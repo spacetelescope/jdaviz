@@ -1,4 +1,3 @@
-import warnings
 from zipfile import ZipFile
 
 import pytest
@@ -146,11 +145,7 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     imview = mosviz_helper.app.get_viewer(mosviz_helper._default_image_viewer_reference_name)
     x_pixcenter = (imview.state.x_max + imview.state.x_min)/2.0
     y_pixcenter = (imview.state.y_max + imview.state.y_min)/2.0
-    with warnings.catch_warnings():
-        # https://github.com/spacetelescope/gwcs/pull/522
-        warnings.filterwarnings(
-            "ignore", message="The bounding_box was set in C order.*")
-        viewer_center_coord = imview.layers[0].layer.coords.pixel_to_world(x_pixcenter, y_pixcenter)
+    viewer_center_coord = imview.layers[0].layer.coords.pixel_to_world(x_pixcenter, y_pixcenter)
     assert_allclose(viewer_center_coord.ra.deg, dc_tab["R.A."][0])
     assert_allclose(viewer_center_coord.dec.deg, dc_tab["Dec."][0])
 
