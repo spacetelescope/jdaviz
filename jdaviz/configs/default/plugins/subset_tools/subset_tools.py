@@ -169,6 +169,9 @@ class SubsetTools(PluginTemplateMixin):
                   'get_center', 'set_center', 'import_region', 'get_subsets_as_regions']
         return PluginUserApi(self, expose)
 
+    def new_get_subsets_as_regions(self, region_type=None, list_of_subset_labels=None, use_display_units=False):
+        pass
+
     def get_subsets_as_regions(self, region_type=None, list_of_subset_labels=None,
                                use_display_units=False):
         """
@@ -206,7 +209,7 @@ class SubsetTools(PluginTemplateMixin):
         if region_type is not None:
             region_type = region_type.lower()
             if region_type not in ['spectral', 'spatial']:
-                raise ValueError("`region_type` must be 'spectral' or 'spatial'.")
+                raise ValueError("`region_type` must be 'spectral', 'spatial', or None for any.")
             if ((self.config == 'imviz' and region_type == 'spectral') or
                (self.config == 'specviz' and region_type == 'spatial')):
                 raise ValueError(f"No {region_type} subests in {self.config}.")
