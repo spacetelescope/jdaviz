@@ -27,7 +27,7 @@ import pytest
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.coordinates import SkyCoord
-from astropy.table import QTable
+from astropy.table import Table, QTable
 
 
 @pytest.mark.remote_data
@@ -182,17 +182,37 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert catalogs_plugin.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+    assert len(catalogs_plugin.table.selected_rows) == 1
+
+    # test to ensure sources searched for respect the maximum sources traitlet
+    catalogs_plugin.max_sources = 1
+    catalogs_plugin.search(error_on_fail=True)
+    assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+
+    catalogs_plugin.clear_table()
+
+    # test single source edge case and docs recommended input file type
+    sky_coord = SkyCoord(ra=337.5202807, dec=-20.83305528, unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord], 'label': ['Source_1']})
+    tbl_file = str(tmp_path / 'sky_centroid1.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+    n_entries = len(tbl)
+
+    catalogs_plugin.from_file = tbl_file
+    out_tbl = catalogs_plugin.search()
+    assert len([out_tbl]) == n_entries
+    assert catalogs_plugin.number_of_results == n_entries
+    assert len(imviz_helper.app.data_collection) == 2  # image + markers
+
     catalogs_plugin.clear()
+
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
     catalogs_plugin.clear(hide_only=False)
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
-
-    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
-
-    assert len(catalogs_plugin.table.selected_rows) == 1
 
     assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5

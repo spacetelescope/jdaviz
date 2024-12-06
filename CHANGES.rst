@@ -18,6 +18,9 @@ Imviz
 
 * Add Roman WFI and CGI footprints to the Footprints plugin. [#3322]
 
+- Catalog Search plugin now exposes a maximum sources limit for all catalogs and resolves an edge case
+  when loading a catalog from a file that only contains one source. [#3337]
+
 Mosviz
 ^^^^^^
 
