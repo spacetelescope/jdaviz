@@ -9,7 +9,7 @@ from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
-from regions import CirclePixelRegion, RectanglePixelRegion
+from regions import CirclePixelRegion, PixCoord, RectanglePixelRegion
 from skimage.io import imsave
 from stdatamodels import asdf_in_fits
 
@@ -259,10 +259,17 @@ class TestParseImage:
         imviz_helper._apply_interactive_region('bqplot:rectangle',
                                                (982, 1088),
                                                (1008, 1077))  # Background
-        subsets = imviz_helper.get_interactive_regions()
+        subsets = imviz_helper.plugins['Subset Tools']._obj.get_subsets_as_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
+        # check that retrieved subsets-as-regions from subset plugin match what was loaded.
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+        assert subsets['Subset 1'].center == PixCoord(970.95, 1116.05)
         assert isinstance(subsets['Subset 2'], RectanglePixelRegion)
+        assert subsets['Subset 2'].center == PixCoord(995.0, 1082.5)
+        # ensure agreement between app.get_subsets and subset_tools.get_subsets_as_regions
+        ss = imviz_helper.app.get_subsets()
+        assert ss['Subset 1'][0]['region'] == subsets['Subset 1']
+        assert ss['Subset 2'][0]['region'] == subsets['Subset 2']
 
         # Test simple aperture photometry plugin.
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
