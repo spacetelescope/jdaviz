@@ -143,6 +143,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # the distance between the longest zoom limits and the center point
         zoom_radius = max(skycoord_center.separation(zoom_coordinate))
 
+        max_sources_used = False
+
         # conducts search based on SDSS
         if self.catalog_selected == "SDSS":
             from astroquery.sdss import SDSS
@@ -161,6 +163,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                                         data_release=17)
                 if len(query_region_result) > self.max_sources:
                     query_region_result = query_region_result[:self.max_sources]
+                    max_sources_used = True
             except Exception as e:  # nosec
                 errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
                           f"r={zoom_radius}: {repr(e)}")
@@ -190,6 +193,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
                                         columns=('source_id', 'ra', 'dec')
                                         )
+            if len(sources) == self.max_sources:
+                max_sources_used = True
             self.app._catalog_source_table = sources
             skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
 
@@ -200,6 +205,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.app._catalog_source_table = table
             if len(table['sky_centroid']) > self.max_sources:
                 skycoord_table = table['sky_centroid'][:self.max_sources]
+                max_sources_used = True
             else:
                 skycoord_table = table['sky_centroid']
         else:
@@ -213,6 +219,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.number_of_results = 0
             self.app._catalog_source_table = None
             return
+
+        if max_sources_used:
+            snackbar_message = SnackbarMessage(
+                    f"{self.catalog_selected} queried, results returned were limited using max_sources = {self.max_sources}.",  # noqa
+                    color="success",
+                    sender=self)
+            self.hub.broadcast(snackbar_message)
 
         # coordinates found are converted to pixel coordinates
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)
@@ -252,7 +265,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
                 x_coordinates = [x_coordinates]
                 y_coordinates = [y_coordinates]
-
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
                                              x_coordinates, y_coordinates):
                 # Check if the row contains the required keys
