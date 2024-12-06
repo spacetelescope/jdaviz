@@ -1496,9 +1496,8 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._update_layer_items())
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_subset_created())
-        # will need SubsetUpdateMessage for name only (style shouldn't force a full refresh)
-        # self.hub.subscribe(self, SubsetUpdateMessage,
-        #                    handler=lambda _: self._update_layer_items())
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda _: self._update_layer_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_layer_items())
 
@@ -1714,6 +1713,8 @@ class LayerSelect(SelectPluginComponent):
     @observe('filters', 'sort_by')
     def _update_layer_items(self, msg={}):
         # NOTE: _on_layers_changed is passed without a msg object during init
+        # TODO: if the message is a SubsetUpdateMessage, only act on those that require
+        # an update
         # TODO: Handle changes to just one item without recompiling the whole thing
         manual_items = [{'label': label} for label in self.manual_options]
         # use getattr so the super() call above doesn't try to access the attr before
@@ -4484,6 +4485,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             # currently in subscribed states will be ignored.
             for viewer in self.subscribed_viewers:
                 viewer._update_layer_icons()
+                viewer.data_menu.layer._update_layer_items()
             # callbacks from the viewer state also do not trigger an update to the
             # layer items (tabs), so we'll force those to update from here as well.
             self.plugin.layer._update_layer_items()
