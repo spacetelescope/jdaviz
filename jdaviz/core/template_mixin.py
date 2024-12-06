@@ -700,6 +700,10 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
             new_order = [handler] + [other for other in existing_callbacks if other != handler]
             self._plugin._trait_notifiers[traitlet_name]['change'] = new_order
 
+    def send_state(self, traitlet_name):
+        # redirect send_state through the plugin
+        self._plugin.send_state(self._plugin_traitlets.get(traitlet_name))
+
     @property
     def plugin(self):
         """
