@@ -143,10 +143,7 @@
         Stop stream
       </plugin-action-button>
     </v-row>
-<<<<<<< HEAD
-=======
     <j-plugin-section-header>Live Sound Options</j-plugin-section-header>
->>>>>>> 9abf2b3b (sonification plugin options: rearrange, label, defaults.)
     <v-row>
       <v-select
         :menu-props="{ left: true }"
@@ -154,22 +151,15 @@
         :items="sound_devices_items"
         v-model="sound_devices_selected"
         label="Sound device"
-<<<<<<< HEAD
-        hint="Device which sound will be output from. Must be selected BEFORE cube is sonified."
-=======
         hint="Device which sound will be output from."
->>>>>>> 9abf2b3b (sonification plugin options: rearrange, label, defaults.)
         persistent-hint
         ></v-select>
     </v-row>
     <v-row>
         Volume
         <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
-<<<<<<< HEAD
-    </v-row>
-=======
-   </v-row>
 
->>>>>>> 9abf2b3b (sonification plugin options: rearrange, label, defaults.)
+    </v-row>
+   </v-row>
  </j-tray-plugin>
 </template>

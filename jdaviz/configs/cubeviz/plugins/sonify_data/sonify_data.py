@@ -93,7 +93,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             display_unit = self.spec_viewer.state.x_display_unit
             min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
             max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
-            self.flux_viewer.update_listener_wls(min_wavelength, max_wavelength, display_unit)
+            self.flux_viewer.update_listener_wls((min_wavelength, max_wavelength), display_unit)
 
         # Ensure the current spectral region bounds are up-to-date at render time
         self.update_wavelength_range(None)
