@@ -169,7 +169,6 @@ class SubsetTools(PluginTemplateMixin):
                   'get_center', 'set_center', 'import_region', 'get_subsets_as_regions']
         return PluginUserApi(self, expose)
 
-
     def get_subsets_as_regions(self, region_type=None, list_of_subset_labels=None,
                                use_display_units=False):
         """
@@ -180,11 +179,10 @@ class SubsetTools(PluginTemplateMixin):
         Parameters
         ----------
         region_type : str or None, optional
-            Specifies the type of subsets to retrieve. Options are:
-            - ``spatial``: Retrieve only spatial subsets.
-            - ``spectral``: Retrieve only spectral subsets.
-            - ``None`` (default): Retrieve both spatial and spectral subsets,
-              determined by the current configuration.
+            Specifies the type of subsets to retrieve. Options are ``spatial``
+            to retrieve only spatial subsets, ``spectral``: Retrieve only
+            spectral subsets or ``None`` (default) to retrieve both spatial
+            and spectral subsets, when relevent to the current configuration.
 
         list_of_subset_labels : list of str or None, optional
             If specified, only subsets matching these labels will be included.
