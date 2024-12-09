@@ -72,7 +72,6 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
                               flux=y_corners * u.Unit(old_unit))
             y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spec)
 
-            #with delay_callback(self, 'y_min', 'y_max'):
             self.y_min = np.nanmin(y_corners_new)
             self.y_max = np.nanmax(y_corners_new)
 
