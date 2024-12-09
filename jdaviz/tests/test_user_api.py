@@ -41,9 +41,9 @@ def test_specviz_data_labels(specviz_helper, spectrum1d):
 
 def test_toggle_api_hints(specviz_helper):
     assert specviz_helper.app.state.show_api_hints is False
-    specviz_helper.app.toggle_api_hints()
+    specviz_helper.toggle_api_hints()
     assert specviz_helper.app.state.show_api_hints is True
-    specviz_helper.app.toggle_api_hints(True)
+    specviz_helper.toggle_api_hints(True)
     assert specviz_helper.app.state.show_api_hints is True
-    specviz_helper.app.toggle_api_hints()
+    specviz_helper.toggle_api_hints()
     assert specviz_helper.app.state.show_api_hints is False
