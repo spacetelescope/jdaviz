@@ -982,7 +982,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         sb_unit = self.app._get_display_unit('sb')
         if spec.flux.unit != sb_unit:
-            spec = spec.with_flux_unit(sb_unit)
+            # ensure specutils has access to jdaviz custom unit equivalencies
+            equivalencies = all_flux_unit_conversion_equivs()
+            spec = spec.with_flux_unit(sb_unit, equivalencies=equivalencies)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
