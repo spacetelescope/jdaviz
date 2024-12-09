@@ -63,7 +63,7 @@ class TestCatalogs:
     # NOTE: We mark "slow" so it only runs on the dev job that is allowed to fail.
     @pytest.mark.slow
     # ignore gaia archive scheduled maintenance stdout
-    @pytest.mark.filterwarnings("ignore:PytestUnraisableExceptionWarning")
+    @pytest.mark.filterwarnings("ignore:.*Gaia archive will be intermittently unavailable.*")
     def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
