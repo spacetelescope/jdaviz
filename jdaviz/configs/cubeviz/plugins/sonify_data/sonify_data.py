@@ -45,7 +45,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
     eln = Bool(True).tag(sync=True)
     audfrqmin = FloatHandleEmpty(50).tag(sync=True)
-    audfrqmax = FloatHandleEmpty(1500).tag(sync=True)
+    audfrqmax = FloatHandleEmpty(1000).tag(sync=True)
     pccut = IntHandleEmpty(20).tag(sync=True)
     volume = IntHandleEmpty(100).tag(sync=True)
     stream_active = Bool(True).tag(sync=True)
