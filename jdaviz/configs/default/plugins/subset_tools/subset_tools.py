@@ -169,8 +169,6 @@ class SubsetTools(PluginTemplateMixin):
                   'get_center', 'set_center', 'import_region', 'get_subsets_as_regions']
         return PluginUserApi(self, expose)
 
-    def new_get_subsets_as_regions(self, region_type=None, list_of_subset_labels=None, use_display_units=False):
-        pass
 
     def get_subsets_as_regions(self, region_type=None, list_of_subset_labels=None,
                                use_display_units=False):
