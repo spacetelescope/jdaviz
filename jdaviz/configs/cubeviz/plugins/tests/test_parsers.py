@@ -208,6 +208,7 @@ def test_numpy_cube(cubeviz_helper):
     assert isinstance(data.coords, PaddedSpectrumWCS)
     assert flux.units == 'ct / pix2'
 
+
 @pytest.mark.remote_data
 def test_manga_cube(cubeviz_helper):
     # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
