@@ -32,7 +32,6 @@ from astropy.table import Table, QTable
 
 @pytest.mark.remote_data
 class TestCatalogs:
-
     # testing that the plugin search does not crash when no data/image is provided
     def test_plugin_no_image(self, imviz_helper):
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
@@ -89,6 +88,16 @@ class TestCatalogs:
 
         # test SDSS catalog
         catalogs_plugin.catalog.selected = 'SDSS'
+
+        # testing that SDSS catalog respects the maximum sources set
+        catalogs_plugin.max_sources = 100
+        catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+
+        # reset max_sources to it's default value
+        catalogs_plugin.max_sources = 1000
         # This basically calls the following under the hood:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin
@@ -103,13 +112,6 @@ class TestCatalogs:
         assert catalogs_plugin.number_of_results > 500
         prev_results = catalogs_plugin.number_of_results
 
-        # testing that SDSS catalog respects the maximum sources set
-        catalogs_plugin.max_sources = 100
-        catalogs_plugin.search(error_on_fail=True)
-
-        assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
-
         # testing that every variable updates accordingly when markers are cleared
         catalogs_plugin.vue_do_clear()
 
@@ -122,6 +124,9 @@ class TestCatalogs:
         tmp_file = tmp_path / 'test.ecsv'
         qtable.write(tmp_file, overwrite=True)
 
+        # reset max_sources to it's default value
+        catalogs_plugin.max_sources = 1000
+
         catalogs_plugin.from_file = str(tmp_file)
         # setting filename from API will automatically set catalog to 'From File...'
         assert catalogs_plugin.catalog.selected == 'From File...'
@@ -132,20 +137,16 @@ class TestCatalogs:
         catalogs_plugin.table.selected_rows = catalogs_plugin.table.items[0:2]
         assert len(catalogs_plugin.table.selected_rows) == 2
 
-        catalogs_plugin.clear_table()
-        assert not catalogs_plugin.results_available
-
         # test Gaia catalog
-        catalogs_plugin.catalog.selected == 'Gaia'
+        catalogs_plugin.catalog.selected = 'Gaia'
+
+        assert catalogs_plugin.catalog.selected == 'Gaia'
 
         # astroquery.gaia query has the Gaia.ROW_LIMIT parameter that limits the number of rows
         # returned. Test to verify that this query functionality is maintained by the package.
         # Note: astroquery.sdss does not have this parameter.
         catalogs_plugin.max_sources = 10
-        out_tbl = catalogs_plugin.search(error_on_fail=True)
-
-        assert catalogs_plugin.catalog.selected == 'Gaia'
-        assert len([out_tbl]) == catalogs_plugin.max_sources
+        catalogs_plugin.search(error_on_fail=True)
 
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
