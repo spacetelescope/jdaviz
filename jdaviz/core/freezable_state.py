@@ -63,7 +63,6 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
 
         if old_unit != new_unit:
             if old_unit is None or new_unit is None:
-                self._reset_y_limits()
                 return
 
             x_corners = np.array([self.x_min, self.x_min, self.x_max, self.x_max])
