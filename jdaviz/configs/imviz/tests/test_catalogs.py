@@ -86,17 +86,29 @@ class TestCatalogs:
 
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
+
+        # test SDSS catalog
+        catalogs_plugin.catalog.selected = 'SDSS'
         # This basically calls the following under the hood:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
         catalogs_plugin.search(error_on_fail=True)
 
+        assert catalogs_plugin.catalog.selected == 'SDSS'
+
         # number of results should be > 500 or so
         # Answer was determined by running the search with the image in the notebook.
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results > 500
         prev_results = catalogs_plugin.number_of_results
+
+        # testing that SDSS catalog respects the maximum sources set
+        catalogs_plugin.max_sources = 100
+        catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
 
         # testing that every variable updates accordingly when markers are cleared
         catalogs_plugin.vue_do_clear()
@@ -119,6 +131,24 @@ class TestCatalogs:
 
         catalogs_plugin.table.selected_rows = catalogs_plugin.table.items[0:2]
         assert len(catalogs_plugin.table.selected_rows) == 2
+
+        catalogs_plugin.clear_table()
+        assert not catalogs_plugin.results_available
+
+        # test Gaia catalog
+        catalogs_plugin.catalog.selected == 'Gaia'
+
+        # astroquery.gaia query has the Gaia.ROW_LIMIT parameter that limits the number of rows
+        # returned. Test to verify that this query functionality is maintained by the package.
+        # Note: astroquery.sdss does not have this parameter.
+        catalogs_plugin.max_sources = 10
+        out_tbl = catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.catalog.selected == 'Gaia'
+        assert len([out_tbl]) == catalogs_plugin.max_sources
+
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
 
         assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 2047.5
