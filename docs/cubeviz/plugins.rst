@@ -87,7 +87,7 @@ The slice plugin provides the ability to select the slice
 of the cube currently visible in the image viewers, with the
 corresponding wavelength highlighted in the spectrum viewer.
 
-To choose a specific slice, enter an approximate wavelength (in which case the nearest slice will 
+To choose a specific slice, enter an approximate wavelength (in which case the nearest slice will
 be selected and the wavelength entry will "span" to the exact value of that slice).  The snapping
 behavior can be disabled in the plugin settings to allow for smooth scrubbing, in which case the
 closest slice will still be displayed in the cube viewer.
@@ -301,6 +301,9 @@ optionally choose a :guilabel:`Spatial region`, if you have one.
 Click :guilabel:`EXTRACT` to produce a new 1D spectrum dataset
 from the spectral cube, which has uncertainties propagated by
 `astropy.nddata <https://docs.astropy.org/en/stable/nddata/nddata.html>`_.
+By default, if a mask was loaded with the cube, it will be applied to the
+cube when extracting in addition to any subsets chosen as an aperture. This
+is not currently done for Data Quality arrays, e.g. the DQ extension in JWST files.
 
 If using a simple subset (currently only works for a circular subset applied to data
 with spatial axis units in wavelength) for the spatial aperture, an option to
