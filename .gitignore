@@ -17,6 +17,7 @@ htmlcov
 MANIFEST
 .ipynb_checkpoints
 notebooks/*.fits
+notebooks/*.ecsv
 
 # Sphinx
 docs/api
