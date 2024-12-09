@@ -362,9 +362,6 @@ class UnitConversion(PluginTemplateMixin):
             pass
         else:
             self.spectrum_viewer.set_plot_axes()
-            # until we can have upstream automatic limit updating on change
-            # in display units with equivalencies, we'll reset the limits
-            self.spectrum_viewer.reset_limits()
 
             # broadcast that there has been a change in the spectrum viewer y axis,
             self.hub.broadcast(GlobalDisplayUnitChanged('spectral_y',

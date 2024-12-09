@@ -8,6 +8,8 @@ New Features
 
 * Improve performance while importing multiple regions. [#3321]
 
+* Changing flux/SB display units no longer resets viewer zoom levels. [#3335]
+
 Cubeviz
 ^^^^^^^
 
