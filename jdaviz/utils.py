@@ -505,7 +505,7 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
     elif image_data or (spec_unit and solid_angle_in_spec):
         if not solid_angle_in_targ:
             targ_units /= solid_angle_in_spec
-        solid_angle_in_targ = solid_angle_in_spec
+            solid_angle_in_targ = solid_angle_in_spec
         if ((u.Unit(targ_units) in indirect_units()) or
            (u.Unit(orig_units) in indirect_units())):
             # SB -> Flux -> Flux -> SB
