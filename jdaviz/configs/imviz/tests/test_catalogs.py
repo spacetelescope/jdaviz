@@ -62,6 +62,8 @@ class TestCatalogs:
     # the z-band FITS image was downloaded and used
     # NOTE: We mark "slow" so it only runs on the dev job that is allowed to fail.
     @pytest.mark.slow
+    # ignore gaia archive scheduled maintenance stdout
+    @pytest.mark.filterwarnings("ignore:PytestUnraisableExceptionWarning")
     def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
