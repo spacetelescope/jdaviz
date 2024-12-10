@@ -20,14 +20,16 @@
               {{'\'' + selected + '\''}}
             </span>
             <span v-else>
-              <v-icon v-if="item.icon" small>{{ item.icon }}</v-icon>
+              <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
+              <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
               {{ selected }}
             </span>
           </div>
         </template>
         <template v-slot:item="{ item }">
           <span style="margin-top: 8px; margin-bottom: 0px">
-            <v-icon v-if="item.icon" small>{{ item.icon }}</v-icon>
+            <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
+            <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
             {{ item.label }}
           </span>
         </template>
