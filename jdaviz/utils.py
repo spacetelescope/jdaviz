@@ -418,7 +418,9 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units, return_unit=True)
 
     # Ensure a spectrum passed through Spectral Extraction plugin
-    if (((spec and ('_pixel_scale_factor' in spec.meta))) and
+    if ((((spec and ('_pixel_scale_factor' in spec.meta))) or
+        (spectral_axis is not None and ('_pixel_scale_factor' in spectral_axis.info.meta)))
+        and
             (((solid_angle_in_orig) and (not solid_angle_in_targ)) or
              ((not solid_angle_in_orig) and (solid_angle_in_targ)))):
         # Data item in data collection does not update from conversion/translation.
@@ -427,7 +429,13 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         n_values = len(values)
 
         # Make sure they are float (can be Quantity).
-        fac = spec.meta['_pixel_scale_factor']
+        if spec:
+            fac = spec.meta['_pixel_scale_factor']
+        elif spectral_axis is not None:
+            # Quantity.info.meta gets casted to set
+            fac = next((item for item in spectral_axis.info.meta if isinstance(item, float)), None)
+            spec_unit = orig_units
+
         if isinstance(fac, Quantity):
             fac = fac.value
 

@@ -67,6 +67,12 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             x_corners = np.array([self.x_min, self.x_min, self.x_max, self.x_max])
             y_corners = np.array([self.y_min, self.y_max, self.y_min, self.y_max])
             spectral_axis = x_corners * u.Unit(self.x_display_unit)
+
+            for layer in self.layers:
+                if layer.layer.meta.get('_pixel_scale_factor'):
+                    spectral_axis.info.meta = {'_pixel_scale_factor',
+                                               layer.layer.meta.get('_pixel_scale_factor')}
+
             y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis)  # noqa
 
             self.y_min = np.nanmin(y_corners_new)
