@@ -320,15 +320,4 @@ span.api-hint-header {
   color: #C6F0FD !important;
 }
 
-.telescope-badge {
-  font-size: 11px;
-  font-variant: small-caps;
-  border: 1px solid black;
-  border-radius: 2px;
-  background-color: gray;
-  color: white;
-  padding: 2px;
-  vertical-align: text-top;
-}
-
 </style>
