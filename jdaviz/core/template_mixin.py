@@ -919,7 +919,8 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         try:
             self._apply_default_selection()
-        except: pass
+        except ValueError:
+            pass
 
     @property
     def viewer_dicts(self):

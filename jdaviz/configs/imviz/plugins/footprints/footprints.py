@@ -517,7 +517,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             return item['label'] == 'From File...' or item.get('observatory') == 'JWST'
 
         def only_roman(item):
-            return item['label'] == 'From File...' or item.get('observatory') == 'Roman' 
+            return item['label'] == 'From File...' or item.get('observatory') == 'Roman'
 
         if self.preset_obs_selected == 'JWST':
             self.preset.filters = [only_jwst]
