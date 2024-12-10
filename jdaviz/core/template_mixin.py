@@ -791,6 +791,11 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             manual_options = [default_text] + manual_options
         self._manual_options = manual_options
 
+        # Reserve the default and manual options strings so people can't use them as Subset labels
+        self._plugin.app._reserved_labels.add(str(default_text).lower())
+        self._plugin.app._reserved_labels.update([x["label"].lower() if isinstance(x, dict) else
+                                                  x.lower() for x in manual_options])
+
         self.items = [self._to_item(opt) for opt in manual_options]
         # set default values for traitlets
         if default_text is not None:
