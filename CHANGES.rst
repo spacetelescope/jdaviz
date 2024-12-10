@@ -124,6 +124,8 @@ Imviz
 
 - Updates UI language in the orientation plugin to better match API. [#3276]
 
+- Update Roman L2 example files in example notebook. [#3346]
+
 Mosviz
 ^^^^^^
 
