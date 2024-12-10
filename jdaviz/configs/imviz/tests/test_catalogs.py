@@ -27,12 +27,11 @@ import pytest
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.coordinates import SkyCoord
-from astropy.table import QTable
+from astropy.table import Table, QTable
 
 
 @pytest.mark.remote_data
 class TestCatalogs:
-
     # testing that the plugin search does not crash when no data/image is provided
     def test_plugin_no_image(self, imviz_helper):
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
@@ -86,11 +85,26 @@ class TestCatalogs:
 
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
+
+        # test SDSS catalog
+        catalogs_plugin.catalog.selected = 'SDSS'
+
+        # testing that SDSS catalog respects the maximum sources set
+        catalogs_plugin.max_sources = 100
+        catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+
+        # reset max_sources to it's default value
+        catalogs_plugin.max_sources = 1000
         # This basically calls the following under the hood:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
         catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.catalog.selected == 'SDSS'
 
         # number of results should be > 500 or so
         # Answer was determined by running the search with the image in the notebook.
@@ -110,6 +124,9 @@ class TestCatalogs:
         tmp_file = tmp_path / 'test.ecsv'
         qtable.write(tmp_file, overwrite=True)
 
+        # reset max_sources to it's default value
+        catalogs_plugin.max_sources = 1000
+
         catalogs_plugin.from_file = str(tmp_file)
         # setting filename from API will automatically set catalog to 'From File...'
         assert catalogs_plugin.catalog.selected == 'From File...'
@@ -119,6 +136,21 @@ class TestCatalogs:
 
         catalogs_plugin.table.selected_rows = catalogs_plugin.table.items[0:2]
         assert len(catalogs_plugin.table.selected_rows) == 2
+
+        # test Gaia catalog
+        catalogs_plugin.catalog.selected = 'Gaia'
+
+        assert catalogs_plugin.catalog.selected == 'Gaia'
+
+        # astroquery.gaia query has the Gaia.ROW_LIMIT parameter that limits the number of rows
+        # returned. Test to verify that this query functionality is maintained by the package.
+        # Note: astroquery.sdss does not have this parameter.
+        catalogs_plugin.max_sources = 10
+        with pytest.warns(ResourceWarning):
+            catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
 
         assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 2047.5
@@ -182,17 +214,37 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert catalogs_plugin.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+    assert len(catalogs_plugin.table.selected_rows) == 1
+
+    # test to ensure sources searched for respect the maximum sources traitlet
+    catalogs_plugin.max_sources = 1
+    catalogs_plugin.search(error_on_fail=True)
+    assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+
+    catalogs_plugin.clear_table()
+
+    # test single source edge case and docs recommended input file type
+    sky_coord = SkyCoord(ra=337.5202807, dec=-20.83305528, unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord], 'label': ['Source_1']})
+    tbl_file = str(tmp_path / 'sky_centroid1.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+    n_entries = len(tbl)
+
+    catalogs_plugin.from_file = tbl_file
+    out_tbl = catalogs_plugin.search()
+    assert len([out_tbl]) == n_entries
+    assert catalogs_plugin.number_of_results == n_entries
+    assert len(imviz_helper.app.data_collection) == 2  # image + markers
+
     catalogs_plugin.clear()
+
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
     catalogs_plugin.clear(hide_only=False)
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
-
-    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
-
-    assert len(catalogs_plugin.table.selected_rows) == 1
 
     assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
