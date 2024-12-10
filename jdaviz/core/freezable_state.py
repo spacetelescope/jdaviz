@@ -72,6 +72,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
                 if layer.layer.meta.get('_pixel_scale_factor'):
                     spectral_axis.info.meta = {'_pixel_scale_factor',
                                                layer.layer.meta.get('_pixel_scale_factor')}
+                    break
 
             y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis)  # noqa
 
