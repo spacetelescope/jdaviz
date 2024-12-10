@@ -1,8 +1,10 @@
 from traitlets import Bool, List, Unicode, observe
 import numpy as np
+import os
 import regions
 
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import LinkUpdatedMessage, ChangeRefDataMessage
@@ -12,6 +14,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         EditableSelectPluginComponent, SelectPluginComponent,
                                         FileImportSelectPluginComponent, HasFileImportSelect)
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 
 from jdaviz.configs.imviz.plugins.footprints import preset_regions
@@ -123,15 +126,16 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
-            obs_icons = {'JWST': 'mdi-hexagon-outline', 'Roman': 'mdi-telescope'}
-            preset_options = list(preset_regions._instruments.keys())
+            obs_icons = {'JWST': read_icon(os.path.join(ICON_DIR, 'JWST_solid.svg'), 'svg+xml'),
+                         'Roman': read_icon(os.path.join(ICON_DIR, 'Roman_solid.svg'), 'svg+xml')}
             preset_options = [{'label': display_name,
                                'siaf_name': siaf_name,
                                'observatory': observatory,
                                'icon': obs_icons.get(observatory, None)}
                               for observatory, instruments in preset_regions._instruments.items()
                               for display_name, siaf_name in instruments.items()]
-            preset_obs_options = ['Any'] + list(preset_regions._instruments.keys())
+            preset_obs_options = ['Any'] + [{'label': obs, 'icon': obs_icons.get(obs)}
+                                            for obs in preset_regions._instruments.keys()]
         else:
             preset_options = ['None']
             preset_obs_options = []

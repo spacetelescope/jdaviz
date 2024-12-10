@@ -95,34 +95,23 @@
       </v-alert>
 
       <v-row justify="end" class="row-no-outside-padding" style="margin-bottom: -6px !important">
-        <j-tooltip tooltipcontent="Show only JWST footprints in preset list">
-          <v-btn
-            tile
-            :elevation=0
-            x-small
-            dense 
-            :color="preset_obs_selected === 'JWST' ? 'turquoise' : 'transparent'"
-            dark
-            style="padding-left: 8px; padding-right: 6px;"
-            @click="() => {if (preset_obs_selected === 'JWST') {preset_obs_selected = 'Any'} else {preset_obs_selected = 'JWST'}}"
-          >
-            <v-icon small :color="preset_obs_selected === 'JWST' ? 'white' : 'turquoise'">mdi-hexagon-outline</v-icon>
-          </v-btn>
-        </j-tooltip>
-        <j-tooltip tooltipcontent="Show only Roman footprints in preset list">
-          <v-btn
-            tile
-            :elevation=0
-            x-small
-            dense 
-            :color="preset_obs_selected === 'Roman' ? 'turquoise' : 'transparent'"
-            dark
-            style="padding-left: 8px; padding-right: 6px;"
-            @click="() => {if (preset_obs_selected === 'Roman') {preset_obs_selected = 'Any'} else {preset_obs_selected = 'Roman'}}"
-          >
-            <v-icon small :color="preset_obs_selected === 'Roman' ? 'white' : 'turquoise'">mdi-telescope</v-icon>
-          </v-btn>
-        </j-tooltip>
+        <div v-for="preset_obs_item in preset_obs_items">
+          <j-tooltip v-if="preset_obs_item.label !== 'Any'" :tooltipcontent="'Show only '+preset_obs_item.label+' footprints in preset list'">
+            <v-btn
+              tile
+              :elevation=0
+              x-small
+              dense 
+              :color="preset_obs_selected === preset_obs_item.label ? 'turquoise' : 'transparent'"
+              :dark="preset_obs_selected === preset_obs_item.label"
+              style="padding-left: 8px; padding-right: 6px;"
+              @click="() => {if (preset_obs_selected === preset_obs_item.label) {preset_obs_selected = 'Any'} else {preset_obs_selected = preset_obs_item.label}}"
+            >
+              <img :src="preset_obs_item.icon" width="16" class="invert-if-dark" style="margin-right: 2px"/>
+              {{ preset_obs_item.label }}
+            </v-btn>
+          </j-tooltip>
+        </div>
       </v-row>
 
       <plugin-file-import-select
