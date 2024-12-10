@@ -383,7 +383,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     # If there are only two values, this is likely the limits being converted, so then
     # in case we need to use the spectral density equivalency, we need to provide only
     # to spectral axis values. If there is only one value
-    image_data = False
+    indirect_needs_spec_axis = False
     if spec:
         if not np.isscalar(values) and len(values) == 2:
             spectral_values = spec.spectral_axis[0]
@@ -398,12 +398,17 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             eqv = u.spectral_density(spectral_values)
         else:
             eqv = u.spectral_density(spec.spectral_axis[0])
-    elif spectral_axis and isinstance(spectral_axis, u.Quantity):
+    elif spectral_axis is not None:
+        if not isinstance(spectral_axis, u.Quantity):
+            raise TypeError("spectral_axis must be an instance of astropy.units.Quantity.")
+
         if eqv:
-            image_data = True
-            # Needed to convert Flux to Flux for complex conversion/translation of cube image data
+            indirect_needs_spec_axis = True
+            # Needed to convert Flux to Flux for complex conversion/translation of non-spectrum data
             eqv += u.spectral_density(spectral_axis)
-        elif len(values) == len(spectral_axis):
+        elif not np.isscalar(values) and len(values) != spectral_axis.size:
+            raise ValueError(f"Size mismatch: values size : ({values.size}) must match spectral_axis size : ({spectral_axis.size}).")  # noqa
+        else:
             eqv = u.spectral_density(spectral_axis)
 
     orig_units = u.Unit(original_units)
@@ -457,10 +462,10 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             elif selected_unit_updated == 'orig':
                 orig_units = updated_units
 
-    elif image_data:
+    elif indirect_needs_spec_axis:
         values, orig_units = _indirect_conversion(
             values=values, orig_units=orig_units, targ_units=targ_units,
-            eqv=eqv, image_data=image_data
+            eqv=eqv, indirect_needs_spec_axis=indirect_needs_spec_axis
             )
     elif solid_angle_in_orig == solid_angle_in_targ == PIX2:
         # in the case where we have 2 SBs per solid pixel that need
@@ -476,7 +481,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
 
 
 def _indirect_conversion(values, orig_units, targ_units, eqv,
-                         spec_unit=None, image_data=None):
+                         spec_unit=None, indirect_needs_spec_axis=None):
 
     # Note: is there a way we could write this to not require 'spec_unit'? It
     # seems like it falls back on this to get a solid angle unit, but can we
@@ -505,7 +510,7 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
 
         return values, targ_units, 'targ'
 
-    elif image_data or (spec_unit and solid_angle_in_spec):
+    elif indirect_needs_spec_axis or (spec_unit and solid_angle_in_spec):
         if not solid_angle_in_targ:
             targ_units /= solid_angle_in_spec
         if ((u.Unit(targ_units) in indirect_units()) or

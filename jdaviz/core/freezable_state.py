@@ -64,10 +64,11 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             if old_unit is None or new_unit is None:
                 self._reset_y_limits()
                 return
-
             x_corners = np.array([self.x_min, self.x_min, self.x_max, self.x_max])
             y_corners = np.array([self.y_min, self.y_max, self.y_min, self.y_max])
-            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=x_corners*u.Unit(self.x_display_unit))  # noqa
+            spectral_axis = x_corners * u.Unit(self.x_display_unit)
+            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis)  # noqa
+
             self.y_min = np.nanmin(y_corners_new)
             self.y_max = np.nanmax(y_corners_new)
 
