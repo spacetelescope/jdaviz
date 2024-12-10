@@ -126,17 +126,20 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
-            preset_options = list(_available_instruments.keys())
+            preset_options = list(preset_regions._instruments.keys())
+            preset_options = [{'label': region,
+                               'instrument': instrument,
+                               'observatory': 'JWST',
+                               'icon': 'mdi-hexagon-outline'}
+                              for region, instrument in _available_instruments.items()]
         else:
             preset_options = ['None']
-
-        if not self.app.state.settings.get('server_is_remote', False):
-            preset_options.append('From File...')
 
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
                                                       selected='preset_selected',
-                                                      manual_options=preset_options)
+                                                      manual_options=preset_options,
+                                                      server_is_remote=self.app.state.settings.get('server_is_remote', False))  # noqa
 
         # set the custom file parser for importing catalogs
         self.preset._file_parser = self._file_parser

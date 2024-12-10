@@ -790,7 +790,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             manual_options = [default_text] + manual_options
         self._manual_options = manual_options
 
-        self.items = [{"label": opt} if isinstance(opt, str) else opt for opt in manual_options]
+        self.items = [self._to_item(opt) for opt in manual_options]
         # set default values for traitlets
         if default_text is not None:
             self.selected = default_text
@@ -806,6 +806,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         if default_mode != 'empty' and self.selected == '':
             self._apply_default_selection()
+
+    @staticmethod
+    def _to_item(item):
+        if isinstance(item, dict):
+            return item
+        return {'label': item}
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
@@ -905,6 +911,15 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def remove_filter(self, *filters):
         self.filters = [f for f in self.filters
                         if (f not in filters and getattr(f, '__name__', '') not in filters)]
+
+    @observe('filters')
+    def _update_items(self, msg={}):
+        all_items = [self._to_item(opt) for opt in self.manual_options]
+        self.items = [item for item in all_items if self._is_valid_item(item)]
+
+        try:
+            self._apply_default_selection()
+        except: pass
 
     @property
     def viewer_dicts(self):
@@ -1091,7 +1106,8 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
     def __init__(self, plugin, **kwargs):
         self._cached_obj = {}
 
-        if "From File..." not in kwargs['manual_options']:
+        if (not kwargs.get('server_is_remote', False)
+                and "From File..." not in kwargs['manual_options']):
             kwargs['manual_options'] += ['From File...']
 
         if not isinstance(plugin, HasFileImportSelect):  # pragma: no cover
@@ -1493,19 +1509,19 @@ class LayerSelect(SelectPluginComponent):
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_data_added)
         self.hub.subscribe(self, RemoveDataMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_subset_created())
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda _: self._update_layer_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._update_items())
 
         self.sort_by = sort_by
-        self.app.state.add_callback('layer_icons', self._update_layer_items)
+        self.app.state.add_callback('layer_icons', self._update_items)
         self.add_observe(viewer, self._on_viewer_selected_changed)
-        self.add_observe(selected, self._update_layer_items)
-        self._update_layer_items()
+        self.add_observe(selected, self._update_items)
+        self._update_items()
         self.update_wcs_only_filter(only_wcs_layers)
 
         # TODO: all of these add_filter commands should be refactored to pass filters directly
@@ -1632,7 +1648,7 @@ class LayerSelect(SelectPluginComponent):
             new = [new]
         if new != old:
             self._clear_cache()
-            self._update_layer_items()
+            self._update_items()
             added_viewers = list(set(new) - set(old))
             removed_viewers = list(set(old) - set(new))
             for old_viewer in removed_viewers:
@@ -1640,38 +1656,38 @@ class LayerSelect(SelectPluginComponent):
                 if old_viewer is None:
                     continue
                 # NOTE: color_mode callback must be conflicting with something else, so instead
-                # we call _update_layer_items in the PlotOptionsSyncState for color_mode
-                # old_viewer.state.remove_callback('color_mode', self._update_layer_items)
+                # we call _update_items in the PlotOptionsSyncState for color_mode
+                # old_viewer.state.remove_callback('color_mode', self._update_items)
                 for layer in old_viewer.state.layers:
                     if is_wcs_only(layer.layer):
                         continue
-                    layer.remove_callback('color', self._update_layer_items)
-                    layer.remove_callback('zorder', self._update_layer_items)
+                    layer.remove_callback('color', self._update_items)
+                    layer.remove_callback('zorder', self._update_items)
                     if hasattr(layer, 'cmap'):
-                        layer.remove_callback('cmap', self._update_layer_items)
+                        layer.remove_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
-                        layer.remove_callback('bitmap_visible', self._update_layer_items)
+                        layer.remove_callback('bitmap_visible', self._update_items)
                     elif hasattr(layer, 'visible'):
-                        layer.remove_callback('visible', self._update_layer_items)
+                        layer.remove_callback('visible', self._update_items)
 
             for new_viewer in added_viewers:
                 new_viewer = self._get_viewer(new_viewer)
                 if new_viewer is None:
                     continue
                 # NOTE: color_mode callback must be conflicting with something else, so instead
-                # we call _update_layer_items in the PlotOptionsSyncState for color_mode
-                # new_viewer.state.add_callback('color_mode', self._update_layer_items)
+                # we call _update_items in the PlotOptionsSyncState for color_mode
+                # new_viewer.state.add_callback('color_mode', self._update_items)
                 for layer in new_viewer.state.layers:
                     if is_wcs_only(layer.layer):
                         continue
-                    layer.add_callback('color', self._update_layer_items)
-                    layer.add_callback('zorder', self._update_layer_items)
+                    layer.add_callback('color', self._update_items)
+                    layer.add_callback('zorder', self._update_items)
                     if hasattr(layer, 'cmap'):
-                        layer.add_callback('cmap', self._update_layer_items)
+                        layer.add_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
-                        layer.add_callback('bitmap_visible', self._update_layer_items)
+                        layer.add_callback('bitmap_visible', self._update_items)
                     if hasattr(layer, 'visible'):
-                        layer.add_callback('visible', self._update_layer_items)
+                        layer.add_callback('visible', self._update_items)
 
     def _on_subset_created(self, msg=None):
         new_subset_label = self.app.data_collection.subset_groups[-1].label
@@ -1679,10 +1695,10 @@ class LayerSelect(SelectPluginComponent):
         for current_viewer in viewer:
             for layer in self._get_viewer(current_viewer).state.layers:
                 if layer.layer.label == new_subset_label and is_not_wcs_only(layer.layer):
-                    layer.add_callback('color', self._update_layer_items)
-                    layer.add_callback('visible', self._update_layer_items)
+                    layer.add_callback('color', self._update_items)
+                    layer.add_callback('visible', self._update_items)
                     # TODO: Add ability to add new item to self.items instead of recompiling
-        self._update_layer_items({'source': 'subset_added'})
+        self._update_items({'source': 'subset_added'})
 
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
@@ -1700,18 +1716,18 @@ class LayerSelect(SelectPluginComponent):
                     # _on_layers_changed whenever the color changes
                     # TODO: find out if this conflicts with another color change event
                     #  and is causing the lag in the color picker
-                    layer.add_callback('color', self._update_layer_items)
+                    layer.add_callback('color', self._update_items)
                     if hasattr(layer, 'cmap'):
-                        layer.add_callback('cmap', self._update_layer_items)
+                        layer.add_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
-                        layer.add_callback('bitmap_visible', self._update_layer_items)
+                        layer.add_callback('bitmap_visible', self._update_items)
                     if hasattr(layer, 'visible'):
-                        layer.add_callback('visible', self._update_layer_items)
+                        layer.add_callback('visible', self._update_items)
 
-        self._update_layer_items({'source': 'data_added'})
+        self._update_items({'source': 'data_added'})
 
     @observe('filters', 'sort_by')
-    def _update_layer_items(self, msg={}):
+    def _update_items(self, msg={}):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: if the message is a SubsetUpdateMessage, only act on those that require
         # an update
@@ -2716,12 +2732,12 @@ class PluginTableSelect(SelectPluginComponent):
                          multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
-        self.hub.subscribe(self, PluginTableAddedMessage, handler=self._on_tables_changed)
-        self.hub.subscribe(self, PluginTableModifiedMessage, handler=self._on_tables_changed)
-        self._on_tables_changed()
+        self.hub.subscribe(self, PluginTableAddedMessage, handler=self._update_items)
+        self.hub.subscribe(self, PluginTableModifiedMessage, handler=self._update_items)
+        self._update_items()
 
     @observe('filters')
-    def _on_tables_changed(self, *args):
+    def _update_items(self, *args):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_tables.items()
                                      if self._is_valid_item(v._obj)]
@@ -2829,12 +2845,12 @@ class PluginPlotSelect(SelectPluginComponent):
                          multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
-        self.hub.subscribe(self, PluginPlotAddedMessage, handler=self._on_plots_changed)
-        self.hub.subscribe(self, PluginPlotModifiedMessage, handler=self._on_plots_changed)
-        self._on_plots_changed()
+        self.hub.subscribe(self, PluginPlotAddedMessage, handler=self._update_items)
+        self.hub.subscribe(self, PluginPlotModifiedMessage, handler=self._update_items)
+        self._update_items()
 
     @observe('filters')
-    def _on_plots_changed(self, *args):
+    def _update_items(self, *args):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_plots.items()
                                      if self._is_valid_item(v._obj)]
@@ -3251,12 +3267,12 @@ class ViewerSelect(SelectPluginComponent):
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
 
-        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
-        self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
-        self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewers_changed)
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._update_items)
+        self.hub.subscribe(self, ViewerRemovedMessage, handler=self._update_items)
+        self.hub.subscribe(self, ViewerRenamedMessage, handler=self._update_items)
 
         # initialize viewer_items from original viewers
-        self._on_viewers_changed()
+        self._update_items()
 
     @property
     def ids(self):
@@ -3328,8 +3344,8 @@ class ViewerSelect(SelectPluginComponent):
         super().add_filter(*filters)
         if 'reference_has_wcs' in filters:
             # reference data can change whenever data is added OR removed from a viewer
-            self.hub.subscribe(self, AddDataMessage, handler=self._on_viewers_changed)
-            self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewers_changed)
+            self.hub.subscribe(self, AddDataMessage, handler=self._update_items)
+            self.hub.subscribe(self, RemoveDataMessage, handler=self._update_items)
 
     def _is_valid_item(self, viewer):
         def is_spectrum_viewer(viewer):
@@ -3350,8 +3366,8 @@ class ViewerSelect(SelectPluginComponent):
         return super()._is_valid_item(viewer, locals())
 
     @observe('filters')
-    def _on_viewers_changed(self, msg=None):
-        # NOTE: _on_viewers_changed is passed without a msg object during init
+    def _update_items(self, msg=None):
+        # NOTE: _update_items is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
         was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
@@ -3477,16 +3493,16 @@ class DatasetSelect(SelectPluginComponent):
         # override this for how to access on-the-fly spectral extraction of a cube
         self._spectral_extraction_function = 'sum'
         # Add/Remove Data are triggered when checked/unchecked from viewers
-        self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
-        self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_data_changed)
-        self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, AddDataMessage, handler=self._update_items)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._update_items)
+        self.hub.subscribe(self, DataCollectionAddMessage, handler=self._update_items)
+        self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._update_items)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 
-        self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
+        self.app.state.add_callback('layer_icons', lambda _: self._update_items())
         # initialize items from original viewers
-        self._on_data_changed()
+        self._update_items()
 
     @property
     def default_data_cls(self):
@@ -3639,7 +3655,7 @@ class DatasetSelect(SelectPluginComponent):
             return self.app._get_assoc_data_parent(data.label) is None
 
         def same_mosviz_row(data):
-            # NOTE: requires calling _on_data_changed on a change to row
+            # NOTE: requires calling _update_items on a change to row
             # currently handled by mosviz helper _row_click_message_handler
             meta = getattr(data, 'meta', None)
             if meta is None:
@@ -3656,8 +3672,8 @@ class DatasetSelect(SelectPluginComponent):
         return super()._is_valid_item(data, locals())
 
     @observe('filters')
-    def _on_data_changed(self, msg=None):
-        # NOTE: _on_data_changed is passed without a msg object during init
+    def _update_items(self, msg=None):
+        # NOTE: _update_items is passed without a msg object during init
         # future improvement: don't recreate the entire list when msg is passed
         def _dc_to_dict(data):
             d = {'label': data.label,
@@ -4488,7 +4504,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                 viewer.data_menu.layer._update_layer_items()
             # callbacks from the viewer state also do not trigger an update to the
             # layer items (tabs), so we'll force those to update from here as well.
-            self.plugin.layer._update_layer_items()
+            self.plugin.layer._update_items()
 
         if self._processing_change_to_glue:
             return
