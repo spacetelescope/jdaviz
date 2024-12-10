@@ -106,8 +106,7 @@
             style="padding-left: 8px; padding-right: 6px;"
             @click="() => {if (preset_obs_selected === 'JWST') {preset_obs_selected = 'Any'} else {preset_obs_selected = 'JWST'}}"
           >
-            <span v-if="preset_obs_selected === 'JWST'" style="color: white">JWST</span>
-            <span v-else style="color: black">JWST</span>
+            <v-icon small :color="preset_obs_selected === 'JWST' ? 'white' : 'turquoise'">mdi-hexagon-outline</v-icon>
           </v-btn>
         </j-tooltip>
         <j-tooltip tooltipcontent="Show only Roman footprints in preset list">
@@ -121,9 +120,8 @@
             style="padding-left: 8px; padding-right: 6px;"
             @click="() => {if (preset_obs_selected === 'Roman') {preset_obs_selected = 'Any'} else {preset_obs_selected = 'Roman'}}"
           >
-          <span v-if="preset_obs_selected === 'Roman'" style="color: white">Roman</span>
-          <span v-else style="color: black">Roman</span>
-         </v-btn>
+            <v-icon small :color="preset_obs_selected === 'Roman' ? 'white' : 'turquoise'">mdi-telescope</v-icon>
+          </v-btn>
         </j-tooltip>
       </v-row>
 
