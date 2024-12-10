@@ -1513,7 +1513,7 @@ class LayerSelect(SelectPluginComponent):
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_subset_created())
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_items())
 
@@ -4501,7 +4501,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             # currently in subscribed states will be ignored.
             for viewer in self.subscribed_viewers:
                 viewer._update_layer_icons()
-                viewer.data_menu.layer._update_layer_items()
+                viewer.data_menu.layer._update_items()
             # callbacks from the viewer state also do not trigger an update to the
             # layer items (tabs), so we'll force those to update from here as well.
             self.plugin.layer._update_items()
