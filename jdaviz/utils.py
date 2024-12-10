@@ -342,7 +342,7 @@ def indirect_units():
     return units
 
 
-def flux_conversion(values, original_units, target_units, spec=None, eqv=None, slice=None):
+def flux_conversion(values, original_units, target_units, spec=None, eqv=None, spectral_axis=None):
     """
     Convert flux or surface brightness values from original units to target units.
 
@@ -367,8 +367,8 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     eqv : list of :ref:`astropy:unit_equivalencies`, optional
         A list of Astropy equivalencies necessary for complex unit conversions/translations.
 
-    slice : `astropy.units.Quantity`, optional
-        The current slice of a data cube, with units. Necessary for complex unit
+    spectral_axis : `astropy.units.Quantity`, optional
+        Provide spectral axis associated with values array. Necessary for simple and complex unit
         conversions/translations that require spectral density equivalencies.
 
     Returns
@@ -398,12 +398,13 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             eqv = u.spectral_density(spectral_values)
         else:
             eqv = u.spectral_density(spec.spectral_axis[0])
-    elif slice is not None and eqv:
-        image_data = True
-        # Need this to convert Flux to Flux for complex conversions/translations of cube image data
-        eqv += u.spectral_density(slice)
-    elif slice is not None:
-        eqv = u.spectral_density(slice)
+    elif spectral_axis and isinstance(spectral_axis, u.Quantity):
+        if eqv:
+            image_data = True
+            # Needed to convert Flux to Flux for complex conversion/translation of cube image data
+            eqv += u.spectral_density(spectral_axis)
+        elif len(values) == len(spectral_axis):
+            eqv = u.spectral_density(spectral_axis)
 
     orig_units = u.Unit(original_units)
     targ_units = u.Unit(target_units)

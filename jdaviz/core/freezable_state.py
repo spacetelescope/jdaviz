@@ -67,8 +67,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
 
             x_corners = np.array([self.x_min, self.x_min, self.x_max, self.x_max])
             y_corners = np.array([self.y_min, self.y_max, self.y_min, self.y_max])
-            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, slice=x_corners*u.Unit(self.x_display_unit))  # noqa
-
+            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=x_corners*u.Unit(self.x_display_unit))  # noqa
             self.y_min = np.nanmin(y_corners_new)
             self.y_max = np.nanmax(y_corners_new)
 
