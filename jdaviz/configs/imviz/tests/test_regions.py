@@ -70,7 +70,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
         # Make sure nothing is actually loaded
         self.verify_region_loaded('MaskedSubset 1', count=0)
-        assert self.imviz.get_interactive_regions() == {}
+        assert self.imviz.plugins['Subset Tools'].get_subsets_as_regions() == {}
 
     def test_regions_fully_out_of_bounds(self):
         """Glue ROI will not error when out of bounds."""
@@ -78,7 +78,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         bad_regions = self.subset_plugin.import_region([my_reg], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
-        assert len(self.imviz.get_interactive_regions()) == 1
+        assert len(self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()) == 1
 
     def test_regions_mask(self):
         mask = np.zeros((10, 10), dtype=np.bool_)
@@ -86,13 +86,13 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         bad_regions = self.subset_plugin.import_region([mask], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('MaskedSubset 1')
-        assert self.imviz.get_interactive_regions() == {}
+        assert self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions() == {}
 
         mask[1, 1] = True
         bad_regions = self.subset_plugin.import_region([mask], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('MaskedSubset 2')
-        assert self.imviz.get_interactive_regions() == {}
+        assert self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions() == {}
 
         # Also test deletion by label here.
         self.imviz._delete_region('MaskedSubset 1')
@@ -103,7 +103,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         bad_regions = self.subset_plugin.import_region([mask], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('MaskedSubset 3')
-        assert self.imviz.get_interactive_regions() == {}
+        assert self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions() == {}
 
         # Deletion of non-existent label is silent no-op.
         self.imviz._delete_region('foo')
@@ -115,7 +115,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
                                                        combination_mode='new')
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
-        assert len(self.imviz.get_interactive_regions()) == 1
+        assert len(self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()) == 1
 
     def test_regions_sky_has_wcs(self):
         # Mimic interactive region (before)
@@ -141,7 +141,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # Check interactive regions. We do not check if the translation is correct,
         # that check hopefully is already done in glue-astronomy.
         # Apparently, static region ate up one number...
-        subsets = self.imviz.get_interactive_regions()
+        subsets = self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3', 'Subset 5', 'Subset 6'], subsets  # noqa: E501
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
@@ -161,7 +161,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # Test data is set up such that 1 pixel is 1 arcsec.
         subset_radii = {"Subset 1": [0.5, 1], "Subset 2": [1, 3]}
 
-        subsets = self.imviz.get_interactive_regions()
+        subsets = self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()
         subset_names = sorted(subsets.keys())
         assert subset_names == ['Subset 1', 'Subset 2']
         for n in subset_names:
@@ -174,7 +174,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         bad_regions = self.subset_plugin.import_region([my_aper], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
-        assert len(self.imviz.get_interactive_regions()) == 1
+        assert len(self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()) == 1
 
     def test_photutils_sky_has_wcs(self):
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
@@ -182,7 +182,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         bad_regions = self.subset_plugin.import_region([my_aper_sky], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
-        assert len(self.imviz.get_interactive_regions()) == 1
+        assert len(self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()) == 1
 
 
 class TestLoadRegionsFromFile(BaseRegionHandler):
@@ -204,7 +204,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         assert len(bad_regions) == 1
 
         # Will load 8/9 and 7 of that become ROIs.
-        subsets = imviz_helper.get_interactive_regions()
+        subsets = imviz_helper.plugins['Subset Tools']._obj.get_subsets_as_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3',
                                         'Subset 4', 'Subset 5', 'Subset 6', 'Subset 7'], subsets
 
@@ -217,7 +217,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.region_file, combination_mode='new', max_num_regions=2, return_bad_regions=True)
         assert len(bad_regions) == 0
-        subsets = imviz_helper.get_interactive_regions()
+        subsets = imviz_helper.plugins['Subset Tools']._obj.get_subsets_as_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
@@ -227,7 +227,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.raw_regions[6], return_bad_regions=True)
         assert len(bad_regions) == 1
-        assert imviz_helper.get_interactive_regions() == {}
+        assert imviz_helper.plugins['Subset Tools']._obj.get_subsets_as_regions() == {}
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
     def test_ds9_load_one_good_one_bad(self, imviz_helper):
@@ -237,12 +237,12 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
             [self.raw_regions[3], self.raw_regions[6]], return_bad_regions=True)
         assert len(bad_regions) == 1
 
-        subsets = imviz_helper.get_interactive_regions()
+        subsets = imviz_helper.plugins['Subset Tools']._obj.get_subsets_as_regions()
         assert list(subsets.keys()) == ['Subset 1'], subsets
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
 
-class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
+class TestGetRegions(BaseImviz_WCS_NoWCS):
     def test_annulus(self):
         # Outer circle
         self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))
@@ -250,22 +250,30 @@ class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
         self.imviz._apply_interactive_region('bqplot:truecircle', (2, 2), (7, 7))
 
         # At this point, there should be two normal circles.
-        subsets = self.imviz.get_interactive_regions()
+        subsets = self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
+        assert subsets['Subset 1'].center == PixCoord(4.5, 4.5)
+        assert subsets['Subset 2'].center == PixCoord(4.5, 4.5)
+        # ensure agreement between app.get_subsets and subset_tools.get_subsets_as_regions
+        ss = self.imviz.app.get_subsets()
+        assert ss['Subset 1'][0]['region'] == subsets['Subset 1']
+        assert ss['Subset 2'][0]['region'] == subsets['Subset 2']
 
         # Create a third subset that is an annulus.
         subset_groups = self.imviz.app.data_collection.subset_groups
         new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
         self.viewer.apply_subset_state(new_subset)
 
-        subsets = self.imviz.get_interactive_regions()
+        subsets = self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()
         assert len(self.imviz.app.data_collection.subset_groups) == 3
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
         assert isinstance(subsets['Subset 3'], CircleAnnulusPixelRegion)
+        # and check the new retrieved region
+        assert subsets['Subset 3'].center == PixCoord(4.5, 4.5)
 
         # Clear the regions for next test.
         self.imviz._delete_all_regions()
