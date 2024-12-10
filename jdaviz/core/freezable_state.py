@@ -69,7 +69,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             spectral_axis = x_corners * u.Unit(self.x_display_unit)
 
             for layer in self.layers:
-                if psc := layer.layer.meta.get('_pixel_scale_factor', None) is not None:
+                if psc := getattr(layer.layer, 'meta', {}).get('_pixel_scale_factor', None):  # noqa
                     spectral_axis.info.meta = {'_pixel_scale_factor',
                                                psc}
                     break
