@@ -106,7 +106,8 @@
             style="padding-left: 8px; padding-right: 6px;"
             @click="() => {preset_only_roman = false; preset_only_jwst = !preset_only_jwst}"
           >
-            <v-icon small :color="preset_only_jwst ? 'white' : 'turquoise'">mdi-hexagon-outline</v-icon>
+            <span v-if="preset_only_jwst" style="color: white">JWST</span>
+            <span v-else style="color: black">JWST</span>
           </v-btn>
         </j-tooltip>
         <j-tooltip tooltipcontent="Show only Roman footprints in preset list">
@@ -120,8 +121,9 @@
             style="padding-left: 8px; padding-right: 6px;"
             @click="() => {preset_only_jwst = false; preset_only_roman = !preset_only_roman}"
           >
-            <v-icon small :color="preset_only_roman ? 'white' : 'turquoise'">mdi-telescope</v-icon>
-          </v-btn>
+          <span v-if="preset_only_roman" style="color: white">Roman</span>
+          <span v-else style="color: black">Roman</span>
+         </v-btn>
         </j-tooltip>
       </v-row>
 
