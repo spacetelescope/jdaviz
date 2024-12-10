@@ -62,8 +62,6 @@ class TestCatalogs:
     # the z-band FITS image was downloaded and used
     # NOTE: We mark "slow" so it only runs on the dev job that is allowed to fail.
     @pytest.mark.slow
-    # ignore gaia archive scheduled maintenance stdout
-    @pytest.mark.filterwarnings("ignore:.*Gaia archive will be intermittently unavailable.*")
     def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
@@ -148,7 +146,8 @@ class TestCatalogs:
         # returned. Test to verify that this query functionality is maintained by the package.
         # Note: astroquery.sdss does not have this parameter.
         catalogs_plugin.max_sources = 10
-        catalogs_plugin.search(error_on_fail=True)
+        with pytest.warns(ResourceWarning):
+            catalogs_plugin.search(error_on_fail=True)
 
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
