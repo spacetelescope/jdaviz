@@ -68,6 +68,9 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             y_corners = np.array([self.y_min, self.y_max, self.y_min, self.y_max])
             spectral_axis = x_corners * u.Unit(self.x_display_unit)
 
+            # NOTE: this uses the scale factor from the first found layer.  We may want to
+            # generalize this to iterate over all scale factors if/when we support multiple
+            # flux cubes (with potentially different pixel scale factors).
             for layer in self.layers:
                 if psc := getattr(layer.layer, 'meta', {}).get('_pixel_scale_factor', None):  # noqa
                     spectral_axis.info.meta = {'_pixel_scale_factor',
