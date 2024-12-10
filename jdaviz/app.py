@@ -319,6 +319,9 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, PluginPlotAddedMessage,
                            handler=self._on_plugin_plot_added)
 
+        # Convenient reference of all existing subset names
+        self._reserved_labels = set([None,])
+
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
 
@@ -371,10 +374,14 @@ class Application(VuetifyTemplate, HubListener):
         # Internal cache so we don't have to keep calling get_object for the same Data.
         # Key should be (data_label, statistic) and value the translated object.
         self._get_object_cache = {}
+
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=self._on_subset_update_message)
+        # These both call _on_layers_changed
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_subset_delete_message)
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=self._on_subset_create_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
@@ -384,9 +391,6 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_add_data_message)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_layers_changed)
-        self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=self._on_layers_changed)
-        # SubsetDeleteMessage will also call _on_layers_changed via _on_subset_delete_message
 
         # Emit messages when icons are updated
         self.state.add_callback('viewer_icons',
@@ -457,6 +461,7 @@ class Application(VuetifyTemplate, HubListener):
         self._update_live_plugin_results(trigger_data_lbl=msg.data.label)
 
     def _on_subset_update_message(self, msg):
+        print(msg)
         # NOTE: print statements in here will require the viewer output_widget
         self._clear_object_cache(msg.subset.label)
         if msg.attribute == 'subset_state':
@@ -464,6 +469,12 @@ class Application(VuetifyTemplate, HubListener):
 
     def _on_subset_delete_message(self, msg):
         self._remove_live_plugin_results(trigger_subset=msg.subset)
+        self._reserved_labels.remove(msg.subset.label.lower())
+        self._on_layers_changed(msg)
+
+    def _on_subset_create_message(self, msg):
+        print(msg)
+        self._reserved_labels.add(msg.subset.label.lower())
         self._on_layers_changed(msg)
 
     def _on_plugin_plot_added(self, msg):
@@ -1531,11 +1542,6 @@ class Application(VuetifyTemplate, HubListener):
 
         """
 
-        # get all existing subset labels
-        dc = self.data_collection
-        subsets = dc.subset_groups
-        existing_labels = [subset.label.lower() for subset in subsets]
-
         # get active selection, if there is one
         if self.session.edit_subset_mode.edit_subset == []:
             subset_selected = None
@@ -1544,12 +1550,12 @@ class Application(VuetifyTemplate, HubListener):
 
         # remove the current selection label from the set of labels, because its ok
         # if the new subset shares the name of the current selection (renaming to current name)
-        if subset_selected.lower() in existing_labels:
-            existing_labels.remove(subset_selected.lower())
+        if subset_selected.lower() in self._reserved_labels:
+            self._reserved_labels.remove(subset_selected.lower())
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
-        if subset_name.lower() in existing_labels:
+        if subset_name.lower() in self._reserved_labels:
             warnings.warn(f"Can not rename subset to name of another existing subset ({subset_name}).")
             return subset_selected
 
