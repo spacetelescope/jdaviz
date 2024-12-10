@@ -121,7 +121,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
-            obs_icons = {'JWST': 'mdi-hexagon-outline', 'Roman': 'mdi-telescope'}
+            obs_icons = {'JWST': 'JWST', 'Roman': 'Roman'}
             preset_options = list(preset_regions._instruments.keys())
             preset_options = [{'label': display_name,
                                'siaf_name': siaf_name,
