@@ -39,13 +39,14 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     """
     template_file = __file__, "sonify_data.vue"
 
-    sample_rate = IntHandleEmpty(44100).tag(sync=True)
-    buffer_size = IntHandleEmpty(2048).tag(sync=True)
+    sample_rate = 44100 #IntHandleEmpty(44100).tag(sync=True)
+    buffer_size = 2048 #IntHandleEmpty(2048).tag(sync=True)
     assidx = FloatHandleEmpty(2.5).tag(sync=True)
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
     eln = Bool(True).tag(sync=True)
     audfrqmin = FloatHandleEmpty(50).tag(sync=True)
     audfrqmax = FloatHandleEmpty(1000).tag(sync=True)
+    use_pccut = Bool(True).tag(sync=True)
     pccut = IntHandleEmpty(20).tag(sync=True)
     volume = IntHandleEmpty(100).tag(sync=True)
     stream_active = Bool(True).tag(sync=True)
@@ -101,7 +102,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
                                            self.pccut, self.audfrqmin,
-                                           self.audfrqmax, self.eln)
+                                           self.audfrqmax, self.eln, self.use_pccut)
 
         # Automatically select spectrum-at-spaxel tool
         spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']

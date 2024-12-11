@@ -135,7 +135,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sonified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
-                          pccut, audfrqmin, audfrqmax, eln):
+                          pccut, audfrqmin, audfrqmax, eln, use_pccut):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)
         wlens = spectrum.wavelength.to('m').value
         flux = spectrum.flux.value
@@ -161,11 +161,12 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # make a rough white-light image from the clipped array
         whitelight = np.expand_dims(clipped_arr.sum(-1), axis=2)
 
-        # subtract any percentile cut
-        clipped_arr -= np.expand_dims(pc_cube, axis=2)
+        if use_pccut:
+            # subtract any percentile cut
+            clipped_arr -= np.expand_dims(pc_cube, axis=2)
 
-        # and re-clip
-        clipped_arr = np.clip(clipped_arr, 0, np.inf)
+            # and re-clip
+            clipped_arr = np.clip(clipped_arr, 0, np.inf)
 
         self.sonified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
                                               samplerate=sample_rate, buffsize=buffer_size,

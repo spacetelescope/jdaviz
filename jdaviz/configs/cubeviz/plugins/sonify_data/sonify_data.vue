@@ -44,26 +44,6 @@
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <v-row>
               <v-text-field
-                ref="sample_rate"
-                type="number"
-                label="Sample Rate"
-                v-model.number="sample_rate"
-                hint="The desired sample rate."
-                persistent-hint
-              ></v-text-field>
-            </v-row>
-            <v-row>
-              <v-text-field
-                ref="buffer_size"
-                type="number"
-                label="Buffer Size"
-                v-model.number="buffer_size"
-                hint="The desired buffer size."
-                persistent-hint
-              ></v-text-field>
-            </v-row>
-            <v-row>
-              <v-text-field
                 ref="audfrqmin"
                 type="number"
                 label="Minimum Audio Frequency"
@@ -102,13 +82,21 @@
                 persistent-hint
               ></v-text-field>
             </v-row>
-            <v-row>
+	    <v-row>
+              <v-switch
+                v-model="use_pccut"
+                label="Use Flux Percentile Cut?"
+                hint="Whether to only sonify flux above a min. percentile (else use absolute values)"
+                persistent-hint
+               ></v-switch>
+	    </v-row>
+            <v-row v-if="use_pccut">
               <v-text-field
                 ref="pccut"
                 type="number"
-                label="Flux Percentile Cut"
+                label="Flux Percentile Cut Value"
                 v-model.number="pccut"
-                hint="The minimum flux percentile to be heard."
+                hint="The minimum percentile to be heard."
                 persistent-hint
               ></v-text-field>
             </v-row>
@@ -158,7 +146,6 @@
     <v-row>
         Volume
         <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
-
     </v-row>
    </v-row>
  </j-tray-plugin>
