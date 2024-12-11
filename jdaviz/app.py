@@ -320,7 +320,7 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_plugin_plot_added)
 
         # Convenient reference of all existing subset names
-        self._reserved_labels = set([None,])
+        self._reserved_labels = set([])
 
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
@@ -2034,6 +2034,10 @@ class Application(VuetifyTemplate, HubListener):
         if viewer_item is None:  # Maybe they mean the ID
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
+
+    def _rename_subset(self, old_label, new_label):
+        # Change the label of a subset, making sure it propagates to as many places as it can
+        pass
 
     def _reparent_subsets(self, old_parent, new_parent=None):
         '''
