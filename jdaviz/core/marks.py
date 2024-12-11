@@ -11,7 +11,8 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general)
+                                               flux_conversion_general,
+                                               check_if_unit_is_per_solid_angle)
 
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
