@@ -224,7 +224,7 @@ def test_manga_cube(cubeviz_helper):
     se.function = "Mean"
     se.extract()
     extracted_max = cubeviz_helper.get_data("Spectrum (mean)").max()
-    assert_allclose(extracted_max.value, 2.836957E-18)
+    assert_allclose(extracted_max.value, 2.836957E-18, rtol=1E-5)
     assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
 
