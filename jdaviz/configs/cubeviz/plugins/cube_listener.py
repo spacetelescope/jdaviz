@@ -43,7 +43,7 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     data = {'spectrum': [spec], 'pitch': [1]}
 
     # again, use maximal range for the mapped parameters
-    lims = {'spectrum': ('0', '100')}
+    lims = {'spectrum': (0, '100')}
 
     # set up source
     sources = Events(data.keys())
