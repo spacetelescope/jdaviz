@@ -16,6 +16,10 @@ Bug Fixes
 
 - Fixed viewer widgets displaying improperly if initialized out of view in Jupyter Lab. [#3299]
 
+- Fixed width of sliders in plugins to use full-width of plugin. [#3303]
+
+- Raise an error when attempting to open in a popout or sidecar when not supported (i.e. within VSCode). [#3309]
+
 Cubeviz
 ^^^^^^^
 
