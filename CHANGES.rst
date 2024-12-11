@@ -103,6 +103,8 @@ Bug Fixes
 
 - Fix Slice plugin for indexing through temporal slices. [#3235]
 
+- Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
+
 Cubeviz
 ^^^^^^^
 
