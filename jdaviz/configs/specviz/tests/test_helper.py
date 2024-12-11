@@ -117,14 +117,16 @@ class TestSpecvizHelper:
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
     def test_get_spectral_regions_none(self):
-        spec_region = self.spec_app.get_spectral_regions()
+        plg = self.spec_app.plugins['Subset Tools']
+        spec_region = plg.get_regions()
 
         assert spec_region == {}
 
     def test_get_spectral_regions_one(self):
         self.spec_app.plugins['Subset Tools'].import_region(
             SpectralRegion(6000*self.spec.spectral_axis.unit, 6500*self.spec.spectral_axis.unit))
-        spec_region = self.spec_app.get_spectral_regions()
+        plg = self.spec_app.plugins['Subset Tools']
+        spec_region = plg.get_regions()
         assert len(spec_region['Subset 1'].subregions) == 1
 
     def test_get_spectral_regions_two(self):
