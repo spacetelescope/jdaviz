@@ -66,6 +66,8 @@ Cubeviz
 ^^^^^^^
 - Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]
 
+- Fixed bugs where cube model fitting could fail if Jdaviz custom equivalencies were required. [#3343]
+
 Imviz
 ^^^^^
 
