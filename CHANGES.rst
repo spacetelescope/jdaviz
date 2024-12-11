@@ -81,6 +81,8 @@ Other Changes and Additions
 New Features
 ------------
 
+- Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
+
 Cubeviz
 ^^^^^^^
 

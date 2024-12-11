@@ -216,7 +216,7 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
             # NOTE: if extending this beyond GWCS, the mouseover logic
             # for outside_*_bounding_box should also be updated.
             data.coords._orig_bounding_box = data.coords.bounding_box
-            data.coords.bounding_box = None
+
         if not data.meta.get(_wcs_only_label, False):
             data_label = app.return_data_label(data_label, alt_name="image_data")
 
