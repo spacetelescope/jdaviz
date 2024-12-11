@@ -83,7 +83,8 @@ roman = [
     "roman_datamodels>=0.17.1",
 ]
 strauss = [
-    "strauss@git+https://github.com/james-trayford/strauss@equal_loudness_normalisation"
+    "strauss@git+https://github.com/james-trayford/strauss@equal_loudness_normalisation",
+    "sounddevice"
 ]
 
 [build-system]
