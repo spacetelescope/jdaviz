@@ -148,7 +148,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
             return output_spectra
 
-    @deprecated(since="4.1", alternative="subset_tools.get_subsets_as_regions")
+    @deprecated(since="4.1", alternative="subset_tools.get_regions")
     def get_spectral_regions(self, use_display_units=False):
         """
         A simple wrapper around the app-level call to retrieve only spectral

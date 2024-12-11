@@ -879,7 +879,7 @@ class ImageConfigHelper(ConfigHelper):
         if return_bad_regions:
             return bad_regions
 
-    @deprecated(since="4.1", alternative="subset_tools.get_subsets_as_regions")
+    @deprecated(since="4.1", alternative="subset_tools.get_regions")
     def get_interactive_regions(self):
         """
         Return spatial regions that can be interacted with in the viewer.

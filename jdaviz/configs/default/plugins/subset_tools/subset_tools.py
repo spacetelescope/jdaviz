@@ -165,12 +165,12 @@ class SubsetTools(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        expose = ['subset', 'combination_mode', 'recenter_dataset', 'recente',
-                  'get_center', 'set_center', 'import_region', 'get_subsets_as_regions']
+        expose = ['subset', 'combination_mode', 'recenter_dataset', 'recenter',
+                  'get_center', 'set_center', 'import_region', 'get_regions']
         return PluginUserApi(self, expose)
 
-    def get_subsets_as_regions(self, region_type=None, list_of_subset_labels=None,
-                               use_display_units=False):
+    def get_regions(self, region_type=None, list_of_subset_labels=None,
+                    use_display_units=False):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
