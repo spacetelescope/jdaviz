@@ -291,7 +291,8 @@ def test_get_regions_composite(cubeviz_helper, spectrum1d_cube):
     plg = cubeviz_helper.plugins['Subset Tools']
 
     # For some reason, Subset 2 disappears after the third subset is applied
-    # when loaded this way. Uncomment to replace _apply_interactive_region.
+    # when loaded this way. Uncomment to replace _apply_interactive_region once
+    # JDAT-5014 is resolved
     # plg.import_region(CirclePixelRegion(center=PixCoord(x=96.0, y=96.0),
     #                                     radius=45.0), combination_mode='new')
     # plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
@@ -301,7 +302,7 @@ def test_get_regions_composite(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper._apply_interactive_region('bqplot:truecircle', (51, 51), (141, 141))
     cubeviz_helper._apply_interactive_region('bqplot:truecircle', (70, 70), (120, 120))
 
-    # apply ciomposite subset created from two existing circular subsets
+    # apply composite subset created from two existing circular subsets
     subset_groups = cubeviz_helper.app.data_collection.subset_groups
     new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
     cubeviz_helper.default_viewer._obj.apply_subset_state(new_subset)
