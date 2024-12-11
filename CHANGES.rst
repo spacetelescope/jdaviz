@@ -29,6 +29,8 @@ Cubeviz
 
 - Fixed initializing a Gaussian1D model component when ``Cube Fit`` is toggled on. [#3295]
 
+- Spectral extraction now correctly respects the loaded mask cube. [#3319]
+
 Imviz
 ^^^^^
 

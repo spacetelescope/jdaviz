@@ -371,6 +371,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return None
 
     @property
+    def mask_cube(self):
+        if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and
+                hasattr(self.app._jdaviz_helper, '_loaded_mask_cube') and
+                self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label):
+            return self._app._jdaviz_helper._loaded_mask_cube
+        else:
+            # TODO: allow selecting or associating a mask/DQ cube?
+            return None
+
+    @property
     def slice_display_unit(self):
         return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
@@ -430,7 +440,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def bg_area_along_spectral(self):
         return np.sum(self.bg_weight_mask, axis=self.spatial_axes)
 
-    def _extract_from_aperture(self, cube, uncert_cube, aperture,
+    def _extract_from_aperture(self, cube, uncert_cube, mask_cube, aperture,
                                weight_mask, wavelength_dependent,
                                selected_func, **kwargs):
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
@@ -485,6 +495,18 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Filter out NaNs (False = good)
         mask = np.logical_or(mask, np.isnan(flux))
+
+        # Also apply the cube's original mask array
+        if mask_cube:
+            snackbar_message = SnackbarMessage(
+                "Note: Applied loaded mask cube during extraction",
+                color="warning",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+            mask_from_cube = mask_cube.get_component('flux').data.copy()
+            # Some mask cubes have NaNs where they are not masked instead of 0
+            mask_from_cube[np.where(np.isnan(mask_from_cube))] = 0
+            mask = np.logical_or(mask, mask_from_cube.astype('bool'))
 
         nddata_reshaped = NDDataArray(
             flux, mask=mask, uncertainty=uncertainties, wcs=wcs, meta=nddata.meta
@@ -588,7 +610,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError("aperture and background cannot be set to the same subset")
 
         selected_func = self.function_selected.lower()
-        spec = self._extract_from_aperture(self.cube, self.uncert_cube,
+        spec = self._extract_from_aperture(self.cube, self.uncert_cube, self.mask_cube,
                                            self.aperture, self.aperture_weight_mask,
                                            self.wavelength_dependent,
                                            selected_func, **kwargs)
@@ -642,7 +664,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # allow internal calls to override the behavior of the bg_spec_per_spaxel traitlet
         bg_spec_per_spaxel = kwargs.pop('bg_spec_per_spaxel', self.bg_spec_per_spaxel)
         if self.background.selected != self.background.default_text:
-            bg_spec = self._extract_from_aperture(self.cube, self.uncert_cube,
+            bg_spec = self._extract_from_aperture(self.cube, self.uncert_cube, self.mask_cube,
                                                   self.background, self.bg_weight_mask,
                                                   self.bg_wavelength_dependent,
                                                   self.function_selected.lower(), **kwargs)
