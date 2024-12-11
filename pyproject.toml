@@ -84,7 +84,8 @@ roman = [
 ]
 strauss = [
     "strauss@git+https://github.com/james-trayford/strauss@equal_loudness_normalisation",
-    "sounddevice"
+    "sounddevice",
+    "libportaudio2"
 ]
 
 [build-system]
