@@ -443,6 +443,29 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     assert np.all(result.get_component("flux").data == 1)
 
 
+def test_fit_with_count_units(cubeviz_helper):
+    flux = np.random.random((7, 8, 9)) * u.count
+    spectral_axis = np.linspace(4000, 5000, flux.shape[-1]) * u.AA
+
+    spec = Spectrum1D(flux=flux, spectral_axis=spectral_axis)
+    cubeviz_helper.load_data(spec, data_label="test")
+
+    mf = cubeviz_helper.plugins["Model Fitting"]
+    mf.cube_fit = True
+    mf.create_model_component("Const1D")
+
+    # ensures specutils.Spectrum1D.with_flux_unit has access to Jdaviz custom equivalencies for
+    # PIX^2 unit
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit()
+
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'ct / pix2'
+
+    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    assert model_flux.units == 'ct / pix2'
+
+
 def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
 
@@ -480,4 +503,18 @@ def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_
     assert model_flux.units == 'Jy / sr'
     assert np.allclose(model_flux.data[:, :, 1], expected_result_slice * 1e6)
 
-    # ToDo: Add a test for a unit change that needs an equivalency
+    # ensure conversions that require the spectral axis/translations are handled by the plugin
+    uc.spectral_y_type = 'Surface Brightness'
+    uc.flux_unit = 'erg / (Angstrom s cm2)'
+
+    mf.reestimate_model_parameters()
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'erg / (Angstrom s sr cm2)'
+
+    # running this ensures specutils.Spectrum1D.with_flux_unit has Jdaviz custom equivalencies
+    # for spectral axis conversions and scale factor translations
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit()
+
+    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    assert model_flux.units == 'erg / (Angstrom s sr cm2)'

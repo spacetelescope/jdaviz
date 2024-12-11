@@ -983,7 +983,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         sb_unit = self.app._get_display_unit('sb')
         if spec.flux.unit != sb_unit:
             # ensure specutils has access to jdaviz custom unit equivalencies
-            equivalencies = all_flux_unit_conversion_equivs()
+            pixar_sr = spec.meta.get('_pixel_scale_factor', None)
+            equivalencies = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
+                                                            cube_wave=spec.spectral_axis)
             spec = spec.with_flux_unit(sb_unit, equivalencies=equivalencies)
 
         snackbar_message = SnackbarMessage(
