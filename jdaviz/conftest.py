@@ -64,9 +64,7 @@ def roman_level_1_ramp():
     shape = (10, 25, 25)
     data_model = mk_datamodel(RampModel, shape=shape, dq=False)
 
-    data_model.data = u.Quantity(
-        100 + 3 * np.cumsum(rng.uniform(size=shape), axis=0), u.DN
-    )
+    data_model.data = 100 + 3 * np.cumsum(rng.uniform(size=shape), axis=0)
     return data_model
 
 
