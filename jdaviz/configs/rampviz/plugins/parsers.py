@@ -196,6 +196,12 @@ def _roman_3d_to_glue_data(
     data_reshaped = move_group_axis_last(data)
     diff_data_reshaped = move_group_axis_last(diff_data)
 
+    # if the ramp cube has no units, assume DN:
+    if getattr(data_reshaped, 'unit', None) is None:
+        assumed_unit = u.DN
+        data_reshaped <<= assumed_unit
+        diff_data_reshaped <<= assumed_unit
+
     # load these cubes into the cache:
     app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(
         data_reshaped
