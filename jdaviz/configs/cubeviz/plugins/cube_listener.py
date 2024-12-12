@@ -9,7 +9,6 @@ try:
     from strauss.sources import Events
     from strauss.score import Score
     from strauss.generator import Spectralizer
-    from tqdm import tqdm
 except ImportError:
     pass
 
@@ -117,7 +116,7 @@ class CubeListenerData:
         lo2hi = self.wlens.argsort()[::-1]
 
         t0 = time.time()
-        for i in tqdm(range(self.cube.shape[0])):
+        for i in range(self.cube.shape[0]):
             for j in range(self.cube.shape[1]):
                 with suppress_stderr():
                     if self.cube[i, j, lo2hi].any():
