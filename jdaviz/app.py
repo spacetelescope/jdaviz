@@ -461,7 +461,6 @@ class Application(VuetifyTemplate, HubListener):
         self._update_live_plugin_results(trigger_data_lbl=msg.data.label)
 
     def _on_subset_update_message(self, msg):
-        print(msg)
         # NOTE: print statements in here will require the viewer output_widget
         self._clear_object_cache(msg.subset.label)
         if msg.attribute == 'subset_state':
@@ -473,7 +472,6 @@ class Application(VuetifyTemplate, HubListener):
         self._on_layers_changed(msg)
 
     def _on_subset_create_message(self, msg):
-        print(msg)
         self._reserved_labels.add(msg.subset.label.lower())
         self._on_layers_changed(msg)
 
@@ -595,6 +593,9 @@ class Application(VuetifyTemplate, HubListener):
             children_layers = self._get_assoc_data_children(layer_name)
 
         elif hasattr(msg, 'subset'):
+            # We don't need to reprocess the subset for every data collection entry
+            if msg.subset.data != self.data_collection[0]:
+                return
             layer_name = msg.subset.label
             is_wcs_only = False
             is_not_child = True
@@ -1525,42 +1526,6 @@ class Application(VuetifyTemplate, HubListener):
                 f"Data '{data_label}' successfully added.", sender=self, color="success")
             self.hub.broadcast(snackbar_message)
 
-    def check_valid_subset_label(self, subset_name):
-        """Check that `subset_name` is a valid choice for a subset name. This
-        check is run when renaming subsets.
-
-        A valid subset name must not be the name of another subset in the data
-        collection (case insensitive? there cant be a subset 1 and a Subset 1.)
-        The name may match a subset in the data collection if it the current
-        active selection (i.e the renaming is not really a renaming, it is
-        just keeping the old name, which is valid).
-
-        Unlike dataset names, the attempted renaming of a subset to an existing
-        subset label will not append a number (e.g Subset 1 repeated because
-        Subset 1(1)). If the name exists, a warning will be raised and the
-        original subset name will be returned.
-
-        """
-
-        # get active selection, if there is one
-        if self.session.edit_subset_mode.edit_subset == []:
-            subset_selected = None
-        else:
-            subset_selected = self.session.edit_subset_mode.edit_subset[0].label
-
-        # remove the current selection label from the set of labels, because its ok
-        # if the new subset shares the name of the current selection (renaming to current name)
-        if subset_selected.lower() in self._reserved_labels:
-            self._reserved_labels.remove(subset_selected.lower())
-
-        # now check `subset_name` against list of non-active current subset labels
-        # and warn and return if it is
-        if subset_name.lower() in self._reserved_labels:
-            warnings.warn(f"Can not rename subset to name of another existing subset ({subset_name}).")
-            return subset_selected
-
-        return subset_name
-
     def return_data_label(self, loaded_object, ext=None, alt_name=None, check_unique=True):
         """
         Returns a unique data label that can be safely used to load data into data collection.
@@ -2035,9 +2000,53 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
 
+    def _check_valid_subset_label(self, subset_name, warn_if_duplicate=True):
+        """Check that `subset_name` is a valid choice for a subset name. This
+        check is run when renaming subsets.
+
+        A valid subset name must not be the name of another subset in the data
+        collection (case insensitive? there cant be a subset 1 and a Subset 1.)
+        The name may match a subset in the data collection if it the current
+        active selection (i.e the renaming is not really a renaming, it is
+        just keeping the old name, which is valid).
+
+        Unlike dataset names, the attempted renaming of a subset to an existing
+        subset label will not append a number (e.g Subset 1 repeated because
+        Subset 1(1)). If the name exists, a warning will be raised and the
+        original subset name will be returned.
+
+        """
+
+        # get active selection, if there is one
+        if self.session.edit_subset_mode.edit_subset == []:
+            subset_selected = None
+        else:
+            subset_selected = self.session.edit_subset_mode.edit_subset[0].label
+
+        # remove the current selection label from the set of labels, because its ok
+        # if the new subset shares the name of the current selection (renaming to current name)
+        if subset_selected.lower() in self._reserved_labels:
+            self._reserved_labels.remove(subset_selected.lower())
+
+        # now check `subset_name` against list of non-active current subset labels
+        # and warn and return if it is
+        if subset_name.lower() in self._reserved_labels:
+            if warn_if_duplicate:
+                warnings.warn(f"Can not rename subset to name of another existing subset ({subset_name}).")
+            return False
+
+        return True
+
     def _rename_subset(self, old_label, new_label):
         # Change the label of a subset, making sure it propagates to as many places as it can
-        pass
+        # I don't think there's an easier way to get subset_group by label, it's just a tuple
+        for s in self.data_collection.subset_groups:
+            if s.label == old_label:
+                sg = s
+                break
+        print(sg)
+        if self._check_valid_subset_label(new_label):
+            sg.label = new_label
 
     def _reparent_subsets(self, old_parent, new_parent=None):
         '''
@@ -2431,6 +2440,7 @@ class Application(VuetifyTemplate, HubListener):
             self._link_new_data()
         data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
+        self._reserved_labels.add(msg.data.label)
 
     def _clear_object_cache(self, data_label=None):
         if data_label is None:

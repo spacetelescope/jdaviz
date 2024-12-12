@@ -300,8 +300,11 @@ class SubsetTools(PluginTemplateMixin):
                 self.show_region_info = True
         self._update_combination_mode()
 
-    def _on_subset_update(self, *args):
-        self._sync_selected_from_state(*args)
+    def _on_subset_update(self, msg):
+        if msg.attribute == "label":
+            print("updating label")
+            print(msg.subset.label)
+        self._sync_selected_from_state()
         if 'Create New' in self.subset_selected:
             return
         subsets_avail = [sg.label for sg in self.app.data_collection.subset_groups]
@@ -309,7 +312,7 @@ class SubsetTools(PluginTemplateMixin):
             # subset selection should re-default after processing the deleted subset,
             # for now we can safely ignore
             return
-        self._get_subset_definition(*args)
+        self._get_subset_definition()
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
         self.subset._update_subset(subset_to_update, attribute="type")
 
