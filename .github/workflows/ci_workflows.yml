@@ -73,9 +73,10 @@ jobs:
             allow_failure: true
 
           - name: Python 3.11 with stable versions of dependencies and Roman
+            os: ubuntu-latest
             python: '3.11'
-            runs-on: ubuntu-latest
             toxenv: py311-test-romandeps
+            toxposargs: --remote-data
             allow_failure: true
 
     steps:
