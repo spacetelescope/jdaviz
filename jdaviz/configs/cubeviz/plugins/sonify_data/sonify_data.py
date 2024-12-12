@@ -63,7 +63,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.disabled_msg = ('To use Sonify Data, install strauss and restart Jdaviz. You '
                                  'can do this by running `pip install ".[strauss]"` in the command'
                                  ' line and then launching Jdaviz. Currently, this plugin only works'
-                                 'on devices with valid sound output.')
+                                 ' on devices with valid sound output.')
 
         else:
             devices, indexes = self.build_device_lists()
