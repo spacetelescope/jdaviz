@@ -11,7 +11,6 @@ from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, _MatchedZoomMixin
 from jdaviz.configs.default.plugins.tools import ProfileFromCube
 
-
 __all__ = []
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
