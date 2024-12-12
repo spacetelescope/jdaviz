@@ -69,7 +69,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             devices, indexes = self.build_device_lists()
             self.sound_device_indexes = dict(zip(devices, indexes))
             self.sound_devices_items = devices
-            print(dict(zip(indexes, devices)))
             self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
 
         # TODO: Remove hardcoded range and flux viewer
