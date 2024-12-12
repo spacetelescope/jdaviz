@@ -2000,7 +2000,7 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
 
-    def _check_valid_subset_label(self, subset_name, warn_if_duplicate=True):
+    def _check_valid_subset_label(self, subset_name, warn_if_invalid=True):
         """Check that `subset_name` is a valid choice for a subset name. This
         check is run when renaming subsets.
 
@@ -2031,22 +2031,29 @@ class Application(VuetifyTemplate, HubListener):
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
         if subset_name.lower() in self._reserved_labels:
-            if warn_if_duplicate:
-                warnings.warn(f"Can not rename subset to name of another existing subset ({subset_name}).")
+            if warn_if_invalid:
+                warnings.warn(f"Can not rename subset to name of another existing subset"
+                               " or data item: ({subset_name}).")
+            return False
+
+        elif not subset_name.replace(" ", "").isalnum():
+            if warn_if_invalid:
+                warnings.warn("Subset labels must be purely alphanumeric")
             return False
 
         return True
 
-    def _rename_subset(self, old_label, new_label):
+    def _rename_subset(self, old_label, new_label, subset_group=None, check_if_valid):
         # Change the label of a subset, making sure it propagates to as many places as it can
         # I don't think there's an easier way to get subset_group by label, it's just a tuple
-        for s in self.data_collection.subset_groups:
-            if s.label == old_label:
-                sg = s
-                break
-        print(sg)
+        if subset_group is None:
+            for s in self.data_collection.subset_groups:
+                if s.label == old_label:
+                    subset_group = s
+                    break
+        print(subset_group)
         if self._check_valid_subset_label(new_label):
-            sg.label = new_label
+            subset_group.label = new_label
 
     def _reparent_subsets(self, old_parent, new_parent=None):
         '''
