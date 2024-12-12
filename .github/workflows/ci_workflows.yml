@@ -76,7 +76,6 @@ jobs:
             os: ubuntu-latest
             python: '3.11'
             toxenv: py311-test-romandeps
-            toxposargs: --remote-data
             allow_failure: true
 
     steps:
