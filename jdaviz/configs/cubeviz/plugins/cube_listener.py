@@ -3,7 +3,6 @@ from contextlib import contextmanager
 import sys
 import os
 import time
-
 try:
     from strauss.sonification import Sonification
     from strauss.sources import Events
