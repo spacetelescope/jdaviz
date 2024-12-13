@@ -259,7 +259,7 @@ class TestParseImage:
         imviz_helper._apply_interactive_region('bqplot:rectangle',
                                                (982, 1088),
                                                (1008, 1077))  # Background
-        subsets = imviz_helper.plugins['Subset Tools']._obj.get_regions()
+        subsets = imviz_helper.plugins['Subset Tools'].get_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         # check that retrieved subsets-as-regions from subset plugin match what was loaded.
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)

@@ -122,7 +122,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         all_labels = [layer.layer.label for layer in self.viewer.state.layers]
         # Retrieved subsets as sky regions from Subset plugin, and ensure they
         # match what was loaded and that they are in sky coordinates.
-        subset_as_regions = self.imviz.plugins['Subset Tools']._obj.get_regions()
+        subset_as_regions = self.imviz.plugins['Subset Tools'].get_regions()
         assert sorted(subset_as_regions) == ['Subset 1', 'Subset 2']
         assert_allclose(subset_as_regions['Subset 1'].center.ra.deg, 337.519449)
         assert_allclose(subset_as_regions['Subset 2'].center.ra.deg, 337.518498)

@@ -42,7 +42,7 @@ class TestLoadRegions(BaseRegionHandler):
             [my_reg], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1', count=1)
-        assert len(self.cubeviz.plugins['Subset Tools']._obj.get_regions()) == 1
+        assert len(self.cubeviz.plugins['Subset Tools'].get_regions()) == 1
 
     def test_regions_sky_has_wcs(self):
         sky = SkyCoord(205.4397, 27.0035, unit='deg')

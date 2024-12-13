@@ -136,7 +136,7 @@ class TestSpecvizHelper:
                                  7800*self.spec.spectral_axis.unit))
         self.spec_app.plugins['Subset Tools'].import_region(subset, combination_mode='or')
 
-        spec_region = self.spec_app.plugins['Subset Tools']._obj.get_regions()
+        spec_region = self.spec_app.plugins['Subset Tools'].get_regions()
 
         assert len(spec_region['Subset 1'].subregions) == 2
 
@@ -149,7 +149,7 @@ class TestSpecvizHelper:
                                  7800*self.spec.spectral_axis.unit))
         self.spec_app.plugins['Subset Tools'].import_region(subset, combination_mode='or')
 
-        spec_region = self.spec_app.plugins['Subset Tools']._obj.get_regions()
+        spec_region = self.spec_app.plugins['Subset Tools'].get_regions()
 
         assert len(spec_region['Subset 1'].subregions) == 3
         # Assert correct values for test with 3 subregions
@@ -175,7 +175,7 @@ class TestSpecvizHelper:
                                  6*self.spec.spectral_axis.unit))
         self.spec_app.plugins['Subset Tools'].import_region(subset, combination_mode='or')
 
-        spec_region = self.spec_app.plugins['Subset Tools']._obj.get_regions()
+        spec_region = self.spec_app.plugins['Subset Tools'].get_regions()
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
                                  1, atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,
@@ -196,7 +196,7 @@ class TestSpecvizHelper:
         self.spec_app.plugins['Subset Tools'].import_region(
             subset, combination_mode=['new', 'andnot', 'and'])
 
-        spec_region = self.spec_app.plugins['Subset Tools']._obj.get_regions()
+        spec_region = self.spec_app.plugins['Subset Tools'].get_regions()
 
         assert len(spec_region['Subset 1'].subregions) == 1
         # Assert correct values for test with 3 subregions
@@ -215,7 +215,7 @@ class TestSpecvizHelper:
         self.spec_app.plugins['Subset Tools'].import_region(
             subset, combination_mode=['new', 'andnot', 'andnot'])
 
-        spec_region = self.spec_app.plugins['Subset Tools']._obj.get_regions()
+        spec_region = self.spec_app.plugins['Subset Tools'].get_regions()
 
         assert len(spec_region['Subset 1'].subregions) == 3
         # Assert correct values for test with 3 subregions
@@ -276,7 +276,7 @@ def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
                             7000 * spectrum1d.spectral_axis.unit)
     specviz_helper.plugins['Subset Tools'].import_region(subset)
 
-    subsets = specviz_helper.plugins['Subset Tools']._obj.get_regions()
+    subsets = specviz_helper.plugins['Subset Tools'].get_regions()
     reg = subsets.get('Subset 1')
 
     assert spectrum1d.spectral_axis.unit == reg.lower.unit
@@ -319,12 +319,12 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     specviz_helper.plugins['Subset Tools'].import_region(subset)
 
     # Retrieve the Subset
-    ss = specviz_helper.plugins['Subset Tools']._obj.get_regions(use_display_units=False)
+    ss = specviz_helper.plugins['Subset Tools'].get_regions(use_display_units=False)
     reg = ss.get('Subset 1')
     assert reg.lower.unit == u.Angstrom
     assert reg.upper.unit == u.Angstrom
 
-    ss = specviz_helper.plugins['Subset Tools']._obj.get_regions(use_display_units=True)
+    ss = specviz_helper.plugins['Subset Tools'].get_regions(use_display_units=True)
     reg = ss.get('Subset 1')
     assert reg.lower.unit == u.um
     assert reg.upper.unit == u.um
