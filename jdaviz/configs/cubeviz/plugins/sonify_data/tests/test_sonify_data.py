@@ -1,10 +1,13 @@
+import os
 import pytest
 from specutils import SpectralRegion
 import astropy.units as u
 
 pytest.importorskip("strauss")
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output.")
 def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
     sonify_plg = cubeviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
@@ -32,3 +35,8 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
     assert sonify_plg.flux_viewer.stream_active is False
     sonify_plg.vue_start_stop_stream()
     assert sonify_plg.flux_viewer.stream_active
+
+
+def test_sonify_data_does_not_break_other_things(cubeviz_helper, spectrum1d_cube_larger):
+    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    assert len(cubeviz_helper.app.data_collection) > 0

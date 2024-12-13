@@ -58,7 +58,7 @@ jobs:
   ci_cron_tests_stable_strauss:
     name: Python 3.12 with stable versions of dependencies and Strauss
     runs-on: ubuntu-latest
-    if: (CI == false && (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI'))))
+    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI')))
     steps:
     - name: Checkout code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
