@@ -82,6 +82,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
+        if self.disabled_msg:
+            raise ValueError('Unable to sonify cube')
+
         # Get index of selected device
         selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
 
