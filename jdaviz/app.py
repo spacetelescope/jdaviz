@@ -41,7 +41,7 @@ from jdaviz import __version__
 from jdaviz import style_registry
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                                SnackbarMessage, RemoveDataMessage,
+                                SnackbarMessage, RemoveDataMessage, SubsetRenameMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, ChangeRefDataMessage,
@@ -2043,7 +2043,7 @@ class Application(VuetifyTemplate, HubListener):
 
         return True
 
-    def _rename_subset(self, old_label, new_label, subset_group=None, check_if_valid):
+    def _rename_subset(self, old_label, new_label, subset_group=None, check_valid=True):
         # Change the label of a subset, making sure it propagates to as many places as it can
         # I don't think there's an easier way to get subset_group by label, it's just a tuple
         if subset_group is None:
@@ -2052,8 +2052,13 @@ class Application(VuetifyTemplate, HubListener):
                     subset_group = s
                     break
         print(subset_group)
-        if self._check_valid_subset_label(new_label):
+        if check_valid:
+            if self._check_valid_subset_label(new_label):
+                subset_group.label = new_label
+        else:
             subset_group.label = new_label
+
+        self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
 
     def _reparent_subsets(self, old_parent, new_parent=None):
         '''
