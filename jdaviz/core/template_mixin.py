@@ -49,7 +49,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ChangeRefDataMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
                                 PluginPlotAddedMessage, PluginPlotModifiedMessage,
-                                GlobalDisplayUnitChanged)
+                                GlobalDisplayUnitChanged, SubsetRenameMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -1988,6 +1988,8 @@ class SubsetSelect(SelectPluginComponent):
                            handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda msg: self._delete_subset(msg.subset))
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=lambda msg: self._rename_subset(msg))
 
         self._initialize_choices()
 
@@ -2072,6 +2074,28 @@ class SubsetSelect(SelectPluginComponent):
 
             if self._subset_selected_changed_callback is not None:
                 self._subset_selected_changed_callback()
+
+    def _rename_subset(self, msg):
+        # See if we're renaming the selected subset
+        update_selected = False
+        if self.selected == msg.old_label:
+            update_selected = True
+
+        # Find the subset in self.items and update the label
+        for subset in self.items:
+            if subset['label'] == msg.old_label:
+                subset['label'] = msg.new_label
+                break
+
+        # Update the selected label if needed
+        if update_selected:
+            self.selected = msg.new_label
+
+        # Force the traitlet to update. This is named different things depending on the plugin
+        for att in ("subset_items", "aperture_items", "bg_items"):
+            if hasattr(self.plugin, att):
+                self.plugin.send_state(att)
+
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():

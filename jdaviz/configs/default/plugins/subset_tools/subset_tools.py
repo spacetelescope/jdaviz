@@ -171,7 +171,7 @@ class SubsetTools(PluginTemplateMixin):
                   'recenter_dataset', 'recenter',
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
-                  'rename_subset']
+                  'rename_selected', 'rename_subset']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
@@ -851,19 +851,21 @@ class SubsetTools(PluginTemplateMixin):
     @cached_property
     def selected_subset_group(self):
         for subset_group in self.app.data_collection.subset_groups:
-            if subset_group.label == self.selected:
+            if subset_group.label == self.subset.selected:
                 return subset_group
 
-    def rename_selected(self, new_name):
-        if new_name in self.labels:
-            raise ValueError(f"{new_name} is already a named subset")
-        if new_name in ['Entire Spectrum', 'Surrounding']:
-            # these are names used in various subset dropdowns for other meanings
-            raise ValueError(f"{new_name} is a reserved name")
+    def rename_subset(self, old_label, new_label, subset_group=None):
+        self.app._rename_subset(old_label, new_label, subset_group)
+        self._sync_available_from_state()
+
+    def rename_selected(self, new_label):
+        #if not self.app._check_valid_subset_label(self.selected, new_name, warn_if_invalid=False):
 
         subset_group = self.selected_subset_group
         if subset_group is None:
             raise TypeError("current selection is not a subset")
+
+        self.rename_subset(self.subset.selected, new_label, subset_group=subset_group)
 
     def import_region(self, region, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
