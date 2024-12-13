@@ -779,6 +779,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         # we'll pop from kwargs now to avoid passing to the super.__init__, but need to
         # wait for everything else to be set before setting to the traitlet
         filters = kwargs.pop('filters', [])[:]  # [:] needed to force copy from kwarg default
+        self._apply_filters_to_manual_options = kwargs.pop('apply_filters_to_manual_options', False)
 
         super().__init__(*args, **kwargs)
         self._selected_previous = None
@@ -914,8 +915,19 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     @observe('filters')
     def _update_items(self, msg={}):
-        all_items = [self._to_item(opt) for opt in self.manual_options]
-        self.items = [item for item in all_items if self._is_valid_item(item)]
+        if self._apply_filters_to_manual_options:
+            all_items = self.items + [self._to_item(opt)
+                                      for opt in self.manual_options
+                                      if self._to_item(opt) not in self.items]
+            self.items = [item for item in all_items if self._is_valid_item(item)]
+        else:
+            filtered_items = [item
+                              for item in self.items
+                              if self._is_valid_item(item)]
+            manual_options = [self._to_item(opt)
+                              for opt in self.manual_options
+                              if self._to_item(opt) not in filtered_items]
+            self.items = filtered_items + manual_options
 
         try:
             self._apply_default_selection()

@@ -116,8 +116,8 @@ class SubsetTools(PluginTemplateMixin):
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    combination_items = List([]).tag(sync=True)
-    combination_selected = Any().tag(sync=True)
+    combination_mode_items = List([]).tag(sync=True)
+    combination_mode_selected = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -160,8 +160,8 @@ class SubsetTools(PluginTemplateMixin):
                                               multiselect=None)
 
         self.combination_mode = SelectPluginComponent(self,
-                                                      items='combination_items',
-                                                      selected='combination_selected',
+                                                      items='combination_mode_items',
+                                                      selected='combination_mode_selected',
                                                       manual_options=COMBO_OPTIONS)
 
     @property
@@ -1125,11 +1125,11 @@ class SubsetTools(PluginTemplateMixin):
         if return_bad_regions:
             return bad_regions
 
-    @observe('combination_selected')
-    def _combination_selected_updated(self, change):
+    @observe('combination_mode_selected')
+    def _combination_mode_selected_updated(self, change):
         self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
 
     def _update_combination_mode(self):
         if self.app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
-            self.combination_mode.selected = SUBSET_TO_PRETTY[
+            self.combination_mode_selected = SUBSET_TO_PRETTY[
                 self.app.session.edit_subset_mode.mode]

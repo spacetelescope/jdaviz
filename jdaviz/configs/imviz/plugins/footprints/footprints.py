@@ -143,7 +143,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.preset_obs = SelectPluginComponent(self,
                                                 items='preset_obs_items',
                                                 selected='preset_obs_selected',
-                                                manual_options=preset_obs_options)
+                                                manual_options=preset_obs_options,
+                                                apply_filter_to_manual_options=True)
 
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
@@ -513,6 +514,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     @observe('preset_obs_selected')
     def _update_preset_filters(self, event={}):
+        if not hasattr(self, 'preset'):
+            # during plugin init
+            return 
+
         def only_jwst(item):
             return item['label'] == 'From File...' or item.get('observatory') == 'JWST'
 

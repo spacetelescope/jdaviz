@@ -142,7 +142,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             return
 
         self.dq_layer.filter_is_child_of = self.science_layer_selected
-        self.dq_layer._update_layer_items()
+        self.dq_layer._update_items()
 
         # listen for changes on the image opacity, and update the
         # data quality layer opacity on changes to the science layer opacity
