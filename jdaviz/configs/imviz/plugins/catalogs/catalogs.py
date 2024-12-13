@@ -244,7 +244,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
-        if self.catalog_selected in ["SDSS", "Gaia", "From File..."]:
+        if self.catalog_selected in ["SDSS", "Gaia"]:
             # for single source convert table information to lists for zipping
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
                 x_coordinates = [x_coordinates]
@@ -256,12 +256,26 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                     row_id = row["objid"]
                 elif self.catalog_selected == "Gaia":
                     row_id = row["SOURCE_ID"]
-                elif self.catalog_selected == "From File...":
-                    row_id = len(self.table)
                 # Check if the row contains the required keys
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
                             'Object ID': row_id.astype(str),
+                            'id': len(self.table),
+                            'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
+                            'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
+                self.table.add_item(row_info)
+        elif self.catalog_selected in ["From File..."]:
+            # for single source convert table information to lists for zipping
+            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
+                x_coordinates = [x_coordinates]
+                y_coordinates = [y_coordinates]
+
+            for row, x_coord, y_coord in zip(self.app._catalog_source_table,
+                                             x_coordinates, y_coordinates):
+                # Check if the row contains the required keys
+                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
+                            'Declination (degrees)': row['sky_centroid'].dec.deg,
+                            'Object ID': str(row.get('label', 'N/A')),
                             'id': len(self.table),
                             'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
                             'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
