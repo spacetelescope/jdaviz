@@ -1,10 +1,11 @@
 import os
+
+import astropy.units as u
 import pytest
 from specutils import SpectralRegion
-import astropy.units as u
 
 pytest.importorskip("strauss")
-IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+IN_GITHUB_ACTIONS = os.environ.get("CI", "false") == "true"
 
 
 @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output.")
