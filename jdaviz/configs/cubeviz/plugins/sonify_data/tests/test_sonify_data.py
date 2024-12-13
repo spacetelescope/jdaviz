@@ -37,10 +37,10 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
     assert sonify_plg.flux_viewer.stream_active
 
 
+@pytest.mark.skipif(not IN_GITHUB_ACTIONS, reason="Plugin disabled only in CI")
 def test_sonify_data_disabled(cubeviz_helper, spectrum1d_cube_larger):
-    if IN_GITHUB_ACTIONS:
-        cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
-        sonify_plg = cubeviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
-        assert sonify_plg.disabled_msg
-        with pytest.raises(ValueError, match='Unable to sonify cube'):
-            sonify_plg.vue_sonify_cube()
+    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    sonify_plg = cubeviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
+    assert sonify_plg.disabled_msg
+    with pytest.raises(ValueError, match='Unable to sonify cube'):
+        sonify_plg.vue_sonify_cube()
