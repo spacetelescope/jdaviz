@@ -1,4 +1,4 @@
-4.0.1 (unreleased)
+4.0.1 (2024-12-13)
 ==================
 
 Bug Fixes
@@ -42,15 +42,6 @@ Imviz
 - Updates UI language in the orientation plugin to better match API. [#3276]
 
 - Update Roman L2 example files in example notebook. [#3346]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 4.0 (2024-10-17)
 ================
