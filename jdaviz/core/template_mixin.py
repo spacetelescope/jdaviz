@@ -1535,6 +1535,8 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_items())
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=self._on_subset_renamed)
 
         self.sort_by = sort_by
         self.app.state.add_callback('layer_icons', self._update_items)
@@ -1719,6 +1721,16 @@ class LayerSelect(SelectPluginComponent):
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_items({'source': 'subset_added'})
 
+    def _on_subset_renamed(self, msg):
+        print("Calling on_subset_renamed")
+        # Find the subset in self.items and update the label
+        for item in self.items:
+            if item['label'] == msg.old_label:
+                print(f"Updating {item}")
+                item['label'] = msg.new_label
+                break
+        self.send_state("items")
+
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
             return
@@ -1769,6 +1781,7 @@ class LayerSelect(SelectPluginComponent):
             self.only_wcs_layers
         ]
         unique_layer_labels = list(set(layer_labels))
+        print("Found layer lables: {unique_layer_labels}")
         layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
@@ -2095,10 +2108,12 @@ class SubsetSelect(SelectPluginComponent):
         if update_selected:
             self.selected = msg.new_label
 
+        # Force the traitlet to update.
+        self.send_state('items')
         # Force the traitlet to update. This is named different things depending on the plugin
-        for att in ("subset_items", "aperture_items", "bg_items"):
-            if hasattr(self.plugin, att):
-                self.plugin.send_state(att)
+        #for att in ("subset_items", "aperture_items", "bg_items"):
+        #    if hasattr(self.plugin, att):
+        #        self.plugin.send_state(att)
 
 
     def _update_has_subregions(self):
