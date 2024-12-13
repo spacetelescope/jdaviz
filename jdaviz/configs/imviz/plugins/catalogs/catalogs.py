@@ -242,8 +242,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         x_coordinates = np.squeeze(filtered_pair_pixel_table[0])
         y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
 
-        # NOTE: If performance becomes a problem, see
-        # https://docs.astropy.org/en/stable/table/index.html#performance-tips
         if self.catalog_selected in ["SDSS", "Gaia"]:
             # for single source convert table information to lists for zipping
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
@@ -264,6 +262,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
                             'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
                 self.table.add_item(row_info)
+        # NOTE: If performance becomes a problem, see
+        # https://docs.astropy.org/en/stable/table/index.html#performance-tips
         elif self.catalog_selected in ["From File..."]:
             # for single source convert table information to lists for zipping
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
