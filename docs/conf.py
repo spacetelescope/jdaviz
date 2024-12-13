@@ -298,8 +298,10 @@ intersphinx_mapping.update({  # noqa: F405
 })
 
 # Options for linkcheck
-linkcheck_ignore = ['https://github.com/spacetelescope/jdaviz/settings/branches']
-
+linkcheck_ignore = [
+    'https://github.com/spacetelescope/jdaviz/settings/branches',
+    'https://pypi.org/project/jdaviz/#files'
+]
 
 # -- Custom directive -------------------------------------------
 

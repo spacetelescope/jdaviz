@@ -342,7 +342,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # after the fancy indexing above, axis=1 corresponds to groups, and
             # operations over axis=0 corresponds to individual pixels:
             axis=0
-        ) << nddata.unit
+        )
+        if nddata.unit is not None:
+            collapsed <<= nddata.unit
 
         def expand(x):
             # put the resulting 1D profile (counts vs. groups) into the
