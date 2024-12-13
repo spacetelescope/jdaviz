@@ -81,8 +81,9 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
 
             y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis)  # noqa
 
-            self.y_min = np.nanmin(y_corners_new)
-            self.y_max = np.nanmax(y_corners_new)
+            with delay_callback(self, 'y_min', 'y_max'):
+                self.y_min = np.nanmin(y_corners_new)
+                self.y_max = np.nanmax(y_corners_new)
 
 
 class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
