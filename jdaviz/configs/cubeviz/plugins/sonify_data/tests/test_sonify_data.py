@@ -37,6 +37,8 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
     assert sonify_plg.flux_viewer.stream_active
 
 
-def test_sonify_data_does_not_break_other_things(cubeviz_helper, spectrum1d_cube_larger):
-    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
-    assert len(cubeviz_helper.app.data_collection) > 0
+def test_sonify_data_disabled(cubeviz_helper, spectrum1d_cube_larger):
+    if IN_GITHUB_ACTIONS:
+        cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+        sonify_plg = cubeviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
+        assert sonify_plg.disabled_msg
