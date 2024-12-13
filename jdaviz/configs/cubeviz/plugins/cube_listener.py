@@ -12,6 +12,7 @@ try:
 except ImportError:
     pass
 
+#  smallest fraction of the max audio amplitude that can be represented by a 16-bit signed integer
 MINVOL = 1/(2**15 - 1)
 
 

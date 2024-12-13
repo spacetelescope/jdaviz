@@ -13,12 +13,12 @@ __all__ = ['SonifyData']
 try:
     import strauss  # noqa
     import sounddevice as sd
-except ImportError as e:
+except ImportError:
     class Empty:
         pass
     sd = Empty()
     sd.default = Empty()
-    sd.default.device = [-1,-1]
+    sd.default.device = [-1, -1]
     _has_strauss = False
 else:
     _has_strauss = True
@@ -62,8 +62,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         if not self.has_strauss or sd.default.device[1] < 0:
             self.disabled_msg = ('To use Sonify Data, install strauss and restart Jdaviz. You '
                                  'can do this by running `pip install ".[strauss]"` in the command'
-                                 ' line and then launching Jdaviz. Currently, this plugin only works'
-                                 ' on devices with valid sound output.')
+                                 ' line and then launching Jdaviz. Currently, this plugin only'
+                                 ' works on devices with valid sound output.')
 
         else:
             devices, indexes = self.build_device_lists()
