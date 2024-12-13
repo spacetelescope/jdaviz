@@ -27,6 +27,7 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general)
+from jdaviz.core.custom_units_and_equivs import PIX2
 
 __all__ = ['ModelFitting']
 
@@ -986,6 +987,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             pixar_sr = spec.meta.get('_pixel_scale_factor', None)
             equivalencies = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
                                                             cube_wave=spec.spectral_axis)
+
+            pix2_in_flux = 'pix2' in spec.flux.unit.to_string()
+            pix2_in_sb = 'pix2' in sb_unit
+            # Handle various cases when PIX2 angle unit is present in the conversion
+            if pix2_in_flux and pix2_in_sb:
+                spec = spec.with_flux_unit(u.Unit(spec.flux.unit)*PIX2, equivalencies=equivalencies)  # noqa
+                spec = spec.with_flux_unit(u.Unit(sb_unit)*PIX2, equivalencies=equivalencies)
+            elif pix2_in_flux:
+                spec = spec.with_flux_unit(u.Unit(spec.flux.unit) * PIX2, equivalencies=equivalencies)  # noqa
+            elif pix2_in_sb:
+                spec = spec.with_flux_unit(u.Unit(spec.flux.unit) / PIX2, equivalencies=equivalencies)  # noqa
+
             spec = spec.with_flux_unit(sb_unit, equivalencies=equivalencies)
 
         snackbar_message = SnackbarMessage(

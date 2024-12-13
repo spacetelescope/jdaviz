@@ -15,6 +15,7 @@ from specutils.spectra import Spectrum1D
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
 from jdaviz.core.custom_units_and_equivs import PIX2
+from jdaviz.conftest import _create_spectrum1d_cube_with_fluxunit
 
 SPECTRUM_SIZE = 200  # length of spectrum
 
@@ -466,8 +467,12 @@ def test_fit_with_count_units(cubeviz_helper):
     assert model_flux.units == 'ct / pix2'
 
 
-def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
-    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
+@pytest.mark.parametrize("solid_angle_unit", [u.sr, PIX2])
+def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
+    cube = _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy / solid_angle_unit, shape=(10, 4, 5),
+                                                 with_uncerts=True)
+    cubeviz_helper.load_data(cube, data_label="test")
+    solid_angle_string = str(solid_angle_unit)
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     mf = cubeviz_helper.plugins['Model Fitting']
@@ -476,7 +481,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_
 
     mf.create_model_component("Const1D")
     # Check that the parameter is using the current units when initialized
-    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / sr'
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'MJy / {solid_angle_string}'
 
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
@@ -489,18 +494,18 @@ def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_
                                       [9.40e-05, 9.90e-05, 1.04e-04, 1.09e-04]])
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
-    assert model_flux.units == 'MJy / sr'
+    assert model_flux.units == f'MJy / {solid_angle_string}'
     assert np.allclose(model_flux.data[:, :, 1], expected_result_slice)
 
     # Switch back to Jy, see that the component didn't change but the output does
     uc.flux_unit = 'Jy'
-    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / sr'
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'MJy / {solid_angle_string}'
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit()
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
-    assert model_flux.units == 'Jy / sr'
+    assert model_flux.units == f'Jy / {solid_angle_string}'
     assert np.allclose(model_flux.data[:, :, 1], expected_result_slice * 1e6)
 
     # ensure conversions that require the spectral axis/translations are handled by the plugin
@@ -508,7 +513,13 @@ def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_
     uc.flux_unit = 'erg / (Angstrom s cm2)'
 
     mf.reestimate_model_parameters()
-    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'erg / (Angstrom s sr cm2)'
+
+    if solid_angle_string == 'sr':
+        expected_unit_string = f'erg / (Angstrom s {solid_angle_string} cm2)'
+    else:
+        expected_unit_string = f'erg / (Angstrom s cm2 {solid_angle_string})'
+
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == expected_unit_string
 
     # running this ensures specutils.Spectrum1D.with_flux_unit has Jdaviz custom equivalencies
     # for spectral axis conversions and scale factor translations
@@ -517,4 +528,4 @@ def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_
         mf.calculate_fit()
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
-    assert model_flux.units == 'erg / (Angstrom s sr cm2)'
+    assert model_flux.units == expected_unit_string
