@@ -181,7 +181,7 @@ class SubsetTools(PluginTemplateMixin):
         ----------
         region_type : str or None, optional
             Specifies the type of subsets to retrieve. Options are ``spatial``
-            to retrieve only spatial subsets, ``spectral``: Retrieve only
+            to retrieve only spatial subsets, ``spectral`` to retrieve only
             spectral subsets or ``None`` (default) to retrieve both spatial
             and spectral subsets, when relevent to the current configuration.
 
@@ -193,7 +193,7 @@ class SubsetTools(PluginTemplateMixin):
         use_display_units : bool, optional
             (For spectral subsets) If False (default), subsets are returned in
             the native data unit. If True, subsets are returned in the spectral
-            axis display unit set in the  Unit Conversion plugin.
+            axis display unit set in the Unit Conversion plugin.
 
         Returns
         -------
