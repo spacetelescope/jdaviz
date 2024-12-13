@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 from astropy import units as u
@@ -203,6 +205,25 @@ def test_numpy_cube(cubeviz_helper):
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
     assert flux.units == 'ct'
+
+
+@pytest.mark.remote_data
+def test_manga_cube(cubeviz_helper):
+    # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
+    # This also tests that spaxel is converted to pix**2
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        cubeviz_helper.load_data("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", cache=True)  # noqa
+
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    uc.spectral_y_type = "Surface Brightness"
+
+    se = cubeviz_helper.plugins['Spectral Extraction']
+    se.function = "Mean"
+    se.extract()
+    extracted_max = cubeviz_helper.get_data("Spectrum (mean)").max()
+    assert_allclose(extracted_max.value, 2.836957E-18, rtol=1E-5)
+    assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
 
 def test_invalid_data_types(cubeviz_helper):
