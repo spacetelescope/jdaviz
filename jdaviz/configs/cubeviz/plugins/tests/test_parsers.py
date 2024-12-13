@@ -209,10 +209,30 @@ def test_numpy_cube(cubeviz_helper):
     assert flux.units == 'ct / pix2'
 
 
-@pytest.mark.remote_data
-def test_manga_cube(cubeviz_helper):
-    # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
+def test_loading_with_mask(cubeviz_helper):
     # This also tests that spaxel is converted to pix**2
+    custom_spec = Spectrum1D(flux=[[[20, 1],[9, 1]],[[3, 1],[6, 5]]] * u.Unit("erg / Angstrom s cm**2 spaxel"),  # noqa
+                             spectral_axis = [1, 2]*u.AA,
+                             mask=[[[1, 0],[0, 0]],[[0, 0],[0, 0]]])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        cubeviz_helper.load_data(custom_spec)
+        #cubeviz_helper.load_data("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", cache=True)  # noqa
+
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    uc.spectral_y_type = "Surface Brightness"
+
+    se = cubeviz_helper.plugins['Spectral Extraction']
+    se.function = "Mean"
+    se.extract()
+    extracted = cubeviz_helper.get_data("Spectrum (mean)")
+    assert_allclose(extracted.flux.value, [6, 2])
+    assert extracted.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
+
+
+@pytest.mark.remote_data
+def test_manga_with_mask(cubeviz_helper):
+    # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
         cubeviz_helper.load_data("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", cache=True)  # noqa
@@ -224,7 +244,7 @@ def test_manga_cube(cubeviz_helper):
     se.function = "Mean"
     se.extract()
     extracted_max = cubeviz_helper.get_data("Spectrum (mean)").max()
-    assert_allclose(extracted_max.value, 2.836957E-18)
+    assert_allclose(extracted_max.value, 5.566169e-18)
     assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
 
