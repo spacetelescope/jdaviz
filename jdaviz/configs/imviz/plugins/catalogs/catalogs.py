@@ -45,7 +45,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             'Object ID': np.nan,
             'id': np.nan,
             'x_coord': np.nan,
-            'y_coord': np.nan}
+            'y_coord': np.nan
+            }
+
+    headers = ['Right Ascension (degrees)', 'Declination (degrees)',
+               'Object ID', 'x_coord', 'y_coord']
 
     @property
     def user_api(self):
@@ -70,11 +74,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self._marker_name = 'catalog_results'
 
         # initializing the headers in the table that is displayed in the UI
-        headers = ['Right Ascension (degrees)', 'Declination (degrees)',
-                   'Object ID', 'x_coord', 'y_coord']
-
-        self.table.headers_avail = headers
-        self.table.headers_visible = headers
+        self.table.headers_avail = self.headers
+        self.table.headers_visible = self.headers
         self.table._default_values_by_colname = self._default_table_values
         self.table._selected_rows_changed_callback = lambda msg: self.plot_selected_points()
         self.table.item_key = 'id'
@@ -88,13 +89,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     def _file_parser(path):
         try:
             table = QTable.read(path)
+            if not table.colnames:  # Ensure the file has columns
+                return "File contains no columns", {}
+
+            if 'sky_centroid' not in table.colnames:
+                return 'Table does not contain required sky_centroid column', {}
+
+            return '', {path: table}
         except Exception:
             return 'Could not parse file with astropy.table.QTable.read', {}
-
-        if 'sky_centroid' not in table.colnames:
-            return 'Table does not contain required sky_centroid column', {}
-
-        return '', {path: table}
 
     @with_spinner()
     def search(self, error_on_fail=False):
@@ -202,6 +205,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
             table = self.catalog.selected_obj
+            column_names = list(table.colnames)
+            self.table.headers_avail = self.headers + [
+                col for col in column_names if col not in self.headers
+                ]
+            self.table.headers_visible = self.headers
             self.app._catalog_source_table = table
             if len(table['sky_centroid']) > self.max_sources:
                 skycoord_table = table['sky_centroid'][:self.max_sources]
@@ -269,16 +277,28 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
                 x_coordinates = [x_coordinates]
                 y_coordinates = [y_coordinates]
+            for idx, (row, x_coord, y_coord) in enumerate(zip(self.app._catalog_source_table, x_coordinates, y_coordinates)):
+                sky_centroid = row['sky_centroid']
+                if isinstance(sky_centroid, SkyCoord):
+                    ra_deg = sky_centroid.ra.deg
+                    dec_deg = sky_centroid.dec.deg
+                else:
+                    # Handle scalar or list-like case
+                    ra_deg = sky_centroid.ra[idx].deg
+                    dec_deg = sky_centroid.dec[idx].deg
 
-            for row, x_coord, y_coord in zip(self.app._catalog_source_table,
-                                             x_coordinates, y_coordinates):
-                # Check if the row contains the required keys
-                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
-                            'Declination (degrees)': row['sky_centroid'].dec.deg,
-                            'Object ID': str(row.get('label', 'N/A')),
-                            'id': len(self.table),
-                            'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
-                            'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
+                row_info = {
+                    'Right Ascension (degrees)': ra_deg,
+                    'Declination (degrees)': dec_deg,
+                    'Object ID': str(row.get('label', 'N/A')),
+                    'id': idx,
+                    'x_coord': x_coord,
+                    'y_coord': y_coord,
+                }
+                for col in table.colnames:
+                    if col not in ['label', 'sky_centroid']:  # Skip already processed columns
+                        row_info[col] = row[col]
+
                 self.table.add_item(row_info)
 
         filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,

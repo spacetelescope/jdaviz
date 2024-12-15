@@ -4691,12 +4691,16 @@ class Table(PluginSubcomponent):
                 return ''
             elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
                 return ''
-
             elif isinstance(item, float):
                 return float_precision(column, item)
             elif isinstance(item, (list, tuple)):
                 return [float_precision(column, i) if isinstance(i, float) else i for i in item]
-
+            elif isinstance(item, np.ndarray):
+                return item.tolist()  # Convert arrays to lists
+            elif isinstance(item, u.Quantity):
+                return item.value.tolist() if item.size > 1 else item.value
+            elif isinstance(item, np.bool_):
+                return bool(item)
             return item
 
         if isinstance(item, QTable):
@@ -4706,6 +4710,9 @@ class Table(PluginSubcomponent):
         if isinstance(item, QTableRow):
             # Row does not have .items() implemented
             item = {k: v for k, v in zip(item.keys(), item.values())}
+
+        # Clean and JSON-safe processing
+        item = {k: json_safe(k, v) for k, v in item.items()}
 
         # save original sent values to the cached QTable object
         if self._qtable is None:

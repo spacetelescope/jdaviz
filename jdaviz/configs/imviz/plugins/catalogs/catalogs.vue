@@ -36,6 +36,16 @@
         See the <j-external-link link='https://astroquery.readthedocs.io/en/latest/gaia/gaia.html' linktext='astropy.gaia docs'></j-external-link> for details on the query defaults.
       </j-docs-link>
     </v-row>
+    
+    <v-row v-if="catalog_selected && catalog_selected.endsWith('.ecsv')">
+      <v-select
+        v-model="selected_columns"
+        :items="column_names"
+        label="Select Columns"
+        multiple
+        hint="Select columns to display in the table."
+      />
+    </v-row>
 
     <v-row>
       <v-text-field
