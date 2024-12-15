@@ -207,7 +207,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             table = self.catalog.selected_obj
             column_names = list(table.colnames)
             self.table.headers_avail = self.headers + [
-                col for col in column_names if col not in self.headers
+                col for col in column_names if col not in self.headers and col not in ["sky_centroid", "label"]
                 ]
             self.table.headers_visible = self.headers
             self.app._catalog_source_table = table
@@ -278,18 +278,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 x_coordinates = [x_coordinates]
                 y_coordinates = [y_coordinates]
             for idx, (row, x_coord, y_coord) in enumerate(zip(self.app._catalog_source_table, x_coordinates, y_coordinates)):
-                sky_centroid = row['sky_centroid']
-                if isinstance(sky_centroid, SkyCoord):
-                    ra_deg = sky_centroid.ra.deg
-                    dec_deg = sky_centroid.dec.deg
-                else:
-                    # Handle scalar or list-like case
-                    ra_deg = sky_centroid.ra[idx].deg
-                    dec_deg = sky_centroid.dec[idx].deg
-
                 row_info = {
-                    'Right Ascension (degrees)': ra_deg,
-                    'Declination (degrees)': dec_deg,
+                    'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
+                    'Declination (degrees)': row['sky_centroid'].dec.deg,
                     'Object ID': str(row.get('label', 'N/A')),
                     'id': idx,
                     'x_coord': x_coord,
@@ -384,6 +375,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     def clear(self, hide_only=True):
         # gets the current viewer
         viewer = self.viewer.selected_obj
+        # Clear the table before performing a new search
+        self.table.items = []
 
         if not hide_only and self._marker_name in self.app.data_collection.labels:
             # resetting values
