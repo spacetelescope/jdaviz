@@ -385,14 +385,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
     @property
-    def mask_non_science(self):
+    def inverted_mask_non_science(self):
         # Aperture masks begin by removing from consideration any pixel
         # set to NaN, which corresponds to a pixel on the "non-science" portions
         # of the detector. For JWST spectral cubes, these pixels are also marked in
-        # the DQ array with flag `513`.
-        return np.logical_not(
-            np.isnan(self.dataset.selected_obj.flux.value)
-        ).astype(float)
+        # the DQ array with flag `513`. Also respect the loaded mask, if it exists.
+        # This "inverted mask" is `True` where the data are included, `False` where excluded.
+        mask_non_science = np.isnan(self.dataset.selected_obj.flux.value)
+        if self.mask_cube is not None:
+            mask_non_science = np.logical_or(self.mask_cube.get_component('flux').data,
+                                             mask_non_science)
+        return np.logical_not(mask_non_science).astype(float)
 
     @property
     def aperture_weight_mask(self):
@@ -401,10 +404,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # wavelength, on the range [0, 1].
         if self.aperture.selected == self.aperture.default_text:
             # Entire Cube
-            return self.mask_non_science
+            return self.inverted_mask_non_science
 
         return (
-            self.mask_non_science *
+            self.inverted_mask_non_science *
             self.aperture.get_mask(
                 self.dataset.selected_obj,
                 self.aperture_method_selected,
@@ -420,7 +423,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return np.zeros_like(self.dataset.selected_obj.flux.value)
 
         return (
-            self.mask_non_science *
+            self.inverted_mask_non_science *
             self.background.get_mask(
                 self.dataset.selected_obj,
                 self.aperture_method_selected,
