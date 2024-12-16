@@ -43,6 +43,9 @@ API Changes
   ``metadata_plugin.meta`` instead, which will return a Python dictionary instead of
   list of tuples. [#3292]
 
+- Add ``get_regions`` method to subset plugin to retrieve spatial/spectral subsets as
+  ``regions`` or ``SpectralRegions``, deprecate ``get_interactive_regions`` and ``get_spectral_regions``. [#3340]
+
 Cubeviz
 ^^^^^^^
 

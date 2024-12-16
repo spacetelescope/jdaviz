@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from astropy.nddata import NDData
 import astropy.units as u
+from regions import CirclePixelRegion, PixCoord
 from specutils import SpectralRegion
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from glue.core.edit_subset_mode import ReplaceMode, OrMode
@@ -226,3 +227,91 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
 
     with pytest.raises(ValueError, match='\'test\' not one of'):
         plg.combination_mode = 'test'
+
+
+def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
+
+    """Test Subset Tools.get regions."""
+
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    # load one spectral region, which will become 'Subset 1'
+    plg.import_region(SpectralRegion(1 * u.um, 2 * u.um))
+
+    # load one spatial region, which will become 'Subset 2'
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    plg.import_region(spatial_reg, combination_mode='new')
+
+    # call get_regions, which by default for cubeviz will return both
+    # spatial and spectral regions
+    all_regions = plg.get_regions()
+    assert len(all_regions) == 2
+
+    # make sure filtering by subset label works
+    only_s1 = plg.get_regions(list_of_subset_labels=['Subset 1'])
+    assert len(only_s1) == 1
+    assert only_s1['Subset 1']
+
+    # now specify region type and check output
+    spatial_regions = plg.get_regions(region_type='spatial')
+    assert len(spatial_regions) == 1
+    assert spatial_regions['Subset 2']
+    spectral_regions = plg.get_regions(region_type='spectral')
+    assert len(spectral_regions) == 1
+    assert spectral_regions['Subset 1']
+
+    # now test a composite spatial subset, make sure it is retrieved
+    sr1 = CirclePixelRegion(center=PixCoord(x=2.5, y=2.5), radius=2)
+    sr2 = CirclePixelRegion(center=PixCoord(x=2.5, y=3), radius=2)
+    plg.import_region(sr1, combination_mode='new')
+    plg.import_region(sr2, combination_mode='and')
+    spatial_regions = plg.get_regions(region_type='spatial')
+    assert spatial_regions['Subset 3']
+
+    # test errors
+    with pytest.raises(ValueError, match='No spectral subests in imviz.'):
+        imviz_helper.plugins['Subset Tools'].get_regions('spectral')
+    with pytest.raises(ValueError, match="`region_type` must be 'spectral', 'spatial', or None for any."):  # noqa E501
+        plg.get_regions(region_type='fail')
+
+
+@pytest.mark.xfail(reason='Unskip once issue XXXX is resolved.')
+def test_get_regions_composite(cubeviz_helper, spectrum1d_cube):
+    """
+    If you apply a circular subset mask to a circular subset to make a
+    composite subset, and they aren't exactly aligned at the center to form a
+    circular annulus, obtaining the region through ``get_interactive_regions``
+    (now deprecated, replaced with get_regions in Subset Tools) fails.
+    However, you can retrieve the compound subset as a ``region`` with
+    ``app.get_subsets``. This test ensures that a region is returned through
+    both ``app.get_subsets`` and ``get_regions``.
+    """
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    # For some reason, Subset 2 disappears after the third subset is applied
+    # when loaded this way. Uncomment to replace _apply_interactive_region once
+    # JDAT-5014 is resolved
+    # plg.import_region(CirclePixelRegion(center=PixCoord(x=96.0, y=96.0),
+    #                                     radius=45.0), combination_mode='new')
+    # plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
+    #                                     radius=25.0), combination_mode='new')
+
+    # apply two circular subsets
+    cubeviz_helper._apply_interactive_region('bqplot:truecircle', (51, 51), (141, 141))
+    cubeviz_helper._apply_interactive_region('bqplot:truecircle', (70, 70), (120, 120))
+
+    # apply composite subset created from two existing circular subsets
+    subset_groups = cubeviz_helper.app.data_collection.subset_groups
+    new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
+    cubeviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+
+    # make sure Subset 3, the composite subset, is retrieved.
+    regions = plg.get_regions()
+    ss_labels = ['Subset 1', 'Subset 2', 'Subset 3']
+    assert np.all([regions[ss] for ss in ss_labels])
+
+    # make sure the same regions are returned by app.get_subsets
+    get_subsets = cubeviz_helper.app.get_subsets()
+    assert np.all([get_subsets[ss][0]['region'] == regions[ss] for ss in ss_labels])

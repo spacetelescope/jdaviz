@@ -19,8 +19,9 @@ from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
 
-import astropy.units as u
 from astropy.nddata import NDDataArray, CCDData, StdDevUncertainty
+import astropy.units as u
+from astropy.utils.decorators import deprecated
 from regions.core.core import Region
 from specutils import Spectrum1D, SpectralRegion
 
@@ -878,8 +879,10 @@ class ImageConfigHelper(ConfigHelper):
         if return_bad_regions:
             return bad_regions
 
+    @deprecated(since="4.1", alternative="subset_tools.get_regions")
     def get_interactive_regions(self):
-        """Return spatial regions that can be interacted with in the viewer.
+        """
+        Return spatial regions that can be interacted with in the viewer.
         This does not return masked regions added via :meth:`load_regions`.
 
         Unsupported region shapes will be skipped. When that happens,
