@@ -66,14 +66,6 @@
        <v-col>
          <plugin-action-button
             :results_isolated_to_plugin="true"
-            @click="do_clear"
-          >
-            Clear
-          </plugin-action-button>
-       </v-col>
-       <v-col>
-         <plugin-action-button
-            :results_isolated_to_plugin="true"
             @click="do_search"
             :spinner="spinner"
           >

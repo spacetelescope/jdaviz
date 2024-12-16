@@ -116,7 +116,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         """
         # calling clear in the case the user forgot after searching
-        self.clear()
+        self.clear_table()
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
@@ -372,11 +372,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # calls self.search() which handles all of the searching logic
         self.search()
 
-    def clear(self, hide_only=True):
+    def clear_table(self, hide_only=True):
         # gets the current viewer
         viewer = self.viewer.selected_obj
         # Clear the table before performing a new search
         self.table.items = []
+        self.table.selected_rows = []
+        self.table.selected_indices = []
 
         if not hide_only and self._marker_name in self.app.data_collection.labels:
             # resetting values
@@ -398,5 +400,5 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
                     lyr.visible = False
 
-    def vue_do_clear(self, *args, **kwargs):
-        self.clear()
+    def vue_do_clear_table(self, *args, **kwargs):
+        self.clear_table()
