@@ -390,7 +390,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Aperture masks begin by removing from consideration any pixel
         # set to NaN, which corresponds to a pixel on the "non-science" portions
         # of the detector. For JWST spectral cubes, these pixels are also marked in
-        # the DQ array with flag `513`. Also respect the loaded mask, if it exists
+        # the DQ array with flag `513`. Also respect the loaded mask, if it exists.
+        # This "inverted mask" is `True` where the data are included, `False` where excluded.
         mask_non_science = np.isnan(self.dataset.selected_obj.flux.value)
         if self.mask_cube is not None:
             mask_non_science = np.logical_or(self.mask_cube.get_component('flux').data,
