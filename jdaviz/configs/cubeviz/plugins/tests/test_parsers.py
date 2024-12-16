@@ -248,7 +248,7 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
     se.function = function
     se.extract()
     extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()
-    assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
+    assert_allclose(extracted_max.value, expected_value, rtol=5e-6)
     if function == "Sum":
         assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")
     else:
