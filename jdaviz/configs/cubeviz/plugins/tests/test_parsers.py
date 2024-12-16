@@ -217,7 +217,6 @@ def test_loading_with_mask(cubeviz_helper):
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
         cubeviz_helper.load_data(custom_spec)
-        #cubeviz_helper.load_data("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", cache=True)  # noqa
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
