@@ -392,7 +392,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # of the detector. For JWST spectral cubes, these pixels are also marked in
         # the DQ array with flag `513`. Also respect the loaded mask, if it exists
         nan_mask = np.isnan(self.dataset.selected_obj.flux.value)
-        return np.logical_not(np.logical_or(self.mask_cube.get_component('flux').data,
+        return np.logical_not(np.logical_or(self.mask_cube.get_component('flux').data.astype(bool),
                                             nan_mask)).astype(float)
 
     @property
