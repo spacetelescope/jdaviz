@@ -207,7 +207,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             table = self.catalog.selected_obj
             column_names = list(table.colnames)
             self.table.headers_avail = self.headers + [
-                col for col in column_names if col not in self.headers and col not in ["sky_centroid", "label"]
+                col for col in column_names if col not in self.headers and col not in ["sky_centroid", "label"]     # noqa:E501
                 ]
             self.table.headers_visible = self.headers
             self.app._catalog_source_table = table
@@ -277,7 +277,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
                 x_coordinates = [x_coordinates]
                 y_coordinates = [y_coordinates]
-            for idx, (row, x_coord, y_coord) in enumerate(zip(self.app._catalog_source_table, x_coordinates, y_coordinates)):
+            for idx, (row, x_coord, y_coord) in enumerate(zip(self.app._catalog_source_table, x_coordinates, y_coordinates)):  # noqa:E501
                 row_info = {
                     'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
                     'Declination (degrees)': row['sky_centroid'].dec.deg,
@@ -337,7 +337,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     def vue_zoom_in(self, *args, **kwargs):
         """This function will zoom into the image based on the selected points"""
         selected_rows = self.table.selected_rows
-
+        if not selected_rows:  # Check if no rows are selected
+            return
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
 
