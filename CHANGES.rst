@@ -4,9 +4,9 @@
 New Features
 ------------
 
-* New design for viewer legend and data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310]
+- New design for viewer legend and data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310]
 
-* Improve performance while importing multiple regions. [#3321]
+- Improve performance while importing multiple regions. [#3321]
 
 Cubeviz
 ^^^^^^^
@@ -14,9 +14,9 @@ Cubeviz
 Imviz
 ^^^^^
 
-* Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
+- Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
 
-* Add Roman WFI and CGI footprints to the Footprints plugin. [#3322]
+- Add Roman WFI and CGI footprints to the Footprints plugin. [#3322]
 
 - Catalog Search plugin now exposes a maximum sources limit for all catalogs and resolves an edge case
   when loading a catalog from a file that only contains one source. [#3337]
@@ -86,8 +86,11 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+
 - Added a short description of each plugin in the side menu, visible before the plugin is opened. Removes redundant descriptions above link
   out to documentation when plugin is opened. Enable search on plugin description in addition to title. [#3268]
+
+- Improved performance of ``app.get_subsets`` for the single-subset case. [#3363]
 
 4.0.1 (2024-12-16)
 ==================
