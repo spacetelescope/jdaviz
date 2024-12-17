@@ -960,8 +960,7 @@ class Application(VuetifyTemplate, HubListener):
             if isinstance(subset_name, str):
                 subsets = [subset for subset in subsets if subset.label == subset_name]
                 if subsets == []:
-                    all_labels = [sg.label for sg in dc.subset_groups]
-                    all_labels.sort()
+                    all_labels = sorted(sg.label for sg in dc.subset_groups)
                     raise ValueError(f"{subset_name} not in {all_labels}")
             else:
                 raise ValueError("subset_name must be a string.")
