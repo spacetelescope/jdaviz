@@ -959,6 +959,10 @@ class Application(VuetifyTemplate, HubListener):
         if subset_name is not None:
             if isinstance(subset_name, str):
                 subsets = [subset for subset in subsets if subset.label == subset_name]
+                if subsets == []:
+                    all_labels = [sg.label for sg in dc.subset_groups]
+                    all_labels.sort()
+                    raise ValueError(f"{subset_name} not in {all_labels}")
             else:
                 raise ValueError("subset_name must be a string.")
 
@@ -1027,10 +1031,8 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     all_subsets[label] = subset_region
 
-        if subset_name and subset_name in all_subsets:
+        if subset_name:
             return all_subsets[subset_name]
-        elif subset_name:
-            raise ValueError(f"{subset_name} not in {all_subsets.keys()}")
         else:
             return all_subsets
 
