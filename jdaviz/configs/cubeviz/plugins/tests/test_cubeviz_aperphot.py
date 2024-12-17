@@ -274,6 +274,7 @@ def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,
             assert_quantity_allclose(orig_converted, new, rtol=1e-03)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
 @pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
