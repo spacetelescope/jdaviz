@@ -106,7 +106,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         if self.stream and not self.stream.closed and self.stream_active:
             self.stream.stop()
 
-    def update_cube(self, x, y):
+    def update_audified_cube(self, x, y):
         if (not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or
                 not hasattr(self.audified_cube, 'sigcube')):
             return

@@ -170,7 +170,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
             self._mark.visible = True
 
             self.viewer.start_stream()
-            self.viewer.update_cube(x, y)
+            self.viewer.update_audified_cube(x, y)
 
             self._profile_viewer.set_limits(
                 y_min=np.nanmin(y_values) * 0.8, y_max=np.nanmax(y_values) * 1.2)

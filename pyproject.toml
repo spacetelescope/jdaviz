@@ -84,7 +84,6 @@ roman = [
 ]
 strauss = [
     "strauss",
-    "sounddevice"
 ]
 
 [build-system]
