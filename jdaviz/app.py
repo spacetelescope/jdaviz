@@ -956,7 +956,7 @@ class Application(VuetifyTemplate, HubListener):
         all_subsets = {}
 
         # If we only want one subset, no need to loop through them all
-        if subset_name is not None:
+        if subset_name not in (None, ""):
             if isinstance(subset_name, str):
                 subsets = [subset for subset in subsets if subset.label == subset_name]
                 if subsets == []:
