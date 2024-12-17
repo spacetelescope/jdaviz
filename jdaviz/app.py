@@ -955,9 +955,17 @@ class Application(VuetifyTemplate, HubListener):
 
         all_subsets = {}
 
+        # If we only want one subset, no need to loop through them all
+        if subset_name is not None:
+            if isinstance(subset_name, str):
+                subset_name = subset_name.lower()
+                subsets = [subset for subset in subsets if subset.label.lower() == subset_name]
+            else:
+                raise ValueError("subset_name must be a string.")
+
         for subset in subsets:
 
-            label = subset.label
+            label = subset.label.lower()
 
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
@@ -1020,13 +1028,10 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     all_subsets[label] = subset_region
 
-        # can this be done at the top to avoid traversing all subsets if only
-        # one is requested?
-        all_subset_names = [subset.label for subset in dc.subset_groups]
-        if subset_name and subset_name in all_subset_names:
+        if subset_name and subset_name in all_subsets:
             return all_subsets[subset_name]
         elif subset_name:
-            raise ValueError(f"{subset_name} not in {all_subset_names}")
+            raise ValueError(f"{subset_name} not in {all_subsets.keys()}")
         else:
             return all_subsets
 
