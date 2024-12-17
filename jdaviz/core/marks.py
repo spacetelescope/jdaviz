@@ -157,10 +157,9 @@ class PluginMark:
             return
         if self.viewer.__class__.__name__ in ['SpecvizProfileView',
                                               'CubevizProfileView',
-                                              'MosvizProfileView']:
+                                              'MosvizProfileView',
+                                              'MosvizProfile2DView']:
             axis_map = {'spectral': 'x', 'spectral_y': 'y'}
-        elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
-            axis_map = {'spectral': 'x'}
         else:
             return
         axis = axis_map.get(msg.axis, None)

@@ -1113,8 +1113,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
+        masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum(),
                                                    self.spectral_subset)
+        if masked_spectrum.flux.unit.to_string != self.app._get_display_unit('flux'):
+            equivalencies = u.spectral_density(masked_spectrum.spectral_axis)
+            masked_spectrum = masked_spectrum.with_flux_unit(self.app._get_display_unit('flux'),
+                                                             equivalencies=equivalencies)
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 masked_spectrum,
