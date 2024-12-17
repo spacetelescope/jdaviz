@@ -958,9 +958,7 @@ class Application(VuetifyTemplate, HubListener):
         # If we only want one subset, no need to loop through them all
         if subset_name is not None:
             if isinstance(subset_name, str):
-                print(subsets)
                 subsets = [subset for subset in subsets if subset.label == subset_name]
-                print(f"Trimmed to {subsets}")
             else:
                 raise ValueError("subset_name must be a string.")
 
