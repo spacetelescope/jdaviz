@@ -958,14 +958,15 @@ class Application(VuetifyTemplate, HubListener):
         # If we only want one subset, no need to loop through them all
         if subset_name is not None:
             if isinstance(subset_name, str):
-                subset_name = subset_name.lower()
-                subsets = [subset for subset in subsets if subset.label.lower() == subset_name]
+                print(subsets)
+                subsets = [subset for subset in subsets if subset.label == subset_name]
+                print(f"Trimmed to {subsets}")
             else:
                 raise ValueError("subset_name must be a string.")
 
         for subset in subsets:
 
-            label = subset.label.lower()
+            label = subset.label
 
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
