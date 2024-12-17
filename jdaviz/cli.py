@@ -62,7 +62,6 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     # easily accessed e.g. in the file load dialog.
     os.environ['JDAVIZ_START_DIR'] = os.path.abspath('.')
 
-    from solara.__main__ import cli
     from jdaviz import solara
     solara.config = layout.capitalize()
     solara.data_list = file_list
@@ -71,16 +70,29 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     solara.theme = theme
     solara.jdaviz_verbosity = verbosity
     solara.jdaviz_history_verbosity = history_verbosity
-    args = []
-    if hotreload:
-        args += ['--auto-restart']
+    run_solara(host=host, port=port, theme=theme, browser=browser, production=not hotreload)
+
+
+def run_solara(host, port, theme, browser, production: bool = True):
+    os.environ["SOLARA_APP"] = "jdaviz.solara"
+    import solara.server.starlette
+    import solara.server.settings
+    solara.server.settings.theme.variant = theme
+    solara.server.settings.theme.loader = "plain"
+    solara.server.settings.main.mode = "production" if production else "development"
+
+    server = solara.server.starlette.ServerStarlette(host="localhost", port=port)
+    print(f"Starting server on {server.base_url}")
+    server.serve_threaded()
+    server.wait_until_serving()
+    if browser == "qt":
+        from . import qt
+        qt.run_qt(server.base_url)
     else:
-        args += ['--production']
-    cli(['run', 'jdaviz.solara',
-         '--theme-loader', 'plain',
-         '--theme-variant', theme,
-         '--host', host,
-         '--port', port] + args)
+        import webbrowser
+        controller = webbrowser.get(None if browser == 'default' else browser)
+        controller.open(server.base_url)
+        server.join()
 
 
 def _main(config=None):
@@ -100,7 +112,7 @@ def _main(config=None):
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
     parser.add_argument('--browser', type=str, default='default',
-                        help='Browser to use for application.')
+                        help='Browser to use for application (use qt for embedded Qt browser).')
     parser.add_argument('--theme', choices=['light', 'dark'], default='light',
                         help='Theme to use for application.')
     parser.add_argument('--verbosity', choices=_verbosity_levels, default='info',
