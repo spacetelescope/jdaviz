@@ -979,7 +979,7 @@ class Application(VuetifyTemplate, HubListener):
 
         for subset in subsets:
 
-            label = subset.label
+            label = subset.label.lower()
 
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
@@ -2030,10 +2030,11 @@ class Application(VuetifyTemplate, HubListener):
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
+        print(f"Reserved labels:\n{self._reserved_labels}")
         if subset_name.lower() in self._reserved_labels:
             if warn_if_invalid:
-                warnings.warn(f"Can not rename subset to name of another existing subset"
-                               " or data item: ({subset_name}).")
+                warnings.warn("Cannot rename subset to name of an existing subset"
+                              f" or data item: ({subset_name}).")
             return False
 
         elif not subset_name.replace(" ", "").isalnum():
@@ -2054,6 +2055,7 @@ class Application(VuetifyTemplate, HubListener):
         print(subset_group)
         if check_valid:
             if self._check_valid_subset_label(new_label):
+                print("Checking validity")
                 subset_group.label = new_label
         else:
             subset_group.label = new_label

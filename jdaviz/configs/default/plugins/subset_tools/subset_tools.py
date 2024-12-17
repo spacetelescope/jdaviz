@@ -859,8 +859,6 @@ class SubsetTools(PluginTemplateMixin):
         self._sync_available_from_state()
 
     def rename_selected(self, new_label):
-        #if not self.app._check_valid_subset_label(self.selected, new_name, warn_if_invalid=False):
-
         subset_group = self.selected_subset_group
         if subset_group is None:
             raise TypeError("current selection is not a subset")

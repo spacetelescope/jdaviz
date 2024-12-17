@@ -1755,7 +1755,6 @@ class LayerSelect(SelectPluginComponent):
             self.only_wcs_layers
         ]
         unique_layer_labels = list(set(layer_labels))
-        print("Found layer lables: {unique_layer_labels}")
         layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
@@ -2084,11 +2083,6 @@ class SubsetSelect(SelectPluginComponent):
 
         # Force the traitlet to update.
         self.send_state('items')
-        # Force the traitlet to update. This is named different things depending on the plugin
-        #for att in ("subset_items", "aperture_items", "bg_items"):
-        #    if hasattr(self.plugin, att):
-        #        self.plugin.send_state(att)
-
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():

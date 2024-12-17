@@ -315,3 +315,24 @@ def test_get_regions_composite(cubeviz_helper, spectrum1d_cube):
     # make sure the same regions are returned by app.get_subsets
     get_subsets = cubeviz_helper.app.get_subsets()
     assert np.all([get_subsets[ss][0]['region'] == regions[ss] for ss in ss_labels])
+
+
+def test_check_valid_subset_label(imviz_helper):
+
+    # imviz instance with some data
+    data = NDData(np.ones((50, 50)) * u.nJy)
+    imviz_helper.load_data(data)
+
+    st = imviz_helper.plugins["Subset Tools"]
+
+    # apply three subsets, with their default names of `Subset 1`, `Subset 2`, and `Subset 3`
+    st.import_region(CircularROI(20, 20, 10))
+    st.subset = "Create New"
+    st.import_region(CircularROI(25, 25, 10))
+    st.subset = "Create New"
+    st.import_region(CircularROI(30, 30, 10))
+
+    # we should not be able to rename or add a subset named 'subset 1', since 'Subset 1'
+    # exists. make sure this warns and returns accordingly.
+    with pytest.warns(Warning, match="Cannot rename subset to name of an existing subset"):
+        st.rename_selected("subset 1")
