@@ -22,6 +22,7 @@ from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general)
+from jdaviz.utils import flux_conversion
 
 __all__ = ['CoordsInfo']
 
@@ -402,8 +403,21 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 coords_status = False
 
         elif isinstance(viewer, MosvizProfile2DView):
-            self._dict['spectral_axis'] = self._dict['axes_x']
-            self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
+            if self.app._get_display_unit('spectral') != self._dict['axes_x:unit']:
+                self._dict['spectral_axis:unit'] = self.app._get_display_unit('spectral')
+                try:
+                    wave, pixel = image.coords.pixel_to_world(x, y)
+                    if (wave is not None and
+                       wave.unit.to_string() != self.app._get_display_unit('spectral')):
+                        equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
+                        wave = wave.to(self.app._get_display_unit('spectral'),
+                                       equivalencies=equivalencies)
+                        self._dict['spectral_axis'] = wave.value
+                except Exception:  # WCS might not be valid  # pragma: no cover
+                    coords_status = False
+                else:
+                    self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
+                    self._dict['spectral_axis'] = self._dict['axes_x']
             self._dict['value'] = self._dict['axes_y']
             self._dict['value:unit'] = self._dict['axes_y:unit']
             coords_status = False
@@ -433,6 +447,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
             try:
                 wave, pixel = image.coords.pixel_to_world(x, y)
+                if (wave is not None and
+                   wave.unit.to_string() != self.app._get_display_unit('spectral')):
+                    equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
+                    wave = wave.to(self.app._get_display_unit('spectral'),
+                                   equivalencies=equivalencies)
             except Exception:  # WCS might not be valid  # pragma: no cover
                 coords_status = False
             else:
@@ -489,6 +508,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_data = associated_dq_layer.layer.get_data(dq_attribute)
                     dq_value = dq_data[int(round(y)), int(round(x))]
                 unit = u.Unit(image.get_component(attribute).units)
+
+                if unit != self.app._get_display_unit(attribute):
+                    equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
+                    value = flux_conversion(value, unit, self.app._get_display_unit(attribute),
+                                            eqv=equivalencies)
+                    unit = self.app._get_display_unit(attribute)
+
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
                 arr = image.get_component(attribute).data
                 unit = u.Unit(image.get_component(attribute).units)
