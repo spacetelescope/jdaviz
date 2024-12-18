@@ -48,10 +48,10 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Hide axes by default
         self.state.show_axes = False
 
-        self.audified_cube = None
+        self.sonified_cube = None
         self.stream = None
-        self.audification_wl_bounds = None
-        self.audification_wl_unit = None
+        self.sonification_wl_bounds = None
+        self.sonification_wl_unit = None
         self.volume_level = None
         self.stream_active = True
 
@@ -106,31 +106,31 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         if self.stream and not self.stream.closed and self.stream_active:
             self.stream.stop()
 
-    def update_audified_cube(self, x, y):
-        if (not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or
-                not hasattr(self.audified_cube, 'sigcube')):
+    def update_sonified_cube(self, x, y):
+        if (not self.sonified_cube or not hasattr(self.sonified_cube, 'newsig') or
+                not hasattr(self.sonified_cube, 'sigcube')):
             return
-        self.audified_cube.newsig = self.audified_cube.sigcube[x, y, :]
-        self.audified_cube.cbuff = True
+        self.sonified_cube.newsig = self.sonified_cube.sigcube[x, y, :]
+        self.sonified_cube.cbuff = True
 
     def update_listener_wls(self, w1, w2, wunit):
-        self.audification_wl_bounds = (w1, w2)
-        self.audification_wl_unit = wunit
+        self.sonification_wl_bounds = (w1, w2)
+        self.sonification_wl_unit = wunit
 
     def update_sound_device(self, device_index):
-        if not self.audified_cube:
+        if not self.sonified_cube:
             return
 
         self.stop_stream()
         self.stream = sd.OutputStream(samplerate=self.sample_rate, blocksize=self.buffer_size,
                                       device=device_index, channels=1, dtype='int16',
-                                      latency='low', callback=self.audified_cube.player_callback)
+                                      latency='low', callback=self.sonified_cube.player_callback)
 
     def update_volume_level(self, level):
-        if not self.audified_cube:
+        if not self.sonified_cube:
             return
         self.volume_level = level
-        self.audified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
+        self.sonified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln):
@@ -140,9 +140,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
 
-        if self.audification_wl_bounds:
-            wl_unit = getattr(u, self.audification_wl_unit)
-            si_wl_bounds = (self.audification_wl_bounds * wl_unit).to('m')
+        if self.sonification_wl_bounds:
+            wl_unit = getattr(u, self.sonification_wl_unit)
+            si_wl_bounds = (self.sonification_wl_bounds * wl_unit).to('m')
             wdx = np.logical_and(wlens >= si_wl_bounds[0].value,
                                  wlens <= si_wl_bounds[1].value)
             wlens = wlens[wdx]
@@ -162,20 +162,20 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # and re-clip
         clipped_arr = np.clip(clipped_arr, 0, np.inf)
 
-        self.audified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
+        self.sonified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
                                               samplerate=sample_rate, buffsize=buffer_size,
-                                              wl_bounds=self.audification_wl_bounds,
-                                              wl_unit=self.audification_wl_unit,
+                                              wl_bounds=self.sonification_wl_bounds,
+                                              wl_unit=self.sonification_wl_unit,
                                               audfrqmin=audfrqmin, audfrqmax=audfrqmax,
                                               eln=eln, vol=self.volume_level)
-        self.audified_cube.audify_cube()
-        self.audified_cube.sigcube = (
-                self.audified_cube.sigcube * pow(whitelight / whitelight.max(),
+        self.sonified_cube.sonify_cube()
+        self.sonified_cube.sigcube = (
+                self.sonified_cube.sigcube * pow(whitelight / whitelight.max(),
                                                  ssvidx)).astype('int16')
         self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, device=device,
                                       channels=1, dtype='int16', latency='low',
-                                      callback=self.audified_cube.player_callback)
-        self.audified_cube.cbuff = True
+                                      callback=self.sonified_cube.player_callback)
+        self.sonified_cube.cbuff = True
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")

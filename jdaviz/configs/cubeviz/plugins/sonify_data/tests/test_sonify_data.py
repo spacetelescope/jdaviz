@@ -16,20 +16,20 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
 
     # Create sonified data cube
     sonify_plg.vue_sonify_cube()
-    assert sonify_plg.flux_viewer.audification_wl_bounds is None
-    assert sonify_plg.flux_viewer.audified_cube is not None
+    assert sonify_plg.flux_viewer.sonification_wl_bounds is None
+    assert sonify_plg.flux_viewer.sonified_cube is not None
 
     # Test changing volume
     sonify_plg.volume = 90
     assert sonify_plg.flux_viewer.volume_level == 90
 
-    # Test using spectral subset for setting audification bounds
+    # Test using spectral subset for setting sonification bounds
     spec_region = SpectralRegion(4.62360028e-07*u.m, 4.62920561e-07*u.m)
     subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     subset_plugin.import_region(spec_region)
     sonify_plg.spectral_subset_selected = 'Subset 1'
     sonify_plg.vue_sonify_cube()
-    assert sonify_plg.flux_viewer.audification_wl_bounds == (4.62360028e-07, 4.62920561e-07)
+    assert sonify_plg.flux_viewer.sonification_wl_bounds == (4.62360028e-07, 4.62920561e-07)
 
     # Stop/start stream
     sonify_plg.vue_start_stop_stream()

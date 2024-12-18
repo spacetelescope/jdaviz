@@ -27,7 +27,7 @@ def suppress_stderr():
             sys.stderr = old_stderr
 
 
-def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300,
+def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300,
                     eln=False):
     notes = [["A2"]]
     score = Score(notes, duration)
@@ -109,7 +109,7 @@ class CubeListenerData:
         wsrt = np.sort([w1, w2])
         self.wl_bounds = tuple(wsrt)
 
-    def audify_cube(self):
+    def sonify_cube(self):
         """
         Iterate through the cube, convert each spectrum to a signal, and store
         in class attributes
@@ -121,7 +121,7 @@ class CubeListenerData:
             for j in range(self.cube.shape[1]):
                 with suppress_stderr():
                     if self.cube[i, j, lo2hi].any():
-                        sig = audify_spectrum(self.cube[i, j, lo2hi], self.dur,
+                        sig = sonify_spectrum(self.cube[i, j, lo2hi], self.dur,
                                               srate=self.srate,
                                               fmin=self.audfrqmin,
                                               fmax=self.audfrqmax,
