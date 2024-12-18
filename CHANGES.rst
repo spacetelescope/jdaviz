@@ -72,6 +72,9 @@ Bug Fixes
 
 - Fixed broken histogram pan/zoom in Plot Options plugin. [#3361]
 
+- Fixed bug with Plot Options select_all when data is float32. [#3366]
+
+
 Cubeviz
 ^^^^^^^
 - Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]

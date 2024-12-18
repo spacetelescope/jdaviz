@@ -4413,7 +4413,10 @@ class PlotOptionsSyncState(BasePluginComponent):
             # unmixing something in mixed state and results in more consistent and predictable
             # behavior
             self._processing_change_from_glue = True
-            self.value = current_glue_values[0]
+            first_value = current_glue_values[0]
+            if isinstance(first_value, np.float32):
+                first_value = first_value.astype(np.float64)
+            self.value = first_value
             self._processing_change_from_glue = False
         self.sync = {**self.sync,
                      'mixed': mixed}
