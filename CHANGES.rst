@@ -8,6 +8,8 @@ New Features
 
 - Improve performance while importing multiple regions. [#3321]
 
+- Added API for renaming subsets to Subset Tools plugin. [#3356]
+
 Cubeviz
 ^^^^^^^
 

@@ -49,7 +49,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ChangeRefDataMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
                                 PluginPlotAddedMessage, PluginPlotModifiedMessage,
-                                GlobalDisplayUnitChanged)
+                                GlobalDisplayUnitChanged, SubsetRenameMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -700,6 +700,10 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
             new_order = [handler] + [other for other in existing_callbacks if other != handler]
             self._plugin._trait_notifiers[traitlet_name]['change'] = new_order
 
+    def send_state(self, traitlet_name):
+        # redirect send_state through the plugin
+        self._plugin.send_state(self._plugin_traitlets.get(traitlet_name))
+
     @property
     def plugin(self):
         """
@@ -789,6 +793,11 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         if default_text is not None and default_text not in manual_options:
             manual_options = [default_text] + manual_options
         self._manual_options = manual_options
+
+        # Reserve the default and manual options strings so people can't use them as Subset labels
+        self._plugin.app._reserved_labels.add(str(default_text).lower())
+        self._plugin.app._reserved_labels.update([x["label"].lower() if isinstance(x, dict) else
+                                                  x.lower() for x in manual_options])
 
         self.items = [{"label": opt} if isinstance(opt, str) else opt for opt in manual_options]
         # set default values for traitlets
@@ -1500,6 +1509,8 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._update_layer_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_layer_items())
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=self._on_subset_renamed)
 
         self.sort_by = sort_by
         self.app.state.add_callback('layer_icons', self._update_layer_items)
@@ -1683,6 +1694,16 @@ class LayerSelect(SelectPluginComponent):
                     layer.add_callback('visible', self._update_layer_items)
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_layer_items({'source': 'subset_added'})
+
+    def _on_subset_renamed(self, msg):
+        print("Calling on_subset_renamed")
+        # Find the subset in self.items and update the label
+        for item in self.items:
+            if item['label'] == msg.old_label:
+                print(f"Updating {item}")
+                item['label'] = msg.new_label
+                break
+        self.send_state("items")
 
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
@@ -1957,6 +1978,8 @@ class SubsetSelect(SelectPluginComponent):
                            handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda msg: self._delete_subset(msg.subset))
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=lambda msg: self._rename_subset(msg))
 
         self._initialize_choices()
 
@@ -2041,6 +2064,25 @@ class SubsetSelect(SelectPluginComponent):
 
             if self._subset_selected_changed_callback is not None:
                 self._subset_selected_changed_callback()
+
+    def _rename_subset(self, msg):
+        # See if we're renaming the selected subset
+        update_selected = False
+        if self.selected == msg.old_label:
+            update_selected = True
+
+        # Find the subset in self.items and update the label
+        for subset in self.items:
+            if subset['label'] == msg.old_label:
+                subset['label'] = msg.new_label
+                break
+
+        # Update the selected label if needed
+        if update_selected:
+            self.selected = msg.new_label
+
+        # Force the traitlet to update.
+        self.send_state('items')
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():

@@ -4,6 +4,7 @@ import numpy as np
 
 from astropy.time import Time
 import astropy.units as u
+from functools import cached_property
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
@@ -166,8 +167,11 @@ class SubsetTools(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        expose = ['subset', 'combination_mode', 'recenter_dataset', 'recenter',
-                  'get_center', 'set_center', 'import_region', 'get_regions']
+        expose = ['subset', 'combination_mode',
+                  'recenter_dataset', 'recenter',
+                  'get_center', 'set_center',
+                  'import_region', 'get_regions',
+                  'rename_selected', 'rename_subset']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
@@ -300,8 +304,13 @@ class SubsetTools(PluginTemplateMixin):
                 self.show_region_info = True
         self._update_combination_mode()
 
-    def _on_subset_update(self, *args):
-        self._sync_selected_from_state(*args)
+    def _on_subset_update(self, msg):
+        '''
+        if msg.attribute == "label":
+            print("updating label")
+            print(msg.subset.label)
+        '''
+        self._sync_selected_from_state()
         if 'Create New' in self.subset_selected:
             return
         subsets_avail = [sg.label for sg in self.app.data_collection.subset_groups]
@@ -309,7 +318,7 @@ class SubsetTools(PluginTemplateMixin):
             # subset selection should re-default after processing the deleted subset,
             # for now we can safely ignore
             return
-        self._get_subset_definition(*args)
+        self._get_subset_definition()
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
         self.subset._update_subset(subset_to_update, attribute="type")
 
@@ -838,6 +847,23 @@ class SubsetTools(PluginTemplateMixin):
             if self.subset_definitions[index][i]['name'] == name:
                 self.subset_definitions[index][i]['value'] = new_value
                 break
+
+    @cached_property
+    def selected_subset_group(self):
+        for subset_group in self.app.data_collection.subset_groups:
+            if subset_group.label == self.subset.selected:
+                return subset_group
+
+    def rename_subset(self, old_label, new_label, subset_group=None):
+        self.app._rename_subset(old_label, new_label, subset_group)
+        self._sync_available_from_state()
+
+    def rename_selected(self, new_label):
+        subset_group = self.selected_subset_group
+        if subset_group is None:
+            raise TypeError("current selection is not a subset")
+
+        self.rename_subset(self.subset.selected, new_label, subset_group=subset_group)
 
     def import_region(self, region, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
