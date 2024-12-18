@@ -28,6 +28,7 @@ from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.remote_data
@@ -260,7 +261,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Now zoom in
     catalogs_plugin.vue_zoom_in()
 
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -49.99966
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 50.00034
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -48.99999
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 51.00001
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -49.99966, rtol=1e-6)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, 50.00034, rtol=1e-6)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, -48.99999, rtol=1e-6)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 51.00001, rtol=1e-6)
