@@ -332,7 +332,7 @@ def test_check_valid_subset_label(imviz_helper):
     st.subset = "Create New"
     st.import_region(CircularROI(30, 30, 10))
 
-    # we should not be able to rename or add a subset named 'subset 1', since 'Subset 1'
-    # exists. make sure this warns and returns accordingly.
+    # we should not be able to rename or add a subset named 'Subset 1'.
+    # Make sure this warns and returns accordingly.
     with pytest.warns(Warning, match="Cannot rename subset to name of an existing subset"):
-        st.rename_selected("subset 1")
+        st.rename_selected("Subset 1")

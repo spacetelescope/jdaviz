@@ -468,11 +468,13 @@ class Application(VuetifyTemplate, HubListener):
 
     def _on_subset_delete_message(self, msg):
         self._remove_live_plugin_results(trigger_subset=msg.subset)
-        self._reserved_labels.remove(msg.subset.label.lower())
+        if msg.subset.label in self._reserved_labels:
+            # This might already be gone in test teardowns
+            self._reserved_labels.remove(msg.subset.label)
         self._on_layers_changed(msg)
 
     def _on_subset_create_message(self, msg):
-        self._reserved_labels.add(msg.subset.label.lower())
+        self._reserved_labels.add(msg.subset.label)
         self._on_layers_changed(msg)
 
     def _on_plugin_plot_added(self, msg):
@@ -2025,13 +2027,13 @@ class Application(VuetifyTemplate, HubListener):
 
         # remove the current selection label from the set of labels, because its ok
         # if the new subset shares the name of the current selection (renaming to current name)
-        if subset_selected.lower() in self._reserved_labels:
-            self._reserved_labels.remove(subset_selected.lower())
+        if subset_selected in self._reserved_labels:
+            self._reserved_labels.remove(subset_selected)
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
         print(f"Reserved labels:\n{self._reserved_labels}")
-        if subset_name.lower() in self._reserved_labels:
+        if subset_name in self._reserved_labels:
             if warn_if_invalid:
                 warnings.warn("Cannot rename subset to name of an existing subset"
                               f" or data item: ({subset_name}).")
