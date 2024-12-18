@@ -14,4 +14,8 @@ For example:
   plugin.open_in_tray()
   plugin.show('popout')
 
-When running in a notebook, some plugins provide API hints directly in the UI.  To enable these, toggle the ``<>`` button in the top of the plugin.
+When running in a notebook, some plugins provide API hints directly in the UI.  To enable these, toggle the ``[API]`` button on the top bar of the app or call:
+
+.. code-block:: python
+
+  viz.toggle_api_hints()
