@@ -431,3 +431,30 @@ def test_segmentation_image(imviz_helper):
     assert plot_opts.stretch_function.value == 'linear'
     assert plot_opts.image_bias.value == 0.5
     assert plot_opts.image_contrast.value == 1.0
+
+
+def test_imviz_select_all_layers(imviz_helper):
+    """
+    Test to catch a (fixed) bug that was revealed when trying to select
+    all layers when data is float32. This was caused when trying to set
+    `stretch_vmin_value`.
+    """
+
+    arr = np.arange(36.).reshape(6, 6).astype(np.float32)
+
+    # load three images in one viewer
+    with imviz_helper.batch_load():
+        for i in range(3):
+            imviz_helper.load_data(arr, data_label=f"data_{i}")
+
+    plot_options = imviz_helper.plugins['Plot Options']
+
+    plot_options.layer.multiselect = True
+    plot_options.select_all()
+
+    # all layers selected, set stretch function to log for all
+    plot_options.stretch_function = 'log'
+
+    # and make sure each layer picked up this change
+    for layer in plot_options.image_colormap.linked_states:
+        assert layer.as_dict()['stretch'] == 'log'

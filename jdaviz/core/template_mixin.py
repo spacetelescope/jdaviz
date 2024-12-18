@@ -4401,22 +4401,16 @@ class PlotOptionsSyncState(BasePluginComponent):
         return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
-        if len(self.linked_states) <= 1:
-            mixed = False
-        else:
+
+        if len(self.linked_states) >= 1:
             current_glue_values = []
             for state in self.linked_states:
                 current_glue_values.append(self._get_glue_value(state))
-            mixed = self.is_mixed(current_glue_values)
-            # ensure the value corresponds to the first entry, this prevents the case where a glue
-            # change to one of the linked_states changes the value that will be adopted when
-            # unmixing something in mixed state and results in more consistent and predictable
-            # behavior
-            self._processing_change_from_glue = True
-            self.value = current_glue_values[0]
-            self._processing_change_from_glue = False
-        self.sync = {**self.sync,
-                     'mixed': mixed}
+
+        if len(current_glue_values) and current_glue_values[0] is not None:
+            # sync the initial value of the widget, avoiding recursion
+            self._on_glue_value_changed(current_glue_values[0],
+                                        update_mixed_state=False)
 
     def _on_value_changed(self, msg):
         if self._processing_change_from_glue:
@@ -4477,7 +4471,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_from_glue = False
         self._update_mixed_state()
 
-    def _on_glue_value_changed(self, value):
+    def _on_glue_value_changed(self, value, update_mixed_state=True):
         if self._glue_name in ('color_mode', 'linewidth'):
             # then we need to force updates to the layer-icon colors
             # NOTE: this will only trigger when the change to color_mode was handled
@@ -4512,8 +4506,9 @@ class PlotOptionsSyncState(BasePluginComponent):
             # it is not skipped if it has already been called since an actual traitlet change)
             self.plugin._update_stretch_curve()
 
-        # need to recompute mixed state
-        self._update_mixed_state()
+        if update_mixed_state:
+            # recompute mixed state
+            self._update_mixed_state()
         self._processing_change_from_glue = False
 
     def unmix_state(self, new_value=None):
