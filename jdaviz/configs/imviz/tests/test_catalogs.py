@@ -158,12 +158,16 @@ class TestCatalogs:
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
+        # First select a row
+        catalogs_plugin.table.selected_rows = [
+            catalogs_plugin.table.items[0]]
+        # Then zoom in to the selected
         catalogs_plugin.vue_zoom_in()
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 278.86265
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 378.8691
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 1022.5631800000001
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1122.56318
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 675.29611
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 775.29611
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
