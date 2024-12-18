@@ -11,8 +11,8 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general,
                                                check_if_unit_is_per_solid_angle)
+from jdaviz.utils import flux_conversion
 
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
@@ -136,7 +136,7 @@ class PluginMark:
             self.yunit = unit
             return
 
-        if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
+        if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):  # noqa
 
             if self.viewer.default_class is Spectrum1D:
 
@@ -145,8 +145,7 @@ class PluginMark:
                 pixar_sr = spec.meta.get('PIXAR_SR', 1)
                 cube_wave = self.x * self.xunit
                 equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
-                y = flux_conversion_general(self.y, self.yunit, unit, equivs,
-                                            with_unit=False)
+                y = flux_conversion(self.y, self.yunit, unit, eqv=equivs)
 
             self.y = y
 

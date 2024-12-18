@@ -4,6 +4,7 @@ import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
+from specutils import Spectrum1D
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.core.marks import MarkersMark
@@ -240,6 +241,27 @@ def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
     # make sure last marker added to table reflects new unit selection
     last_row = mp.export_table()[-1]
     assert last_row['value:unit'] == new_cube_unit_str
+
+
+def test_markers_specviz2d_flux_unit_conversion(specviz2d_helper, spectrum2d):
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
+    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3, 2]*u.AA)
+    specviz2d_helper.load_data(spectrum2d)
+
+    uc = specviz2d_helper.plugins['Unit Conversion']
+    uc.open_in_tray()
+    mp = specviz2d_helper.plugins['Markers']
+    mp.keep_active = True
+
+    label_mouseover = specviz2d_helper.app.session.application._tools["g-coords-info"]
+    viewer2d = specviz2d_helper.app.get_viewer("spectrum2d-viewer")
+    label_mouseover._viewer_mouse_event(viewer2d, {"event": "mousemove",
+                                                   "domain": {"x": 6, "y": 3}})
+    mp._obj._on_viewer_key_event(viewer2d, {'event': 'keydown',
+                                            'key': 'm'})
+
+    assert label_mouseover.as_dict()['value:unit'] == uc.flux_unit
 
 
 class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
