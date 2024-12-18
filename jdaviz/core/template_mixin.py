@@ -4691,12 +4691,20 @@ class Table(PluginSubcomponent):
                 return ''
             elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
                 return ''
-
             elif isinstance(item, float):
                 return float_precision(column, item)
             elif isinstance(item, (list, tuple)):
                 return [float_precision(column, i) if isinstance(i, float) else i for i in item]
-
+            elif isinstance(item, (np.float32, np.float64)):
+                return float(item)
+            elif isinstance(item, u.Quantity):
+                return item.value.tolist() if item.size > 1 else item.value
+            elif isinstance(item, np.bool_):
+                return bool(item)
+            elif isinstance(item, np.ndarray):
+                return item.tolist()
+            elif isinstance(item, tuple):
+                return tuple(json_safe(v) for v in item)
             return item
 
         if isinstance(item, QTable):
@@ -4738,6 +4746,8 @@ class Table(PluginSubcomponent):
         Clear all entries/markers from the current table.
         """
         self.items = []
+        self.selected_rows = []
+        self.selected_indices = []
         self._qtable = None
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
