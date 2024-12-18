@@ -70,6 +70,8 @@ Bug Fixes
   occured when certain flux-to flux-conversions occured, as well as certain conversions between flux and surface
   brightness. This PR also fixed an issue with unit string formatting in the aperture photometry plugin. [#3228]
 
+- Fixed broken histogram pan/zoom in Plot Options plugin. [#3361]
+
 Cubeviz
 ^^^^^^^
 - Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]

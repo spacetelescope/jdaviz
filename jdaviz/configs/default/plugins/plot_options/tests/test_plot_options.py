@@ -137,6 +137,15 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert po.stretch_histogram.marks['vmin'].x[0] == po.stretch_vmin.value
     assert po.stretch_histogram.marks['vmax'].x[0] == po.stretch_vmax.value
 
+    # Make sure some tools work
+
+    po_panzoom = po.stretch_histogram.toolbar.tools["jdaviz:panzoom"]
+    po_panzoom.activate()
+    po_panzoom.deactivate()
+
+    po_prevzoom = po.stretch_histogram.toolbar.tools["jdaviz:prevzoom"]
+    po_prevzoom.activate()
+
 
 @pytest.mark.filterwarnings('ignore')
 def test_user_api(cubeviz_helper, spectrum1d_cube):
