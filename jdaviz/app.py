@@ -979,7 +979,7 @@ class Application(VuetifyTemplate, HubListener):
 
         for subset in subsets:
 
-            label = subset.label.lower()
+            label = subset.label
 
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
