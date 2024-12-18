@@ -2032,7 +2032,6 @@ class Application(VuetifyTemplate, HubListener):
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
-        print(f"Reserved labels:\n{self._reserved_labels}")
         if subset_name in self._reserved_labels:
             if warn_if_invalid:
                 warnings.warn("Cannot rename subset to name of an existing subset"
@@ -2054,10 +2053,8 @@ class Application(VuetifyTemplate, HubListener):
                 if s.label == old_label:
                     subset_group = s
                     break
-        print(subset_group)
         if check_valid:
             if self._check_valid_subset_label(new_label):
-                print("Checking validity")
                 subset_group.label = new_label
         else:
             subset_group.label = new_label
