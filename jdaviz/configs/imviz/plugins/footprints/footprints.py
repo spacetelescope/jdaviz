@@ -143,13 +143,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.preset_obs = SelectPluginComponent(self,
                                                 items='preset_obs_items',
                                                 selected='preset_obs_selected',
-                                                manual_options=preset_obs_options,
-                                                apply_filter_to_manual_options=True)
+                                                manual_options=preset_obs_options)
 
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
                                                       selected='preset_selected',
                                                       manual_options=preset_options,
+                                                      apply_filters_to_manual_options=True,
                                                       server_is_remote=self.app.state.settings.get('server_is_remote', False))  # noqa
 
         # set the custom file parser for importing catalogs

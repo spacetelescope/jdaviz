@@ -915,18 +915,14 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     @observe('filters')
     def _update_items(self, msg={}):
+        manual_options = [self._to_item(opt) for opt in self.manual_options]
+        non_manual_options = [item for item in self.items if item not in manual_options]
         if self._apply_filters_to_manual_options:
-            all_items = self.items + [self._to_item(opt)
-                                      for opt in self.manual_options
-                                      if self._to_item(opt) not in self.items]
-            self.items = [item for item in all_items if self._is_valid_item(item)]
+            self.items = [item for item in non_manual_options + manual_options
+                          if self._is_valid_item(item)]
         else:
-            filtered_items = [item
-                              for item in self.items
+            filtered_items = [item for item in non_manual_options
                               if self._is_valid_item(item)]
-            manual_options = [self._to_item(opt)
-                              for opt in self.manual_options
-                              if self._to_item(opt) not in filtered_items]
             self.items = filtered_items + manual_options
 
         try:
