@@ -516,7 +516,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     def _update_preset_filters(self, event={}):
         if not hasattr(self, 'preset'):
             # during plugin init
-            return 
+            return
 
         def only_jwst(item):
             return item['label'] == 'From File...' or item.get('observatory') == 'JWST'
