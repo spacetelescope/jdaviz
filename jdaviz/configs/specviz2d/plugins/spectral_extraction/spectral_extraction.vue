@@ -311,7 +311,7 @@
                 action_tooltip="Create Background Image"
                 :action_spinner="bg_img_spinner"
                 add_results_api_hint="plg.bg_results"
-                action_api_hint=plg.export_bg_img()"
+                action_api_hint="plg.export_bg_img()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_img"
               ></plugin-add-results>
@@ -438,7 +438,7 @@
         label="Profile Type"
         api_hint="plg.horne_ext_profile ="
         :api_hints_enabled="api_hints_enabled"
-        hint="Profile to use for Horne extractoin."
+        hint="Profile to use for Horne extraction."
       />
 
       <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
