@@ -356,3 +356,30 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
             f"Pixel x=00010.0 y=00008.0 Value +1.00000e+00 ct / {angle_str}",
             "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
             "204.9987654313 27.0008999946 (deg)")
+
+
+@pytest.mark.parametrize("start_unit, end_unit, end_spectral_y_type, expected_limits",
+                         [('Jy', 'MJy', 'Flux', (5e-07, 6e-07, 1e-4, 1.05e-4)),
+                          ('MJy', 'ph / (Angstrom s cm2)', 'Surface Brightness', (5e-07, 6e-07, 25153169.66070254, 31692993.772485193))  # noqa
+                          ])
+def test_limits_on_unit_change(cubeviz_helper, start_unit, end_unit,
+                               end_spectral_y_type, expected_limits):
+    """
+    Test that the limits are reset when changing units
+    """
+
+    w, wcs_dict = cubeviz_wcs_dict()
+    flux = np.zeros((30, 20, 3001), dtype=np.float32)
+    flux[5:15, 1:11, :] = 1
+    cube = Spectrum1D(flux=flux * u.Unit(start_unit), wcs=w, meta=wcs_dict)
+    cubeviz_helper.load_data(cube, data_label="test")
+
+    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    sv = cubeviz_helper.viewers['spectrum-viewer']
+    sv.set_limits(x_min=5e-7, x_max=6e-7, y_min=100, y_max=105)
+
+    uc_plg.flux_unit = end_unit
+    uc_plg.spectral_y_type = end_spectral_y_type
+
+    new_limits = sv._obj.get_limits()
+    assert np.allclose(new_limits, expected_limits)
