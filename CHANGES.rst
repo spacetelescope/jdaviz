@@ -10,6 +10,8 @@ New Features
 
 * API method to toggle API hints. [#3336]
 
+* Changing flux/SB display units no longer resets viewer zoom levels. [#3335]
+
 Cubeviz
 ^^^^^^^
 
