@@ -163,7 +163,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
             self.viewer.stop_stream()
         else:
             y_values = spectrum.flux[x, y, :].value
-            if np.all(np.isnan(y_values)):
+            if not np.all(np.isfinite(y_values)):
                 self._mark.visible = False
                 return
             self._mark.update_xy(spectrum.spectral_axis.value, y_values)
