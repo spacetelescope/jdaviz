@@ -4401,16 +4401,24 @@ class PlotOptionsSyncState(BasePluginComponent):
         return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
-
-        if len(self.linked_states) >= 1:
+        if len(self.linked_states) <= 1:
+            mixed = False
+        else:
             current_glue_values = []
             for state in self.linked_states:
                 current_glue_values.append(self._get_glue_value(state))
-
-        if len(current_glue_values) and current_glue_values[0] is not None:
-            # sync the initial value of the widget, avoiding recursion
-            self._on_glue_value_changed(current_glue_values[0],
-                                        update_mixed_state=False)
+            mixed = self.is_mixed(current_glue_values)
+            # ensure the value corresponds to the first entry, this prevents the case where a glue
+            # change to one of the linked_states changes the value that will be adopted when
+            # unmixing something in mixed state and results in more consistent and predictable
+            # behavior
+            if len(current_glue_values) and current_glue_values[0] is not None:
+                self._processing_change_from_glue = True
+                self.value = self._on_glue_value_changed(current_glue_values[0],
+                                                         update_mixed_state=False)
+                self._processing_change_from_glue = False
+        self.sync = {**self.sync,
+                     'mixed': mixed}
 
     def _on_value_changed(self, msg):
         if self._processing_change_from_glue:
@@ -4509,6 +4517,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         if update_mixed_state:
             # recompute mixed state
             self._update_mixed_state()
+
         self._processing_change_from_glue = False
 
     def unmix_state(self, new_value=None):
