@@ -13,6 +13,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Add Sonify Data plugin which uses the Strauss package to turn a data cube into sound. [#3269]
+
 Imviz
 ^^^^^
 
