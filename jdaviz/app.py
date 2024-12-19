@@ -2002,7 +2002,7 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
 
-    def _check_valid_subset_label(self, subset_name, warn_if_invalid=True):
+    def _check_valid_subset_label(self, subset_name, raise_if_invalid=True):
         """Check that `subset_name` is a valid choice for a subset name. This
         check is run when renaming subsets.
 
@@ -2033,22 +2033,26 @@ class Application(VuetifyTemplate, HubListener):
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
         if subset_name in self._reserved_labels:
-            if warn_if_invalid:
-                warnings.warn("Cannot rename subset to name of an existing subset"
+            if raise_if_invalid:
+                raise ValueError("Cannot rename subset to name of an existing subset"
                               f" or data item: ({subset_name}).")
             return False
 
         elif not subset_name.replace(" ", "").isalnum():
-            if warn_if_invalid:
-                warnings.warn("Subset labels must be purely alphanumeric")
+            if raise_if_invalid:
+                raise ValueError("Subset labels must be purely alphanumeric")
             return False
 
         else:
             split_label = subset_name.split(" ")
             if split_label[0] == "Subset" and split_label[1].isdigit():
-                if warn_if_invalid:
-                    warnings.warn("The pattern 'Subset N' is reserved for auto-generated labels")
+                print("Got here")
+                if raise_if_invalid:
+                    raise ValueError("The pattern 'Subset N' is reserved for "
+                                     "auto-generated labels")
                 return False
+            else:
+                print("whoops")
 
         return True
 
