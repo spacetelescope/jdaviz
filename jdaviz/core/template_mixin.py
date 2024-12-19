@@ -809,7 +809,8 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
-            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            # NOTE: selected is a list here so should not be wrapped with quotes
+            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
