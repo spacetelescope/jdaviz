@@ -4413,10 +4413,8 @@ class PlotOptionsSyncState(BasePluginComponent):
             # unmixing something in mixed state and results in more consistent and predictable
             # behavior
             if len(current_glue_values) and current_glue_values[0] is not None:
-                self._processing_change_from_glue = True
-                self.value = self._on_glue_value_changed(current_glue_values[0],
-                                                         update_mixed_state=False)
-                self._processing_change_from_glue = False
+                self._on_glue_value_changed(current_glue_values[0],
+                                            update_mixed_state=False)
         self.sync = {**self.sync,
                      'mixed': mixed}
 
