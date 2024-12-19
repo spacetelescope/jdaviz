@@ -4,7 +4,9 @@
       <v-select
         :menu-props="{ left: true }"
         attach
-        :items="items.map(i => i.label)"
+        :items="items"
+        item-text="label"
+        item-value="label"
         v-model="selected"
         @change="$emit('update:selected', $event)"
         :label="api_hints_enabled && api_hint ? api_hint : label"
@@ -12,15 +14,26 @@
         :hint="hint"
         persistent-hint
       >
-        <template v-slot:selection="{ item }">
-          <span :class="api_hints_enabled ? 'api-hint' : null">
-            {{ api_hints_enabled ?
-              '\'' + item + '\''
-              :
-              item
-            }}
+        <template v-slot:selection="{ item, index }">
+          <div class="single-line" style="width: 100%">
+            <span v-if="api_hints_enabled" class="api-hint" :style="index > 0 ? 'display: none' : null">
+              {{'\'' + selected + '\''}}
+            </span>
+            <span v-else>
+              <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
+              <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
+              {{ selected }}
+            </span>
+          </div>
+        </template>
+        <template v-slot:item="{ item }">
+          <span style="margin-top: 8px; margin-bottom: 0px">
+            <v-icon v-if="item.icon && item.icon.length < 50" small>{{ item.icon }}</v-icon>
+            <img v-else-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="opacity: 1.0; margin-bottom: -2px"/>
+            {{ item.label }}
           </span>
         </template>
+    
       </v-select>
       <v-chip v-if="selected === 'From File...'"
         close
