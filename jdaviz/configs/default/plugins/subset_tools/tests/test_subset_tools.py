@@ -334,5 +334,8 @@ def test_check_valid_subset_label(imviz_helper):
 
     # we should not be able to rename or add a subset named 'Subset 1'.
     # Make sure this warns and returns accordingly.
-    with pytest.warns(Warning, match="Cannot rename subset to name of an existing subset"):
+    with pytest.raises(ValueError, match="Cannot rename subset to name of an existing subset"):
         st.rename_selected("Subset 1")
+
+    with pytest.raises(ValueError, match="The pattern 'Subset N' is reserved"):
+        st.rename_selected("Subset 5")
