@@ -312,6 +312,8 @@ def test_results_table(specviz_helper, spectrum1d):
     mf = specviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
 
+    uc = specviz_helper.plugins['Unit Conversion']
+
     mf.add_results.label = 'linear model'
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
@@ -324,6 +326,9 @@ def test_results_table(specviz_helper, spectrum1d):
                                  'L:slope_0:fixed', 'L:slope_0:std',
                                  'L:intercept_0', 'L:intercept_0:unit',
                                  'L:intercept_0:fixed', 'L:intercept_0:std']
+
+    # verify units in table match the current display unit
+    assert mf_table['L:intercept_0:unit'][-1] == uc.flux_unit
 
     mf.create_model_component('Gaussian1D')
     mf.add_results.label = 'composite model'
@@ -345,6 +350,19 @@ def test_results_table(specviz_helper, spectrum1d):
                                  'G:mean_1:fixed', 'G:mean_1:std',
                                  'G:stddev_1', 'G:stddev_1:unit',
                                  'G:stddev_1:fixed', 'G:stddev_1:std']
+
+    mf.remove_model_component('G')
+    assert len(mf_table) == 2
+
+    # verify Spectrum1D model fitting plugin and table can handle spectral density conversions
+    uc.flux_unit = 'erg / (Angstrom s cm2)'
+    mf.reestimate_model_parameters()
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit(add_data=True)
+
+    assert mf_table['L:intercept_0:unit'][-1] == uc.flux_unit
 
 
 def test_equation_validation(specviz_helper, spectrum1d):
