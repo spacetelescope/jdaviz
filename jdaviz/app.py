@@ -2046,13 +2046,10 @@ class Application(VuetifyTemplate, HubListener):
         else:
             split_label = subset_name.split(" ")
             if split_label[0] == "Subset" and split_label[1].isdigit():
-                print("Got here")
                 if raise_if_invalid:
                     raise ValueError("The pattern 'Subset N' is reserved for "
                                      "auto-generated labels")
                 return False
-            else:
-                print("whoops")
 
         return True
 
