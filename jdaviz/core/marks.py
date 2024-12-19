@@ -141,6 +141,8 @@ class PluginMark:
             if self.viewer.default_class is Spectrum1D:
 
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
+                if self.xunit is None:
+                    self.xunit = self.viewer.jdaviz_helper.app._get_display_unit('spectral')
 
                 pixar_sr = spec.meta.get('PIXAR_SR', 1)
                 cube_wave = self.x * self.xunit

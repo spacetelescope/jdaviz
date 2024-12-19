@@ -246,7 +246,7 @@ def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
 def test_markers_specviz2d_flux_unit_conversion(specviz2d_helper, spectrum2d):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3, 2]*u.AA)
+    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
     specviz2d_helper.load_data(spectrum2d)
 
     uc = specviz2d_helper.plugins['Unit Conversion']
@@ -255,7 +255,7 @@ def test_markers_specviz2d_flux_unit_conversion(specviz2d_helper, spectrum2d):
     mp.keep_active = True
 
     label_mouseover = specviz2d_helper.app.session.application._tools["g-coords-info"]
-    viewer2d = specviz2d_helper.app.get_viewer("spectrum2d-viewer")
+    viewer2d = specviz2d_helper.app.get_viewer("spectrum-2d-viewer")
     label_mouseover._viewer_mouse_event(viewer2d, {"event": "mousemove",
                                                    "domain": {"x": 6, "y": 3}})
     mp._obj._on_viewer_key_event(viewer2d, {'event': 'keydown',
