@@ -2061,6 +2061,10 @@ class Application(VuetifyTemplate, HubListener):
                 if s.label == old_label:
                     subset_group = s
                     break
+            # If we couldn't find a matching subset group, raise an error
+            else:
+                raise ValueError(f"No subset named {old_label} to rename")
+
         if check_valid:
             if self._check_valid_subset_label(new_label):
                 subset_group.label = new_label
