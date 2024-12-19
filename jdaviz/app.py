@@ -2043,6 +2043,13 @@ class Application(VuetifyTemplate, HubListener):
                 warnings.warn("Subset labels must be purely alphanumeric")
             return False
 
+        else:
+            split_label = subset_name.split(" ")
+            if split_label[0] == "Subset" and split_label[1].isdigit():
+                if warn_if_invalid:
+                    warnings.warn("The pattern 'Subset N' is reserved for auto-generated labels")
+                return False
+
         return True
 
     def _rename_subset(self, old_label, new_label, subset_group=None, check_valid=True):
