@@ -4698,7 +4698,7 @@ class Table(PluginSubcomponent):
             elif isinstance(item, (np.float32, np.float64)):
                 return float(item)
             elif isinstance(item, u.Quantity):
-                return item.value.tolist() if item.size > 1 else item.value
+                return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}
             elif isinstance(item, np.bool_):
                 return bool(item)
             elif isinstance(item, np.ndarray):
