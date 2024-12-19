@@ -126,8 +126,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
-            obs_icons = {'JWST': read_icon(os.path.join(ICON_DIR, 'JWST_solid.svg'), 'svg+xml'),
-                         'Roman': read_icon(os.path.join(ICON_DIR, 'Roman_solid.svg'), 'svg+xml')}
+            obs_icons = {'JWST': read_icon(os.path.join(ICON_DIR, 'jwst_solid.svg'), 'svg+xml'),
+                         'Roman': read_icon(os.path.join(ICON_DIR, 'roman_solid.svg'), 'svg+xml')}
             preset_options = [{'label': display_name,
                                'siaf_name': siaf_name,
                                'observatory': observatory,
