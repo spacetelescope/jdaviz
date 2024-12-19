@@ -854,16 +854,35 @@ class SubsetTools(PluginTemplateMixin):
             if subset_group.label == self.subset.selected:
                 return subset_group
 
-    def rename_subset(self, old_label, new_label, subset_group=None):
-        self.app._rename_subset(old_label, new_label, subset_group)
+    def rename_subset(self, old_label, new_label):
+        """
+        Method to rename an existing subset
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the subset to be renamed.
+        new_label : str
+            The new label to apply to the selected subset.
+        """
+        self.app._rename_subset(old_label, new_label)
         self._sync_available_from_state()
 
     def rename_selected(self, new_label):
+        """
+        Method to rename the subset currently selected in the Subset Tools plugin.
+
+        Parameters
+        ----------
+        new_label : str
+            The new label to apply to the selected subset.
+        """
         subset_group = self.selected_subset_group
         if subset_group is None:
             raise TypeError("current selection is not a subset")
 
-        self.rename_subset(self.subset.selected, new_label, subset_group=subset_group)
+        self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
+        self._sync_available_from_state()
 
     def import_region(self, region, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
