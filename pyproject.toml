@@ -85,6 +85,10 @@ roman = [
 strauss = [
     "strauss",
 ]
+qt = [
+    "qtpy",
+    "PySide6"
+]
 
 [build-system]
 requires = [
