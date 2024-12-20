@@ -64,10 +64,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'index', 'value', 'value:unit']
+
         elif self.config == 'specviz2d':
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'value', 'value:unit', 'viewer']
+
         elif self.config == 'mosviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'world_ra', 'world_dec', 'index',
@@ -223,6 +225,11 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':
             row_info = self.coords_info.as_dict()
+            if 'value' in row_info:
+                # format and cast flux value for Table
+                row_info['value'] = f"{row_info['value']:.5e}"
+            else:
+                row_info['value'] = ''
 
             if 'viewer' in self.table.headers_avail:
                 row_info['viewer'] = viewer.reference if viewer.reference is not None else viewer.reference_id  # noqa
