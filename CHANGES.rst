@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- New design for viewer legend and data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310]
+- New design for viewer legend and future data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310, #3370]
 
 - Improve performance while importing multiple regions. [#3321]
 
