@@ -1,3 +1,4 @@
+from astropy.io import fits
 import pytest
 import numpy as np
 from specutils import SpectralRegion
@@ -144,6 +145,35 @@ def test_data_menu_remove_subset(specviz_helper, spectrum1d):
     # TODO: not quite sure why this isn't passing, seems to
     # work on local tests, so may just be async?
     # assert dm.layer.choices == ['test', 'test2', 'Subset 2']
+
+
+def test_data_menu_dq_layers(imviz_helper):
+    imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
+
+    hdu = fits.ImageHDU(np.zeros(shape=(2, 2), dtype=np.int32))
+    hdu.name = 'DQ'
+    dq = fits.HDUList([fits.PrimaryHDU(), hdu])
+
+    imviz_helper.load_data(dq, data_label="dq", show_in_viewer=True)
+    # manually link this DQ to the parent image
+    imviz_helper.app._set_assoc_data_as_child("dq[DQ,1]", new_parent_label='image')
+
+    dm = imviz_helper.viewers['imviz-0']._obj.data_menu
+    assert dm.layer.choices == ['dq[DQ,1]', 'image']
+    assert len(dm._obj.visible_layers) == 2
+
+    # turning off image (parent) data-layer should also turn off DQ
+    dm.set_layer_visibility('image', False)
+    assert len(dm._obj.visible_layers) == 0
+
+    # turning on image (parent) should leave DQ off
+    dm.set_layer_visibility('image', True)
+    assert len(dm._obj.visible_layers) == 1
+
+    # turning on DQ (child, when parent off) should show parent
+    dm.set_layer_visibility('image', False)
+    dm.set_layer_visibility('dq[DQ,1]', True)
+    assert len(dm._obj.visible_layers) == 2
 
 
 @pytest.mark.skip(reason="known issue")
