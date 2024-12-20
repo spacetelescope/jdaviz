@@ -327,11 +327,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     def vue_zoom_in(self, *args, **kwargs):
 
-        self.zoom_to_selected(return_bounding_box=True)
+        self.zoom_to_selected()
 
     def zoom_to_selected(self, padding=0.02, return_bounding_box=False):
         """
-        Zoom to a region containing the currently selected points in the catalog.
+        Zoom on the default viewer to a region containing the currently selected
+        points in the catalog.
 
         Parameters
         ----------
@@ -345,10 +346,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         Returns
         -------
-        tuple of tuple or None
+        list of float or None
             If there are activley selected rows, and ``return_bounding_box`` is
-            True, returns a tuple containing the bounding
-            box coordinates: ((x_min, x_max), (y_min, y_max)).
+            True, returns a list containing the bounding
+            box coordinates: [x_min, x_max, y_min, y_max].
             Otherwise, returns None.
 
         """
@@ -380,7 +381,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         viewer.set_limits(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
         if return_bounding_box:
-            return (x_min, x_max), (y_min, y_max)
+            return [x_min, x_max, y_min, y_max]
 
     def import_catalog(self, catalog):
         """
