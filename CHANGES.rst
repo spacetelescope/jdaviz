@@ -27,6 +27,8 @@ Imviz
 - Catalog Search plugin now exposes a maximum sources limit for all catalogs and resolves an edge case
   when loading a catalog from a file that only contains one source. [#3337]
 
+- Enhance the Catalog Search plugin to support additional columns when loading catalog data from files. [#3359]
+
 Mosviz
 ^^^^^^
 

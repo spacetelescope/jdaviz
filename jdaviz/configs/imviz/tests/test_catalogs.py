@@ -28,6 +28,7 @@ from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.remote_data
@@ -113,7 +114,7 @@ class TestCatalogs:
         prev_results = catalogs_plugin.number_of_results
 
         # testing that every variable updates accordingly when markers are cleared
-        catalogs_plugin.vue_do_clear()
+        catalogs_plugin.vue_do_clear_table()
 
         assert not catalogs_plugin.results_available
 
@@ -157,12 +158,16 @@ class TestCatalogs:
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
+        # First select a row
+        catalogs_plugin.table.selected_rows = [
+            catalogs_plugin.table.items[0]]
+        # Then zoom in to the selected
         catalogs_plugin.vue_zoom_in()
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 278.86265
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 378.8691
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 1022.5631800000001
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1122.56318
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 675.29611
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 775.29611
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -237,12 +242,12 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert catalogs_plugin.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
-    catalogs_plugin.clear()
+    catalogs_plugin.clear_table()
 
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
-    catalogs_plugin.clear(hide_only=False)
+    catalogs_plugin.clear_table(hide_only=False)
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
@@ -250,10 +255,17 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
+    # Re-populate the table with a new search
+    out_tbl = catalogs_plugin.search()
+    assert len(out_tbl) > 0
+    # Ensure at least one row is selected before zooming
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+    assert len(catalogs_plugin.table.selected_rows) > 0
 
+    # Now zoom in
     catalogs_plugin.vue_zoom_in()
 
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -49.99966
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 50.00034
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -48.99999
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 51.00001
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -49.99966, rtol=1e-6)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, 50.00034, rtol=1e-6)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, -48.99999, rtol=1e-6)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 51.00001, rtol=1e-6)
