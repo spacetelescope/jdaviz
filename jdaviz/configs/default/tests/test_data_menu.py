@@ -64,7 +64,7 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     dm._obj.dm_layer_selected = [1]
     assert dm.layer.selected == ['test']
     specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "test2")
-    specviz_helper.app.vue_data_item_remove({"item_name": "test2"})
+    specviz_helper.app.data_item_remove("test2")
     assert len(dm._obj.layer_items) == 1
     assert dm._obj.dm_layer_selected == [0]
     assert dm.layer.selected == ['test']

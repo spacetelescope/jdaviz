@@ -43,6 +43,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     :ref:`public API <plugin-apis>`:
 
     * :meth:`open_menu`
+    * :meth:`data_labels_loaded`
+    * :meth:`data_labels_visible`
+    * :meth:`data_labels_unloaded`
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
         actively selected layer(s)
     * ``orientation`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
@@ -98,8 +101,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_modes = List().tag(sync=True)
 
-    dev_data_menu = Bool(False).tag(sync=True)
-
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._viewer = viewer
@@ -153,9 +154,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
+        readonly = ['data_labels_loaded', 'data_labels_visible', 'data_labels_unloaded']
         if self.app.config == 'imviz':
             expose += ['orientation']
-        return UserApiWrapper(self, expose=expose)
+        return UserApiWrapper(self, expose=expose, readonly=readonly)
 
     def open_menu(self):
         """
@@ -166,6 +168,20 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def existing_subset_labels(self):
         return [sg.label for sg in self.app.data_collection.subset_groups]
+
+    @property
+    def data_labels_loaded(self):
+        return [layer['label'] for layer in self.layer_items
+                if layer['label'] not in self.existing_subset_labels]
+
+    @property
+    def data_labels_visible(self):
+        return [layer['label'] for layer in self.layer_items
+                if layer['label'] not in self.existing_subset_labels and layer['visible']]
+
+    @property
+    def data_labels_unloaded(self):
+        return self.dataset.choices
 
     def _set_viewer_id(self):
         # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
@@ -515,7 +531,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                         self.app.data_collection.remove_subset_group(sg)
                         break
             else:
-                self.app.vue_data_item_remove({'item_name': layer})
+                self.app.data_item_remove(layer)
 
     def vue_remove_from_app(self, *args):
         self.remove_from_app()  # pragma: no cover
