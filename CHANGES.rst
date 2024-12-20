@@ -20,7 +20,7 @@ Imviz
 
 - Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
 
-- Add Roman WFI and CGI footprints to the Footprints plugin. [#3322]
+- Add Roman WFI and CGI footprints to the Footprints plugin. [#3322, #3345]
 
 - Catalog Search plugin now exposes a maximum sources limit for all catalogs and resolves an edge case
   when loading a catalog from a file that only contains one source. [#3337]

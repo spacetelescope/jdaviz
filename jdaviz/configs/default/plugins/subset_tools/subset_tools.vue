@@ -52,7 +52,7 @@
 
     <v-row v-if="api_hints_enabled" style="margin-top: -32px">
       <span class="api-hint">
-        plg.combination_mode = '{{ combination_selected }}'
+        plg.combination_mode = '{{ combination_mode_selected }}'
       </span>
     </v-row>
 
