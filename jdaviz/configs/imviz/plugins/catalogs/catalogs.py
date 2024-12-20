@@ -281,8 +281,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 row_info = {
                     'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
                     'Declination (degrees)': row['sky_centroid'].dec.deg,
-                    'Object ID': str(row.get('label', 'N/A')),
-                    'id': idx,
+                    'Object ID': str(row.get('label', f"{idx + 1}")),
+                    'id': idx+1,
                     'x_coord': x_coord,
                     'y_coord': y_coord,
                 }
