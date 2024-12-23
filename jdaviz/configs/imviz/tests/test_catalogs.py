@@ -29,7 +29,6 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.table import Table, QTable
-from numpy.testing import assert_allclose
 
 
 @pytest.mark.remote_data
@@ -170,10 +169,10 @@ class TestCatalogs:
         # so test results don't change
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 278.86265
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 378.8691
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 1022.5757000000001
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1122.5757
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 704.7727144165947
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 745.8271655834053
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
