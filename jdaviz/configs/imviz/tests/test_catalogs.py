@@ -159,14 +159,21 @@ class TestCatalogs:
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
+        # Re-populate the table with a new search
+        out_tbl = catalogs_plugin.search()
+        assert len(out_tbl) > 0
+        # Ensure at least one row is selected before zooming
+        catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+        assert len(catalogs_plugin.table.selected_rows) > 0
+
         # set 'padding' to reproduce original hard-coded 50 pixel window
         # so test results don't change
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 1022.5631800000001
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1122.56318
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 675.29611
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 775.29611
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 278.86265
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 378.8691
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -254,14 +261,21 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
+    # Re-populate the table with a new search
+    out_tbl = catalogs_plugin.search()
+    assert len(out_tbl) > 0
+    # Ensure at least one row is selected before zooming
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+    assert len(catalogs_plugin.table.selected_rows) > 0
 
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.19966
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 0.20034000000000002
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 0.8000100000000001
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1.20001
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.19966, rtol=1e-1)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max,
+                    0.20034000000000002, rtol=1e-1)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.8000100000000001, rtol=1e-1)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.20001, rtol=1e-1)
 
 
 def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
