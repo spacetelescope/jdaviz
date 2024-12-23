@@ -29,6 +29,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`zoom_to_selected`
     """
     template_file = __file__, "catalogs.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -49,7 +50,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('clear_table', 'export_table',))
+        return PluginUserApi(self, expose=('clear_table', 'export_table',
+                                           'zoom_to_selected'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -324,23 +326,62 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                                            getattr(y, 'value', y))
 
     def vue_zoom_in(self, *args, **kwargs):
-        """This function will zoom into the image based on the selected points"""
+
+        self.zoom_to_selected()
+
+    def zoom_to_selected(self, padding=0.02, return_bounding_box=False):
+        """
+        Zoom on the default viewer to a region containing the currently selected
+        points in the catalog.
+
+        Parameters
+        ----------
+        padding : float, optional
+            A fractional value representing the padding around the bounding box
+            of the selected points. It is applied as a proportion of the largest
+            dimension of the current extent of loaded data. Defaults to 0.02.
+        return_bounding_box : bool, optional
+            If True, returns the bounding box of the zoomed region as
+            ((x_min, x_max), (y_min, y_max)). Defaults to False.
+
+        Returns
+        -------
+        list of float or None
+            If there are activley selected rows, and ``return_bounding_box`` is
+            True, returns a list containing the bounding
+            box coordinates: [x_min, x_max, y_min, y_max].
+            Otherwise, returns None.
+
+        """
+
+        viewer = self.app._jdaviz_helper._default_viewer
+
         selected_rows = self.table.selected_rows
+
+        if not len(selected_rows):
+            return
+
+        if padding <= 0 or padding > 1:
+            raise ValueError("`padding` must be between 0 and 1.")
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
 
+        limits = viewer.state._get_reset_limits()
+        max_dim = max((limits[1] - limits[0]), (limits[3] - limits[2]))
+        padding = max_dim * padding
+
         # this works with single selected points
         # zooming when the range is too large is not performing correctly
-        x_min = min(x) - 50
-        x_max = max(x) + 50
-        y_min = min(y) - 50
-        y_max = max(y) + 50
+        x_min = min(x) - padding
+        x_max = max(x) + padding
+        y_min = min(y) - padding
+        y_max = max(y) + padding
 
-        self.app._jdaviz_helper._default_viewer.set_limits(
-            x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        viewer.set_limits(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
-        return (x_min, x_max), (y_min, y_max)
+        if return_bounding_box:
+            return [x_min, x_max, y_min, y_max]
 
     def import_catalog(self, catalog):
         """
