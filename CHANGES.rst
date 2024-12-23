@@ -83,6 +83,8 @@ Bug Fixes
 
 - Fixed bug with Plot Options select_all when data is float32. [#3366]
 
+- Fixed an issue with back-to-back calls of set_limits and get_limits. [#3371]
+
 
 Cubeviz
 ^^^^^^^
