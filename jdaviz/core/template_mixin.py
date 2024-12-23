@@ -1722,11 +1722,9 @@ class LayerSelect(SelectPluginComponent):
         self._update_items({'source': 'subset_added'})
 
     def _on_subset_renamed(self, msg):
-        print("Calling on_subset_renamed")
         # Find the subset in self.items and update the label
         for item in self.items:
             if item['label'] == msg.old_label:
-                print(f"Updating {item}")
                 item['label'] = msg.new_label
                 break
         self.send_state("items")
