@@ -118,3 +118,24 @@ class TestDeleteData(BaseImviz_WCS_NoWCS):
         po.stretch_function = "Square Root"
         self.imviz.destroy_viewer("imviz-1")
         assert len(po.layer.choices) == 2
+
+
+def test_viewer_limits(imviz_helper):
+    """
+    Test that sequential calls to set_limits and get_limits return the same
+    viewer limits.
+    """
+    arr = np.ones((10, 10))
+    imviz_helper.load_data(arr, data_label='my_array')
+    viewer = imviz_helper.default_viewer._obj
+
+    # set limits then get limits and make sure they are the same
+    viewer.set_limits(x_min=0, x_max=20, y_min=0, y_max=20)
+    limits = viewer.get_limits()
+    assert limits == (0, 20, 0, 20)
+
+    # calling get_limits again should also return the same original limits, but
+    # it doesn't, uncomment once JDAT-5050 is done
+    # get limits again, make sure they are the same.
+    # limits = viewer.get_limits()
+    # assert limits == (0, 20, 0, 20)
