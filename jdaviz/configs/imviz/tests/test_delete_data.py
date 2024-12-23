@@ -60,7 +60,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
 
         # We have to remove the data from the viewer before deleting the data from the app.
         self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI,1]")
-        self.imviz.app.vue_data_item_remove({"item_name": "has_wcs_1[SCI,1]"})
+        self.imviz.app.data_item_remove("has_wcs_1[SCI,1]")
 
         # Make sure we re-linked images 2 and 3 (plus WCS-only reference data layer)
         assert len(self.imviz.app.data_collection.external_links) == 2
@@ -98,7 +98,7 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
         self.imviz.app._change_reference_data("Default orientation")
 
         # Delete N-up E-left reference data from GUI.
-        self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
+        self.imviz.app.data_item_remove("North-up, East-left")
 
         # Make sure rotated ellipse is still the same as before.
         out_reg_d = self.imviz.app.get_subsets(include_sky_region=True)['Subset 1'][0]['sky_region']
