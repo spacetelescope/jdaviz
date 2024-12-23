@@ -290,7 +290,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _update_subset_format_disabled(self):
         new_items = []
         if self.subset.selected is not None:
-            subset = self.app.get_subsets(self.subset.selected)
+            try:
+                subset = self.app.get_subsets(self.subset.selected)
+            except Exception:
+                # subset invalid message will already be set,
+                # no need to set valid/invalid formats.
+                return
             if self.app._is_subset_spectral(subset[0]):
                 good_formats = ["ecsv"]
             else:
@@ -333,16 +338,20 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         disable Export button until these are supported.
         """
 
-        if self.subset.selected is not None:
-            subset = self.app.get_subsets(self.subset.selected)
-            if self.subset.selected == '':
-                self.subset_invalid_msg = ''
-            elif self.app._is_subset_spectral(subset[0]):
-                self.subset_invalid_msg = ''
-            elif len(subset) > 1:
-                self.subset_invalid_msg = 'Export for composite subsets not yet supported.'
+        if self.subset.selected not in [None, '']:
+            try:
+                subset = self.app.get_subsets(self.subset.selected)
+            except Exception as e:
+                self.subset_invalid_msg = f"Export for subset not supported: {e}"
             else:
-                self.subset_invalid_msg = ''
+                if self.subset.selected == '':
+                    self.subset_invalid_msg = ''
+                elif self.app._is_subset_spectral(subset[0]):
+                    self.subset_invalid_msg = ''
+                elif len(subset) > 1:
+                    self.subset_invalid_msg = 'Export for composite subsets not yet supported.'
+                else:
+                    self.subset_invalid_msg = ''
         else:  # no subset selected (can be '' instead of None if previous selection made)
             self.subset_invalid_msg = ''
 

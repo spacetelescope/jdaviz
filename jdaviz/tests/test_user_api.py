@@ -37,3 +37,13 @@ def test_specviz_data_labels(specviz_helper, spectrum1d):
     assert specviz_helper.data_labels == [label]
     assert specviz_helper.viewers['spectrum-viewer'].data_labels_loaded == [label]
     assert specviz_helper.viewers['spectrum-viewer'].data_labels_visible == [label]
+
+
+def test_toggle_api_hints(specviz_helper):
+    assert specviz_helper.app.state.show_api_hints is False
+    specviz_helper.toggle_api_hints()
+    assert specviz_helper.app.state.show_api_hints is True
+    specviz_helper.toggle_api_hints(True)
+    assert specviz_helper.app.state.show_api_hints is True
+    specviz_helper.toggle_api_hints()
+    assert specviz_helper.app.state.show_api_hints is False

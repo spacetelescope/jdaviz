@@ -22,11 +22,12 @@ This may need to instead be tested for in the future.
 '''
 
 import numpy as np
+from numpy.testing import assert_allclose
 import pytest
 
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NDData
-from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable
 from numpy.testing import assert_allclose
 
@@ -158,11 +159,9 @@ class TestCatalogs:
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
-        # First select a row
-        catalogs_plugin.table.selected_rows = [
-            catalogs_plugin.table.items[0]]
-        # Then zoom in to the selected
-        catalogs_plugin.vue_zoom_in()
+        # set 'padding' to reproduce original hard-coded 50 pixel window
+        # so test results don't change
+        catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 1022.5631800000001
         assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1122.56318
@@ -255,17 +254,84 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
-    # Re-populate the table with a new search
-    out_tbl = catalogs_plugin.search()
-    assert len(out_tbl) > 0
-    # Ensure at least one row is selected before zooming
-    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
-    assert len(catalogs_plugin.table.selected_rows) > 0
 
-    # Now zoom in
-    catalogs_plugin.vue_zoom_in()
+    # test the zooming using the default 'padding' of 2% of the viewer size
+    # around selected points
+    catalogs_plugin.zoom_to_selected()
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.19966
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 0.20034000000000002
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 0.8000100000000001
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1.20001
 
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -49.99966, rtol=1e-6)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, 50.00034, rtol=1e-6)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, -48.99999, rtol=1e-6)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 51.00001, rtol=1e-6)
+
+def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
+
+    arr = np.ones((500, 500))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+
+    # write out catalog to file so we can read it back in
+    # todo: if tables can be loaded directly at some point, do that
+
+    # sources at pixel coords ~(100, 100), ~(200, 200)
+    sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
+                         dec=[-20.80555273, -20.7777673], unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord],
+                 'label': ['Source_1', 'Source_2']})
+    tbl_file = str(tmp_path / 'test_catalog.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+
+    catalogs_plugin._obj.from_file = tbl_file
+
+    catalogs_plugin._obj.search()
+
+    # select both sources
+    catalogs_plugin._obj.table.selected_rows = catalogs_plugin._obj.table.items
+
+    # check viewer limits before zoom
+    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+    assert xmin == ymin == -0.5
+    assert xmax == ymax == 499.5
+
+    # zoom to selected sources
+    catalogs_plugin.zoom_to_selected()
+
+    # make sure the viewer bounds reflect the zoom, which, in pixel coords,
+    # should be centered at roughly pixel coords (150, 150)
+    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+
+    assert_allclose((xmin + xmax) / 2, 150., atol=0.1)
+    assert_allclose((ymin + ymax) / 2, 150., atol=0.1)
+
+    # and the zoom box size should reflect the default padding of 2% of the image
+    # size around the bounding box containing the source(s), which in this case is
+    # 10 pixels around
+    assert_allclose(xmin, 100 - 10, atol=0.1)  # min x of selected sources minus pad
+    assert_allclose(xmax, 200 + 10, atol=0.1)  # max x of selected sources plus pad
+    assert_allclose(ymin, 100 - 10, atol=0.1)  # min y of selected sources minus pad
+    assert_allclose(ymax, 200 + 10, atol=0.1)  # max y of selected sources plus pad
+
+    # select one source now
+    catalogs_plugin._obj.table.selected_rows = catalogs_plugin._obj.table.items[0:1]
+
+    # zoom to single selected source, using a new value for 'padding'
+    catalogs_plugin.zoom_to_selected(padding=0.05)
+
+    # check that zoom window is centered correctly on the source at 100, 100
+    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+    assert_allclose((xmin + xmax) / 2, 100., atol=0.1)
+    assert_allclose((ymin + ymax) / 2, 100., atol=0.1)
+
+    # and the zoom box size should reflect the default padding of 5% of the image
+    # size around the bounding box containing the source(s), which in this case is
+    # 25 pixels around
+    assert_allclose(xmin, 100 - 25, atol=0.1)  # min x of selected source minus pad
+    assert_allclose(xmax, 100 + 25, atol=0.1)  # max x of selected source plus pad
+    assert_allclose(ymin, 100 - 25, atol=0.1)  # min y of selected source minus pad
+    assert_allclose(ymax, 100 + 25, atol=0.1)  # max y of selected source plus pad
+
+    # test that appropriate error is raised when padding is not a valud percentage
+    with pytest.raises(ValueError, match="`padding` must be between 0 and 1."):
+        catalogs_plugin.zoom_to_selected(padding=5)

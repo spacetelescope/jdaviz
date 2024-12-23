@@ -1,8 +1,10 @@
 from traitlets import Bool, List, Unicode, observe
 import numpy as np
+import os
 import regions
 
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import LinkUpdatedMessage, ChangeRefDataMessage
@@ -10,21 +12,15 @@ from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import regions2roi
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
-                                        EditableSelectPluginComponent,
+                                        EditableSelectPluginComponent, SelectPluginComponent,
                                         FileImportSelectPluginComponent, HasFileImportSelect)
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 
 from jdaviz.configs.imviz.plugins.footprints import preset_regions
 
 
 __all__ = ['Footprints']
-
-
-_available_instruments = {
-    display_name: {'label': display_name, 'siaf_name': siaf_name, 'observatory': observatory}
-    for observatory, instruments in preset_regions._instruments.items()
-    for display_name, siaf_name in instruments.items()
-}
 
 
 @tray_registry('imviz-footprints', label="Footprints")
@@ -54,6 +50,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         color of the currently selected overlay
     * ``fill_opacity``
         opacity of the filled region of the currently selected overlay
+    * ``preset_obs`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+        selected observatories to filter ``preset`` choices.
     * ``preset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
         selected overlay preset
     * :meth:`import_region`
@@ -92,6 +90,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     # PRESET OVERLAYS AND OPTIONS
     has_pysiaf = Bool(preset_regions._has_pysiaf).tag(sync=True)
+    preset_obs_items = List().tag(sync=True)
+    preset_obs_selected = Unicode().tag(sync=True)
     preset_items = List().tag(sync=True)
     preset_selected = Unicode().tag(sync=True)
 
@@ -126,17 +126,31 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
-            preset_options = list(_available_instruments.keys())
+            obs_icons = {'JWST': read_icon(os.path.join(ICON_DIR, 'jwst_solid.svg'), 'svg+xml'),
+                         'Roman': read_icon(os.path.join(ICON_DIR, 'roman_solid.svg'), 'svg+xml')}
+            preset_options = [{'label': display_name,
+                               'siaf_name': siaf_name,
+                               'observatory': observatory,
+                               'icon': obs_icons.get(observatory, None)}
+                              for observatory, instruments in preset_regions._instruments.items()
+                              for display_name, siaf_name in instruments.items()]
+            preset_obs_options = ['Any'] + [{'label': obs, 'icon': obs_icons.get(obs)}
+                                            for obs in preset_regions._instruments.keys()]
         else:
             preset_options = ['None']
+            preset_obs_options = []
 
-        if not self.app.state.settings.get('server_is_remote', False):
-            preset_options.append('From File...')
+        self.preset_obs = SelectPluginComponent(self,
+                                                items='preset_obs_items',
+                                                selected='preset_obs_selected',
+                                                manual_options=preset_obs_options)
 
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
                                                       selected='preset_selected',
-                                                      manual_options=preset_options)
+                                                      manual_options=preset_options,
+                                                      apply_filters_to_manual_options=True,
+                                                      server_is_remote=self.app.state.settings.get('server_is_remote', False))  # noqa
 
         # set the custom file parser for importing catalogs
         self.preset._file_parser = self._file_parser
@@ -153,7 +167,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         return PluginUserApi(self, expose=('overlay',
                                            'rename_overlay', 'add_overlay', 'remove_overlay',
                                            'viewer', 'visible', 'color', 'fill_opacity',
-                                           'preset', 'import_region',
+                                           'preset_obs', 'preset', 'import_region',
                                            'center_on_viewer', 'ra', 'dec', 'pa',
                                            'v2_offset', 'v3_offset',
                                            'overlay_regions'))
@@ -489,14 +503,33 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                     regs = [regs]
                 overlay['regions'] = regs
             regs = overlay.get('regions', [])
-        elif self.has_pysiaf and self.preset_selected in _available_instruments.keys():
+        elif self.has_pysiaf:
             regs = preset_regions.instrument_footprint(
-                _available_instruments[self.preset_selected]['observatory'],
+                self.preset.selected_item['observatory'],
                 self.preset_selected, **callable_kwargs
             )
         else:  # pragma: no cover
             regs = []
         return regs
+
+    @observe('preset_obs_selected')
+    def _update_preset_filters(self, event={}):
+        if not hasattr(self, 'preset'):
+            # during plugin init
+            return
+
+        def only_jwst(item):
+            return item['label'] == 'From File...' or item.get('observatory') == 'JWST'
+
+        def only_roman(item):
+            return item['label'] == 'From File...' or item.get('observatory') == 'Roman'
+
+        if self.preset_obs_selected == 'JWST':
+            self.preset.filters = [only_jwst]
+        elif self.preset_obs_selected == 'Roman':
+            self.preset.filters = [only_roman]
+        else:
+            self.preset.filters = []
 
     @observe('preset_selected', 'from_file', 'ra', 'dec', 'pa', 'v2_offset', 'v3_offset')
     def _preset_args_changed(self, msg={}, overlay_selected=None):

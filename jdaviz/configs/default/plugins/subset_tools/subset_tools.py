@@ -9,7 +9,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
-                              MaskSubsetState)
+                              MaskSubsetState, Subset)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -83,6 +83,7 @@ class SubsetTools(PluginTemplateMixin):
     * :meth:`get_center`
     * :meth:`set_center`
     * :meth:`import_region`
+    * :meth:`get_regions`
     """
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
@@ -115,8 +116,8 @@ class SubsetTools(PluginTemplateMixin):
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    combination_items = List([]).tag(sync=True)
-    combination_selected = Any().tag(sync=True)
+    combination_mode_items = List([]).tag(sync=True)
+    combination_mode_selected = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -159,17 +160,115 @@ class SubsetTools(PluginTemplateMixin):
                                               multiselect=None)
 
         self.combination_mode = SelectPluginComponent(self,
-                                                      items='combination_items',
-                                                      selected='combination_selected',
+                                                      items='combination_mode_items',
+                                                      selected='combination_mode_selected',
                                                       manual_options=COMBO_OPTIONS)
 
     @property
     def user_api(self):
-        expose = ['subset', 'combination_mode',
-                  'recenter_dataset', 'recenter',
-                  'get_center', 'set_center',
-                  'import_region']
+        expose = ['subset', 'combination_mode', 'recenter_dataset', 'recenter',
+                  'get_center', 'set_center', 'import_region', 'get_regions']
         return PluginUserApi(self, expose)
+
+    def get_regions(self, region_type=None, list_of_subset_labels=None,
+                    use_display_units=False):
+        """
+        Return spatial and/or spectral subsets of ``region_type`` (spatial or
+        spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
+        respectivley.
+
+        Parameters
+        ----------
+        region_type : str or None, optional
+            Specifies the type of subsets to retrieve. Options are ``spatial``
+            to retrieve only spatial subsets, ``spectral`` to retrieve only
+            spectral subsets or ``None`` (default) to retrieve both spatial
+            and spectral subsets, when relevent to the current configuration.
+
+        list_of_subset_labels : list of str or None, optional
+            If specified, only subsets matching these labels will be included.
+            If not specified, all subsets matching the ``region_type`` will be
+            returned.
+
+        use_display_units : bool, optional
+            (For spectral subsets) If False (default), subsets are returned in
+            the native data unit. If True, subsets are returned in the spectral
+            axis display unit set in the Unit Conversion plugin.
+
+        Returns
+        -------
+        regions : dict
+            A dictionary mapping subset labels to their respective ``regions``
+            objects (for spatial regions) or ``SpectralRegions`` objects
+            (for spectral regions).
+        """
+
+        if region_type is not None:
+            region_type = region_type.lower()
+            if region_type not in ['spectral', 'spatial']:
+                raise ValueError("`region_type` must be 'spectral', 'spatial', or None for any.")
+            if ((self.config == 'imviz' and region_type == 'spectral') or
+               (self.config == 'specviz' and region_type == 'spatial')):
+                raise ValueError(f"No {region_type} subests in {self.config}.")
+            region_type = [region_type]
+
+        else:  # determine which subset types should be returned by config, if type not specified
+            if self.config == 'imviz':
+                region_type = ['spatial']
+            elif self.config == 'specviz':
+                region_type = ['spectral']
+            else:
+                region_type = ['spatial', 'spectral']
+
+        regions = {}
+
+        if 'spatial' in region_type:
+            from glue_astronomy.translators.regions import roi_subset_state_to_region
+
+            failed_regs = set()
+            to_sky = self.app._align_by == 'wcs'
+
+            # Subset is global, so we just use default viewer.
+            for lyr in self.app._jdaviz_helper.default_viewer._obj.layers:
+                if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
+                        or lyr.layer.ndim not in (2, 3)):
+                    continue
+
+                subset_data = lyr.layer
+                subset_label = subset_data.label
+
+                # TODO: Remove this when Jdaviz support round-tripping, see
+                # https://github.com/spacetelescope/jdaviz/pull/721
+                if not subset_label.startswith('Subset'):
+                    continue
+                try:
+                    if self.app.config == "imviz" and to_sky:
+                        region = roi_subset_state_to_region(subset_data.subset_state,
+                                                            to_sky=to_sky)
+                    else:
+                        region = subset_data.data.get_selection_definition(
+                            subset_id=subset_label, format='astropy-regions')
+                except (NotImplementedError, ValueError):
+                    failed_regs.add(subset_label)
+                else:
+                    regions[subset_label] = region
+
+            if len(failed_regs) > 0:
+                self.app.hub.broadcast(SnackbarMessage(
+                    f"Regions skipped: {', '.join(sorted(failed_regs))}",
+                    color="warning", timeout=8000, sender=self.app))
+
+        if 'spectral' in region_type:
+            spec_regions = self.app.get_subsets(spectral_only=True,
+                                                use_display_units=use_display_units)
+            if spec_regions:
+                regions.update(spec_regions)
+
+        # filter by list_of_subset_labels
+        if list_of_subset_labels is not None:
+            regions = {key: regions[key] for key in list_of_subset_labels}
+
+        return regions
 
     def _on_link_update(self, *args):
         """When linking is changed pixels<>wcs, change display units of the
@@ -1026,11 +1125,11 @@ class SubsetTools(PluginTemplateMixin):
         if return_bad_regions:
             return bad_regions
 
-    @observe('combination_selected')
-    def _combination_selected_updated(self, change):
+    @observe('combination_mode_selected')
+    def _combination_mode_selected_updated(self, change):
         self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
 
     def _update_combination_mode(self):
         if self.app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
-            self.combination_mode.selected = SUBSET_TO_PRETTY[
+            self.combination_mode_selected = SUBSET_TO_PRETTY[
                 self.app.session.edit_subset_mode.mode]

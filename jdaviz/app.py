@@ -955,6 +955,16 @@ class Application(VuetifyTemplate, HubListener):
 
         all_subsets = {}
 
+        # If we only want one subset, no need to loop through them all
+        if subset_name not in (None, ""):
+            if isinstance(subset_name, str):
+                subsets = [subset for subset in subsets if subset.label == subset_name]
+                if subsets == []:
+                    all_labels = sorted(sg.label for sg in dc.subset_groups)
+                    raise ValueError(f"{subset_name} not in {all_labels}")
+            else:
+                raise ValueError("subset_name must be a string.")
+
         for subset in subsets:
 
             label = subset.label
@@ -1020,13 +1030,8 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     all_subsets[label] = subset_region
 
-        # can this be done at the top to avoid traversing all subsets if only
-        # one is requested?
-        all_subset_names = [subset.label for subset in dc.subset_groups]
-        if subset_name and subset_name in all_subset_names:
+        if subset_name:
             return all_subsets[subset_name]
-        elif subset_name:
-            raise ValueError(f"{subset_name} not in {all_subset_names}")
         else:
             return all_subsets
 
