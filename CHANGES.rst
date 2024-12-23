@@ -1,4 +1,85 @@
-4.1 (unreleased)
+4.2 (unreleased)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+4.1.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.1 (2024-12-23)
 ================
 
 New Features
@@ -32,16 +113,10 @@ Imviz
   the image size (default 2%) to address and issue with zooming when using a small
   image or WCS linked. [#3369]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 - Specviz parser will now split a spectrum with a 2D flux array into multiple spectra on load
   (useful for certain SDSS file types). [#3229]
-
-Specviz2d
-^^^^^^^^^
 
 API Changes
 -----------
@@ -57,21 +132,6 @@ API Changes
 - Add ``get_regions`` method to subset plugin to retrieve spatial/spectral subsets as
   ``regions`` or ``SpectralRegions``, deprecate ``get_interactive_regions`` and ``get_spectral_regions``. [#3340]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
 Bug Fixes
 ---------
 
@@ -85,24 +145,11 @@ Bug Fixes
 
 - Fixed an issue with back-to-back calls of set_limits and get_limits. [#3371]
 
-
 Cubeviz
 ^^^^^^^
 - Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]
 
 - Fixed bugs where cube model fitting could fail if Jdaviz custom equivalencies were required. [#3343]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Other Changes and Additions
 ---------------------------
