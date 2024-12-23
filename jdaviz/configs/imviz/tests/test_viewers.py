@@ -133,9 +133,3 @@ def test_viewer_limits(imviz_helper):
     viewer.set_limits(x_min=0, x_max=20, y_min=0, y_max=20)
     limits = viewer.get_limits()
     assert limits == (0, 20, 0, 20)
-
-    # calling get_limits again should also return the same original limits, but
-    # it doesn't, uncomment once JDAT-5050 is done
-    # get limits again, make sure they are the same.
-    # limits = viewer.get_limits()
-    # assert limits == (0, 20, 0, 20)
