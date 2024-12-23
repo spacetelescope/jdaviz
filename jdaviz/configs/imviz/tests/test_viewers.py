@@ -130,6 +130,6 @@ def test_viewer_limits(imviz_helper):
     viewer = imviz_helper.default_viewer._obj
 
     # set limits then get limits and make sure they are the same
-    viewer.set_limits(x_min=0, x_max=20, y_min=0, y_max=20)
+    viewer.set_limits(x_min=0, x_max=5, y_min=0, y_max=5)
     limits = viewer.get_limits()
-    assert limits == (0, 20, 0, 20)
+    assert limits == (0, 5, 0, 5)
