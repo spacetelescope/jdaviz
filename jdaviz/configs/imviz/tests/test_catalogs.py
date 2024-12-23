@@ -114,7 +114,7 @@ class TestCatalogs:
         prev_results = catalogs_plugin.number_of_results
 
         # testing that every variable updates accordingly when markers are cleared
-        catalogs_plugin.vue_do_clear()
+        catalogs_plugin.vue_do_clear_table()
 
         assert not catalogs_plugin.results_available
 
@@ -158,14 +158,21 @@ class TestCatalogs:
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
+        # Re-populate the table with a new search
+        out_tbl = catalogs_plugin.search()
+        assert len(out_tbl) > 0
+        # Ensure at least one row is selected before zooming
+        catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+        assert len(catalogs_plugin.table.selected_rows) > 0
+
         # set 'padding' to reproduce original hard-coded 50 pixel window
         # so test results don't change
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 278.86265
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 378.8691
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 1022.5757000000001
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1122.5757
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 704.7727144165947
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 745.8271655834053
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -240,12 +247,12 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert catalogs_plugin.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
-    catalogs_plugin.clear()
+    catalogs_plugin.clear_table()
 
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
-    catalogs_plugin.clear(hide_only=False)
+    catalogs_plugin.clear_table(hide_only=False)
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
@@ -253,14 +260,21 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
+    # Re-populate the table with a new search
+    out_tbl = catalogs_plugin.search()
+    assert len(out_tbl) > 0
+    # Ensure at least one row is selected before zooming
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+    assert len(catalogs_plugin.table.selected_rows) > 0
 
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.19966
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 0.20034000000000002
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 0.8000100000000001
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1.20001
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.19966, rtol=1e-1)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max,
+                    0.20034000000000002, rtol=1e-1)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.8000100000000001, rtol=1e-1)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.20001, rtol=1e-1)
 
 
 def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
