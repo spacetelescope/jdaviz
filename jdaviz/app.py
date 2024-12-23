@@ -2035,7 +2035,7 @@ class Application(VuetifyTemplate, HubListener):
         if subset_name in self._reserved_labels:
             if raise_if_invalid:
                 raise ValueError("Cannot rename subset to name of an existing subset"
-                              f" or data item: ({subset_name}).")
+                                 f" or data item: ({subset_name}).")
             return False
 
         elif not subset_name.replace(" ", "").isalnum():
