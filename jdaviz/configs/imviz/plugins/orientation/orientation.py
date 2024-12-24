@@ -8,6 +8,7 @@ from glue.core.message import (
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
+from glue.viewers.image.state import ImageSubsetLayerState
 from traitlets import List, Unicode, Bool, Dict, observe
 
 from jdaviz.configs.imviz.wcs_utils import (
@@ -501,8 +502,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             # ensure that it is never visible:
             for layer in viewer.state.layers:
                 if (
-                    hasattr(layer.layer, 'label') and
-                    layer.layer.label.startswith("Subset") and
+                    isinstance(layer.layer, ImageSubsetLayerState) and
                     layer.layer.data.meta.get("_WCS_ONLY", False)
                 ):
                     layer.visible = False

@@ -924,11 +924,6 @@ class ImageConfigHelper(ConfigHelper):
             subset_data = lyr.layer
             subset_label = subset_data.label
 
-            # TODO: Remove this when Jdaviz support round-tripping, see
-            # https://github.com/spacetelescope/jdaviz/pull/721
-            if not subset_label.startswith('Subset'):
-                continue
-
             try:
                 if self.app.config == "imviz" and to_sky:
                     region = roi_subset_state_to_region(subset_data.subset_state, to_sky=to_sky)
