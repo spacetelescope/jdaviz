@@ -63,12 +63,18 @@ jobs:
             toxenv: py310-test
             allow_failure: false
 
+          - name: Linux - Python 3.13
+            os: ubuntu-latest
+            python: '3.13'
+            toxenv: py313-test
+            allow_failure: false
+
           # This also runs on cron but we want to make sure new changes
           # won't break this job at the PR stage.
-          - name: Python 3.12 with latest dev versions of key dependencies, and remote data
+          - name: Python 3.13 with latest dev versions of key dependencies, and remote data
             os: ubuntu-latest
-            python: '3.12'
-            toxenv: py312-test-devdeps
+            python: '3.13'
+            toxenv: py313-test-devdeps
             toxposargs: --remote-data --run-slow
             allow_failure: true
 

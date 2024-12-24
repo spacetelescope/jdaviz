@@ -140,6 +140,7 @@ filterwarnings = [
     "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",  # asdf + dateutil<=2.8.2 + Python 3.12
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
     "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",
+    "ignore:Parsing dates involving a day of month without a year:DeprecationWarning",  # ipykernel<7
     "ignore::DeprecationWarning:glue",
     "ignore::DeprecationWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
