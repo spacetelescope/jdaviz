@@ -17,11 +17,11 @@ defaults:
 
 jobs:
   build_binary_not_osx:
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
-        os: [ubuntu, windows]
+        os: [ubuntu-22.04, windows-latest]
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       with:
@@ -94,11 +94,11 @@ jobs:
 
   # Do not want to deal with OSX certs in pull request builds.
   build_binary_osx:
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
     strategy:
       matrix:
-        os: [macos]
+        os: [macos-14]
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
