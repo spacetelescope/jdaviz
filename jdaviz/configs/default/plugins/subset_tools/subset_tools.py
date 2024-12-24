@@ -241,6 +241,10 @@ class SubsetTools(PluginTemplateMixin):
                 subset_data = lyr.layer
                 subset_label = subset_data.label
 
+                if type(subset_data.subset_state) not in (RoiSubsetState, CompositeSubsetState):
+                    # Ignore MaskSubsetState here
+                    continue
+
                 try:
                     if self.app.config == "imviz" and to_sky:
                         region = roi_subset_state_to_region(subset_data.subset_state,
