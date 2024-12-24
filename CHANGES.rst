@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Added API for renaming subsets to Subset Tools plugin. [#3356]
+
 Cubeviz
 ^^^^^^^
 
@@ -92,8 +94,6 @@ New Features
 - API method to toggle API hints. [#3336]
 
 - Changing flux/SB display units no longer resets viewer zoom levels. [#3335]
-
-- Added API for renaming subsets to Subset Tools plugin. [#3356]
 
 Cubeviz
 ^^^^^^^
