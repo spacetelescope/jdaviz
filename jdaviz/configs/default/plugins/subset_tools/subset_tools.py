@@ -241,7 +241,7 @@ class SubsetTools(PluginTemplateMixin):
                 subset_data = lyr.layer
                 subset_label = subset_data.label
 
-                if type(subset_data.subset_state) not in (RoiSubsetState, CompositeSubsetState):
+                if isinstance(subset_data.subset_state, MaskSubsetState):
                     # Ignore MaskSubsetState here
                     continue
 
