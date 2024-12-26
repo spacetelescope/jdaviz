@@ -559,7 +559,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             else:
                 dq_text = ''
             self.row1b_text = f'{value:+10.5e} {unit}{dq_text}'
-            self._dict['value'] = float(value)
+            if not isinstance(value, (float, np.floating)):
+                self._dict['value'] = float(value)
+            else:
+                self._dict['value'] = value
             self._dict['value:unit'] = str(unit)
             self._dict['value:unreliable'] = unreliable_pixel
         else:
