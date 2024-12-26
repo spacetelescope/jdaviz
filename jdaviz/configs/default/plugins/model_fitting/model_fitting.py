@@ -559,7 +559,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # equivs for spectral density and flux<>sb
             pixar_sr = masked_spectrum.meta.get('_pixel_scale_factor', 1.0)
             equivs = all_flux_unit_conversion_equivs(pixar_sr, init_x)
-            equivs += u.spectral_density(init_x)
 
             init_y = flux_conversion_general([init_y.value],
                                              init_y.unit,
@@ -1114,13 +1113,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        spec = self.dataset.selected_spectrum
-        # Needs Attention:
-        # should conversion occur before or after call to _apply_subset_masks?
-        if spec.flux.unit.to_string != self.app._get_display_unit('flux'):
-            equivalencies = u.spectral_density(self.dataset.selected_spectrum.spectral_axis)
-            spec = self.dataset.selected_spectrum.with_flux_unit(self.app._get_display_unit('flux'),
-                                                                 equivalencies=equivalencies)
+        spec = self.dataset.get_selected_spectrum(use_display_units=True)
 
         masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)

@@ -377,7 +377,11 @@ class ConfigHelper(HubListener):
                                                                eqv=eqv)
                         new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
                     else:
-                        new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
+                        eqv = all_flux_unit_conversion_equivs(cube_wave=data.spectral_axis)
+                        new_uncert_converted = flux_conversion(new_uncert.quantity.value,
+                                                               new_uncert.unit, y_unit, spec=data,
+                                                               eqv=eqv)
+                        new_uncert = StdDevUncertainty(new_uncert, unit=y_unit)
 
                 else:
                     new_uncert = None
@@ -388,8 +392,9 @@ class ConfigHelper(HubListener):
                     new_y = flux_conversion(data.flux.value, data.flux.unit,
                                             y_unit, data, eqv=eqv) * u.Unit(y_unit)
                 else:
+                    eqv = all_flux_unit_conversion_equivs(cube_wave=data.spectral_axis)
                     new_y = flux_conversion(data.flux.value, data.flux.unit,
-                                            data.flux.unit, spec=data) * u.Unit(data.flux.unit)
+                                            y_unit, spec=data) * u.Unit(y_unit)
 
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                      data.spectral_axis.unit,
