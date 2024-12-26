@@ -211,7 +211,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
                    dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
-    tbl = QTable({'sky_centroid': sky})
+    tbl = QTable({'sky_centroid': sky})  # Table has no "Label" column
     tbl_file = str(tmp_path / 'sky_centroid.ecsv')
     tbl.write(tbl_file, overwrite=True)
     n_entries = len(tbl)
@@ -226,6 +226,9 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     out_tbl = catalogs_plugin.search(error_on_fail=True)
     assert len(out_tbl) == n_entries
     assert catalogs_plugin.number_of_results == n_entries
+    # Assert that Object ID is set to index + 1 when the label column is absent
+    for idx, item in enumerate(catalogs_plugin.table.items):
+        assert item['Object ID'] == str(idx + 1)
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
@@ -352,3 +355,40 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
     # test that appropriate error is raised when padding is not a valud percentage
     with pytest.raises(ValueError, match="`padding` must be between 0 and 1."):
         catalogs_plugin.zoom_to_selected(padding=5)
+
+
+def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs, tmp_path):
+    # Create a table with additional columns
+    sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
+                   dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
+    tbl = QTable({
+        'sky_centroid': sky,
+        'flux': [1.0, 2.0, 3.0],
+        'flux_err': [0.1, 0.2, 0.3],
+        'is_extended': [False, True, False],
+        'roundness': [0.01, 0.02, 0.03],
+        'sharpness': [0.1, 0.2, 0.3]
+    })
+    tbl_file = str(tmp_path / 'extra_columns.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+
+    ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    assert len(imviz_helper.app.data_collection) == 1
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']._obj
+    catalogs_plugin.from_file = tbl_file
+    catalogs_plugin.catalog_selected = 'From File...'
+    catalogs_plugin.search(error_on_fail=True)
+
+    extra_columns = ['flux', 'flux_err', 'is_extended', 'roundness', 'sharpness']
+    for col in extra_columns:
+        assert col in catalogs_plugin.table.headers_avail
+
+    # Check if extra columns are populated correctly
+    for idx, item in enumerate(catalogs_plugin.table.items):
+        assert float(item['flux']) == tbl['flux'][idx]
+        assert float(item['flux_err']) == tbl['flux_err'][idx]
+        assert item['is_extended'] == tbl['is_extended'][idx]
+        assert float(item['roundness']) == tbl['roundness'][idx]
+        assert float(item['sharpness']) == tbl['sharpness'][idx]
