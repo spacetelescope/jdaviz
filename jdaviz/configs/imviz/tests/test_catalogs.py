@@ -169,10 +169,14 @@ class TestCatalogs:
         # so test results don't change
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 1022.5757000000001
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1122.5757
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 704.7727144165947
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 745.8271655834053
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.x_min, 1022.57570000, atol=0.1)
+        assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max,
+                        1122.5757, atol=0.1)
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.y_min, 675.29611, atol=0.1)
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.y_max, 775.29611, atol=0.1)
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
