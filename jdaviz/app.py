@@ -2089,6 +2089,10 @@ class Application(VuetifyTemplate, HubListener):
                     results_dict['add_results']['label'] = new_data_label
                     d.meta['_update_live_plugin_results'] = results_dict
 
+                    for data_item in self.state.data_items:
+                        if data_item['name'] == old_data_label:
+                            data_item['name'] = new_data_label
+
         self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
 
     def _reparent_subsets(self, old_parent, new_parent=None):
