@@ -2071,6 +2071,9 @@ class Application(VuetifyTemplate, HubListener):
         else:
             subset_group.label = new_label
 
+        self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
+        _ = self.state.layer_icons.pop(old_label)
+
         self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
 
     def _reparent_subsets(self, old_parent, new_parent=None):

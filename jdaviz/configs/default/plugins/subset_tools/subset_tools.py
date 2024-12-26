@@ -305,11 +305,6 @@ class SubsetTools(PluginTemplateMixin):
         self._update_combination_mode()
 
     def _on_subset_update(self, msg):
-        '''
-        if msg.attribute == "label":
-            print("updating label")
-            print(msg.subset.label)
-        '''
         self._sync_selected_from_state()
         if 'Create New' in self.subset_selected:
             return
