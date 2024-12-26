@@ -3551,6 +3551,7 @@ class DatasetSelect(SelectPluginComponent):
         self.hub.subscribe(self, RemoveDataMessage, handler=self._update_items)
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._update_items)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._update_items)
+        self.hub.subscribe(self, SubsetRenameMessage, handler=self._update_items)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 

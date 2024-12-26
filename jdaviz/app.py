@@ -2071,8 +2071,23 @@ class Application(VuetifyTemplate, HubListener):
         else:
             subset_group.label = new_label
 
+        # Update layer icon
         self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
         _ = self.state.layer_icons.pop(old_label)
+
+        # Updated extracted spectrum if applicable and update _update_live_plugin_results dict.
+        if self.config == 'cubeviz':
+            for d in self.data_collection:
+                if d.label.split("(")[-1].split(",")[0] == old_label:
+                    old_data_label = d.label
+                    new_data_label = d.label.replace(old_label, new_label)
+                    d.label = new_data_label
+                    self.state.layer_icons[new_data_label] = self.state.layer_icons[old_data_label]
+                    _ = self.state.layer_icons.pop(old_data_label)
+                    results_dict = d.meta['_update_live_plugin_results']
+                    results_dict['aperture'] = new_label
+                    results_dict['add_results']['label'] = new_data_label
+                    d.meta['_update_live_plugin_results'] = results_dict
 
         self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
 
