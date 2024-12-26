@@ -2056,6 +2056,10 @@ class SubsetSelect(SelectPluginComponent):
         return super()._is_valid_item(subset, locals())
 
     def _update_subset(self, subset, attribute=None):
+        if attribute == 'label':
+            # We handle this in _rename_subset
+            return
+
         if (attribute == 'subset_state' and
             ((self.is_multiselect and subset.label in self.selected)
              or (subset.label == self.selected))):
