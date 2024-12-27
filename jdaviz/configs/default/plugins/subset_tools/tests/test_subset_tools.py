@@ -359,3 +359,6 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
 
     plg.rename_selected("Second Test")
     assert plg.subset.choices == ['Create New', 'Test Rename', 'Second Test']
+
+    with pytest.raises(ValueError, match="No subset named BadLabel to rename"):
+        plg.rename_subset("BadLabel", "Failure")
