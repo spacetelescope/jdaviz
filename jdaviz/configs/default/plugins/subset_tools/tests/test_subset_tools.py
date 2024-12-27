@@ -339,3 +339,20 @@ def test_check_valid_subset_label(imviz_helper):
 
     with pytest.raises(ValueError, match="The pattern 'Subset N' is reserved"):
         st.rename_selected("Subset 5")
+
+
+def test_rename_subset(cubeviz_helper, spectrum1d_cube):
+
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    plg.import_region(spatial_reg, combination_mode='new')
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
+    plg.import_region(spatial_reg, combination_mode='new')
+
+    plg.rename_subset("Subset 1", "Test Rename")
+
+    print(cubeviz_helper.app.data_collection)
+    assert plg.subset.choices == ['Create New', 'Test Rename', 'Subset 2']
+    assert cubeviz_helper.app.data_collection[-1].label == "Spectrum (Test Rename, sum)"
