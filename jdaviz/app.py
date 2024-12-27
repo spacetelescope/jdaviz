@@ -2095,7 +2095,8 @@ class Application(VuetifyTemplate, HubListener):
             if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
                 results_dict = d.meta['_update_live_plugin_results']
                 for key in results_dict.get('_subscriptions', {}).get('subset'):
-                    results_dict[key] = new_label
+                    if results_dict[key] == old_label:
+                        results_dict[key] = new_label
 
                 if data_renamed:
                     results_dict['add_results']['label'] = new_data_label
