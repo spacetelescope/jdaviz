@@ -356,3 +356,6 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
     print(cubeviz_helper.app.data_collection)
     assert plg.subset.choices == ['Create New', 'Test Rename', 'Subset 2']
     assert cubeviz_helper.app.data_collection[-1].label == "Spectrum (Test Rename, sum)"
+
+    plg.rename_selected("Second Test")
+    assert plg.subset.choices == ['Create New', 'Test Rename', 'Second Test']
