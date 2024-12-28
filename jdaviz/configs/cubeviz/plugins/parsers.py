@@ -456,6 +456,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             flux = val << u.dimensionless_unscaled  # DQ flags have no unit
         elif attr == "uncertainty":
             flux = val.represent_as(StdDevUncertainty).quantity
+            flux[np.isinf(flux)] = np.nan  # Avoid INF from IVAR conversion
         else:
             flux = val
 
