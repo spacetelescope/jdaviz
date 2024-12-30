@@ -45,6 +45,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed copious warnings from spaxel tool when data has INF. [#3368]
+
 Imviz
 ^^^^^
 

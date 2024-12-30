@@ -172,5 +172,8 @@ class SpectrumPerSpaxel(ProfileFromCube):
             self.viewer.start_stream()
             self.viewer.update_sonified_cube(x, y)
 
-            self._profile_viewer.set_limits(
-                y_min=np.nanmin(y_values) * 0.8, y_max=np.nanmax(y_values) * 1.2)
+            # Data might have inf too.
+            new_ymin = np.nanmin(y_values)
+            new_ymax = np.nanmax(y_values)
+            if np.all(np.isfinite([new_ymin, new_ymax])):
+                self._profile_viewer.set_limits(y_min=new_ymin * 0.8, y_max=new_ymax * 1.2)
