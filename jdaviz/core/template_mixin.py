@@ -1789,7 +1789,10 @@ class LayerSelect(SelectPluginComponent):
 
         def _sort_by_zorder(items_dict):
             # NOTE: this works best if subscribed to a single viewer
-            return -1 * items_dict.get('zorder', 0)
+            zorder = items_dict.get('zorder', 0)
+            if zorder is None:
+                zorder = 0
+            return -1 * zorder
 
         if self.sort_by == 'zorder':
             layer_items.sort(key=_sort_by_zorder)
