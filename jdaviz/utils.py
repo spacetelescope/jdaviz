@@ -519,7 +519,7 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
         return values, targ_units, 'targ'
 
     elif indirect_needs_spec_axis or (spec_unit and solid_angle_in_spec):
-        if not solid_angle_in_targ:
+        if not solid_angle_in_targ and solid_angle_in_spec:
             targ_units /= solid_angle_in_spec
             solid_angle_in_targ = solid_angle_in_spec
         if ((u.Unit(targ_units) in indirect_units()) or
