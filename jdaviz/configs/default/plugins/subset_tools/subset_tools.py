@@ -85,6 +85,8 @@ class SubsetTools(PluginTemplateMixin):
     * :meth:`set_center`
     * :meth:`import_region`
     * :meth:`get_regions`
+    * :meth:`rename_selected`
+    * :meth:`rename_subset`
     """
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
