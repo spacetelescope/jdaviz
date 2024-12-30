@@ -52,7 +52,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.stream = None
 
         self.sonification_wl_ranges = None
-        self.sonification_wl_bounds = None
         self.sonification_wl_unit = None
         self.volume_level = None
         self.stream_active = True
@@ -115,8 +114,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sonified_cube.newsig = self.sonified_cube.sigcube[x, y, :]
         self.sonified_cube.cbuff = True
 
-    def update_listener_wls(self, wbounds, wunit):
-        self.sonification_wl_ranges = wbounds
+    def update_listener_wls(self, wranges, wunit):
+        self.sonification_wl_ranges = wranges
         self.sonification_wl_unit = wunit
 
     def update_sound_device(self, device_index):
@@ -170,7 +169,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self.sonified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
                                               samplerate=sample_rate, buffsize=buffer_size,
-                                              wl_bounds=self.sonification_wl_bounds,
                                               wl_unit=self.sonification_wl_unit,
                                               audfrqmin=audfrqmin, audfrqmax=audfrqmax,
                                               eln=eln, vol=self.volume_level)

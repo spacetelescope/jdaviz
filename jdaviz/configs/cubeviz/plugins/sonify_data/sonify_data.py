@@ -119,10 +119,10 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         display_unit = self.spec_viewer.state.x_display_unit
         # is this spectral selection or the entire spectrum?
         if hasattr(self.spectral_subset.selected_obj, "subregions"):
-            wlbounds = self.spectral_subset.selected_obj.subregions
+            wlranges = self.spectral_subset.selected_obj.subregions
         else:
-            wlbounds = None
-        self.flux_viewer.update_listener_wls(wlbounds, display_unit)
+            wlranges = None
+        self.flux_viewer.update_listener_wls(wlranges, display_unit)
 
     @observe('volume')
     def update_volume_level(self, event):

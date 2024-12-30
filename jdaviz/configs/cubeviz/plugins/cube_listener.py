@@ -59,8 +59,7 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
 
 class CubeListenerData:
     def __init__(self, cube, wlens, samplerate=44100, duration=1, overlap=0.05, buffsize=1024,
-                 bdepth=16, wl_bounds=None, wl_unit=None, audfrqmin=50, audfrqmax=1500,
-                 eln=False, vol=None):
+                 bdepth=16, wl_unit=None, audfrqmin=50, audfrqmax=1500, eln=False, vol=None):
         self.siglen = int(samplerate*(duration-overlap))
         self.cube = cube
         self.dur = duration
@@ -74,7 +73,6 @@ class CubeListenerData:
         else:
             self.atten_level = int(np.clip((vol/100)**2, MINVOL, 1))
 
-        self.wl_bounds = wl_bounds
         self.wl_unit = wl_unit
         self.wlens = wlens
 
