@@ -315,3 +315,50 @@ def test_get_regions_composite(cubeviz_helper, spectrum1d_cube):
     # make sure the same regions are returned by app.get_subsets
     get_subsets = cubeviz_helper.app.get_subsets()
     assert np.all([get_subsets[ss][0]['region'] == regions[ss] for ss in ss_labels])
+
+
+def test_check_valid_subset_label(imviz_helper):
+
+    # imviz instance with some data
+    data = NDData(np.ones((50, 50)) * u.nJy)
+    imviz_helper.load_data(data)
+
+    st = imviz_helper.plugins["Subset Tools"]
+
+    # apply three subsets, with their default names of `Subset 1`, `Subset 2`, and `Subset 3`
+    st.import_region(CircularROI(20, 20, 10))
+    st.subset = "Create New"
+    st.import_region(CircularROI(25, 25, 10))
+    st.subset = "Create New"
+    st.import_region(CircularROI(30, 30, 10))
+
+    # we should not be able to rename or add a subset named 'Subset 1'.
+    # Make sure this warns and returns accordingly.
+    with pytest.raises(ValueError, match="Cannot rename subset to name of an existing subset"):
+        st.rename_selected("Subset 1")
+
+    with pytest.raises(ValueError, match="The pattern 'Subset N' is reserved"):
+        st.rename_selected("Subset 5")
+
+
+def test_rename_subset(cubeviz_helper, spectrum1d_cube):
+
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    plg.import_region(spatial_reg, combination_mode='new')
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
+    plg.import_region(spatial_reg, combination_mode='new')
+
+    plg.rename_subset("Subset 1", "Test Rename")
+
+    print(cubeviz_helper.app.data_collection)
+    assert plg.subset.choices == ['Create New', 'Test Rename', 'Subset 2']
+    assert cubeviz_helper.app.data_collection[-1].label == "Spectrum (Test Rename, sum)"
+
+    plg.rename_selected("Second Test")
+    assert plg.subset.choices == ['Create New', 'Test Rename', 'Second Test']
+
+    with pytest.raises(ValueError, match="No subset named BadLabel to rename"):
+        plg.rename_subset("BadLabel", "Failure")

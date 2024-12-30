@@ -41,7 +41,7 @@ from jdaviz import __version__
 from jdaviz import style_registry
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                                SnackbarMessage, RemoveDataMessage,
+                                SnackbarMessage, RemoveDataMessage, SubsetRenameMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, ChangeRefDataMessage,
@@ -319,6 +319,9 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, PluginPlotAddedMessage,
                            handler=self._on_plugin_plot_added)
 
+        # Convenient reference of all existing subset names
+        self._reserved_labels = set([])
+
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
 
@@ -371,10 +374,14 @@ class Application(VuetifyTemplate, HubListener):
         # Internal cache so we don't have to keep calling get_object for the same Data.
         # Key should be (data_label, statistic) and value the translated object.
         self._get_object_cache = {}
+
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=self._on_subset_update_message)
+        # These both call _on_layers_changed
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_subset_delete_message)
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=self._on_subset_create_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
@@ -384,9 +391,6 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_add_data_message)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_layers_changed)
-        self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=self._on_layers_changed)
-        # SubsetDeleteMessage will also call _on_layers_changed via _on_subset_delete_message
 
         # Emit messages when icons are updated
         self.state.add_callback('viewer_icons',
@@ -464,6 +468,13 @@ class Application(VuetifyTemplate, HubListener):
 
     def _on_subset_delete_message(self, msg):
         self._remove_live_plugin_results(trigger_subset=msg.subset)
+        if msg.subset.label in self._reserved_labels:
+            # This might already be gone in test teardowns
+            self._reserved_labels.remove(msg.subset.label)
+        self._on_layers_changed(msg)
+
+    def _on_subset_create_message(self, msg):
+        self._reserved_labels.add(msg.subset.label)
         self._on_layers_changed(msg)
 
     def _on_plugin_plot_added(self, msg):
@@ -584,6 +595,9 @@ class Application(VuetifyTemplate, HubListener):
             children_layers = self._get_assoc_data_children(layer_name)
 
         elif hasattr(msg, 'subset'):
+            # We don't need to reprocess the subset for every data collection entry
+            if msg.subset.data != self.data_collection[0]:
+                return
             layer_name = msg.subset.label
             is_wcs_only = False
             is_not_child = True
@@ -1988,6 +2002,109 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
 
+    def _check_valid_subset_label(self, subset_name, raise_if_invalid=True):
+        """Check that `subset_name` is a valid choice for a subset name. This
+        check is run when renaming subsets.
+
+        A valid subset name must not be the name of another subset in the data
+        collection (case insensitive? there cant be a subset 1 and a Subset 1.)
+        The name may match a subset in the data collection if it the current
+        active selection (i.e the renaming is not really a renaming, it is
+        just keeping the old name, which is valid).
+
+        Unlike dataset names, the attempted renaming of a subset to an existing
+        subset label will not append a number (e.g Subset 1 repeated because
+        Subset 1(1)). If the name exists, a warning will be raised and the
+        original subset name will be returned.
+
+        """
+
+        # get active selection, if there is one
+        if self.session.edit_subset_mode.edit_subset == []:
+            subset_selected = None
+        else:
+            subset_selected = self.session.edit_subset_mode.edit_subset[0].label
+
+        # remove the current selection label from the set of labels, because its ok
+        # if the new subset shares the name of the current selection (renaming to current name)
+        if subset_selected in self._reserved_labels:
+            self._reserved_labels.remove(subset_selected)
+
+        # now check `subset_name` against list of non-active current subset labels
+        # and warn and return if it is
+        if subset_name in self._reserved_labels:
+            if raise_if_invalid:
+                raise ValueError("Cannot rename subset to name of an existing subset"
+                                 f" or data item: ({subset_name}).")
+            return False
+
+        elif not subset_name.replace(" ", "").isalnum():
+            if raise_if_invalid:
+                raise ValueError("Subset labels must be purely alphanumeric")
+            return False
+
+        else:
+            split_label = subset_name.split(" ")
+            if split_label[0] == "Subset" and split_label[1].isdigit():
+                if raise_if_invalid:
+                    raise ValueError("The pattern 'Subset N' is reserved for "
+                                     "auto-generated labels")
+                return False
+
+        return True
+
+    def _rename_subset(self, old_label, new_label, subset_group=None, check_valid=True):
+        # Change the label of a subset, making sure it propagates to as many places as it can
+        # I don't think there's an easier way to get subset_group by label, it's just a tuple
+        if subset_group is None:
+            for s in self.data_collection.subset_groups:
+                if s.label == old_label:
+                    subset_group = s
+                    break
+            # If we couldn't find a matching subset group, raise an error
+            else:
+                raise ValueError(f"No subset named {old_label} to rename")
+
+        if check_valid:
+            if self._check_valid_subset_label(new_label):
+                subset_group.label = new_label
+        else:
+            subset_group.label = new_label
+
+        # Update layer icon
+        self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
+        _ = self.state.layer_icons.pop(old_label)
+
+        # Updated derived data if applicable
+        for d in self.data_collection:
+            data_renamed = False
+            # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
+            if d.label.split("(")[-1].split(",")[0] == old_label:
+                old_data_label = d.label
+                new_data_label = d.label.replace(old_label, new_label)
+                d.label = new_data_label
+                self.state.layer_icons[new_data_label] = self.state.layer_icons[old_data_label]
+                _ = self.state.layer_icons.pop(old_data_label)
+
+                # Update the entries in the old data menu
+                for data_item in self.state.data_items:
+                    if data_item['name'] == old_data_label:
+                        data_item['name'] = new_data_label
+
+            # Update live plugin results subscriptions
+            if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
+                results_dict = d.meta['_update_live_plugin_results']
+                for key in results_dict.get('_subscriptions', {}).get('subset'):
+                    if results_dict[key] == old_label:
+                        results_dict[key] = new_label
+
+                if data_renamed:
+                    results_dict['add_results']['label'] = new_data_label
+
+                d.meta['_update_live_plugin_results'] = results_dict
+
+        self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
+
     def _reparent_subsets(self, old_parent, new_parent=None):
         '''
         Re-parent subsets that belong to the specified data
@@ -2380,6 +2497,7 @@ class Application(VuetifyTemplate, HubListener):
             self._link_new_data()
         data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
+        self._reserved_labels.add(msg.data.label)
 
     def _clear_object_cache(self, data_label=None):
         if data_label is None:

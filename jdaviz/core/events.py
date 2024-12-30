@@ -2,7 +2,7 @@ import astropy.units as u
 from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
-           'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage',
+           'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage', 'SubsetRenameMessage',
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
@@ -159,6 +159,27 @@ class ChangeRefDataMessage(Message):
     @property
     def old(self):
         return self._old
+
+
+class SubsetRenameMessage(Message):
+    def __init__(self, subset_group, old_label, new_label, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._subset_group = subset_group
+        self._old_label = old_label
+        self._new_label = new_label
+
+    @property
+    def subset_group(self):
+        return self._subset_group
+
+    @property
+    def old_label(self):
+        return self._old_label
+
+    @property
+    def new_label(self):
+        return self._new_label
 
 
 class SnackbarMessage(Message):
