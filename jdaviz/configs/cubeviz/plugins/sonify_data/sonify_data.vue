@@ -26,6 +26,7 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Select the data set."
     />
+
     <plugin-subset-select
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
@@ -35,6 +36,7 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the wavelength range."
     />
+
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel>

@@ -247,7 +247,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if event.get('name') == 'layer_items':
             # changing the layers in the viewer needs to trigger an update to dataset_items
             # through the set filters
-            self.dataset._on_data_changed()
+            self.dataset._update_items()
             self.loaded_n_data = len([lyr for lyr in self.layer.choices
                                       if lyr not in subset_labels])
             return
@@ -358,6 +358,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 layer.visible = visible
             elif hasattr(layer.layer, 'data') and layer.layer.data.label == layer_label:
                 layer.visible = layer.layer.label in self.visible_layers
+            if not visible and self.app._get_assoc_data_parent(layer.layer.label) == layer_label:
+                # then this is a child-layer of a parent-layer that is being hidden
+                # so also hide the child-layer
+                layer.visible = False
+
+        if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
+            # ensure the parent layer is also visible
+            self.set_layer_visibility(parent_label, visible=True)
+
         return self.visible_layers
 
     def toggle_layer_visibility(self, layer_label):

@@ -19,8 +19,9 @@ from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
 
-import astropy.units as u
 from astropy.nddata import NDDataArray, CCDData, StdDevUncertainty
+import astropy.units as u
+from astropy.utils.decorators import deprecated
 from regions.core.core import Region
 from specutils import Spectrum1D, SpectralRegion
 
@@ -453,6 +454,20 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
+    def toggle_api_hints(self, enabled=None):
+        """
+        Toggle the visibility of API hints in the application.
+
+        Parameters
+        ----------
+        enabled : bool, optional
+            If `True`, show API hints. If `False`, hide API hints.
+            If `None`, toggle the current state.
+        """
+        if enabled is None:
+            enabled = not self.app.state.show_api_hints
+        self.app.state.show_api_hints = enabled
+
     def _handle_display_units(self, data, use_display_units=True):
         if use_display_units:
             if isinstance(data, Spectrum1D):
@@ -878,8 +893,10 @@ class ImageConfigHelper(ConfigHelper):
         if return_bad_regions:
             return bad_regions
 
+    @deprecated(since="4.1", alternative="subset_tools.get_regions")
     def get_interactive_regions(self):
-        """Return spatial regions that can be interacted with in the viewer.
+        """
+        Return spatial regions that can be interacted with in the viewer.
         This does not return masked regions added via :meth:`load_regions`.
 
         Unsupported region shapes will be skipped. When that happens,
@@ -906,11 +923,6 @@ class ImageConfigHelper(ConfigHelper):
 
             subset_data = lyr.layer
             subset_label = subset_data.label
-
-            # TODO: Remove this when Jdaviz support round-tripping, see
-            # https://github.com/spacetelescope/jdaviz/pull/721
-            if not subset_label.startswith('Subset'):
-                continue
 
             try:
                 if self.app.config == "imviz" and to_sky:

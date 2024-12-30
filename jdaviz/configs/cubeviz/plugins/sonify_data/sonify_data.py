@@ -39,8 +39,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     """
     template_file = __file__, "sonify_data.vue"
 
-    sample_rate = 44100 #IntHandleEmpty(44100).tag(sync=True)
-    buffer_size = 2048 #IntHandleEmpty(2048).tag(sync=True)
+    sample_rate = 44100 # lets not reveal these to users yet
+    buffer_size = 2048  # lets not reveal these to users yet
     assidx = FloatHandleEmpty(2.5).tag(sync=True)
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
     eln = Bool(True).tag(sync=True)
@@ -75,7 +75,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # TODO: Remove hardcoded range and flux viewer
         self.spec_viewer = self.app.get_viewer('spectrum-viewer')
         self.flux_viewer = self.app.get_viewer('flux-viewer')
-        
+
+
     @property
     def user_api(self):
         expose = []

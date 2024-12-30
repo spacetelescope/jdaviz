@@ -22,17 +22,17 @@ This may need to instead be tested for in the future.
 '''
 
 import numpy as np
+from numpy.testing import assert_allclose
 import pytest
 
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NDData
-from astropy.coordinates import SkyCoord
-from astropy.table import QTable
+from astropy.table import Table, QTable
 
 
 @pytest.mark.remote_data
 class TestCatalogs:
-
     # testing that the plugin search does not crash when no data/image is provided
     def test_plugin_no_image(self, imviz_helper):
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
@@ -86,11 +86,26 @@ class TestCatalogs:
 
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
+
+        # test SDSS catalog
+        catalogs_plugin.catalog.selected = 'SDSS'
+
+        # testing that SDSS catalog respects the maximum sources set
+        catalogs_plugin.max_sources = 100
+        catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+
+        # reset max_sources to it's default value
+        catalogs_plugin.max_sources = 1000
         # This basically calls the following under the hood:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
         catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.catalog.selected == 'SDSS'
 
         # number of results should be > 500 or so
         # Answer was determined by running the search with the image in the notebook.
@@ -110,6 +125,9 @@ class TestCatalogs:
         tmp_file = tmp_path / 'test.ecsv'
         qtable.write(tmp_file, overwrite=True)
 
+        # reset max_sources to it's default value
+        catalogs_plugin.max_sources = 1000
+
         catalogs_plugin.from_file = str(tmp_file)
         # setting filename from API will automatically set catalog to 'From File...'
         assert catalogs_plugin.catalog.selected == 'From File...'
@@ -120,12 +138,29 @@ class TestCatalogs:
         catalogs_plugin.table.selected_rows = catalogs_plugin.table.items[0:2]
         assert len(catalogs_plugin.table.selected_rows) == 2
 
+        # test Gaia catalog
+        catalogs_plugin.catalog.selected = 'Gaia'
+
+        assert catalogs_plugin.catalog.selected == 'Gaia'
+
+        # astroquery.gaia query has the Gaia.ROW_LIMIT parameter that limits the number of rows
+        # returned. Test to verify that this query functionality is maintained by the package.
+        # Note: astroquery.sdss does not have this parameter.
+        catalogs_plugin.max_sources = 10
+        with pytest.warns(ResourceWarning):
+            catalogs_plugin.search(error_on_fail=True)
+
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+
         assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 2047.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
-        catalogs_plugin.vue_zoom_in()
+        # set 'padding' to reproduce original hard-coded 50 pixel window
+        # so test results don't change
+        catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
         assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
@@ -182,7 +217,31 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert catalogs_plugin.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+    assert len(catalogs_plugin.table.selected_rows) == 1
+
+    # test to ensure sources searched for respect the maximum sources traitlet
+    catalogs_plugin.max_sources = 1
+    catalogs_plugin.search(error_on_fail=True)
+    assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+
+    catalogs_plugin.clear_table()
+
+    # test single source edge case and docs recommended input file type
+    sky_coord = SkyCoord(ra=337.5202807, dec=-20.83305528, unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord], 'label': ['Source_1']})
+    tbl_file = str(tmp_path / 'sky_centroid1.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+    n_entries = len(tbl)
+
+    catalogs_plugin.from_file = tbl_file
+    out_tbl = catalogs_plugin.search()
+    assert len([out_tbl]) == n_entries
+    assert catalogs_plugin.number_of_results == n_entries
+    assert len(imviz_helper.app.data_collection) == 2  # image + markers
+
     catalogs_plugin.clear()
+
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
@@ -190,18 +249,88 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
-    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
-
-    assert len(catalogs_plugin.table.selected_rows) == 1
-
     assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
 
-    catalogs_plugin.vue_zoom_in()
+    # test the zooming using the default 'padding' of 2% of the viewer size
+    # around selected points
+    catalogs_plugin.zoom_to_selected()
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.19966
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 0.20034000000000002
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 0.8000100000000001
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1.20001
 
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -49.99966
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 50.00034
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -48.99999
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 51.00001
+
+def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
+
+    arr = np.ones((500, 500))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+
+    # write out catalog to file so we can read it back in
+    # todo: if tables can be loaded directly at some point, do that
+
+    # sources at pixel coords ~(100, 100), ~(200, 200)
+    sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
+                         dec=[-20.80555273, -20.7777673], unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord],
+                 'label': ['Source_1', 'Source_2']})
+    tbl_file = str(tmp_path / 'test_catalog.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+
+    catalogs_plugin._obj.from_file = tbl_file
+
+    catalogs_plugin._obj.search()
+
+    # select both sources
+    catalogs_plugin._obj.table.selected_rows = catalogs_plugin._obj.table.items
+
+    # check viewer limits before zoom
+    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+    assert xmin == ymin == -0.5
+    assert xmax == ymax == 499.5
+
+    # zoom to selected sources
+    catalogs_plugin.zoom_to_selected()
+
+    # make sure the viewer bounds reflect the zoom, which, in pixel coords,
+    # should be centered at roughly pixel coords (150, 150)
+    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+
+    assert_allclose((xmin + xmax) / 2, 150., atol=0.1)
+    assert_allclose((ymin + ymax) / 2, 150., atol=0.1)
+
+    # and the zoom box size should reflect the default padding of 2% of the image
+    # size around the bounding box containing the source(s), which in this case is
+    # 10 pixels around
+    assert_allclose(xmin, 100 - 10, atol=0.1)  # min x of selected sources minus pad
+    assert_allclose(xmax, 200 + 10, atol=0.1)  # max x of selected sources plus pad
+    assert_allclose(ymin, 100 - 10, atol=0.1)  # min y of selected sources minus pad
+    assert_allclose(ymax, 200 + 10, atol=0.1)  # max y of selected sources plus pad
+
+    # select one source now
+    catalogs_plugin._obj.table.selected_rows = catalogs_plugin._obj.table.items[0:1]
+
+    # zoom to single selected source, using a new value for 'padding'
+    catalogs_plugin.zoom_to_selected(padding=0.05)
+
+    # check that zoom window is centered correctly on the source at 100, 100
+    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+    assert_allclose((xmin + xmax) / 2, 100., atol=0.1)
+    assert_allclose((ymin + ymax) / 2, 100., atol=0.1)
+
+    # and the zoom box size should reflect the default padding of 5% of the image
+    # size around the bounding box containing the source(s), which in this case is
+    # 25 pixels around
+    assert_allclose(xmin, 100 - 25, atol=0.1)  # min x of selected source minus pad
+    assert_allclose(xmax, 100 + 25, atol=0.1)  # max x of selected source plus pad
+    assert_allclose(ymin, 100 - 25, atol=0.1)  # min y of selected source minus pad
+    assert_allclose(ymax, 100 + 25, atol=0.1)  # max y of selected source plus pad
+
+    # test that appropriate error is raised when padding is not a valud percentage
+    with pytest.raises(ValueError, match="`padding` must be between 0 and 1."):
+        catalogs_plugin.zoom_to_selected(padding=5)

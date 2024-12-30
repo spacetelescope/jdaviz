@@ -29,6 +29,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`zoom_to_selected`
     """
     template_file = __file__, "catalogs.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -36,7 +37,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     catalog_selected = Unicode("").tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
-    max_gaia_sources = IntHandleEmpty(1000).tag(sync=True)
+    max_sources = IntHandleEmpty(1000).tag(sync=True)
 
     # setting the default table headers and values
     _default_table_values = {
@@ -49,7 +50,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('clear_table', 'export_table',))
+        return PluginUserApi(self, expose=('clear_table', 'export_table',
+                                           'zoom_to_selected'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,6 +145,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # the distance between the longest zoom limits and the center point
         zoom_radius = max(skycoord_center.separation(zoom_coordinate))
 
+        max_sources_used = False
+
         # conducts search based on SDSS
         if self.catalog_selected == "SDSS":
             from astroquery.sdss import SDSS
@@ -159,6 +163,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                     zoom_radius = r_max
                 query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                         data_release=17)
+                if len(query_region_result) > self.max_sources:
+                    query_region_result = query_region_result[:self.max_sources]
+                    max_sources_used = True
             except Exception as e:  # nosec
                 errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
                           f"r={zoom_radius}: {repr(e)}")
@@ -182,11 +189,14 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                       unit='deg')
 
         elif self.catalog_selected == 'Gaia':
-            from astroquery.gaia import Gaia, conf
+            from astroquery.gaia import Gaia
 
-            with conf.set_temp("ROW_LIMIT", self.max_gaia_sources):
-                sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
-                                            columns=('source_id', 'ra', 'dec'))
+            Gaia.ROW_LIMIT = self.max_sources
+            sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
+                                        columns=('source_id', 'ra', 'dec')
+                                        )
+            if len(sources) == self.max_sources:
+                max_sources_used = True
             self.app._catalog_source_table = sources
             skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
 
@@ -195,8 +205,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             # but this exceptions might be raised here if setting from_file from the UI
             table = self.catalog.selected_obj
             self.app._catalog_source_table = table
-            skycoord_table = table['sky_centroid']
-
+            if len(table['sky_centroid']) > self.max_sources:
+                skycoord_table = table['sky_centroid'][:self.max_sources]
+                max_sources_used = True
+            else:
+                skycoord_table = table['sky_centroid']
         else:
             self.results_available = False
             self.number_of_results = 0
@@ -208,6 +221,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.number_of_results = 0
             self.app._catalog_source_table = None
             return
+
+        if max_sources_used:
+            snackbar_message = SnackbarMessage(
+                    f"{self.catalog_selected} queried, results returned were limited using max_sources = {self.max_sources}.",  # noqa
+                    color="success",
+                    sender=self)
+            self.hub.broadcast(snackbar_message)
 
         # coordinates found are converted to pixel coordinates
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)
@@ -225,6 +245,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
 
         if self.catalog_selected in ["SDSS", "Gaia"]:
+            # for single source convert table information to lists for zipping
+            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
+                x_coordinates = [x_coordinates]
+                y_coordinates = [y_coordinates]
+
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
                                              x_coordinates, y_coordinates):
                 if self.catalog_selected == "SDSS":
@@ -236,13 +261,17 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'Declination (degrees)': row['dec'],
                             'Object ID': row_id.astype(str),
                             'id': len(self.table),
-                            'x_coord': x_coord,
-                            'y_coord': y_coord}
+                            'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
+                            'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
                 self.table.add_item(row_info)
-
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
-        if self.catalog_selected == 'From File...':
+        elif self.catalog_selected in ["From File..."]:
+            # for single source convert table information to lists for zipping
+            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
+                x_coordinates = [x_coordinates]
+                y_coordinates = [y_coordinates]
+
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
                                              x_coordinates, y_coordinates):
                 # Check if the row contains the required keys
@@ -250,9 +279,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'Declination (degrees)': row['sky_centroid'].dec.deg,
                             'Object ID': str(row.get('label', 'N/A')),
                             'id': len(self.table),
-                            'x_coord': x_coord,
-                            'y_coord': y_coord}
-
+                            'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
+                            'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
                 self.table.add_item(row_info)
 
         filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
@@ -298,23 +326,62 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                                            getattr(y, 'value', y))
 
     def vue_zoom_in(self, *args, **kwargs):
-        """This function will zoom into the image based on the selected points"""
+
+        self.zoom_to_selected()
+
+    def zoom_to_selected(self, padding=0.02, return_bounding_box=False):
+        """
+        Zoom on the default viewer to a region containing the currently selected
+        points in the catalog.
+
+        Parameters
+        ----------
+        padding : float, optional
+            A fractional value representing the padding around the bounding box
+            of the selected points. It is applied as a proportion of the largest
+            dimension of the current extent of loaded data. Defaults to 0.02.
+        return_bounding_box : bool, optional
+            If True, returns the bounding box of the zoomed region as
+            ((x_min, x_max), (y_min, y_max)). Defaults to False.
+
+        Returns
+        -------
+        list of float or None
+            If there are activley selected rows, and ``return_bounding_box`` is
+            True, returns a list containing the bounding
+            box coordinates: [x_min, x_max, y_min, y_max].
+            Otherwise, returns None.
+
+        """
+
+        viewer = self.app._jdaviz_helper._default_viewer
+
         selected_rows = self.table.selected_rows
+
+        if not len(selected_rows):
+            return
+
+        if padding <= 0 or padding > 1:
+            raise ValueError("`padding` must be between 0 and 1.")
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
 
+        limits = viewer.state._get_reset_limits()
+        max_dim = max((limits[1] - limits[0]), (limits[3] - limits[2]))
+        padding = max_dim * padding
+
         # this works with single selected points
         # zooming when the range is too large is not performing correctly
-        x_min = min(x) - 50
-        x_max = max(x) + 50
-        y_min = min(y) - 50
-        y_max = max(y) + 50
+        x_min = min(x) - padding
+        x_max = max(x) + padding
+        y_min = min(y) - padding
+        y_max = max(y) + padding
 
-        self.app._jdaviz_helper._default_viewer.set_limits(
-            x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        viewer.set_limits(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
-        return (x_min, x_max), (y_min, y_max)
+        if return_bounding_box:
+            return [x_min, x_max, y_min, y_max]
 
     def import_catalog(self, catalog):
         """

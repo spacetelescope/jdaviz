@@ -1,12 +1,10 @@
-4.1 (unreleased)
+4.2 (unreleased)
 ================
 
 New Features
 ------------
 
-* New design for viewer legend and data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310]
-
-* Improve performance while importing multiple regions. [#3321]
+- Added API for renaming subsets to Subset Tools plugin. [#3356]
 
 Cubeviz
 ^^^^^^^
@@ -16,31 +14,17 @@ Cubeviz
 Imviz
 ^^^^^
 
-* Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
-
-* Add Roman WFI and CGI footprints to the Footprints plugin. [#3322]
-
 Mosviz
 ^^^^^^
 
 Specviz
 ^^^^^^^
-- Specviz parser will now split a spectrum with a 2D flux array into multiple spectra on load
-  (useful for certain SDSS file types). [#3229]
 
 Specviz2d
 ^^^^^^^^^
 
 API Changes
 -----------
-- Removed API access to plugins that have passed the deprecation period: Links Control, Canvas Rotation, Export Plot. [#3270]
-
-- Subset Tools plugin now exposes the ``subset``, ``combination_mode``, ``recenter_dataset``,
-  ``recenter``, ``get_center``, and ``set_center`` in the user API. [#3293, #3304, #3325]
-
-- Metadata plugin: ``metadata_plugin.metadata`` API has been deprecated; use
-  ``metadata_plugin.meta`` instead, which will return a Python dictionary instead of
-  list of tuples. [#3292]
 
 Cubeviz
 ^^^^^^^
@@ -60,13 +44,10 @@ Specviz2d
 Bug Fixes
 ---------
 
-- Fixed broken flux unit conversions in all plugins that respond to changes in flux unit changes. These cases
-  occured when certain flux-to flux-conversions occured, as well as certain conversions between flux and surface
-  brightness. This PR also fixed an issue with unit string formatting in the aperture photometry plugin. [#3228]
-
 Cubeviz
 ^^^^^^^
-- Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]
+
+- Fixed copious warnings from spaxel tool when data has INF. [#3368]
 
 Imviz
 ^^^^^
@@ -82,10 +63,109 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+
+4.1.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.1 (2024-12-23)
+================
+
+New Features
+------------
+
+- New design for viewer legend and future data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310, #3370]
+
+- Improve performance while importing multiple regions. [#3321]
+
+- API method to toggle API hints. [#3336]
+
+- Changing flux/SB display units no longer resets viewer zoom levels. [#3335]
+
+Cubeviz
+^^^^^^^
+
+- Add Sonify Data plugin which uses the Strauss package to turn a data cube into sound. [#3269]
+
+Imviz
+^^^^^
+
+- Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
+
+- Add Roman WFI and CGI footprints to the Footprints plugin. [#3322, #3345]
+
+- Catalog Search plugin now exposes a maximum sources limit for all catalogs and resolves an edge case
+  when loading a catalog from a file that only contains one source. [#3337]
+
+- Catalog Search plugin ``zoom_to_selected`` is now in the public API. The default
+  zoom level changed from a fixed 50 pixels to a zoom window that is a fraction of
+  the image size (default 2%) to address and issue with zooming when using a small
+  image or WCS linked. [#3369]
+
+Specviz
+^^^^^^^
+- Specviz parser will now split a spectrum with a 2D flux array into multiple spectra on load
+  (useful for certain SDSS file types). [#3229]
+
+API Changes
+-----------
+- Removed API access to plugins that have passed the deprecation period: Links Control, Canvas Rotation, Export Plot. [#3270]
+
+- Subset Tools plugin now exposes the ``subset``, ``combination_mode``, ``recenter_dataset``,
+  ``recenter``, ``get_center``, and ``set_center`` in the user API. [#3293, #3304, #3325]
+
+- Metadata plugin: ``metadata_plugin.metadata`` API has been deprecated; use
+  ``metadata_plugin.meta`` instead, which will return a Python dictionary instead of
+  list of tuples. [#3292]
+
+- Add ``get_regions`` method to subset plugin to retrieve spatial/spectral subsets as
+  ``regions`` or ``SpectralRegions``, deprecate ``get_interactive_regions`` and ``get_spectral_regions``. [#3340]
+
+Bug Fixes
+---------
+
+- Fixed broken flux unit conversions in all plugins that respond to changes in flux unit changes. These cases
+  occured when certain flux-to flux-conversions occured, as well as certain conversions between flux and surface
+  brightness. This PR also fixed an issue with unit string formatting in the aperture photometry plugin. [#3228]
+
+- Fixed broken histogram pan/zoom in Plot Options plugin. [#3361]
+
+- Fixed bug with Plot Options select_all when data is float32. [#3366]
+
+- Fixed an issue with back-to-back calls of set_limits and get_limits. [#3371]
+
+Cubeviz
+^^^^^^^
+- Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]
+
+- Fixed bugs where cube model fitting could fail if Jdaviz custom equivalencies were required. [#3343]
+
+Other Changes and Additions
+---------------------------
+
 - Added a short description of each plugin in the side menu, visible before the plugin is opened. Removes redundant descriptions above link
   out to documentation when plugin is opened. Enable search on plugin description in addition to title. [#3268]
 
-4.0.1 (unreleased)
+- Improved performance of ``app.get_subsets`` for the single-subset case. [#3363]
+
+4.0.1 (2024-12-16)
 ==================
 
 Bug Fixes
@@ -116,7 +196,7 @@ Cubeviz
 
 - Fixed initializing a Gaussian1D model component when ``Cube Fit`` is toggled on. [#3295]
 
-- Spectral extraction now correctly respects the loaded mask cube. [#3319]
+- Spectral extraction now correctly respects the loaded mask cube. [#3319, #3358]
 
 Imviz
 ^^^^^
