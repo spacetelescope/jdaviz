@@ -302,6 +302,11 @@ def flux_conversion_general(values, original_unit, target_unit,
             return values
         return values * original_unit
 
+    if isinstance(original_unit, str):
+        original_unit = u.Unit(original_unit)
+    if isinstance(target_unit, str):
+        target_unit = u.Unit(target_unit)
+
     solid_angle_in_orig = check_if_unit_is_per_solid_angle(original_unit,
                                                            return_unit=True)
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(target_unit,
@@ -315,7 +320,7 @@ def flux_conversion_general(values, original_unit, target_unit,
         # the pix2 before conversion and re-apply. if this doesn't work, something else
         # is going on (missing equivalency, etc)
         if solid_angle_in_orig == solid_angle_in_targ == PIX2:
-            converted_values = (values * original_unit * PIX2).to(target_unit * PIX2)
+            converted_values = (values * (original_unit * PIX2)).to(target_unit * PIX2)
             converted_values = converted_values / PIX2  # re-apply pix2 unit
         else:
             try:

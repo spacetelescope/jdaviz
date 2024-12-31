@@ -369,7 +369,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
-                    if flux_unit.is_equivalent(u.Unit('W/(m2 m)'/solid_angle_in_flux_unit)):
+                    if flux_unit.is_equivalent(u.W / (u.m * u.m * u.m * solid_angle_in_flux_unit)):
                         final_unit = u.Unit(f'W/(m2 {solid_angle_string})')
                     else:
                         final_unit = u.Unit('W/m2')
