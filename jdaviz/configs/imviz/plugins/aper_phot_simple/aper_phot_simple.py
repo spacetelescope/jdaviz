@@ -727,10 +727,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             if img_unit != u.count:
                 try:
                     ctfac = float(counts_factor if counts_factor is not None else self.counts_factor)  # noqa: E501
-                    if ctfac < 0:
-                        raise ValueError('Counts conversion factor cannot be negative.')
                 except ValueError:  # Clearer error message
                     raise ValueError('Missing or invalid counts conversion factor')
+                else:
+                    if ctfac < 0:
+                        raise ValueError('Counts conversion factor cannot be negative '
+                                         f'but got {ctfac}.')
                 if not np.allclose(ctfac, 0):
                     include_counts_fac = True
 
@@ -742,11 +744,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     (self.flux_scaling is not None)):
 
                 # convert flux_scaling from flux display unit to native flux unit
-                flux_scaling = flux_conversion_general(self.flux_scaling,
-                                                       u.Unit(self.flux_scaling_display_unit),
-                                                       img_unit * self.display_solid_angle_unit,
-                                                       u.spectral_density(self._cube_wave),
-                                                       with_unit=False)
+                flux_scaling = flux_conversion_general(
+                    self.flux_scaling,
+                    u.Unit(self.flux_scaling_display_unit),
+                    img_unit * u.Unit(self.display_solid_angle_unit),
+                    u.spectral_density(self._cube_wave),
+                    with_unit=False)
 
             try:
                 flux_scale = float(flux_scaling if flux_scaling is not None else self.flux_scaling)

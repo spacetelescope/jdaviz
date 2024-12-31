@@ -379,9 +379,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if self.spectrum_viewer.state.x_display_unit is not None:
             return (
                 u.Unit(self.app._get_display_unit('sb')) *
-                self.spectrum_viewer.state.x_display_unit
+                u.Unit(self.spectrum_viewer.state.x_display_unit)
             )
-        return ''
+        return u.dimensionless_unscaled
 
     @property
     def spectral_unit_selected(self):
