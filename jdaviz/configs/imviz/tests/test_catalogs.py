@@ -159,8 +159,8 @@ class TestCatalogs:
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
         # Re-populate the table with a new search
-        out_tbl = catalogs_plugin.search()
-        assert len(out_tbl) > 0
+        with pytest.warns(ResourceWarning):
+            catalogs_plugin.search(error_on_fail=True)
         # Ensure at least one row is selected before zooming
         catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
         assert len(catalogs_plugin.table.selected_rows) > 0

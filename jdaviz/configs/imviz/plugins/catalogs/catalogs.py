@@ -91,15 +91,16 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     def _file_parser(path):
         try:
             table = QTable.read(path)
-            if not table.colnames:  # Ensure the file has columns
-                return "File contains no columns", {}
-
-            if 'sky_centroid' not in table.colnames:
-                return 'Table does not contain required sky_centroid column', {}
-
-            return '', {path: table}
         except Exception:
             return 'Could not parse file with astropy.table.QTable.read', {}
+
+        if not table.colnames:  # Ensure the file has columns
+            return "File contains no columns", {}
+
+        if 'sky_centroid' not in table.colnames:
+            return 'Table does not contain required sky_centroid column', {}
+
+        return '', {path: table}
 
     @with_spinner()
     def search(self, error_on_fail=False):
@@ -207,10 +208,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
             table = self.catalog.selected_obj
-            column_names = list(table.colnames)
+            column_names = table.colnames
             self.table.headers_avail = self.headers + [
-                col for col in column_names if col not in self.headers and col not in ["sky_centroid", "label"]     # noqa:E501
-                ]
+                col for col in column_names if col not in self.headers]
             self.table.headers_visible = self.headers
             self.app._catalog_source_table = table
             if len(table['sky_centroid']) > self.max_sources:
@@ -284,12 +284,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                     'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
                     'Declination (degrees)': row['sky_centroid'].dec.deg,
                     'Object ID': str(row.get('label', f"{idx + 1}")),
-                    'id': idx+1,
+                    'id': len(self.table),
                     'x_coord': x_coord,
                     'y_coord': y_coord,
                 }
+                # Add sky_centroid and label explicitly to row_info
+                row_info['sky_centroid'] = row['sky_centroid']
+                row_info['label'] = row.get('label', f"{idx + 1}")
                 for col in table.colnames:
-                    if col not in ['label', 'sky_centroid']:  # Skip already processed columns
+                    if col not in self.headers:  # Skip already processed columns
                         row_info[col] = row[col]
 
                 self.table.add_item(row_info)
