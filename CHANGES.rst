@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Spatial subsets no longer show as having mixed visibility (in the legend and plot options tab) when aligned by WCS. [#3373]
+
 Mosviz
 ^^^^^^
 
