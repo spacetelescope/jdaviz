@@ -2344,7 +2344,7 @@ class Application(VuetifyTemplate, HubListener):
         # if Data has children, update their visibilities to match Data:
         available_plugins = [tray_item['name'] for tray_item in self.state.tray_items]
         for child in assoc_children:
-            if child not in viewer.data_labels_loaded:
+            if child not in viewer.data_menu.data_labels_loaded:
                 self.add_data_to_viewer(viewer.reference, child, visible=visible)
 
             if 'g-data-quality' in available_plugins and visible:
@@ -2693,10 +2693,6 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 linked_by_wcs = False
             viewer.state.linked_by_wcs = linked_by_wcs
-
-        if linked_by_wcs:
-            from jdaviz.configs.imviz.helper import get_wcs_only_layer_labels
-            viewer.state.wcs_only_layers = get_wcs_only_layer_labels(self)
 
         if msg.x_attr is not None:
             x = msg.data.id[msg.x_attr]
