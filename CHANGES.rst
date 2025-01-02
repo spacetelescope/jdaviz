@@ -11,6 +11,7 @@ Cubeviz
 
 Imviz
 ^^^^^
+
 - Enhance the Catalog Search plugin to support additional columns when loading catalog data from files. [#3359]
   
 - Catalog Search ``clear_table`` now removes all associated markers from the viewer. [#3359]
