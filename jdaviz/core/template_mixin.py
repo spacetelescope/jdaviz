@@ -1614,7 +1614,9 @@ class LayerSelect(SelectPluginComponent):
         linewidths = []
         for viewer in self.viewer_objs:
             for layer in viewer.layers:
-                if layer.layer.label == layer_label and is_not_wcs_only(layer.layer):
+                if (layer.layer.label == layer_label
+                        and is_not_wcs_only(layer.layer)
+                        and is_not_wcs_only(layer.layer.data)):
                     if is_subset is None:
                         is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
@@ -1768,7 +1770,10 @@ class LayerSelect(SelectPluginComponent):
 
         def _sort_by_zorder(items_dict):
             # NOTE: this works best if subscribed to a single viewer
-            return -1 * items_dict.get('zorder', 0)
+            zorder = items_dict.get('zorder', 0)
+            if zorder is None:
+                zorder = 0
+            return -1 * zorder
 
         if self.sort_by == 'zorder':
             layer_items.sort(key=_sort_by_zorder)
