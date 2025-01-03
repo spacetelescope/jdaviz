@@ -148,7 +148,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 # index just the spectral subregion
                 wdx = np.logical_or(wdx,
                                      np.logical_and(wlens >= r[0].to_value(u.m),
-                                     wlens <= r[1].to('m').value))
+                                     wlens <= r[1].to_value(u.m)))
             wlens = wlens[wdx]
             flux = flux[:, :, wdx]
 
