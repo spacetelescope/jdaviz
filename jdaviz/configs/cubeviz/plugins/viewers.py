@@ -147,7 +147,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             for r in self.sonification_wl_ranges:
                 # index just the spectral subregion
                 wdx = np.logical_or(wdx,
-                                     np.logical_and(wlens >= r[0].to('m').value,
+                                     np.logical_and(wlens >= r[0].to_value(u.m),
                                      wlens <= r[1].to('m').value))
             wlens = wlens[wdx]
             flux = flux[:, :, wdx]
