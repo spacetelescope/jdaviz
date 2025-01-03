@@ -114,11 +114,13 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
 
     # TODO: Replace private API calls with more public ones when available.
     def test_non_wcs_layer_labels(self):
+        from jdaviz.utils import get_wcs_only_layer_labels
+
         self.imviz.link_data(align_by="wcs")
         assert len(self.imviz.app.data_collection) == 3
 
         # Confirm the WCS-only layer is created by WCS-linking .
-        assert len(self.viewer.state.wcs_only_layers) == 1
+        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 1
 
         # Load a WCS-only layer, bypassing normal labeling scheme.
         ndd = wcs_utils._get_rotated_nddata_from_label(
@@ -133,7 +135,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert len(self.imviz.app.state.layer_icons) == 4  # 3 + 1
 
         # Confirm the new WCS-only layer is logged.
-        assert len(self.viewer.state.wcs_only_layers) == 2
+        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 2
 
         # Load a second WCS-only layer.
         ndd2 = wcs_utils._get_rotated_nddata_from_label(
@@ -149,7 +151,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert len(self.imviz.app.state.layer_icons) == 5
 
         # Confirm the second WCS-only layer is logged
-        assert len(self.viewer.state.wcs_only_layers) == 3
+        assert len(get_wcs_only_layer_labels(self.imviz.app)) == 3
 
         # First entry is image data and the default reference data.
         assert self.imviz.app.state.layer_icons["fits_wcs[DATA]"] == "a"

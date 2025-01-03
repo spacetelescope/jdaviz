@@ -12,7 +12,8 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
-from jdaviz.utils import data_has_valid_wcs, layer_is_image_data, get_top_layer_index
+from jdaviz.utils import (get_wcs_only_layer_labels, data_has_valid_wcs,
+                          layer_is_image_data, get_top_layer_index)
 
 __all__ = ['ImvizImageView']
 
@@ -318,7 +319,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if data_label == ref_label:
             return 'self'
 
-        if ref_label in self.state.wcs_only_layers:
+        if ref_label in get_wcs_only_layer_labels(self.jdaviz_app):
             return 'wcs'
 
         align_by = None

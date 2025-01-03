@@ -124,8 +124,6 @@ glue_settings.UNIT_CONVERTER = 'custom-jdaviz'
 custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-external-link': 'components/external_link.vue',
                      'j-docs-link': 'components/docs_link.vue',
-                     'j-viewer-data-select': 'components/viewer_data_select.vue',
-                     'j-viewer-data-select-item': 'components/viewer_data_select_item.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
                      'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
@@ -446,15 +444,13 @@ class Application(VuetifyTemplate, HubListener):
                 self.hub.broadcast(SnackbarMessage(
                     f"Auto-update for {plugin_inputs['add_results']['label']} failed: {e}",
                     sender=self, color="error"))
-                # TODO: should we delete the entry (but then any plot options, etc, are lost)
-                # self.vue_data_item_remove({'item_name': data.label})
 
     def _remove_live_plugin_results(self, trigger_data_lbl=None, trigger_subset=None):
         for data, plugin_inputs in self._iter_live_plugin_results(trigger_data_lbl, trigger_subset):
             self.hub.broadcast(SnackbarMessage(
                 f"Removing {data.label} due to deletion of {trigger_subset.label if trigger_subset is not None else trigger_data_lbl}",  # noqa
                 sender=self, color="warning"))
-            self.vue_data_item_remove({'item_name': data.label})
+            self.data_item_remove(data.label)
 
     def _on_add_data_message(self, msg):
         self._on_layers_changed(msg)
@@ -1702,12 +1698,6 @@ class Application(VuetifyTemplate, HubListener):
                                                 sender=self)
         self.hub.broadcast(remove_data_message)
 
-        # update data menu entry
-        selected_items = viewer_item['selected_data_items']
-        data_id = self._data_id_from_label(data_label)
-        if data_id in selected_items:
-            _ = selected_items.pop(data_id)
-
     def _data_id_from_label(self, label):
         """
         Retrieve the data item given the Glue ``DataCollection`` data label.
@@ -2267,19 +2257,6 @@ class Application(VuetifyTemplate, HubListener):
 
         self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
 
-    def vue_data_item_unload(self, event):
-        """
-        Callback for selection events in the front-end data list when clicking to unload an entry
-        from the viewer.
-        """
-        data_label = self._get_data_item_by_id(event['item_id'])['name']
-        self.remove_data_from_viewer(event['id'], data_label)
-
-    def vue_data_item_visibility(self, event):
-        self.set_data_visibility(event['id'],
-                                 self._get_data_item_by_id(event['item_id'])['name'],
-                                 visible=event['visible'], replace=event.get('replace', False))
-
     def vue_change_reference_data(self, event):
         self._change_reference_data(
             self._get_data_item_by_id(event['item_id'])['name'],
@@ -2367,7 +2344,7 @@ class Application(VuetifyTemplate, HubListener):
         # if Data has children, update their visibilities to match Data:
         available_plugins = [tray_item['name'] for tray_item in self.state.tray_items]
         for child in assoc_children:
-            if child not in viewer.data_labels_loaded:
+            if child not in viewer.data_menu.data_labels_loaded:
                 self.add_data_to_viewer(viewer.reference, child, visible=visible)
 
             if 'g-data-quality' in available_plugins and visible:
@@ -2389,29 +2366,6 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     layer.visible = visible
 
-        # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI.
-        # must update the visibility of `data_label` and its children:
-        selected_items = viewer_item['selected_data_items']
-        update_data_labels = [data_label] + assoc_children
-        for update_data_label in update_data_labels:
-            data_id = self._data_id_from_label(update_data_label)
-
-            if replace and update_data_label == data_label:
-                for id in selected_items:
-                    if id != data_id:
-                        selected_items[id] = 'hidden'
-
-            selected_items[data_id] = 'visible' if visible else 'hidden'
-
-        # remove WCS-only data from selected items, add to wcs_only_layers:
-        for layer in viewer.layers:
-            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(_wcs_only_label, False)
-            if layer.layer.data.label == data_label and layer_is_wcs_only:
-                layer.visible = False
-                if data_label not in viewer.state.wcs_only_layers:
-                    viewer.state.wcs_only_layers.append(data_label)
-                selected_items.pop(data_id)
-
         # Sets the plot axes labels to be the units of the most recently
         # active data.
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
@@ -2421,9 +2375,7 @@ class Application(VuetifyTemplate, HubListener):
             if self.config == 'imviz':
                 viewer.on_limits_change()  # Trigger compass redraw
 
-    def vue_data_item_remove(self, event):
-
-        data_label = event['item_name']
+    def data_item_remove(self, data_label):
         data = self.data_collection[data_label]
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
         if orientation_plugin is not None and orientation_plugin.align_by == "WCS":
@@ -2672,8 +2624,6 @@ class Application(VuetifyTemplate, HubListener):
                                                    sender=self)
                                )
 
-        wcs_only_layers = getattr(viewer.state, 'wcs_only_layers', [])
-
         reference_data = getattr(viewer.state, 'reference_data', None)
         reference_data_label = getattr(reference_data, 'label', None)
         linked_by_wcs = getattr(viewer.state, 'linked_by_wcs', False)
@@ -2684,9 +2634,6 @@ class Application(VuetifyTemplate, HubListener):
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
             'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
-            # TODO: remove unused entries after old data menu deprecation period
-            'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
-            'wcs_only_layers': wcs_only_layers,
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
@@ -2694,7 +2641,6 @@ class Application(VuetifyTemplate, HubListener):
             'collapse': True,
             'reference': reference or name or vid,
             'linked_by_wcs': linked_by_wcs,
-            'open_data_menu_if_empty': open_data_menu_if_empty  # noqa open menu on init if viewer is empty
         }
 
     def _on_new_viewer(self, msg, vid=None, name=None, add_layers_to_viewer=False,
@@ -2747,10 +2693,6 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 linked_by_wcs = False
             viewer.state.linked_by_wcs = linked_by_wcs
-
-        if linked_by_wcs:
-            from jdaviz.configs.imviz.helper import get_wcs_only_layer_labels
-            viewer.state.wcs_only_layers = get_wcs_only_layer_labels(self)
 
         if msg.x_attr is not None:
             x = msg.data.id[msg.x_attr]

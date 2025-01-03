@@ -25,7 +25,8 @@ from jdaviz.core.template_mixin import (
     PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
 )
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import get_reference_image_data, layer_is_2d, _wcs_only_label
+from jdaviz.utils import (get_wcs_only_layer_labels, get_reference_image_data,
+                          layer_is_2d, _wcs_only_label)
 
 __all__ = ['Orientation']
 
@@ -421,8 +422,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def _add_data_to_viewer(self, data_label, viewer_id):
         viewer = self.app.get_viewer_by_id(viewer_id)
 
-        wcs_only_layers = viewer.state.wcs_only_layers
-        if data_label not in wcs_only_layers:
+        if data_label not in viewer.data_menu.orientation.choices:
             self.app.add_data_to_viewer(viewer_id, data_label)
 
     def _on_viewer_added(self, msg):
@@ -433,7 +433,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'viewer'):
             return
 
-        wcs_only_layers = self.app._jdaviz_helper.default_viewer._obj.state.wcs_only_layers
+        wcs_only_layers = get_wcs_only_layer_labels(self.app)
 
         viewers_to_update = kwargs.get(
             'viewers_to_update', self.app._viewer_store.keys()
@@ -446,7 +446,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                     self.app.add_data_to_viewer(viewer_ref, wcs_layer)
             if (
                 self.orientation.selected not in
-                    self.viewer.selected_obj.state.wcs_only_layers and
+                    wcs_only_layers and
                     self.align_by_selected == 'WCS'
             ):
                 self.orientation.selected = base_wcs_layer_label

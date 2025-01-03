@@ -523,7 +523,7 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
     specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "my_spec_AA")
-    specviz_helper.app.vue_data_item_remove({"item_name": "my_spec_AA"})
+    specviz_helper.app.data_item_remove("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened
     assert subset1.subset_state.att.parent.label == "my_spec_nm"
