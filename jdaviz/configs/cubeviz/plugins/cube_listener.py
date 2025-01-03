@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import sys
 import os
 import time
+
 try:
     from strauss.sonification import Sonification
     from strauss.sources import Events
@@ -13,7 +14,6 @@ except ImportError:
 
 #  smallest fraction of the max audio amplitude that can be represented by a 16-bit signed integer
 MINVOL = 1/(2**15 - 1)
-
 
 @contextmanager
 def suppress_stderr():
@@ -41,7 +41,9 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
 
     data = {'spectrum': [spec], 'pitch': [1]}
 
-    # again, use maximal range for the mapped parameters
+    # set range in spectral flux representing the maximum and minimum sound frequency power:
+    # 0 (numeric): absolute 0 in flux units, such that any flux above 0 will sound.  
+    # '100' (string): 100th percentile (i.e. maximum value) in spectral flux.
     lims = {'spectrum': (0, '100')}
 
     # set up source
