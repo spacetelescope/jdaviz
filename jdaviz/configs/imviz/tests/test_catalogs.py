@@ -171,8 +171,8 @@ class TestCatalogs:
 
         assert_allclose(
             imviz_helper.viewers['imviz-0']._obj.state.x_min, 1022.57570000, atol=0.1)
-        assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max,
-                        1122.5757, atol=0.1)
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.x_max, 1122.5757, atol=0.1)
         assert_allclose(
             imviz_helper.viewers['imviz-0']._obj.state.y_min, 675.29611, atol=0.1)
         assert_allclose(
@@ -277,11 +277,11 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.19966, rtol=1e-1)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.19966, rtol=1e-4)
     assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max,
-                    0.20034000000000002, rtol=1e-1)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.8000100000000001, rtol=1e-1)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.20001, rtol=1e-1)
+                    0.20034000000000002, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.8000100000000001, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.20001, rtol=1e-4)
 
 
 def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
