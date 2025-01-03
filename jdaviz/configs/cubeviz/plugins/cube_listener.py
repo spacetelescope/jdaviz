@@ -42,8 +42,10 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
 
     data = {'spectrum': [spec], 'pitch': [1]}
 
-    # again, use maximal range for the mapped parameters
-    lims = {'spectrum': ('0', '100')}
+    # set range in spectral flux representing the maximum and minimum sound frequency power:
+    # 0 (numeric): absolute 0 in flux units, such that any flux above 0 will sound.
+    # '100' (string): 100th percentile (i.e. maximum value) in spectral flux.
+    lims = {'spectrum': (0, '100')}
 
     # set up source
     sources = Events(data.keys())
@@ -60,8 +62,7 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
 
 class CubeListenerData:
     def __init__(self, cube, wlens, samplerate=44100, duration=1, overlap=0.05, buffsize=1024,
-                 bdepth=16, wl_bounds=None, wl_unit=None, audfrqmin=50, audfrqmax=1500,
-                 eln=False, vol=None):
+                 bdepth=16, wl_unit=None, audfrqmin=50, audfrqmax=1500, eln=False, vol=None):
         self.siglen = int(samplerate*(duration-overlap))
         self.cube = cube
         self.dur = duration
@@ -75,7 +76,6 @@ class CubeListenerData:
         else:
             self.atten_level = int(np.clip((vol/100)**2, MINVOL, 1))
 
-        self.wl_bounds = wl_bounds
         self.wl_unit = wl_unit
         self.wlens = wlens
 

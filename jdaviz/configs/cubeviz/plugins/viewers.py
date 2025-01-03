@@ -50,7 +50,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self.sonified_cube = None
         self.stream = None
-        self.sonification_wl_bounds = None
+
+        self.sonification_wl_ranges = None
         self.sonification_wl_unit = None
         self.volume_level = None
         self.stream_active = True
@@ -113,8 +114,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sonified_cube.newsig = self.sonified_cube.sigcube[x, y, :]
         self.sonified_cube.cbuff = True
 
-    def update_listener_wls(self, w1, w2, wunit):
-        self.sonification_wl_bounds = (w1, w2)
+    def update_listener_wls(self, wranges, wunit):
+        self.sonification_wl_ranges = wranges
         self.sonification_wl_unit = wunit
 
     def update_sound_device(self, device_index):
@@ -133,18 +134,20 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sonified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
-                          pccut, audfrqmin, audfrqmax, eln):
+                          pccut, audfrqmin, audfrqmax, eln, use_pccut):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)
         wlens = spectrum.wavelength.to('m').value
         flux = spectrum.flux.value
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
 
-        if self.sonification_wl_bounds:
-            wl_unit = getattr(u, self.sonification_wl_unit)
-            si_wl_bounds = (self.sonification_wl_bounds * wl_unit).to('m')
-            wdx = np.logical_and(wlens >= si_wl_bounds[0].value,
-                                 wlens <= si_wl_bounds[1].value)
+        if self.sonification_wl_ranges:
+            wdx = np.zeros(wlens.size).astype(bool)
+            for r in self.sonification_wl_ranges:
+                # index just the spectral subregion
+                wdx = np.logical_or(wdx,
+                                    np.logical_and(wlens >= r[0].to_value(u.m),
+                                                   wlens <= r[1].to_value(u.m)))
             wlens = wlens[wdx]
             flux = flux[:, :, wdx]
 
@@ -156,15 +159,15 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # make a rough white-light image from the clipped array
         whitelight = np.expand_dims(clipped_arr.sum(-1), axis=2)
 
-        # subtract any percentile cut
-        clipped_arr -= np.expand_dims(pc_cube, axis=2)
+        if use_pccut:
+            # subtract any percentile cut
+            clipped_arr -= np.expand_dims(pc_cube, axis=2)
 
-        # and re-clip
-        clipped_arr = np.clip(clipped_arr, 0, np.inf)
+            # and re-clip
+            clipped_arr = np.clip(clipped_arr, 0, np.inf)
 
         self.sonified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
                                               samplerate=sample_rate, buffsize=buffer_size,
-                                              wl_bounds=self.sonification_wl_bounds,
                                               wl_unit=self.sonification_wl_unit,
                                               audfrqmin=audfrqmin, audfrqmax=audfrqmax,
                                               eln=eln, vol=self.volume_level)

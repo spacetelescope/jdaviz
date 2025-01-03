@@ -9,6 +9,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Enhancements for the cube sonification plug-in. [#3372]
+  
 Imviz
 ^^^^^
 
