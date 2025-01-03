@@ -382,8 +382,9 @@ To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipelin
 The file must be able to be parsed by `astropy.table.Table.read` and contains the following columns:
 
 * ``'sky_centroid'``: Column with `~astropy.coordinates.SkyCoord` sky coordinates of the sources.
-* ``'label'``: Column with string identifiers of the sources. If you have numerical identifiers,
-  they will be recast as string.
+* ``'label'``: (Optional) Column with string identifiers of the sources.
+  If not provided, unique string identifiers will be generated automatically.
+  If you have numerical identifiers, they will be recast as strings.
 
 Clicking :guilabel:`SEARCH` will show markers for any entry within the filtered zoom window.
 
