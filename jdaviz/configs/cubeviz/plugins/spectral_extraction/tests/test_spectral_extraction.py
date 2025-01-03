@@ -520,9 +520,18 @@ def test_spectral_extraction_with_correct_sum_units(cubeviz_helper,
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
     collapsed = spec_extr_plugin.extract()
+
+    assert '_pixel_scale_factor' in collapsed.meta
+
+    # Original units in Jy / sr
+    # After collapsing, sr is removed via the scale factor and the extracted spectrum is in Jy
+    expected_flux_values = (np.array([190., 590., 990., 1390., 1790.,
+                                      2190., 2590., 2990., 3390., 3790.]) *
+                            collapsed.meta.get('_pixel_scale_factor'))
+
     np.testing.assert_allclose(
         collapsed.flux.value,
-        [190., 590., 990., 1390., 1790., 2190., 2590., 2990., 3390., 3790.]
+        expected_flux_values
     )
     assert collapsed.flux.unit == u.Jy
     assert collapsed.uncertainty.unit == u.Jy
