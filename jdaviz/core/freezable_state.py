@@ -83,6 +83,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             else:
                 spectral_axis.info.meta = {}
                 eqv = all_flux_unit_conversion_equivs(cube_wave=spectral_axis)
+                spectral_axis = None
 
             y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis, eqv=eqv)  # noqa
 
