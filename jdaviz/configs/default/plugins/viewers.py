@@ -99,6 +99,11 @@ class JdavizViewerMixin(WithCache):
     def data_menu(self):
         return self._data_menu.user_api
 
+    def _deprecated_data_menu(self):
+        # temporary method to allow for opening new data-menu from old button.  This should
+        # be removed anytime after the old button is removed (likely in 4.3)
+        self.data_menu.open_menu()
+
     @property
     @deprecated(since="4.1", alternative="viewer.data_menu.data_labels_loaded")
     def data_labels_loaded(self):

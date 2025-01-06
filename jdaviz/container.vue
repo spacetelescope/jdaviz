@@ -33,7 +33,9 @@
                 tile
                 icon
                 outlined
-                style="height: 42px; width: 42px; cursor: default">
+                style="height: 42px; width: 42px"
+                @click="$emit('call-viewer-method', {'id': viewer.id, 'method': '_deprecated_data_menu'})"
+                >
                 <v-icon>mdi-format-list-bulleted-square</v-icon>
               </v-btn>
             </j-tooltip>
