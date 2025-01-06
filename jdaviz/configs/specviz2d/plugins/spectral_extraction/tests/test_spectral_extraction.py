@@ -207,9 +207,9 @@ def test_horne_extract_self_profile(specviz2d_helper):
         spec2d[:, ii] = gaus
 
     wave = np.arange(0, spec2d.shape[1], 1)
-    objectspec = Spectrum1D(spectral_axis=wave*u.m,
-                            flux=spec2d*u.Jy,
-                            uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
+    objectspec = Spectrum(spectral_axis=wave*u.m,
+                          flux=spec2d*u.Jy,
+                          uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
     specviz2d_helper.load_data(objectspec)
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')

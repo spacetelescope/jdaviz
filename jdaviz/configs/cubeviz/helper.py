@@ -1,5 +1,3 @@
-from jdaviz.core.events import SnackbarMessage
-from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.events import AddDataMessage, SnackbarMessage

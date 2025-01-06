@@ -5,7 +5,6 @@ import astropy
 from astropy import units as u
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
-from specutils import Spectrum
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage, GlobalDisplayUnitChanged
@@ -490,8 +489,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask = nddata.mask
 
         # Use the spectral coordinate from the WCS:
-        pass_spectral_axis = False
-        spectral_axis = None
         if '_orig_spec' in cube.meta:
             wcs = cube.meta['_orig_spec'].wcs.spectral
         elif hasattr(cube.coords, 'spectral'):
@@ -500,8 +497,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # This is the attribute for a PaddedSpectrumWCS in the 3D case
             wcs = cube.coords.spectral_wcs
         else:
-            wcs = spectral_cube.coords
-            pass_spectral_axis=True
+            wcs = cube.coords
 
         # Filter out NaNs (False = good)
         mask = np.logical_or(mask, np.isnan(flux))
@@ -559,11 +555,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     aperture_area = 1 * sq_angle_unit
                 collapsed_nddata = collapsed_nddata.multiply(aperture_area,
                                                              propagate_uncertainties=True)
-        # Convert to Spectrum, with the spectral axis in correct units:
-        print(self.spectral_axis_index)
-        if hasattr(spectral_cube.coords, 'spectral_wcs'):
-            print(f"Has spectral_wcs: {spectral_cube.coords.spectral_wcs.world_axis_units}")
-            target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[self.spectral_axis_index]
         else:
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
                 axis=self.spatial_axes, **kwargs
@@ -571,8 +562,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         return self._return_extracted(cube, wcs, collapsed_nddata)
 
-    def _return_extracted(self, cube, wcs, collapsed_nddata):
-        # Convert to Spectrum1D, with the spectral axis in correct units:
+    def _return_extracted(self, cube, wcs, collapsed_nddata, pass_spectral_axis=False):
+        # Convert to Spectrum, with the spectral axis in correct units:
         if hasattr(cube.coords, 'spectral_wcs'):
             target_wave_unit = cube.coords.spectral_wcs.world_axis_units[self.spectral_axis_index]
         elif hasattr(cube.coords, 'spectral'):
@@ -589,7 +580,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if pass_spectral_axis:
             wcs_args = [0, 0, 0]
-            spec_indices = np.arange(spectral_cube.shape[self.spectral_axis_index])
+            spec_indices = np.arange(cube.shape[self.spectral_axis_index])
             wcs_args[self.spectral_axis_index] = spec_indices
             wcs_args.reverse()
             spectral_and_spatial = wcs.pixel_to_world(*wcs_args)

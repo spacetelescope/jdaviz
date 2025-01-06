@@ -511,10 +511,10 @@ class ConfigHelper(HubListener):
                             * u.Unit(spectral_unit))
 
                 data = Spectrum(spectral_axis=new_spec,
-                                  flux=new_y,
-                                  uncertainty=new_uncert,
-                                  mask=data.mask,
-                                  spectral_axis_index=data.meta['spectral_axis_index'])
+                                flux=new_y,
+                                uncertainty=new_uncert,
+                                mask=data.mask,
+                                spectral_axis_index=data.meta['spectral_axis_index'])
             else:  # pragma: nocover
                 raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
         return data

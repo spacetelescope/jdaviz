@@ -75,7 +75,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
         try:
             _parse_spectrum1d_3d(
-                app, Spectrum1D.read(file_obj), data_label=data_label,
+                app, Spectrum.read(file_obj), data_label=data_label,
                 flux_viewer_reference_name=flux_viewer_reference_name,
                 uncert_viewer_reference_name=uncert_viewer_reference_name
             )
@@ -128,7 +128,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
             else:
                 try:
                     _parse_spectrum1d_3d(
-                        app, Spectrum1D.read(hdulist), data_label=data_label or file_name,
+                        app, Spectrum.read(hdulist), data_label=data_label or file_name,
                         flux_viewer_reference_name=flux_viewer_reference_name,
                         uncert_viewer_reference_name=uncert_viewer_reference_name
                     )

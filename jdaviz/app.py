@@ -758,9 +758,7 @@ class Application(VuetifyTemplate, HubListener):
             spectral_axis_index = dc[0].meta['spectral_axis_index']
             ref_wavelength_component = dc[0].components[spectral_axis_index]
             # May need to update this for specutils 2
-            ref_flux_component = dc[0].components[6]
             linked_wavelength_component = dc[-1].components[1]
-            linked_flux_component = dc[-1].components[-1]
 
             dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
@@ -1089,7 +1087,7 @@ class Application(VuetifyTemplate, HubListener):
             if ndim == 2:
                 units = u.pix
             else:
-                handler, _ = data_translator.get_handler_for(Spectrum1D)
+                handler, _ = data_translator.get_handler_for(Spectrum)
                 spec = handler.to_object(data)
                 units = spec.spectral_axis.unit
 

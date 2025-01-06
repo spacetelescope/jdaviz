@@ -36,7 +36,7 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
 
 
 def test_initialize_specviz_sb(specviz_helper, spectrum1d):
-    spec_sb = Spectrum1D(spectrum1d.flux/u.sr, spectrum1d.spectral_axis)
+    spec_sb = Spectrum(spectrum1d.flux/u.sr, spectrum1d.spectral_axis)
     specviz_helper.load_data(spec_sb, data_label="Test 1D Spectrum")
     plg = specviz_helper.plugins["Unit Conversion"]
     assert plg._obj.flux_unit == "Jy"

@@ -97,7 +97,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                                  "returned an empty list")
         elif path.is_file():
             try:
-                data = Spectrum1D.read(str(path), format=format)
+                data = Spectrum.read(str(path), format=format)
                 if data.flux.ndim == 2:
                     data = split_spectrum_with_2D_flux_array(data)
                 else:
@@ -293,7 +293,7 @@ def split_spectrum_with_2D_flux_array(data):
             unc = data.uncertainty[i, :]
         if data.mask is not None:
             mask = data.mask[i, :]
-        new_data.append(Spectrum1D(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
-                                   uncertainty=unc, mask=mask, meta=data.meta))
+        new_data.append(Spectrum(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
+                                 uncertainty=unc, mask=mask, meta=data.meta))
 
     return new_data

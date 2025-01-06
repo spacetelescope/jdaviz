@@ -405,7 +405,7 @@ def test_incompatible_units(specviz_helper, spectrum1d):
 def test_cube_fit_with_nans(cubeviz_helper):
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
-    spec = Spectrum1D(flux=flux)
+    spec = Spectrum(flux=flux)
     cubeviz_helper.load_data(spec, data_label="test")
 
     mf = cubeviz_helper.plugins["Model Fitting"]
@@ -426,7 +426,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     # Also test with existing mask
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
-    spec = Spectrum1D(flux=flux)
+    spec = Spectrum(flux=flux)
     spec.flux[5, 5, 7] = 10 * u.nJy
     cubeviz_helper.load_data(spec, data_label="test")
 
@@ -448,7 +448,7 @@ def test_fit_with_count_units(cubeviz_helper):
     flux = np.random.random((7, 8, 9)) * u.count
     spectral_axis = np.linspace(4000, 5000, flux.shape[-1]) * u.AA
 
-    spec = Spectrum1D(flux=flux, spectral_axis=spectral_axis)
+    spec = Spectrum(flux=flux, spectral_axis=spectral_axis)
     cubeviz_helper.load_data(spec, data_label="test")
 
     mf = cubeviz_helper.plugins["Model Fitting"]
