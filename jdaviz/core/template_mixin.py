@@ -4829,6 +4829,41 @@ class Table(PluginSubcomponent):
         self._qtable = None
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
+    def select_rows(self, rows):
+        """
+        Select rows from the current table by index, indices, or slice.
+
+        Parameters
+        ----------
+        rows : int, list of int, slice, or tuple of slice
+            The rows to select. This can be:
+            - An integer specifying a single row index.
+            - A list of integers specifying multiple row indices.
+            - A slice object specifying a range of rows.
+            - A tuple of slices (e.g using np.s_)
+
+        """
+
+        if isinstance(rows, (list, tuple)):
+            selected = []
+            if isinstance(rows[0], slice):
+                for sl in rows:
+                    selected += self.items[sl]
+            else:
+                selected = [self.items[i] for i in rows]
+
+        elif isinstance(rows, slice):
+            selected = self.items[rows]
+        elif isinstance(rows, int):
+            selected = [self.items[rows]]
+
+        # apply new selection
+        self.selected_rows = selected
+
+    def select_all(self):
+        """ Select all rows in table."""
+        self.select_rows(slice(0, len(self) + 1))
+
     def vue_clear_table(self, data=None):
         # if the plugin (or via the TableMixin) has its own clear_table implementation,
         # call that, otherwise call the one defined here

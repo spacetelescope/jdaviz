@@ -135,7 +135,7 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == prev_results
 
-        catalogs_plugin.table.selected_rows = catalogs_plugin.table.items[0:2]
+        catalogs_plugin._obj.table.select_rows(slice(0, 2))
         assert len(catalogs_plugin.table.selected_rows) == 2
 
         # test Gaia catalog
@@ -308,7 +308,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
     catalogs_plugin._obj.search()
 
     # select both sources
-    catalogs_plugin._obj.table.selected_rows = catalogs_plugin._obj.table.items
+    catalogs_plugin._obj.table.select_all()
 
     # check viewer limits before zoom
     xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
@@ -392,3 +392,61 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs, tmp
         assert item['is_extended'] == tbl['is_extended'][idx]
         assert float(item['roundness']) == tbl['roundness'][idx]
         assert float(item['sharpness']) == tbl['sharpness'][idx]
+
+
+def test_select_catalog_table_rows(imviz_helper, image_2d_wcs, tmp_path):
+
+    """Test the ``select_rows`` functionality on table in plugin."""
+
+    arr = np.ones((500, 500))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+
+    # write out table to load back in
+    # NOTE: if we ever support loading Table obj directly, replace this and
+    # remove tmp_path
+    sky_coord = SkyCoord(ra=[337.49, 337.46, 337.47, 337.48, 337.49, 337.50],
+                         dec=[-20.81, -20.78, -20.79, -20.80, -20.77, -20.76],
+                         unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord],
+                'label': ['Source_1', 'Source_2', 'Source_3', 'Source_4',
+                          'Source_5', 'Source_6']})
+    tbl_file = str(tmp_path / 'test_catalog.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    plugin_table = catalogs_plugin._obj.table
+
+    # load catalog
+    catalogs_plugin._obj.from_file = tbl_file
+    catalogs_plugin._obj.search()
+
+    # select a single row:
+    plugin_table.select_rows(3)
+    assert len(plugin_table.selected_rows) == 1
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.48000'
+
+    # select multiple rows by indices
+    plugin_table.select_rows([3, 2, 4])
+    assert len(plugin_table.selected_rows) == 3
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.48000'
+    assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.47000'
+    assert plugin_table.selected_rows[2]['Right Ascension (degrees)'] == '337.49000'
+
+    # select a range of rows with a slice
+    plugin_table.select_rows(slice(0, 2))
+    assert len(plugin_table.selected_rows) == 2
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.49000'
+    assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.46000'
+
+    # select rows with multi dim. numpy slice
+    plugin_table.select_rows(np.s_[0:2, 3:5])
+    assert len(plugin_table.selected_rows) == 4
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.49000'
+    assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.46000'
+    assert plugin_table.selected_rows[2]['Right Ascension (degrees)'] == '337.48000'
+    assert plugin_table.selected_rows[3]['Right Ascension (degrees)'] == '337.49000'
+
+    # test select_all
+    plugin_table.select_all()
+    assert len(plugin_table.selected_rows) == 6
