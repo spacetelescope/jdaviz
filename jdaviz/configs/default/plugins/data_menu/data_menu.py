@@ -229,13 +229,20 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             raise
         self._during_select_sync = False
 
-    @observe('dm_layer_selected')
+    @observe('dm_layer_selected', 'layer_multiselect')
     def _dm_layer_selected_changed(self, event={}):
-        if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
+        if not hasattr(self, 'layer'):  # pragma: no cover
             return
         if self._during_select_sync:
             return
-        if len(event.get('new')) == len(event.get('old')):
+        if event.get('name') == 'layer_multiselect' and event.get('new'):
+            return
+        if not self.layer.multiselect and len(self.dm_layer_selected) > 1:
+            # vue will still treat the element as a list, so we will include the
+            # logic here to enforce single-select toggling
+            self.dm_layer_selected = [self.dm_layer_selected[-1]]
+            return
+        if event.get('name') == 'dm_layer_selected' and len(event.get('new')) == len(event.get('old')):
             # not possible from UI interaction, but instead caused by a selected
             # layer being removed (deleting a selected subset, etc).  We want
             # to update dm_layer_selected in order to preserve layer.selected
@@ -244,8 +251,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         with self.during_select_sync():
             # map index in dm_layer_selected (inverse order of layer_items)
             # to set self.layer.selected
-            self.layer.selected = [self.layer_items[i]['label']
-                                   for i in self.dm_layer_selected]
+            selected = [self.layer_items[i]['label']
+                        for i in self.dm_layer_selected]
+            if self.layer.multiselect:
+                self.layer.selected = selected
+            else:
+                self.layer.selected = selected[0] if len(selected) else ''
 
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
@@ -255,7 +266,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             with self.during_select_sync():
                 # map list of strings in self.layer.selected to indices in dm_layer_selected
                 layer_labels = [layer['label'] for layer in self.layer_items]
-                self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected
+                layer_selected = self.layer_selected if self.layer.multiselect else [self.layer_selected]
+                self.dm_layer_selected = [layer_labels.index(label) for label in layer_selected
                                           if label in layer_labels]
 
         subset_labels = self.existing_subset_labels
