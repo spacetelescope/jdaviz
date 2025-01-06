@@ -3260,7 +3260,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         min_x = min(spectral_axis.value)
         if per_pixel:
             # full_spectrum.flux is a cube, so we want to act on all spaxels independently
-            continuum_y = np.take(full_spectrum.flux, continuum_mask, axis=spectral_axis_index).value
+            continuum_y = np.take(full_spectrum.flux, continuum_mask, axis=spectral_axis_index).value  # noqa
 
             def fit_continuum(continuum_y_spaxel):
                 return np.polyfit(continuum_x-min_x, continuum_y_spaxel, deg=1)

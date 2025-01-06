@@ -611,7 +611,7 @@ def test_spectral_extraction_scientific_validation(
     calspec_fitsrec = fits.getdata(calspec_url)
     column_units = [u.AA] + 2 * [u.Unit('erg s-1 cm-2 AA-1')]
     spectra_table = QTable(calspec_fitsrec, units=column_units)
-    model_spectrum = Spectrum1D(
+    model_spectrum = Spectrum(
         flux=spectra_table['FLUX'],
         spectral_axis=spectra_table['WAVELENGTH']
     )
