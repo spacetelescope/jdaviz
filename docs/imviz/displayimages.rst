@@ -18,24 +18,18 @@ Right-click will open a dropdown with access to different options for each butto
 Selecting a Data Set
 ====================
 
-Data can be selected and de-selected in each viewer's data menu, opened by clicking the
-|icon-viewer-data-select| button in the top left of the viewer. Here, you can click a
-checkbox to the left of the listed data to make the data visible (checked) or invisible
-(unchecked). The datasets available in each viewer are filtered
+Data can be selected and de-selected in each viewer's data menu, opened by clicking on
+the legend in the top right of the viewer. Here, all the data and subset layers are listed
+and their visibility can be toggled with the "eye" icon on the right.
+
+To add an additional data layer or interactively create a new subset, click the "+" icon in
+the top right of the data menu.  The datasets available in each viewer are filtered
 to include only compatible data, so you may not see all loaded data in the menu for
 every viewer. For example, 1D spectra will not be available in the image viewers.
 
-In addition to selecting and de-selecting data to toggle its visibility in the viewer, you
-can also unload the data from the viewer completely by clicking the ``X`` to the right of the
-data label. Any data that still exists in Imviz but has been unloaded from the viewer
-is listed in a separate section that is hidden by default but can can be expanded by clicking
-on the section header:
-
-.. image:: img/imviz_removed_data.png
-
-This section can be hidden by clicking the section header again. Unloaded data will be available
-to re-load into the viewer (by clicking the ``+`` icon) or remove permanently from the app (by
-clicking the trashcan icon).
+Clicking on the rows in the data menu selects entries for further actions available in the 
+bottom bar of the data menu.  Here you can modify selected subsets, view metadata or subset
+details, or remove layers from either the viewer or the entire application instance.
 
 .. warning::
     Deleting the first image that was loaded into Imviz may be slow, as deleting this image

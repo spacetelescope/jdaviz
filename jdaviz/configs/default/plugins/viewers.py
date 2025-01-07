@@ -15,6 +15,7 @@ from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
 
+from astropy.utils import deprecated
 from astropy import units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, VarianceUncertainty, InverseVariance
@@ -70,10 +71,9 @@ class JdavizViewerMixin(WithCache):
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
         if not isinstance(self, TableViewer):
-            # TODO: eventually remove data_labels, data_labels_loaded,
+            # TODO: eventually remove data_labels_loaded
             # and data_labels_visible once deprecation period passes
-            # TODO: add data_menu once API is finalized and ready to be made public
-            expose = ['data_labels', 'data_labels_loaded', 'data_labels_visible']
+            expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
         else:
             expose = []
         if isinstance(self, BqplotImageView):
@@ -99,8 +99,13 @@ class JdavizViewerMixin(WithCache):
     def data_menu(self):
         return self._data_menu.user_api
 
+    def _deprecated_data_menu(self):
+        # temporary method to allow for opening new data-menu from old button.  This should
+        # be removed anytime after the old button is removed (likely in 4.3)
+        self.data_menu.open_menu()
+
     @property
-    # TODO: deprecate in favor of viewer.data_menu.layers_loaded
+    @deprecated(since="4.1", alternative="viewer.data_menu.data_labels_loaded")
     def data_labels_loaded(self):
         """
         List of data labels loaded in this viewer.
@@ -110,13 +115,10 @@ class JdavizViewerMixin(WithCache):
         data_labels : list
             list of strings
         """
-        viewer_item = self.jdaviz_app._get_viewer_item(self.reference_id)
-        return [self.jdaviz_app._get_data_item_by_id(data_id)['name']
-                for data_id in viewer_item.get('selected_data_items', {}).keys()
-                if self.jdaviz_app._get_data_item_by_id(data_id) is not None]
+        return self.data_menu.data_labels_loaded
 
     @property
-    # TODO: deprecate in favor of viewer.data_menu.layers_visible
+    @deprecated(since="4.1", alternative="viewer.data_menu.data_labels_visible")
     def data_labels_visible(self):
         """
         List of data labels visible in this viewer.
@@ -126,10 +128,7 @@ class JdavizViewerMixin(WithCache):
         data_labels : list
             list of strings
         """
-        viewer_item = self.jdaviz_app._get_viewer_item(self.reference_id)
-        return [self.jdaviz_app._get_data_item_by_id(data_id)['name']
-                for data_id, visibility in viewer_item.get('selected_data_items', {}).items()
-                if visibility != 'hidden']
+        return self.data_menu.data_labels_visible
 
     def reset_limits(self):
         """

@@ -11,9 +11,6 @@
       :layer_icons="layer_icons"
       @resize="(e) => $emit('resize', e)"
       :closefn="closefn"
-      @data-item-visibility="$emit('data-item-visibility', $event)"
-      @data-item-unload="$emit('data-item-unload', $event)"
-      @data-item-remove="$emit('data-item-remove', $event)"
       @call-viewer-method="$emit('call-viewer-method', $event)"
       @change-reference-data="$emit('change-reference-data', $event)"
     ></g-viewer-tab>
@@ -28,18 +25,20 @@
     >
         <div>
           <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
-            <j-viewer-data-select
-              :data_items="data_items" 
-              :viewer="viewer"
-              :app_settings="app_settings"
-              :layer_icons="layer_icons"
-              :icons="icons"
-              :linked_by_wcs="viewer.linked_by_wcs"
-              @data-item-visibility="$emit('data-item-visibility', $event)"
-              @data-item-unload="$emit('data-item-unload', $event)"
-              @data-item-remove="$emit('data-item-remove', $event)"
-              @change-reference-data="$emit('change-reference-data', $event)"
-            ></j-viewer-data-select>
+            <j-tooltip tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
+              <v-btn
+                text 
+                elevation="3" 
+                color="white"
+                tile
+                icon
+                outlined
+                style="height: 42px; width: 42px"
+                @click="$emit('call-viewer-method', {'id': viewer.id, 'method': '_deprecated_data_menu'})"
+                >
+                <v-icon>mdi-format-list-bulleted-square</v-icon>
+              </v-btn>
+            </j-tooltip>
 
             <v-toolbar-items v-if="viewer.reference === 'table-viewer'">
               <j-tooltip tipid='table-prev'>

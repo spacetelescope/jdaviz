@@ -35,8 +35,8 @@ def test_specviz_data_labels(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     assert specviz_helper.data_labels == [label]
-    assert specviz_helper.viewers['spectrum-viewer'].data_labels_loaded == [label]
-    assert specviz_helper.viewers['spectrum-viewer'].data_labels_visible == [label]
+    assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded == [label]
+    assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_visible == [label]
 
 
 def test_toggle_api_hints(specviz_helper):
