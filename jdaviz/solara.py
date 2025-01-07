@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import signal
+import threading
 
 import solara
 import solara.lab
@@ -20,15 +20,19 @@ jdaviz_history_verbosity = 'info'
 
 @solara.lab.on_kernel_start
 def on_kernel_start():
+    print("Starting kernel", solara.get_kernel_id())
     # at import time, solara runs with a dummy kernel
     # we simply ignore that
     if "dummy" in solara.get_kernel_id():
         return
 
     def on_kernel_close():
-        # for some reason, sys.exit(0) does not work here
-        # see https://github.com/encode/uvicorn/discussions/1103
-        signal.raise_signal(signal.SIGINT)
+        def exit_process():
+            # sys.exit(0) does not work, it just throws an exception
+            # this really makes the process exit
+            os._exit(0)
+        # give the kernel some time to close
+        threading.Thread(target=exit_process).start()
     return on_kernel_close
 
 
