@@ -4713,7 +4713,8 @@ class Table(PluginSubcomponent):
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, ('clear_table', 'export_table'))
+        return UserApiWrapper(self, ('clear_table', 'export_table',
+                                     'select_rows', 'select_all'))
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -4895,6 +4896,8 @@ class TableMixin(VuetifyTemplate, HubListener):
 
     * :meth:`clear_table`
     * :meth:`export_table`
+    * :meth:`select_rows`
+    * :meth:`select_all`
 
     To render in the plugin's vue file::
 
@@ -4932,6 +4935,27 @@ class TableMixin(VuetifyTemplate, HubListener):
             If ``filename`` already exists, should it be overwritten.
         """
         return self.table.export_table(filename=filename, overwrite=overwrite)
+
+    def select_rows(self, rows):
+        """
+        Select rows from the current table by index, indices, or slice.
+
+        Parameters
+        ----------
+        rows : int, list of int, slice, or tuple of slice
+            The rows to select. This can be:
+            - An integer specifying a single row index.
+            - A list of integers specifying multiple row indices.
+            - A slice object specifying a range of rows.
+            - A tuple of slices (e.g using numpy slice)
+
+        """
+
+        self.table.select_rows(rows)
+
+    def select_all(self):
+        """ Select all rows in table."""
+        self.table.select_all()
 
 
 class Plot(PluginSubcomponent):

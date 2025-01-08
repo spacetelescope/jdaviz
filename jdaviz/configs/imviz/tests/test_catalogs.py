@@ -135,7 +135,7 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == prev_results
 
-        catalogs_plugin._obj.table.select_rows(slice(0, 2))
+        catalogs_plugin.select_rows(slice(0, 2))
         assert len(catalogs_plugin.table.selected_rows) == 2
 
         # test Gaia catalog
@@ -308,7 +308,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
     catalogs_plugin._obj.search()
 
     # select both sources
-    catalogs_plugin._obj.table.select_all()
+    catalogs_plugin.select_all()
 
     # check viewer limits before zoom
     xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
@@ -422,25 +422,25 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs, tmp_path):
     catalogs_plugin._obj.search()
 
     # select a single row:
-    plugin_table.select_rows(3)
+    catalogs_plugin.select_rows(3)
     assert len(plugin_table.selected_rows) == 1
     assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.48000'
 
     # select multiple rows by indices
-    plugin_table.select_rows([3, 2, 4])
+    catalogs_plugin.select_rows([3, 2, 4])
     assert len(plugin_table.selected_rows) == 3
     assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.48000'
     assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.47000'
     assert plugin_table.selected_rows[2]['Right Ascension (degrees)'] == '337.49000'
 
     # select a range of rows with a slice
-    plugin_table.select_rows(slice(0, 2))
+    catalogs_plugin.select_rows(slice(0, 2))
     assert len(plugin_table.selected_rows) == 2
     assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.49000'
     assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.46000'
 
     # select rows with multi dim. numpy slice
-    plugin_table.select_rows(np.s_[0:2, 3:5])
+    catalogs_plugin.select_rows(np.s_[0:2, 3:5])
     assert len(plugin_table.selected_rows) == 4
     assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.49000'
     assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.46000'
@@ -448,5 +448,5 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs, tmp_path):
     assert plugin_table.selected_rows[3]['Right Ascension (degrees)'] == '337.49000'
 
     # test select_all
-    plugin_table.select_all()
+    catalogs_plugin.select_all()
     assert len(plugin_table.selected_rows) == 6
