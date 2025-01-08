@@ -6,7 +6,8 @@ from traitlets import Bool, Dict, Unicode, Integer, List, observe
 from jdaviz.core.template_mixin import (TemplateMixin, LayerSelect,
                                         LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage, ChangeRefDataMessage
+from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
+                                ChangeRefDataMessage, ViewerRenamedMessage)
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
@@ -132,6 +133,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
+        self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
 
@@ -209,6 +211,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if self.orientation_align_by_wcs:
             with self.during_select_sync():
                 self.orientation.selected = str(self._viewer.state.reference_data.label)
+
+    def _on_viewer_renamed_message(self, msg):
+        if self.viewer_reference == msg.old_viewer_ref:
+            self.viewer_reference = msg.new_viewer_ref
+            self._set_viewer_id()
 
     @observe('orientation_layer_selected')
     def _orientation_layer_selected_changed(self, event={}):
