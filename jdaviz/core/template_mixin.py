@@ -4840,7 +4840,7 @@ class Table(PluginSubcomponent):
             - An integer specifying a single row index.
             - A list of integers specifying multiple row indices.
             - A slice object specifying a range of rows.
-            - A tuple of slices (e.g using np.s_)
+            - A tuple of slices (e.g using numpy slice)
 
         """
 
