@@ -2848,6 +2848,7 @@ class Application(VuetifyTemplate, HubListener):
                 'name': name,
                 'label': tray_item_label,
                 'tray_item_description': tray_item_description,
+                'api_methods': tray_item_instance.api_methods,
                 'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })

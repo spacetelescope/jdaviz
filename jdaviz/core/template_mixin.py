@@ -419,6 +419,7 @@ class PluginTemplateMixin(TemplateMixin):
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
+    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
@@ -464,6 +465,11 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
+
+        # set user-API methods
+        self.api_methods = sorted([attr
+                                   for attr in self.user_api.__dir__()
+                                   if attr not in ('open_in_tray', 'show', 'api_hints_enabled', 'close_in_tray')])
 
     def new(self):
         new = self.__class__(app=self.app)
