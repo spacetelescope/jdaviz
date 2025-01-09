@@ -13,6 +13,7 @@ New Features
   methods to change active selection to all table items or clear all selected
   items without clearing the table. [#3381]
 
+- Plugin API methods and attributes are now searchable from the plugin tray (and visible when API hints are enabled). [#3384]
 
 Cubeviz
 ^^^^^^^
