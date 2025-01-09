@@ -6,6 +6,7 @@ import astropy.units as u
 import bqplot
 from contextlib import contextmanager
 import numpy as np
+import inspect
 import logging
 import os
 import threading
@@ -467,9 +468,8 @@ class PluginTemplateMixin(TemplateMixin):
         super().__init__(app=app, **kwargs)
 
         # set user-API methods
-        self.api_methods = sorted([attr
-                                   for attr in self.user_api.__dir__()
-                                   if attr not in ('open_in_tray', 'show', 'api_hints_enabled', 'close_in_tray')])
+        self.api_methods = sorted([name+"()" if type(obj).__name__ == 'method' else name
+                                   for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
         new = self.__class__(app=self.app)
