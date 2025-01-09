@@ -450,3 +450,8 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs, tmp_path):
     # test select_all
     catalogs_plugin.select_all()
     assert len(plugin_table.selected_rows) == 6
+
+    # test deselect all
+    catalogs_plugin.deselect_all()
+    assert len(plugin_table.selected_rows) == 0
+

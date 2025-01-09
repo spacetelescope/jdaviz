@@ -4714,7 +4714,8 @@ class Table(PluginSubcomponent):
     @property
     def user_api(self):
         return UserApiWrapper(self, ('clear_table', 'export_table',
-                                     'select_rows', 'select_all'))
+                                     'select_rows', 'select_all',
+                                     'deselect_all'))
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -4865,6 +4866,10 @@ class Table(PluginSubcomponent):
         """ Select all rows in table."""
         self.select_rows(slice(0, len(self) + 1))
 
+    def deselect_all(self):
+        """ Deselect all rows in table."""
+        self.selected_rows = []
+
     def vue_clear_table(self, data=None):
         # if the plugin (or via the TableMixin) has its own clear_table implementation,
         # call that, otherwise call the one defined here
@@ -4956,6 +4961,10 @@ class TableMixin(VuetifyTemplate, HubListener):
     def select_all(self):
         """ Select all rows in table."""
         self.table.select_all()
+
+    def deselect_all(self):
+        """ Deselect all rows in table."""
+        self.table.deselect_all()
 
 
 class Plot(PluginSubcomponent):
