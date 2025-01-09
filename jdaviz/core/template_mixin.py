@@ -468,7 +468,11 @@ class PluginTemplateMixin(TemplateMixin):
         super().__init__(app=app, **kwargs)
 
         # set user-API methods
-        self.api_methods = sorted([name+"()" if type(obj).__name__ == 'method' else name
+        def get_api_text(name, obj):
+            if type(obj).__name__ == 'method':
+                return f"{name}{inspect.signature(obj)}"
+            return name
+        self.api_methods = sorted([get_api_text(name, obj)
                                    for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
