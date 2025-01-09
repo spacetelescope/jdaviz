@@ -4715,7 +4715,7 @@ class Table(PluginSubcomponent):
     def user_api(self):
         return UserApiWrapper(self, ('clear_table', 'export_table',
                                      'select_rows', 'select_all',
-                                     'deselect_all'))
+                                     'select_none'))
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -4866,7 +4866,7 @@ class Table(PluginSubcomponent):
         """ Select all rows in table."""
         self.select_rows(slice(0, len(self) + 1))
 
-    def deselect_all(self):
+    def select_none(self):
         """ Deselect all rows in table."""
         self.selected_rows = []
 
@@ -4962,9 +4962,9 @@ class TableMixin(VuetifyTemplate, HubListener):
         """ Select all rows in table."""
         self.table.select_all()
 
-    def deselect_all(self):
+    def select_none(self):
         """ Deselect all rows in table."""
-        self.table.deselect_all()
+        self.table.select_none()
 
 
 class Plot(PluginSubcomponent):
