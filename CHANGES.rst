@@ -9,7 +9,7 @@ New Features
 - Viewer data-menus are now found in the legend on the right of the viewer. [#3281]
 
 - Added 'select_rows' method to plugin tables to enable changing
-  curent selection by indicies or slice. Also added 'select_all' and 'deselect_all'
+  curent selection by indicies or slice. Also added 'select_all' and 'select_none'
   methods to change active selection to all table items or clear all selected
   items without clearing the table. [#3381]
 
