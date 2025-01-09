@@ -42,6 +42,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Orientation plugin: ``link_type`` and ``wcs_use_affine`` (previously deprecated) have now been removed. [#3385]
+
 Mosviz
 ^^^^^^
 
