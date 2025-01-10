@@ -202,7 +202,7 @@ From the API within the Jupyter notebook (if linking by WCS):
 
 .. code-block:: python
 
-    imviz.link_data(link_type='wcs')
+    imviz.link_data(align_by='wcs')
 
 .. _imviz-orientation-rotation:
 
