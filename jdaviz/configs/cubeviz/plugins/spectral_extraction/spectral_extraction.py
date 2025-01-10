@@ -142,6 +142,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.aperture._initialize_choices()
         self.aperture.select_default()
 
+        self.spectral_axis_index = 0
+
         self.background = ApertureSubsetSelect(self,
                                                'bg_items',
                                                'bg_selected',
@@ -495,7 +497,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # This is the attribute for a PaddedSpectrumWCS in the 3D case
             wcs = cube.coords.spectral_wcs
         else:
-            wcs = None
+            wcs = cube.coords
 
         # Filter out NaNs (False = good)
         mask = np.logical_or(mask, np.isnan(flux))
@@ -560,12 +562,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         return self._return_extracted(cube, wcs, collapsed_nddata)
 
-    def _return_extracted(self, cube, wcs, collapsed_nddata):
-        # Convert to Spectrum1D, with the spectral axis in correct units:
+    def _return_extracted(self, cube, wcs, collapsed_nddata, pass_spectral_axis=False):
+        # Convert to Spectrum, with the spectral axis in correct units:
         if hasattr(cube.coords, 'spectral_wcs'):
-            target_wave_unit = cube.coords.spectral_wcs.world_axis_units[0]
+            target_wave_unit = cube.coords.spectral_wcs.world_axis_units[self.spectral_axis_index]
         elif hasattr(cube.coords, 'spectral'):
-            target_wave_unit = cube.coords.spectral.world_axis_units[0]
+            target_wave_unit = cube.coords.spectral.world_axis_units[self.spectral_axis_index]
         else:
             target_wave_unit = None
 
@@ -576,11 +578,20 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         mask = collapsed_nddata.mask
         uncertainty = collapsed_nddata.uncertainty
 
+        if pass_spectral_axis:
+            wcs_args = [0, 0, 0]
+            spec_indices = np.arange(cube.shape[self.spectral_axis_index])
+            wcs_args[self.spectral_axis_index] = spec_indices
+            wcs_args.reverse()
+            spectral_and_spatial = wcs.pixel_to_world(*wcs_args)
+            spectral_axis = [x for x in spectral_and_spatial if isinstance(x, SpectralCoord)][0]  # noqa
+
         collapsed_spec = _return_spectrum_with_correct_units(
             flux, wcs, collapsed_nddata.meta, data_type='flux',
             target_wave_unit=target_wave_unit,
             uncertainty=uncertainty,
-            mask=mask
+            mask=mask,
+            spectral_axis=spectral_axis
         )
         return collapsed_spec
 

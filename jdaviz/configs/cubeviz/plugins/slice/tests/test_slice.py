@@ -34,8 +34,8 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
 
     assert sl.value == slice_values[1]
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 1
-    assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[-1] == 1
-    assert cubeviz_helper.app.get_viewer("uncert-viewer").state.slices[-1] == 1
+    assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[0] == 1
+    assert cubeviz_helper.app.get_viewer("uncert-viewer").state.slices[0] == 1
     cubeviz_helper.select_wavelength(slice_values[0])
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 0
     assert sl.value == slice_values[0]
@@ -124,7 +124,7 @@ def test_init_slice(cubeviz_helper, spectrum1d_cube):
 
     assert sl.value == slice_values[1]
     assert fv.slice == 1
-    assert fv.state.slices == (0, 0, 1)
+    assert fv.state.slices == (1, 0, 0)
 
     # make sure adding new data doesn't revert slice to 0
     mm = cubeviz_helper.plugins['Moment Maps']
@@ -132,4 +132,4 @@ def test_init_slice(cubeviz_helper, spectrum1d_cube):
 
     assert sl.value == slice_values[1]
     assert fv.slice == 1
-    assert fv.state.slices == (0, 0, 1)
+    assert fv.state.slices == (1, 0, 0)

@@ -54,7 +54,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
         Parameters
         ----------
-        data : str, `~astropy.io.fits.HDUList`, `~specutils.Spectrum1D`, or ndarray
+        data : str, `~astropy.io.fits.HDUList`, `~specutils.Spectrum`, or ndarray
             A string file path, astropy FITS object pointing to the
             data cube, a spectrum object, or a Numpy array cube.
             If plain array is given, axes order must be ``(x, y, z)``.
