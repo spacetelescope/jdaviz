@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fixes traceback from the data-menu that can be caused by a viewer rename. [#3383]
+
 Cubeviz
 ^^^^^^^
 
