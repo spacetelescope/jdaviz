@@ -1526,6 +1526,8 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_items())
+        self.hub.subscribe(self, ViewerRenamedMessage,
+                           self._on_viewer_renamed_message)
 
         self.sort_by = sort_by
         self.app.state.add_callback('layer_icons', self._update_items)
@@ -1563,6 +1565,14 @@ class LayerSelect(SelectPluginComponent):
                 return len(self.app._get_assoc_data_children(data.label)) > 0
 
             self.add_filter(filter_has_children)
+
+    def _on_viewer_renamed_message(self, msg):
+        if isinstance(self.viewer, list):
+            for i, viewer in self.viewer:
+                if viewer == msg.old_viewer_ref:
+                    self.viewer[i] = msg.new_viewer_ref
+        elif self.viewer == msg.old_viewer_ref:
+            self.viewer = msg.new_viewer_ref
 
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
