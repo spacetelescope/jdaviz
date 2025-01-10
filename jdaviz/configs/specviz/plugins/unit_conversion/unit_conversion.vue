@@ -49,7 +49,7 @@
       hint="Solid angle unit."
     />
 
-    <v-row v-if="has_spectral">
+    <v-row v-if="has_sb">
       <v-text-field
         v-model="sb_unit_selected"
         :label="api_hints_enabled ? 'plg.sb_unit' : 'Surface Brightness Unit'"

@@ -113,9 +113,8 @@ class UnitConversion(PluginTemplateMixin):
 
         self._cached_properties = ['image_layers']
 
-        if self.config not in ['specviz', 'cubeviz']:
-            # TODO [specviz2d, mosviz] x_display_unit is not implemented in glue for image viewer
-            # used by spectrum-2d-viewer
+        if self.config not in ['specviz', 'specviz2d', 'cubeviz']:
+            # TODO [mosviz] x_display_unit is not implemented in glue for image viewer
             # TODO [mosviz]: add to yaml file
             # TODO [cubeviz, slice]: slice indicator broken after changing spectral_unit
             # TODO: support for multiple viewers and handling of mixed state from glue (or does
@@ -141,7 +140,7 @@ class UnitConversion(PluginTemplateMixin):
         # initialize flux choices to empty list, will be populated when data is loaded
         self.flux_unit.choices = []
 
-        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz')
+        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz', 'specviz2d')
         self.angle_unit = UnitSelectPluginComponent(self,
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
@@ -211,7 +210,6 @@ class UnitConversion(PluginTemplateMixin):
                 or not len(self.flux_unit_selected)
                 or not len(self.angle_unit_selected)
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
-
             data_obj = msg.data.get_object()
             if isinstance(data_obj, Spectrum1D):
 
@@ -237,9 +235,13 @@ class UnitConversion(PluginTemplateMixin):
 
                     try:
                         if angle_unit is None:
-                            # default to sr if input spectrum is not in surface brightness units
-                            # TODO: for cubeviz, should we check the cube itself?
-                            self.angle_unit.selected = 'sr'
+                            if self.config in ['specviz', 'specviz2d']:
+                                self.has_angle = False
+                                self.has_sb = False
+                            else:
+                                # default to pix2 if input data is not in surface brightness units
+                                # TODO: for cubeviz, should we check the cube itself?
+                                self.angle_unit.selected = 'pix2'
                         else:
                             self.angle_unit.selected = str(angle_unit)
                     except ValueError:

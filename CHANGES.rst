@@ -33,6 +33,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Implement the Unit Conversion plugin in Specviz2D. [#3253]
+
 API Changes
 -----------
 

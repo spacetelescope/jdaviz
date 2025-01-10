@@ -8,6 +8,7 @@ from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 
 from jdaviz.utils import get_reference_image_data, flux_conversion
+from jdaviz.core.unit_conversion_utils import all_flux_unit_conversion_equivs
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
@@ -71,15 +72,20 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
             # NOTE: this uses the scale factor from the first found layer.  We may want to
             # generalize this to iterate over all scale factors if/when we support multiple
             # flux cubes (with potentially different pixel scale factors).
+            eqv = None
             for layer in self.layers:
                 if psc := getattr(layer.layer, 'meta', {}).get('_pixel_scale_factor', None):  # noqa
                     spectral_axis.info.meta = {'_pixel_scale_factor',
                                                psc}
+                    eqv = all_flux_unit_conversion_equivs(pixar_sr=psc,
+                                                          cube_wave=spectral_axis)
                     break
             else:
                 spectral_axis.info.meta = {}
+                eqv = all_flux_unit_conversion_equivs(cube_wave=spectral_axis)
+                spectral_axis = None
 
-            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis)  # noqa
+            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis, eqv=eqv)  # noqa
 
             with delay_callback(self, 'y_min', 'y_max'):
                 self.y_min = np.nanmin(y_corners_new)
