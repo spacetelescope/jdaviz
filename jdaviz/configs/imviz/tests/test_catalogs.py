@@ -114,7 +114,7 @@ class TestCatalogs:
         prev_results = catalogs_plugin.number_of_results
 
         # testing that every variable updates accordingly when markers are cleared
-        catalogs_plugin.vue_do_clear()
+        catalogs_plugin.vue_do_clear_table()
 
         assert not catalogs_plugin.results_available
 
@@ -135,7 +135,7 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == prev_results
 
-        catalogs_plugin.table.selected_rows = catalogs_plugin.table.items[0:2]
+        catalogs_plugin.select_rows(slice(0, 2))
         assert len(catalogs_plugin.table.selected_rows) == 2
 
         # test Gaia catalog
@@ -158,14 +158,25 @@ class TestCatalogs:
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
+        # Re-populate the table with a new search
+        with pytest.warns(ResourceWarning):
+            catalogs_plugin.search(error_on_fail=True)
+        # Ensure at least one row is selected before zooming
+        catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+        assert len(catalogs_plugin.table.selected_rows) > 0
+
         # set 'padding' to reproduce original hard-coded 50 pixel window
         # so test results don't change
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 278.86265
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 378.8691
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.x_min, 1022.57570000, atol=0.1)
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.x_max, 1122.5757, atol=0.1)
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.y_min, 675.29611, atol=0.1)
+        assert_allclose(
+            imviz_helper.viewers['imviz-0']._obj.state.y_max, 775.29611, atol=0.1)
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -200,7 +211,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
                    dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
-    tbl = QTable({'sky_centroid': sky})
+    tbl = QTable({'sky_centroid': sky})  # Table has no "Label" column
     tbl_file = str(tmp_path / 'sky_centroid.ecsv')
     tbl.write(tbl_file, overwrite=True)
     n_entries = len(tbl)
@@ -215,6 +226,9 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     out_tbl = catalogs_plugin.search(error_on_fail=True)
     assert len(out_tbl) == n_entries
     assert catalogs_plugin.number_of_results == n_entries
+    # Assert that Object ID is set to index + 1 when the label column is absent
+    for idx, item in enumerate(catalogs_plugin.table.items):
+        assert item['Object ID'] == str(idx + 1)
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
@@ -240,12 +254,12 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert catalogs_plugin.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
-    catalogs_plugin.clear()
+    catalogs_plugin.clear_table()
 
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
-    catalogs_plugin.clear(hide_only=False)
+    catalogs_plugin.clear_table(hide_only=False)
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
@@ -253,14 +267,21 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
+    # Re-populate the table with a new search
+    out_tbl = catalogs_plugin.search()
+    assert len(out_tbl) > 0
+    # Ensure at least one row is selected before zooming
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+    assert len(catalogs_plugin.table.selected_rows) > 0
 
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.19966
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 0.20034000000000002
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 0.8000100000000001
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1.20001
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.19966, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max,
+                    0.20034000000000002, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.8000100000000001, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.20001, rtol=1e-4)
 
 
 def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
@@ -287,7 +308,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
     catalogs_plugin._obj.search()
 
     # select both sources
-    catalogs_plugin._obj.table.selected_rows = catalogs_plugin._obj.table.items
+    catalogs_plugin.select_all()
 
     # check viewer limits before zoom
     xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
@@ -334,3 +355,102 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
     # test that appropriate error is raised when padding is not a valud percentage
     with pytest.raises(ValueError, match="`padding` must be between 0 and 1."):
         catalogs_plugin.zoom_to_selected(padding=5)
+
+
+def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs, tmp_path):
+    # Create a table with additional columns
+    sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
+                   dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
+    tbl = QTable({
+        'sky_centroid': sky,
+        'flux': [1.0, 2.0, 3.0],
+        'flux_err': [0.1, 0.2, 0.3],
+        'is_extended': [False, True, False],
+        'roundness': [0.01, 0.02, 0.03],
+        'sharpness': [0.1, 0.2, 0.3]
+    })
+    tbl_file = str(tmp_path / 'extra_columns.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+
+    ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    assert len(imviz_helper.app.data_collection) == 1
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']._obj
+    catalogs_plugin.from_file = tbl_file
+    catalogs_plugin.catalog_selected = 'From File...'
+    catalogs_plugin.search(error_on_fail=True)
+
+    extra_columns = ['flux', 'flux_err', 'is_extended', 'roundness', 'sharpness']
+    for col in extra_columns:
+        assert col in catalogs_plugin.table.headers_avail
+
+    # Check if extra columns are populated correctly
+    for idx, item in enumerate(catalogs_plugin.table.items):
+        assert float(item['flux']) == tbl['flux'][idx]
+        assert float(item['flux_err']) == tbl['flux_err'][idx]
+        assert item['is_extended'] == tbl['is_extended'][idx]
+        assert float(item['roundness']) == tbl['roundness'][idx]
+        assert float(item['sharpness']) == tbl['sharpness'][idx]
+
+
+def test_select_catalog_table_rows(imviz_helper, image_2d_wcs, tmp_path):
+
+    """Test the ``select_rows`` functionality on table in plugin."""
+
+    arr = np.ones((500, 500))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+
+    # write out table to load back in
+    # NOTE: if we ever support loading Table obj directly, replace this and
+    # remove tmp_path
+    sky_coord = SkyCoord(ra=[337.49, 337.46, 337.47, 337.48, 337.49, 337.50],
+                         dec=[-20.81, -20.78, -20.79, -20.80, -20.77, -20.76],
+                         unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord],
+                'label': ['Source_1', 'Source_2', 'Source_3', 'Source_4',
+                          'Source_5', 'Source_6']})
+    tbl_file = str(tmp_path / 'test_catalog.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    plugin_table = catalogs_plugin._obj.table
+
+    # load catalog
+    catalogs_plugin._obj.from_file = tbl_file
+    catalogs_plugin._obj.search()
+
+    # select a single row:
+    catalogs_plugin.select_rows(3)
+    assert len(plugin_table.selected_rows) == 1
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.48000'
+
+    # select multiple rows by indices
+    catalogs_plugin.select_rows([3, 2, 4])
+    assert len(plugin_table.selected_rows) == 3
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.48000'
+    assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.47000'
+    assert plugin_table.selected_rows[2]['Right Ascension (degrees)'] == '337.49000'
+
+    # select a range of rows with a slice
+    catalogs_plugin.select_rows(slice(0, 2))
+    assert len(plugin_table.selected_rows) == 2
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.49000'
+    assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.46000'
+
+    # select rows with multi dim. numpy slice
+    catalogs_plugin.select_rows(np.s_[0:2, 3:5])
+    assert len(plugin_table.selected_rows) == 4
+    assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.49000'
+    assert plugin_table.selected_rows[1]['Right Ascension (degrees)'] == '337.46000'
+    assert plugin_table.selected_rows[2]['Right Ascension (degrees)'] == '337.48000'
+    assert plugin_table.selected_rows[3]['Right Ascension (degrees)'] == '337.49000'
+
+    # test select_all
+    catalogs_plugin.select_all()
+    assert len(plugin_table.selected_rows) == 6
+
+    # test select_none
+    catalogs_plugin.select_none()
+    assert len(plugin_table.selected_rows) == 0

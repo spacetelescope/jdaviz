@@ -6,13 +6,26 @@ New Features
 
 - Added API for renaming subsets to Subset Tools plugin. [#3356]
 
+- Viewer data-menus are now found in the legend on the right of the viewer. [#3281]
+
+- Added 'select_rows' method to plugin tables to enable changing
+  curent selection by indicies or slice. Also added 'select_all' and 'select_none'
+  methods to change active selection to all table items or clear all selected
+  items without clearing the table. [#3381]
+
+- Plugin API methods and attributes are now searchable from the plugin tray (and visible when API hints are enabled). [#3384]
+
 Cubeviz
 ^^^^^^^
 
-- Enhancements for the cube sonification plugin. [#3377]
+- Enhancements for the cube sonification plugin. [#3377, #3387]
   
 Imviz
 ^^^^^
+
+- Enhance the Catalog Search plugin to support additional columns when loading catalog data from files. [#3359]
+  
+- Catalog Search ``clear_table`` now removes all associated markers from the viewer. [#3359]
 
 Mosviz
 ^^^^^^
@@ -31,6 +44,8 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Orientation plugin: ``link_type`` and ``wcs_use_affine`` (previously deprecated) have now been removed. [#3385]
 
 Mosviz
 ^^^^^^
@@ -70,11 +85,15 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixes traceback from the data-menu that can be caused by a viewer rename. [#3383]
+
 Cubeviz
 ^^^^^^^
 
 Imviz
 ^^^^^
+
+- Spatial subsets no longer show as having mixed visibility (in the legend and plot options tab) when aligned by WCS. [#3373]
 
 Mosviz
 ^^^^^^

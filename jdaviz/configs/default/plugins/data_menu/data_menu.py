@@ -6,7 +6,8 @@ from traitlets import Bool, Dict, Unicode, Integer, List, observe
 from jdaviz.core.template_mixin import (TemplateMixin, LayerSelect,
                                         LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage, ChangeRefDataMessage
+from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
+                                ChangeRefDataMessage, ViewerRenamedMessage)
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
@@ -43,6 +44,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     :ref:`public API <plugin-apis>`:
 
     * :meth:`open_menu`
+    * :meth:`data_labels_loaded`
+    * :meth:`data_labels_visible`
+    * :meth:`data_labels_unloaded`
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
         actively selected layer(s)
     * ``orientation`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
@@ -98,8 +102,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_modes = List().tag(sync=True)
 
-    dev_data_menu = Bool(False).tag(sync=True)
-
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._viewer = viewer
@@ -131,6 +133,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
+        self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
 
@@ -153,9 +156,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
+        readonly = ['data_labels_loaded', 'data_labels_visible', 'data_labels_unloaded']
         if self.app.config == 'imviz':
             expose += ['orientation']
-        return UserApiWrapper(self, expose=expose)
+        return UserApiWrapper(self, expose=expose, readonly=readonly)
 
     def open_menu(self):
         """
@@ -166,6 +170,20 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def existing_subset_labels(self):
         return [sg.label for sg in self.app.data_collection.subset_groups]
+
+    @property
+    def data_labels_loaded(self):
+        return [layer['label'] for layer in self.layer_items
+                if layer['label'] not in self.existing_subset_labels]
+
+    @property
+    def data_labels_visible(self):
+        return [layer['label'] for layer in self.layer_items
+                if layer['label'] not in self.existing_subset_labels and layer['visible']]
+
+    @property
+    def data_labels_unloaded(self):
+        return self.dataset.choices
 
     def _set_viewer_id(self):
         # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
@@ -194,6 +212,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             with self.during_select_sync():
                 self.orientation.selected = str(self._viewer.state.reference_data.label)
 
+    def _on_viewer_renamed_message(self, msg):
+        if self.viewer_reference == msg.old_viewer_ref:
+            self.viewer_reference = msg.new_viewer_ref
+            self._set_viewer_id()
+
     @observe('orientation_layer_selected')
     def _orientation_layer_selected_changed(self, event={}):
         if not hasattr(self, 'orientation'):
@@ -213,13 +236,21 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             raise
         self._during_select_sync = False
 
-    @observe('dm_layer_selected')
+    @observe('dm_layer_selected', 'layer_multiselect')
     def _dm_layer_selected_changed(self, event={}):
-        if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
+        if not hasattr(self, 'layer'):  # pragma: no cover
             return
         if self._during_select_sync:
             return
-        if len(event.get('new')) == len(event.get('old')):
+        if event.get('name') == 'layer_multiselect' and event.get('new'):
+            return
+        if not self.layer.multiselect and len(self.dm_layer_selected) > 1:
+            # vue will still treat the element as a list, so we will include the
+            # logic here to enforce single-select toggling
+            self.dm_layer_selected = [self.dm_layer_selected[-1]]
+            return
+        if (event.get('name') == 'dm_layer_selected'
+                and len(event.get('new')) == len(event.get('old'))):
             # not possible from UI interaction, but instead caused by a selected
             # layer being removed (deleting a selected subset, etc).  We want
             # to update dm_layer_selected in order to preserve layer.selected
@@ -228,8 +259,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         with self.during_select_sync():
             # map index in dm_layer_selected (inverse order of layer_items)
             # to set self.layer.selected
-            self.layer.selected = [self.layer_items[i]['label']
-                                   for i in self.dm_layer_selected]
+            selected = [self.layer_items[i]['label']
+                        for i in self.dm_layer_selected]
+            if self.layer.multiselect:
+                self.layer.selected = selected
+            else:
+                self.layer.selected = selected[0] if len(selected) else ''
 
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
@@ -239,7 +274,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             with self.during_select_sync():
                 # map list of strings in self.layer.selected to indices in dm_layer_selected
                 layer_labels = [layer['label'] for layer in self.layer_items]
-                self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected
+                layer_selected = self.layer_selected if self.layer.multiselect else [self.layer_selected]  # noqa
+                self.dm_layer_selected = [layer_labels.index(label) for label in layer_selected
                                           if label in layer_labels]
 
         subset_labels = self.existing_subset_labels
@@ -515,7 +551,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                         self.app.data_collection.remove_subset_group(sg)
                         break
             else:
-                self.app.vue_data_item_remove({'item_name': layer})
+                self.app.data_item_remove(layer)
 
     def vue_remove_from_app(self, *args):
         self.remove_from_app()  # pragma: no cover

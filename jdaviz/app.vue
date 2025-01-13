@@ -128,6 +128,9 @@
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  config }}.plugins['{{ trayItem.label }}']</span>
                         </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="state.show_api_hints && state.tray_items_filter.length" v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">plg.{{ api_method }}</span>
+                        </v-list-item-subtitle>
                         <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
@@ -194,8 +197,17 @@ export default {
       if (tray_items_filter === null || tray_items_filter.length == 0) {
         return true
       }
-      // simple exact text search match on the plugin title for now.
-      return trayItem.label.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1 || trayItem.tray_item_description.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1
+      // simple exact text search match on the plugin title/description for now.
+      return trayItem.label.toLowerCase().includes(tray_items_filter.toLowerCase()) || trayItem.tray_item_description.toLowerCase().includes(tray_items_filter.toLowerCase()) || this.trayItemMethodMatch(trayItem, tray_items_filter).length > 0
+    },
+    trayItemMethodMatch(trayItem, tray_items_filter ) {
+      if (tray_items_filter === null) {
+        return []
+      }
+      if (tray_items_filter === '.') {
+        return trayItem.api_methods
+      }
+      return trayItem.api_methods.filter((item) => ("."+item.toLowerCase()).includes(tray_items_filter.toLowerCase()))
     },
     onLayoutChange() {
       /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */

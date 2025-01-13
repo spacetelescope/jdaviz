@@ -177,7 +177,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         lc_plugin.viewer = "imviz-1"
         lc_plugin.orientation = "North-up, East-left"
 
-        self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
+        self.imviz.app.data_item_remove("North-up, East-left")
 
         assert self.viewer.state.reference_data.label == "Default orientation"
         assert viewer_2.state.reference_data.label == "Default orientation"
@@ -202,7 +202,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         # Switch to N-up E-right
         lc_plugin.set_north_up_east_right()
 
-        self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
+        self.imviz.app.data_item_remove("North-up, East-left")
 
         # Check that E-right still linked to default
         assert len(self.imviz.app.data_collection.external_links) == 3

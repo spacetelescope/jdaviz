@@ -130,6 +130,11 @@
       >
         Stop stream
       </plugin-action-button>
+      <plugin-action-button
+        @click="refresh_device_list_in_dropdown"
+      >
+        Refresh Device List
+      </plugin-action-button>
     </v-row>
     <j-plugin-section-header>Live Sound Options</j-plugin-section-header>
     <v-row>

@@ -46,12 +46,17 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             'Object ID': np.nan,
             'id': np.nan,
             'x_coord': np.nan,
-            'y_coord': np.nan}
+            'y_coord': np.nan
+            }
+
+    headers = ['Right Ascension (degrees)', 'Declination (degrees)',
+               'Object ID', 'x_coord', 'y_coord']
 
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('clear_table', 'export_table',
-                                           'zoom_to_selected'))
+                                           'zoom_to_selected', 'select_rows',
+                                           'select_all', 'select_none'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,11 +77,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self._marker_name = 'catalog_results'
 
         # initializing the headers in the table that is displayed in the UI
-        headers = ['Right Ascension (degrees)', 'Declination (degrees)',
-                   'Object ID', 'x_coord', 'y_coord']
-
-        self.table.headers_avail = headers
-        self.table.headers_visible = headers
+        self.table.headers_avail = self.headers
+        self.table.headers_visible = self.headers
         self.table._default_values_by_colname = self._default_table_values
         self.table._selected_rows_changed_callback = lambda msg: self.plot_selected_points()
         self.table.item_key = 'id'
@@ -92,6 +94,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             table = QTable.read(path)
         except Exception:
             return 'Could not parse file with astropy.table.QTable.read', {}
+
+        if not table.colnames:  # Ensure the file has columns
+            return "File contains no columns", {}
 
         if 'sky_centroid' not in table.colnames:
             return 'Table does not contain required sky_centroid column', {}
@@ -115,7 +120,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         """
         # calling clear in the case the user forgot after searching
-        self.clear()
+        self.clear_table()
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
@@ -204,6 +209,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
             table = self.catalog.selected_obj
+            column_names = table.colnames
+            self.table.headers_avail = self.headers + [
+                col for col in column_names if col not in self.headers]
+            self.table.headers_visible = self.headers
             self.app._catalog_source_table = table
             if len(table['sky_centroid']) > self.max_sources:
                 skycoord_table = table['sky_centroid'][:self.max_sources]
@@ -271,16 +280,22 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
                 x_coordinates = [x_coordinates]
                 y_coordinates = [y_coordinates]
+            for idx, (row, x_coord, y_coord) in enumerate(zip(self.app._catalog_source_table, x_coordinates, y_coordinates)):  # noqa:E501
+                row_info = {
+                    'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
+                    'Declination (degrees)': row['sky_centroid'].dec.deg,
+                    'Object ID': str(row.get('label', f"{idx + 1}")),
+                    'id': len(self.table),
+                    'x_coord': x_coord,
+                    'y_coord': y_coord,
+                }
+                # Add sky_centroid and label explicitly to row_info
+                row_info['sky_centroid'] = row['sky_centroid']
+                row_info['label'] = row.get('label', f"{idx + 1}")
+                for col in table.colnames:
+                    if col not in self.headers:  # Skip already processed columns
+                        row_info[col] = row[col]
 
-            for row, x_coord, y_coord in zip(self.app._catalog_source_table,
-                                             x_coordinates, y_coordinates):
-                # Check if the row contains the required keys
-                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
-                            'Declination (degrees)': row['sky_centroid'].dec.deg,
-                            'Object ID': str(row.get('label', 'N/A')),
-                            'id': len(self.table),
-                            'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
-                            'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
                 self.table.add_item(row_info)
 
         filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
@@ -357,8 +372,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         viewer = self.app._jdaviz_helper._default_viewer
 
         selected_rows = self.table.selected_rows
-
-        if not len(selected_rows):
+        if not selected_rows:  # Check if no rows are selected
             return
 
         if padding <= 0 or padding > 1:
@@ -402,9 +416,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # calls self.search() which handles all of the searching logic
         self.search()
 
-    def clear(self, hide_only=True):
+    def clear_table(self, hide_only=True):
         # gets the current viewer
         viewer = self.viewer.selected_obj
+        # Clear the table before performing a new search
+        self.table.items = []
+        self.table.selected_rows = []
+        self.table.selected_indices = []
 
         if not hide_only and self._marker_name in self.app.data_collection.labels:
             # resetting values
@@ -426,5 +444,5 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
                     lyr.visible = False
 
-    def vue_do_clear(self, *args, **kwargs):
-        self.clear()
+    def vue_do_clear_table(self, *args, **kwargs):
+        self.clear_table()

@@ -6,6 +6,7 @@ import astropy.units as u
 import bqplot
 from contextlib import contextmanager
 import numpy as np
+import inspect
 import logging
 import os
 import threading
@@ -419,6 +420,7 @@ class PluginTemplateMixin(TemplateMixin):
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
+    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
@@ -464,6 +466,14 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
+
+        # set user-API methods
+        def get_api_text(name, obj):
+            if type(obj).__name__ == 'method':
+                return f"{name}{inspect.signature(obj)}"
+            return name
+        self.api_methods = sorted([get_api_text(name, obj)
+                                   for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
         new = self.__class__(app=self.app)
@@ -1537,6 +1547,8 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetRenameMessage,
                            handler=self._on_subset_renamed)
+        self.hub.subscribe(self, ViewerRenamedMessage,
+                           self._on_viewer_renamed_message)
 
         self.sort_by = sort_by
         self.app.state.add_callback('layer_icons', self._update_items)
@@ -1574,6 +1586,14 @@ class LayerSelect(SelectPluginComponent):
                 return len(self.app._get_assoc_data_children(data.label)) > 0
 
             self.add_filter(filter_has_children)
+
+    def _on_viewer_renamed_message(self, msg):
+        if isinstance(self.viewer, list):
+            for i, viewer in self.viewer:
+                if viewer == msg.old_viewer_ref:
+                    self.viewer[i] = msg.new_viewer_ref
+        elif self.viewer == msg.old_viewer_ref:
+            self.viewer = msg.new_viewer_ref
 
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
@@ -1625,7 +1645,9 @@ class LayerSelect(SelectPluginComponent):
         linewidths = []
         for viewer in self.viewer_objs:
             for layer in viewer.layers:
-                if layer.layer.label == layer_label and is_not_wcs_only(layer.layer):
+                if (layer.layer.label == layer_label
+                        and is_not_wcs_only(layer.layer)
+                        and is_not_wcs_only(layer.layer.data)):
                     if is_subset is None:
                         is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
@@ -1787,7 +1809,10 @@ class LayerSelect(SelectPluginComponent):
 
         def _sort_by_zorder(items_dict):
             # NOTE: this works best if subscribed to a single viewer
-            return -1 * items_dict.get('zorder', 0)
+            zorder = items_dict.get('zorder', 0)
+            if zorder is None:
+                zorder = 0
+            return -1 * zorder
 
         if self.sort_by == 'zorder':
             layer_items.sort(key=_sort_by_zorder)
@@ -4708,7 +4733,9 @@ class Table(PluginSubcomponent):
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, ('clear_table', 'export_table'))
+        return UserApiWrapper(self, ('clear_table', 'export_table',
+                                     'select_rows', 'select_all',
+                                     'select_none'))
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -4764,12 +4791,20 @@ class Table(PluginSubcomponent):
                 return ''
             elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
                 return ''
-
             elif isinstance(item, float):
                 return float_precision(column, item)
             elif isinstance(item, (list, tuple)):
                 return [float_precision(column, i) if isinstance(i, float) else i for i in item]
-
+            elif isinstance(item, (np.float32, np.float64)):
+                return float(item)
+            elif isinstance(item, u.Quantity):
+                return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}     # noqa: E501
+            elif isinstance(item, np.bool_):
+                return bool(item)
+            elif isinstance(item, np.ndarray):
+                return item.tolist()
+            elif isinstance(item, tuple):
+                return tuple(json_safe(v) for v in item)
             return item
 
         if isinstance(item, QTable):
@@ -4811,8 +4846,49 @@ class Table(PluginSubcomponent):
         Clear all entries/markers from the current table.
         """
         self.items = []
+        self.selected_rows = []
+        self.selected_indices = []
         self._qtable = None
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
+
+    def select_rows(self, rows):
+        """
+        Select rows from the current table by index, indices, or slice.
+
+        Parameters
+        ----------
+        rows : int, list of int, slice, or tuple of slice
+            The rows to select. This can be:
+            - An integer specifying a single row index.
+            - A list of integers specifying multiple row indices.
+            - A slice object specifying a range of rows.
+            - A tuple of slices (e.g using numpy slice)
+
+        """
+
+        if isinstance(rows, (list, tuple)):
+            selected = []
+            if isinstance(rows[0], slice):
+                for sl in rows:
+                    selected += self.items[sl]
+            else:
+                selected = [self.items[i] for i in rows]
+
+        elif isinstance(rows, slice):
+            selected = self.items[rows]
+        elif isinstance(rows, int):
+            selected = [self.items[rows]]
+
+        # apply new selection
+        self.selected_rows = selected
+
+    def select_all(self):
+        """ Select all rows in table."""
+        self.select_rows(slice(0, len(self) + 1))
+
+    def select_none(self):
+        """ Deselect all rows in table."""
+        self.selected_rows = []
 
     def vue_clear_table(self, data=None):
         # if the plugin (or via the TableMixin) has its own clear_table implementation,
@@ -4845,6 +4921,8 @@ class TableMixin(VuetifyTemplate, HubListener):
 
     * :meth:`clear_table`
     * :meth:`export_table`
+    * :meth:`select_rows`
+    * :meth:`select_all`
 
     To render in the plugin's vue file::
 
@@ -4882,6 +4960,31 @@ class TableMixin(VuetifyTemplate, HubListener):
             If ``filename`` already exists, should it be overwritten.
         """
         return self.table.export_table(filename=filename, overwrite=overwrite)
+
+    def select_rows(self, rows):
+        """
+        Select rows from the current table by index, indices, or slice.
+
+        Parameters
+        ----------
+        rows : int, list of int, slice, or tuple of slice
+            The rows to select. This can be:
+            - An integer specifying a single row index.
+            - A list of integers specifying multiple row indices.
+            - A slice object specifying a range of rows.
+            - A tuple of slices (e.g using numpy slice)
+
+        """
+
+        self.table.select_rows(rows)
+
+    def select_all(self):
+        """ Select all rows in table."""
+        self.table.select_all()
+
+    def select_none(self):
+        """ Deselect all rows in table."""
+        self.table.select_none()
 
 
 class Plot(PluginSubcomponent):
