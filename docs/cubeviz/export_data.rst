@@ -86,20 +86,20 @@ For a list of model labels:
 
 .. code-block:: python
 
-    models = cubeviz.get_models()
+    models = cubeviz.plugins['Model Fitting'].get_models()
     models
 
 Once you know the model labels, to get a specific model:
 
 .. code-block:: python
 
-    mymodel = cubeviz.get_models(model_label="ModelLabel", x=10)
+    mymodel = cubeviz.plugins['Model Fitting'].get_models(model_label="ModelLabel", x=10)
 
 To extract all of the model parameters:
 
 .. code-block:: python
 
-    myparams = cubeviz.get_model_parameters(model_label="ModelLabel", x=x, y=y)
+    myparams = cubeviz.plugins['Model Fitting'].get_model_parameters(model_label="ModelLabel", x=x, y=y)
     myparams
 
 where the ``model_label`` parameter identifies which model should be returned and
