@@ -27,6 +27,7 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
@@ -45,6 +46,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`export_table`
     """
     template_file = __file__, "aper_phot_simple.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -150,14 +152,16 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.subscribe(self, GlobalDisplayUnitChanged,
                                handler=self._on_display_units_changed)
 
-# TODO: expose public API once finalized
-#    @property
-#    def user_api(self):
-#        return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
-#                                           'background', 'background_value',
-#                                           'pixel_area', 'counts_factor', 'flux_scaling',
-#                                           'calculate_photometry',
-#                                           'unpack_batch_options', 'calculate_batch_photometry'))
+    @property
+    def user_api(self):
+        # TODO: expose public API once finalized
+        # expose=('multiselect', 'dataset', 'aperture',
+        #                                   'background', 'background_value',
+        #                                   'pixel_area', 'counts_factor', 'flux_scaling',
+        #                                   'calculate_photometry',
+        #                                   'unpack_batch_options', 'calculate_batch_photometry')
+
+        return PluginUserApi(self, expose=('export_table',))
 
     def _on_slice_changed(self, msg):
         if self.config != "cubeviz":

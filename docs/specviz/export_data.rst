@@ -84,20 +84,20 @@ For a list of model labels:
 
 .. code-block:: python
 
-    models = specviz.get_models()
+    models = specviz.plugins['Model Fitting'].get_models()
     models
 
 Once you know the model labels, to get a specific model:
 
 .. code-block:: python
 
-    mymodel = specviz.get_models(model_label="ModelLabel")
+    mymodel = specviz.plugins['Model Fitting'].get_models(model_label="ModelLabel")
 
 To extract all of the model parameters:
 
 .. code-block:: python
 
-    myparams = specviz.get_model_parameters(model_label="ModelLabel")
+    myparams = specviz.plugins['Model Fitting'].get_model_parameters(model_label="ModelLabel")
     myparams
 
 where the ``model_label`` parameter identifies which model should be returned.

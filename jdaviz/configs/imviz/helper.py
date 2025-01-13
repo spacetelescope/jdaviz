@@ -300,6 +300,7 @@ class Imviz(ImageConfigHelper):
 
         return align_by
 
+    @deprecated(since="4.2", alternative="plugins['Aperture Photometry'].export_table()")
     def get_aperture_photometry_results(self):
         """Return aperture photometry results, if any.
         Results are calculated using :ref:`aper-phot-simple` plugin.
@@ -310,7 +311,7 @@ class Imviz(ImageConfigHelper):
             Photometry results if available or `None` otherwise.
 
         """
-        return self.plugins['Aperture Photometry']._obj.export_table()
+        return self.plugins['Aperture Photometry'].export_table()
 
     def get_catalog_source_results(self):
         """Return table of sources given by querying from a catalog, if any.

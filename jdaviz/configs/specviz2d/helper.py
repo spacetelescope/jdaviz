@@ -1,3 +1,5 @@
+from astropy.utils.decorators import deprecated
+
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
@@ -19,6 +21,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
         super().__init__(*args, **kwargs)
 
     @property
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer']")
     def specviz(self):
         """
         A Specviz helper (`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz
@@ -152,6 +155,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 timeout=timeout
             )
 
+    @deprecated(since="4.2")
     def load_trace(self, trace, data_label, show_in_viewer=True):
         """
         Load a trace object and load into the spectrum-2d-viewer

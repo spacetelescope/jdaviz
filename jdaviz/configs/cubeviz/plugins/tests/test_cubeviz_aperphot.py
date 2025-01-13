@@ -31,7 +31,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     plg.dataset_selected = "test[FLUX]"
     plg.aperture_selected = "Subset 1"
     plg.vue_do_aper_phot()
-    row = cubeviz_helper.get_aperture_photometry_results()[0]
+    row = plg.export_table()[0]
 
     # Basically, we should recover the input rectangle here.
     assert_allclose(row["xcenter"], 1 * u.pix)
@@ -51,7 +51,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     cube_slice_plg = cubeviz_helper.plugins["Slice"]._obj
     cube_slice_plg.vue_goto_first()
     plg.vue_do_aper_phot()
-    row = cubeviz_helper.get_aperture_photometry_results()[1]
+    row = plg.export_table()[1]
 
     # Same rectangle but different slice value.
     assert_allclose(row["xcenter"], 1 * u.pix)
@@ -79,7 +79,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     plg.dataset_selected = "test[FLUX] collapsed"
     plg.aperture_selected = "Subset 1"
     plg.vue_do_aper_phot()
-    row = cubeviz_helper.get_aperture_photometry_results()[2]
+    row = plg.export_table()[2]
 
     # Basically, we should recover the input rectangle here.
     assert_allclose(row["xcenter"], 1 * u.pix)

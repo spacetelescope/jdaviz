@@ -55,7 +55,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.aperture_selected = 'Subset 1'
         assert phot_plugin.dataset.selected_dc_item is not None
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
         phot_plugin.dataset_selected = 'has_wcs_2[SCI,1]'
@@ -68,7 +68,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.pixel_area, 0)
         assert_allclose(phot_plugin.flux_scaling, 0)
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 2
         assert phot_plugin.plot_available
         assert len(phot_plugin.plot.layers['profile'].layer.data['x']) > 0
@@ -127,7 +127,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 3  # New result is appended
         assert tbl[-1]['id'] == 3
         assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix, rtol=1e-4)
@@ -152,7 +152,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.background_selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
         assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
@@ -256,12 +256,12 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         phot_plugin.dataset_selected = 'has_wcs[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 1'
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
         phot_plugin.dataset_selected = 'no_wcs[SCI,1]'
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
         assert_array_equal(tbl['sky_center'], None)
 
@@ -309,7 +309,7 @@ class TestAdvancedAperPhot:
         self.phot_plugin.background_selected = 'Manual'
         self.phot_plugin.background_value = local_bkg
         self.phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = self.phot_plugin.export_table()
 
         # Imperfect down-sampling and imperfect apertures, so 10% is good enough.
         assert_allclose(tbl['sum'][-1], expected_sum, rtol=0.1)

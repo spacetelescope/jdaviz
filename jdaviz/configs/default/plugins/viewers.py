@@ -92,7 +92,7 @@ class JdavizViewerMixin(WithCache):
         elif isinstance(self, TableViewer):
             expose += []
         else:
-            expose += ['set_limits', 'reset_limits']
+            expose += ['set_limits', 'reset_limits', 'set_tick_format']
         return ViewerUserApi(self, expose=expose)
 
     @property
@@ -179,6 +179,24 @@ class JdavizViewerMixin(WithCache):
 
         """
         return self.state.x_min, self.state.x_max, self.state.y_min, self.state.y_max
+
+    def set_tick_format(self, fmt, axis):
+        """
+        Manually set the tick format of one of the axes.
+
+        Parameters
+        ----------
+        fmt : str
+            Format of tick marks.
+            For example, ``'0.1e'`` to set scientific notation or ``'0.2f'`` to turn it off.
+        axis : {x, y}
+            The viewer axis.
+        """
+        if axis not in ('x', 'y'):
+            raise ValueError("axis must be 'x' or 'y'")
+        # Examples of values for fmt are '0.1e' or '0.2f'
+        axis = {'x': 0, 'y': 1}[axis]
+        self.figure.axes[axis].tick_format = fmt
 
     @property
     def native_marks(self):
