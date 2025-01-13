@@ -104,7 +104,7 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         plugin.calculate_fit()
 
-    params = cubeviz_helper.get_model_parameters()
+    params = cubeviz_helper.plugins['Model Fitting'].get_model_parameters()
     slope_res = np.zeros((3, 4))
     slope_res[2, 2] = 1.0
 
