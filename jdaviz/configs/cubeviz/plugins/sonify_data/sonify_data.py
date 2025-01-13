@@ -66,10 +66,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                  ' works on devices with valid sound output.')
 
         else:
-            devices, indexes = self.build_device_lists()
-            self.sound_device_indexes = dict(zip(devices, indexes))
-            self.sound_devices_items = devices
-            self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
+            self.sound_device_indexes = None
+            self.refresh_device_list()
 
         # TODO: Remove hardcoded range and flux viewer
         self.spec_viewer = self.app.get_viewer('spectrum-viewer')
@@ -117,6 +115,15 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         if event['new'] != event['old']:
             didx = dict(zip(*self.build_device_lists()))[event['new']]
             self.flux_viewer.update_sound_device(didx)
+
+    def refresh_device_list(self):
+        devices, indexes = self.build_device_lists()
+        self.sound_device_indexes = dict(zip(devices, indexes))
+        self.sound_devices_items = devices
+        self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
+
+    def vue_refresh_device_list_in_dropdown(self, *args):
+        self.refresh_device_list()
 
     def build_device_lists(self):
         # dedicated function to build the current *output*

@@ -132,6 +132,11 @@
       >
         Stop stream
       </plugin-action-button>
+      <plugin-action-button
+        @click="refresh_device_list_in_dropdown"
+      >
+        Refresh Device List
+      </plugin-action-button>
     </v-row>
     <v-row>
       <v-select
