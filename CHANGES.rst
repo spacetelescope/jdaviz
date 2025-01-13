@@ -19,7 +19,7 @@ Cubeviz
 ^^^^^^^
 
 - Enhancements for the cube sonification plugin. [#3377, #3387]
-  
+
 Imviz
 ^^^^^
 
