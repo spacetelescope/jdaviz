@@ -59,6 +59,15 @@ div.output_wrapper {
   padding: 0px;
 }
 
+.plugin-header {
+  /* ensure dropdown arrow aligns to the top for tall headers */
+  align-items: start !important;
+}
+
+.plugin-header .v-expansion-panel-header__icon {
+  margin-top: 4px;
+}
+
 .plugin-expansion-panel-content .row {
   /* override -12px margins */
   margin-left: 0px;

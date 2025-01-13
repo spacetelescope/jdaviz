@@ -6,6 +6,7 @@ import astropy.units as u
 import bqplot
 from contextlib import contextmanager
 import numpy as np
+import inspect
 import logging
 import os
 import threading
@@ -419,6 +420,7 @@ class PluginTemplateMixin(TemplateMixin):
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
+    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
@@ -464,6 +466,14 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
+
+        # set user-API methods
+        def get_api_text(name, obj):
+            if type(obj).__name__ == 'method':
+                return f"{name}{inspect.signature(obj)}"
+            return name
+        self.api_methods = sorted([get_api_text(name, obj)
+                                   for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
         new = self.__class__(app=self.app)
