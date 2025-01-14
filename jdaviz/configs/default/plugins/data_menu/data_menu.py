@@ -47,8 +47,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`data_labels_loaded`
     * :meth:`data_labels_visible`
     * :meth:`data_labels_unloaded`
-    * :meth:`subset_labels_loaded`
-    * :meth:`subset_labels_visible`
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
         actively selected layer(s)
     * ``orientation`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
@@ -158,8 +156,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
-        readonly = ['subset_labels_loaded', 'subset_labels_visible',
-                    'data_labels_loaded', 'data_labels_visible', 'data_labels_unloaded']
+        readonly = ['data_labels_loaded', 'data_labels_visible', 'data_labels_unloaded']
         if self.app.config == 'imviz':
             expose += ['orientation']
         return UserApiWrapper(self, expose=expose, readonly=readonly)
@@ -173,16 +170,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def existing_subset_labels(self):
         return [sg.label for sg in self.app.data_collection.subset_groups]
-
-    @property
-    def subset_labels_loaded(self):
-        return [layer['label'] for layer in self.layer_items
-                if layer['label'] in self.existing_subset_labels]
-
-    @property
-    def subset_labels_visible(self):
-        return [layer['label'] for layer in self.layer_items
-                if layer['label'] in self.existing_subset_labels and layer['visible']]
 
     @property
     def data_labels_loaded(self):
