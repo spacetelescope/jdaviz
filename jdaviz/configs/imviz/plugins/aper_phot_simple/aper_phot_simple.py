@@ -46,7 +46,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * :meth:`export_table`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     """
     template_file = __file__, "aper_phot_simple.vue"
     uses_active_status = Bool(True).tag(sync=True)
