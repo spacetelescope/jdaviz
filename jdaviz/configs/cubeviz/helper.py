@@ -115,7 +115,6 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         self.select_slice(wavelength)
 
     @property
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer']")
     def specviz(self):
         """
         A Specviz helper (:class:`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz

@@ -21,7 +21,6 @@ class Specviz2d(ConfigHelper, LineListMixin):
         super().__init__(*args, **kwargs)
 
     @property
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer']")
     def specviz(self):
         """
         A Specviz helper (`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz

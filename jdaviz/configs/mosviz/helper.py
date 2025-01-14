@@ -863,7 +863,6 @@ class Mosviz(ConfigHelper, LineListMixin):
         table_df.to_csv(filename, index_label="Table Index")
 
     @property
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer']")
     def specviz(self):
         """
         A Specviz helper (:class:`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz
