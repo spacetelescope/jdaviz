@@ -2,8 +2,6 @@ import warnings
 
 from astropy import units as u
 from astropy.utils.decorators import deprecated
-from regions.core.core import Region
-from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.helpers import ConfigHelper
@@ -84,70 +82,6 @@ class Specviz(ConfigHelper, LineListMixin):
                           local_path=local_path,
                           timeout=timeout,
                           load_as_list=load_as_list)
-
-    @deprecated(since="4.2", alternative="get_data")
-    def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
-        """Returns the current data loaded into the main viewer
-
-        """
-        spectra = {}
-        # Just to save line length
-        get_data_method = self.app._jdaviz_helper.get_data
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        all_subsets = self.app.get_subsets(object_only=True)
-
-        if data_label is not None:
-            spectrum = get_data_method(data_label=data_label,
-                                       spectral_subset=spectral_subset,
-                                       cls=Spectrum1D)
-            spectra[data_label] = spectrum
-        else:
-            for layer_state in viewer.state.layers:
-                lyr = layer_state.layer
-                if spectral_subset is not None:
-                    if lyr.label == spectral_subset:
-                        spectrum = get_data_method(data_label=lyr.data.label,
-                                                   spectral_subset=spectral_subset,
-                                                   cls=Spectrum1D)
-                        spectra[lyr.data.label] = spectrum
-                    else:
-                        continue
-                elif (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
-                        isinstance(all_subsets[lyr.label][0], Region)):
-                    # spatial subsets appear as automatically extracted entries, we can skip
-                    # the layer representing the subset itself.
-                    continue
-                elif (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
-                        isinstance(all_subsets[lyr.label], SpectralRegion)):
-                    spectrum = get_data_method(data_label=lyr.data.label,
-                                               spectral_subset=lyr.label,
-                                               cls=Spectrum1D)
-                    spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
-                else:
-                    spectrum = get_data_method(data_label=lyr.label,
-                                               cls=Spectrum1D)
-                    spectra[lyr.label] = spectrum
-
-        if not apply_slider_redshift:
-            if data_label is not None:
-                return spectra[data_label]
-            return spectra
-        else:
-            output_spectra = {}
-            # We need to create new Spectrum1D outputs with the redshifts set
-            for key in spectra.keys():
-                output_spectra[key] = _apply_redshift_to_spectra(spectra[key], self._redshift)
-
-            if apply_slider_redshift == "Warn":
-                warnings.warn("Applying the value from the redshift "
-                              "slider to the output spectra. To avoid seeing this "
-                              "warning, explicitly set the apply_slider_redshift "
-                              "keyword option to True or False.")
-
-            if data_label is not None:
-                output_spectra = output_spectra[data_label]
-
-            return output_spectra
 
     @deprecated(since="4.1", alternative="subset_tools.get_regions")
     def get_spectral_regions(self, use_display_units=False):
@@ -305,7 +239,7 @@ class Specviz(ConfigHelper, LineListMixin):
         sv.set_tick_format(fmt, axis=['x', 'y'][axis])
 
     def get_data(self, data_label=None, spectral_subset=None, cls=None,
-                 use_display_units=False):
+                 use_display_units=False, apply_slider_redshift="Warn"):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         spectral_subset.
@@ -320,6 +254,10 @@ class Specviz(ConfigHelper, LineListMixin):
             The type that data will be returned as.
         use_display_units: bool, optional
             Whether to convert to the display units defined in the <unit-conversion> plugin.
+        apply_slider_redshift : bool, optional
+            Whether to apply the redshift slider value to the output spectra. If set to "Warn",
+            a warning will be issued if the redshift slider is not set to 0. To avoid seeing this
+            warning, explicitly set the apply_slider_redshift keyword option to True or False.
 
         Returns
         -------
@@ -327,5 +265,44 @@ class Specviz(ConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        return self._get_data(data_label=data_label, spectral_subset=spectral_subset,
+        data = self._get_data(data_label=data_label, spectral_subset=spectral_subset,
                               cls=cls, use_display_units=use_display_units)
+
+        if apply_slider_redshift and isinstance(data, Spectrum1D):
+            return _apply_redshift_to_spectra(data, self._redshift)
+        return data
+
+    def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
+        """Returns the current data loaded into the main viewer
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        spectral_subset : str, optional
+            Spectral subset applied to data.
+        apply_slider_redshift : bool, optional
+            Whether to apply the redshift slider value to the output spectra. If set to "Warn",
+            a warning will be issued if the redshift slider is not set to 0. To avoid seeing this
+            warning, explicitly set the apply_slider_redshift keyword option to True or False.
+
+        Returns
+        -------
+        dict: dictionary of Spectrum1D objects
+        """
+        sv = self.viewers[self._default_spectrum_viewer_reference_name]
+        spectra_labels = sv.data_menu.data_labels_loaded if data_label is None else [data_label]
+        subset_labels = sv.data_menu.subset_labels_visible if spectral_subset is None else [spectral_subset]  # noqa
+
+        spectra = {}
+        for spec_label in spectra_labels:
+            spectra[spec_label] = self.get_data(data_label=spec_label,
+                                                cls=Spectrum1D,
+                                                apply_slider_redshift=apply_slider_redshift)
+            for subset_label in subset_labels:
+                spectrum = self.get_data(data_label=spec_label,
+                                         spectral_subset=subset_label,
+                                         cls=Spectrum1D,
+                                         apply_slider_redshift=apply_slider_redshift)
+                spectra[f"{spec_label} ({subset_label})"] = spectrum
+        return spectra
