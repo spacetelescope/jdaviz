@@ -286,7 +286,7 @@ class TestParseImage:
         assert_allclose(phot_plugin.counts_factor, 0.0036385915646798953)
         assert_allclose(phot_plugin.flux_scaling, 0.003631)
         phot_plugin.vue_do_aper_phot()
-        tbl = imviz_helper.get_aperture_photometry_results()
+        tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
         assert_quantity_allclose(tbl[0]['xcenter'], 970.95 * u.pix)
         assert_quantity_allclose(tbl[0]['ycenter'], 1116.05 * u.pix)
         sky = tbl[0]['sky_center']
@@ -412,7 +412,7 @@ class TestParseImage:
         phot_plugin.background_value = 0.0014  # Manual entry: Median on whole array
         assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
         phot_plugin.vue_do_aper_phot()
-        tbl = imviz_helper.get_aperture_photometry_results()
+        tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
         assert_quantity_allclose(tbl[0]['xcenter'], 1488.5 * u.pix, atol=2 * u.pix)
         assert_quantity_allclose(tbl[0]['ycenter'], 2576 * u.pix, atol=2 * u.pix)
         sky = tbl[0]['sky_center']

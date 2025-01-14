@@ -121,7 +121,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     plg.dataset_selected = "test[FLUX] spatial-smooth stddev-1.0"
     plg.aperture_selected = "Subset 1"
     plg.vue_do_aper_phot()
-    row = cubeviz_helper.get_aperture_photometry_results()[0]
+    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here.
     assert_allclose(row["xcenter"], 1 * u.pix)
@@ -182,7 +182,7 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
         cube_unit = u.MJy / solid_angle_unit  # cube unit in app is now per pix2
 
     plg.vue_do_aper_phot()
-    row = cubeviz_helper.get_aperture_photometry_results()[0]
+    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here, minus background.
     assert_allclose(row["xcenter"], 3 * u.pix)
@@ -227,7 +227,7 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
     assert_allclose(plg.flux_scaling, 0.003631)
 
     plg.vue_do_aper_phot()
-    row = cubeviz_helper.get_aperture_photometry_results()[0]
+    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here, minus background.
     assert_allclose(row["xcenter"], 3 * u.pix)

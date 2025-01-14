@@ -442,7 +442,7 @@ def test_fit_radial_profile_with_nan(imviz_helper):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # Fitter warnings do not matter, only want error.
         phot_plugin.vue_do_aper_phot()
-    tbl = imviz_helper.get_aperture_photometry_results()
+    tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
 
     assert phot_plugin.result_failed_msg == ''
     assert_allclose(tbl['sum'][0], 8590.419296)
@@ -541,7 +541,7 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
 
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
     assert len(phot_plugin.table) == 2
-    tbl = cubeviz_helper.get_aperture_photometry_results()
+    tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
     assert_quantity_allclose(tbl['sum'], [5.980836e-12, 2.037396e-10] * u.Jy, rtol=1e-4)
 
     # Test that it still works after unit conversion
@@ -550,7 +550,7 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
 
     assert len(phot_plugin.table) == 4
-    tbl = cubeviz_helper.get_aperture_photometry_results()
+    tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
     # get_aperture_photometry_results converts all to the same units
     assert_quantity_allclose(tbl['sum'],
                              [5.980836e-12, 2.037396e-10, 5.980836e-12, 2.037396e-10] * u.Jy,
