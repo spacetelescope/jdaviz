@@ -8,7 +8,6 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
-from astropy.utils.decorators import deprecated
 from glue.core.data import Data
 from glue.core.exceptions import IncompatibleAttribute
 
@@ -873,7 +872,6 @@ class Mosviz(ConfigHelper, LineListMixin):
         return self._specviz
 
     @property
-    @deprecated(since="4.2", alternative="viewers['spectrum-2d-viewer']")
     def specviz2d(self):
         """
         A Specviz2d helper (:class:`~jdaviz.configs.specviz2d.helper.Specviz2d`) for the Jdaviz
