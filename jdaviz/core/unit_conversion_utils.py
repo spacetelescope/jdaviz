@@ -425,8 +425,8 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
     based on the physical type of the flux unit (per-frequency or per-wavelength) and
     the provided spectral axis unit.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     u1 : astropy.units.Unit
         The unit of the integrated flux that needs conversion.
 
@@ -434,8 +434,8 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
         The unit of the spectral axis over which the flux was integrated (e.g., Angstrom
         for wavelength or Hz for frequency).
 
-    Returns:
-    --------
+    Returns
+    -------
     astropy.units.Unit
         The converted flux unit compatible with the given spectral axis unit. If the
         units are already compatible, the input unit `u1` is returned unchanged.
