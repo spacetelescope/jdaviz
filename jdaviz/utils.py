@@ -326,9 +326,19 @@ def standardize_roman_metadata(data_model):
 
 
 def indirect_units():
+    from jdaviz.core.custom_units_and_equivs import PIX2
     from jdaviz.core.unit_conversion_utils import supported_sq_angle_units
 
-    units = []
+    # Only PIX2 here because sr would mess with PIXAR_SR stuff from JWST.
+    units = [
+        u.Jy / PIX2,
+        u.MJy / PIX2,
+        u.mJy / PIX2,
+        u.uJy / PIX2,
+        u.W / (u.Hz * u.m**2 * PIX2),
+        u.eV / (u.Hz * u.s * u.m**2 * PIX2),
+        u.ct / PIX2
+    ]
 
     for angle_unit in supported_sq_angle_units():
         units += [
@@ -418,11 +428,10 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units, return_unit=True)
 
     # Ensure a spectrum passed through Spectral Extraction plugin
-    if ((((spec and ('_pixel_scale_factor' in spec.meta))) or
-        (spectral_axis is not None and ('_pixel_scale_factor' in spectral_axis.info.meta)))
-        and
-            (((solid_angle_in_orig) and (not solid_angle_in_targ)) or
-             ((not solid_angle_in_orig) and (solid_angle_in_targ)))):
+    if (((spec and ('_pixel_scale_factor' in spec.meta)) or
+            (spectral_axis is not None and ('_pixel_scale_factor' in spectral_axis.info.meta))) and
+        ((solid_angle_in_orig and (not solid_angle_in_targ)) or
+            ((not solid_angle_in_orig) and solid_angle_in_targ))):
         # Data item in data collection does not update from conversion/translation.
         # App-wide original data units are used for conversion, original and
         # target_units dictate the conversion to take place.
@@ -456,9 +465,9 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         # additional conversions to reach the desired end unit.
         # if spec_unit in [original_units, target_units]:
         result = _indirect_conversion(
-                    values=values, orig_units=orig_units, targ_units=targ_units,
-                    eqv=eqv, spec_unit=spec_unit
-                )
+            values=values, orig_units=orig_units, targ_units=targ_units,
+            eqv=eqv, spec_unit=spec_unit
+        )
 
         if result and len(result) == 2:
             values, updated_units = result
@@ -523,7 +532,7 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
             targ_units /= solid_angle_in_spec
             solid_angle_in_targ = solid_angle_in_spec
         if ((u.Unit(targ_units) in indirect_units()) or
-           (u.Unit(orig_units) in indirect_units())):
+                (u.Unit(orig_units) in indirect_units())):
             # SB -> Flux -> Flux -> SB
             temp_orig = orig_units * solid_angle_in_orig
             temp_targ = targ_units * solid_angle_in_targ

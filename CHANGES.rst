@@ -64,6 +64,8 @@ Cubeviz
 
 - Fixed copious warnings from spaxel tool when data has INF. [#3368]
 
+- Fixed unit conversion for certain units when Surface Brightness is selected. [#3389]
+
 Imviz
 ^^^^^
 
