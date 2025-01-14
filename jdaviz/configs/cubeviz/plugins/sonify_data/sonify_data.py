@@ -39,13 +39,15 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     """
     template_file = __file__, "sonify_data.vue"
 
-    sample_rate = IntHandleEmpty(44100).tag(sync=True)
-    buffer_size = IntHandleEmpty(2048).tag(sync=True)
+    # Removing UI option to vary these for now
+    sample_rate = 44100  # IntHandleEmpty(44100).tag(sync=True)
+    buffer_size = 2048  # IntHandleEmpty(2048).tag(sync=True)
     assidx = FloatHandleEmpty(2.5).tag(sync=True)
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
-    eln = Bool(False).tag(sync=True)
+    eln = Bool(True).tag(sync=True)
     audfrqmin = FloatHandleEmpty(50).tag(sync=True)
-    audfrqmax = FloatHandleEmpty(1500).tag(sync=True)
+    audfrqmax = FloatHandleEmpty(1000).tag(sync=True)
+    use_pccut = Bool(True).tag(sync=True)
     pccut = IntHandleEmpty(20).tag(sync=True)
     volume = IntHandleEmpty(100).tag(sync=True)
     stream_active = Bool(True).tag(sync=True)
@@ -91,12 +93,15 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             display_unit = self.spec_viewer.state.x_display_unit
             min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
             max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
-            self.flux_viewer.update_listener_wls(min_wavelength, max_wavelength, display_unit)
+            self.flux_viewer.update_listener_wls((min_wavelength, max_wavelength), display_unit)
 
+        # Ensure the current spectral region bounds are up-to-date at render time
+        self.update_wavelength_range(None)
+        # generate the sonified cube
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
                                            self.pccut, self.audfrqmin,
-                                           self.audfrqmax, self.eln)
+                                           self.audfrqmax, self.eln, self.use_pccut)
 
         # Automatically select spectrum-at-spaxel tool
         spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
@@ -105,6 +110,18 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
         self.flux_viewer.stream_active = not self.flux_viewer.stream_active
+
+    @observe('spectral_subset_selected')
+    def update_wavelength_range(self, event):
+        if not hasattr(self, 'spec_viewer'):
+            return
+        display_unit = self.spec_viewer.state.x_display_unit
+        # is this spectral selection or the entire spectrum?
+        if hasattr(self.spectral_subset.selected_obj, "subregions"):
+            wlranges = self.spectral_subset.selected_obj.subregions
+        else:
+            wlranges = None
+        self.flux_viewer.update_listener_wls(wlranges, display_unit)
 
     @observe('volume')
     def update_volume_level(self, event):
