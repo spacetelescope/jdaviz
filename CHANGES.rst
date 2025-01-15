@@ -53,8 +53,12 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Specviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs. [#3388]
+
 Specviz2d
 ^^^^^^^^^
+
+- Specviz2d-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs. [#3388]
 
 Bug Fixes
 ---------
@@ -63,6 +67,8 @@ Cubeviz
 ^^^^^^^
 
 - Fixed copious warnings from spaxel tool when data has INF. [#3368]
+
+- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs. [#3388]
 
 Imviz
 ^^^^^
