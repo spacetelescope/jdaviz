@@ -43,7 +43,7 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     collapsed_cube_nddata = collapsed_cube_nddata * (u.pix ** 2)
 
     # Collapse the spectral cube using the methods in jdaviz:
-    collapsed_cube_s1d = plg.extract(add_data=False)  # returns Spectrum1D
+    collapsed_cube_s1d = plg.extract(add_data=False)  # returns Spectrum
 
     assert plg._obj.disabled_msg == ''
     assert isinstance(spectral_cube, NDDataArray)
@@ -607,7 +607,7 @@ def test_spectral_extraction_scientific_validation(
     evolve with time. For the latest updates on MIRI flux calibration, see:
     https://jwst-docs.stsci.edu/jwst-calibration-status/miri-calibration-status/
     """
-    # Download CALSPEC model spectrum, initialize Spectrum1D.
+    # Download CALSPEC model spectrum, initialize Spectrum.
     calspec_fitsrec = fits.getdata(calspec_url)
     column_units = [u.AA] + 2 * [u.Unit('erg s-1 cm-2 AA-1')]
     spectra_table = QTable(calspec_fitsrec, units=column_units)

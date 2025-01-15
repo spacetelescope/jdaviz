@@ -455,7 +455,7 @@ def test_fit_with_count_units(cubeviz_helper):
     mf.cube_fit = True
     mf.create_model_component("Const1D")
 
-    # ensures specutils.Spectrum1D.with_flux_unit has access to Jdaviz custom equivalencies for
+    # ensures specutils.Spectrum.with_flux_unit has access to Jdaviz custom equivalencies for
     # PIX^2 unit
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
@@ -521,7 +521,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == expected_unit_string
 
-    # running this ensures specutils.Spectrum1D.with_flux_unit has Jdaviz custom equivalencies
+    # running this ensures specutils.Spectrum.with_flux_unit has Jdaviz custom equivalencies
     # for spectral axis conversions and scale factor translations
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')

@@ -49,7 +49,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         `~astroquery.mast.Conf.timeout`).
     load_as_list : bool, optional
         Force the parser to load the input file with the `~specutils.SpectrumList` read function
-        instead of `~specutils.Spectrum1D`.
+        instead of `~specutils.Spectrum`.
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -64,7 +64,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
     if isinstance(data, SpectrumCollection):
         raise TypeError("SpectrumCollection detected."
-                        " Please provide a Spectrum1D or SpectrumList")
+                        " Please provide a Spectrum or SpectrumList")
     elif isinstance(data, Spectrum):
         # Handle the possibility of 2D spectra by splitting into separate spectra
         if data.flux.ndim == 1:
@@ -143,7 +143,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 # others may not, if uncert is None, set to list of NaN. later,
                 # if the concatenated list of uncertanties is all nan (meaning
                 # they were all nan to begin with, or all None), it will be set
-                # to None on the final Spectrum1D
+                # to None on the final Spectrum
                 if spec.uncertainty is not None and spec.uncertainty[wlind] is not None:
                     dfnuallorig.append(spec.uncertainty[wlind].array)
                 else:
@@ -273,11 +273,11 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 def split_spectrum_with_2D_flux_array(data):
     """
-    Helper function to split Spectrum1D of 2D flux to a SpectrumList of nD objects.
+    Helper function to split Spectrum of 2D flux to a SpectrumList of nD objects.
 
     Parameters
     ----------
-    data : `~specutils.Spectrum1D`
+    data : `~specutils.Spectrum`
         Spectrum with 2D flux array
 
     Returns

@@ -151,7 +151,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
             spectrum = cube_data
         else:
             spectrum = cube_data.get_object(statistic=None)
-        # Note: change this when Spectrum1D.with_spectral_axis is fixed.
+        # Note: change this when Spectrum.with_spectral_axis is fixed.
         x_unit = self._profile_viewer.state.x_display_unit
         if spectrum.spectral_axis.unit != x_unit:
             new_spectral_axis = spectrum.spectral_axis.to(x_unit)

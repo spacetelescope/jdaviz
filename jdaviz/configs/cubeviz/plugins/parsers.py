@@ -179,7 +179,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
     brightness and `apply_pix2` is True.
     """
     # handle scale factors when they are included in the unit
-    # (has to be done before Spectrum1D creation)
+    # (has to be done before Spectrum creation)
     if not np.isclose(flux.unit.scale, 1, rtol=1e-5):
         flux = flux.to(flux.unit / flux.unit.scale)
 

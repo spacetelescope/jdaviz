@@ -348,7 +348,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
 
     This function handles the conversion of flux or surface brightness values between different
     units, taking into account changes between flux and surface brightness. It supports complex
-    conversions for Spectrum1D objects or cube image data.
+    conversions for Spectrum objects or cube image data.
 
     Parameters
     ----------
@@ -361,8 +361,8 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     target_units : str
         The units the flux or surface brightness will be converted to.
 
-    spec : `~specutils.Spectrum1D`, optional
-        The Spectrum1D object that will have converted flux or surface brightness units.
+    spec : `~specutils.Spectrum`, optional
+        The Spectrum object that will have converted flux or surface brightness units.
 
     eqv : list of :ref:`astropy:unit_equivalencies`, optional
         A list of Astropy equivalencies necessary for complex unit conversions/translations.

@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.utils import minversion
 from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
@@ -19,7 +19,7 @@ PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
 
 def test_spec_sb_flux_conversion():
     # Actual spectrum content does not matter, just the meta is used here.
-    spec = Spectrum1D(flux=[1, 1, 1] * u.Jy, spectral_axis=[1, 2, 3] * u.um)
+    spec = Spectrum(flux=[1, 1, 1] * u.Jy, spectral_axis=[1, 2, 3] * u.um)
 
     # values != 2
     values = [10, 20, 30]

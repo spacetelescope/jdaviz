@@ -211,7 +211,7 @@ def test_numpy_cube(cubeviz_helper):
 
 def test_loading_with_mask(cubeviz_helper):
     # This also tests that spaxel is converted to pix**2
-    custom_spec = Spectrum1D(flux=[[[20, 1], [9, 1]], [[3, 1], [6, np.nan]]] * u.Unit("erg / Angstrom s cm**2 spaxel"),  # noqa
+    custom_spec = Spectrum(flux=[[[20, 1], [9, 1]], [[3, 1], [6, np.nan]]] * u.Unit("erg / Angstrom s cm**2 spaxel"),  # noqa
                              spectral_axis=[1, 2]*u.AA,
                              mask=[[[1, 0], [0, 0]], [[0, 0], [0, 0]]])
     cubeviz_helper.load_data(custom_spec)

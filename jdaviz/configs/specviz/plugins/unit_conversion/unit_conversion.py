@@ -4,7 +4,7 @@ from functools import cached_property
 from astropy import units as u
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
-from specutils import Spectrum1D
+from specutils import Spectrum
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
@@ -213,7 +213,7 @@ class UnitConversion(PluginTemplateMixin):
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
 
             data_obj = msg.data.get_object()
-            if isinstance(data_obj, Spectrum1D):
+            if isinstance(data_obj, Spectrum):
 
                 self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
