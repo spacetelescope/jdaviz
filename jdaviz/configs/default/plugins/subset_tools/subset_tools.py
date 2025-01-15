@@ -865,6 +865,9 @@ class SubsetTools(PluginTemplateMixin):
         self.app._rename_subset(old_label, new_label)
         self._sync_available_from_state()
 
+    def vue_rename_subset(self, msg):
+        self.rename_subset(msg['old_label'], msg['new_label'])
+
     def rename_selected(self, new_label):
         """
         Method to rename the subset currently selected in the Subset Tools plugin.
