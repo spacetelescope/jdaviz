@@ -121,6 +121,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._units = {}
         self._fitted_model = None
         self._fitted_spectrum = None
+        self._fitted_models = {}
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
@@ -788,8 +789,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         """
         Dictionary of all previously fitted models.
         """
-        # TODO: store this internally instead of within the app
-        return self.app.fitted_models
+        return self._fitted_models
 
     def get_models(self, models=None, model_label=None, x=None, y=None):
         """
@@ -1137,7 +1137,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._fitted_spectrum = fitted_spectrum
 
         if add_data:
-            self.app.fitted_models[self.results_label] = fitted_model
+            self._fitted_models[self.results_label] = fitted_model
             self.add_results.add_results_from_plugin(fitted_spectrum)
 
             if self.residuals_calculate:
@@ -1246,7 +1246,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if add_data:
             for m in fitted_model:
                 temp_label = "{} ({}, {})".format(self.results_label, m["x"], m["y"])
-                self.app.fitted_models[temp_label] = m["model"]
+                self._fitted_models[temp_label] = m["model"]
 
         output_cube = Spectrum1D(flux=fitted_spectrum.flux, wcs=fitted_spectrum.wcs)
 
