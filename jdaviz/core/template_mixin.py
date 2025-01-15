@@ -1287,6 +1287,9 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         hint="Select an item to modify."
       </plugin-editable-select>
     """
+    add_allowed = Bool(True).tag(sync=True)
+    remove_allowed = Bool(True).tag(sync=True)
+    rename_allowed = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         """
@@ -1389,6 +1392,8 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         * set_as_selected : bool
             whether to immediately set the new entry as the selected entry
         """
+        if not self.add_allowed:
+            raise ValueError("adding disabled")
         self._check_new_choice(label)
         self._manual_options += [label]
         self._update_items()
@@ -1407,6 +1412,8 @@ class EditableSelectPluginComponent(SelectPluginComponent):
             label of an existing entry.  If not provided, will default to the currently selected
             entry
         """
+        if not self.remove_allowed:
+            raise ValueError("removing disabled")
         if label is None:
             label = self.selected
         if label not in self.choices:
@@ -1428,6 +1435,8 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         * new : str
             new label.  Must not be another existing entry.
         """
+        if not self.rename_allowed:
+            raise ValueError("renaming disabled")
         if old not in self.choices:
             raise ValueError(f"'{old}' not one of available choices ({self.choices})")
         self._check_new_choice(new)
