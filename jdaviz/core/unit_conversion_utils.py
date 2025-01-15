@@ -438,7 +438,7 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
     -------
     astropy.units.Unit
         The converted flux unit compatible with the given spectral axis unit. If the
-        units are already compatible, the input unit `u1` is returned unchanged.
+        units are already compatible, the input unit ``u1`` is returned unchanged.
     """
 
     uu = u1 / spectral_axis_unit
