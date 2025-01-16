@@ -1,5 +1,3 @@
-from astropy.utils.decorators import deprecated
-
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
