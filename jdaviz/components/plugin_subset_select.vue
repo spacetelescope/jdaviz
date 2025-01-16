@@ -43,7 +43,7 @@
           </span>
         </div>
       </template>
-      <template v-slot:append>
+      <template v-slot:append v-if="selected !== 'Create New'">
         <v-icon style="cursor: pointer">mdi-menu-down</v-icon>
         <j-tooltip tooltipcontent="rename" v-if="api_hint_rename">
           <v-icon style="cursor: pointer" @click="() => {rename_new_label = selected; rename_mode = true}">mdi-pencil</v-icon>
