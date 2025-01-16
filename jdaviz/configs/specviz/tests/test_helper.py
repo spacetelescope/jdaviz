@@ -454,6 +454,8 @@ def test_plot_uncertainties(specviz_helper, spectrum1d):
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
 
+# Some API might be going through deprecation, so ignore the warning.
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_plugin_user_apis(specviz_helper):
     for plugin_name, plugin_api in specviz_helper.plugins.items():
         plugin = plugin_api._obj
