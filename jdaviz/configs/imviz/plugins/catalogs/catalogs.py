@@ -255,7 +255,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 if self.catalog_selected == "SDSS":
                     row_id = row["objid"]
                 elif self.catalog_selected == "Gaia":
-                    row_id = row["SOURCE_ID"]
+                    row_id = row["source_id"]
                 # Check if the row contains the required keys
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
