@@ -168,9 +168,6 @@ class ConfigHelper(HubListener):
     @deprecated(since="4.2", alternative="plugins['Model Fitting'].fitted_models")
     def fitted_models(self):
         """
-        Deprecated and will be removed in jdaviz 4.4.
-        Use plugins['Model Fitting'].fitted_models instead.
-
         Returns the fitted models.
 
         Returns
@@ -186,9 +183,6 @@ class ConfigHelper(HubListener):
     @deprecated(since="4.2", alternative="plugins['Model Fitting'].get_models")
     def get_models(self, models=None, model_label=None, x=None, y=None):
         """
-        Deprecated and will be removed in jdaviz 4.4.
-        Use plugins['Model Fitting'].get_models instead.
-
         Loop through all models and output models of the label model_label.
         If x or y is set, return model_labels of those (x, y) coordinates.
         If x and y are None, print all models regardless of coordinates.
@@ -222,9 +216,6 @@ class ConfigHelper(HubListener):
     @deprecated(since="4.2")
     def get_model_parameters(self, models=None, model_label=None, x=None, y=None):
         """
-        Deprecated and will be removed in jdaviz 4.4.
-        Use plugins['Model Fitting'].get_model_parameters instead.
-
         Convert each parameter of model inside models into a coordinate that
         maps the model name and parameter name to a `astropy.units.Quantity`
         object.
