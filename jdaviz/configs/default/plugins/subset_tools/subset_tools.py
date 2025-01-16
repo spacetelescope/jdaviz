@@ -869,7 +869,11 @@ class SubsetTools(PluginTemplateMixin):
         self.subset.rename_choice(old_label, new_label)
 
     def vue_rename_subset(self, msg):
-        self.rename_subset(msg['old_label'], msg['new_label'])
+        try:
+            self.rename_subset(msg['old_label'], msg['new_label'])
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(f"Failed to rename subset: {repr(e)}",
+                                               color='error', sender=self))
 
     def rename_selected(self, new_label):
         """
