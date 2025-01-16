@@ -1,14 +1,11 @@
-import logging
 import math
 import os
+import warnings
+
 import matplotlib
 import numpy as np
-
-from astropy.visualization import ManualInterval, ContrastBiasStretch
-
 from echo import delay_callback
-from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
-
+from astropy.visualization import ManualInterval, ContrastBiasStretch
 from glue.core.subset_group import GroupedSubset
 from glue.config import stretches as glue_stretches
 from glue.viewers.scatter.state import ScatterViewerState
@@ -18,6 +15,8 @@ from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerSt
 from glue.viewers.image.composite_array import COLOR_CONVERTER
 from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
+from scipy.interpolate import PchipInterpolator
+from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, LayerSelect,
@@ -29,9 +28,6 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 # by importing from utils, glue_colormaps will include the custom Random colormap
 from jdaviz.utils import is_not_wcs_only, cmap_samples, glue_colormaps
-
-
-from scipy.interpolate import PchipInterpolator
 
 __all__ = ['PlotOptions']
 
@@ -663,12 +659,18 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def multiselect(self):
-        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently evaluates viewer_multiselect or layer_multiselect")  # noqa
+        warnings.warn(
+            "multiselect has been replaced by separate viewer_multiselect and "
+            "layer_multiselect and will be removed in the future. "
+            "This currently evaluates viewer_multiselect or layer_multiselect", DeprecationWarning)
         return self.viewer_multiselect or self.layer_multiselect
 
     @multiselect.setter
     def multiselect(self, value):
-        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently sets viewer_multiselect and layer_multiselect")  # noqa
+        warnings.warn(
+            "multiselect has been replaced by separate viewer_multiselect and "
+            "layer_multiselect and will be removed in the future. "
+            "This currently sets viewer_multiselect and layer_multiselect", DeprecationWarning)
         self.viewer_multiselect = value
         self.layer_multiselect = value
 

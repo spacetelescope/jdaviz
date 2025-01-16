@@ -1,5 +1,6 @@
-import logging
 import os
+import warnings
+
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -277,10 +278,10 @@ def _parse_hdulist(
         try:
             flux_unit = u.Unit(hdu.header['BUNIT'])
         except Exception:
-            logging.warning("Invalid BUNIT, using DN as data unit")
+            warnings.warn("Invalid BUNIT, using DN as data unit", UserWarning)
             flux_unit = u.DN
     else:
-        logging.warning("Invalid BUNIT, using DN as data unit")
+        warnings.warn("Invalid BUNIT, using DN as data unit", UserWarning)
         flux_unit = u.DN
 
     # index the ramp array by the integration to load. returns all groups and pixels.

@@ -115,6 +115,8 @@ def test_redshift_column(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     assert_allclose(mosviz_helper.get_spectrum_1d(apply_slider_redshift=True, row=1).redshift.value, 0.0)  # noqa: E501
 
 
+# Some API might be going through deprecation, so ignore the warning.
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_plugin_user_apis(mosviz_helper):
     for plugin_name, plugin_api in mosviz_helper.plugins.items():
         plugin = plugin_api._obj

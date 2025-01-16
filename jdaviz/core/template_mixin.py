@@ -1,20 +1,19 @@
-from astropy.coordinates.sky_coordinate import SkyCoord
-from astropy.nddata import NDData
-from astropy.table import QTable
-from astropy.table.row import Row as QTableRow
-import astropy.units as u
-import bqplot
-from contextlib import contextmanager
-import numpy as np
 import inspect
-import logging
 import os
 import threading
 import time
 import warnings
-
-from echo import delay_callback
+from contextlib import contextmanager
 from functools import cached_property
+
+import astropy.units as u
+import bqplot
+import numpy as np
+from astropy.coordinates.sky_coordinate import SkyCoord
+from astropy.nddata import NDData
+from astropy.table import QTable
+from astropy.table.row import Row as QTableRow
+from echo import delay_callback
 from ipyvuetify import VuetifyTemplate
 from glue.config import colormaps
 from glue.core import Data, HubListener
@@ -31,15 +30,14 @@ from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
+from ipywidgets import widget_serialization
+from ipypopout import PopoutButton
+from ipypopout.popout_button import get_kernel_id
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
 from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
-
-from ipywidgets import widget_serialization
-from ipypopout import PopoutButton
-from ipypopout.popout_button import get_kernel_id
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
@@ -472,8 +470,11 @@ class PluginTemplateMixin(TemplateMixin):
             if type(obj).__name__ == 'method':
                 return f"{name}{inspect.signature(obj)}"
             return name
-        self.api_methods = sorted([get_api_text(name, obj)
-                                   for name, obj in inspect.getmembers(self.user_api)])
+        with warnings.catch_warnings():
+            # Some API might be going through deprecation, so ignore the warning.
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            self.api_methods = sorted([get_api_text(name, obj)
+                                       for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
         new = self.__class__(app=self.app)
@@ -4522,7 +4523,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             setattr(self.plugin, self._spinner, True)
 
         if self._glue_name == 'color_mode' and msg['new'] == 'Monochromatic':
-            logging.warning("DeprecationWarning: 'Monochromatic' renamed to 'Color'")
+            warnings.warn("'Monochromatic' renamed to 'Color'", DeprecationWarning)
             self.value = 'One color per layer'
             return
 
