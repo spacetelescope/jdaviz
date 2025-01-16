@@ -30,6 +30,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
         cubeviz_helper.load_data(cube, data_label='test')
 
     mm = cubeviz_helper.plugins['Moment Maps']
+    print(mm._obj.continuum_marks)
     assert not mm._obj.continuum_marks['center'].visible
     with mm.as_active():
         assert mm._obj.continuum_marks['center'].visible
