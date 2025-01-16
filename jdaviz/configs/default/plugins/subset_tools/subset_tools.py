@@ -27,7 +27,8 @@ from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
                      CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
 
 from jdaviz.core.region_translators import regions2roi, aperture2regions
-from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
+from jdaviz.core.events import (SnackbarMessage, GlobalDisplayUnitChanged,
+                                LinkUpdatedMessage, SubsetRenameMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
                                         SubsetSelect, SelectPluginComponent)
@@ -146,6 +147,8 @@ class SubsetTools(PluginTemplateMixin):
                                    handler=self._on_display_unit_changed)
         self.session.hub.subscribe(self, LinkUpdatedMessage,
                                    handler=self._on_link_update)
+        self.session.hub.subscribe(self, SubsetRenameMessage,
+                                   handler=self._sync_available_from_state)
 
         self.subset = SubsetSelect(self,
                                    'subset_items',
@@ -862,8 +865,8 @@ class SubsetTools(PluginTemplateMixin):
         new_label : str
             The new label to apply to the selected subset.
         """
-        self.app._rename_subset(old_label, new_label)
-        self._sync_available_from_state()
+        # will emit a SubsetRenameMessage and call _sync_available_from_state()
+        self.subset.rename_choice(old_label, new_label)
 
     def vue_rename_subset(self, msg):
         self.rename_subset(msg['old_label'], msg['new_label'])

@@ -1935,7 +1935,10 @@ class SubsetSelect(SelectPluginComponent):
     * :attr:`selected_obj`
     * :attr:`selected_subset_state`
     * :meth:`selected_min_max`
+    * :meth:`rename_choice`
+    """
 
+    """development information:
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``items`` (list of dicts with keys: label, color, type)
@@ -2145,6 +2148,19 @@ class SubsetSelect(SelectPluginComponent):
 
         # Force the traitlet to update.
         self.send_state('items')
+
+    def rename_choice(self, old, new):
+        """
+        Rename an existing entry.
+
+        Parameters
+        ----------
+        * old : str
+            label of the existing entry to modify
+        * new : str
+            new label.  Must not be another existing entry.
+        """
+        self.app._rename_subset(old, new)
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
