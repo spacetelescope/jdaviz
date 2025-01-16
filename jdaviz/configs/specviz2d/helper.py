@@ -154,7 +154,6 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 timeout=timeout
             )
 
-    @deprecated(since="4.2")
     def load_trace(self, trace, data_label, show_in_viewer=True):
         """
         Load a trace object and load into the spectrum-2d-viewer
