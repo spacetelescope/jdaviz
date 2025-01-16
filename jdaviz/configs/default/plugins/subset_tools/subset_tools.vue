@@ -36,8 +36,10 @@
           :selected.sync="subset_selected"
           :multiselect="multiselect"
           :show_if_single_entry="true"
+          @rename-subset="rename_subset"
           label="Subset"
           api_hint="plg.subset ="
+          api_hint_rename="plg.rename_subset"
           :api_hints_enabled="api_hints_enabled"
           hint="Select subset to edit."
         />

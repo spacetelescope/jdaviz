@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Added API for renaming subsets to Subset Tools plugin. [#3356]
+- Added API and UI for renaming subsets to Subset Tools plugin. [#3356, #3392]
 
 - Viewer data-menus are now found in the legend on the right of the viewer. [#3281]
 
