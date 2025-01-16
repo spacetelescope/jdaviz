@@ -3,6 +3,7 @@ from functools import cached_property
 import numpy as np
 import astropy
 from astropy import units as u
+from astropy.coordinates import SpectralCoord
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
@@ -142,8 +143,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.aperture._initialize_choices()
         self.aperture.select_default()
 
-        self.spectral_axis_index = 0
-
         self.background = ApertureSubsetSelect(self,
                                                'bg_items',
                                                'bg_selected',
@@ -232,7 +231,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
         # is always wavelength. This may need adjustment after the following
         # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
-        return (0, 1)
+        spatial_axes = [0, 1, 2]
+        spatial_axes.remove(self.spectral_axis_index)
+        return tuple(spatial_axes)
+
+    @property
+    def spectral_axis_index(self):
+        return self.cube.meta["spectral_axis_index"]
 
     @property
     def slice_indicator_viewers(self):
@@ -566,10 +571,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Convert to Spectrum, with the spectral axis in correct units:
         if hasattr(cube.coords, 'spectral_wcs'):
             target_wave_unit = cube.coords.spectral_wcs.world_axis_units[self.spectral_axis_index]
+            wcs = cube.coords.spectral_wcs
         elif hasattr(cube.coords, 'spectral'):
             target_wave_unit = cube.coords.spectral.world_axis_units[self.spectral_axis_index]
+            wcs = cube.coords.spectral
         else:
             target_wave_unit = None
+            # Can't split out spectral from GWCS
+            wcs = cube.coords
+            pass_spectral_axis = True
 
         if target_wave_unit == '':
             target_wave_unit = 'pix'
@@ -586,13 +596,21 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             spectral_and_spatial = wcs.pixel_to_world(*wcs_args)
             spectral_axis = [x for x in spectral_and_spatial if isinstance(x, SpectralCoord)][0]  # noqa
 
-        collapsed_spec = _return_spectrum_with_correct_units(
-            flux, wcs, collapsed_nddata.meta, data_type='flux',
-            target_wave_unit=target_wave_unit,
-            uncertainty=uncertainty,
-            mask=mask,
-            spectral_axis=spectral_axis
-        )
+            collapsed_spec = _return_spectrum_with_correct_units(
+                flux, wcs, collapsed_nddata.meta, data_type='flux',
+                target_wave_unit=target_wave_unit,
+                uncertainty=uncertainty,
+                mask=mask,
+                spectral_axis=spectral_axis
+            )
+        else:
+            collapsed_spec = _return_spectrum_with_correct_units(
+                flux, wcs, collapsed_nddata.meta, data_type='flux',
+                target_wave_unit=target_wave_unit,
+                uncertainty=uncertainty,
+                mask=mask
+            )
+
         return collapsed_spec
 
     def _preview_x_from_extracted(self, extracted):
