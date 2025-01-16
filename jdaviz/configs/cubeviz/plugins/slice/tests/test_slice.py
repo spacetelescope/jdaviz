@@ -36,11 +36,11 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 1
     assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[-1] == 1
     assert cubeviz_helper.app.get_viewer("uncert-viewer").state.slices[-1] == 1
-    cubeviz_helper.select_wavelength(slice_values[0])
+    sl.value = slice_values[0]
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 0
     assert sl.value == slice_values[0]
 
-    cubeviz_helper.select_wavelength(slice_values[1])
+    sl.value = slice_values[1]
     assert sl.value == slice_values[1]
 
     # test setting a static 2d image to the "watched" flux viewer to make sure it disconnects
@@ -57,14 +57,14 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     sv.state.layers[0].as_steps = True
     new_len = len(sv.native_marks[0].x)
     assert new_len == 2*orig_len
-    cubeviz_helper.select_wavelength(4.62360028e-07)
+    sl.value = 4.62360028e-07
     assert sl.value == slice_values[1]
 
     # Add test for unit conversion
     uc_plugin = cubeviz_helper.plugins['Unit Conversion']._obj
     uc_plugin.spectral_unit.selected = 'Angstrom'
     assert sl.value_unit == 'Angstrom'
-    cubeviz_helper.select_wavelength(4623.60028)
+    sl.value = 4623.60028
     assert sl.value == 4623.600276968349
 
     # Retrieve updated slice_values

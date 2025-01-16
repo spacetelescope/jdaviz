@@ -55,7 +55,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.aperture_selected = 'Subset 1'
         assert phot_plugin.dataset.selected_dc_item is not None
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
         phot_plugin.dataset_selected = 'has_wcs_2[SCI,1]'
@@ -68,7 +68,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.pixel_area, 0)
         assert_allclose(phot_plugin.flux_scaling, 0)
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 2
         assert phot_plugin.plot_available
         assert len(phot_plugin.plot.layers['profile'].layer.data['x']) > 0
@@ -127,7 +127,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 3  # New result is appended
         assert tbl[-1]['id'] == 3
         assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix, rtol=1e-4)
@@ -152,7 +152,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.background_selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
         assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
@@ -256,12 +256,12 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         phot_plugin.dataset_selected = 'has_wcs[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 1'
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
         phot_plugin.dataset_selected = 'no_wcs[SCI,1]'
         phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = phot_plugin.export_table()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
         assert_array_equal(tbl['sky_center'], None)
 
@@ -309,7 +309,7 @@ class TestAdvancedAperPhot:
         self.phot_plugin.background_selected = 'Manual'
         self.phot_plugin.background_value = local_bkg
         self.phot_plugin.vue_do_aper_phot()
-        tbl = self.imviz.get_aperture_photometry_results()
+        tbl = self.phot_plugin.export_table()
 
         # Imperfect down-sampling and imperfect apertures, so 10% is good enough.
         assert_allclose(tbl['sum'][-1], expected_sum, rtol=0.1)
@@ -442,7 +442,7 @@ def test_fit_radial_profile_with_nan(imviz_helper):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # Fitter warnings do not matter, only want error.
         phot_plugin.vue_do_aper_phot()
-    tbl = imviz_helper.get_aperture_photometry_results()
+    tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
 
     assert phot_plugin.result_failed_msg == ''
     assert_allclose(tbl['sum'][0], 8590.419296)
@@ -541,7 +541,7 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
 
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
     assert len(phot_plugin.table) == 2
-    tbl = cubeviz_helper.get_aperture_photometry_results()
+    tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
     assert_quantity_allclose(tbl['sum'], [5.980836e-12, 2.037396e-10] * u.Jy, rtol=1e-4)
 
     # Test that it still works after unit conversion
@@ -550,7 +550,7 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
 
     assert len(phot_plugin.table) == 4
-    tbl = cubeviz_helper.get_aperture_photometry_results()
+    tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
     # get_aperture_photometry_results converts all to the same units
     assert_quantity_allclose(tbl['sum'],
                              [5.980836e-12, 2.037396e-10, 5.980836e-12, 2.037396e-10] * u.Jy,

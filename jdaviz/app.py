@@ -366,9 +366,6 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, SnackbarMessage,
                            handler=self._on_snackbar_message)
 
-        # Add a fitted_models dictionary that the helpers (or user) can access
-        self.fitted_models = {}
-
         # Internal cache so we don't have to keep calling get_object for the same Data.
         # Key should be (data_label, statistic) and value the translated object.
         self._get_object_cache = {}
