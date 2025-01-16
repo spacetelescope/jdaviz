@@ -177,7 +177,7 @@ class ConfigHelper(HubListener):
         """
         plg = self.plugins.get('Model Fitting', None)
         if plg is None:
-            raise ValueError("Model Fitting plugin does not exist")
+            raise ValueError("Model Fitting plugins is not loaded")
         return plg.fitted_models
 
     @deprecated(since="4.2", alternative="plugins['Model Fitting'].get_models")
@@ -208,7 +208,7 @@ class ConfigHelper(HubListener):
         """
         plg = self.plugins.get('Model Fitting', None)
         if plg is None:
-            raise ValueError("Model Fitting plugin does not exist")
+            raise ValueError("Model Fitting plugins is not loaded")
         return plg.get_models(models=models,
                               model_label=model_label,
                               x=x, y=y)
@@ -245,7 +245,7 @@ class ConfigHelper(HubListener):
         """
         plg = self.plugins.get('Model Fitting', None)
         if plg is None:
-            raise ValueError("Model Fitting plugin does not exist")
+            raise ValueError("Model Fitting plugins is not loaded")
         return plg.get_model_parameters(models=models,
                                         model_label=model_label,
                                         x=x, y=y)

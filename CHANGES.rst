@@ -68,10 +68,12 @@ Cubeviz
 
 - Fixed copious warnings from spaxel tool when data has INF. [#3368]
 
-- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs. [#3388]
+- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 Imviz
 ^^^^^
+
+- ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 Mosviz
 ^^^^^^
