@@ -298,6 +298,7 @@
         }
         element = element.parentElement;
       }
+      this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
     },
     beforeDestroy() {
       let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
@@ -326,6 +327,11 @@
         if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
           const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
           menuContent.parentElement.style.top = top + "px";
+
+          /* since Jupyter Lab 4.2 cells outside the view port get a height of 0, causing the menu to be visible when
+           * that happens. This workaround hides the menu when it's parent cell is not in the viewport. */
+          const labCellHidden = this.jupyterLabCell && window.getComputedStyle(this.jupyterLabCell).height === "0px";
+          menuContent.parentElement.style.display = labCellHidden ? "none" : "";
         }
       },
       boolToString(b) {
