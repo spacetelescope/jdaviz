@@ -1,6 +1,6 @@
 import astropy.units as u
 from itertools import combinations
-import numpy as np
+from numpy.testing import assert_allclose
 import pytest
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
@@ -9,6 +9,7 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                combine_flux_and_angle_units,
                                                flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
+from jdaviz.utils import _eqv_pixar_sr
 
 
 @pytest.mark.parametrize("unit, is_solid_angle", [
@@ -87,11 +88,112 @@ def test_general_flux_conversion():
     equivalencies = all_flux_unit_conversion_equivs(pixar_sr=4, cube_wave=1*u.nm)
     for orig, targ, truth in units_and_expected:
         converted_value = flux_conversion_general([1], orig, targ, equivalencies)
-        np.testing.assert_allclose(converted_value[0].value, truth)
+        assert_allclose(converted_value[0].value, truth)
         assert converted_value.unit == targ
 
         # as a bonus, also test the function that converts squared flux units
         # (relevant in aperture photometry)
         sq = handle_squared_flux_unit_conversions(1, orig**2, targ**2, equivalencies)
-        np.testing.assert_allclose(sq.value, truth**2, rtol=1e-06)
+        assert_allclose(sq.value, truth**2, rtol=1e-06)
         assert sq.unit == targ ** 2
+
+
+def test_general_flux_conversion_continuted():
+
+    """
+    This is effectivley the same test as 'test_general_flux_conversion',
+    and is included to retain test coverage of a previous flux conversion
+    function that tested these specific cases, as to not remove any test coverage
+    since these tests are quite fast.
+    """
+
+    # the values to be translated in every test case
+    values = [10, 20, 30]
+
+    # unit conversion equivalencies for u.spectral, and flux<>SB for all flux
+    # conversions supported. Using PIXAR_SR = 0.1 for flux to SB per steradian,
+    # and a spectral axis for u.spectral equivalency. depending on the conversion,
+    # all of these equivs might not be required but it is harmless to pass them anyway.
+    equivs = all_flux_unit_conversion_equivs(pixar_sr=0.1,
+                                             cube_wave=[1, 2, 3] * u.um)
+
+    test_combos = [(u.Jy / u.sr, u.Jy, [1, 2, 3]),
+                   (u.Jy, u.Jy / u.sr, [100, 200, 300]),
+                   (u.Jy / PIX2, u.Jy, [10, 20, 30]),
+                   (u.Jy, u.Jy / PIX2, [10, 20, 30]),
+                   (u.Jy / u.sr, u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr),
+                   [2.99792458e-12, 1.49896229e-12, 9.99308193e-13]),
+                   (u.Jy / PIX2, u.erg / (u.Angstrom * u.s * u.cm**2 * PIX2),
+                   [2.99792458e-12, 1.49896229e-12, 9.99308193e-13]),
+                   (u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr), u.Jy / u.sr,
+                   [3.33564095e+13, 2.66851276e+14, 9.00623057e+14]),
+                   (u.erg / (u.Angstrom * u.s * u.cm**2 * PIX2), u.Jy / PIX2,
+                   [3.33564095e+13, 2.66851276e+14, 9.00623057e+14]),
+                   (u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr), u.Jy / u.sr,
+                   [3.33564095e+13, 2.66851276e+14, 9.00623057e+14]),
+                   (u.erg / (u.Angstrom * u.s * u.cm**2 * PIX2), u.Jy / PIX2,
+                   [3.33564095e+13, 2.66851276e+14, 9.00623057e+14]),
+                   (u.MJy, u.ph / (u.s * u.cm**2 * u.Hz * u.sr),
+                   [0.00050341, 0.00201365, 0.0045307]),
+                   (u.MJy, u.ph / (u.s * u.cm**2 * u.Hz),
+                   [5.03411657e-05, 2.01364663e-04, 4.53070491e-04]),
+                   (u.ph / (u.s * u.cm**2 * u.Hz * u.sr), u.MJy,
+                   [198644.58571489, 198644.58571489, 198644.58571489]),
+                   (u.ph / (u.s * u.cm**2 * u.Hz * PIX2), u.MJy,
+                   [1986445.85714893, 1986445.85714893, 1986445.85714893]),
+                   (u.Jy / u.sr, u.MJy, [1.e-06, 2.e-06, 3.e-06]),
+                   (u.MJy / PIX2, u.MJy, [10, 20, 30])
+                   ]
+
+    for orig, targ, expected in test_combos:
+        converted = flux_conversion_general(values, orig, targ, equivs)
+        assert_allclose(converted, expected * targ, rtol=1e-05)
+
+    # some other misc test cases from previous test
+    converted = flux_conversion_general(1., u.MJy / u.sr,
+                                        u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
+                                        equivs)
+    assert_allclose(converted, 1.e-17 * u.erg / (u.s * u.cm**2 * u.Hz * u.sr))
+
+    # another old test case
+    converted = flux_conversion_general(10., u.MJy / u.sr, u.Jy / u.sr)
+    assert_allclose(converted, 10000000. * u.Jy / u.sr)
+
+    # quantity scale factor
+    eqv = _eqv_pixar_sr(0.1 * (u.sr / u.pix))
+    assert_allclose(flux_conversion_general(values, u.Jy / u.sr, u.Jy, eqv),
+                    [1, 2, 3] * u.Jy)
+    assert_allclose(flux_conversion_general(values, u.Jy, u.Jy / u.sr, eqv),
+                    [100, 200, 300] * u.Jy / u.sr)
+
+    # values == 2
+    assert_allclose(flux_conversion_general([10, 20], u.Jy / u.sr, u.Jy, eqv),
+                    [1, 2] * u.Jy)
+    assert_allclose(flux_conversion_general([10, 20], u.Jy, u.Jy / u.sr, eqv),
+                    [100, 200] * u.Jy / u.sr)
+
+    # array scale factor, same length arrays
+    res = flux_conversion_general(values, u.Jy / u.sr, u.Jy,
+                                  _eqv_pixar_sr([0.1, 0.2, 0.3]))
+    assert_allclose(res, [1., 4., 9.] * u.Jy)
+
+    res = flux_conversion_general(values, u.Jy, u.Jy / u.sr,
+                                  _eqv_pixar_sr([0.1, 0.2, 0.3]))
+    assert_allclose(res, [100, 100, 100] * u.Jy / u.sr)
+
+    # array + quantity scale factor, same length arrays
+    eqv = _eqv_pixar_sr([0.1, 0.2, 0.3] * (u.sr / u.pix))
+    assert_allclose(flux_conversion_general(values, u.Jy / u.sr, u.Jy, eqv),
+                    [1., 4., 9.] * u.Jy)
+    assert_allclose(flux_conversion_general(values, u.Jy, u.Jy / u.sr, eqv),
+                    [100, 100, 100] * u.Jy / u.sr)
+
+    # values != 2 but _pixel_scale_factor size mismatch
+    with pytest.raises(ValueError, match="operands could not be broadcast together"):
+        eqv = _eqv_pixar_sr([0.1, 0.2, 0.3, 0.4])
+        flux_conversion_general(values, u.Jy / u.sr, u.Jy, eqv)
+
+    # # Other kind of flux conversion unrelated to _pixel_scale_factor.
+    # # The answer was obtained from synphot unit conversion.
+    targ = [2.99792458e-12, 1.49896229e-12, 9.99308193e-13] * (u.erg / (u.AA * u.cm * u.cm * u.s))  # FLAM  # noqa: E501
+    assert_allclose(flux_conversion_general(values, u.Jy, targ.unit, equivs), targ)
