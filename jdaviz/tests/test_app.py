@@ -6,7 +6,8 @@ from astropy.wcs import WCS
 from specutils import Spectrum1D
 from jdaviz import Application, Specviz
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
-from jdaviz.utils import flux_conversion
+from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
+                                               viewer_flux_conversion_equivalencies)
 
 
 # This applies to all viz but testing with Imviz should be enough.
@@ -227,8 +228,11 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy / u.sr
     target_units = u.MJy
 
-    value = flux_conversion(values, original_units,
-                            target_units, data.get_object(cls=Spectrum1D))
+    spec = data.get_object(cls=Spectrum1D)
+    viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
+    value = flux_conversion_general(values, original_units,
+                                    target_units, viewer_equivs,
+                                    with_unit=False)
 
     # will be a uniform array since not wavelength dependent
     # so test first value in array
@@ -240,8 +244,10 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
-    new_values = flux_conversion(values, original_units,
-                                 target_units, data.get_object(cls=Spectrum1D))
+    viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
+    new_values = flux_conversion_general(values, original_units,
+                                         target_units, viewer_equivs,
+                                         with_unit=False)
 
     assert np.allclose(new_values,
                        (values * original_units)
@@ -255,8 +261,10 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
-    new_values = flux_conversion(values, original_units,
-                                 target_units, data.get_object(cls=Spectrum1D))
+    viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
+    new_values = flux_conversion_general(values, original_units,
+                                         target_units, viewer_equivs,
+                                         with_unit=False)
 
     # In this case we do a regular spectral density conversion, but using the
     # first value in the spectral axis for the equivalency

@@ -50,13 +50,16 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
-                          MultiMaskSubsetState, _wcs_only_label, flux_conversion,
-                          spectral_axis_conversion)
+from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
+                          layer_is_table_data, MultiMaskSubsetState,
+                          _wcs_only_label)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
-                                               supported_sq_angle_units)
+                                               flux_conversion_general,
+                                               spectral_axis_conversion,
+                                               supported_sq_angle_units,
+                                               viewer_flux_conversion_equivalencies)
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
@@ -110,7 +113,11 @@ class UnitConverterWithSpectral:
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
                 spec = Spectrum1D(flux=data.data * u.Unit(original_units))
-            return flux_conversion(values, original_units, target_units, spec)
+            # equivalencies for flux/surface brightness conversions
+            viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
+            return flux_conversion_general(values, original_units,
+                                           target_units, viewer_equivs,
+                                           with_unit=False)
         else:  # spectral axis
             return spectral_axis_conversion(values, original_units, target_units)
 
