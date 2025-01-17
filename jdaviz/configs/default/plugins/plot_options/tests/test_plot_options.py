@@ -346,7 +346,8 @@ def test_track_mixed_states(imviz_helper):
         po.image_color.value = rgb_colors[i]
 
     # Switch to multiselect to test mixing and unmixing of states
-    po.multiselect = True
+    po.viewer_multiselect = True
+    po.layer_multiselect = True
     po.viewer_selected = ["imviz-0", "imviz-1"]
     assert po.layer.items[-1]["label"] == "array_2"
     # The corresponding layer in each viewer is the same color,

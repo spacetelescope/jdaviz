@@ -1,4 +1,5 @@
-import logging
+import warnings
+
 import astropy.units as u
 
 __all__ = ['UserApiWrapper', 'PluginUserApi', 'ViewerUserApi']
@@ -36,7 +37,7 @@ class UserApiWrapper:
             return super().__getattribute__(attr)
 
         if attr in self._deprecated:
-            logging.warning("DeprecationWarning: %s is deprecated" % attr)
+            warnings.warn(f"{attr} is deprecated", DeprecationWarning)
 
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
@@ -141,7 +142,7 @@ class PluginUserApi(UserApiWrapper):
 
     def __repr__(self):
         if self._deprecation_msg:
-            logging.warning("DeprecationWarning: %s" % self._deprecation_msg)
+            warnings.warn(self._deprecation_msg, DeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return f'<{self._obj._registry_label} API>'
 
@@ -164,12 +165,12 @@ class ViewerUserApi(UserApiWrapper):
 
     def __getattr__(self, *args, **kwargs):
         if super().__getattr__('_deprecation_msg'):
-            logging.warning(f"DeprecationWarning: {self._deprecation_msg}")
+            warnings.warn(self._deprecation_msg, DeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__getattr__(*args, **kwargs)
 
     def __setattr__(self, *args, **kwargs):
         if hasattr(self, '_deprecation_msg') and self._deprecation_msg:
-            logging.warning(f"DeprecationWarning: {self._deprecation_msg}")
+            warnings.warn(self._deprecation_msg, DeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__setattr__(*args, **kwargs)

@@ -1,4 +1,3 @@
-import logging
 import os
 import warnings
 
@@ -282,12 +281,12 @@ def _parse_hdulist(app, hdulist, file_name=None,
             try:
                 flux_unit = u.Unit(hdu.header['BUNIT'])
             except Exception:
-                logging.warning("Invalid BUNIT, using count as data unit")
+                warnings.warn("Invalid BUNIT, using count as data unit", UserWarning)
                 flux_unit = u.count
         elif data_type == 'mask':  # DQ flags have no unit
             flux_unit = u.dimensionless_unscaled
         else:
-            logging.warning("Invalid BUNIT, using count as data unit")
+            warnings.warn("Invalid BUNIT, using count as data unit", UserWarning)
             flux_unit = u.count
 
         flux = hdu.data << flux_unit
