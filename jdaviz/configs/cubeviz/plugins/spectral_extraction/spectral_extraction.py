@@ -458,7 +458,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 subset_id=aperture.selected, cls=NDDataArray
             )
             if uncert_cube:
-                # Subset may not be linked to the uncertainty cube at this point??
                 uncertainties = uncert_cube.get_subset_object(
                     subset_id=aperture.selected, cls=StdDevUncertainty
                 )
