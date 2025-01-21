@@ -96,27 +96,39 @@ class WithSliceSelection:
         )
 
         for layer in self.layers:
-            world_comp_ids = layer.layer.data.world_component_ids
+            coords = layer.layer.data.coords
+            if hasattr(coords, 'temporal_wcs'):
+                data_units = coords.temporal_wcs.unit
+                data = coords.temporal_wcs.pixel_to_world_values(
+                    np.arange(layer.layer.data.shape[0])
+                )
 
-            if not len(world_comp_ids):
-                # rampviz uses coordinate components:
-                world_comp_ids = layer.layer.data.coordinate_components
+            else:
+                world_comp_ids = layer.layer.data.world_component_ids
 
-            if self.slice_index >= len(world_comp_ids):
-                # Case where 2D image is loaded in image viewer
-                continue
+                if not len(world_comp_ids):
+                    # rampviz uses coordinate components:
+                    world_comp_ids = layer.layer.data.coordinate_components
 
-            try:
-                # Retrieve layer data and units using the slice index of the world components ids
-                data_comp = layer.layer.data.get_component(world_comp_ids[self.slice_index])
-            except (AttributeError, KeyError):
-                continue
+                if self.slice_index >= len(world_comp_ids):
+                    # Case where 2D image is loaded in image viewer
+                    continue
 
-            data = np.asarray(data_comp.data.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
-                              dtype=float)
+                try:
+                    # Retrieve layer data and units using the slice index
+                    # of the world components ids
+                    data_comp = layer.layer.data.get_component(
+                        world_comp_ids[self.slice_index]
+                    )
+                except (AttributeError, KeyError):
+                    continue
+
+                data = np.asarray(
+                    data_comp.data.take(0, take_inds[0]).take(0, take_inds[1]),
+                    dtype=float)
+                data_units = getattr(data_comp, 'units', None)
 
             # Convert to display units if applicable
-            data_units = getattr(data_comp, 'units', None)
             if slice_display_units and data_units and slice_display_units != data_units:
                 converted_axis = (data * u.Unit(data_units)).to_value(
                     slice_display_units,
