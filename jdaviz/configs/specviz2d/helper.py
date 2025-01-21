@@ -38,12 +38,12 @@ class Specviz2d(ConfigHelper, LineListMixin):
         ----------
         spectrum_2d: str
             A spectrum as translatable container objects (e.g.,
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        spectrum_1d: str or Spectrum1D
+        spectrum_1d: str or Spectrum
             A spectrum as translatable container objects (e.g.,
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
         spectrum_1d_label : str
@@ -182,7 +182,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Provide a label to retrieve a specific data set from data_collection.
         spectral_subset : str, optional
             Spectral subset applied to data.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+        cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
 
         Returns

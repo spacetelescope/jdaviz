@@ -15,7 +15,7 @@ from astropy.utils.introspection import minversion
 import astropy.units as u
 
 from glue.core.roi import CircularROI
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum, SpectralRegion
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
 
@@ -168,9 +168,9 @@ def test_initialize_gaussian_with_cube(cubeviz_helper, spectrum1d_cube_larger):
 
 
 def test_fit_cube_no_wcs(cubeviz_helper):
-    # This is like when user does something to a cube outside of Jdaviz
-    # and then loads it back into a new instance of Cubeviz for further analysis.
-    sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # nx, ny, nz
+    # This is like when user do something to a cube outside of Jdaviz
+    # and then load it back into a new instance of Cubeviz for further analysis.
+    sp = Spectrum(flux=np.ones((7, 8, 9)) * u.nJy, spectral_axis_index=2)  # ny, nx, nz
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
@@ -189,7 +189,7 @@ def test_fit_cube_no_wcs(cubeviz_helper):
 
 
 def test_toggle_cube_fit_subset(cubeviz_helper):
-    sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # ny, nx, nz
+    sp = Spectrum(flux=np.ones((7, 8, 9)) * u.nJy)  # ny, nx, nz
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
 
@@ -352,7 +352,7 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     # Get the data object again (ensures mask == None)
     data = cubeviz_helper.app.data_collection[-1].get_object()
     subset = cubeviz_helper.app.data_collection[-1].get_subset_object(
-        p.spectral_subset_selected, cls=Spectrum1D, statistic=None
+        p.spectral_subset_selected, cls=Spectrum, statistic=None
     )
     masked_data = p._apply_subset_masks(data, p.spectral_subset)
 
@@ -368,8 +368,8 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="right_spectrum")
 
     # 5000-7000
-    sp2 = Spectrum1D(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
-                     flux=spectrum1d.flux * 1.25)
+    sp2 = Spectrum(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
+                   flux=spectrum1d.flux * 1.25)
     specviz_helper.load_data(sp2, data_label="left_spectrum")
 
     # apply subset that overlaps on left_spectrum, but not right_spectrum
@@ -404,7 +404,7 @@ def test_all_nan_uncert(specviz_helper):
     # being filtered in the fitter, as would normally happen with nans)
 
     uncertainty = StdDevUncertainty([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan] * u.Jy)
-    spec = Spectrum1D(flux=[1, 2, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
+    spec = Spectrum(flux=[1, 2, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
     specviz_helper.load_data(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']
@@ -431,7 +431,7 @@ def test_all_nan_uncert_subset(specviz_helper):
     # message
 
     uncertainty = StdDevUncertainty([1, 1, np.nan, np.nan, np.nan, np.nan] * u.Jy)
-    spec = Spectrum1D(flux=[2, 4, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
+    spec = Spectrum(flux=[2, 4, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
     specviz_helper.load_data(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']

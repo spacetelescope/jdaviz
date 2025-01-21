@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
-from specutils import Spectrum1D
+from specutils import Spectrum
 from jdaviz import Application, Specviz
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 from jdaviz.utils import flux_conversion
@@ -207,7 +207,7 @@ def test_to_unit(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     # this can be removed once spectra pass through spectral extraction
@@ -228,7 +228,7 @@ def test_to_unit(cubeviz_helper):
     target_units = u.MJy
 
     value = flux_conversion(values, original_units,
-                            target_units, data.get_object(cls=Spectrum1D))
+                            target_units, data.get_object(cls=Spectrum))
 
     # will be a uniform array since not wavelength dependent
     # so test first value in array
@@ -241,7 +241,7 @@ def test_to_unit(cubeviz_helper):
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
     new_values = flux_conversion(values, original_units,
-                                 target_units, data.get_object(cls=Spectrum1D))
+                                 target_units, data.get_object(cls=Spectrum))
 
     assert np.allclose(new_values,
                        (values * original_units)
@@ -256,7 +256,7 @@ def test_to_unit(cubeviz_helper):
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
     new_values = flux_conversion(values, original_units,
-                                 target_units, data.get_object(cls=Spectrum1D))
+                                 target_units, data.get_object(cls=Spectrum))
 
     # In this case we do a regular spectral density conversion, but using the
     # first value in the spectral axis for the equivalency
