@@ -97,6 +97,8 @@ Imviz
 
 - Spatial subsets no longer show as having mixed visibility (in the legend and plot options tab) when aligned by WCS. [#3373]
 
+- Fixed Gaia catalog search sometimes failing with invalid ``SOURCE_ID`` look-up. [#3400]
+
 Mosviz
 ^^^^^^
 
