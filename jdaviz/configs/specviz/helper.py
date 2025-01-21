@@ -74,16 +74,23 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astropy.utils.data.download_file` or
             `~astroquery.mast.Conf.timeout`).
         """
+        from jdaviz.core import data_formats
+        format, conf = data_formats.get_valid_format(data)
+        parsers = {'specviz': 'specviz-spectrum1d-parser', 'specviz2d': 'mosviz-spec2d-parser'}
+        parser_kwargs = {'mosviz-spec2d-parser': {},
+                         'specviz-spectrum1d-parser': {'format': format,
+                                                       'show_in_viewer': show_in_viewer,
+                                                       'concat_by_file': concat_by_file,
+                                                       'cache': cache,
+                                                       'local_path': local_path,
+                                                       'timeout': timeout,
+                                                       'load_as_list': load_as_list}}
+        parser = parsers.get(conf)
+        kwargs = parser_kwargs.get(parser, {})
         super().load_data(data,
-                          parser_reference='specviz-spectrum1d-parser',
+                          parser_reference=parser,
                           data_label=data_label,
-                          format=format,
-                          show_in_viewer=show_in_viewer,
-                          concat_by_file=concat_by_file,
-                          cache=cache,
-                          local_path=local_path,
-                          timeout=timeout,
-                          load_as_list=load_as_list)
+                          **kwargs)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer

@@ -75,9 +75,12 @@ def get_valid_format(filename):
     config : str
         The recommended application configuration
     """
-
-    valid_file_format = identify_spectrum_format(filename, SpectrumList)
-    ndim = guess_dimensionality(filename)
+    if isinstance(filename, (str, pathlib.Path)):
+        valid_file_format = identify_spectrum_format(filename, SpectrumList)
+        ndim = guess_dimensionality(filename)
+    elif isinstance(filename, (Spectrum1D)):
+        valid_file_format = None
+        ndim = filename.flux.ndim
 
     if valid_file_format:
         recommended_config = file_to_config_mapping.get(valid_file_format, 'default')

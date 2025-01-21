@@ -301,10 +301,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
     """
     spectrum_2d_viewer_reference_name = (
-        app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
+        getattr(app._jdaviz_helper, "_default_spectrum_2d_viewer_reference_name", None)
     )
     table_viewer_reference_name = (
-        app._jdaviz_helper._default_table_viewer_reference_name
+        getattr(app._jdaviz_helper, "_default_table_viewer_reference_name", None)
     )
 
     # Note: This is also used by Specviz2D
@@ -388,13 +388,13 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             label = data_labels[index]
             app.data_collection[label] = data
 
-        if add_to_table:
+        if add_to_table and table_viewer_reference_name is not None:
             _add_to_table(
                 app, data_labels, '2D Spectra',
                 table_viewer_reference_name=table_viewer_reference_name
             )
 
-    if show_in_viewer:
+    if show_in_viewer and spectrum_2d_viewer_reference_name is not None:
         if len(data_labels) > 1:
             raise ValueError("More than one data label provided, unclear " +
                              "which to show in viewer")
