@@ -6,6 +6,7 @@ from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
 
+from jdaviz.core import data_formats
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
@@ -33,6 +34,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
     _default_configuration = "specviz"
     _default_spectrum_viewer_reference_name = "spectrum-viewer"
+    _dev_deconfig = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,9 +76,9 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astropy.utils.data.download_file` or
             `~astroquery.mast.Conf.timeout`).
         """
-        from jdaviz.core import data_formats
         parser = data_formats.get_parser(data)
-
+        if not self._dev_deconfig and parser != 'specviz-spectrum1d-parser':
+            raise NotImplementedError("Only Spectrum1D data is supported in Specviz.")
         parser_kwargs = {'mosviz-spec2d-parser': {'show_in_viewer': show_in_viewer,
                                                   'data_labels': data_label},
                          'specreduce-trace': {'show_in_viewer': show_in_viewer,
