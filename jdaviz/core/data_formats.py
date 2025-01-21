@@ -76,12 +76,8 @@ def get_valid_format(filename):
     config : str
         The recommended application configuration
     """
-    if isinstance(filename, (str, pathlib.Path)):
-        valid_file_format = identify_spectrum_format(filename, SpectrumList)
-        ndim = guess_dimensionality(filename)
-    elif isinstance(filename, (Spectrum1D)):
-        valid_file_format = None
-        ndim = filename.flux.ndim
+    valid_file_format = identify_spectrum_format(filename, SpectrumList)
+    ndim = guess_dimensionality(filename)
 
     if valid_file_format:
         recommended_config = file_to_config_mapping.get(valid_file_format, 'default')
@@ -107,6 +103,12 @@ def get_parser(obj):
     """
     if isinstance(obj, Trace):
         return 'specreduce-trace'
+    elif isinstance(obj, Spectrum1D):
+        if obj.flux.ndim == 1:
+            return 'specviz-spectrum1d-parser'
+        else:
+            # TODO: how to determine if multiple spectra or an image?
+            return 'mosviz-spec2d-parser'
     _, config = get_valid_format(obj)
     parsers = {'specviz': 'specviz-spectrum1d-parser', 'specviz2d': 'mosviz-spec2d-parser'}
     return parsers.get(config)
