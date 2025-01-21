@@ -75,9 +75,10 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astroquery.mast.Conf.timeout`).
         """
         from jdaviz.core import data_formats
-        format, conf = data_formats.get_valid_format(data)
-        parsers = {'specviz': 'specviz-spectrum1d-parser', 'specviz2d': 'mosviz-spec2d-parser'}
+        parser = data_formats.get_parser(data)
+
         parser_kwargs = {'mosviz-spec2d-parser': {},
+                         'specreduce-trace': {'show_in_viewer': show_in_viewer},
                          'specviz-spectrum1d-parser': {'format': format,
                                                        'show_in_viewer': show_in_viewer,
                                                        'concat_by_file': concat_by_file,
@@ -85,7 +86,6 @@ class Specviz(ConfigHelper, LineListMixin):
                                                        'local_path': local_path,
                                                        'timeout': timeout,
                                                        'load_as_list': load_as_list}}
-        parser = parsers.get(conf)
         kwargs = parser_kwargs.get(parser, {})
         super().load_data(data,
                           parser_reference=parser,

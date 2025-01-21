@@ -8,6 +8,7 @@ from astropy.wcs import WCS
 
 from specutils.io.registers import identify_spectrum_format
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specreduce.tracing import Trace
 from stdatamodels import asdf_in_fits
 
 from jdaviz.core.config import list_configurations
@@ -88,6 +89,27 @@ def get_valid_format(filename):
         recommended_config = ndim_to_config_mapping.get(ndim, 'default')
 
     return valid_file_format, recommended_config
+
+
+def get_parser(obj):
+    """
+    Identify the data parser from a filename or data object
+
+    Parameters
+    ----------
+    obj : str or `pathlib.Path` or file-like object
+        The filename of the loaded data
+
+    Returns
+    -------
+    parser : str
+        The parser for the data object
+    """
+    if isinstance(obj, Trace):
+        return 'specreduce-trace'
+    _, config = get_valid_format(obj)
+    parsers = {'specviz': 'specviz-spectrum1d-parser', 'specviz2d': 'mosviz-spec2d-parser'}
+    return parsers.get(config)
 
 
 def identify_data(filename, current=None):

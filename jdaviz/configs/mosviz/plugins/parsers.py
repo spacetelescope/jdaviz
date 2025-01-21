@@ -18,7 +18,7 @@ from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
-__all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
+__all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser', 'specreduce_trace_parser']
 
 FALLBACK_NAME = "Unspecified"
 EXPECTED_FILES = {"niriss": ['1D Spectra C', '1D Spectra R',
@@ -401,6 +401,34 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         app.add_data_to_viewer(spectrum_2d_viewer_reference_name, data_labels[0])
 
     return len(data_obj)
+
+
+@data_parser_registry("specreduce-trace")
+def specreduce_trace_parser(app, data_obj, data_label=None, show_in_viewer=False):
+    """
+    Loads a specreduce trace object.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : str or list or spectrum-like
+        File path, list, or spectrum-like object to be read as a new row in
+        the mosviz table.
+    data_label : str, optional
+        The label applied to the glue data component.
+    show_in_viewer : bool
+        Show data in viewer(s).
+    """
+    spectrum_2d_viewer_reference_name = (
+        getattr(app._jdaviz_helper, "_default_spectrum_2d_viewer_reference_name", None)
+    )
+
+    app.add_data(data_obj, data_label=data_label)
+    if show_in_viewer and spectrum_2d_viewer_reference_name:
+        app.add_data_to_viewer(
+            spectrum_2d_viewer_reference_name, data_label
+        )
 
 
 def _load_fits_image_from_filename(filename, app):
