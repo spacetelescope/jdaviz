@@ -3272,11 +3272,11 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
             # spectrum.spectral_axis is an array, but we need our continuum to have the same
             # shape as the fluxes in the cube, so let's just duplicate to the correct shape
-            print(spectrum.flux.shape)
             spectral_axis_cube = np.zeros(spectrum.flux.shape)
-            spectral_axis_cube[:, :] = spectrum.spectral_axis.value
-
-            continuum = slopes[:, :, np.newaxis] * (spectral_axis_cube-min_x) + intercepts[:, :, np.newaxis]  # noqa
+            reshape_inds = [1, 1, 1]
+            reshape_inds[spectral_axis_index] = -1
+            spectral_axis_cube[:, :, :] = spectrum.spectral_axis.value.reshape(reshape_inds)
+            continuum = np.expand_dims(slopes, spectral_axis_index) * (spectral_axis_cube-min_x) + np.expand_dims(intercepts, spectral_axis_index)  # noqa
         else:
             continuum_y = full_spectrum.flux[continuum_mask].value
             slope, intercept = np.polyfit(continuum_x-min_x, continuum_y, deg=1)

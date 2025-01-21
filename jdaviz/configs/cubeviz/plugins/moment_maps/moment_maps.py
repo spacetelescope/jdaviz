@@ -311,7 +311,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # before calculating
         else:
             slab_sa = slab.spectral_axis.to(self.app._get_display_unit('spectral'))
-            slab = Spectrum(slab.flux, slab_sa, uncertainty=slab.uncertainty)
+            slab = Spectrum(slab.flux, slab_sa, uncertainty=slab.uncertainty,
+                            spectral_axis_index=cube.spectral_axis_index)
 
         # Finally actually calculate the moment
         self.moment = analysis.moment(slab, order=n_moment).T

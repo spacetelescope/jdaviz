@@ -31,6 +31,8 @@ def _valid_glue_display_unit(unit_str, sv, axis='x'):
     unit_u = u.Unit(unit_str)
     choices_str = getattr(sv.state.__class__, f'{axis}_display_unit').get_choices(sv.state)
     choices_str = [choice for choice in choices_str if choice is not None]
+    if choices_str == []:
+        return unit_str
     choices_u = [u.Unit(choice) for choice in choices_str]
     if unit_u not in choices_u:
         raise ValueError(f"{unit_str} could not find match in valid {axis} display units {choices_str}")  # noqa
