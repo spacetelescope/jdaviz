@@ -77,19 +77,21 @@ class Specviz(ConfigHelper, LineListMixin):
         from jdaviz.core import data_formats
         parser = data_formats.get_parser(data)
 
-        parser_kwargs = {'mosviz-spec2d-parser': {},
-                         'specreduce-trace': {'show_in_viewer': show_in_viewer},
+        parser_kwargs = {'mosviz-spec2d-parser': {'show_in_viewer': show_in_viewer,
+                                                  'data_labels': data_label},
+                         'specreduce-trace': {'show_in_viewer': show_in_viewer,
+                                              'data_label': data_label},
                          'specviz-spectrum1d-parser': {'format': format,
                                                        'show_in_viewer': show_in_viewer,
                                                        'concat_by_file': concat_by_file,
                                                        'cache': cache,
                                                        'local_path': local_path,
                                                        'timeout': timeout,
-                                                       'load_as_list': load_as_list}}
+                                                       'load_as_list': load_as_list,
+                                                       'data_label': data_label}}
         kwargs = parser_kwargs.get(parser, {})
         super().load_data(data,
                           parser_reference=parser,
-                          data_label=data_label,
                           **kwargs)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
