@@ -27,7 +27,8 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
     assert sorted(imviz_helper.plugins['Compass'].viewer.labels) == viewer_names
 
     po = imviz_helper.plugins['Plot Options']
-    po.multiselect = True
+    po.viewer_multiselect = True
+    po.layer_multiselect = True
     po.viewer = viewer_names
 
     imviz_helper.destroy_viewer(actual_name)

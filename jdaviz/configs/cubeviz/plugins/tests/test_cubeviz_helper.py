@@ -1,3 +1,4 @@
+import pytest
 from specutils import SpectralRegion
 
 from jdaviz import Cubeviz
@@ -17,6 +18,8 @@ def test_nested_helper(cubeviz_helper):
     assert spec_viewer.jdaviz_helper == cubeviz_helper
 
 
+# Some API might be going through deprecation, so ignore the warning.
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_plugin_user_apis(cubeviz_helper):
     for plugin_name, plugin_api in cubeviz_helper.plugins.items():
         plugin = plugin_api._obj
