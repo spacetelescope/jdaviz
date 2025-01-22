@@ -139,13 +139,17 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
 
     # check that the decomposed DQ flag is at the end of the flux label's line:
     flux_label_idx = label_mouseover_text.index(expected_flux_label)
-    assert label_mouseover_text[flux_label_idx + len(expected_flux_label) + 1:] == '(DQ: 3)'
+    associated_dq_layer = dq_plugin.get_dq_layers(viewer)[0]
+    dq_data = associated_dq_layer.layer.get_data(associated_dq_layer.state.attribute)
+    dq_val = dq_data[708, 1366]
+    assert label_mouseover_text[flux_label_idx + len(expected_flux_label) + 1:] == f'(DQ: {dq_val:.0f})'  # noqa: E501
 
     # check that a flagged pixel that is not marked with the bit 0 has a flux in mouseover label:
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1371, 'y': 715}})
     label_mouseover_text = label_mouseover.as_text()[0]
-    assert label_mouseover_text.split('+')[1].endswith('(DQ: 4)')
+    dq_val = dq_data[715, 1371]
+    assert label_mouseover_text.split('+')[1].endswith(f'(DQ: {dq_val:.0f})')
 
     # check that a pixel without a DQ flag has no DQ mouseover label:
     label_mouseover._viewer_mouse_event(viewer,
