@@ -79,12 +79,20 @@ class Specviz(ConfigHelper, LineListMixin):
         parser = data_formats.get_parser(data)
         if not self._dev_deconfig and parser != 'specviz-spectrum1d-parser':
             raise NotImplementedError("Only Spectrum1D data is supported in Specviz.")
-        parser_kwargs = {'mosviz-spec2d-parser': {'show_in_viewer': show_in_viewer,
+
+        default_labels = {'mosviz-spec2d-parser': '2D Spectrum',
+                          'specreduce-trace': 'Trace',
+                          'specviz-spectrum1d-parser': 'Spectrum 1D'}
+        if data_label is None:
+            data_label = default_labels.get(parser, 'Unknown')
+        data_label = self.app.return_unique_name(data_label)
+
+        parser_kwargs = {'mosviz-spec2d-parser': {'show_in_viewer': False,
                                                   'data_labels': data_label},
-                         'specreduce-trace': {'show_in_viewer': show_in_viewer,
+                         'specreduce-trace': {'show_in_viewer': False,
                                               'data_label': data_label},
                          'specviz-spectrum1d-parser': {'format': format,
-                                                       'show_in_viewer': show_in_viewer,
+                                                       'show_in_viewer': False,
                                                        'concat_by_file': concat_by_file,
                                                        'cache': cache,
                                                        'local_path': local_path,
@@ -95,6 +103,17 @@ class Specviz(ConfigHelper, LineListMixin):
         super().load_data(data,
                           parser_reference=parser,
                           **kwargs)
+
+        if show_in_viewer:
+            # loop through existing viewers and show in any that support this data type
+            added = 0
+            for viewer in self.viewers.values():
+                if data_label in viewer.data_menu.data_labels_unloaded:
+                    added += 1
+                    viewer.data_menu.add_data(data_label)
+            if added == 0:
+                # TODO: in the future open a new viewer with some default type based on the data
+                print(f"*** No viewer found to display \'{data_label}\'")
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
