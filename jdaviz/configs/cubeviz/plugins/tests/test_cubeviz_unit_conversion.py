@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.wcs import WCS
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
@@ -36,7 +36,7 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     # load cube with flux units of MJy
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.ones((3, 4, 5), dtype=np.float32)
-    cube = Spectrum1D(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
     viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
@@ -135,7 +135,7 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.zeros((3, 4, 5), dtype=np.float32)
     # load cube in flux_unit, will become cube in flux_unit / pix2
-    cube = Spectrum1D(flux=flux * flux_unit, wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * flux_unit, wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube)
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
@@ -152,7 +152,7 @@ def test_unit_translation(cubeviz_helper, angle_unit):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)
@@ -198,7 +198,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
@@ -319,7 +319,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * (u.ct / angle_unit), wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * (u.ct / angle_unit), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
@@ -371,7 +371,7 @@ def test_limits_on_unit_change(cubeviz_helper, start_unit, end_unit,
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.Unit(start_unit), wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * u.Unit(start_unit), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
