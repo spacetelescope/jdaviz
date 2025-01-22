@@ -89,6 +89,8 @@ Bug Fixes
 
 - Fixes data-menu visibility when app is scrolled out of view. [#3391]
 
+- Fix Slice plugin for indexing through temporal slices. [#3235]
+
 Cubeviz
 ^^^^^^^
 
