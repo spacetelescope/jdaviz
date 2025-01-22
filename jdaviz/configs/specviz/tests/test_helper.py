@@ -60,7 +60,7 @@ class TestSpecvizHelper:
         self.spec_app.load_data(self.spec_list)
         assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
-            assert "specviz_data" in self.spec_app.app.data_collection[i].label
+            assert "Spectrum" in self.spec_app.app.data_collection[i].label
 
     def test_load_spectrum_list_with_labels(self):
         # now load three more spectra from a SpectrumList, with labels:
@@ -412,7 +412,7 @@ def test_load_2d_flux(specviz_helper):
     # 1D Spectrum1D objects to load in Specviz.
     spec = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                       flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
-    specviz_helper.load_data(spec, data_label="test")
+    specviz_helper.load_data(spec, data_label="test", load_as_list=True)
 
     assert len(specviz_helper.app.data_collection) == 4
     assert specviz_helper.app.data_collection[0].label == "test [0]"

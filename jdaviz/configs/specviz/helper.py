@@ -82,7 +82,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
         default_labels = {'mosviz-spec2d-parser': '2D Spectrum',
                           'specreduce-trace': 'Trace',
-                          'specviz-spectrum1d-parser': 'Spectrum 1D'}
+                          'specviz-spectrum1d-parser': 'Spectrum'}
         if data_label is None:
             data_label = default_labels.get(parser, 'Unknown')
         data_label = self.app.return_unique_name(data_label)
