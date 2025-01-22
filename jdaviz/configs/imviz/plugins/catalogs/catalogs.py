@@ -151,6 +151,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         if self.catalog_selected == "SDSS":
             from astroquery.sdss import SDSS
             r_max = 3 * u.arcmin
+            src_id_colname = "objid"
 
             # queries the region (based on the provided center point and radius)
             # finds all the sources in that region
@@ -195,6 +196,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
                                         columns=('source_id', 'ra', 'dec')
                                         )
+            if "SOURCE_ID" in sources.colnames:  # Case could flip non-deterministically
+                src_id_colname = "SOURCE_ID"
+            else:
+                src_id_colname = "source_id"
             if len(sources) == self.max_sources:
                 max_sources_used = True
             self.app._catalog_source_table = sources
@@ -252,10 +257,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
                                              x_coordinates, y_coordinates):
-                if self.catalog_selected == "SDSS":
-                    row_id = row["objid"]
-                elif self.catalog_selected == "Gaia":
-                    row_id = row["SOURCE_ID"]
+                row_id = row[src_id_colname]
                 # Check if the row contains the required keys
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
