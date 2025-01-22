@@ -2029,7 +2029,7 @@ class SubsetSelect(SelectPluginComponent):
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
         self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=lambda msg: self._update_subset(msg.subset))
+                           handler=lambda msg: self._update_subset(msg.subset, attribute="type"))
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda msg: self._delete_subset(msg.subset))
         self.hub.subscribe(self, SubsetRenameMessage,
