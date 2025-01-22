@@ -87,7 +87,7 @@ def get_valid_format(filename):
     return valid_file_format, recommended_config
 
 
-def get_parser(obj):
+def get_parser(obj, load_as_list=False):
     """
     Identify the data parser from a filename or data object
 
@@ -107,7 +107,8 @@ def get_parser(obj):
         if obj.flux.ndim == 1:
             return 'specviz-spectrum1d-parser'
         else:
-            # TODO: how to determine if multiple spectra or an image?
+            if load_as_list:
+                return 'specviz-spectrumlist-parser'
             return 'mosviz-spec2d-parser'
     _, config = get_valid_format(obj)
     parsers = {'specviz': 'specviz-spectrum1d-parser', 'specviz2d': 'mosviz-spec2d-parser'}

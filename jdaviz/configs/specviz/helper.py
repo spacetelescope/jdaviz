@@ -76,7 +76,7 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astropy.utils.data.download_file` or
             `~astroquery.mast.Conf.timeout`).
         """
-        parser = data_formats.get_parser(data)
+        parser = data_formats.get_parser(data, load_as_list=load_as_list)
         if not self._dev_deconfig and parser != 'specviz-spectrum1d-parser':
             raise NotImplementedError("Only Spectrum1D data is supported in Specviz.")
 
