@@ -168,6 +168,7 @@ class Specviz(ConfigHelper, LineListMixin):
         """
         return self.app.get_subsets(spectral_only=True, use_display_units=use_display_units)
 
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
 
@@ -190,6 +191,7 @@ class Specviz(ConfigHelper, LineListMixin):
         ref_spec = self.get_spectra(ref_index, apply_slider_redshift=False)
         self._set_scale(scale, ref_spec.spectral_axis, x_min, x_max)
 
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def y_limits(self, y_min=None, y_max=None):
         """Sets the limits of the y-axis
 
@@ -249,18 +251,21 @@ class Specviz(ConfigHelper, LineListMixin):
 
             scale.max = float(max_val)
 
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].reset_limits")
     def autoscale_x(self):
         """Sets the x-axis limits to the min/max of the reference data
 
         """
         self.x_limits("auto", "auto")
 
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].reset_limits")
     def autoscale_y(self):
         """Sets the y-axis limits to the min/max of the reference data
 
         """
         self.y_limits("auto", "auto")
 
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def flip_x(self):
         """Flips the current limits of the x-axis
 
@@ -268,6 +273,7 @@ class Specviz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer(self._default_spectrum_viewer_reference_name).scale_x
         self.x_limits(x_min=scale.max, x_max=scale.min)
 
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def flip_y(self):
         """Flips the current limits of the y-axis
 
@@ -275,6 +281,7 @@ class Specviz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer(self._default_spectrum_viewer_reference_name).scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
 
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_tick_format")
     def set_spectrum_tick_format(self, fmt, axis=None):
         """
         Manually set the tick format of one of the axes of the profile viewer.
@@ -293,10 +300,8 @@ class Specviz(ConfigHelper, LineListMixin):
             warnings.warn("Please use either 0 or 1 for the axis value")
             return
 
-        # Examples of values for fmt are '0.1e' or '0.2f'
-        self.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).figure.axes[axis].tick_format = fmt
+        sv = self.viewers[self._default_spectrum_viewer_reference_name]
+        sv.set_tick_format(fmt, axis=['x', 'y'][axis])
 
     def get_data(self, data_label=None, spectral_subset=None, cls=None,
                  use_display_units=False):

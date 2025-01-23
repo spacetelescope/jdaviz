@@ -27,6 +27,7 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
@@ -45,6 +46,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
+    * :meth:`fitted_models`
     """
     template_file = __file__, "aper_phot_simple.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -112,6 +115,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
+        self._fitted_models = {}
         self._fitted_model_name = 'phot_radial_profile'
 
         # override default plot styling
@@ -150,14 +154,20 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.subscribe(self, GlobalDisplayUnitChanged,
                                handler=self._on_display_units_changed)
 
-# TODO: expose public API once finalized
-#    @property
-#    def user_api(self):
-#        return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
-#                                           'background', 'background_value',
-#                                           'pixel_area', 'counts_factor', 'flux_scaling',
-#                                           'calculate_photometry',
-#                                           'unpack_batch_options', 'calculate_batch_photometry'))
+    @property
+    def user_api(self):
+        # TODO: expose public API once finalized
+        # expose=('multiselect', 'dataset', 'aperture',
+        #                                   'background', 'background_value',
+        #                                   'pixel_area', 'counts_factor', 'flux_scaling',
+        #                                   'calculate_photometry',
+        #                                   'unpack_batch_options', 'calculate_batch_photometry')
+
+        return PluginUserApi(self, expose=('export_table', 'fitted_models'))
+
+    @property
+    def fitted_models(self):
+        return self._fitted_models
 
     def _on_slice_changed(self, msg):
         if self.config != "cubeviz":
@@ -612,8 +622,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Reset last fitted model
         fit_model = None
         # TODO: remove _fitted_model_name cache?
-        if self._fitted_model_name in self.app.fitted_models:
-            del self.app.fitted_models[self._fitted_model_name]
+        if self._fitted_model_name in self._fitted_models:
+            del self._fitted_models[self._fitted_model_name]
 
         comp = data.get_component(data.main_components[0])
         if comp.units:
@@ -974,7 +984,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                         self.hub.broadcast(SnackbarMessage(
                             f"Radial profile fitting: {msg}", color='warning', sender=self))
                     y_fit = fit_model(x_data)
-                    self.app.fitted_models[self._fitted_model_name] = fit_model
+                    self._fitted_models[self._fitted_model_name] = fit_model
                     self.plot._update_data('fit', x=x_data, y=y_fit, reset_lims=True)
                     self.plot.update_style('fit', color='magenta',
                                            markers_visible=False, line_visible=True)

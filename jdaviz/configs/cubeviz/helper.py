@@ -1,3 +1,5 @@
+from astropy.utils.decorators import deprecated
+
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
@@ -97,6 +99,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                     color='warning', sender=self, timeout=10000)
             self.app.hub.broadcast(msg)
 
+    @deprecated(since="4.2", alternative="plugins['Slice'].value")
     def select_wavelength(self, wavelength):
         """
         Select the slice closest to the provided wavelength.
@@ -149,8 +152,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                               spectral_subset=spectral_subset,
                               cls=cls, use_display_units=use_display_units)
 
-    # Need this method for Imviz Aperture Photometry plugin.
-
+    @deprecated(since="4.2", alternative="plugins['Aperture Photometry'].export_table()")
     def get_aperture_photometry_results(self):
         """Return aperture photometry results, if any.
         Results are calculated using :ref:`cubeviz-aper-phot` plugin.
@@ -161,4 +163,4 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
             Photometry results if available or `None` otherwise.
 
         """
-        return self.plugins['Aperture Photometry']._obj.export_table()
+        return self.plugins['Aperture Photometry'].export_table()

@@ -53,8 +53,6 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     """
     template_file = __file__, "data_quality.vue"
 
-    irrelevant_msg = Unicode("").tag(sync=True)
-
     # `layer` is the science data layer
     science_layer_multiselect = Bool(False).tag(sync=True)
     science_layer_items = List().tag(sync=True)
