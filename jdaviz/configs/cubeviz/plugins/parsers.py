@@ -10,6 +10,7 @@ from astropy.wcs import WCS
 from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
@@ -24,7 +25,7 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 @data_parser_registry("cubeviz-data-parser")
 def parse_data(app, file_obj, data_type=None, data_label=None,
                parent=None, cache=None, local_path=None, timeout=None,
-               specutils_format=None):
+               specutils_format=None, spectral_axis_index=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -156,9 +157,12 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
             )
 
     elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
+        if spectral_axis_index is not None and spectral_axis_index < 0:
+            spectral_axis_index = spectral_axis_index + file_obj.ndim
         _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
                        flux_viewer_reference_name=flux_viewer_reference_name,
-                       uncert_viewer_reference_name=uncert_viewer_reference_name)
+                       uncert_viewer_reference_name=uncert_viewer_reference_name,
+                       spectral_axis_index=spectral_axis_index)
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -219,8 +223,6 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
                     target_wave_unit = u.Unit(hdr[cunit_key])
                     found_target = True
                     break
-    print(f"Target wave unit: {target_wave_unit}")
-    print(f"Current unit: {sc.spectral_axis.unit}")
 
     if target_wave_unit == sc.spectral_axis.unit:
         target_wave_unit = None
@@ -407,7 +409,8 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
 
 def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
                    flux_viewer_reference_name=None,
-                   uncert_viewer_reference_name=None):
+                   uncert_viewer_reference_name=None,
+                   spectral_axis_index=None):
     if data_label is None:
         data_label = app.return_data_label(file_obj)
 
@@ -422,7 +425,12 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
         flux = flux << (u.count / PIX2)
 
     meta = standardize_metadata({'_orig_spatial_wcs': None})
-    s3d = Spectrum(flux=flux, meta=meta)
+    if spectral_axis_index is None:
+        # Default to last axis in array for the spectral axis
+        msg = "Spectral axis index not specified, assuming last axis."
+        app.hub.broadcast(SnackbarMessage(msg, sender=app._jdaviz_helper, color="warning"))
+        spectral_axis_index = flux.ndim - 1
+    s3d = Spectrum(flux=flux, meta=meta, spectral_axis_index=spectral_axis_index)
 
     # convert data loaded in flux units to a per-square-pixel surface
     # brightness unit (e.g Jy to Jy/pix**2)

@@ -572,6 +572,8 @@ class ConfigHelper(HubListener):
         object_kwargs = {}
         if cls == Spectrum:
             object_kwargs['statistic'] = None
+            if 'spectral_axis_index' in data.meta:
+                object_kwargs['spectral_axis_index'] = data.meta['spectral_axis_index']
 
         if not spatial_subset and not mask_subset:
             if 'Trace' in data.meta:
