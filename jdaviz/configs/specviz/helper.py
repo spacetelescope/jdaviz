@@ -1,3 +1,4 @@
+import pathlib
 import warnings
 
 from astropy import units as u
@@ -10,6 +11,7 @@ from jdaviz.core import data_formats
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
+from jdaviz.utils import download_uri_to_path
 
 __all__ = ['Specviz']
 
@@ -87,6 +89,12 @@ class Specviz(ConfigHelper, LineListMixin):
             data_label = default_labels.get(parser, 'Unknown')
         data_label = self.app.return_unique_name(data_label)
 
+        if isinstance(data, str):
+            path = pathlib.Path(data)
+            if not path.is_file() and not path.is_dir():
+                data = download_uri_to_path(data, cache=cache,
+                                            local_path=local_path, timeout=timeout)
+
         parser_kwargs = {'mosviz-spec2d-parser': {'show_in_viewer': False,
                                                   'data_labels': data_label},
                          'specreduce-trace': {'show_in_viewer': False,
@@ -94,9 +102,6 @@ class Specviz(ConfigHelper, LineListMixin):
                          'specviz-spectrum1d-parser': {'format': format,
                                                        'show_in_viewer': False,
                                                        'concat_by_file': concat_by_file,
-                                                       'cache': cache,
-                                                       'local_path': local_path,
-                                                       'timeout': timeout,
                                                        'load_as_list': load_as_list,
                                                        'data_label': data_label}}
         kwargs = parser_kwargs.get(parser, {})
