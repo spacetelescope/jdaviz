@@ -67,7 +67,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
 
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.label == 'my_2d_spec 2D'
-    assert dc_0.get_component('flux').units == ''
+    assert dc_0.get_component('flux').units == 'Jy'
 
     dc_1 = specviz2d_helper.app.data_collection[1]
     assert dc_1.label == 'Spectrum 1D'
@@ -79,7 +79,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    assert label_mouseover.as_text() == ('Pixel x=00000.0 y=00000.0 Value +3.74540e-01',
+    assert label_mouseover.as_text() == ('Pixel x=00000.0 y=00000.0 Value +3.74540e-01 Jy',
                                          'Wave 1.00000e-06 m', '')
     assert label_mouseover.icon == 'a'
 
@@ -90,7 +90,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
                                         {'event': 'mousemove', 'domain': {'x': 7.2e-6, 'y': 3}})
     assert label_mouseover.as_text() == ('Cursor 7.20000e-06, 3.00000e+00',
                                          'Wave 7.00000e-06 m (6 pix)',
-                                         'Flux -3.59571e+00')
+                                         'Flux -3.59571e+00 Jy')
 
     assert label_mouseover.icon == 'b'
 

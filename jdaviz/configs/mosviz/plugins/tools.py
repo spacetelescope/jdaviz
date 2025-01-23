@@ -30,19 +30,17 @@ class _MatchedXZoomMixin(_MatchedZoomMixin):
                 cid = str(key)
                 break
 
-        if cid is None:
-            raise ValueError("Neither 'Wavelength' nor 'Wave' component'" +
-                             "found in the data collection.")
-
-        native_unit = u.Unit(self.viewer.state.data_collection[0].get_component(cid).units)
+        if cid is not None:
+            native_unit = u.Unit(self.viewer.state.data_collection[0].get_component(cid).units)
+        else:
+            native_unit = ''
         current_display_unit = u.Unit(self.viewer.jdaviz_helper.app._get_display_unit('spectral'))
 
         if isinstance(from_viewer, MosvizProfileView) and isinstance(to_viewer, MosvizProfile2DView):  # noqa
-            if native_unit != current_display_unit:
+            if native_unit != current_display_unit and native_unit != '':
                 limits['x_min'] = (limits['x_min'] * native_unit).to_value(
                                    current_display_unit, equivalencies=u.spectral()
                                 )
-
                 limits['x_max'] = (limits['x_max'] * native_unit).to_value(
                                    current_display_unit, equivalencies=u.spectral()
                                    )
@@ -51,7 +49,7 @@ class _MatchedXZoomMixin(_MatchedZoomMixin):
         elif isinstance(from_viewer, MosvizProfile2DView) and isinstance(to_viewer, MosvizProfileView):  # noqa
             limits['x_min'], limits['x_max'] = from_viewer.pixel_to_world_limits((limits['x_min'],
                                                                                   limits['x_max']))
-            if native_unit != current_display_unit:
+            if native_unit != current_display_unit and native_unit != '':
                 limits['x_min'] = (limits['x_min'] * native_unit).to_value(
                                    current_display_unit, equivalencies=u.spectral()
                                    )

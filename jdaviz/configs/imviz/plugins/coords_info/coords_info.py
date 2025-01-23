@@ -499,6 +499,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
                 unit = u.Unit(image.get_component(attribute).units)
                 if (isinstance(viewer, MosvizProfile2DView) and unit != ''
+                   and u.Unit(self.app._get_display_unit(attribute)).physical_type
+                   not in ['frequency', 'wavelength', 'length']
                    and unit != self.app._get_display_unit(attribute)):
                     equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
                     value = flux_conversion(value, unit, self.app._get_display_unit(attribute),
