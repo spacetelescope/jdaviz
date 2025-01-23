@@ -45,27 +45,24 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
-    def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
-                  concat_by_file=False, cache=None, local_path=None, timeout=None,
-                  load_as_list=False):
+    def load_data(self, input, data_label=None, parser=None,
+                  show_in_viewer=True,
+                  cache=None, local_path=None, timeout=None):
         """
         Load data into Specviz.
 
         Parameters
         ----------
-        data : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
+        input : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
             Spectrum1D, SpectrumList, or path to compatible data file.
         data_label : str
             The Glue data label found in the ``DataCollection``.
-        format : str
-            Loader format specification used to indicate data format in
-            `~specutils.Spectrum1D.read` io method.
+        parser : str
+            The name of the parser to use to load the data.  Will automatically
+            be determined if only a single registered parser is capable of parsing
+            ``input``.
         show_in_viewer : bool
             Show data in viewer(s).
-        concat_by_file : bool
-            If True and there is more than one available extension, concatenate
-            the extensions within each spectrum file passed to the parser and
-            add a concatenated spectrum to the data collection.
         cache : None, bool, or str
             Cache the downloaded file if the data are retrieved by a query
             to a URL or URI.
@@ -78,47 +75,39 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astropy.utils.data.download_file` or
             `~astroquery.mast.Conf.timeout`).
         """
-        parser = data_formats.get_parser(data, load_as_list=load_as_list)
-        if not self._dev_deconfig and parser != 'specviz-spectrum1d-parser':
+        from jdaviz.core import parsers
+
+        if isinstance(input, str):
+            path = pathlib.Path(input)
+            if not path.is_file() and not path.is_dir():
+                input = download_uri_to_path(input, cache=cache,
+                                             local_path=local_path, timeout=timeout)
+
+        parser = parsers.parse(input, parser=parser)
+        if not self._dev_deconfig and parser.registry_name != '1D Spectrum':
             raise NotImplementedError("Only Spectrum1D data is supported in Specviz.")
 
-        default_labels = {'mosviz-spec2d-parser': '2D Spectrum',
-                          'specreduce-trace': 'Trace',
-                          'specviz-spectrum1d-parser': 'Spectrum'}
         if data_label is None:
-            data_label = default_labels.get(parser, 'Unknown')
-        data_label = self.app.return_unique_name(data_label)
+            data_label = parser.default_data_label
 
-        if isinstance(data, str):
-            path = pathlib.Path(data)
-            if not path.is_file() and not path.is_dir():
-                data = download_uri_to_path(data, cache=cache,
-                                            local_path=local_path, timeout=timeout)
-
-        parser_kwargs = {'mosviz-spec2d-parser': {'show_in_viewer': False,
-                                                  'data_labels': data_label},
-                         'specreduce-trace': {'show_in_viewer': False,
-                                              'data_label': data_label},
-                         'specviz-spectrum1d-parser': {'format': format,
-                                                       'show_in_viewer': False,
-                                                       'concat_by_file': concat_by_file,
-                                                       'load_as_list': load_as_list,
-                                                       'data_label': data_label}}
-        kwargs = parser_kwargs.get(parser, {})
-        super().load_data(data,
-                          parser_reference=parser,
-                          **kwargs)
+        data_labels = []
+        for data in parser.glue_data:
+            data_label = self.app.return_unique_name(data_label)
+            data_labels.append(data_label)
+            self.app.add_data(data, data_label)
 
         if show_in_viewer:
-            # loop through existing viewers and show in any that support this data type
-            added = 0
-            for viewer in self.viewers.values():
-                if data_label in viewer.data_menu.data_labels_unloaded:
-                    added += 1
-                    viewer.data_menu.add_data(data_label)
-            if added == 0:
-                # TODO: in the future open a new viewer with some default type based on the data
-                print(f"*** No viewer found to display \'{data_label}\'")
+            for data_label in data_labels:
+                # loop through existing viewers and show in any that support this data type
+                added = 0
+                for viewer in self.viewers.values():
+                    if data_label in viewer.data_menu.data_labels_unloaded:
+                        added += 1
+                        viewer.data_menu.add_data(data_label)
+                if added == 0:
+                    # TODO: in the future open a new viewer with some default type based on the data
+                    # using parser.default_viewer
+                    print(f"*** No viewer found to display \'{data_label}\'")
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
