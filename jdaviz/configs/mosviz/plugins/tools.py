@@ -1,6 +1,7 @@
 import os
 
 from glue.config import viewer_tool
+from astropy import units as u
 
 from jdaviz.configs.mosviz.plugins.viewers import MosvizProfileView, MosvizProfile2DView
 from jdaviz.core.tools import _MatchedZoomMixin, HomeZoom, BoxZoom, XRangeZoom, PanZoom, PanZoomX
@@ -18,12 +19,45 @@ class _MatchedXZoomMixin(_MatchedZoomMixin):
         return isinstance(viewer, (MosvizProfile2DView, MosvizProfileView))
 
     def _map_limits(self, from_viewer, to_viewer, limits={}):
+        components = self.viewer.state.data_collection[0]._components
+        # Determine cid for spectral axis
+        cid = None
+        for key in components.keys():
+            if 'Wavelength' in str(key):
+                cid = str(key)
+                break
+            elif 'Wave' in str(key):
+                cid = str(key)
+                break
+
+        if cid is None:
+            raise ValueError("Neither 'Wavelength' nor 'Wave' component'" +
+                             "found in the data collection.")
+
+        native_unit = u.Unit(self.viewer.state.data_collection[0].get_component(cid).units)
+        current_display_unit = u.Unit(self.viewer.jdaviz_helper.app._get_display_unit('spectral'))
+
         if isinstance(from_viewer, MosvizProfileView) and isinstance(to_viewer, MosvizProfile2DView):  # noqa
+            if native_unit != current_display_unit:
+                limits['x_min'] = (limits['x_min'] * native_unit).to_value(
+                                   current_display_unit, equivalencies=u.spectral()
+                                )
+
+                limits['x_max'] = (limits['x_max'] * native_unit).to_value(
+                                   current_display_unit, equivalencies=u.spectral()
+                                   )
             limits['x_min'], limits['x_max'] = to_viewer.world_to_pixel_limits((limits['x_min'],
                                                                                 limits['x_max']))
         elif isinstance(from_viewer, MosvizProfile2DView) and isinstance(to_viewer, MosvizProfileView):  # noqa
             limits['x_min'], limits['x_max'] = from_viewer.pixel_to_world_limits((limits['x_min'],
                                                                                   limits['x_max']))
+            if native_unit != current_display_unit:
+                limits['x_min'] = (limits['x_min'] * native_unit).to_value(
+                                   current_display_unit, equivalencies=u.spectral()
+                                   )
+                limits['x_max'] = (limits['x_max'] * native_unit).to_value(
+                                   current_display_unit, equivalencies=u.spectral()
+                                   )
         return limits
 
 
