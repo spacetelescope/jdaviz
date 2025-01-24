@@ -325,8 +325,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
                          flux_viewer_reference_name=None,
-                         uncert_viewer_reference_name=None,
-                         parent=None):
+                         uncert_viewer_reference_name=None):
     """Load spectrum1d as a cube."""
 
     if data_label is None:
@@ -344,13 +343,6 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             flux[np.isinf(flux)] = np.nan  # Avoid INF from IVAR conversion
         else:
             flux = val
-
-        if parent is not None:
-            parent_data_label = parent
-        elif attr == 'uncertainty':
-            parent_data_label = app.return_data_label(data_label, "FLUX").split(" ")[0]
-        else:
-            parent_data_label = None
 
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -371,7 +363,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
                 flux, file_obj.wcs, meta, data_type=attr, apply_pix2=True)
 
         cur_data_label = app.return_data_label(data_label, attr.upper())
-        app.add_data(s1d, cur_data_label, parent=parent_data_label)
+        app.add_data(s1d, cur_data_label)
 
         if attr == 'flux':
             app.add_data_to_viewer(flux_viewer_reference_name, cur_data_label)
