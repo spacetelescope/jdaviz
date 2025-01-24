@@ -5,7 +5,7 @@ from functools import cached_property
 from jdaviz.core.registries import resolver_registry, parser_registry, loader_registry
 from jdaviz.utils import download_uri_to_path
 
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectrumList
 
 __all__ = ['parse']
 
@@ -54,6 +54,12 @@ class BaseParsingStepLoader(BaseParsingStep):
     def default_data_label(self):
         return self.registry_name
 
+    @property
+    def default_viewer(self):
+        # returns the registry name of the default viewer
+        # only used if `show_in_viewer=True` and no existing viewers can accept the data
+        return 'specviz-profile-viewer'
+
 
 class ParsingStepSearch:
     valid = {}
@@ -63,8 +69,10 @@ class ParsingStepSearch:
         self._input = input
         self._kwargs = kwargs
 
-        if isinstance(parser, BaseParsingStep):
-            all_parsers = {parser.__name__: parser}
+        # TODO: could eventually allow passing unregistered parser classes/objects
+        # which could then be used to allow pre-parsing of MOS data (selecting individual rows)
+#        if isinstance(parser, BaseParsingStep):
+#            all_parsers = {parser.__name__: parser}
         if isinstance(parser, str):
             if parser not in registry.members:
                 raise ValueError(f"\'{parser}\' not one of {list(registry.members.keys())}")
@@ -96,6 +104,8 @@ class ParsingStepSearch:
         return self.single_match(**self._kwargs)
 
 
+### RESOLVERS (string -> path or object(s))
+
 @resolver_registry('Local Path')
 class LocalFileResolver(BaseParsingStep):
     @property
@@ -117,29 +127,41 @@ class URLResolver(BaseParsingStep):
                                     local_path=local_path, timeout=timeout)
 
 
+### PARSERS (path -> object(s))
+
 @parser_registry('specutils.Spectrum')
 class SpecutilsSpectrumParser(BaseParsingStep):
+    SpecutilsCls = Spectrum1D
+
+    @property
     def is_valid(self):
-        if isinstance(self.input, Spectrum1D):
-            return True
-        if not isinstance(self.input, str):
-            return False
         try:
-            self.spectrum1d
+            self.object
         except Exception as e:
-            print("spectrum1d read failed", str(e))
+            print(f"{self.SpecutilsCls.__name__} read failed", str(e))
             return False
         return True
 
     @cached_property
-    def spectrum1d(self):
-        return Spectrum1D.read(self.input)
+    def object(self):
+        if isinstance(self.input, self.SpecutilsCls):
+            return self.input
+        return self.SpecutilsCls.read(self.input)
 
     def __call__(self):
-        if isinstance(self.input, Spectrum1D):
-            return self.input
-        return self.spectrum1d
+        return self.object
 
+
+@parser_registry('specutils.SpectrumList')
+class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
+    SpecutilsCls = SpectrumList
+
+    @property
+    def is_valid(self):
+        return super().is_valid and len(self.object) > 1
+
+
+### LOADERS (object(s) -> object(s) ready for ingesting in glue)
 
 @loader_registry('1D Spectrum')
 class Spectrum1DLoader(BaseParsingStepLoader):
@@ -153,6 +175,37 @@ class Spectrum2DLoader(BaseParsingStepLoader):
     @property
     def is_valid(self):
         return isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 2
+
+
+@loader_registry('1D Spectrum List')
+class Spectrum1DListLoader(BaseParsingStepLoader):
+    @property
+    def is_valid(self):
+        # TODO: should this be split into two loaders? 
+        # should a loader take a single input type, output a single output type, or just have a consistent data_label and viewer?
+        return isinstance(self.input, SpectrumList) or (isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 2)
+
+    def __call__(self):
+        if isinstance(self.input, SpectrumList):
+            return self.input
+        elif isinstance(self.input, Spectrum1D):
+            def this_row(field, i):
+                if field is None:
+                    return None
+                return field[i, :]
+    
+            return SpectrumList([Spectrum1D(spectral_axis=self.input.spectral_axis,
+                                            flux=this_row(self.input.flux, i),
+                                            uncertainty=this_row(self.input.uncertainty, i),
+                                            mask=this_row(self.input.mask, i),
+                                            meta=self.input.meta)
+                                 for i in range(self.input.flux.shape[0])])
+        else:
+            raise NotImplementedError()
+
+    @property
+    def default_data_label(self):
+        return '1D Spectrum'
 
 
 @loader_registry('Specreduce Trace')
@@ -189,4 +242,4 @@ def parse(input,
     return objects, loader
 
 
-# TODO: concept of "only_if_requested" for spectrum2d loaded as list
+# TODO: concept of "only_if_requested"/priority/enabled for spectrum2d loaded as list
