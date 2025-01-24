@@ -729,29 +729,21 @@ class SpectralExtraction(PluginTemplateMixin):
             # then we're offsetting an existing trace
             # for FlatTrace, we can keep and expose a new FlatTrace (which has the advantage of
             # being able to load back into the plugin)
-            orig_trace = self.trace_trace.get_selected_spectrum(
-                            self.trace_trace.selected_obj, use_display_units=True
-                            )
+            orig_trace = self.trace_trace.selected_obj
             if isinstance(orig_trace, tracing.FlatTrace):
-                trace = tracing.FlatTrace(self.trace_dataset.get_selected_spectrum(
-                                          self.trace_dataset, use_display_units=True),
+                trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                           orig_trace.trace_pos+self.trace_offset)
             else:
-                trace = tracing.ArrayTrace(self.trace_dataset.get_selected_spectrum(
-                                           self.trace_dataset, use_display_units=True),
-                                           self.trace_trace.get_selected_spectrum(
-                                                self.trace_trace.selected_obj,
-                                                use_display_units=True).trace+self.trace_offset)
+                trace = tracing.ArrayTrace(self.trace_dataset.selected_obj,
+                                           self.trace_trace.selected_obj.trace+self.trace_offset)
 
         elif self.trace_type_selected == 'Flat':
-            trace = tracing.FlatTrace(self.trace_dataset.get_selected_spectrum(
-                                      use_display_units=True),
+            trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                       self.trace_pixel)
 
         elif self.trace_type_selected in _model_cls:
             trace_model = _model_cls[self.trace_type_selected](degree=self.trace_order)
-            trace = tracing.FitTrace(self.trace_dataset.get_selected_spectrum(
-                                     use_display_units=True),
+            trace = tracing.FitTrace(self.trace_dataset.selected_obj,
                                      guess=self.trace_pixel,
                                      bins=int(self.trace_bins) if self.trace_do_binning else None,
                                      window=self.trace_window,

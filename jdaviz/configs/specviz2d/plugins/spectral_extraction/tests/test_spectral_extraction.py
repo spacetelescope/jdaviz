@@ -280,9 +280,6 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
         # display units
         uc.flux_unit.selected = new_flux_unit
 
-        exported_trace = pext.export_trace()
-        assert exported_trace.image._unit == specviz2d_helper.app._get_display_unit('flux')
-
         exported_bg = pext.export_bg()
         assert exported_bg.image._unit == specviz2d_helper.app._get_display_unit('flux')
 
