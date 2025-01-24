@@ -2110,7 +2110,7 @@ class SubsetSelect(SelectPluginComponent):
         else:
             # 'type' can be passed manually rather than coming from SubsetUpdateMessage.attribute
             # This will be None if triggered by SubsetCreateMessage
-            if attribute in ('style', 'type') or attribute is None:
+            if attribute in ('style', 'type', None):
                 # TODO: may need to add label and then rebuild the entire list if/when
                 # we add support for renaming subsets
 
