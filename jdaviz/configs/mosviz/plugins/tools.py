@@ -21,18 +21,13 @@ class _MatchedXZoomMixin(_MatchedZoomMixin):
     def _map_limits(self, from_viewer, to_viewer, limits={}):
         components = self.viewer.state.data_collection[0]._components
         # Determine cid for spectral axis
-        cid = None
         for key in components.keys():
-            if 'Wavelength' in str(key):
-                cid = str(key)
+            strkey = str(key)
+            if 'Wavelength' in strkey or 'Wave' in strkey:
+                native_unit = u.Unit(self.viewer.state.data_collection[0].get_component(strkey).units)  # noqa
                 break
-            elif 'Wave' in str(key):
-                cid = str(key)
-                break
-
-        if cid is not None:
-            native_unit = u.Unit(self.viewer.state.data_collection[0].get_component(cid).units)
         else:
+            # no matches found
             native_unit = ''
         current_display_unit = u.Unit(self.viewer.jdaviz_helper.app._get_display_unit('spectral'))
 

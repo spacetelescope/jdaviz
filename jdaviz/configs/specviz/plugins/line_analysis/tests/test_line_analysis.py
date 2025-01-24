@@ -92,7 +92,7 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     is in flux/pix2 and flux/sr, and that the results remain consistant
     between translations of the spectral y axis flux<>surface brightness.
     """
-    cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / sq_angle_unit,
+    cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.Jy / sq_angle_unit,
                                            shape=(25, 25, 4), with_uncerts=True)
     cubeviz_helper.load_data(cube, data_label="Test Cube")
 
@@ -119,14 +119,14 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
                     la._obj.continuum_marks['right'].y]
 
     # change flux unit and make sure result stays the same after conversion
-    uc.flux_unit.selected = 'Jy'
+    uc.flux_unit.selected = 'MJy'
 
     marks_after = [la._obj.continuum_marks['left'].y,
                    la._obj.continuum_marks['right'].y]
 
     # ensure continuum marks update when spectral_y is changed by
     # multiply converted continuum marks by expected scale factor (MJy -> Jy)
-    scaling_factor = 1e6
+    scaling_factor = 1e-6
     assert_allclose([mark * scaling_factor for mark in marks_before], marks_after, rtol=1e-5)
 
     # reset to test again after spectral_y_type is changed

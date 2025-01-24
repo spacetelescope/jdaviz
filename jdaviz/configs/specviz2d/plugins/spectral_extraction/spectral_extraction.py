@@ -708,7 +708,6 @@ class SpectralExtraction(PluginTemplateMixin):
         else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 
-    # UPDATE HERE
     @with_spinner('trace_spinner')
     def export_trace(self, add_data=False, **kwargs):
         """
