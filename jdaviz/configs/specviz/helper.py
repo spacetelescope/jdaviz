@@ -45,9 +45,10 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
-    def load_data(self, input, data_label=None, parser=None,
-                  show_in_viewer=True,
-                  cache=None, local_path=None, timeout=None):
+    def load_data(self, input, data_label=None,
+                  resolver=None, parser=None, loader=None,
+                  resolver_kwargs={}, parser_kwargs={}, loader_kwargs={},
+                  show_in_viewer=True):
         """
         Load data into Specviz.
 
@@ -57,44 +58,31 @@ class Specviz(ConfigHelper, LineListMixin):
             Spectrum1D, SpectrumList, or path to compatible data file.
         data_label : str
             The Glue data label found in the ``DataCollection``.
-        parser : str
-            The name of the parser to use to load the data.  Will automatically
-            be determined if only a single registered parser is capable of parsing
-            ``input``.
         show_in_viewer : bool
             Show data in viewer(s).
-        cache : None, bool, or str
-            Cache the downloaded file if the data are retrieved by a query
-            to a URL or URI.
-        local_path : str, optional
-            Cache remote files to this path. This is only used if data is
-            requested from `astroquery.mast`.
-        timeout : float, optional
-            If downloading from a remote URI, set the timeout limit for
-            remote requests in seconds (passed to
-            `~astropy.utils.data.download_file` or
-            `~astroquery.mast.Conf.timeout`).
         """
         from jdaviz.core import parsers
 
-        if isinstance(input, str):
-            path = pathlib.Path(input)
-            if not path.is_file() and not path.is_dir():
-                input = download_uri_to_path(input, cache=cache,
-                                             local_path=local_path, timeout=timeout)
-
-        parser = parsers.parse(input, parser=parser)
-        if not self._dev_deconfig and parser.registry_name != '1D Spectrum':
-            raise NotImplementedError("Only Spectrum1D data is supported in Specviz.")
-
-        if data_label is None:
-            data_label = parser.default_data_label
-
         data_labels = []
-        for data in parser.glue_data:
-            data_label = self.app.return_unique_name(data_label)
-            data_labels.append(data_label)
-            self.app.add_data(data, data_label)
+        inputs = input if isinstance(input, list) else [input]
+
+        for input in inputs:
+            objects, loader = parsers.parse(input,
+                                            resolver=resolver, parser=parser, loader=loader,
+                                            resolver_kwargs=resolver_kwargs,
+                                            parser_kwargs=parser_kwargs,
+                                            loader_kwargs=loader_kwargs)
+
+            if not self._dev_deconfig and loader.registry_name != '1D Spectrum':
+                raise NotImplementedError("Only Spectrum1D data is supported in Specviz.")
+
+            if data_label is None:
+                data_label = getattr(loader, 'default_data_label', 'data')
+
+            for data in objects:
+                data_label = self.app.return_unique_name(data_label)
+                data_labels.append(data_label)
+                self.app.add_data(data, data_label)
 
         if show_in_viewer:
             for data_label in data_labels:
