@@ -87,6 +87,8 @@
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     </v-row>
 
+    <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
+
     <jupyter-widget :widget="table_widget"></jupyter-widget> 
 
   </j-tray-plugin>
