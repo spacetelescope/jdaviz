@@ -33,6 +33,17 @@
       </v-expansion-panels>
     </v-row>
 
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="api_hints_enabled"
+      label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Select the input flux cube."
+    />
+
+
     <div @mouseover="() => active_step='ap'">
       <j-plugin-section-header :active="active_step==='ap'">Aperture</j-plugin-section-header>
 
