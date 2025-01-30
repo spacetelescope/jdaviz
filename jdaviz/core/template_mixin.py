@@ -1540,7 +1540,8 @@ class LayerSelect(SelectPluginComponent):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=lambda _: self._on_subset_created())
+                           handler=lambda _: self._on_subset_created(),
+                           priority=100)
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
