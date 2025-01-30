@@ -118,7 +118,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._units = {}
+        self._units = {}  # string representation of display units
         self._fitted_model = None
         self._fitted_spectrum = None
         self._fitted_models = {}
@@ -325,11 +325,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         sb_unit = self.app._get_display_unit('sb')
         spectral_y_unit = self.app._get_display_unit('spectral_y')
         if event.get('new'):
-            self._units['y'] = sb_unit
+            self._units['y'] = str(sb_unit)
             self.dataset.add_filter('is_flux_cube')
             self.dataset.remove_filter('layer_in_spectrum_viewer')
         else:
-            self._units['y'] = spectral_y_unit
+            self._units['y'] = str(spectral_y_unit)
             self.dataset.add_filter('layer_in_spectrum_viewer')
             self.dataset.remove_filter('is_flux_cube')
 
@@ -483,12 +483,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Need to set the units the first time we initialize a model component, after this
         # we listen for display unit changes
         if self._units.get('x', '') == '':
-            self._units['x'] = self.app._get_display_unit('spectral')
+            self._units['x'] = str(self.app._get_display_unit('spectral'))
         if self._units.get('y', '') == '':
             if self.cube_fit:
-                self._units['y'] = self.app._get_display_unit('sb')
+                self._units['y'] = str(self.app._get_display_unit('sb'))
             else:
-                self._units['y'] = self.app._get_display_unit('spectral_y')
+                self._units['y'] = str(self.app._get_display_unit('spectral_y'))
 
         if model_comp == "Polynomial1D":
             # self.poly_order is the value in the widget for creating

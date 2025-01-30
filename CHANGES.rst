@@ -81,6 +81,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fixed traceback in model fitting due to units not being represented as strings. [#3412]
+
 Specviz2d
 ^^^^^^^^^
 
