@@ -2,7 +2,6 @@ import numpy as np
 
 from traitlets import Bool, List, Unicode, observe
 
-
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
@@ -389,9 +388,10 @@ class SpectralExtraction(PluginTemplateMixin):
             # happens when first initializing plugin outside of tray
             return
 
-        width = self.trace_dataset.selected_obj.shape[0]
+        width = self.trace_dataset.get_selected_spectrum(use_display_units=True).shape[0]
         # estimate the pixel number by taking the median of the brightest pixel index in each column
-        brightest_pixel = int(np.median(np.argmax(self.trace_dataset.selected_obj.flux, axis=0)))
+        trace_flux = self.trace_dataset.get_selected_spectrum(use_display_units=True).flux
+        brightest_pixel = int(np.median(np.argmax(trace_flux, axis=0)))
         # do not allow to be an edge pixel
         if brightest_pixel < 1:
             brightest_pixel = 1
@@ -762,12 +762,13 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def _get_bg_trace(self):
         if self.bg_type_selected == 'Manual':
-            trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
+            trace = tracing.FlatTrace(self.trace_dataset.get_selected_spectrum(
+                                      use_display_units=True),
                                       self.bg_trace_pixel)
         elif self.bg_trace_selected == 'From Plugin':
             trace = self.export_trace(add_data=False)
         else:
-            trace = self.bg_trace.selected_obj
+            trace = self.bg_trace.get_selected_spectrum(use_disaply_units=True)
 
         return trace
 
@@ -825,17 +826,20 @@ class SpectralExtraction(PluginTemplateMixin):
         trace = self._get_bg_trace()
 
         if self.bg_type_selected == 'Manual':
-            bg = background.Background(self.bg_dataset.selected_obj,
+            bg = background.Background(self.bg_dataset.get_selected_spectrum(
+                                       use_display_units=True),
                                        [trace], width=self.bg_width,
                                        statistic=self.bg_statistic.selected.lower())
         elif self.bg_type_selected == 'OneSided':
-            bg = background.Background.one_sided(self.bg_dataset.selected_obj,
+            bg = background.Background.one_sided(self.bg_dataset.get_selected_spectrum(
+                                                 use_display_units=True),
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width,
                                                  statistic=self.bg_statistic.selected.lower())
         elif self.bg_type_selected == 'TwoSided':
-            bg = background.Background.two_sided(self.bg_dataset.selected_obj,
+            bg = background.Background.two_sided(self.bg_dataset.get_selected_spectrum(
+                                                 use_display_units=True),
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width,
@@ -918,13 +922,13 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.ext_trace_selected == 'From Plugin':
             return self.export_trace(add_data=False)
         else:
-            return self.ext_trace.selected_obj
+            return self.ext_trace.get_selected_spectrum(use_display_units=True)
 
     def _get_ext_input_spectrum(self):
         if self.ext_dataset_selected == 'From Plugin':
             return self.export_bg_sub(add_data=False)
         else:
-            return self.ext_dataset.selected_obj
+            return self.ext_dataset.get_selected_spectrum(use_display_units=True)
 
     def import_extract(self, ext):
         """

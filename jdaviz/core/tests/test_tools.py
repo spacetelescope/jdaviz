@@ -5,6 +5,7 @@ from astropy import units as u
 from astropy.nddata import NDData
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
+from specutils import Spectrum1D
 
 from jdaviz.tests.test_utils import PHOTUTILS_LT_1_12_1
 
@@ -141,3 +142,58 @@ def test_stretch_bounds_click_outside_threshold(imviz_helper):
         stretch_tool.on_mouse_event(outside_threshold_msg)
         assert po.stretch_vmin.value == initial_vmin
         assert po.stretch_vmax.value == initial_vmax
+
+
+def test_unit_conversion_limits_update(specviz2d_helper, mos_spectrum2d):
+    specviz2d_helper.load_data(mos_spectrum2d)
+    uc = specviz2d_helper.plugins['Unit Conversion']
+
+    spec_viewer = specviz2d_helper.app.get_viewer(
+                  specviz2d_helper.app._jdaviz_helper._default_spectrum_viewer_reference_name)
+    spec2d_viewer = specviz2d_helper.app.get_viewer(
+                    specviz2d_helper.app._jdaviz_helper._default_spectrum_2d_viewer_reference_name)
+
+    # ensure spectrum and spectrum2d viewer limits matching updates when spectral_unit
+    # conversion occurs
+    uc.spectral_unit = 'Hz'
+
+    spec_viewer_lims_before = spec_viewer.get_limits()
+    spec2d_viewer_lims_before = spec2d_viewer.get_limits()
+
+    spec_viewer.reset_limits()
+
+    # ensure spectral unit conversion occurs when limits are manually changed
+    assert_allclose(spec_viewer_lims_before, spec_viewer.get_limits())
+    assert_allclose(spec2d_viewer_lims_before, spec2d_viewer.get_limits())
+
+    spec2d_viewer.reset_limits()
+
+    # test again when matching viewer's limits are reset
+    assert_allclose(spec_viewer_lims_before, spec_viewer.get_limits())
+    assert_allclose(spec2d_viewer_lims_before, spec2d_viewer.get_limits())
+
+
+def test_match_limits_without_wave_component(specviz2d_helper):
+    data = np.zeros((5, 10))
+    spec2d = Spectrum1D(flux=data*u.MJy)
+    specviz2d_helper.load_data(spec2d)
+
+    spec_viewer = specviz2d_helper.app.get_viewer(
+                  specviz2d_helper.app._jdaviz_helper._default_spectrum_viewer_reference_name)
+    spec2d_viewer = specviz2d_helper.app.get_viewer(
+                    specviz2d_helper.app._jdaviz_helper._default_spectrum_2d_viewer_reference_name)
+
+    spec_viewer_lims_before = spec_viewer.get_limits()
+    spec2d_viewer_lims_before = spec2d_viewer.get_limits()
+
+    spec_viewer.reset_limits()
+
+    # ensure limits reset when Wave nor Wavelength component is present
+    assert_allclose(spec_viewer_lims_before, spec_viewer.get_limits())
+    assert_allclose(spec2d_viewer_lims_before, spec2d_viewer.get_limits())
+
+    spec2d_viewer.reset_limits()
+
+    # test again when when limits are reset with spectrum2d-viewer
+    assert_allclose(spec_viewer_lims_before, spec_viewer.get_limits())
+    assert_allclose(spec2d_viewer_lims_before, spec2d_viewer.get_limits())

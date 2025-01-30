@@ -28,6 +28,8 @@ from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs, flux_conversion, spectral_axis_conversion
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               check_if_unit_is_per_solid_angle)
 
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper', 'CubeConfigHelper']
@@ -367,20 +369,38 @@ class ConfigHelper(HubListener):
                         # if not specified as NDUncertainty, assume stddev:
                         new_uncert = uncertainty
                     if ('_pixel_scale_factor' in data.meta):
+                        pixar_sr = data.meta.get('_pixel_scale_factor', None)
+                        eqv = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
+                                                              cube_wave=data.spectral_axis)
                         new_uncert_converted = flux_conversion(new_uncert.quantity.value,
-                                                               new_uncert.unit, y_unit, spec=data)
+                                                               new_uncert.unit, y_unit, spec=data,
+                                                               eqv=eqv)
                         new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
-                    else:
+                    elif ((check_if_unit_is_per_solid_angle(u.Unit(data.flux.unit)) !=
+                           check_if_unit_is_per_solid_angle(u.Unit(y_unit)))):
                         new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
-
+                    else:
+                        eqv = all_flux_unit_conversion_equivs(cube_wave=data.spectral_axis)
+                        new_uncert_converted = flux_conversion(new_uncert.quantity.value,
+                                                               new_uncert.unit, y_unit,
+                                                               spec=data, eqv=eqv)
+                        new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
                 else:
                     new_uncert = None
                 if ('_pixel_scale_factor' in data.meta):
+                    pixar_sr = data.meta.get('_pixel_scale_factor', None)
+                    eqv = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
+                                                          cube_wave=data.spectral_axis)
                     new_y = flux_conversion(data.flux.value, data.flux.unit,
-                                            y_unit, data) * u.Unit(y_unit)
+                                            y_unit, data, eqv=eqv) * u.Unit(y_unit)
+                elif (check_if_unit_is_per_solid_angle(u.Unit(data.flux.unit)) !=
+                      check_if_unit_is_per_solid_angle(u.Unit(y_unit))):
+                    new_y = data.flux.value * u.Unit(data.flux.unit)
                 else:
+                    eqv = all_flux_unit_conversion_equivs(cube_wave=data.spectral_axis)
                     new_y = flux_conversion(data.flux.value, data.flux.unit,
-                                            data.flux.unit, spec=data) * u.Unit(data.flux.unit)
+                                            y_unit, spec=data, eqv=eqv) * u.Unit(y_unit)
+
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                      data.spectral_axis.unit,
                                                      spectral_unit)

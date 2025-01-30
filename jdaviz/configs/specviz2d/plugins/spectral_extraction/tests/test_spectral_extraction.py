@@ -10,6 +10,8 @@ from packaging.version import Version
 from specreduce import tracing, background, extract
 from specutils import Spectrum1D
 
+from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
+
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 
 
@@ -265,3 +267,30 @@ def test_horne_extract_self_profile(specviz2d_helper):
     pext.self_prof_interp_degree_y = 0
     with pytest.raises(ValueError, match='`self_prof_interp_degree_y` must be greater than 0.'):
         sp_ext = pext.export_extract_spectrum()
+
+
+def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectrum2d):
+    specviz2d_helper.load_data(mos_spectrum2d)
+
+    uc = specviz2d_helper.plugins["Unit Conversion"]
+    pext = specviz2d_helper.plugins['Spectral Extraction']
+
+    for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        # iterate through flux units verifying that selected object/spectrum is obtained using
+        # display units
+        uc.flux_unit.selected = new_flux_unit
+
+        exported_bg = pext.export_bg()
+        assert exported_bg.image._unit == specviz2d_helper.app._get_display_unit('flux')
+
+        exported_bg_img = pext.export_bg_img()
+        assert exported_bg_img._unit == specviz2d_helper.app._get_display_unit('flux')
+
+        exported_bg_sub = pext.export_bg_sub()
+        assert exported_bg_sub._unit == specviz2d_helper.app._get_display_unit('flux')
+
+        exported_extract_spectrum = pext.export_extract_spectrum()
+        assert exported_extract_spectrum._unit == specviz2d_helper.app._get_display_unit('flux')
+
+        exported_extract = pext.export_extract()
+        assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')

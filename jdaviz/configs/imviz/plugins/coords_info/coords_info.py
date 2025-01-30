@@ -22,6 +22,7 @@ from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general)
+from jdaviz.utils import flux_conversion
 
 __all__ = ['CoordsInfo']
 
@@ -433,6 +434,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
             try:
                 wave, pixel = image.coords.pixel_to_world(x, y)
+                if wave is not None:
+                    equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
+                    wave = wave.to(self.app._get_display_unit('spectral'),
+                                   equivalencies=equivalencies)
+                    self._dict['spectral_axis'] = wave.value
+                    self._dict['spectral_axis:unit'] = wave.unit.to_string()
             except Exception:  # WCS might not be valid  # pragma: no cover
                 coords_status = False
             else:
@@ -483,12 +490,23 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
             if isinstance(viewer, (ImvizImageView, MosvizImageView, MosvizProfile2DView)):
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
+
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]
                     dq_attribute = associated_dq_layer.state.attribute
                     dq_data = associated_dq_layer.layer.get_data(dq_attribute)
                     dq_value = dq_data[int(round(y)), int(round(x))]
+
                 unit = u.Unit(image.get_component(attribute).units)
+                if (isinstance(viewer, MosvizProfile2DView) and unit != ''
+                   and u.Unit(self.app._get_display_unit(attribute)).physical_type
+                   not in ['frequency', 'wavelength', 'length']
+                   and unit != self.app._get_display_unit(attribute)):
+                    equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
+                    value = flux_conversion(value, unit, self.app._get_display_unit(attribute),
+                                            eqv=equivalencies)
+                    unit = self.app._get_display_unit(attribute)
+
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
                 arr = image.get_component(attribute).data
                 unit = u.Unit(image.get_component(attribute).units)
@@ -543,7 +561,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             else:
                 dq_text = ''
             self.row1b_text = f'{value:+10.5e} {unit}{dq_text}'
-            self._dict['value'] = float(value)
+            if not isinstance(value, (float, np.floating)):
+                self._dict['value'] = float(value)
+            else:
+                self._dict['value'] = value
             self._dict['value:unit'] = str(unit)
             self._dict['value:unreliable'] = unreliable_pixel
         else:

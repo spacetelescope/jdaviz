@@ -1113,8 +1113,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
+        spec = self.dataset.get_selected_spectrum(use_display_units=True)
+
+        masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 masked_spectrum,

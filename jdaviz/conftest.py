@@ -258,7 +258,7 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4), with_u
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
                 "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
                 "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
-                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 10.,
                 # Need these for aperture photometry test.
                 "TELESCOP": "JWST", "BUNIT": fluxunit.to_string(), "PIXAR_A2": 0.01}
     w = WCS(wcs_dict)
@@ -360,7 +360,7 @@ def _generate_mos_spectrum2d():
         'CRVAL1': 0.0, 'CRVAL2': 5.0,
         'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
     np.random.seed(42)
-    data = np.random.sample((1024, 15)) * u.one
+    data = np.random.sample((1024, 15)) * u.Jy
     return data, header
 
 
