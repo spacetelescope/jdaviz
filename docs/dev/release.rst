@@ -33,6 +33,11 @@ Choose your adventure:
 * :ref:`release-feature`
 * :ref:`release-bugfix`
 
+But wait, there's more:
+
+* :ref:`release-milestones`
+* :ref:`release-labels`
+* :ref:`manual-backport`
 
 .. _release-feature:
 
@@ -348,8 +353,8 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      Specviz2d
      ^^^^^^^^^
 
-   Update the ``CITATION.cff`` file's ``date-released``, ``version`` and
-   ``authors`` (if any new) sections to match the release branch.
+    Update the ``CITATION.cff`` file's ``date-released``, ``version`` and
+    ``authors`` (if any new) sections to match the release branch.
 
 14. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
 
