@@ -32,7 +32,6 @@ Choose your adventure:
 
 * :ref:`release-feature`
 * :ref:`release-bugfix`
-* :ref:`release-old`
 
 
 .. _release-feature:
@@ -42,8 +41,7 @@ Releasing a minor or major version
 
 The automated release infrastructure has proven to be reliable for a good number
 of releases now, so we've been using this faster version as the default release
-procedure. The longer procedure we previously used is still available in the
-:ref:`release-old` section.
+procedure.
 
 You can do a release from your fork directly without a clean code check-out.
 
