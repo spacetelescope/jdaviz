@@ -350,6 +350,9 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      Specviz2d
      ^^^^^^^^^
 
+   Update the ``CITATION.cff`` file's ``date-released``, ``version`` and
+   ``authors`` (if any new) sections to match the release branch.
+
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
 
 #. Finally, you will need to set up the vX.Y.x branch for the next (potential)
