@@ -208,59 +208,54 @@ def test_from_file_parsing(imviz_helper, tmp_path):
     assert catalogs_plugin.from_file_message == 'Table does not contain required sky_centroid column'  # noqa
 
 
-def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
+def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
                    dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
     tbl = QTable({'sky_centroid': sky})  # Table has no "Label" column
-    tbl_file = str(tmp_path / 'sky_centroid.ecsv')
-    tbl.write(tbl_file, overwrite=True)
     n_entries = len(tbl)
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     imviz_helper.load_data(ndd, data_label='data_with_wcs')
     assert len(imviz_helper.app.data_collection) == 1
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']._obj
-    catalogs_plugin.from_file = tbl_file
-    catalogs_plugin.catalog_selected = 'From File...'
-    out_tbl = catalogs_plugin.search(error_on_fail=True)
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin.import_catalog(tbl)
+    out_tbl = catalogs_plugin._obj.search(error_on_fail=True)
     assert len(out_tbl) == n_entries
-    assert catalogs_plugin.number_of_results == n_entries
+    assert catalogs_plugin._obj.number_of_results == n_entries
     # Assert that Object ID is set to index + 1 when the label column is absent
-    for idx, item in enumerate(catalogs_plugin.table.items):
+    for idx, item in enumerate(catalogs_plugin._obj.table.items):
         assert item['Object ID'] == str(idx + 1)
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
-    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
-    assert len(catalogs_plugin.table.selected_rows) == 1
+    catalogs_plugin._obj.table.selected_rows = [catalogs_plugin._obj.table.items[0]]
+    assert len(catalogs_plugin._obj.table.selected_rows) == 1
 
     # test to ensure sources searched for respect the maximum sources traitlet
-    catalogs_plugin.max_sources = 1
-    catalogs_plugin.search(error_on_fail=True)
-    assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+    catalogs_plugin._obj.max_sources = 1
+    catalogs_plugin._obj.search(error_on_fail=True)
+    assert catalogs_plugin._obj.number_of_results == catalogs_plugin._obj.max_sources
 
     catalogs_plugin.clear_table()
 
     # test single source edge case and docs recommended input file type
     sky_coord = SkyCoord(ra=337.5202807, dec=-20.83305528, unit='deg')
     tbl = Table({'sky_centroid': [sky_coord], 'label': ['Source_1']})
-    tbl_file = str(tmp_path / 'sky_centroid1.ecsv')
-    tbl.write(tbl_file, overwrite=True)
     n_entries = len(tbl)
 
-    catalogs_plugin.from_file = tbl_file
-    out_tbl = catalogs_plugin.search()
+    catalogs_plugin.import_catalog(tbl)
+    out_tbl = catalogs_plugin._obj.search()
     assert len([out_tbl]) == n_entries
-    assert catalogs_plugin.number_of_results == n_entries
+    assert catalogs_plugin._obj.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
 
-    assert not catalogs_plugin.results_available
+    assert not catalogs_plugin._obj.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
     catalogs_plugin.clear_table(hide_only=False)
-    assert not catalogs_plugin.results_available
+    assert not catalogs_plugin._obj.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
     assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
@@ -268,50 +263,42 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
     assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
     # Re-populate the table with a new search
-    out_tbl = catalogs_plugin.search()
+    out_tbl = catalogs_plugin._obj.search()
     assert len(out_tbl) > 0
     # Ensure at least one row is selected before zooming
-    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
-    assert len(catalogs_plugin.table.selected_rows) > 0
+    catalogs_plugin._obj.table.selected_rows = [catalogs_plugin._obj.table.items[0]]
+    assert len(catalogs_plugin._obj.table.selected_rows) > 0
 
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
     assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.19966, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max,
-                    0.20034000000000002, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.8000100000000001, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, 0.20034, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.80001, rtol=1e-4)
     assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.20001, rtol=1e-4)
 
 
-def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
+def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
     imviz_helper.load_data(ndd)
-
-    # write out catalog to file so we can read it back in
-    # todo: if tables can be loaded directly at some point, do that
 
     # sources at pixel coords ~(100, 100), ~(200, 200)
     sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
                          dec=[-20.80555273, -20.7777673], unit='deg')
     tbl = Table({'sky_centroid': [sky_coord],
                  'label': ['Source_1', 'Source_2']})
-    tbl_file = str(tmp_path / 'test_catalog.ecsv')
-    tbl.write(tbl_file, overwrite=True)
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
-
-    catalogs_plugin._obj.from_file = tbl_file
-
+    catalogs_plugin.import_catalog(tbl)
     catalogs_plugin._obj.search()
 
     # select both sources
     catalogs_plugin.select_all()
 
     # check viewer limits before zoom
-    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
     assert xmin == ymin == -0.5
     assert xmax == ymax == 499.5
 
@@ -320,7 +307,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
 
     # make sure the viewer bounds reflect the zoom, which, in pixel coords,
     # should be centered at roughly pixel coords (150, 150)
-    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
 
     assert_allclose((xmin + xmax) / 2, 150., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 150., atol=0.1)
@@ -340,7 +327,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
     catalogs_plugin.zoom_to_selected(padding=0.05)
 
     # check that zoom window is centered correctly on the source at 100, 100
-    xmin, xmax, ymin, ymax = imviz_helper.app._jdaviz_helper._default_viewer.get_limits()
+    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
     assert_allclose((xmin + xmax) / 2, 100., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 100., atol=0.1)
 
@@ -357,7 +344,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs, tmp_path):
         catalogs_plugin.zoom_to_selected(padding=5)
 
 
-def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs, tmp_path):
+def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
     # Create a table with additional columns
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
                    dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
@@ -369,16 +356,13 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs, tmp
         'roundness': [0.01, 0.02, 0.03],
         'sharpness': [0.1, 0.2, 0.3]
     })
-    tbl_file = str(tmp_path / 'extra_columns.ecsv')
-    tbl.write(tbl_file, overwrite=True)
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     imviz_helper.load_data(ndd, data_label='data_with_wcs')
     assert len(imviz_helper.app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']._obj
-    catalogs_plugin.from_file = tbl_file
-    catalogs_plugin.catalog_selected = 'From File...'
+    catalogs_plugin.import_catalog(tbl)
     catalogs_plugin.search(error_on_fail=True)
 
     extra_columns = ['flux', 'flux_err', 'is_extended', 'roundness', 'sharpness']
@@ -394,31 +378,25 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs, tmp
         assert float(item['sharpness']) == tbl['sharpness'][idx]
 
 
-def test_select_catalog_table_rows(imviz_helper, image_2d_wcs, tmp_path):
-
+def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
     """Test the ``select_rows`` functionality on table in plugin."""
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
     imviz_helper.load_data(ndd)
 
-    # write out table to load back in
-    # NOTE: if we ever support loading Table obj directly, replace this and
-    # remove tmp_path
     sky_coord = SkyCoord(ra=[337.49, 337.46, 337.47, 337.48, 337.49, 337.50],
                          dec=[-20.81, -20.78, -20.79, -20.80, -20.77, -20.76],
                          unit='deg')
     tbl = Table({'sky_centroid': [sky_coord],
                 'label': ['Source_1', 'Source_2', 'Source_3', 'Source_4',
                           'Source_5', 'Source_6']})
-    tbl_file = str(tmp_path / 'test_catalog.ecsv')
-    tbl.write(tbl_file, overwrite=True)
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
     plugin_table = catalogs_plugin._obj.table
 
     # load catalog
-    catalogs_plugin._obj.from_file = tbl_file
+    catalogs_plugin.import_catalog(tbl)
     catalogs_plugin._obj.search()
 
     # select a single row:
