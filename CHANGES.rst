@@ -23,7 +23,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Catalog Search now supports importing Astropy table object via ``import_catalog`` method. [#3424]
+- Catalog Search now supports importing Astropy table object via ``import_catalog`` method. [#3425]
 
 - Enhance the Catalog Search plugin to support additional columns when loading catalog data from files. [#3359]
 
