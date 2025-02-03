@@ -10,7 +10,7 @@ from the Jupyter notebook using API calls.
 The Toolbar below gives you several image display options.
 Right-click will open a dropdown with access to different options for each button.
 
-.. image:: ../img/toolbar.jpg
+.. image:: ../img/toolbar.png
     :alt: Imviz Toolbar
 
 .. _imviz-selecting-data:
@@ -22,12 +22,15 @@ Data can be selected and de-selected in each viewer's data menu, opened by click
 the legend in the top right of the viewer. Here, all the data and subset layers are listed
 and their visibility can be toggled with the "eye" icon on the right.
 
+.. image:: ../img/data_menu.png
+    :alt: Imviz Data Menu
+
 To add an additional data layer or interactively create a new subset, click the "+" icon in
 the top right of the data menu.  The datasets available in each viewer are filtered
 to include only compatible data, so you may not see all loaded data in the menu for
 every viewer. For example, 1D spectra will not be available in the image viewers.
 
-Clicking on the rows in the data menu selects entries for further actions available in the 
+Clicking on the rows in the data menu selects entries for further actions available in the
 bottom bar of the data menu.  Here you can modify selected subsets, view metadata or subset
 details, or remove layers from either the viewer or the entire application instance.
 
