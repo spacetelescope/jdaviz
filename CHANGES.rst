@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fix showing dataset dropdown in cubeviz's spectral extraction for flux-cube products from other plugins. [#3411]
+
 Cubeviz
 ^^^^^^^
 
