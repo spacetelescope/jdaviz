@@ -81,10 +81,10 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.waveband.choices = (
             w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
         )
-        self.waveband_selected = None
+        self.waveband_selected = ''
 
         self._full_registry_results = None
-        self.resource_selected = None
+        self.resource_selected = ''
         self.resource = SelectPluginComponent(
             self, items="resource_choices", selected="resource_selected"
         )
@@ -250,7 +250,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         # Clear existing resources list
         self.resource.choices = []
-        self.resource_selected = None
+        self.resource_selected = ''
 
         try:
             registry_args = [
