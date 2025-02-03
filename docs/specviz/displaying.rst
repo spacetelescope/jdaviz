@@ -20,7 +20,7 @@ Jupyter notebook using an API. The Toolbar below gives you several spectroscopic
 display options. Right click will open a dropdown with access to different options
 for each button.
 
-.. image:: ./img/specviztoolbar.jpg
+.. image:: ./img/specviztoolbar.png
     :alt: Specviz Toolbar
 
 
