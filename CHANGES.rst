@@ -27,6 +27,8 @@ Imviz
   
 - Catalog Search ``clear_table`` now removes all associated markers from the viewer. [#3359]
 
+- Virtual Observatory plugin to query resources and download data products. [#2872]
+
 Mosviz
 ^^^^^^
 
