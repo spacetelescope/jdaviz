@@ -386,6 +386,12 @@ The file must be able to be parsed by `astropy.table.Table.read` and contains th
   If not provided, unique string identifiers will be generated automatically.
   If you have numerical identifiers, they will be recast as strings.
 
+Alternately, if you already have the table object, you could load it in directly via API:
+
+.. code-block:: python
+
+    imviz.plugins["Catalog Search"].import_catalog(table_object)
+
 Clicking :guilabel:`SEARCH` will show markers for any entry within the filtered zoom window.
 
 If you have multiple viewers open, you will see another dropdown menu to select the active
