@@ -4,7 +4,7 @@ from astropy import units as u
 
 from pyvo.utils import vocabularies
 from pyvo import registry
-from pyvo.dal.exceptions import DALFormatError
+from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Unicode, Any, List, Float, observe
 
@@ -357,15 +357,30 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     )
 
             # Once coordinate lookup is complete, search service using these coords.
-            sia_results = sia_service.search(
-                coord,
-                size=(
-                    (self.radius * u.Unit(self.radius_unit.selected))
-                    if self.radius > 0.0
-                    else None
-                ),
-                format="image/fits",
-            )
+            try:
+                sia_results = sia_service.search(
+                    coord,
+                    size=(
+                        (self.radius * u.Unit(self.radius_unit.selected))
+                        if self.radius > 0.0
+                        else None
+                    ),
+                    format="image/fits",
+                )
+            except DALQueryError as e:
+                # We've run into issues where the service assumes a FORMAT and injects it for us.
+                # If the "image/fits" is duplicated, remove our requested format and rely on theirs
+                if "Wrong FORMAT=image/fits,image/fits" in str(e):
+                    sia_results = sia_service.search(
+                        coord,
+                        size=(
+                            (self.radius * u.Unit(self.radius_unit.selected))
+                            if self.radius > 0.0
+                            else None
+                        ),
+                    )
+                else:
+                    raise e
             if len(sia_results) == 0:
                 self.hub.broadcast(
                     SnackbarMessage(
