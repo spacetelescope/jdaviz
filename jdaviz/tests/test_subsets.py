@@ -791,13 +791,14 @@ def test_draw2d_linking_specviz2d(specviz2d_helper):
 def test_draw1d_linking_specviz2d(specviz2d_helper):
     # custom test data to predict values for different viewers
     header = {
-        'WCSAXES': 2,
-        'CRPIX1': 0.0, 'CRPIX2': 8.5,
-        'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
-        'CUNIT1': 'm', 'CUNIT2': 'deg',
-        'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
-        'CRVAL1': 0.0, 'CRVAL2': 5.0,
-        'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+            'WCSAXES': 2,
+
+            'CRPIX1': 0.0, 'CRPIX2': 8.5,
+            'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
+            'CUNIT1': 'm', 'CUNIT2': 'deg',
+            'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+            'CRVAL1': 0.0, 'CRVAL2': 5.0,
+            'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
     wcs = WCS(header)
 
     x_values = np.linspace(0, 10, 128)
@@ -808,16 +809,23 @@ def test_draw1d_linking_specviz2d(specviz2d_helper):
     spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
 
     specviz2d_helper.load_data(spectrum_2d=spectrum_data)
+    se = specviz2d_helper.plugins['Spectral Extraction']
+    se.export_extract()
+
     viewer_1d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)
     viewer_2d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
     # subset drawn in 1d viewer, want data in 2d viewer
-    viewer_1d.apply_roi(XRangeROI(.0001, .0002))
-    #subset_drawn_1d = viewer_2d.native_marks[-1].image
+    spec_reg = SpectralRegion(0. * u.m, 10000000 * u.m)
+    spec_reg = SpectralRegion(0.0001 * u.m, .0002 * u.m)
+    st = specviz2d_helper.plugins['Subset Tools']
+    st.import_region(spec_reg)
 
-    subset_highlighted_region2 = np.atleast_1d(np.nonzero(subset_drawn_1d))[0]
+    subset_drawn_1d = viewer_2d.native_marks[-1]
+
+    subset_highlighted_region2 = np.atleast_1d(np.nonzero(subset_drawn_1d))[1]
 
     # Get the start and stop indices
     min_value_subset2 = np.min(subset_highlighted_region2)
@@ -829,8 +837,7 @@ def test_draw1d_linking_specviz2d(specviz2d_helper):
 
     assert np.allclose(min_value_subset2, expected_min2, atol=tolerance2)
     assert np.allclose(max_value_subset2, expected_max2, atol=tolerance2)
-
-    '''
+'''
 
 
 def test_multi_mask_subset(specviz_helper, spectrum1d):

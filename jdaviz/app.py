@@ -767,8 +767,17 @@ class Application(VuetifyTemplate, HubListener):
                  ref_data.ndim < 3)
               ):
             if self.config == 'specviz2d':
-                links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1]),
-                         LinkSameWithUnits(linked_data.components[1], ref_data.components[3])]
+                links = []
+                if linked_data.ndim == 2:
+                    # extracted image added to data collection
+                    ref_wavelength_component = ref_data.components[1]
+                else:
+                    # extracted spectrum added to data collection
+                    ref_wavelength_component = ref_data.components[3]
+                    links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
+
+                links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[0]),
+                          LinkSameWithUnits(linked_data.components[1], ref_wavelength_component)]
             else:
                 links = [LinkSame(linked_data.components[0], ref_data.components[0]),
                          LinkSame(linked_data.components[1], ref_data.components[1])]
