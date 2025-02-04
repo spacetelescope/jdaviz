@@ -95,7 +95,9 @@ select Python with a version greater than 3.11.
 .. image:: ./img/navigator_nameenv.png
     :alt: Name environment with Anaconda Navigator
 
-Click on the green play symbol next to the name of the environment you just created
+When the environment is ready, you will find it in the list of available environments
+in the interface. Click on the name of the environment and then on
+the green play symbol next to the name 
 and select Open Terminal. If the terminal window shows the name of the environment and
 no errors, proceed to install jdaviz using `pip`.
 
