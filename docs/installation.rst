@@ -10,8 +10,8 @@ Installation
     to the latest version. In general, it is good practice to install the development
     version following the instructions below as full released versions may lag behind.
 
-User Installation
------------------
+User Installation with conda
+----------------------------
 
 Windows-Specific Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,8 +78,8 @@ You might also want to enable the ``ipywidgets`` notebook extension, as follows:
 
     jupyter nbextension enable --py widgetsnbextension
 
-With Anaconda Navigator
------------------------
+User Installation with Anaconda Navigator
+-----------------------------------------
 
 If you prefer to go through `Anaconda navigator <https://docs.anaconda.com/navigator/>`_,
 you will have to first create a new environment within the navigator interface.
