@@ -26,6 +26,7 @@ from jdaviz.core.template_mixin import (
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import (get_wcs_only_layer_labels, get_reference_image_data,
                           layer_is_2d, _wcs_only_label)
+from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 
 __all__ = ['Orientation']
 
@@ -418,6 +419,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             'viewers_to_update', self.app._viewer_store.keys()
         )
         for viewer_ref in viewers_to_update:
+            if not isinstance(self.app._viewer_store[viewer_ref], ImvizImageView):
+                continue
+
             self.viewer.selected = viewer_ref
             self.orientation.update_wcs_only_filter(wcs_only=self.align_by_selected == 'WCS')
             for wcs_layer in wcs_only_layers:
@@ -785,6 +789,9 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             'Images successfully relinked', color='success', timeout=8000, sender=app))
 
     for viewer in app._viewer_store.values():
+        if not isinstance(viewer, ImvizImageView):
+            continue
+
         wcs_linked = align_by == 'wcs'
         # viewer-state needs to know link type for reset_limits behavior
         viewer.state.linked_by_wcs = wcs_linked
