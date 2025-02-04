@@ -99,7 +99,7 @@ When the environment is ready, you will find it in the list of available environ
 in the interface. Click on the name of the environment and then on
 the green play symbol next to the name
 and select Open Terminal. If the terminal window shows the name of the environment and
-no errors, proceed to install jdaviz using `pip`.
+no errors, proceed to install ``jdaviz`` using ``pip``.
 
 .. code-block:: bash
 
@@ -108,33 +108,33 @@ no errors, proceed to install jdaviz using `pip`.
 If this did not return any problems, you can go back to the Navigator and select the Home
 tab. Make sure the environment is selected at the top, then click Launch under JupyterLab.
 This will open a Jupyter Lab instance in your default browser and you
-are ready to use jdaviz.
+are ready to use ``jdaviz``.
 
 .. image:: ./img/navigator_launchlab.png
     :alt: Launch Jupyter Lab within Anaconda Navigator
 
-In case the terminal returns errors or cannot run the `pip` command, there is
+In case the terminal returns errors or cannot run the ``pip`` command, there is
 a workaround. In the Navigator interface, click on the environment you created
 (we called it jdaviz_navigator in this example), then search for the package
-`jupyter` in the top right search field. Find `jupyter`, select it, and click Apply
+``jupyter`` in the top right search field. Find ``jupyter``, select it, and click Apply
 at the bottom right of the interface. Click again Apply after it has resolved
 the necessary packages.
 
 .. image:: ./img/navigator_jupyter.png
     :alt: Install jupyter in Anaconda Navigator
 
-This installs `jupyter` in the environment. When it is done, go back to the Home tab
+This installs ``jupyter`` in the environment. When it is done, go back to the Home tab
 and make sure the environment is selected at the top. Click Launch under JupyterLab
 and wait for the browser to open a JupyterLab instance. Open an empty notebook by
-clicking on the Python 3 icon under Notebook. In the first cell, run the commands
+clicking on the Python 3 icon under Notebook. In the first cell, run the command
 
 .. code-block:: bash
 
     pip install jdaviz
 
-This will serve as your terminal and should install jdaviz in the environment. If this does
-not return any errors, you are ready to use jdaviz with this empty notebook or any
-other as long as you launch Jupyter from this envornment we created.
+This will serve as your terminal and should install ``jdaviz`` in the environment. If this does
+not return any errors, you are ready to use ``jdaviz`` with this empty notebook or any
+other as long as you launch Jupyter from this environment we created.
 
 If you have a problem with the installation, feel free to submit an issue in
 Github or contact the `Help Desk <jwsthelp.stsci.edu>`_.
