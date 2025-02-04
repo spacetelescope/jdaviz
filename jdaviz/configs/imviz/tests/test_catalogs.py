@@ -114,7 +114,7 @@ class TestCatalogs:
         prev_results = catalogs_plugin.number_of_results
 
         # testing that every variable updates accordingly when markers are cleared
-        catalogs_plugin.vue_do_clear_table()
+        catalogs_plugin.clear_table()
 
         assert not catalogs_plugin.results_available
 
