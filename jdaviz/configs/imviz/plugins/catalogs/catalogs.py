@@ -87,7 +87,36 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.table.item_key = 'id'
         self.table.show_rowselect = True
 
+        def clear_table_callback():
+            # gets the current viewer
+            viewer = self.viewer.selected_obj
+
+            # resetting values
+            self.results_available = False
+            self.number_of_results = 0
+
+            if self._marker_name in self.app.data_collection.labels:
+                # all markers are removed from the viewer
+                viewer.remove_markers(marker_name=self._marker_name)
+
+            elif self.results_available:
+                from jdaviz.utils import layer_is_table_data
+
+                # markers still there, just hidden
+                for lyr in viewer.layers:
+                    if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
+                        lyr.visible = False
+
+        self.table._clear_callback = clear_table_callback
+
         self.table_selected = Table(self, name='table_selected')
+        self.table_selected.clear_btn_lbl = 'Clear Selection'
+        self.table_selected.show_if_empty = False
+
+        def clear_selected_table_callback():
+            self.table.select_none()
+
+        self.table_selected._clear_callback = clear_selected_table_callback
         self.table_selected_widget = 'IPY_MODEL_'+self.table_selected.model_id
 
         self.docs_description = "Queries an area encompassed by the viewer using\
@@ -366,7 +395,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     def _table_selection_changed(self, msg):
         selected_rows = self.table.selected_rows
 
-        self.table_selected.clear_table()
+        self.table_selected._clear_table()
         for selected_row in selected_rows:
             self.table_selected.add_item(selected_row)
 
@@ -451,30 +480,3 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     def vue_do_search(self, *args, **kwargs):
         # calls self.search() which handles all of the searching logic
         self.search()
-
-    def clear_table(self, hide_only=True):
-        # gets the current viewer
-        viewer = self.viewer.selected_obj
-
-        if not hide_only:
-            super().clear_table()
-
-        if not hide_only and self._marker_name in self.app.data_collection.labels:
-            # resetting values
-            self.results_available = False
-            self.number_of_results = 0
-
-            # all markers are removed from the viewer
-            viewer.remove_markers(marker_name=self._marker_name)
-
-        elif self.results_available:
-            from jdaviz.utils import layer_is_table_data
-
-            # resetting values
-            self.results_available = False
-            self.number_of_results = 0
-
-            # markers still there, just hidden
-            for lyr in viewer.layers:
-                if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
-                    lyr.visible = False
