@@ -99,14 +99,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 # all markers are removed from the viewer
                 viewer.remove_markers(marker_name=self._marker_name)
 
-            elif self.results_available:
-                from jdaviz.utils import layer_is_table_data
-
-                # markers still there, just hidden
-                for lyr in viewer.layers:
-                    if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
-                        lyr.visible = False
-
         self.table._clear_callback = clear_table_callback
 
         self.table_selected = Table(self, name='table_selected')
