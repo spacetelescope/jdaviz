@@ -11,6 +11,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.events import CatalogResultsChangedMessage, CatalogSelectClickEventMessage
 from jdaviz.core.marks import CatalogMark
 from jdaviz.core.template_mixin import Table, TableMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -54,7 +55,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     table_selected_widget = Unicode().tag(sync=True)
 
-
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('clear_table', 'export_table', 'import_catalog',
@@ -94,6 +94,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                  a specified catalog and marks all the objects\
                                  found within the area."
 
+        self.session.hub.subscribe(self, CatalogSelectClickEventMessage,
+                                   self._on_catalog_select_click_event)
+
     @staticmethod
     def _file_parser(path):
         if isinstance(path, Table):  # includes QTable
@@ -112,6 +115,18 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             return 'Table does not contain required sky_centroid column', {}
 
         return '', {path: table}
+
+    def _on_catalog_select_click_event(self, msg):
+        xs, ys = self.table._qtable['x_coord'], self.table._qtable['y_coord']
+        # nearest point
+        distsq = (xs - msg.x)**2 + (ys - msg.y)**2
+        ind = np.argmin(distsq)
+        item = self.table.items[ind]
+        if item in self.table.selected_rows:
+            self.table.selected_rows = [sr for sr in self.table.selected_rows if sr != item]
+        else:
+            self.table.selected_rows += [item]
+        self.table.send_state('selected_rows')
 
     @with_spinner()
     def search(self, error_on_fail=False):
@@ -320,6 +335,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'blue', 'alpha': 0.8, 'markersize': 30, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
+
+        msg = CatalogResultsChangedMessage(sender=self)
+        self.session.hub.broadcast(msg)
+
         return skycoord_table
 
     def _get_mark(self, viewer):
