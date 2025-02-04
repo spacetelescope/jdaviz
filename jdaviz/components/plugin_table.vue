@@ -1,5 +1,5 @@
 <template>
-  <div class="plugin-table-component">
+  <div class="plugin-table-component" v-if="show_if_empty || items.length">
     <v-row style="margin: 0px 0px -8px 0px !important">
       <div class="row-select">
         <v-select
@@ -56,11 +56,11 @@
       ></v-data-table>
     </v-row>
 
-    <v-row v-if="clear_table" justify="end">
+    <v-row v-if="clear_table && items.length" justify="end">
       <plugin-action-button
         :results_isolated_to_plugin="true"
         @click="clear_table"
-        >Clear Table
+        >{{ clear_btn_lbl }}
       </plugin-action-button>
     </v-row>
   </div>

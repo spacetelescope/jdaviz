@@ -6,6 +6,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
+           'CatalogResultsChangedMessage', 'CatalogSelectClickEventMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
            'AstrowidgetMarkersChangedMessage', 'MarkersPluginUpdate',
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
@@ -288,6 +289,18 @@ class SpectralMarksChangedMessage(Message):
     @property
     def marks(self):
         return self._marks
+
+
+class CatalogResultsChangedMessage(Message):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class CatalogSelectClickEventMessage(Message):
+    def __init__(self, x, y, *args, **kwargs):
+        self.x = x
+        self.y = y
+        super().__init__(*args, **kwargs)
 
 
 class RedshiftMessage(Message):

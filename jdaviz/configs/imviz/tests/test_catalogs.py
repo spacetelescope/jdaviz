@@ -114,7 +114,7 @@ class TestCatalogs:
         prev_results = catalogs_plugin.number_of_results
 
         # testing that every variable updates accordingly when markers are cleared
-        catalogs_plugin.vue_do_clear_table()
+        catalogs_plugin.clear_table()
 
         assert not catalogs_plugin.results_available
 
@@ -255,11 +255,6 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
-
-    assert not catalogs_plugin.results_available
-    assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
-
-    catalogs_plugin.clear_table(hide_only=False)
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
