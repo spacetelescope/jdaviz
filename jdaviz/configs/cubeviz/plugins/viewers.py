@@ -45,6 +45,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
 
+        self.add_event_callback(self._viewer_mouse_event, events=['mousemove', 'mouseleave', 'mouseenter'])
+
         # Hide axes by default
         self.state.show_axes = False
 
@@ -57,6 +59,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.stream_active = True
 
         self.data_menu._obj.dataset.add_filter('is_cube_or_image')
+        self.test_dict = {(x, y): f'test{x, y}' for x in range(0, 52) for y in range(0, 44)}
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -180,6 +183,32 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                       callback=self.sonified_cube.player_callback)
         self.sonified_cube.cbuff = True
 
+    def _viewer_mouse_event(self, data):
+        if data['event'] in ('mouseleave', 'mouseenter'):
+            return
+
+        if len(self.jdaviz_app.data_collection) < 1:
+            return
+
+        # otherwise a mousemove event, we need to get cursor coordinates and update the display
+
+        # Extract data coordinates - these are pixels in the reference image
+        x = data['domain']['x']
+        y = data['domain']['y']
+
+        if x is None or y is None or int(x) < 0 or int(y) < 0 or int(x) >= 52 or int(y) >= 44:  # Out of bounds
+            return
+
+        # update last known cursor position (so another event like a change in layers can update
+        # the coordinates with the last known position)
+        # self._x, self._y = x, y
+        # self.update_display(viewer, x=x, y=y)
+        # print(self.test_dict[(int(x), int(y))])
+        self.start_stream()
+        self.update_sonified_cube(int(x), int(y))
+        # if hasattr(viewer, 'sonified_cube') and viewer.sonified_cube:
+        #     viewer.start_stream()
+        #     viewer.update_sonified_cube(int(x), int(y))
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
 class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
