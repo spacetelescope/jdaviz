@@ -10,8 +10,8 @@ Installation
     to the latest version. In general, it is good practice to install the development
     version following the instructions below as full released versions may lag behind.
 
-User Installation with conda
-----------------------------
+User Installation
+-----------------
 
 Windows-Specific Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
