@@ -97,7 +97,7 @@ select Python with a version greater than 3.11.
 
 When the environment is ready, you will find it in the list of available environments
 in the interface. Click on the name of the environment and then on
-the green play symbol next to the name 
+the green play symbol next to the name
 and select Open Terminal. If the terminal window shows the name of the environment and
 no errors, proceed to install jdaviz using `pip`.
 
@@ -109,6 +109,9 @@ If this did not return any problems, you can go back to the Navigator and select
 tab. Make sure the environment is selected at the top, then click Launch under JupyterLab.
 This will open a Jupyter Lab instance in your default browser and you
 are ready to use jdaviz.
+
+.. image:: ./img/navigator_launchlab.png
+    :alt: Launch Jupyter Lab within Anaconda Navigator
 
 In case the terminal returns errors or cannot run the `pip` command, there is
 a workaround. In the Navigator interface, click on the environment you created
