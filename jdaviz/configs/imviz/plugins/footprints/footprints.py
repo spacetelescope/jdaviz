@@ -18,7 +18,7 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 
 from jdaviz.configs.imviz.plugins.footprints import preset_regions
-
+from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 
 __all__ = ['Footprints']
 
@@ -173,6 +173,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                            'overlay_regions'))
 
     def _get_marks(self, viewer, overlay=None):
+        if not hasattr(viewer.figure, 'marks'):
+            return []
+
         matches = [mark for mark in viewer.figure.marks
                    if (isinstance(mark, FootprintOverlay) and
                        (mark.overlay == overlay or overlay is None))]
@@ -296,7 +299,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         # remove any marks objects (corresponding to this overlay) from all figures
         for viewer_id, viewer in self.app._viewer_store.items():
-            if not hasattr(viewer, 'figure'):  # pragma: nocover
+            if not hasattr(viewer, 'figure') or not hasattr(viewer.figure, 'marks'):  # pragma: nocover
                 # should only be table viewers in mosviz, but will leave this in case we
                 # ever enable the plugin for the image-viewer in mosviz
                 continue
@@ -554,6 +557,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         regs = self.overlay_regions
         for viewer_id, viewer in self.app._viewer_store.items():
+            if not isinstance(viewer, ImvizImageView):
+                continue
+
             visible = self._mark_visible(viewer_id)
             # TODO: need to re-call this logic when the reference_data is changed... which might
             # warrant some refactoring so we don't have to loop over all viewers if it has only
