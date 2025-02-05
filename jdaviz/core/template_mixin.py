@@ -1539,9 +1539,10 @@ class LayerSelect(SelectPluginComponent):
                            handler=self._on_data_added)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda _: self._update_items())
+        # Default Glue subscriber priority is 10, lowest integer priority is handled last
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_subset_created(),
-                           priority=100)
+                           priority=0)
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
