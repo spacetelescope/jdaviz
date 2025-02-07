@@ -104,8 +104,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                            self.audfrqmax, self.eln, self.use_pccut)
 
         # Automatically select spectrum-at-spaxel tool
-        spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
-        self.flux_viewer.toolbar.active_tool = spec_at_spaxel_tool
+        # spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
+        # self.flux_viewer.toolbar.active_tool = spec_at_spaxel_tool
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
