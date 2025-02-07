@@ -50,7 +50,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
 
-        self.add_event_callback(self._viewer_mouse_event, events=['mousemove', 'mouseleave', 'mouseenter'])
+        self.add_event_callback(self._viewer_mouse_event, events=['mousemove',
+                                                                  'mouseleave',
+                                                                  'mouseenter'])
 
         # Hide axes by default
         self.state.show_axes = False
