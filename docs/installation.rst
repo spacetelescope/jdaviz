@@ -137,7 +137,7 @@ not return any errors, you are ready to use ``jdaviz`` with this empty notebook 
 other as long as you launch Jupyter from this environment we created.
 
 If you have a problem with the installation, feel free to submit an issue in
-Github or contact the `Help Desk <jwsthelp.stsci.edu>`_.
+Github or contact the `JWST Help Desk <https://jwsthelp.stsci.edu>`_.
 
 .. _optional-deps-roman:
 
