@@ -116,6 +116,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fixed linking in fitted model to link to 1D spectrum instead of 2D. [#3434]
+
 4.1.1 (2025-01-31)
 ==================
 
