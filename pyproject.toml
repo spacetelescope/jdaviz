@@ -24,7 +24,7 @@ dependencies = [
     "pyyaml>=5.4.1",
     "specutils>=1.18",
     "specreduce>=1.4.1",
-    "photutils>=1.4",
+    "photutils>=1.12.1",
     "glue-astronomy>=0.10",
     "asteval>=0.9.23",
     "idna",

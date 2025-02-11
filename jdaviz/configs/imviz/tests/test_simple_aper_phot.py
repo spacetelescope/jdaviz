@@ -17,7 +17,6 @@ from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
 from jdaviz.core.custom_units_and_equivs import PIX2
-from jdaviz.tests.test_utils import PHOTUTILS_LT_1_12_1
 
 
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
@@ -338,17 +337,10 @@ class TestAdvancedAperPhot:
 def test_annulus_background(imviz_helper):
     gauss4 = make_4gaussians_image()  # The background has a mean of 5 with noise
     ones = np.ones(gauss4.shape)
-
-    if PHOTUTILS_LT_1_12_1:
-        bg_4gauss_1 = 5.745596129482831
-        bg_4gauss_2 = 5.13918435824334
-        bg_4gauss_3 = 44.72559981461203
-        bg_4gauss_4 = 4.89189
-    else:
-        bg_4gauss_1 = 5.802287
-        bg_4gauss_2 = 5.052332
-        bg_4gauss_3 = 45.416834
-        bg_4gauss_4 = 4.939397
+    bg_4gauss_1 = 5.802287
+    bg_4gauss_2 = 5.052332
+    bg_4gauss_3 = 45.416834
+    bg_4gauss_4 = 4.939397
 
     imviz_helper.load_data(gauss4, data_label='four_gaussians')
     imviz_helper.load_data(ones, data_label='ones')
