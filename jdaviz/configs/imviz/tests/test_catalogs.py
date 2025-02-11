@@ -250,7 +250,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
-    assert not catalogs_plugin.results_available
+    assert not catalogs_plugin._obj.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
     assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
