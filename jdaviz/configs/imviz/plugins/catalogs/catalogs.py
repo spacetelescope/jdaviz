@@ -467,7 +467,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         elif isinstance(catalog, Table):  # includes QTable
             self.catalog.import_obj(catalog)
         else:  # pragma: no cover
-            raise ValueError("catalog must be a string (file path)")
+            raise ValueError("catalog must be a string (file path) or Table object")
 
     def vue_do_search(self, *args, **kwargs):
         # calls self.search() which handles all of the searching logic
