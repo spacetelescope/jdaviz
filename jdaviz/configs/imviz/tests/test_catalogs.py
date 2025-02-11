@@ -376,6 +376,22 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     assert len(catalogs_plugin._obj.table_selected.items) == 1
     assert len(mark.x) == 1
 
+    tool.on_mouse_event({'domain': {'x': 200, 'y': 210}})
+    assert len(catalogs_plugin._obj.table.selected_rows) == 2
+    assert len(catalogs_plugin._obj.table_selected.items) == 2
+    assert len(mark.x) == 2
+
+    # click to remove
+    tool.on_mouse_event({'domain': {'x': 110, 'y': 110}})
+    assert len(catalogs_plugin._obj.table.selected_rows) == 1
+    assert len(catalogs_plugin._obj.table_selected.items) == 1
+    assert len(mark.x) == 1
+
+    catalogs_plugin._obj.table_selected.clear_table()
+    assert len(catalogs_plugin._obj.table.selected_rows) == 0
+    assert len(catalogs_plugin._obj.table_selected.items) == 0
+    assert len(mark.x) == 0
+
 
 def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
     # Create a table with additional columns
