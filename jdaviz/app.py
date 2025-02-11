@@ -736,7 +736,8 @@ class Application(VuetifyTemplate, HubListener):
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
         default_refdata_index = 0
         if (self.config == 'mosviz' or
-                (self.config == "specviz2d" and linked_data.meta.get("Plugin", "") == "Model Fitting")):
+                (self.config == "specviz2d" and
+                 linked_data.meta.get("Plugin", "") == "Model Fitting")):
             # In Mosviz, first data is always MOS Table. Use the next data.
             # In Specviz2d, always link model fit to derived 1D Spectrum, not input 2D spectrum.
             default_refdata_index = 1
