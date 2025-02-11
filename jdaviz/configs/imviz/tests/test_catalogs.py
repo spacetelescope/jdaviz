@@ -339,6 +339,44 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
         catalogs_plugin.zoom_to_selected(padding=5)
 
 
+def test_select_tool(imviz_helper, image_2d_wcs):
+    arr = np.ones((500, 500))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+
+    # write out catalog to file so we can read it back in
+    # todo: if tables can be loaded directly at some point, do that
+
+    # sources at pixel coords ~(100, 100), ~(200, 200)
+    sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
+                         dec=[-20.80555273, -20.7777673], unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord],
+                 'label': ['Source_1', 'Source_2']})
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin.import_catalog(tbl)
+
+    # before catalog searching, the selection tool is not available
+    toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
+    tool = toolbar.tools['jdaviz:selectcatalog']
+    mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['imviz-0']._obj)
+    assert tool.is_visible() is False
+
+    catalogs_plugin._obj.search(error_on_fail=True)
+    assert tool.is_visible()
+
+    assert len(catalogs_plugin._obj.table.selected_rows) == 0
+    assert len(catalogs_plugin._obj.table_selected.items) == 0
+    assert len(mark.x) == 0
+
+    toolbar.active_tool_id = 'jdaviz:selectcatalog'
+    tool.on_mouse_event({'domain': {'x': 100, 'y': 110}})
+
+    assert len(catalogs_plugin._obj.table.selected_rows) == 1
+    assert len(catalogs_plugin._obj.table_selected.items) == 1
+    assert len(mark.x) == 1
+
+
 def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
     # Create a table with additional columns
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],

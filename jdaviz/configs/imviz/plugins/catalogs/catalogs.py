@@ -147,7 +147,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.table.selected_rows = [sr for sr in self.table.selected_rows if sr != item]
         else:
             self.table.selected_rows += [item]
-        self.table.send_state('selected_rows')
+        self._table_selection_changed()
 
     @with_spinner()
     def search(self, error_on_fail=False):
@@ -384,7 +384,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         for mark in self.marks.values():
             mark.visible = self.is_active
 
-    def _table_selection_changed(self, msg):
+    def _table_selection_changed(self, msg={}):
         selected_rows = self.table.selected_rows
 
         self.table_selected._clear_table()
