@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.ma as ma
 from astropy import units as u
-from astropy.table import Table, QTable
+from astropy.table import QTable, Table as AstropyTable
 from astropy.coordinates import SkyCoord
 from traitlets import List, Unicode, Bool, Int, observe
 
@@ -120,7 +120,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     @staticmethod
     def _file_parser(path):
-        if isinstance(path, Table):  # includes QTable
+        if isinstance(path, AstropyTable):  # includes QTable
             from_file_string = f'API: {path.__class__.__name__} object'
             return '', {from_file_string: path}
 
@@ -464,7 +464,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         """
         if isinstance(catalog, str):
             self.catalog.import_file(catalog)
-        elif isinstance(catalog, Table):  # includes QTable
+        elif isinstance(catalog, AstropyTable):  # includes QTable
             self.catalog.import_obj(catalog)
         else:  # pragma: no cover
             raise ValueError("catalog must be a string (file path) or Table object")
