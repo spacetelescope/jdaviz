@@ -68,11 +68,13 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self, items="coordframe_choices", selected="coordframe_selected"
         )
         self.coordframe.choices = [frame.lower() for frame in all_astropy_frames]
+        self.coordframe.selected = self.coordframe.choices[0]
 
         self.radius_unit = UnitSelectPluginComponent(
             self, items="radius_unit_items", selected="radius_unit_selected"
         )
         self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
+        self.radius_unit.selected = "deg"
 
         # Waveband properties to filter available registry resources
         self.waveband = SelectPluginComponent(
