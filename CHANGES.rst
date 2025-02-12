@@ -751,8 +751,6 @@ Specviz
   display label for the y axis in spectral viewer. Previously it was hard coded
   to always display ``flux density`` no matter the input unit. [#2703]
 
-Specviz2d
-^^^^^^^^^
 
 3.8.2 (2024-02-23)
 ==================
