@@ -1539,8 +1539,10 @@ class LayerSelect(SelectPluginComponent):
                            handler=self._on_data_added)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda _: self._update_items())
+        # Default Glue subscriber priority is 10, lowest integer priority is handled last
         self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=lambda _: self._on_subset_created())
+                           handler=lambda _: self._on_subset_created(),
+                           priority=0)
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
@@ -2028,6 +2030,8 @@ class SubsetSelect(SelectPluginComponent):
 
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=lambda msg: self._update_subset(msg.subset))
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda msg: self._delete_subset(msg.subset))
         self.hub.subscribe(self, SubsetRenameMessage,
@@ -2105,7 +2109,8 @@ class SubsetSelect(SelectPluginComponent):
                 self.items = self.items + [self._subset_to_dict(subset)]  # noqa
         else:
             # 'type' can be passed manually rather than coming from SubsetUpdateMessage.attribute
-            if attribute in ('style', 'type'):
+            # This will be None if triggered by SubsetCreateMessage
+            if attribute in ('style', 'type', None):
                 # TODO: may need to add label and then rebuild the entire list if/when
                 # we add support for renaming subsets
 
