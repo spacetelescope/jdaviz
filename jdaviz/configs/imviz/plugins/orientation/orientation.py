@@ -236,8 +236,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.align_by.selected == 'Pixels':
             self.wcs_fast_approximation = True
 
-        self.linking_in_progress = False
         self._link_image_data()
+        # NOTE: _link_image_data will reset linking_in_progress to False
 
         # load data into the viewer that are now compatible with the
         # new link type, remove data from the viewer that are now
@@ -417,6 +417,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         viewers_to_update = kwargs.get(
             'viewers_to_update', self.app._viewer_store.keys()
         )
+        # this is an ugly way to do this - let's see if we can avoid setting internal traitlets
+        # and instead modify the viewer selection from the new data menu
         for viewer_ref in viewers_to_update:
             self.viewer.selected = viewer_ref
             self.orientation.update_wcs_only_filter(wcs_only=self.align_by_selected == 'WCS')
