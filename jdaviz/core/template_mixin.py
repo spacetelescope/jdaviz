@@ -473,7 +473,12 @@ class PluginTemplateMixin(TemplateMixin):
         def get_api_text(name, obj):
             if type(obj).__name__ == 'method':
                 if hasattr(obj, "__wrapped__"):
-                    return f"{name}{inspect.signature(obj.__wrapped__)}"
+                    orig_sig = str(inspect.signature(obj.__wrapped__))
+                    if "(self)" in orig_sig:
+                        orig_sig = orig_sig.replace("(self)", "()")
+                    elif "(self, " in orig_sig:
+                        orig_sig = orig_sig.replace("(self, ", "(")
+                    return f"{name}{orig_sig}"
                 return f"{name}{inspect.signature(obj)}"
             return name
         with warnings.catch_warnings():
