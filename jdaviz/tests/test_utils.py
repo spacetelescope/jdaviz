@@ -1,11 +1,9 @@
 import os
 import warnings
 
-import photutils
 import pytest
 from asdf.exceptions import AsdfWarning
 from astropy import units as u
-from astropy.utils import minversion
 from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
 from specutils import Spectrum1D
@@ -13,8 +11,6 @@ from specutils import Spectrum1D
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
                           _indirect_conversion, _eqv_pixar_sr)
-
-PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
 
 
 def test_spec_sb_flux_conversion():

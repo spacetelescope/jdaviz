@@ -93,6 +93,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Bumped minimum version of ``photutils`` to v1.12.1. [#3432]
+
 4.1.2 (unreleased)
 ==================
 
