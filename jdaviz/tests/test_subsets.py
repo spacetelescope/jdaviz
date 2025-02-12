@@ -786,58 +786,23 @@ def test_draw2d_linking_specviz2d(specviz2d_helper):
     assert np.allclose(min_value_subset1, expected_min1, atol=tolerance1)
     assert np.allclose(max_value_subset1, expected_max1, atol=tolerance1)
 
-
-'''
-def test_draw1d_linking_specviz2d(specviz2d_helper):
-    # custom test data to predict values for different viewers
-    header = {
-            'WCSAXES': 2,
-
-            'CRPIX1': 0.0, 'CRPIX2': 8.5,
-            'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
-            'CUNIT1': 'm', 'CUNIT2': 'deg',
-            'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
-            'CRVAL1': 0.0, 'CRVAL2': 5.0,
-            'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
-    wcs = WCS(header)
-
-    x_values = np.linspace(0, 10, 128)
-    y_values = np.linspace(0, 5, 256)
-
-    # Create a continuous 2D image
-    data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.Jy
-    spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
-
-    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
-    se = specviz2d_helper.plugins['Spectral Extraction']
-    se.export_extract()
-
-    viewer_1d = specviz2d_helper.app.get_viewer(
-        specviz2d_helper._default_spectrum_viewer_reference_name)
-    viewer_2d = specviz2d_helper.app.get_viewer(
-        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
-
-    # subset drawn in 1d viewer, want data in 2d viewer
-    spec_reg = SpectralRegion(0. * u.m, 10000000 * u.m)
+    # now create a subset in the spectrum-viewer, and determine if
+    # subset is linked correctly in spectrum2d-viewer
     spec_reg = SpectralRegion(0.0001 * u.m, .0002 * u.m)
     st = specviz2d_helper.plugins['Subset Tools']
     st.import_region(spec_reg)
 
-    subset_drawn_1d = viewer_2d.native_marks[-1]
+    mask = viewer_2d._get_layer('Subset 1')._get_image()
+    x_coords = np.nonzero(mask)[1]
+    min_value_subset2 = x_coords.min()
+    max_value_subset2 = x_coords.max()
 
-    subset_highlighted_region2 = np.atleast_1d(np.nonzero(subset_drawn_1d))[1]
-
-    # Get the start and stop indices
-    min_value_subset2 = np.min(subset_highlighted_region2)
-    max_value_subset2 = np.max(subset_highlighted_region2)
-
-    tolerance2 = 2
-    expected_min2 = 209
-    expected_max2 = 300
+    tolerance2 = 1
+    expected_min2 = 100
+    expected_max2 = 199
 
     assert np.allclose(min_value_subset2, expected_min2, atol=tolerance2)
     assert np.allclose(max_value_subset2, expected_max2, atol=tolerance2)
-'''
 
 
 def test_multi_mask_subset(specviz_helper, spectrum1d):
