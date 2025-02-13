@@ -4,7 +4,7 @@ import threading
 import time
 import warnings
 from contextlib import contextmanager
-from functools import cached_property
+from functools import cached_property, wraps
 
 import astropy.units as u
 import bqplot
@@ -301,6 +301,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
 
 def skip_if_no_updates_since_last_active(skip_if_not_active=True):
     def decorator(meth):
+        @wraps(meth)
         def wrapper(self, msg={}):
             if msg is None:
                 # method was called manually, don't skip
@@ -337,6 +338,7 @@ def skip_if_no_updates_since_last_active(skip_if_not_active=True):
 
 def skip_if_not_tray_instance():
     def decorator(meth):
+        @wraps(meth)
         def wrapper(self, *args, **kwargs):
             if not self._tray_instance:
                 return
@@ -354,6 +356,7 @@ def with_spinner(spinner_traitlet='spinner'):
     may want different controls for different sections/actions within the plugin.
     """
     def decorator(meth):
+        @wraps(meth)
         def wrapper(self, *args, **kwargs):
             setattr(self, spinner_traitlet, True)
             try:
@@ -384,6 +387,7 @@ def with_temp_disable(timeout=0.3,
         />
     """
     def decorator(meth):
+        @wraps(meth)
         def wrapper(self, *args, **kwargs):
             if getattr(self, disable_traitlet):
                 return
@@ -468,6 +472,13 @@ class PluginTemplateMixin(TemplateMixin):
         # set user-API methods
         def get_api_text(name, obj):
             if type(obj).__name__ == 'method':
+                if hasattr(obj, "__wrapped__"):
+                    orig_sig = str(inspect.signature(obj.__wrapped__))
+                    if "(self)" in orig_sig:
+                        orig_sig = orig_sig.replace("(self)", "()")
+                    elif "(self, " in orig_sig:
+                        orig_sig = orig_sig.replace("(self, ", "(")
+                    return f"{name}{orig_sig}"
                 return f"{name}{inspect.signature(obj)}"
             return name
         with warnings.catch_warnings():
