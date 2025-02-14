@@ -8,6 +8,10 @@ from jdaviz.core.registries import loader_parser_registry
 class SpecutilsSpectrumParser():
     SpecutilsCls = Spectrum1D
 
+    def __init__(self, input):
+        # TODO: move into base class
+        self.input = input
+
     @property
     def is_valid(self):
         try:
