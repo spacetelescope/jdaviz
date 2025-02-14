@@ -1,5 +1,5 @@
 import os
-from traitlets import Unicode
+from traitlets import Unicode, observe
 
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import loader_resolver_registry
@@ -10,16 +10,24 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 class FilepathResolver(BaseResolver):
     template_file = __file__, "filepath.vue"
 
+    filepath = Unicode().tag(sync=True)
     error_message = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
         self._file_upload = FileChooser(start_path)
-        self._file_upload.observe(self._on_file_path_changed, names='file_path')
+        self._file_upload.observe(self._on_file_upload_path_changed, names='file_path')
         self.components = {'g-file-import': self._file_upload}
         super().__init__(*args, **kwargs)
 
-    def _on_file_path_changed(self, event):
+    def _on_file_upload_path_changed(self, event):
+        self.filepath = self._file_upload.file_path
+
+    @observe('filepath')
+    def _on_filepath_changed(self, change):
+        if self._file_upload.file_path != change['new']:
+            path, file = os.path.split(change['new'])
+            self._file_upload._set_form_values(path, file)
         self.format._update_items()
 
     @property
