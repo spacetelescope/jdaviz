@@ -231,7 +231,6 @@ class LoaderStepRegistry(UniqueDictRegistry):
 
     def __call__(self, name=None):
         def decorator(cls):
-            cls.registry_name = name
             cls._registry_label = name
             self.add(name, cls)
             return cls
