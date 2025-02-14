@@ -22,7 +22,7 @@ class URLResolver(BaseResolver):
 
     @observe('url', 'cache')
     def _on_url_changed(self, change):
-        self.format._update_items()
+        self._update_format_items()
 
     def __call__(self, local_path=None, timeout=60):
         return download_uri_to_path(self.url, cache=self.cache,
