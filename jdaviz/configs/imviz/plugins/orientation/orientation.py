@@ -29,11 +29,12 @@ from jdaviz.utils import (get_wcs_only_layer_labels, get_reference_image_data,
 
 __all__ = ['Orientation']
 
+orientation_plugin_label = "Orientation"
 base_wcs_layer_label = 'Default orientation'
 align_by_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
-@tray_registry('imviz-orientation', label="Orientation", viewer_requirements="image")
+@tray_registry('imviz-orientation', label=orientation_plugin_label, viewer_requirements="image")
 class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Orientation Plugin Documentation <imviz-orientation>` for more details.
