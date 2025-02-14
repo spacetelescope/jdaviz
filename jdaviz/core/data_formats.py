@@ -8,6 +8,7 @@ from astropy.wcs import WCS
 
 from specutils.io.registers import identify_spectrum_format
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specreduce.tracing import Trace
 from stdatamodels import asdf_in_fits
 
 from jdaviz.core.config import list_configurations
@@ -75,7 +76,6 @@ def get_valid_format(filename):
     config : str
         The recommended application configuration
     """
-
     valid_file_format = identify_spectrum_format(filename, SpectrumList)
     ndim = guess_dimensionality(filename)
 
@@ -85,6 +85,48 @@ def get_valid_format(filename):
         recommended_config = ndim_to_config_mapping.get(ndim, 'default')
 
     return valid_file_format, recommended_config
+
+
+def get_parser(obj, load_as_list=False):
+    """
+    Identify the data parser from a filename or data object
+
+    Parameters
+    ----------
+    obj : str or `pathlib.Path` or file-like object
+        The filename of the loaded data
+
+    Returns
+    -------
+    parser : str
+        The parser for the data object
+    """
+    if isinstance(obj, (SpectrumList, SpectrumCollection)):
+        return 'specviz-spectrum1d-parser'
+    if isinstance(obj, Trace):
+        return 'specreduce-trace'
+    if isinstance(obj, Spectrum1D):
+        if obj.flux.ndim == 1:
+            return 'specviz-spectrum1d-parser'
+        else:
+            if load_as_list:
+                return 'specviz-spectrum1d-parser'
+            return 'mosviz-spec2d-parser'
+    if isinstance(obj, fits.HDUList):
+        columns = [c.name.lower() for hduitem in obj for c in getattr(hduitem, 'columns', [])]
+        if 'wavelength' in columns and 'flux' in columns:
+            return 'specviz-spectrum1d-parser'
+        else:
+            raise ValueError("cannot find valid parser for HDUList")
+    if isinstance(obj, list):
+        parsers = [get_parser(o, load_as_list=load_as_list) for o in obj]
+        if len(set(parsers)) > 1:
+            raise ValueError("cannot find single parser for list of objects")
+        return parsers[0]
+
+    _, config = get_valid_format(obj)
+    parsers = {'specviz': 'specviz-spectrum1d-parser', 'specviz2d': 'mosviz-spec2d-parser'}
+    return parsers.get(config)
 
 
 def identify_data(filename, current=None):
