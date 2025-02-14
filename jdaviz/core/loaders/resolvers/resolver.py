@@ -1,6 +1,6 @@
-from traitlets import List, Unicode, observe
+from traitlets import Bool, List, Unicode, observe
 
-from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent
+from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
 from jdaviz.core.registries import loader_parser_registry, loader_importer_registry
 
 __all__ = ['BaseResolver']
@@ -64,13 +64,14 @@ class FormatSelect(SelectPluginComponent):
 class BaseResolver(PluginTemplateMixin):
     importer_widget = Unicode().tag(sync=True)
 
+    format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # subclasses should call self.format._update_items on any change
+        # subclasses should call self._update_format_items on any change
         # to user-inputs that might affect the available formats
         self.format = FormatSelect(self,
                                    items='format_items',
@@ -87,6 +88,10 @@ class BaseResolver(PluginTemplateMixin):
         # that can be interpretted by at least one parser
         # (generally a filepath, file object, or python object)
         raise NotImplementedError("Resolver subclass must implement __call__")
+
+    @with_spinner('format_items_spinner')
+    def _update_format_items(self):
+        self.format._update_items()
 
     @property
     def importer(self):

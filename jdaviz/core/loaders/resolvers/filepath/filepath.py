@@ -28,7 +28,7 @@ class FilepathResolver(BaseResolver):
         if self._file_upload.file_path != change['new']:
             path, file = os.path.split(change['new'])
             self._file_upload._set_form_values(path, file)
-        self.format._update_items()
+        self._update_format_items()
 
     @property
     def is_valid(self):
