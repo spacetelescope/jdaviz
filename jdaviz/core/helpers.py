@@ -113,6 +113,20 @@ class ConfigHelper(HubListener):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
     @property
+    def _loaders(self):
+        """
+        Access API objects for data loaders in the import dialog.
+
+        Returns
+        -------
+        loaders : dict
+            dict of loader objects
+        """
+        loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+                   for item in self.app.state.loader_items}
+        return loaders
+
+    @property
     def data_labels(self):
         """
         List of data labels loaded and available in jdaviz

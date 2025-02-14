@@ -47,7 +47,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
-                                    data_parser_registry)
+                                    data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
@@ -239,6 +239,11 @@ class ApplicationState(State):
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
     layer_icons = DictCallbackProperty({}, docstring="Indexed icons (letters) for layers across the app")  # noqa
+
+    dev_loaders = CallbackProperty(
+        False, docstring='Whether to enable developer mode for new loaders infrastructure')
+    loader_items = ListCallbackProperty(
+        docstring="List of loaders available to the application.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -2842,6 +2847,17 @@ class Application(VuetifyTemplate, HubListener):
 
             self._application_handler._tools[name] = tool
 
+        # Loaders
+        import jdaviz.core.loaders
+        for name, loader_cls in loader_resolver_registry.members.items():
+            loader = loader_cls(app=self)
+            self.state.loader_items.append({
+                'name': name,
+                'label': name,
+                'widget': "IPY_MODEL_" + loader.model_id
+            })
+
+        # Tray plugins
         for name in config.get('tray', []):
 
             tray = tray_registry.members.get(name)
