@@ -114,7 +114,7 @@ class TestCatalogs:
         prev_results = catalogs_plugin.number_of_results
 
         # testing that every variable updates accordingly when markers are cleared
-        catalogs_plugin.vue_do_clear_table()
+        catalogs_plugin.clear_table()
 
         assert not catalogs_plugin.results_available
 
@@ -250,11 +250,6 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
-
-    assert not catalogs_plugin._obj.results_available
-    assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
-
-    catalogs_plugin.clear_table(hide_only=False)
     assert not catalogs_plugin._obj.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
@@ -342,6 +337,60 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     # test that appropriate error is raised when padding is not a valud percentage
     with pytest.raises(ValueError, match="`padding` must be between 0 and 1."):
         catalogs_plugin.zoom_to_selected(padding=5)
+
+
+def test_select_tool(imviz_helper, image_2d_wcs):
+    arr = np.ones((500, 500))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+
+    # write out catalog to file so we can read it back in
+    # todo: if tables can be loaded directly at some point, do that
+
+    # sources at pixel coords ~(100, 100), ~(200, 200)
+    sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
+                         dec=[-20.80555273, -20.7777673], unit='deg')
+    tbl = Table({'sky_centroid': [sky_coord],
+                 'label': ['Source_1', 'Source_2']})
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin.import_catalog(tbl)
+
+    # before catalog searching, the selection tool is not available
+    toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
+    tool = toolbar.tools['jdaviz:selectcatalog']
+    mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['imviz-0']._obj)
+    assert tool.is_visible() is False
+
+    catalogs_plugin._obj.search(error_on_fail=True)
+    assert tool.is_visible()
+
+    assert len(catalogs_plugin._obj.table.selected_rows) == 0
+    assert len(catalogs_plugin._obj.table_selected.items) == 0
+    assert len(mark.x) == 0
+
+    toolbar.active_tool_id = 'jdaviz:selectcatalog'
+    tool.on_mouse_event({'domain': {'x': 100, 'y': 110}})
+
+    assert len(catalogs_plugin._obj.table.selected_rows) == 1
+    assert len(catalogs_plugin._obj.table_selected.items) == 1
+    assert len(mark.x) == 1
+
+    tool.on_mouse_event({'domain': {'x': 200, 'y': 210}})
+    assert len(catalogs_plugin._obj.table.selected_rows) == 2
+    assert len(catalogs_plugin._obj.table_selected.items) == 2
+    assert len(mark.x) == 2
+
+    # click to remove
+    tool.on_mouse_event({'domain': {'x': 110, 'y': 110}})
+    assert len(catalogs_plugin._obj.table.selected_rows) == 1
+    assert len(catalogs_plugin._obj.table_selected.items) == 1
+    assert len(mark.x) == 1
+
+    catalogs_plugin._obj.table_selected.clear_table()
+    assert len(catalogs_plugin._obj.table.selected_rows) == 0
+    assert len(catalogs_plugin._obj.table_selected.items) == 0
+    assert len(mark.x) == 0
 
 
 def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
