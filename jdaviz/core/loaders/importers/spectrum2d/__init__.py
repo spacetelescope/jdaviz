@@ -1,1 +1,1 @@
-from .spectrum1d import *  # noqa
+from .spectrum2d import *  # noqa
