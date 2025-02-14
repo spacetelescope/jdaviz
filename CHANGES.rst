@@ -106,6 +106,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Hide spectral subset layer visibility in flux/uncertainty viewers when slice indicator 
+  is within the spectral subset bounds. [#3437]
+
 Imviz
 ^^^^^
 
