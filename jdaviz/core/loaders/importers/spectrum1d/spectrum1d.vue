@@ -1,3 +1,3 @@
 <template>
-    <p>Importing Spectrum1D - no options</p>
+    <p>Importing 1D Spectrum - no options</p>
 </template>

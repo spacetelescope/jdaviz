@@ -21,6 +21,7 @@ class FormatSelect(SelectPluginComponent):
             What mode to use when making the default selection.  Valid options: first, default_text,
             empty.
         """
+        self._importers = {}
         super().__init__(plugin,
                          items=items,
                          selected=selected,
@@ -54,11 +55,15 @@ class FormatSelect(SelectPluginComponent):
                         all_resolvers.append({'label': importer_name,
                                               'parser': parser_name,
                                               'importer': importer_name})
+                        self._importers[importer_name] = this_importer
+
         self.items = all_resolvers
         self._apply_default_selection()
 
 
 class BaseResolver(PluginTemplateMixin):
+    importer_widget = Unicode().tag(sync=True)
+
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
 
@@ -88,4 +93,11 @@ class BaseResolver(PluginTemplateMixin):
         # give access to the importer defined by the user-selection on format
         if not self.format.selected:
             raise ValueError("must select a format before accessing importer")
-        return loader_importer_registry.members.get(self.format.selected)
+        return self.format._importers[self.format.selected]  # TODO: make sure this exposes API (and only shows with .show())
+
+    @observe('format_selected')
+    def _on_format_selected_changed(self, change):
+        if self.format_selected == '':
+            self.importer_widget = ''
+        else:
+            self.importer_widget = "IPY_MODEL_" + self.importer.model_id
