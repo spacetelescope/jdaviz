@@ -244,6 +244,8 @@ class ApplicationState(State):
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
+    loader_tab = CallbackProperty(
+        0, docstring="Index of the active loader tab.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")

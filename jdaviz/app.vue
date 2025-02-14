@@ -46,7 +46,20 @@
             </j-tooltip>
           </template>
           <v-card>
-            <p>loader dialog</p>
+            <v-tabs v-model="state.loader_tab" vertical>
+              <v-tab v-for="loader in state.loader_items" :key="loader.name">
+                {{loader.name}}
+              </v-tab>
+              <v-tab-item
+                v-for="loader in state.loader_items"
+                :key="loader.name"
+              >
+                <v-card flat>
+                  <jupyter-widget :widget="loader.widget" :key="loader.name"></jupyter-widget>
+                </v-card>
+              </v-tab-item>
+            </v-tabs>
+
           </v-card>
         </v-dialog>
       </v-toolbar-items>
