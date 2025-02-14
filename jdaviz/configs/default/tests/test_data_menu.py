@@ -174,7 +174,7 @@ def test_data_menu_dq_layers(imviz_helper):
     assert len(dm._obj.visible_layers) == 2
 
 
-@pytest.mark.skip(reason="known issue")
+@pytest.mark.xfail(reason="known issue")
 def test_data_menu_subset_appearance(specviz_helper, spectrum1d):
     # NOTE: this test is similar to above - the subset is appearing in time IF there
     # are two data entries, but not in this case with just one
@@ -186,6 +186,7 @@ def test_data_menu_subset_appearance(specviz_helper, spectrum1d):
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
                                     6100 * spectrum1d.spectral_axis.unit))
 
+    # AssertionError: assert ['Subset 1', 'test'] == ['test', 'Subset 1']
     assert dm.layer.choices == ['test', 'Subset 1']
 
 
