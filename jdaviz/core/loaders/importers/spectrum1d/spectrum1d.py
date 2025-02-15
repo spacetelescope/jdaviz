@@ -1,30 +1,16 @@
 from specutils import Spectrum1D
 
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.loaders.importers import BaseImporter
 
 
 @loader_importer_registry('1D Spectrum')
-class Spectrum1DImporter(PluginTemplateMixin):
+class Spectrum1DImporter(BaseImporter):
     template_file = __file__, "spectrum1d.vue"
-
-    def __init__(self, app, input, **kwargs):
-        # TODO: move into base class
-        self.input = input
-        super().__init__(app, **kwargs)
 
     @property
     def is_valid(self):
         return isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 1
-
-    def __call__(self):
-        # TODO: move into base class
-        return self.input
-
-    @property
-    def default_data_label(self):
-        # TODO: move into base class
-        return self._registry_label
 
     @property
     def default_viewer(self):

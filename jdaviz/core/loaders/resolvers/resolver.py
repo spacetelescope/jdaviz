@@ -2,6 +2,7 @@ from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
 from jdaviz.core.registries import loader_parser_registry, loader_importer_registry
+from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ['BaseResolver']
 
@@ -88,6 +89,10 @@ class BaseResolver(PluginTemplateMixin):
         # that can be interpretted by at least one parser
         # (generally a filepath, file object, or python object)
         raise NotImplementedError("Resolver subclass must implement __call__")
+
+    @property
+    def user_api(self):
+        return LoaderUserApi(self)
 
     @with_spinner('format_items_spinner')
     def _update_format_items(self):

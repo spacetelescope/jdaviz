@@ -10,7 +10,6 @@
                 <v-row>
                 <v-col>
                     <g-file-import id="file-uploader"></g-file-import>
-                    <span style="color: red;">{{ error_message }}</span>
                 </v-col>
                 </v-row>
 

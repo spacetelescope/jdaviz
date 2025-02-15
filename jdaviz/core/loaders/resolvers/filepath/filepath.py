@@ -4,6 +4,7 @@ from traitlets import Unicode, observe
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
+from jdaviz.core.user_api import LoaderUserApi
 
 
 @loader_resolver_registry('filepath')
@@ -11,7 +12,6 @@ class FilepathResolver(BaseResolver):
     template_file = __file__, "filepath.vue"
 
     filepath = Unicode().tag(sync=True)
-    error_message = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
@@ -19,6 +19,10 @@ class FilepathResolver(BaseResolver):
         self._file_upload.observe(self._on_file_upload_path_changed, names='file_path')
         self.components = {'g-file-import': self._file_upload}
         super().__init__(*args, **kwargs)
+
+    @property
+    def user_api(self):
+        return LoaderUserApi(self, expose=['filepath'])
 
     def _on_file_upload_path_changed(self, event):
         self.filepath = self._file_upload.file_path
