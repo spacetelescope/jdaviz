@@ -53,7 +53,10 @@ class FormatSelect(SelectPluginComponent):
             this_parser = Parser(parser_input)
             # print("*** parser name: ", parser_name, this_parser.is_valid)
             if this_parser.is_valid:
-                importer_input = this_parser()
+                try:
+                    importer_input = this_parser()
+                except Exception:
+                    continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     this_importer = Importer(app=self.plugin.app, input=importer_input)
                     # print("*** importer name: ", importer_name, this_importer.is_valid)
@@ -69,6 +72,8 @@ class FormatSelect(SelectPluginComponent):
 
 class BaseResolver(PluginTemplateMixin):
     importer_widget = Unicode().tag(sync=True)
+
+    import_spinner = Bool(False).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
@@ -116,3 +121,7 @@ class BaseResolver(PluginTemplateMixin):
             self.importer_widget = ''
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
+
+    @with_spinner('import_spinner')
+    def vue_import_clicked(self, *args, **kwargs):
+        self.importer()
