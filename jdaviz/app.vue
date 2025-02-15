@@ -37,7 +37,11 @@
     </v-overlay>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
       <v-toolbar-items v-if="state.dev_loaders">
-        <v-dialog height="400" width="600">
+        <v-dialog
+          scrollable
+          max-height="400px"
+          max-width="600px"
+        >
           <template v-slot:activator="{ on }">
             <j-tooltip tooltipcontent="Import data from a file or online source">
               <v-btn tile depressed v-on="on" color="turquoise">
@@ -45,22 +49,20 @@
               </v-btn>
             </j-tooltip>
           </template>
-          <v-card>
             <v-tabs v-model="state.loader_tab" vertical>
-              <v-tab v-for="loader in state.loader_items" :key="loader.name">
+              <v-tab
+                v-for="loader in state.loader_items"
+                :key="loader.name"
+              >
                 {{loader.name}}
               </v-tab>
               <v-tab-item
                 v-for="loader in state.loader_items"
                 :key="loader.name"
               >
-                <v-card flat>
-                  <jupyter-widget :widget="loader.widget" :key="loader.name"></jupyter-widget>
-                </v-card>
+                <jupyter-widget :widget="loader.widget" :key="loader.name"></jupyter-widget>
               </v-tab-item>
             </v-tabs>
-
-          </v-card>
         </v-dialog>
       </v-toolbar-items>
       <v-toolbar-items v-for="(item, index) in state.tool_items">
