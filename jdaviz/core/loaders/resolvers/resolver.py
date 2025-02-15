@@ -41,7 +41,12 @@ class FormatSelect(SelectPluginComponent):
 
         # check for valid parser > importer combinations given the current filters
         # and resolver inputs
-        parser_input = self.plugin()
+        try:
+            parser_input = self.plugin()
+        except Exception:
+            self.items = []
+            self._apply_default_selection()
+            return
 
         all_resolvers = []
         for parser_name, Parser in loader_parser_registry.members.items():
