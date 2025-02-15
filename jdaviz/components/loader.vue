@@ -39,19 +39,27 @@
     </v-card-text>
     <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn
-            color="primary"
-            :disabled="!format_selected.length"
-            @click="alert('IMPORT')"
-        >
-            Import
-        </v-btn>
+        <plugin-action-button 
+          :spinner="import_spinner"
+          :disabled="!format_selected.length"
+          :results_isolated_to_plugin="false"
+          :api_hints_enabled="api_hints_enabled"
+          @click="$emit('import-clicked')">
+          {{ api_hints_enabled ?
+            'loader.importer()'
+            :
+            'Import'
+          }}
+        </plugin-action-button>
     </v-card-actions>
   </v-card>
 </template>
 
 <script>
 module.exports = {
-  props: ['title', 'format_items_spinner', 'format_items', 'format_selected', 'importer_widget', 'api_hints_enabled'],
+  props: ['title',
+          'format_items_spinner', 'format_items', 'format_selected',
+          'importer_widget', 'import_spinner',
+          'api_hints_enabled'],
 }
 </script>

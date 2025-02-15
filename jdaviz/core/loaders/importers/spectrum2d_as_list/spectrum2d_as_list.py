@@ -1,11 +1,11 @@
 from specutils import Spectrum1D, SpectrumList
 
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporter
+from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 
 @loader_importer_registry('1D Spectrum List')
-class Spectrum2DAsListImporter(BaseImporter):
+class Spectrum2DAsListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum2d_as_list.vue"
 
     @property
@@ -13,9 +13,13 @@ class Spectrum2DAsListImporter(BaseImporter):
         # TODO: should this be split into two loaders? 
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
-        return isinstance(self.input, SpectrumList) or (isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 2)
+        return (isinstance(self.input, SpectrumList) or (isinstance(self.input, Spectrum1D)
+                and self.input.flux.ndim == 2))
 
-    def __call__(self):
+    @property
+    def output(self):
+        if not self.is_valid:
+            return None
         if isinstance(self.input, SpectrumList):
             return self.input
         elif isinstance(self.input, Spectrum1D):

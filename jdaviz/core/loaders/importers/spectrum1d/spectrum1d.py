@@ -1,11 +1,11 @@
 from specutils import Spectrum1D
 
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporter
+from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 
 @loader_importer_registry('1D Spectrum')
-class Spectrum1DImporter(BaseImporter):
+class Spectrum1DImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum1d.vue"
 
     @property
@@ -17,3 +17,4 @@ class Spectrum1DImporter(BaseImporter):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'specviz-profile-viewer'
+
