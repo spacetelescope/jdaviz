@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
+from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.utils import download_uri_to_path
 
 
@@ -15,6 +16,10 @@ class URLResolver(BaseResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    @property
+    def user_api(self):
+        return LoaderUserApi(self, expose=['url', 'cache'])
 
     @property
     def is_valid(self):
