@@ -6,6 +6,7 @@
         :format_selected.sync="format_selected"
         :importer_widget="importer_widget"
         :api_hints_enabled="api_hints_enabled"
+        @cancel-clicked="cancel_clicked"
         :import_spinner="import_spinner"
         @import-clicked="import_clicked"
     >

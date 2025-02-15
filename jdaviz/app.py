@@ -243,6 +243,8 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
+    loader_dialog = CallbackProperty(
+        False, docstring='Whether the loader dialog is open.')
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_tab = CallbackProperty(
