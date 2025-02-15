@@ -281,6 +281,7 @@ span.api-hint, span.api-hint-header {
   font-family: monospace;
   font-size: 12px;  
   letter-spacing: -0.05em !important;
+  text-transform: none !important;
 }
 
 span.api-hint-header {
