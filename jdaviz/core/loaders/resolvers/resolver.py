@@ -122,6 +122,24 @@ class BaseResolver(PluginTemplateMixin):
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
 
+    def close_dialog(self):
+        """
+        Close the loader dialog.
+        """
+        self.app.state.loader_dialog = False
+
+    def show_in_dialog(self):
+        """
+        Show this resolver in the loader dialog.
+        """
+        tabs = [item.get('label') for item in self.app.state.loader_items]
+        self.app.state.loader_tab = tabs.index(self._registry_label)
+        self.app.state.loader_dialog = True
+
+    def vue_cancel_clicked(self, *args, **kwargs):
+        self.close_dialog()
+
     @with_spinner('import_spinner')
     def vue_import_clicked(self, *args, **kwargs):
         self.importer()
+        self.close_dialog()

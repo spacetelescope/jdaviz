@@ -40,6 +40,12 @@
     <v-card-actions>
         <v-spacer></v-spacer>
         <plugin-action-button 
+          :results_isolated_to_plugin="false"
+          :api_hints_enabled="false"
+          @click="$emit('cancel-clicked')">
+          Cancel
+        </plugin-action-button>
+        <plugin-action-button 
           :spinner="import_spinner"
           :disabled="!format_selected.length"
           :results_isolated_to_plugin="false"

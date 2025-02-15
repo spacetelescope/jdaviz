@@ -41,6 +41,7 @@
           scrollable
           max-height="400px"
           max-width="600px"
+          v-model="state.loader_dialog"
         >
           <template v-slot:activator="{ on }">
             <j-tooltip tooltipcontent="Import data from a file or online source">
