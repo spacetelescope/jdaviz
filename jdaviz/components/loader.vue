@@ -13,7 +13,7 @@
                     :selected.sync="format_selected"
                     label="Format"
                     api_hint="loader.format ="
-                    :api_hints_enabled="false"
+                    :api_hints_enabled="api_hints_enabled"
                     hint="Choose input format"
                 />
                 <v-row v-if="format_selected.length">
@@ -52,6 +52,6 @@
 
 <script>
 module.exports = {
-  props: ['title', 'format_items_spinner', 'format_items', 'format_selected', 'importer_widget'],
+  props: ['title', 'format_items_spinner', 'format_items', 'format_selected', 'importer_widget', 'api_hints_enabled'],
 }
 </script>

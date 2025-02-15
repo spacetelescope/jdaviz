@@ -5,8 +5,8 @@
         :format_items="format_items"
         :format_selected.sync="format_selected"
         :importer_widget="importer_widget"
+        :api_hints_enabled="api_hints_enabled"
     >
-    
         <v-row>
             Select a file with data you want to load into this instance of Jdaviz
             and click "IMPORT".

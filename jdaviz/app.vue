@@ -60,6 +60,7 @@
                 v-for="loader in state.loader_items"
                 :key="loader.name"
               >
+                <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">loader = {{  config }}.loaders['{{ loader.name }}']</span>
                 <jupyter-widget :widget="loader.widget" :key="loader.name"></jupyter-widget>
               </v-tab-item>
             </v-tabs>
