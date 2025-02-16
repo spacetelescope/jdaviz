@@ -1,7 +1,7 @@
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.user_api import ImporterUserApi
 
-__all__ = ['BaseImporter', 'BaseImporterToDataCollection']
+__all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
 
 
 class BaseImporter(PluginTemplateMixin):
@@ -23,6 +23,10 @@ class BaseImporter(PluginTemplateMixin):
         # override by subclass
         return self.input
 
+    @property
+    def target(self):
+        raise NotImplementedError("Importer subclass must implement target")
+
     def __call__(self):
         # override by subclass - should act on self.output and load into jdaviz
         raise NotImplementedError("Importer subclass must implement __call__")
@@ -30,9 +34,6 @@ class BaseImporter(PluginTemplateMixin):
     @property
     def user_api(self):
         return ImporterUserApi(self)
-
-    def vue_import(self, *args, **kwargs):
-        self.__call__()
 
 
 class BaseImporterToDataCollection(BaseImporter):
@@ -43,6 +44,10 @@ class BaseImporterToDataCollection(BaseImporter):
     @property
     def default_viewer(self):
         raise NotImplementedError("Importer subclass must implement default_viewer")
+
+    @property
+    def target(self):
+        self.default_viewer
 
     def load_into_viewer(self, data_label):
         added = 0
@@ -62,3 +67,13 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def __call__(self, data_label=None):
         self.add_to_data_collection(data_label, show_in_viewer=True)
+
+
+class BaseImporterToPlugin(BaseImporter):
+    @property
+    def default_plugin(self):
+        raise NotImplementedError("Importer subclass must implement default_plugin")
+
+    @property
+    def target(self):
+        return self.default_plugin

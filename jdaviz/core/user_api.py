@@ -176,7 +176,7 @@ class ImporterUserApi(UserApiWrapper):
       help(importer_object.show)
     """
     def __init__(self, importer, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
-        expose = list(set(list(expose) + ['input', 'output', 'show']))
+        expose = list(set(list(expose) + ['input', 'output', 'target', 'show']))
         super().__init__(importer, expose, readonly, excl_from_dict, deprecated)
 
     def __call__(self):
