@@ -7,24 +7,14 @@
         </v-container>
         <div style="display: grid"> <!-- overlay container -->
             <div style="grid-area: 1/1">
-                <v-row justify="end" class="row-no-outside-padding" style="margin-bottom: -6px !important">
-                  <div v-for="target_item in target_items">
-                    <j-tooltip v-if="target_item.label !== 'Any'" :tooltipcontent="'Show only '+target_item.label+' formats'">
-                      <v-btn
-                        tile
-                        :elevation=0
-                        x-small
-                        dense 
-                        :color="target_selected === target_item.label ? 'turquoise' : 'transparent'"
-                        :dark="target_selected === target_item.label"
-                        style="padding-left: 8px; padding-right: 6px;"
-                        @click="() => {if (target_selected === target_item.label) {$emit('update:target_selected', 'Any')} else {$emit('update:target_selected', target_item.label)}}"
-                      >
-                        {{ target_item.label }}
-                      </v-btn>
-                    </j-tooltip>
-                  </div>
-                </v-row>
+                <v-row>
+                  <plugin-select-filter
+                    :items="target_items"
+                    :selected.sync="target_selected"
+                    @update:selected="($event) => {$emit('update:target_selected', $event)}"
+                    tooltip_suffix="formats"
+                  />
+                </v-row>  
 
                 <plugin-select
                     :show_if_single_entry="true"
