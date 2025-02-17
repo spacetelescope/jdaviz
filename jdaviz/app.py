@@ -47,7 +47,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
-                                    data_parser_registry)
+                                    data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
@@ -126,6 +126,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-docs-link': 'components/docs_link.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
                      'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
+                     'j-loader': 'components/loader.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
@@ -138,6 +139,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
+                     'plugin-select-filter': 'components/plugin_select_filter.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
@@ -239,6 +241,15 @@ class ApplicationState(State):
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
     layer_icons = DictCallbackProperty({}, docstring="Indexed icons (letters) for layers across the app")  # noqa
+
+    dev_loaders = CallbackProperty(
+        False, docstring='Whether to enable developer mode for new loaders infrastructure')
+    loader_dialog = CallbackProperty(
+        False, docstring='Whether the loader dialog is open.')
+    loader_items = ListCallbackProperty(
+        docstring="List of loaders available to the application.")
+    loader_tab = CallbackProperty(
+        0, docstring="Index of the active loader tab.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -2842,6 +2853,17 @@ class Application(VuetifyTemplate, HubListener):
 
             self._application_handler._tools[name] = tool
 
+        # Loaders
+        import jdaviz.core.loaders
+        for name, loader_cls in loader_resolver_registry.members.items():
+            loader = loader_cls(app=self)
+            self.state.loader_items.append({
+                'name': name,
+                'label': name,
+                'widget': "IPY_MODEL_" + loader.model_id
+            })
+
+        # Tray plugins
         for name in config.get('tray', []):
 
             tray = tray_registry.members.get(name)

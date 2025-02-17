@@ -36,6 +36,37 @@
       </div>
     </v-overlay>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
+      <v-toolbar-items v-if="state.dev_loaders">
+        <v-dialog
+          scrollable
+          max-height="400px"
+          max-width="600px"
+          v-model="state.loader_dialog"
+        >
+          <template v-slot:activator="{ on }">
+            <j-tooltip tooltipcontent="Import data from a file or online source">
+              <v-btn tile depressed v-on="on" color="turquoise">
+                Import Data (DEV)
+              </v-btn>
+            </j-tooltip>
+          </template>
+            <v-tabs v-model="state.loader_tab" vertical>
+              <v-tab
+                v-for="loader in state.loader_items"
+                :key="loader.name"
+              >
+                {{loader.name}}
+              </v-tab>
+              <v-tab-item
+                v-for="loader in state.loader_items"
+                :key="loader.name"
+              >
+                <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">loader = {{  config }}.loaders['{{ loader.name }}']</span>
+                <jupyter-widget :widget="loader.widget" :key="loader.name"></jupyter-widget>
+              </v-tab-item>
+            </v-tabs>
+        </v-dialog>
+      </v-toolbar-items>
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="index > 1" vertical style="margin: 0px 10px"></v-divider>
