@@ -50,21 +50,12 @@
               </v-btn>
             </j-tooltip>
           </template>
-            <v-tabs v-model="state.loader_tab" vertical>
-              <v-tab
-                v-for="loader in state.loader_items"
-                :key="loader.name"
-              >
-                {{loader.name}}
-              </v-tab>
-              <v-tab-item
-                v-for="loader in state.loader_items"
-                :key="loader.name"
-              >
-                <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">loader = {{  config }}.loaders['{{ loader.name }}']</span>
-                <jupyter-widget :widget="loader.widget" :key="loader.name"></jupyter-widget>
-              </v-tab-item>
-            </v-tabs>
+          <j-loader-dialog
+            :loader_items="state.loader_items"
+            :loader_tab.sync="state.loader_tab"
+            :api_hints_enabled="state.show_api_hints"
+            :config="config"
+          ></j-loader-dialog>
         </v-dialog>
       </v-toolbar-items>
       <v-toolbar-items v-for="(item, index) in state.tool_items">

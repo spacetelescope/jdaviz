@@ -7,9 +7,8 @@
         </v-container>
         <div style="display: grid"> <!-- overlay container -->
             <div style="grid-area: 1/1">
-                <v-row>
+                <v-row v-if="target_items.length >= 2">
                   <plugin-select-filter
-                    v-if="target_items.length >= 2"
                     :items="target_items"
                     :selected.sync="target_selected"
                     @update:selected="($event) => {$emit('update:target_selected', $event)}"
@@ -18,7 +17,6 @@
                     :api_hints_enabled="api_hints_enabled"
                   />
                 </v-row>  
-
 
                 <v-row v-if="format_items.length == 0">
                     <v-alert type="warning" style="margin-left: -12px; margin-right: -12px; width: 100%">
