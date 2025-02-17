@@ -99,6 +99,13 @@ class TargetSelect(SelectPluginComponent):
     def _is_valid_item(self, item):
         return super()._is_valid_item(item, locals())
 
+    def set_filter_target_in(self, targets):
+        def filter_factory(targets):
+            def filter_target(item):
+                return item['label'] in targets
+            return filter_target
+        self.filters = [filter_factory(targets)]
+
     @observe('filters')
     def _update_items(self, msg={}):
         # print("*** TargetSelect._update_items")
@@ -113,7 +120,8 @@ class TargetSelect(SelectPluginComponent):
         # and use that list when compiling list of valid targets
         all_targets = list(set([importer.target for importer in self.plugin.format._importers.values()]))
 
-        self.items = [{'label': 'Any'}]+[{'label': target} for target in all_targets]
+        all_items = [{'label': 'Any'}]+[{'label': target} for target in all_targets]
+        self.items = [item for item in all_items if self._is_valid_item(item)]
         self._apply_default_selection()
 
 
@@ -130,6 +138,8 @@ class BaseResolver(PluginTemplateMixin):
     target_selected = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        self.toggle_dialog_callback = kwargs.pop('toggle_dialog_callback', None)
+        self.set_tab_callback = kwargs.pop('set_tab_callback', None)
         super().__init__(*args, **kwargs)
 
         # subclasses should call self._update_format_items on any change
@@ -170,7 +180,7 @@ class BaseResolver(PluginTemplateMixin):
         return self.format._importers[self.format.selected]  # TODO: make sure this exposes API (and only shows with .show())
 
     @observe('target_selected')
-    def _on_target_selected_changed(self, change):
+    def _on_target_selected_changed(self, change={}):
         def matches_target_factory(target):
             def matches_target(importer):
                 return importer.target == target
@@ -192,15 +202,21 @@ class BaseResolver(PluginTemplateMixin):
         """
         Close the loader dialog.
         """
-        self.app.state.loader_dialog = False
+        if self.toggle_dialog_callback is None:
+            raise NotImplementedError("toggle_dialog_callback must be set to close dialog")
+        self.toggle_dialog_callback(False)
 
     def show_in_dialog(self):
         """
         Show this resolver in the loader dialog.
         """
+        if self.toggle_dialog_callback is None:
+            raise NotImplementedError("toggle_dialog_callback must be set to open dialog")
+        if self.set_tab_callback is None:
+            raise NotImplementedError("set_tab_callback must be set to open dialog to specific tab")
         tabs = [item.get('label') for item in self.app.state.loader_items]
-        self.app.state.loader_tab = tabs.index(self._registry_label)
-        self.app.state.loader_dialog = True
+        self.set_tab_callback(tabs.index(self._registry_label))
+        self.toggle_dialog_callback(True)
 
     def vue_cancel_clicked(self, *args, **kwargs):
         self.close_dialog()

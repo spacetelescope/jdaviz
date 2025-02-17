@@ -157,6 +157,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-slider': 'components/plugin_slider.vue',
                      'plugin-color-picker': 'components/plugin_color_picker.vue',
                      'plugin-input-header': 'components/plugin_input_header.vue',
+                     'plugin-loaders-dialog-btn': 'components/plugin_loaders_dialog_btn.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
                      'glue-state-select': 'components/glue_state_select.vue',
                      'data-menu-add': 'components/data_menu_add.vue',
@@ -2855,9 +2856,15 @@ class Application(VuetifyTemplate, HubListener):
             self._application_handler._tools[name] = tool
 
         # Loaders
+        def toggle_dialog(opened):
+            self.state.loader_dialog = opened
+        def set_tab(tab):
+            self.state.loader_tab = tab
         import jdaviz.core.loaders
         for name, loader_cls in loader_resolver_registry.members.items():
-            loader = loader_cls(app=self)
+            loader = loader_cls(app=self,
+                                toggle_dialog_callback=toggle_dialog,
+                                set_tab_callback=set_tab)
             self.state.loader_items.append({
                 'name': name,
                 'label': name,
