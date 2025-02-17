@@ -47,7 +47,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @property
     def target(self):
-        self.default_viewer
+        return self.default_viewer
 
     def load_into_viewer(self, data_label):
         added = 0

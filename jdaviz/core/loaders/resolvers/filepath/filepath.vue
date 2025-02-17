@@ -1,6 +1,8 @@
 <template>
     <j-loader
         title="Import Data"
+        :target_items="target_items"
+        :target_selected.sync="target_selected"
         :format_items_spinner="format_items_spinner"
         :format_items="format_items"
         :format_selected.sync="format_selected"

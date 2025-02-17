@@ -33,7 +33,7 @@ class FormatSelect(SelectPluginComponent):
 
     @observe('filters')
     def _update_items(self, msg={}):
-        # print("*** Format._update_items")
+        # print("*** FormatSelect._update_items")
         if not self.plugin.is_valid:
             self.items = []
             self._apply_default_selection()
@@ -49,6 +49,7 @@ class FormatSelect(SelectPluginComponent):
             return
 
         all_resolvers = []
+        self._importers = {}
         for parser_name, Parser in loader_parser_registry.members.items():
             this_parser = Parser(parser_input)
             # print("*** parser name: ", parser_name, this_parser.is_valid)
@@ -60,13 +61,59 @@ class FormatSelect(SelectPluginComponent):
                 for importer_name, Importer in loader_importer_registry.members.items():
                     this_importer = Importer(app=self.plugin.app, input=importer_input)
                     # print("*** importer name: ", importer_name, this_importer.is_valid)
-                    if this_importer.is_valid and self._is_valid_item(this_importer):
-                        all_resolvers.append({'label': importer_name,
-                                              'parser': parser_name,
-                                              'importer': importer_name})
+                    if this_importer.is_valid:
+                        if self._is_valid_item(this_importer):
+                            all_resolvers.append({'label': importer_name,
+                                                  'parser': parser_name,
+                                                  'importer': importer_name,
+                                                  'target': this_importer.target})
+                        # we'll store the importer even if it isn't valid according to the filters
+                        # so that they can be used when compiling the list of target filters
                         self._importers[importer_name] = this_importer
 
         self.items = all_resolvers
+        self._apply_default_selection()
+
+
+class TargetSelect(SelectPluginComponent):
+    def __init__(self, plugin, items, selected, default_mode='first'):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
+        """
+        self._importers = {}
+        super().__init__(plugin,
+                         items=items,
+                         selected=selected,
+                         default_mode=default_mode)
+
+    def _is_valid_item(self, item):
+        return super()._is_valid_item(item, locals())
+
+    @observe('filters')
+    def _update_items(self, msg={}):
+        # print("*** TargetSelect._update_items")
+        if not self.plugin.is_valid:
+            self.items = []
+            self._apply_default_selection()
+            return
+
+        # loop through choices on format and compile list of targets
+        # note that the selection of a target may affect the available formats
+        # so we want to store all importers in the target select even if they are not valid there
+        # and use that list when compiling list of valid targets
+        all_targets = list(set([importer.target for importer in self.plugin.format._importers.values()]))
+
+        self.items = [{'label': 'Any'}]+[{'label': target} for target in all_targets]
         self._apply_default_selection()
 
 
@@ -79,6 +126,9 @@ class BaseResolver(PluginTemplateMixin):
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
 
+    target_items = List().tag(sync=True)
+    target_selected = Unicode().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -87,7 +137,10 @@ class BaseResolver(PluginTemplateMixin):
         self.format = FormatSelect(self,
                                    items='format_items',
                                    selected='format_selected')
-        #self.target
+
+        self.target = TargetSelect(self,
+                                   items='target_items',
+                                   selected='target_selected')
 
     @property
     def is_valid(self):
@@ -107,6 +160,7 @@ class BaseResolver(PluginTemplateMixin):
     @with_spinner('format_items_spinner')
     def _update_format_items(self):
         self.format._update_items()
+        self.target._update_items()  # assumes format._importers is updated from above
 
     @property
     def importer(self):
@@ -114,6 +168,18 @@ class BaseResolver(PluginTemplateMixin):
         if not self.format.selected:
             raise ValueError("must select a format before accessing importer")
         return self.format._importers[self.format.selected]  # TODO: make sure this exposes API (and only shows with .show())
+
+    @observe('target_selected')
+    def _on_target_selected_changed(self, change):
+        def matches_target_factory(target):
+            def matches_target(importer):
+                return importer.target == target
+            return matches_target
+
+        if self.target_selected == 'Any':
+            self.format.filters = []
+        else:
+            self.format.filters = [matches_target_factory(self.target_selected)]
 
     @observe('format_selected')
     def _on_format_selected_changed(self, change):

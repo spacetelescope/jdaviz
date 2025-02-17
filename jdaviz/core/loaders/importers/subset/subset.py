@@ -14,5 +14,9 @@ class SubsetImporter(BaseImporterToPlugin):
     def is_valid(self):
         return isinstance(self.input, (Regions, SpectralRegion))
 
+    @property
+    def default_plugin(self):
+        return 'Footprints'
+
     def __call__(self, subset_label=None):
         self.app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input)
