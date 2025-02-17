@@ -84,6 +84,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.table.headers_visible = self.headers
         self.table._default_values_by_colname = self._default_table_values
         self.table._selected_rows_changed_callback = self._table_selection_changed
+        # note: `item_key` is the name of a column in the
+        # table that has unique values for in row
         self.table.item_key = 'id'
         self.table.show_rowselect = True
 
