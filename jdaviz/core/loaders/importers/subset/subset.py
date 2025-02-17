@@ -16,7 +16,7 @@ class SubsetImporter(BaseImporterToPlugin):
 
     @property
     def default_plugin(self):
-        return 'Footprints'
+        return 'Subset Tools'
 
     def __call__(self, subset_label=None):
         self.app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input)
