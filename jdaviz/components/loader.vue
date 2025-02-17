@@ -9,6 +9,7 @@
             <div style="grid-area: 1/1">
                 <v-row>
                   <plugin-select-filter
+                    v-if="target_items.length >= 2"
                     :items="target_items"
                     :selected.sync="target_selected"
                     @update:selected="($event) => {$emit('update:target_selected', $event)}"
@@ -18,8 +19,19 @@
                   />
                 </v-row>  
 
+
+                <v-row v-if="format_items.length == 0">
+                    <v-alert type="warning" style="margin-left: -12px; margin-right: -12px; width: 100%">
+                        No matching importers found for input.
+                    </v-alert>
+                </v-row>
+                <v-row v-if="format_items.length === 1">
+                    <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">loader.format = '{{ format_selected }}'</span>
+                    <span v-else>Format: {{ format_selected }}</span>
+                </v-row>
                 <plugin-select
-                    :show_if_single_entry="true"
+                    v-if="format_items.length >= 2"
+                    :show_if_single_entry="false"
                     :items="format_items.map(i => i.label)"
                     :selected.sync="format_selected"
                     label="Format"
