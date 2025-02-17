@@ -134,7 +134,7 @@ jobs:
       # google hits on pyqt having the same issue
       # and we might be able to remove it after https://github.com/pyinstaller/pyinstaller/pull/7619
       # is released (pyinstaller 5.13 probably)
-      if: ${{ matrix.os == 'macos' }}
+      if: ${{ matrix.os == 'macos-14' }}
       run: |
         rm -rf standalone/dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/skimage/.dylibs
@@ -145,14 +145,14 @@ jobs:
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/special/*.dylib
 
     - name: Codesign (OSX)
-      if: ${{ matrix.os == 'macos' }}
+      if: ${{ matrix.os == 'macos-14' }}
       run: |
         cd standalone/dist
         codesign --deep --force --options=runtime --entitlements ../entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp jdaviz.app
 
     - name: Create dmg (OSX)
       # if we do not call always() GHA will && with success()
-      if: ${{ always() && (matrix.os == 'macos') }}
+      if: ${{ always() && (matrix.os == 'macos-14') }}
       # it seems ditto (not zip) should be used in combination with notarization
       # see https://developer.apple.com/forums/thread/116831
       # but dmg also works
@@ -162,7 +162,7 @@ jobs:
         hdiutil create -volname "Jdaviz" -srcfolder standalone/dist -ov -format UDZO standalone/dist/jdaviz.dmg
 
     - name: Notary step + stapling (OSX)
-      if: ${{ matrix.os == 'macos' }}
+      if: ${{ matrix.os == 'macos-14' }}
       run: |
         output=$(xcrun notarytool submit standalone/dist/jdaviz.dmg --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
         echo "$output"
@@ -177,12 +177,12 @@ jobs:
         fi
 
     - name: Validate app (OSX)
-      if: ${{ matrix.os == 'macos' }}
+      if: ${{ matrix.os == 'macos-14' }}
       run: |
         spctl -a -vvv -t execute standalone/dist/jdaviz.app
 
     - name: Run jdaviz cmd in background
-      if: ${{ matrix.os == 'macos' }}
+      if: ${{ matrix.os == 'macos-14' }}
       run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
 
     - name: Install playwright
@@ -208,7 +208,7 @@ jobs:
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
-      if: ${{ always() && (matrix.os == 'macos') }}
+      if: ${{ always() && (matrix.os == 'macos-14') }}
       uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
       with:
         name: jdaviz-standlone-${{ matrix.os }}
