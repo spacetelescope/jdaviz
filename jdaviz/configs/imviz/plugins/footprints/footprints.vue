@@ -100,6 +100,8 @@
         :selected.sync="preset_obs_selected"
         @update:selected="($event) => {preset_obs_selected = $event}"
         tooltip_suffix="footprints in preset list"
+        api_hint="plg.preset_obs ="
+        :api_hints_enabled="api_hints_enabled"
       />
 
       <plugin-file-import-select

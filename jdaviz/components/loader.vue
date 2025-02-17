@@ -13,6 +13,8 @@
                     :selected.sync="target_selected"
                     @update:selected="($event) => {$emit('update:target_selected', $event)}"
                     tooltip_suffix="formats"
+                    api_hint="loader.target ="
+                    :api_hints_enabled="api_hints_enabled"
                   />
                 </v-row>  
 
