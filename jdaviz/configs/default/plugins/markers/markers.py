@@ -24,7 +24,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * :meth:`clear_table`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.clear_table`
     * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     """
     template_file = __file__, "markers.vue"
@@ -83,6 +83,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.table.headers_avail = headers
         self.table.headers_visible = headers
         self.table._default_values_by_colname = self._default_table_values
+
+        def clear_table_callback():
+            for mark in self.marks.values():
+                mark.clear()
+
+            self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))
+
+        self.table._clear_callback = clear_table_callback
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -241,13 +249,3 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
             self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
-
-    def clear_table(self):
-        """
-        Clear all entries/markers from the current table.
-        """
-        super().clear_table()
-        for mark in self.marks.values():
-            mark.clear()
-
-        self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))

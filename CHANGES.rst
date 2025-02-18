@@ -29,6 +29,8 @@ Imviz
 
 - Catalog Search ``clear_table`` now removes all associated markers from the viewer. [#3359]
 
+- Catalog Search now shows a table of selected entries and allows selecting/deselecting via a tool in the image viewer. [#3429]
+
 Mosviz
 ^^^^^^
 

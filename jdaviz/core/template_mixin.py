@@ -4757,11 +4757,16 @@ class Table(PluginSubcomponent):
     item_key = Unicode().tag(sync=True)  # Unique field to identify row for selection
     selected_rows = List().tag(sync=True)  # List of selected rows
 
+    show_if_empty = Bool(True).tag(sync=True)
+    clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
+
     def __init__(self, plugin, name='table', selected_rows_changed_callback=None,
+                 clear_callback=None,
                  *args, **kwargs):
         self._qtable = None
         self._table_name = name
         self._selected_rows_changed_callback = selected_rows_changed_callback
+        self._clear_callback = clear_callback
         super().__init__(plugin, 'Table', *args, **kwargs)
 
         plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
@@ -4876,15 +4881,20 @@ class Table(PluginSubcomponent):
     def __len__(self):
         return len(self.items)
 
-    def clear_table(self):
-        """
-        Clear all entries/markers from the current table.
-        """
+    def _clear_table(self):
         self.items = []
         self.selected_rows = []
         self.selected_indices = []
         self._qtable = None
         self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
+
+    def clear_table(self):
+        """
+        Clear all entries/markers from the current table.
+        """
+        self._clear_table()
+        if self._clear_callback is not None:
+            self._clear_callback()
 
     def select_rows(self, rows):
         """
@@ -4926,9 +4936,7 @@ class Table(PluginSubcomponent):
         self.selected_rows = []
 
     def vue_clear_table(self, data=None):
-        # if the plugin (or via the TableMixin) has its own clear_table implementation,
-        # call that, otherwise call the one defined here
-        getattr(self._plugin, 'clear_table', self.clear_table)()
+        self.clear_table()
 
     def export_table(self, filename=None, overwrite=False):
         """

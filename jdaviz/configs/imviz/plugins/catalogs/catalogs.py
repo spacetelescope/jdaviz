@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.ma as ma
 from astropy import units as u
-from astropy.table import Table, QTable
+from astropy.table import QTable, Table as AstropyTable
 from astropy.coordinates import SkyCoord
 from traitlets import List, Unicode, Bool, Int, observe
 
@@ -11,8 +11,9 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.events import CatalogResultsChangedMessage, CatalogSelectClickEventMessage
 from jdaviz.core.marks import CatalogMark
-from jdaviz.core.template_mixin import TableMixin
+from jdaviz.core.template_mixin import Table, TableMixin
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Catalogs']
@@ -52,6 +53,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     headers = ['Right Ascension (degrees)', 'Declination (degrees)',
                'Object ID', 'x_coord', 'y_coord']
 
+    table_selected_widget = Unicode().tag(sync=True)
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('clear_table', 'export_table', 'import_catalog',
@@ -80,17 +83,46 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.table.headers_avail = self.headers
         self.table.headers_visible = self.headers
         self.table._default_values_by_colname = self._default_table_values
-        self.table._selected_rows_changed_callback = lambda msg: self.plot_selected_points()
+        self.table._selected_rows_changed_callback = self._table_selection_changed
+        # note: `item_key` is the name of a column in the
+        # table that has unique values for in row
         self.table.item_key = 'id'
         self.table.show_rowselect = True
+
+        def clear_table_callback():
+            # gets the current viewer
+            viewer = self.viewer.selected_obj
+
+            # resetting values
+            self.results_available = False
+            self.number_of_results = 0
+
+            if self._marker_name in self.app.data_collection.labels:
+                # all markers are removed from the viewer
+                viewer.remove_markers(marker_name=self._marker_name)
+
+        self.table._clear_callback = clear_table_callback
+
+        self.table_selected = Table(self, name='table_selected')
+        self.table_selected.clear_btn_lbl = 'Clear Selection'
+        self.table_selected.show_if_empty = False
+
+        def clear_selected_table_callback():
+            self.table.select_none()
+
+        self.table_selected._clear_callback = clear_selected_table_callback
+        self.table_selected_widget = 'IPY_MODEL_'+self.table_selected.model_id
 
         self.docs_description = "Queries an area encompassed by the viewer using\
                                  a specified catalog and marks all the objects\
                                  found within the area."
 
+        self.session.hub.subscribe(self, CatalogSelectClickEventMessage,
+                                   self._on_catalog_select_click_event)
+
     @staticmethod
     def _file_parser(path):
-        if isinstance(path, Table):  # includes QTable
+        if isinstance(path, AstropyTable):  # includes QTable
             from_file_string = f'API: {path.__class__.__name__} object'
             return '', {from_file_string: path}
 
@@ -106,6 +138,18 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             return 'Table does not contain required sky_centroid column', {}
 
         return '', {path: table}
+
+    def _on_catalog_select_click_event(self, msg):
+        xs, ys = self.table._qtable['x_coord'], self.table._qtable['y_coord']
+        # nearest point
+        distsq = (xs - msg.x)**2 + (ys - msg.y)**2
+        ind = np.argmin(distsq)
+        item = self.table.items[ind]
+        if item in self.table.selected_rows:
+            self.table.selected_rows = [sr for sr in self.table.selected_rows if sr != item]
+        else:
+            self.table.selected_rows += [item]
+        self._table_selection_changed()
 
     @with_spinner()
     def search(self, error_on_fail=False):
@@ -314,6 +358,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'blue', 'alpha': 0.8, 'markersize': 30, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
+
+        msg = CatalogResultsChangedMessage(sender=self)
+        self.session.hub.broadcast(msg)
+
         return skycoord_table
 
     def _get_mark(self, viewer):
@@ -338,8 +386,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         for mark in self.marks.values():
             mark.visible = self.is_active
 
-    def plot_selected_points(self):
+    def _table_selection_changed(self, msg={}):
         selected_rows = self.table.selected_rows
+
+        self.table_selected._clear_table()
+        for selected_row in selected_rows:
+            self.table_selected.add_item(selected_row)
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
@@ -414,42 +466,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         """
         if isinstance(catalog, str):
             self.catalog.import_file(catalog)
-        elif isinstance(catalog, Table):  # includes QTable
+        elif isinstance(catalog, AstropyTable):  # includes QTable
             self.catalog.import_obj(catalog)
         else:  # pragma: no cover
-            raise ValueError("catalog must be a string (file path)")
+            raise ValueError("catalog must be a string (file path) or Table object")
 
     def vue_do_search(self, *args, **kwargs):
         # calls self.search() which handles all of the searching logic
         self.search()
-
-    def clear_table(self, hide_only=True):
-        # gets the current viewer
-        viewer = self.viewer.selected_obj
-        # Clear the table before performing a new search
-        self.table.items = []
-        self.table.selected_rows = []
-        self.table.selected_indices = []
-
-        if not hide_only and self._marker_name in self.app.data_collection.labels:
-            # resetting values
-            self.results_available = False
-            self.number_of_results = 0
-
-            # all markers are removed from the viewer
-            viewer.remove_markers(marker_name=self._marker_name)
-
-        elif self.results_available:
-            from jdaviz.utils import layer_is_table_data
-
-            # resetting values
-            self.results_available = False
-            self.number_of_results = 0
-
-            # markers still there, just hidden
-            for lyr in viewer.layers:
-                if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
-                    lyr.visible = False
-
-    def vue_do_clear_table(self, *args, **kwargs):
-        self.clear_table()
