@@ -96,4 +96,4 @@ def test_auto_config_detection(uri, expected_helper):
     fn = download_file(url, timeout=100)
     helper_name, hdul = identify_helper(fn)
     hdul.close()
-    assert helper_name == expected_helper
+    assert len(helper_name) == 1 and helper_name[0] == expected_helper
