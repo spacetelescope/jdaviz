@@ -179,17 +179,17 @@ def test_user_api(specviz2d_helper):
     pext.bg_sub_add_results.auto = True
 
 
-@pytest.mark.skip(reason='filenames changed')
 @pytest.mark.remote_data
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
 def test_spectrum_on_top(specviz2d_helper):
-    fn = download_file('https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:jwst/product/jw01529-o004_t002_miri_p750l_s2d.fits', cache=True)  # noqa
+    fn = download_file('https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits', cache=True)  # noqa
 
     specviz2d_helper.load_data(spectrum_2d=fn)
 
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+    pext.trace_pixel = 14.2
     assert pext.bg_type_selected == 'OneSided'
-    assert pext.bg_separation < 0
+    np.testing.assert_allclose(pext.bg_separation, 6)
 
 
 @pytest.mark.filterwarnings('ignore')
