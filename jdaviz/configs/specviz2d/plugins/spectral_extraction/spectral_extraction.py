@@ -82,6 +82,7 @@ class SpectralExtraction(PluginTemplateMixin):
     * ``bg_sub_add_results``
     * :meth:`import_bg`
     * :meth:`export_bg`
+    * :meth:`export_bg_spectrum`
     * :meth:`export_bg_img`
     * :meth:`export_bg_sub`
     * ``ext_dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
@@ -373,7 +374,8 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'bg_statistic',
                                            'bg_add_results', 'bg_sub_add_results',
                                            'import_bg',
-                                           'export_bg', 'export_bg_img', 'export_bg_sub',
+                                           'export_bg', 'export_bg_spectrum',
+                                           'export_bg_img', 'export_bg_sub',
                                            'ext_dataset', 'ext_trace', 'ext_type',
                                            'ext_width', 'ext_add_results',
                                            'horne_ext_profile',

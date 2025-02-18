@@ -338,7 +338,7 @@
                 action_label="Export"
                 action_tooltip="Create Background Spectrum"
                 add_results_api_hint="plg.bg_spec_results"
-                action_api_hint="plg.export_bg_spec()"
+                action_api_hint="plg.export_bg_spectrum()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
