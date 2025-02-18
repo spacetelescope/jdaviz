@@ -7,39 +7,41 @@
         </v-container>
         <div style="display: grid"> <!-- overlay container -->
             <div style="grid-area: 1/1">
-                <v-row v-if="target_items.length >= 2">
-                  <plugin-select-filter
-                    :items="target_items"
-                    :selected.sync="target_selected"
-                    @update:selected="($event) => {$emit('update:target_selected', $event)}"
-                    tooltip_suffix="formats"
-                    api_hint="loader.target ="
-                    :api_hints_enabled="api_hints_enabled"
-                  />
-                </v-row>  
+                <v-container style="padding-right: 28px">
+                  <v-row v-if="target_items.length >= 2" style="padding-right: 12px">
+                    <plugin-select-filter
+                      :items="target_items"
+                      :selected.sync="target_selected"
+                      @update:selected="($event) => {$emit('update:target_selected', $event)}"
+                      tooltip_suffix="formats"
+                      api_hint="loader.target ="
+                      :api_hints_enabled="api_hints_enabled"
+                    />
+                  </v-row>  
 
-                <v-row v-if="format_items.length == 0">
-                    <v-alert type="warning" style="margin-left: -12px; margin-right: -12px; width: 100%">
-                        No matching importers found for input.
-                    </v-alert>
-                </v-row>
-                <v-row v-if="format_items.length === 1">
-                    <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">loader.format = '{{ format_selected }}'</span>
-                    <span v-else>Format: {{ format_selected }}</span>
-                </v-row>
-                <plugin-select
-                    v-if="format_items.length >= 2"
-                    :show_if_single_entry="false"
-                    :items="format_items.map(i => i.label)"
-                    :selected.sync="format_selected"
-                    label="Format"
-                    api_hint="loader.format ="
-                    :api_hints_enabled="api_hints_enabled"
-                    hint="Choose input format"
-                />
-                <v-row v-if="format_selected.length">
-                    <jupyter-widget :widget="importer_widget"></jupyter-widget>
-                </v-row>
+                  <v-row v-if="format_items.length == 0">
+                      <v-alert type="warning" style="margin-left: -12px; margin-right: -12px; width: 100%">
+                          No matching importers found for input.
+                      </v-alert>
+                  </v-row>
+                  <v-row v-if="format_items.length === 1" style="margin-top: 16px">
+                      <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">loader.format = '{{ format_selected }}'</span>
+                      <span v-else>Format: {{ format_selected }}</span>
+                  </v-row>
+                  <plugin-select
+                      v-if="format_items.length >= 2"
+                      :show_if_single_entry="false"
+                      :items="format_items.map(i => i.label)"
+                      :selected.sync="format_selected"
+                      label="Format"
+                      api_hint="loader.format ="
+                      :api_hints_enabled="api_hints_enabled"
+                      hint="Choose input format"
+                  />
+                  <v-row v-if="format_selected.length" style="margin-top: 16px">
+                      <jupyter-widget :widget="importer_widget"></jupyter-widget>
+                  </v-row>
+                </v-container>
             </div>
             <div v-if="format_items_spinner"
                 class="text-center"

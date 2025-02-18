@@ -37,10 +37,11 @@
     </v-overlay>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
       <v-toolbar-items v-if="state.dev_loaders">
+        <!-- NOTE: tabs are 150px, file browser is fixed at 500px in file_chooser.py -->
         <v-dialog
           scrollable
           max-height="400px"
-          max-width="600px"
+          width="700px"
           v-model="state.loader_dialog"
         >
           <template v-slot:activator="{ on }">

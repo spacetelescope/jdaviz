@@ -23,3 +23,9 @@ module.exports = {
   props: ['loader_items', 'loader_tab', 'api_hints_enabled', 'config'],
 }
 </script>
+
+<style scoped>
+.v-slide-group__wrapper {
+  width: 150px;
+}
+</style>
