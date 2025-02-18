@@ -1,34 +1,31 @@
 from functools import cached_property
 from specutils import Spectrum1D, SpectrumList
 
+from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
 
 
 @loader_parser_registry('specutils.Spectrum')
-class SpecutilsSpectrumParser():
+class SpecutilsSpectrumParser(BaseParser):
     SpecutilsCls = Spectrum1D
-
-    def __init__(self, input):
-        # TODO: move into base class
-        self.input = input
 
     @property
     def is_valid(self):
+        if self.app.config not in ('specviz', 'specviz2d'):
+            # NOTE: temporary during deconfig process
+            return False
         try:
-            self.object
+            self.output
         except Exception as e:
             print(f"{self.SpecutilsCls.__name__} read failed", str(e))
             return False
         return True
 
     @cached_property
-    def object(self):
+    def output(self):
         if isinstance(self.input, self.SpecutilsCls):
             return self.input
         return self.SpecutilsCls.read(self.input)
-
-    def __call__(self):
-        return self.object
 
 
 @loader_parser_registry('specutils.SpectrumList')
@@ -37,4 +34,7 @@ class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
 
     @property
     def is_valid(self):
-        return super().is_valid and len(self.object) > 1
+        if self.app.config != 'specviz':
+            # NOTE: temporary during deconfig process
+            return False
+        return super().is_valid and len(self.output) > 1

@@ -2,25 +2,27 @@ from functools import cached_property
 from regions import Regions
 from specutils import SpectralRegion
 
+from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
 
 
 @loader_parser_registry('Regions')
-class RegionsParser():
-    def __init__(self, input):
-        # TODO: move into base class
-        self.input = input
-
+class RegionsParser(BaseParser):
     @property
     def is_valid(self):
+        if self.app.config != 'specviz':
+            # NOTE: temporary during deconfig process
+            return False
         if isinstance(self.input, (Regions, SpectralRegion)):
             return True
         if isinstance(self.input, str):
             ext = self.input.split('.')[-1]
-            return ext in ('reg', 'fits', 'ecsv')
+            # once deconfigging is complete:
+            # return ext in ('reg', 'fits', 'ecsv')
+            return ext == 'ecsv'
 
     @cached_property
-    def object(self):
+    def output(self):
         if isinstance(self.input, (Regions, SpectralRegion)):
             return self.input
         # region_format = kwargs.pop('region_format', None)
@@ -29,8 +31,4 @@ class RegionsParser():
             return Regions.read(self.input, format=region_format)
         except Exception:  # nosec
             return SpectralRegion.read(self.input)
-
-    def __call__(self):
-        return self.object
-
 

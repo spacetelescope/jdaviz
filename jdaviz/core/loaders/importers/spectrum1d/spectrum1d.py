@@ -10,6 +10,9 @@ class Spectrum1DImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
+        if self.app.config not in ('specviz', 'specviz2d'):
+            # NOTE: temporary during deconfig process
+            return False
         return isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 1
 
     @property

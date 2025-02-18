@@ -51,7 +51,7 @@ class FormatSelect(SelectPluginComponent):
         all_resolvers = []
         self._importers = {}
         for parser_name, Parser in loader_parser_registry.members.items():
-            this_parser = Parser(parser_input)
+            this_parser = Parser(self.plugin.app, parser_input)
             # print("*** parser name: ", parser_name, this_parser.is_valid)
             if this_parser.is_valid:
                 try:

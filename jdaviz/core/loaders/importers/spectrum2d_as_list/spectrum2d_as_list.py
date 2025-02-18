@@ -10,6 +10,9 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
+        if self.app.config != 'specviz':
+            # NOTE: temporary during deconfig process
+            return False
         # TODO: should this be split into two loaders? 
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
