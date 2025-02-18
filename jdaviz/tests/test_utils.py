@@ -1,8 +1,6 @@
 import os
-import warnings
 
 import pytest
-from asdf.exceptions import AsdfWarning
 from astropy import units as u
 from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
@@ -206,12 +204,8 @@ def test_uri_to_download_specviz(specviz_helper, tmp_path):
     specviz_helper.load_data(uri, cache=True, local_path=local_path)
 
 
-@pytest.mark.skip(reason="FIXME: Find a file that is not missing from MAST")
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper, tmp_path):
-    uri = "mast:JWST/product/jw01324-o006_s00005_nirspec_f100lp-g140h_s2d.fits"
+    uri = "mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits"
     local_path = str(tmp_path / uri.split('/')[-1])
-
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', AsdfWarning)
-        specviz2d_helper.load_data(uri, cache=True, local_path=local_path)
+    specviz2d_helper.load_data(uri, cache=True, local_path=local_path)
