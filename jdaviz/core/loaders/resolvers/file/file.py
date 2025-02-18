@@ -7,9 +7,9 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 
-@loader_resolver_registry('filepath')
-class FilepathResolver(BaseResolver):
-    template_file = __file__, "filepath.vue"
+@loader_resolver_registry('file')
+class FileResolver(BaseResolver):
+    template_file = __file__, "file.vue"
 
     filepath = Unicode().tag(sync=True)
 
