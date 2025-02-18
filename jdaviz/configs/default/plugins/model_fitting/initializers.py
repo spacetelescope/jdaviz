@@ -81,7 +81,8 @@ class _Linear1DInitializer:
             # For cube fitting, need to collapse before this calculation
             y = np.nanmean(y, axis=(0, 1))
         i_good = np.isfinite(y)
-        slope, intercept = np.polynomial.Polynomial.fit(x.value[i_good].flatten(), y.value[i_good].flatten(), 1)
+        slope, intercept = np.polynomial.Polynomial.fit(
+            x.value[i_good].flatten(), y.value[i_good].flatten(), 1)
 
         instance.slope.value = slope
         instance.intercept.value = intercept

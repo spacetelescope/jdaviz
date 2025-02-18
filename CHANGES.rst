@@ -108,6 +108,8 @@ Bug Fixes
 
 - Fix showing dataset dropdown in cubeviz's spectral extraction for flux-cube products from other plugins. [#3411]
 
+- Model Fitting: Prevent non-finite data from producing NaNs as initial guesses for some models. [#3450]
+
 Cubeviz
 ^^^^^^^
 
