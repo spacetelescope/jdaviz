@@ -2,7 +2,7 @@
   <v-dialog
       scrollable
       max-height="400px"
-      max-width="600px"
+      width="700px"
       v-model="show_loader_dialog"
   >
     <template v-slot:activator="{ on }">
