@@ -229,7 +229,7 @@ def create_equivalent_spectral_axis_units_list(spectral_axis_unit,
                                                         u.lsec]):
     """Get all possible conversions from current spectral_axis_unit."""
     if spectral_axis_unit in (u.pix, u.dimensionless_unscaled):
-        return [spectral_axis_unit]
+        return [spectral_axis_unit.to_string()]
 
     # Get unit equivalencies.
     try:
