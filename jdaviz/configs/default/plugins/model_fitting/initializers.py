@@ -50,7 +50,7 @@ def _get_model_name(model):
     return class_string.split('\'>')[0].split(".")[-1]
 
 
-class _Linear1DInitializer(object):
+class _Linear1DInitializer:
     """
     Initialization that is specific to the Linear1D model.
 
@@ -89,7 +89,7 @@ class _Linear1DInitializer(object):
         return instance
 
 
-class _WideBand1DInitializer(object):
+class _WideBand1DInitializer:
     """
     Initialization that is applicable to all "wide band"
     models
@@ -135,7 +135,7 @@ class _WideBand1DInitializer(object):
         return instance
 
 
-class _LineProfile1DInitializer(object):
+class _LineProfile1DInitializer:
     """
     Initialization that is applicable to all "line profile"
     models.
