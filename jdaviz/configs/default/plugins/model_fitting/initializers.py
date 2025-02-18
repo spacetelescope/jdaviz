@@ -50,7 +50,7 @@ def _get_model_name(model):
     return class_string.split('\'>')[0].split(".")[-1]
 
 
-class _Linear1DInitializer(object):
+class _Linear1DInitializer:
     """
     Initialization that is specific to the Linear1D model.
 
@@ -134,7 +134,7 @@ class _WideBand1DInitializer(object):
         return instance
 
 
-class _LineProfile1DInitializer(object):
+class _LineProfile1DInitializer:
     """
     Initialization that is applicable to all "line profile"
     models.
@@ -270,6 +270,36 @@ class _BlackBodyInitializer:
         return instance
 
 
+class _Polynomial1DInitializer:
+    """Initialization that is specific to the Polynomial1D model."""
+
+    def initialize(self, instance, x, y):
+        """
+        Initialize the model
+
+        Parameters
+        ----------
+        instance : `~astropy.modeling.Model`
+            The model to initialize.
+
+        x, y : numpy.ndarray
+            The data to use to initialize from.
+
+        Returns
+        -------
+        instance : `~astropy.modeling.Model`
+            The initialized model.
+        """
+        if y.ndim == 3:
+            # For cube fitting, need to collapse before this calculation
+            y = np.nanmean(y, axis=(0, 1))
+        slope, intercept = np.polynomial.Polynomial.fit(x.value.flatten(), y.value.flatten(), 1)
+        instance.c0 = intercept * instance.c0.unit
+        if instance.degree > 0:
+            instance.c1 = slope * instance.c1.unit
+        return instance
+
+
 def _setattr(instance, mname, pname, value):
     """
     Sets parameter value by mapping parameter name to model type.
@@ -316,6 +346,7 @@ _initializers = {
     'Trapezoid1D':                 _Width_LineProfile1DInitializer,  # noqa
     'Linear1D':                    _Linear1DInitializer,  # noqa
     'BlackBody':                   _BlackBodyInitializer,  # noqa
+    'Polynomial1D':                _Polynomial1DInitializer,  # noqa
     # 'Spline1D':                   spline.Spline1DInitializer
 }
 
