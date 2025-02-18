@@ -60,12 +60,16 @@
     </v-card-text>
     <v-card-actions>
         <v-spacer></v-spacer>
-        <plugin-action-button 
-          :results_isolated_to_plugin="false"
-          :api_hints_enabled="false"
-          @click="$emit('cancel-clicked')">
-          Cancel
-        </plugin-action-button>
+        <!-- do not show cancel button by default, but only if wrapped in loader-in-dialog 
+             class which set display: block in <style> below -->
+        <div class="cancel-btn" style="display: none">
+          <plugin-action-button 
+            :results_isolated_to_plugin="false"
+            :api_hints_enabled="false"
+            @click="$emit('cancel-clicked')">
+            Cancel
+          </plugin-action-button>
+        </div>
         <plugin-action-button 
           :spinner="import_spinner"
           :disabled="!format_selected.length"
@@ -91,3 +95,9 @@ module.exports = {
           'api_hints_enabled'],
 }
 </script>
+
+<style scoped>
+  .loader-in-dialog .cancel-btn {
+    display: block !important;
+  }
+</style>
