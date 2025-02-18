@@ -1,8 +1,10 @@
 """The ``region_translators`` module houses translations of
 :ref:`regions:shapes` to :ref:`photutils:photutils-aperture` apertures.
 """
+import photutils
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.utils import minversion
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, CircularAnnulusROI
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
@@ -18,6 +20,8 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
                      RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion, PixCoord)
 
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
+
+PHOTUTILS_LT_2_2 = not minversion(photutils, "2.1.1.dev60")  # no 2.2.dev tag
 
 
 def _get_region_from_spatial_subset(plugin_obj, subset_state):
@@ -173,9 +177,13 @@ def regions2aperture(region_shape):
         aperture = SkyCircularAperture(region_shape.center, region_shape.radius)
 
     elif isinstance(region_shape, EllipsePixelRegion):
+        if PHOTUTILS_LT_2_2:
+            th = region_shape.angle.to_value(u.radian)
+        else:
+            th = region_shape.angle
         aperture = EllipticalAperture(
             region_shape.center.xy, region_shape.width * 0.5, region_shape.height * 0.5,
-            theta=region_shape.angle.to_value(u.radian))
+            theta=th)
 
     elif isinstance(region_shape, EllipseSkyRegion):
         aperture = SkyEllipticalAperture(
@@ -183,9 +191,13 @@ def regions2aperture(region_shape):
             theta=(region_shape.angle - (90 * u.deg)))
 
     elif isinstance(region_shape, RectanglePixelRegion):
+        if PHOTUTILS_LT_2_2:
+            th = region_shape.angle.to_value(u.radian)
+        else:
+            th = region_shape.angle
         aperture = RectangularAperture(
             region_shape.center.xy, region_shape.width, region_shape.height,
-            theta=region_shape.angle.to_value(u.radian))
+            theta=th)
 
     elif isinstance(region_shape, RectangleSkyRegion):
         aperture = SkyRectangularAperture(
@@ -201,10 +213,14 @@ def regions2aperture(region_shape):
             region_shape.center, region_shape.inner_radius, region_shape.outer_radius)
 
     elif isinstance(region_shape, EllipseAnnulusPixelRegion):
+        if PHOTUTILS_LT_2_2:
+            th = region_shape.angle.to_value(u.radian)
+        else:
+            th = region_shape.angle
         aperture = EllipticalAnnulus(
             region_shape.center.xy, region_shape.inner_width * 0.5, region_shape.outer_width * 0.5,
             region_shape.outer_height * 0.5, b_in=region_shape.inner_height * 0.5,
-            theta=region_shape.angle.to_value(u.radian))
+            theta=th)
 
     elif isinstance(region_shape, EllipseAnnulusSkyRegion):
         aperture = SkyEllipticalAnnulus(
@@ -213,10 +229,14 @@ def regions2aperture(region_shape):
             theta=(region_shape.angle - (90 * u.deg)))
 
     elif isinstance(region_shape, RectangleAnnulusPixelRegion):
+        if PHOTUTILS_LT_2_2:
+            th = region_shape.angle.to_value(u.radian)
+        else:
+            th = region_shape.angle
         aperture = RectangularAnnulus(
             region_shape.center.xy, region_shape.inner_width, region_shape.outer_width,
             region_shape.outer_height, h_in=region_shape.inner_height,
-            theta=region_shape.angle.to_value(u.radian))
+            theta=th)
 
     elif isinstance(region_shape, RectangleAnnulusSkyRegion):
         aperture = SkyRectangularAnnulus(
@@ -348,4 +368,6 @@ def positions2pixcoord(positions):
 
 def theta2angle(theta):
     """Convert ``photutils`` theta to ``regions`` angle for pixel regions."""
-    return Angle(theta, u.radian)
+    if PHOTUTILS_LT_2_2:
+        return Angle(theta, u.radian)
+    return theta  # This whole function can be deleted when we remove PHOTUTILS_LT_2_2
