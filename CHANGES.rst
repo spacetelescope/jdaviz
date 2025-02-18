@@ -23,6 +23,8 @@ Specviz2d
 
 - Fix subset linking/displaying between pixel/wavelength in Specviz2d viewers. [#2736]
 
+- Fixes missing API entry for spectral extraction's export_bg_spectrum.  [#3447]
+
 4.1.1 (2025-01-31)
 ==================
 
