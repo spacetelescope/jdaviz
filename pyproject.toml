@@ -155,14 +155,12 @@ filterwarnings = [
 
 [tool.coverage.run]
 omit = [
-    "jdaviz/_astropy_init*",
     "jdaviz/conftest.py",
     "jdaviz/*setup_package*",
     "jdaviz/tests/*",
     "jdaviz/**/tests/*",
     "jdaviz/extern/*",
     "jdaviz/version*",
-    "*/jdaviz/_astropy_init*",
     "*/jdaviz/conftest.py",
     "*/jdaviz/*setup_package*",
     "*/jdaviz/tests/*",
