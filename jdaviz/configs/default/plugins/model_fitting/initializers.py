@@ -80,7 +80,8 @@ class _Linear1DInitializer(object):
         if y.ndim == 3:
             # For cube fitting, need to collapse before this calculation
             y = np.nanmean(y, axis=(0, 1))
-        slope, intercept = np.polynomial.Polynomial.fit(x.value.flatten(), y.value.flatten(), 1)
+        i_good = np.isfinite(y)
+        slope, intercept = np.polynomial.Polynomial.fit(x.value[i_good].flatten(), y.value[i_good].flatten(), 1)
 
         instance.slope.value = slope
         instance.intercept.value = intercept
@@ -191,6 +192,10 @@ class _LineProfile1DInitializer(object):
         if y.ndim == 3:
             # For cube fitting, need to collapse before these calculations
             y = np.nanmean(y, axis=(0, 1))
+        else:
+            i_good = np.isfinite(y)
+            x = x[i_good]
+            y = y[i_good]
 
         # X centroid estimates the position
         centroid = np.sum(x * y) / np.sum(y)
