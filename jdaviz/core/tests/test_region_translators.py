@@ -15,7 +15,7 @@ from regions import (CirclePixelRegion, EllipsePixelRegion, RectanglePixelRegion
                      RectangleAnnulusPixelRegion, PolygonPixelRegion, PixCoord)
 
 from jdaviz.core.region_translators import (
-    regions2roi, regions2aperture, aperture2regions)
+    regions2roi, regions2aperture, aperture2regions, PHOTUTILS_LT_2_2)
 
 
 # TODO: Use proper method from upstream when that is available.
@@ -86,7 +86,10 @@ def test_translation_ellipse(image_2d_wcs):
     assert_allclose(aperture.positions, region_shape.center.xy)
     assert_allclose(aperture.a * 2, region_shape.width)
     assert_allclose(aperture.b * 2, region_shape.height)
-    assert_allclose(aperture.theta, region_shape.angle.radian)
+    if PHOTUTILS_LT_2_2:
+        assert_allclose(aperture.theta, region_shape.angle.radian)
+    else:
+        assert_quantity_allclose(aperture.theta, region_shape.angle)
 
     region_sky = region_shape.to_sky(image_2d_wcs)
     aperture_sky = regions2aperture(region_sky)
@@ -139,7 +142,10 @@ def test_translation_rectangle(image_2d_wcs):
     assert_allclose(aperture.positions, region_shape.center.xy)
     assert_allclose(aperture.w, region_shape.width)
     assert_allclose(aperture.h, region_shape.height)
-    assert_allclose(aperture.theta, region_shape.angle.radian)
+    if PHOTUTILS_LT_2_2:
+        assert_allclose(aperture.theta, region_shape.angle.radian)
+    else:
+        assert_quantity_allclose(aperture.theta, region_shape.angle)
 
     region_sky = region_shape.to_sky(image_2d_wcs)
     aperture_sky = regions2aperture(region_sky)
@@ -228,7 +234,10 @@ def test_translation_ellipse_annulus(image_2d_wcs):
     assert_allclose(aperture.a_out * 2, region_shape.outer_width)
     assert_allclose(aperture.b_in * 2, region_shape.inner_height)
     assert_allclose(aperture.b_out * 2, region_shape.outer_height)
-    assert_allclose(aperture.theta, region_shape.angle.radian)
+    if PHOTUTILS_LT_2_2:
+        assert_allclose(aperture.theta, region_shape.angle.radian)
+    else:
+        assert_quantity_allclose(aperture.theta, region_shape.angle)
 
     region_sky = region_shape.to_sky(image_2d_wcs)
     aperture_sky = regions2aperture(region_sky)
@@ -283,7 +292,10 @@ def test_translation_rectangle_annulus(image_2d_wcs):
     assert_allclose(aperture.w_out, region_shape.outer_width)
     assert_allclose(aperture.h_in, region_shape.inner_height)
     assert_allclose(aperture.h_out, region_shape.outer_height)
-    assert_allclose(aperture.theta, region_shape.angle.radian)
+    if PHOTUTILS_LT_2_2:
+        assert_allclose(aperture.theta, region_shape.angle.radian)
+    else:
+        assert_quantity_allclose(aperture.theta, region_shape.angle)
 
     region_sky = region_shape.to_sky(image_2d_wcs)
     aperture_sky = regions2aperture(region_sky)
