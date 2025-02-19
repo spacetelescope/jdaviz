@@ -9,7 +9,8 @@ from astropy import units as u
 from astropy.nddata import NDData, NDDataArray
 from astropy.io import fits
 from astropy.time import Time
-from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
+from echo import (CallbackProperty, DictCallbackProperty,
+                  ListCallbackProperty, delay_callback)
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 import numpy as np
@@ -695,23 +696,26 @@ class Application(VuetifyTemplate, HubListener):
             old=old_refdata,
             sender=self))
 
-        if (
-            all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]) and
-            viewer.shape is not None
-        ):
-            # adjust zoom to account for new refdata if both the
-            # old and new refdata are WCS-only layers
-            # (which also ensures zoom_level is already determined):
-            fov_sky_final = viewer._get_fov()
-            viewer.zoom(
-                float(fov_sky_final / fov_sky_init)
-            )
+        with delay_callback(viewer.state, 'x_min', 'x_max',
+                            'y_min', 'y_max',
+                            'zoom_center_x', 'zoom_center_y', 'zoom_radius'):
+            if (
+                all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]) and
+                viewer.shape is not None
+            ):
+                # adjust zoom to account for new refdata if both the
+                # old and new refdata are WCS-only layers
+                # (which also ensures zoom_level is already determined):
+                fov_sky_final = viewer._get_fov()
+                viewer.zoom(
+                    float(fov_sky_final / fov_sky_init)
+                )
 
-        # only re-center the viewer if all data layers have WCS:
-        has_wcs_per_data = [data_has_valid_wcs(d) for d in viewer.data()]
-        if all(has_wcs_per_data):
-            # re-center the viewer on previous location.
-            viewer.center_on(sky_cen)
+            # only re-center the viewer if all data layers have WCS:
+            has_wcs_per_data = [data_has_valid_wcs(d) for d in viewer.data()]
+            if all(has_wcs_per_data):
+                # re-center the viewer on previous location.
+                viewer.center_on(sky_cen)
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """

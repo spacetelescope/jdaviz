@@ -236,8 +236,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.align_by.selected == 'Pixels':
             self.wcs_fast_approximation = True
 
-        self.linking_in_progress = False
         self._link_image_data()
+        # NOTE: _link_image_data will reset linking_in_progress to False
 
         # load data into the viewer that are now compatible with the
         # new link type, remove data from the viewer that are now
@@ -418,8 +418,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             'viewers_to_update', self.app._viewer_store.keys()
         )
         for viewer_ref in viewers_to_update:
-            self.viewer.selected = viewer_ref
-            self.orientation.update_wcs_only_filter(wcs_only=self.align_by_selected == 'WCS')
+            viewer_dm = self.app._jdaviz_helper.viewers.get(viewer_ref).data_menu
             for wcs_layer in wcs_only_layers:
                 if wcs_layer not in self.viewer.selected_obj.layers:
                     self.app.add_data_to_viewer(viewer_ref, wcs_layer)
@@ -428,7 +427,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                     wcs_only_layers and
                     self.align_by_selected == 'WCS'
             ):
-                self.orientation.selected = base_wcs_layer_label
+                viewer_dm.orientation.selected = base_wcs_layer_label
 
     def _on_data_add_to_viewer(self, msg):
         all_wcs_only_layers = all(
