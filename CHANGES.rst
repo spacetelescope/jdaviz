@@ -45,6 +45,9 @@ Specviz2d
 API Changes
 -----------
 
+- ``jdaviz.test()`` is no longer available. Use ``pytest --pyargs jdaviz <options>``
+  directly if you wish to test your copy of ``jdaviz``. [#3451]
+
 Cubeviz
 ^^^^^^^
 
