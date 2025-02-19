@@ -120,7 +120,7 @@ jobs:
         merge-multiple: true
     - name: Upload report to Codecov
       if: ${{ hashFiles('coverage/') != '' }}
-      uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3  # v5.3.1
+      uses: codecov/codecov-action@2e6e9c5a74ec004831b6d17edfb76c53a54d4d55  # main (2025-02-19)
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: coverage
