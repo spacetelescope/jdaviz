@@ -48,6 +48,11 @@ API Changes
 - ``jdaviz.test()`` is no longer available. Use ``pytest --pyargs jdaviz <options>``
   directly if you wish to test your copy of ``jdaviz``. [#3451]
 
+- ``**kwargs`` from ``viz.plugins['Subset Tools'].import_region(..., **kwargs)`` is removed, ``region_format=None``
+  is now explicitly supported. [#3453]
+
+- ``viz.plugins['Subset Tools'].set_center()`` now always updates the subset (removing the optional ``update`` keyword argument that defaulted to ``False``). [#3453]
+
 Cubeviz
 ^^^^^^^
 
