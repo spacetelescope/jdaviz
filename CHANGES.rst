@@ -109,6 +109,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Improve performance of re-rendering during orientation change. [#3452]
+
 Mosviz
 ^^^^^^
 
@@ -139,8 +141,6 @@ Imviz
 - Spatial subsets no longer show as having mixed visibility (in the legend and plot options tab) when aligned by WCS. [#3373]
 
 - Fixed Gaia catalog search sometimes failing with invalid ``SOURCE_ID`` look-up. [#3400]
-
-- Improve performance of rerendering during orientation chnage. [#3452]
 
 Mosviz
 ^^^^^^
