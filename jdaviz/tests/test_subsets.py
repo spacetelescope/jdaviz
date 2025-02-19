@@ -116,7 +116,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.angle.to_value(u.deg), 45)  # Might be stored in radians
 
     # Move the rectangle
-    subset_plugin.set_center((3, 2), update=True)
+    subset_plugin.set_center((3, 2))
     subsets = cubeviz_helper.app.get_subsets()
     reg = subsets.get('Subset 1')[0]['region']
     assert_allclose(reg.center.x, 3)
@@ -198,7 +198,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
     # Move the Subset.
-    subset_plugin.set_center(10, update=True)
+    subset_plugin.set_center(10)
     subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
     assert_quantity_allclose(reg.lower, 7.25 * u.Hz)
@@ -230,7 +230,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
 
     # Make sure that certain things are not possible because we are
     # dealing with a composite spectral subset
-    subset_plugin.set_center(99, update=True)   # This is no-op
+    subset_plugin.set_center(99)   # This is no-op
     assert subset_plugin.get_center() is None
 
     for key in ("orig", "value"):
