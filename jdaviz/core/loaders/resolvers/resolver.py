@@ -1,3 +1,4 @@
+import warnings
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
@@ -50,17 +51,22 @@ class FormatSelect(SelectPluginComponent):
 
         all_resolvers = []
         self._importers = {}
-        for parser_name, Parser in loader_parser_registry.members.items():
-            this_parser = Parser(self.plugin.app, parser_input)
-            # print("*** parser name: ", parser_name, this_parser.is_valid)
-            if this_parser.is_valid:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for parser_name, Parser in loader_parser_registry.members.items():
+                this_parser = Parser(self.plugin.app, parser_input)
                 try:
-                    importer_input = this_parser()
+                    if this_parser.is_valid:
+                        importer_input = this_parser()
+                    else:
+                        importer_input = None
                 except Exception:
+                    importer_input = None
+
+                if importer_input is None:
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     this_importer = Importer(app=self.plugin.app, input=importer_input)
-                    # print("*** importer name: ", importer_name, this_importer.is_valid)
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             all_resolvers.append({'label': importer_name,
