@@ -215,7 +215,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             self._update_loader_items()
         from ipywidgets.widgets import widget_serialization
         if not self.app.state.dev_loaders:
-            raise NotImplementedError("loaders is under active development and requires a dev-flag to test")
+            raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.loader_items}
         return loaders
@@ -228,9 +228,12 @@ class LoadersMixin(VuetifyTemplate, HubListener):
     def _update_loader_items(self):
         def toggle_dialog(opened):
             self.show_loader_dialog = opened
+
         def set_tab(tab):
             self.loader_tab = tab
-        import jdaviz.core.loaders
+
+        # ensure registry has been populated
+        import jdaviz.core.loaders  # noqa
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
         for name, loader_cls in loader_resolver_registry.members.items():

@@ -118,7 +118,8 @@ class TargetSelect(SelectPluginComponent):
         # note that the selection of a target may affect the available formats
         # so we want to store all importers in the target select even if they are not valid there
         # and use that list when compiling list of valid targets
-        all_targets = list(set([importer.target for importer in self.plugin.format._importers.values()]))
+        all_targets = list(set([importer.target for importer
+                                in self.plugin.format._importers.values()]))
 
         all_items = [{'label': 'Any'}]+[{'label': target} for target in all_targets]
         self.items = [item for item in all_items if self._is_valid_item(item)]
@@ -177,7 +178,7 @@ class BaseResolver(PluginTemplateMixin):
         # give access to the importer defined by the user-selection on format
         if not self.format.selected:
             raise ValueError("must select a format before accessing importer")
-        return self.format._importers[self.format.selected]  # TODO: make sure this exposes API (and only shows with .show())
+        return self.format._importers[self.format.selected]
 
     @observe('target_selected')
     def _on_target_selected_changed(self, change={}):

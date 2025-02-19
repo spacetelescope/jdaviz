@@ -123,7 +123,7 @@ class ConfigHelper(HubListener):
             dict of loader objects
         """
         if not self.app.state.dev_loaders:
-            raise NotImplementedError("loaders is under active development and requires a dev-flag to test")
+            raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}
         return loaders

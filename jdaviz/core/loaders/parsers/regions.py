@@ -31,4 +31,3 @@ class RegionsParser(BaseParser):
             return Regions.read(self.input, format=region_format)
         except Exception:  # nosec
             return SpectralRegion.read(self.input)
-

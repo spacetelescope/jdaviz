@@ -13,7 +13,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
         if self.app.config != 'specviz':
             # NOTE: temporary during deconfig process
             return False
-        # TODO: should this be split into two loaders? 
+        # TODO: should this be split into two loaders?
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
         return (isinstance(self.input, SpectrumList) or (isinstance(self.input, Spectrum1D)

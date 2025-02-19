@@ -170,7 +170,8 @@ class LoaderUserApi(UserApiWrapper):
 class ImporterUserApi(UserApiWrapper):
     """
     This is an API wrapper around an internal importer.  For a full list of attributes/methods,
-    call dir(importer_object) and for help on any of those methods, call help(importer_object.attribute).
+    call dir(importer_object) and for help on any of those methods,
+    call help(importer_object.attribute).
 
     For example::
       help(importer_object.show)
