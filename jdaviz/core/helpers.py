@@ -211,9 +211,9 @@ class ConfigHelper(HubListener):
         plg = self.plugins.get('Model Fitting', None)
         if plg is None:
             raise ValueError("Model Fitting plugins is not loaded")
-        return plg.get_models(models=models,
-                              model_label=model_label,
-                              x=x, y=y)
+        return plg._obj.get_models(models=models,
+                                   model_label=model_label,
+                                   x=x, y=y)
 
     @deprecated(since="4.2")
     def get_model_parameters(self, models=None, model_label=None, x=None, y=None):
@@ -248,9 +248,9 @@ class ConfigHelper(HubListener):
         plg = self.plugins.get('Model Fitting', None)
         if plg is None:
             raise ValueError("Model Fitting plugins is not loaded")
-        return plg.get_model_parameters(models=models,
-                                        model_label=model_label,
-                                        x=x, y=y)
+        return plg._obj.get_model_parameters(models=models,
+                                             model_label=model_label,
+                                             x=x, y=y)
 
     def show(self, loc="inline", title=None, height=None):  # pragma: no cover
         """Display the Jdaviz application.
