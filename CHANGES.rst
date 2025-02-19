@@ -140,6 +140,8 @@ Imviz
 
 - Fixed Gaia catalog search sometimes failing with invalid ``SOURCE_ID`` look-up. [#3400]
 
+- Improve performance of rerendering during orientation chnage. [#3452]
+
 Mosviz
 ^^^^^^
 
