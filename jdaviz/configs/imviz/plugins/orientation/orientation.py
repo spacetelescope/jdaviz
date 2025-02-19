@@ -255,8 +255,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.align_by.selected == 'Pixels':
             self.wcs_fast_approximation = True
 
-        self.linking_in_progress = False
         self._link_image_data()
+        # NOTE: _link_image_data will reset linking_in_progress to False
 
         # load data into the viewer that are now compatible with the
         # new link type, remove data from the viewer that are now
