@@ -547,3 +547,21 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == expected_unit_string
+
+
+def test_fit_spec2d(specviz2d_helper, spectrum2d):
+    specviz2d_helper.load_data(spectrum2d)
+    assert len(specviz2d_helper.app.data_collection) == 2  # 1D is extracted
+
+    mf = specviz2d_helper.plugins['Model Fitting']
+    mf.create_model_component('Const1D')
+    assert mf.equation == 'C'
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit()
+
+    assert len(specviz2d_helper.app.data_collection) == 3  # model is created
+
+    elink = specviz2d_helper.app.data_collection.external_links[-1]
+    assert elink.data1.label == "Spectrum 1D" and elink.data2.label == "model", (elink.data1.label, elink.data2.label)  # noqa: E501

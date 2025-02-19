@@ -134,6 +134,8 @@ Specviz2d
 
 - Fixes missing API entry for spectral extraction's export_bg_spectrum.  [#3447]
 
+- Fixed linking in fitted model to link to 1D spectrum instead of 2D. [#3450]
+
 4.1.1 (2025-01-31)
 ==================
 
