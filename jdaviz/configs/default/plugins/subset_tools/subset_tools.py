@@ -774,7 +774,6 @@ class SubsetTools(PluginTemplateMixin):
         subset_state = self._get_subset_state(subset_name)
         return subset_state.center()
 
-
     def _set_center(self, new_cen, subset_name=None, update=False):
         """Set the desired center for the selected Subset, if applicable.
         If Subset is not centerable, nothing is done.
