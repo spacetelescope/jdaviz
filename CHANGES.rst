@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Improve performance of re-rendering during orientation change. [#3452]
+
 Mosviz
 ^^^^^^
 
