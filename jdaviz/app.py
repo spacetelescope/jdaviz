@@ -32,6 +32,7 @@ from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
+from glue.config import settings
 from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
@@ -70,6 +71,8 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
                  mask=['mask', 'dq'])
 ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
+
+settings.AUTO_COMPUTE_COORDS_LINKS = False
 
 
 @unit_converter('custom-jdaviz')
