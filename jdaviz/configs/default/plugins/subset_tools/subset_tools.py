@@ -716,12 +716,12 @@ class SubsetTools(PluginTemplateMixin):
                 if not np.all(np.isfinite((x, y))):
                     raise ValueError(f'Invalid centroid ({x}, {y})')
             except Exception as err:
-                self._set_center(self.get_center(subset_name=subset), subset_name=subset,
-                                 update=False)
+                self.set_center(self.get_center(subset_name=subset), subset_name=subset,
+                                update=False)
                 self.hub.broadcast(SnackbarMessage(
                     f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
             else:
-                self._set_center((x, y), subset_name=subset, update=True)
+                self.set_center((x, y), subset_name=subset, update=True)
 
         if not self.multiselect:
             _do_recentering(self.subset_selected, self.subset.selected_subset_state)
@@ -774,7 +774,7 @@ class SubsetTools(PluginTemplateMixin):
         subset_state = self._get_subset_state(subset_name)
         return subset_state.center()
 
-    def _set_center(self, new_cen, subset_name=None, update=False):
+    def set_center(self, new_cen, subset_name=None, update=False):
         """Set the desired center for the selected Subset, if applicable.
         If Subset is not centerable, nothing is done.
 
@@ -829,26 +829,6 @@ class SubsetTools(PluginTemplateMixin):
             tmp = self.subset_definitions
             self.subset_definitions = []
             self.subset_definitions = tmp
-
-    def set_center(self, new_cen, subset_name=None):
-        """Set the desired center for the selected Subset, if applicable.
-        If Subset is not centerable, nothing is done.
-
-        Parameters
-        ----------
-        new_cen : number or tuple of numbers
-            The new center defined either as ``x`` or ``(x, y)``,
-            depending on the Subset type.
-        subset_name : str
-            The name of the subset that is being updated.
-
-        Raises
-        ------
-        NotImplementedError
-            Subset type is not supported.
-
-        """
-        return self._set_center(new_cen, subset_name, update=True)
 
     # List of JSON-like dict is nice for front-end but a pain to look up,
     # so we use these helper functions.
