@@ -113,3 +113,7 @@ class BaseImporterToPlugin(BaseImporter):
     @property
     def target(self):
         return self.default_plugin
+
+    @property
+    def has_default_plugin(self):
+        return self.default_plugin in self.app._jdaviz_helper.plugins
