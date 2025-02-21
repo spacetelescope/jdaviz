@@ -39,15 +39,15 @@
   },
   "SDSS": {
     "units": "Angstrom",
-    "medium": "air",
+    "medium": "vacuum",
     "filename_base": "SDSS",
     "Citations/Notes": " Table of Spectral Lines Used in SDSS\n\n http://classic.sdss.org/dr6/algorithms/linestable.html\n Vacuum wavelengths"
   },
   "SDSS-IV": {
     "units": "Angstrom",
-    "medium": "vacuum",
+    "medium": "air",
     "filename_base": "SDSS-IV",
-    "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000 vacuum for lambda < 2000."
+    "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000."
   },
   "H-Paschen-Brackett": {
     "units": "micron",
