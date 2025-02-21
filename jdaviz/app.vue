@@ -56,6 +56,7 @@
             :loader_tab.sync="state.loader_tab"
             :api_hints_enabled="state.show_api_hints"
             :config="config"
+            :api_support="checkNotebookContext()"
           ></j-loader-dialog>
         </v-dialog>
       </v-toolbar-items>

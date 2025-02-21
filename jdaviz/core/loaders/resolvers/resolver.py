@@ -136,6 +136,7 @@ class TargetSelect(SelectPluginComponent):
 
 class BaseResolver(PluginTemplateMixin):
     default_input = None
+    requires_api_support = False
 
     importer_widget = Unicode().tag(sync=True)
 

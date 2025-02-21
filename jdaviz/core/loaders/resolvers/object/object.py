@@ -9,6 +9,7 @@ from jdaviz.core.user_api import LoaderUserApi
 class ObjectResolver(BaseResolver):
     template_file = __file__, "object.vue"
     default_input = 'object'
+    requires_api_support = True
 
     object_repr = Unicode("").tag(sync=True)
 
