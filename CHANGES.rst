@@ -108,6 +108,8 @@ Bug Fixes
 
 - Fix showing dataset dropdown in cubeviz's spectral extraction for flux-cube products from other plugins. [#3411]
 
+- SDSS line list now in vacuum, and SDSS IV in air. Previously, they were incorrectly categorized. [#3458]
+
 Cubeviz
 ^^^^^^^
 
