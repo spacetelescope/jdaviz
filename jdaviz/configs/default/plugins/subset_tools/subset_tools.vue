@@ -8,6 +8,15 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <plugin-loaders-dialog-btn
+      v-if="dev_loaders"
+      :show_loader_dialog.sync="show_loader_dialog"
+      :loader_items="loader_items"
+      :loader_tab.sync="loader_tab"
+      :api_hints_enabled="api_hints_enabled"
+      :config="config"
+    ></plugin-loaders-dialog-btn>
+
     <v-row v-if="api_hints_enabled && config === 'imviz'">
       <span class="api-hint">
         plg.subset.multiselect = {{ boolToString(multiselect) }}

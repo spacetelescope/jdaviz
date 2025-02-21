@@ -17,6 +17,7 @@
       item-text="label"
       item-value="label"
       persistent-hint
+      style="width: 100%"
     >
       <template v-slot:selection="{ item, index }">
         <div class="single-line" style="width: 100%">
