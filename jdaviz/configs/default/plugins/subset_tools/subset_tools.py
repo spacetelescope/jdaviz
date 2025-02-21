@@ -892,7 +892,7 @@ class SubsetTools(PluginTemplateMixin):
         self._sync_available_from_state()
 
     def import_region(self, region, combination_mode=None, max_num_regions=None,
-                      refdata_label=None, return_bad_regions=False, **kwargs):
+                      refdata_label=None, return_bad_regions=False, region_format=None):
         """
         Method for creating subsets from regions or region files.
 
@@ -931,6 +931,10 @@ class SubsetTools(PluginTemplateMixin):
             If `True`, return the regions that failed to load (see ``bad_regions``);
             This is useful for debugging. If `False`, do not return anything (`None`).
 
+        region_format : str or `None`
+            Passed to ``Regions.read(format=region_format)``.  Only applicable if ``region``
+            is a string pointing to a valid file that ``Regions`` can read.
+
         Returns
         -------
         bad_regions : list of (obj, str) or `None`
@@ -943,17 +947,16 @@ class SubsetTools(PluginTemplateMixin):
         if isinstance(region, str):
             if os.path.exists(region):
                 from regions import Regions
-                region_format = kwargs.pop('region_format', None)
                 try:
                     raw_regs = Regions.read(region, format=region_format)
                 except Exception:  # nosec
                     raw_regs = SpectralRegion.read(region)
 
                 return self._load_regions(raw_regs, combination_mode, max_num_regions,
-                                          refdata_label, return_bad_regions, **kwargs)
+                                          refdata_label, return_bad_regions)
         else:
             return self._load_regions(region, combination_mode, max_num_regions, refdata_label,
-                                      return_bad_regions, **kwargs)
+                                      return_bad_regions)
 
     def _load_regions(self, regions, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
