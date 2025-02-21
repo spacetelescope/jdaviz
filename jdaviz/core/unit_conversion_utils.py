@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import itertools
 
 from astropy import units as u
@@ -15,7 +16,8 @@ __all__ = ["all_flux_unit_conversion_equivs", "check_if_unit_is_per_solid_angle"
            "create_equivalent_flux_units_list",
            "create_equivalent_spectral_axis_units_list",
            "flux_conversion_general", "handle_squared_flux_unit_conversions",
-           "supported_sq_angle_units", "units_to_strings"]
+           "supported_sq_angle_units", "spectral_axis_conversion",
+           "units_to_strings"]
 
 
 def all_flux_unit_conversion_equivs(pixar_sr=None, cube_wave=None):
@@ -49,6 +51,62 @@ def all_flux_unit_conversion_equivs(pixar_sr=None, cube_wave=None):
 
     if cube_wave is not None:
         equivs += u.spectral_density(cube_wave)
+
+    return equivs
+
+
+def viewer_flux_conversion_equivalencies(values, spec):
+    """
+    Generate a list of flux and surface brightness unit conversion equivalencies
+    specifically for converting units in the viewer, accounting for the special
+    case of viewer limits that may need to index the spectral axis or list of
+    pixel scale factors.
+
+    This function assumes that if exactly two values are being converted, they
+    represent the y-axis limits of the viewer. In this case, the first spectral
+    axis value is used for spectral density conversions, and the min/max value
+    of pixel scale factor are used if there are more than 2 values in
+    meta['_pixel_scale_factor'].
+
+    Parameters:
+    ----------
+    values : array-like
+        The values to be converted, which may represent flux or surface brightness.
+    spec : Spectrum1D
+
+    Returns:
+    -------
+    equivs : list
+        A list of unit equivalencies for flux and surface brightness conversions.
+    """
+
+    # if we are converting only 2 values, assume it is a viewer y limits case.
+    is_viewer_limits = len(values) == 2
+
+    # for viewer limits case, use only the 0th spectral axis value for spectral_density
+    spectral_values = spec.spectral_axis
+    if not np.isscalar(values) and is_viewer_limits:
+        spectral_values = spectral_values[0]
+
+    # Need this for setting the y-limits but values from viewer might be downscaled
+    if len(values) != spectral_values.size:
+        spectral_values = spec.spectral_axis[0]
+
+    # Next, pixel scale factor
+    pix_fac = None
+    if '_pixel_scale_factor' in spec.meta:
+        pix_fac = spec.meta['_pixel_scale_factor']
+
+        if isinstance(pix_fac, u.Quantity):
+            pix_fac = pix_fac.value
+
+        # If 2 values are being converted (considered to be viewer y limits),
+        # use min and max scale factors.
+        if is_viewer_limits and isinstance(pix_fac, Iterable):
+            pix_fac = [min(pix_fac), max(pix_fac)]
+
+    # combine scale factor and spectral axis for u.spectral with other flux<>sb equivalencies
+    equivs = all_flux_unit_conversion_equivs(pix_fac, spectral_values)
 
     return equivs
 
@@ -297,6 +355,11 @@ def flux_conversion_general(values, original_unit, target_unit,
 
     """
 
+    # we set surface brightness choices and selection before flux, which can
+    # cause a dimensionless translation attempt at instantiation
+    if not target_unit:
+        return values
+
     if original_unit == target_unit:
         if not with_unit:
             return values
@@ -339,6 +402,7 @@ def flux_conversion_general(values, original_unit, target_unit,
 
         if not with_unit:
             return converted_values.value
+
         return converted_values
 
 
@@ -382,6 +446,11 @@ def handle_squared_flux_unit_conversions(value, original_unit=None,
     converted = converted ** 2 * value * target_unit
 
     return converted
+
+
+def spectral_axis_conversion(values, original_units, target_units):
+    eqv = u.spectral() + u.pixel_scale(1*u.pix)
+    return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
 
 
 def supported_sq_angle_units(as_strings=False):
