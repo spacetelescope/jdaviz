@@ -4,7 +4,9 @@ from numpy.testing import assert_allclose
 import pytest
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import (PIX2,
+                                                 SPEC_PHOTON_FLUX_DENSITY_UNITS,
+                                                 _eqv_pixar_sr)
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
