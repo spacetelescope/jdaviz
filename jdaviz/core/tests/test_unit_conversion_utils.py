@@ -11,7 +11,6 @@ from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general,
                                                handle_squared_flux_unit_conversions,
                                                viewer_flux_conversion_equivalencies)
-from jdaviz.utils import _eqv_pixar_sr
 
 
 @pytest.mark.parametrize("unit, is_solid_angle", [
