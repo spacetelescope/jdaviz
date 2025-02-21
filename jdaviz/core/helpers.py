@@ -130,6 +130,35 @@ class ConfigHelper(HubListener):
                    for item in self.app.state.loader_items}
         return loaders
 
+    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        """
+        Load data into the app.  A single valid loader/importer must be able to be
+        matched based on the input, otherwise an error will be raised suggesting
+        what further information to provide.  For an interactive approach,
+        see ``loaders``.
+
+        Parameters
+        ----------
+        inp : string or object or None
+            Input filename, url, data object, etc.
+        loader : string, optional
+            Only consider a specific loader/resolver
+        format : string, optional
+            Only consider a specific format
+        target : string, optional
+            Only consider a specific target
+        kwargs :
+            Additional kwargs are passed on to both the loader and importer, as applicable.
+        """
+        from jdaviz.core.loaders.resolvers import find_matching_resolver
+        resolver = find_matching_resolver(self.app, inp,
+                                          resolver=loader,
+                                          format=format,
+                                          target=target,
+                                          **kwargs)
+        # TODO: how to filter kwargs to pass on to importer
+        resolver.importer(**kwargs)
+
     @property
     def data_labels(self):
         """
