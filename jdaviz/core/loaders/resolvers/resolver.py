@@ -34,7 +34,6 @@ class FormatSelect(SelectPluginComponent):
 
     @observe('filters')
     def _update_items(self, msg={}):
-        # print("*** FormatSelect._update_items")
         if not self.plugin.is_valid:
             self.items = []
             self._apply_default_selection()
@@ -114,7 +113,6 @@ class TargetSelect(SelectPluginComponent):
 
     @observe('filters')
     def _update_items(self, msg={}):
-        # print("*** TargetSelect._update_items")
         if not self.plugin.is_valid:
             self.items = []
             self._apply_default_selection()
@@ -162,13 +160,13 @@ class BaseResolver(PluginTemplateMixin):
     @property
     def is_valid(self):
         # override by subclass
-        return False
+        return False  # pragma: nocover
 
     def __call__(self):
         # override by subclass - must convert any inputs into something
         # that can be interpretted by at least one parser
         # (generally a filepath, file object, or python object)
-        raise NotImplementedError("Resolver subclass must implement __call__")
+        raise NotImplementedError("Resolver subclass must implement __call__")  # pragma: nocover
 
     @property
     def user_api(self):

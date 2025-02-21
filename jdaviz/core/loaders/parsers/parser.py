@@ -12,7 +12,7 @@ class BaseParser:
 
     @property
     def is_valid(self):
-        raise NotImplementedError("Subclasses must implement is_valid property")
+        raise NotImplementedError("Subclasses must implement is_valid property")  # pragma: nocover
 
     @property
     def input(self):
@@ -20,7 +20,7 @@ class BaseParser:
 
     @cached_property
     def output(self):
-        raise NotImplementedError("Subclasses must implement output property")
+        raise NotImplementedError("Subclasses must implement output property")  # pragma: nocover
 
     def __call__(self):
         return self.output

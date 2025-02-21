@@ -21,7 +21,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
-        if not self.is_valid:
+        if not self.is_valid:  # pragma: nocover
             return None
         if isinstance(self.input, SpectrumList):
             return self.input
@@ -38,7 +38,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
                                             meta=self.input.meta)
                                  for i in range(self.input.flux.shape[0])])
         else:
-            raise NotImplementedError()
+            raise NotImplementedError()  # pragma: nocover
 
     @property
     def default_data_label(self):

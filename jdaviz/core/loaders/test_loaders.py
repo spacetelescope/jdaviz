@@ -1,4 +1,7 @@
 import pytest
+import warnings
+from astropy import units as u
+from specutils import SpectralRegion
 from jdaviz.core.registries import loader_resolver_registry
 
 
@@ -41,3 +44,24 @@ def test_resolver_url(specviz_helper):
     loader.importer()
 
     assert len(specviz_helper.app.data_collection) == 1
+
+
+def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
+    s = SpectralRegion(5*u.um, 6*u.um)
+    local_path = str(tmp_path / 'spectral_region.ecsv')
+    s.write(local_path)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        specviz_helper.load_data(spectrum1d)
+
+    specviz_helper.app.state.dev_loaders = True
+    specviz_helper.plugins['Subset Tools']._obj.dev_loaders = True
+
+    loader = specviz_helper.plugins['Subset Tools'].loaders['file']
+
+    assert len(loader.format.choices) == 0
+    loader.filepath = local_path
+    assert len(loader.format.choices) > 0
+
+    loader.importer()

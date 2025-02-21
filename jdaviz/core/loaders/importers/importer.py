@@ -12,7 +12,7 @@ class BaseImporter(PluginTemplateMixin):
     @property
     def is_valid(self):
         # override by subclass
-        return False
+        return False  # pragma: nocover
 
     @property
     def input(self):
@@ -25,11 +25,11 @@ class BaseImporter(PluginTemplateMixin):
 
     @property
     def target(self):
-        raise NotImplementedError("Importer subclass must implement target")
+        raise NotImplementedError("Importer subclass must implement target")  # pragma: nocover
 
     def __call__(self):
         # override by subclass - should act on self.output and load into jdaviz
-        raise NotImplementedError("Importer subclass must implement __call__")
+        raise NotImplementedError("Importer subclass must implement __call__")  # pragma: nocover
 
     @property
     def user_api(self):
@@ -43,7 +43,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @property
     def default_viewer(self):
-        raise NotImplementedError("Importer subclass must implement default_viewer")
+        raise NotImplementedError("Importer subclass must implement default_viewer")  # noqa pragma: nocover
 
     @property
     def target(self):
@@ -72,7 +72,7 @@ class BaseImporterToDataCollection(BaseImporter):
 class BaseImporterToPlugin(BaseImporter):
     @property
     def default_plugin(self):
-        raise NotImplementedError("Importer subclass must implement default_plugin")
+        raise NotImplementedError("Importer subclass must implement default_plugin")  # noqa pragma: nocover
 
     @property
     def target(self):

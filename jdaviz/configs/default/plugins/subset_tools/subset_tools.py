@@ -178,6 +178,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset']
+        if self.dev_loaders:
+            expose += ['loaders']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
