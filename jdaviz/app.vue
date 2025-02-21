@@ -2,6 +2,7 @@
   <v-app id="web-app" :style="checkNotebookContext() ? 'display: inline' : 'display: flex'" :class="'jdaviz ' + config" ref="mainapp">
     <jupyter-widget :widget="style_registry_instance"></jupyter-widget>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
+
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="index > 1" vertical style="margin: 0px 10px"></v-divider>
