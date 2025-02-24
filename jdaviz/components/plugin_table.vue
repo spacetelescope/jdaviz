@@ -39,11 +39,12 @@
         </template>
         </v-select>
       </div>
-      <div style="line-height: 64px; width=32px" class="only-show-in-tray">
+      <span style="line-height: 64px; width=64px; display: inline-flex" class="only-show-in-tray">
         <j-tooltip tipid='plugin-table-send-to-app'>
           <v-icon @click="send_to_app">mdi-view-grid-plus-outline</v-icon>
         </j-tooltip>
-      </div>
+        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+      </span>
     </v-row>
 
     <v-row style="margin: 0px 0px 8px 0px !important">
@@ -95,7 +96,7 @@ module.exports = {
     width: 100%;
   }
   .tray-plugin .row-select {
-    width: calc(100% - 40px)
+    width: calc(100% - 60px)
   }
 
   .plugin-table-component {
