@@ -58,15 +58,15 @@ class BaseImporterToDataCollection(BaseImporter):
         if added == 0:
             print(f"*** will eventually create {self.default_viewer} and add data")
 
-    def add_to_data_collection(self, data_label, show_in_viewer=True):
+    def add_to_data_collection(self, data, data_label, show_in_viewer=True):
         if data_label is None:
             data_label = self.default_data_label
-        self.app.add_data(self.output, data_label=data_label)
+        self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)
 
     def __call__(self, data_label=None):
-        self.add_to_data_collection(data_label, show_in_viewer=True)
+        self.add_to_data_collection(self.output, data_label, show_in_viewer=True)
 
 
 class BaseImporterToPlugin(BaseImporter):

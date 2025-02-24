@@ -49,3 +49,9 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'specviz-profile-viewer'
+
+    def __call__(self, data_label=None):
+        if data_label is None:
+            data_label = self.default_data_label
+        for i, spec in enumerate(self.output):
+            self.add_to_data_collection(spec, f"{data_label}_{i}", show_in_viewer=True)
