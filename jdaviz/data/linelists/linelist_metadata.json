@@ -47,7 +47,7 @@
     "units": "Angstrom",
     "medium": "air",
     "filename_base": "SDSS-IV",
-    "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000."
+    "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000 Angstrom."
   },
   "H-Paschen-Brackett": {
     "units": "micron",
