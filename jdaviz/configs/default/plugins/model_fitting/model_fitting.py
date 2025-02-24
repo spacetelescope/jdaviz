@@ -852,7 +852,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         return selected_models
 
-    def get_model_parameters(self, models=None, model_label=None, x=None, y=None):
+    def _get_model_parameters(self, models=None, model_label=None, x=None, y=None):
         """
         Convert each parameter of model inside models into a coordinate that
         maps the model name and parameter name to a `astropy.units.Quantity`
@@ -986,6 +986,35 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     param_units[key].get(param_name, None))
 
         return parameters_cube
+
+    def get_model_parameters(self, model_label=None, x=None, y=None):
+        """
+        Convert each parameter of model inside models into a coordinate that
+        maps the model name and parameter name to a `astropy.units.Quantity`
+        object.
+
+        Parameters
+        ----------
+        model_label : str
+            Get model parameters for a particular model by inputting its label.
+        x : int
+            The x coordinate of the model spaxels that will be returned from
+            get_models.
+        y : int
+            The y coordinate of the model spaxels that will be returned from
+            get_models.
+
+        Returns
+        -------
+        :dict: a dictionary of the form
+            {model name: {parameter name: [[`astropy.units.Quantity`]]}}
+            for 3d models or
+            {model name: {parameter name: `astropy.units.Quantity`}} where the
+            Quantity object represents the parameter value and unit of one of
+            spaxel models or the 1d models, respectively.
+        """
+        return self._get_model_parameters(models=None, model_label=model_label,
+                                          x=x, y=y)
 
     def vue_add_model(self, event):
         self.create_model_component()

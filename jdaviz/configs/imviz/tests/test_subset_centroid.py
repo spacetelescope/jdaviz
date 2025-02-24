@@ -75,7 +75,7 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
         # The functionality for set_center has changed so that the subset state itself
         # is updated but that change is not propagated to subset_definitions or the UI until
         # vue_update_subset is called.
-        plg.set_center((2, 2), update=False)
+        plg._obj.set_center((2, 2), update=False)
         for key in ("value", "orig"):
             ra = plg._obj._get_value_from_subset_definition(0, "RA Center (degrees)", key)
             dec = plg._obj._get_value_from_subset_definition(0, "Dec Center (degrees)", key)
