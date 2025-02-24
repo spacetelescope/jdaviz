@@ -21,7 +21,6 @@ tray:
   - g-plot-options
   - g-subset-tools
   - g-markers
-  - spectral-extraction
   - g-gaussian-smooth
   - g-model-fitting
   - g-unit-conversion
