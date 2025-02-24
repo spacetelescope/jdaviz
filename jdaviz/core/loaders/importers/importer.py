@@ -2,6 +2,8 @@ from traitlets import Bool, Unicode
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
+from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
 from jdaviz.core.user_api import ImporterUserApi
 
@@ -92,7 +94,14 @@ class BaseImporterToDataCollection(BaseImporter):
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
-            print(f"*** will eventually create {self.default_viewer} and add data")
+            viewer_dict = viewer_registry.members.get(self.default_viewer)
+            viewer_cls = viewer_dict.get('cls')
+            vid = viewer_dict.get('label')
+            self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                    vid=vid, name=vid,
+                                    open_data_menu_if_empty=False)
+            viewer = self.app._jdaviz_helper.viewers.get(vid)
+            viewer.data_menu.add_data(data_label)
 
     def add_to_data_collection(self, data, data_label, show_in_viewer=True):
         if data_label is None:
