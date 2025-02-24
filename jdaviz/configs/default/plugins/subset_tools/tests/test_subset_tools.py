@@ -7,7 +7,8 @@ from astropy.nddata import NDData
 from glue.core.edit_subset_mode import ReplaceMode, OrMode, NewMode
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from numpy.testing import assert_allclose
-from regions import CirclePixelRegion, PixCoord
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
+                     CompoundPixelRegion, PixCoord)
 from specutils import SpectralRegion
 
 from jdaviz.configs.default.plugins.subset_tools import utils
@@ -263,6 +264,7 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
     assert spectral_regions['Subset 1']
 
     # now test a composite spatial subset, make sure it is retrieved
+    # as a CompoundRegion (since operator is &)
     sr1 = CirclePixelRegion(center=PixCoord(x=2.5, y=2.5), radius=2)
     sr2 = CirclePixelRegion(center=PixCoord(x=2.5, y=3), radius=2)
     plg.import_region(sr1, combination_mode='new')
@@ -279,39 +281,79 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
 
 def test_get_regions_composite(imviz_helper):
     """
-    If you apply a circular subset mask to a circular subset to make a
-    composite subset, and they aren't exactly aligned at the center to form a
-    circular annulus, obtaining the region through ``get_interactive_regions``
-    (now deprecated, replaced with get_regions in Subset Tools) fails.
-    However, you can retrieve the compound subset as a ``region`` with
-    ``app.get_subsets``. This test ensures that a region is returned through
-    both ``app.get_subsets`` and ``get_regions``.
+    Test the behavior of retrieving composite subsets as regions
+    using subset_tools.get_regions
     """
     a = np.ones((200, 200))
     imviz_helper.load_data(a, data_label="test")
     plg = imviz_helper.plugins['Subset Tools']
 
-    # apply two circular subsets
+    # apply two (not concentric) circular subsets
     plg.import_region(CirclePixelRegion(center=PixCoord(x=96.0, y=96.0),
                                         radius=45.0), combination_mode='new')
-    plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
+    plg.import_region(CirclePixelRegion(center=PixCoord(x=100.0, y=100.0),
                                         radius=25.0), combination_mode='new')
 
-    # apply composite subset created from two existing circular subsets
+    # create a composite subset created from these circular subsets
+    # that are applied with remove/and not to subtract the smaller from the larger
     imviz_helper.app.session.edit_subset_mode._mode = NewMode
     subset_groups = imviz_helper.app.data_collection.subset_groups
     new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
     imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
 
-    # FIXME: make sure Subset 3, the composite subset, is retrieved.
-    # This needs https://jira.stsci.edu/browse/JDAT-5035
+    # call get_regions and make sure Subset 3, the composite subset, is retrieved, but as a list
+    # of its individual subsets since they were created with &~ and do not form
+    # an exact circular annulus
     regions = plg.get_regions()
-    assert sorted(regions) == ["Subset 1", "Subset 2"]  # What we have
-    # assert sorted(regions) == ["Subset 1", "Subset 2", "Subset 3"]  # What we want after JDAT-5035
+    assert sorted(regions) == ["Subset 1", "Subset 2", "Subset 3"]
+    assert len(regions['Subset 3']) == 2
 
     # make sure the same regions are returned by app.get_subsets
     get_subsets = imviz_helper.app.get_subsets()
     assert sorted(get_subsets) == ["Subset 1", "Subset 2", "Subset 3"]
+
+    # Now, create two concentric circular subsets and combine them to form a circular annulus. 
+    plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
+                                        radius=45.0), combination_mode='new')
+    plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
+                                        radius=25.0), combination_mode='new')
+    imviz_helper.app.session.edit_subset_mode._mode = NewMode
+    subset_groups = imviz_helper.app.data_collection.subset_groups
+    new_subset = subset_groups[3].subset_state & ~subset_groups[4].subset_state
+    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+
+    # now, when get_regions is called, the combined subset should be represented as a
+    # CircleAnnulusPixelRegion rather than two circlular subsets
+    regions = plg.get_regions()
+    assert isinstance(regions['Subset 6'], CircleAnnulusPixelRegion)
+
+    # now, when get_regions is called, the combined subset should be represented as a
+    # CircleAnnulusPixelRegion rather than two circlular subsets
+    regions = plg.get_regions()
+    assert isinstance(regions['Subset 6'], CircleAnnulusPixelRegion)
+
+    # If and/or/xor are used to create composite subsets, they can be represented
+    # as CompoundRegions.
+    # and
+    imviz_helper.app.session.edit_subset_mode._mode = NewMode
+    new_subset = subset_groups[3].subset_state & subset_groups[4].subset_state
+    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+    regions = plg.get_regions()
+    assert isinstance(regions['Subset 7'], CompoundPixelRegion)
+
+    # or
+    imviz_helper.app.session.edit_subset_mode._mode = NewMode
+    new_subset = subset_groups[3].subset_state | subset_groups[4].subset_state
+    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+    regions = plg.get_regions()
+    assert isinstance(regions['Subset 8'], CompoundPixelRegion)
+
+    # xor
+    imviz_helper.app.session.edit_subset_mode._mode = NewMode
+    new_subset = subset_groups[3].subset_state ^ subset_groups[4].subset_state
+    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+    regions = plg.get_regions()
+    assert isinstance(regions['Subset 9'], CompoundPixelRegion)
 
 
 def test_check_valid_subset_label(imviz_helper):

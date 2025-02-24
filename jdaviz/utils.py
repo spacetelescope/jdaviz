@@ -1,3 +1,4 @@
+import operator
 import os
 import time
 import threading
@@ -14,6 +15,7 @@ from astroquery.mast import Observations, conf
 from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
+from regions import CirclePixelRegion, CircleAnnulusPixelRegion
 
 from glue.config import settings
 from glue.config import colormaps as glue_colormaps
@@ -357,6 +359,75 @@ class ColorCycler:
 
     def reset(self):
         self.counter = -1
+
+
+def _chain_regions(regions, ops):
+    """
+    Combine multiple regions into a compound pixel/sky region based on the
+    specified operators.
+
+    If the operators are valid binary operators recognized  by both glue and
+    Regions, the function returns a compound region. Otherwise, it returns a
+    list of individual regions paired with their respective operators, or just
+    returns the region if regions only contains one region.
+
+    Parameters
+    ----------
+    regions : list
+        A list of region objects.
+    ops : list of str
+        A list of glue states that map to operator names to describe how to
+        combine regions (e.g. 'AndState').
+
+    Returns
+    -------
+    Compound region or list
+        A single compound region if valid operators are provided; otherwise,
+        a list of tuples containing individual regions and their associated
+        operators.
+    """
+
+    if len(regions) == 1:
+        return regions[0]
+
+    valid_operators = {
+        'AndState': operator.and_,
+        'OrState': operator.or_,
+        'XorState': operator.xor
+    }
+
+    operators = ops[1:]  # first subset doesn't need an operator
+
+    # if regions cant be combined into a compound region as an annulus or with
+    # and/or/xor, return list of tuples of (region, operator)
+    annulus = _combine_if_annulus(regions[0], regions[1], operators[0])
+    if annulus is None:
+        if not np.all(np.isin(operators, list(valid_operators.keys()))):
+            return list(zip(regions, [''] + operators))
+
+    r1 = annulus or regions[0]
+    for i in range(2 if annulus else 0, len(operators)):
+        r1 = valid_operators[operators[i]](r1, regions[i + 1])
+
+    return r1
+
+
+def _combine_if_annulus(region1, region2, op):
+    """
+    Determine whether applying `region2` to `region1` using the specified
+    operator results in a circular annulus. If the conditions are met,
+    return a `CircleAnnulusPixelRegion`; otherwise, return `None`.
+    """
+    if (
+        isinstance(region1, (CirclePixelRegion))
+        and isinstance(region1, (CirclePixelRegion))
+        and op == 'AndNotState'
+        and region1.center == region2.center
+        and region1.radius > region2.radius
+    ):
+        return CircleAnnulusPixelRegion(center=region1.center,
+                                        inner_radius=region2.radius,
+                                        outer_radius=region1.radius)
 
 
 def get_subset_type(subset):
