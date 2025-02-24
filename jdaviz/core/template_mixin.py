@@ -156,36 +156,33 @@ def show_widget(widget, loc, title):  # pragma: no cover
 
 class ViewerPropertiesMixin:
     # assumes that self.app is defined by the class
-    @cached_property
+    @property
     def spectrum_viewer(self):
-        if hasattr(self, '_default_spectrum_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_viewer=True
-            )
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_spectrum_viewer=True
+        )
+        if viewer_reference is None:
+            return None
 
         return self.app.get_viewer(viewer_reference)
 
-    @cached_property
+    @property
     def spectrum_2d_viewer(self):
-        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_2d_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_2d_viewer=True
-            )
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_spectrum_2d_viewer=True
+        )
+        if viewer_reference is None:
+            return None
 
         return self.app.get_viewer(viewer_reference)
 
-    @cached_property
+    @property
     def flux_viewer(self):
-        if hasattr(self, '_default_flux_viewer_reference_name'):
-            viewer_reference = self._default_flux_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_flux_viewer=True
-            )
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_flux_viewer=True
+        )
+        if viewer_reference is None:
+            return None
 
         return self.app.get_viewer(viewer_reference)
 
@@ -3181,7 +3178,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
     @property
     def continuum_marks(self):
         marks = {}
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer = self.spectrum_viewer
         if viewer is None:
             return {}
         for mark in viewer.figure.marks:

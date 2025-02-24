@@ -70,10 +70,7 @@ class LineListTool(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         self._spectrum1d = None
-        if self._viewer:
-            self.available_lists = self._viewer.available_linelists()
         self.list_to_load = None
         self.loaded_lists = ["Custom"]
         self.list_contents = {"Custom": {"lines": [],
@@ -118,34 +115,31 @@ class LineListTool(PluginTemplateMixin):
                            handler=lambda x: self.update_line_mark_dict())
 
         # if set to auto (default), update the slider range when zooming on the spectrum viewer
-        if self._viewer:
-            self._viewer.state.add_callback("x_min",
-                                            lambda x_min: self._on_spectrum_viewer_limits_changed())
-            self._viewer.state.add_callback("x_max",
-                                            lambda x_max: self._on_spectrum_viewer_limits_changed())
+        if sv := self.spectrum_viewer:
+            sv.state.add_callback("x_min",
+                                  lambda x_min: self._on_spectrum_viewer_limits_changed())
+            sv.state.add_callback("x_max",
+                                  lambda x_max: self._on_spectrum_viewer_limits_changed())
 
-        self._disable_if_no_data()
+        self._set_relevant()
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot spectral lines from preset or custom line lists.'
 
-    @property
-    def _default_spectrum_viewer_reference_name(self):
-        return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
-        )
-
-    @property
-    def _default_flux_viewer_reference_name(self):
-        return getattr(
-            self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
-        )
-
-    def _disable_if_no_data(self):
-        if len(self.app.data_collection) == 0:
-            self.disabled_msg = 'Line Lists unavailable when no data is loaded'
+    def _set_relevant(self):
+        sv = self.spectrum_viewer
+        if sv is None:
+            self.irrelevant_msg = 'Line Lists unavailable without spectrum viewer'
+        elif not len(sv.layers):
+            self.irrelevant_msg = ''
+            self.disabled_msg = 'Line Lists unavailable without data loaded in spectrum viewer'
         else:
+            self.irrelevant_msg = ''
             self.disabled_msg = ''
+
+            if not len(self.available_lists):
+                # TODO: move this logic within the plugin itself and out of the viewer
+                self.available_lists = sv.available_linelists()
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -164,20 +158,22 @@ class LineListTool(PluginTemplateMixin):
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
-        self._disable_if_no_data()
+        self._set_relevant()
+        if self.disabled_msg or self.irrelevant_msg:
+            return
 
-        self._viewer_id = self.app._viewer_item_by_reference(
-            self._default_spectrum_viewer_reference_name).get('id')
+        sv = self.spectrum_viewer
+        # case of no spectrum-viewer would have been caught above
+        viewer_id = self.app._viewer_item_by_reference(sv.reference_id).get('id')
 
         # Subsets are global and are not linked to specific viewer instances,
         # so it's not required that we match any specific ids for that case.
         # However, if the msg is not none, check to make sure that it's the
         # viewer we care about and that the message contains the data label.
-        if msg is None or msg.viewer_id != self._viewer_id or msg.data is None:
+        if msg is None or msg.viewer_id != viewer_id or msg.data is None:
             return
 
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+        viewer_data_labels = [layer.layer.label for layer in sv.layers]
         if msg.data.label not in viewer_data_labels:
             return
 
@@ -283,7 +279,7 @@ class LineListTool(PluginTemplateMixin):
         # update all lines, self._global_redshift, and emit message back to Specviz helper
         z = u.Quantity(self.rs_redshift)
 
-        for mark in self.app.get_viewer(self._default_spectrum_viewer_reference_name).figure.marks:
+        for mark in self.spectrum_viewer.figure.marks:
             # update ALL to this redshift, if adding support for per-line redshift
             # this logic will need to change to not affect ALL lines
             if not isinstance(mark, SpectralLine):
@@ -421,7 +417,7 @@ class LineListTool(PluginTemplateMixin):
         self.vue_unpause_tables()
 
     def _on_spectrum_viewer_limits_changed(self, event=None):
-        sv = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        sv = self.spectrum_viewer
         if sv.state.x_min is None or sv.state.x_max is None:
             return
         self.spectrum_viewer_min = float(sv.state.x_min)
@@ -531,7 +527,7 @@ class LineListTool(PluginTemplateMixin):
         self.send_state('loaded_lists')
         self.send_state('list_contents')
 
-        self._viewer.plot_spectral_lines(tmp_names_rest, global_redshift=self._global_redshift)
+        self.spectrum_viewer.plot_spectral_lines(tmp_names_rest, global_redshift=self._global_redshift)
         self.update_line_mark_dict()
 
         msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
@@ -542,7 +538,7 @@ class LineListTool(PluginTemplateMixin):
 
     def update_line_mark_dict(self):
         self.line_mark_dict = {}
-        for m in self._viewer.figure.marks:
+        for m in self.spectrum_viewer.figure.marks:
             if isinstance(m, SpectralLine):
                 self.line_mark_dict[m.table_index] = m
 
@@ -584,7 +580,7 @@ class LineListTool(PluginTemplateMixin):
 
         # Load the table into the main astropy table and get it back, to make
         # sure all values match between the main table and local plugin
-        temp_table = self._viewer.load_line_list(temp_table, return_table=True,
+        temp_table = self.spectrum_viewer.load_line_list(temp_table, return_table=True,
                                                  show=False)
 
         metadata = get_linelist_metadata()
@@ -615,7 +611,7 @@ class LineListTool(PluginTemplateMixin):
         self.loaded_lists = []
         self.loaded_lists = loaded_lists
 
-        self._viewer.plot_spectral_lines()
+        self.spectrum_viewer.plot_spectral_lines()
         self.update_line_mark_dict()
 
         msg_text = ("Spectral lines loaded from preset. Lines can be shown/hidden"
@@ -644,7 +640,7 @@ class LineListTool(PluginTemplateMixin):
             temp_table["linename"] = [temp_dict["linename"]]
             temp_table["rest"] = [temp_dict["rest"]*u.Unit(temp_dict["unit"])]
             temp_table["colors"] = [temp_dict["colors"]]
-            temp_table = self._viewer.load_line_list(temp_table, return_table=True)
+            temp_table = self.spectrum_viewer.load_line_list(temp_table, return_table=True)
 
             # Add line to Custom lines in local list
             temp_dict["name_rest"] = str(temp_table[0]["name_rest"])
@@ -652,7 +648,7 @@ class LineListTool(PluginTemplateMixin):
             self.list_contents = {}
             self.list_contents = list_contents
 
-            self._viewer.plot_spectral_line(temp_dict["name_rest"])
+            self.spectrum_viewer.plot_spectral_line(temp_dict["name_rest"])
             self.update_line_mark_dict()
 
         lines_loaded_message = SnackbarMessage("Custom spectral line loaded",
@@ -666,12 +662,12 @@ class LineListTool(PluginTemplateMixin):
         lc = self.list_contents
         for line in lc[listname]["lines"]:
             line["show"] = True
-            self._viewer.spectral_lines.loc[line["name_rest"]]["show"] = True
+            self.spectrum_viewer.spectral_lines.loc[line["name_rest"]]["show"] = True
 
         self.list_contents = lc
         self.send_state('list_contents')
 
-        self._viewer.plot_spectral_lines(global_redshift=self._global_redshift)
+        self.spectrum_viewer.plot_spectral_lines(global_redshift=self._global_redshift)
         self.update_line_mark_dict()
 
     def vue_hide_all_in_list(self, listname):
@@ -685,14 +681,14 @@ class LineListTool(PluginTemplateMixin):
 
         self.send_state('list_contents')
 
-        self._viewer.erase_spectral_lines(name_rest=name_rests)
+        self.spectrum_viewer.erase_spectral_lines(name_rest=name_rests)
         self.update_line_mark_dict()
 
     def vue_plot_all_lines(self, event):
         """
         Plot all the currently loaded lines in the viewer
         """
-        if self._viewer.spectral_lines is None:
+        if self.spectrum_viewer.spectral_lines is None:
             warn_message = SnackbarMessage("No spectral lines loaded to plot",
                                            sender=self, color="error")
             self.hub.broadcast(warn_message)
@@ -700,18 +696,18 @@ class LineListTool(PluginTemplateMixin):
         for listname in self.list_contents:
             for line in self.list_contents[listname]["lines"]:
                 line["show"] = True
-        self._viewer.spectral_lines["show"] = True
+        self.spectrum_viewer.spectral_lines["show"] = True
 
         self.send_state('list_contents')
 
-        self._viewer.plot_spectral_lines(global_redshift=self._global_redshift)
+        self.spectrum_viewer.plot_spectral_lines(global_redshift=self._global_redshift)
         self.update_line_mark_dict()
 
     def vue_erase_all_lines(self, event):
         """
         Erase all lines from the viewer
         """
-        if self._viewer.spectral_lines is None:
+        if self.spectrum_viewer.spectral_lines is None:
             warn_message = SnackbarMessage("No spectral lines to erase",
                                            sender=self, color="error")
             self.hub.broadcast(warn_message)
@@ -722,7 +718,7 @@ class LineListTool(PluginTemplateMixin):
 
         self.send_state('list_contents')
 
-        self._viewer.erase_spectral_lines()
+        self.spectrum_viewer.erase_spectral_lines()
         self.update_line_mark_dict()
 
     def vue_change_visible(self, data):
@@ -742,9 +738,9 @@ class LineListTool(PluginTemplateMixin):
         self.list_contents = list_contents
 
         if show:
-            self._viewer.plot_spectral_line(name_rest, global_redshift=self._global_redshift)
+            self.spectrum_viewer.plot_spectral_line(name_rest, global_redshift=self._global_redshift)
         else:
-            self._viewer.erase_spectral_lines(name_rest=name_rest)
+            self.spectrum_viewer.erase_spectral_lines(name_rest=name_rest)
 
         self.update_line_mark_dict()
 
@@ -812,7 +808,7 @@ class LineListTool(PluginTemplateMixin):
                 line["colors"] = color
                 # Update the astropy table entry
                 name_rest = line["name_rest"]
-                self._viewer.spectral_lines.loc[name_rest]["colors"] = color
+                self.spectrum_viewer.spectral_lines.loc[name_rest]["colors"] = color
                 # Update the color on the plot
                 if name_rest in self.line_mark_dict:
                     self.line_mark_dict[name_rest].colors = [color]
@@ -832,18 +828,18 @@ class LineListTool(PluginTemplateMixin):
         name_rests = []
         for line in lc["lines"]:
             name_rests.append(self.vue_remove_line(line, erase=False))
-        self._viewer.erase_spectral_lines(name_rest=name_rests)
+        self.spectrum_viewer.erase_spectral_lines(name_rest=name_rests)
         self.update_line_mark_dict()
 
         self.loaded_lists = [x for x in self.loaded_lists if x != listname]
         self.list_contents = {k: v for k, v in self.list_contents.items() if k != listname}
         row_inds = [i for i, ln in
-                    enumerate(self._viewer.spectral_lines['listname'])
+                    enumerate(self.spectrum_viewer.spectral_lines['listname'])
                     if ln != listname]
         if len(row_inds) == 0:
-            self._viewer.spectral_lines = None
+            self.spectrum_viewer.spectral_lines = None
         else:
-            self._viewer.spectral_lines = self._viewer.spectral_lines[row_inds]
+            self.spectrum_viewer.spectral_lines = self.spectrum_viewer.spectral_lines[row_inds]
 
     def vue_remove_line(self, line, erase=True):
         """
@@ -853,14 +849,14 @@ class LineListTool(PluginTemplateMixin):
         """
         name_rest = line["name_rest"]
         # Keep in our spectral line astropy table, but set it to not show on plot
-        self._viewer.spectral_lines.loc[name_rest]["show"] = False
+        self.spectrum_viewer.spectral_lines.loc[name_rest]["show"] = False
 
         # Remove the line from the plot marks
         if erase:
             try:
-                self._viewer.erase_spectral_lines(name_rest=name_rest)
+                self.spectrum_viewer.erase_spectral_lines(name_rest=name_rest)
                 del self.line_mark_dict[name_rest]
             except KeyError:
-                raise KeyError("line marks: {}".format(self._viewer.figure.marks))
+                raise KeyError("line marks: {}".format(self.spectrum_viewer.figure.marks))
         else:
             return name_rest

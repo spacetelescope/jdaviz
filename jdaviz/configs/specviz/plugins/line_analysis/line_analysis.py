@@ -8,12 +8,15 @@ from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
 from specutils import analysis, Spectrum1D
 
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 SpectralMarksChangedMessage,
                                 LineIdentifyMessage,
                                 RedshiftMessage,
                                 GlobalDisplayUnitChanged,
+                                ViewerAddedMessage,
+                                ViewerRemovedMessage,
                                 SnackbarMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
@@ -112,8 +115,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         self.update_results(None)
 
-        # when accessing the selected data, access the spectrum-viewer version
-        self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
@@ -135,12 +136,21 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                            handler=self._on_identified_line_changed)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+        self.hub.subscribe(self, ViewerAddedMessage,
+                           handler=self._on_viewers_changed)
+        self.hub.subscribe(self, ViewerRemovedMessage,
+                           handler=self._on_viewers_changed)
 
-    @property
-    def _default_spectrum_viewer_reference_name(self):
-        return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
-        )
+    def _set_relevant(self):
+        sv = self.spectrum_viewer
+        if sv is None:
+            self.irrelevant_msg = 'Line Analysis unavailable without spectrum viewer'
+        elif not len(sv.layers):
+            self.irrelevant_msg = ''
+            self.disabled_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'
+        else:
+            self.irrelevant_msg = ''
+            self.disabled_msg = ''
 
     @property
     def user_api(self):
@@ -152,15 +162,22 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # Return list of only the table indices ("name_rest" in line table) from line_menu_items
         return [item["value"] for item in self.line_menu_items]
 
+    def _on_viewers_changed(self, msg):
+        # when accessing the selected data, access the spectrum-viewer version
+        self.dataset._viewers = [v.reference_id for v in self.app._viewer_store.values()
+                                 if isinstance(v, SpecvizProfileView)]
+
     def _on_viewer_data_changed(self, msg):
-        viewer_id = self.app._viewer_item_by_reference(
-            self._default_spectrum_viewer_reference_name
-        ).get('id')
+        self._set_relevant()
+        if self.disabled_msg or self.irrelevant_msg:
+            return
+
+        sv = self.spectrum_viewer
+        viewer_id = self.app._viewer_item_by_reference(sv.reference_id).get('id')
         if msg is None or msg.viewer_id != viewer_id or msg.data is None:
             return
 
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+        viewer_data_labels = [layer.layer.label for layer in sv.layers]
         if msg.data.label not in viewer_data_labels:
             return
 
