@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 from astropy import units as u
@@ -86,13 +88,19 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         bad_regions = self.subset_plugin.import_region([mask], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('MaskedSubset 1')
-        assert self.imviz.plugins['Subset Tools'].get_regions() == {}
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='Regions skipped: MaskedSubset 1')
+            assert self.imviz.plugins['Subset Tools'].get_regions() == {}
 
         mask[1, 1] = True
         bad_regions = self.subset_plugin.import_region([mask], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('MaskedSubset 2')
-        assert self.imviz.plugins['Subset Tools'].get_regions() == {}
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='Regions skipped: MaskedSubset 1')
+            assert self.imviz.plugins['Subset Tools'].get_regions() == {}
 
         # Also test deletion by label here.
         self.imviz._delete_region('MaskedSubset 1')
@@ -103,7 +111,10 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         bad_regions = self.subset_plugin.import_region([mask], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('MaskedSubset 3')
-        assert self.imviz.plugins['Subset Tools'].get_regions() == {}
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='Regions skipped: MaskedSubset 2, MaskedSubset 3')
+            assert self.imviz.plugins['Subset Tools'].get_regions() == {}
 
         # Deletion of non-existent label is silent no-op.
         self.imviz._delete_region('foo')
@@ -141,7 +152,10 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # Check interactive regions. We do not check if the translation is correct,
         # that check hopefully is already done in glue-astronomy.
         # Apparently, static region ate up one number...
-        subsets = self.imviz.plugins['Subset Tools'].get_regions()
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='Regions skipped: MaskedSubset 1')
+            subsets = self.imviz.plugins['Subset Tools'].get_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3', 'Subset 5', 'Subset 6'], subsets  # noqa: E501
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
@@ -204,7 +218,10 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         assert len(bad_regions) == 1
 
         # Will load 8/9 and 7 of that become ROIs.
-        subsets = imviz_helper.plugins['Subset Tools'].get_regions()
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='Regions skipped: MaskedSubset 1')
+            subsets = imviz_helper.plugins['Subset Tools'].get_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3',
                                         'Subset 4', 'Subset 5', 'Subset 6', 'Subset 7'], subsets
 
