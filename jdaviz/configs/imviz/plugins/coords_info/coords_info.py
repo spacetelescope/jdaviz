@@ -22,7 +22,6 @@ from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general)
-from jdaviz.utils import flux_conversion
 
 __all__ = ['CoordsInfo']
 
@@ -503,8 +502,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                    not in ['frequency', 'wavelength', 'length']
                    and unit != self.app._get_display_unit(attribute)):
                     equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
-                    value = flux_conversion(value, unit, self.app._get_display_unit(attribute),
-                                            eqv=equivalencies)
+                    value = flux_conversion_general(value, unit,
+                                                    self.app._get_display_unit(attribute),
+                                                    equivalencies,
+                                                    with_unit=False)
                     unit = self.app._get_display_unit(attribute)
 
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):

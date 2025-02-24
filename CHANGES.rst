@@ -75,6 +75,8 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Fixed some broken flux conversions that were dropping the factor of solid angle. [#3457]
+
 Cubeviz
 ^^^^^^^
 
@@ -102,6 +104,10 @@ Other Changes and Additions
 ---------------------------
 
 - Bumped minimum version of ``photutils`` to v1.12.1. [#3432]
+
+- Refactored flux conversion to use a single function for all plugin/viewer flux/surface brightness
+  conversions. [#3457]
+  
 
 4.1.2 (unreleased)
 ==================

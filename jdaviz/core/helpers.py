@@ -27,9 +27,11 @@ from specutils import Spectrum1D, SpectralRegion
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.template_mixin import show_widget
-from jdaviz.utils import data_has_valid_wcs, flux_conversion, spectral_axis_conversion
+from jdaviz.utils import data_has_valid_wcs
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               check_if_unit_is_per_solid_angle)
+                                               check_if_unit_is_per_solid_angle,
+                                               flux_conversion_general,
+                                               spectral_axis_conversion)
 
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper', 'CubeConfigHelper']
@@ -353,6 +355,21 @@ class ConfigHelper(HubListener):
                 if not spectral_unit:
                     return data
                 y_unit = self.app._get_display_unit('spectral_y')
+
+                # if there is no pixel scale factor, and the requested conversion
+                # is between flux/sb, then skip. this case is encountered when
+                # starting the app? ideally this should raise an error, and this
+                # should allow pix2/spaxel but it doesn't - keeping this
+                # condition as-is until further investigation
+                orig_sa = check_if_unit_is_per_solid_angle(u.Unit(data.flux.unit))
+                targ_sa = check_if_unit_is_per_solid_angle(u.Unit(y_unit))
+                skip_flux_conv = ('_pixel_scale_factor' not in data.meta) & (orig_sa != targ_sa)
+
+                # equivalencies for flux/sb unit conversions
+                pixar_sr = data.meta.get('_pixel_scale_factor', None)
+                eqv = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
+                                                      cube_wave=data.spectral_axis)
+
                 # TODO: any other attributes (meta, wcs, etc)?
                 # TODO: implement uncertainty.to upstream
                 uncertainty = data.uncertainty
@@ -362,45 +379,37 @@ class ConfigHelper(HubListener):
                     if uncertainty.unit is None:
                         uncertainty.unit = data.flux.unit
                     if hasattr(uncertainty, 'represent_as'):
-                        new_uncert = uncertainty.represent_as(
-                            StdDevUncertainty
-                        )
+                        new_uncert = uncertainty.represent_as(StdDevUncertainty)
                     else:
                         # if not specified as NDUncertainty, assume stddev:
                         new_uncert = uncertainty
-                    if ('_pixel_scale_factor' in data.meta):
-                        pixar_sr = data.meta.get('_pixel_scale_factor', None)
-                        eqv = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
-                                                              cube_wave=data.spectral_axis)
-                        new_uncert_converted = flux_conversion(new_uncert.quantity.value,
-                                                               new_uncert.unit, y_unit, spec=data,
-                                                               eqv=eqv)
-                        new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
-                    elif ((check_if_unit_is_per_solid_angle(u.Unit(data.flux.unit)) !=
-                           check_if_unit_is_per_solid_angle(u.Unit(y_unit)))):
+
+                    # convert uncertainty units to display units
+                    if skip_flux_conv:
                         new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
                     else:
-                        eqv = all_flux_unit_conversion_equivs(cube_wave=data.spectral_axis)
-                        new_uncert_converted = flux_conversion(new_uncert.quantity.value,
-                                                               new_uncert.unit, y_unit,
-                                                               spec=data, eqv=eqv)
-                        new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
+                        new_uncert_conv = flux_conversion_general(new_uncert.quantity.value,
+                                                                  new_uncert.unit,
+                                                                  y_unit,
+                                                                  eqv,
+                                                                  with_unit=False)
+                        new_uncert = StdDevUncertainty(new_uncert_conv,
+                                                       unit=y_unit)
                 else:
                     new_uncert = None
-                if ('_pixel_scale_factor' in data.meta):
-                    pixar_sr = data.meta.get('_pixel_scale_factor', None)
-                    eqv = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
-                                                          cube_wave=data.spectral_axis)
-                    new_y = flux_conversion(data.flux.value, data.flux.unit,
-                                            y_unit, data, eqv=eqv) * u.Unit(y_unit)
-                elif (check_if_unit_is_per_solid_angle(u.Unit(data.flux.unit)) !=
-                      check_if_unit_is_per_solid_angle(u.Unit(y_unit))):
+
+                # convert flux/sb units to display units
+                if skip_flux_conv:
                     new_y = data.flux.value * u.Unit(data.flux.unit)
                 else:
-                    eqv = all_flux_unit_conversion_equivs(cube_wave=data.spectral_axis)
-                    new_y = flux_conversion(data.flux.value, data.flux.unit,
-                                            y_unit, spec=data, eqv=eqv) * u.Unit(y_unit)
+                    # multiply by unit rather than using with_unit because of
+                    # edge case for dimensionless we want here
+                    new_y = flux_conversion_general(data.flux.value,
+                                                    data.flux.unit,
+                                                    y_unit,
+                                                    eqv, with_unit=False) * u.Unit(y_unit)
 
+                # convert spectral axis to display units
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                      data.spectral_axis.unit,
                                                      spectral_unit)

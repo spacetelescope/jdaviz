@@ -7,8 +7,9 @@ from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 
-from jdaviz.utils import get_reference_image_data, flux_conversion
-from jdaviz.core.unit_conversion_utils import all_flux_unit_conversion_equivs
+from jdaviz.utils import get_reference_image_data
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               flux_conversion_general)
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
@@ -85,7 +86,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
                 eqv = all_flux_unit_conversion_equivs(cube_wave=spectral_axis)
                 spectral_axis = None
 
-            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spectral_axis=spectral_axis, eqv=eqv)  # noqa
+            y_corners_new = flux_conversion_general(y_corners, old_unit, new_unit, eqv, with_unit=False)  # noqa
 
             with delay_callback(self, 'y_min', 'y_max'):
                 self.y_min = np.nanmin(y_corners_new)
