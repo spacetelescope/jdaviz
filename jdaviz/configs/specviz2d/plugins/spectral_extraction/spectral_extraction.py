@@ -351,6 +351,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.ext_add_results.label_whitelist_overwrite = ['Spectrum 1D']
         self.ext_results_label_default = 'Spectrum 1D'
 
+        self._set_relevant()
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -383,6 +385,13 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'self_prof_interp_degree_y',
                                            'import_extract',
                                            'export_extract', 'export_extract_spectrum'))
+
+    @observe('trace_dataset')
+    def _set_relevant(self, *args):
+        if len(self.trace_dataset_items) < 2:
+            self.irrelevant_msg = 'Requires at least one 2D spectrum'
+        else:
+            self.irrelevant_msg = ''
 
     @observe('trace_dataset_selected')
     def _trace_dataset_selected(self, msg=None):

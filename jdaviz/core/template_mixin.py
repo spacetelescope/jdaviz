@@ -3773,6 +3773,9 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
+            s2dv = self.spectrum_2d_viewer
+            if s2dv is None:
+                return False
             return data.label in [l.layer.label for l in self.spectrum_2d_viewer.layers]  # noqa E741
 
         def layer_in_flux_viewer(data):
