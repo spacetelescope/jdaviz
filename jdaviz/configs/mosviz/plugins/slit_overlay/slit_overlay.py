@@ -1,11 +1,8 @@
 import bqplot
-import numpy as np
-from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
-from regions import PolygonSkyRegion
 from traitlets import Bool
 
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.region_translators import stcs_string2region
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 
@@ -15,17 +12,7 @@ __all__ = ['SlitOverlay', 'jwst_header_to_skyregion']
 def jwst_header_to_skyregion(header):
     """Convert S_REGION in given FITS header for JWST data into sky region."""
     s_region = header['S_REGION']
-    footprint = s_region.split("POLYGON ICRS")[1].split()
-    ra = np.array(footprint[::2], dtype=float)
-    dec = np.array(footprint[1::2], dtype=float)
-    corners = SkyCoord(ra, dec, unit="deg")
-    skyregion = PolygonSkyRegion(corners)
-
-    # Need these for zooming
-    length = corners[0].separation(corners[1])
-    width = corners[1].separation(corners[2])
-    skyregion.height = Angle(max(length, width), u.deg)
-    skyregion.center = SkyCoord(ra.mean(), dec.mean(), unit="deg")
+    skyregion = stcs_string2region(s_region)
 
     return skyregion
 

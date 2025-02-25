@@ -1,9 +1,11 @@
 """The ``region_translators`` module houses translations of
 :ref:`regions:shapes` to :ref:`photutils:photutils-aperture` apertures.
 """
+import re
+import numpy as np
 import photutils
 from astropy import units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.utils import minversion
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, CircularAnnulusROI
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
@@ -17,7 +19,8 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
                      RectanglePixelRegion, RectangleSkyRegion,
                      CircleAnnulusPixelRegion, CircleAnnulusSkyRegion,
                      EllipseAnnulusPixelRegion, EllipseAnnulusSkyRegion,
-                     RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion, PixCoord)
+                     RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion,
+                     PixCoord, PolygonSkyRegion)
 
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
 
@@ -351,6 +354,188 @@ def aperture2regions(aperture):
         raise NotImplementedError(f'{aperture.__class__.__name__} is not supported')
 
     return region_shape
+
+
+SUPPORTED_STCS_SHAPE_VALUES = ('POLYGON', 'CIRCLE', 'ELLIPSE', )
+SUPPORTED_STCS_FRAME_VALUES = ('ICRS', 'J2000', 'FK5', )
+STCS_SHAPE_PATTERN = '|'.join(SUPPORTED_STCS_SHAPE_VALUES)
+STCS_FRAME_PATTERN = '|'.join(SUPPORTED_STCS_FRAME_VALUES)
+SUPPORTED_STCS_PATTERN = re.compile(
+    fr"^(?P<shape>({'|'.join(SUPPORTED_STCS_SHAPE_VALUES)}))"
+    fr"(?P<frame>(\s+({'|'.join(SUPPORTED_STCS_FRAME_VALUES)})))*"
+    r"(?P<coordinates>(\s+-?\d+\.\d+)+$)",
+    re.IGNORECASE)
+
+def stcs_string2region(stcs_string):
+    """Convert a given STC-S string to ``regions`` shape.
+
+    Parameters
+    ----------
+    stcs_string : str
+        A valid STC-S string.
+
+    Returns
+    -------
+    sky_region : `regions.Region`
+        A supported ``regions`` shape.
+
+    Raises
+    ------
+    NotImplementedError
+        The given STC-S string is not supported.
+
+    ValueError
+        Invalid inputs.
+
+    Examples
+    --------
+    Translate an STC-S region to `regions.PolygonSkyRegion`:
+
+    >>> from jdaviz.core.region_translators import stcs_string2region
+    >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
+    >>> stcs_string2region(stcs_string)
+    <PolygonSkyRegion(vertices=[<SkyCoord (ICRS): (ra, dec) in deg
+        (10., 20.), (30., 40.), (50., 60.)>])>
+
+    """
+
+    if not isinstance(stcs_string, str):
+        raise ValueError('STC-S string must be a string.')
+
+    _match = SUPPORTED_STCS_PATTERN.match(stcs_string)
+
+    # Check if the STC-S string is valid, otherwise raise an error
+    if not _match:
+        raise ValueError(f'Invalid STC-S string: {stcs_string}')
+
+    # Extract the shape, frame, and coordinates from the STC-S string
+    shape = _match.group('shape').strip().lower()
+    frame = _match.group('frame').strip().lower() if _match.group('frame') else 'icrs'
+    coordinates = list(map(float, _match.group('coordinates').strip().split()))
+
+    sky_region_factory = {
+        'polygon': _create_polygon_skyregion_from_coords,
+        'circle': _create_circle_skyregion_from_coords,
+        'ellipse': _create_ellipse_skyregion_from_coords,
+    }
+
+    return sky_region_factory[shape](coordinates, frame=frame)
+
+
+def _create_polygon_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
+    """Create a `regions.PolygonSkyRegion` from given coordinates.
+
+    Parameters
+    ----------
+    coords : list
+        List of coordinates in the form of [ra1, dec1, ra2, dec2, ...].
+
+    frame : str, optional
+        Coordinate frame. Default is 'icrs'.
+
+    unit : `~astropy.units.Unit`, optional
+        Unit of the coordinates. Default is `~astropy.units.deg`.
+
+    Returns
+    -------
+    sky_region : `regions.PolygonSkyRegion`
+        A polygon sky region.
+
+    Examples
+    --------
+    Create a `regions.PolygonSkyRegion` from given coordinates:
+
+    >>> from jdaviz.core.region_translators import create_polygon_skyregion_from_coords
+    >>> coords = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0]
+    >>> _create_polygon_skyregion_from_coords(coords)
+    <PolygonSkyRegion(vertices=[<SkyCoord (ICRS): (ra, dec) in deg
+        (10., 20.), (30., 40.), (50., 60.)>])>
+
+    """
+    ra = np.array(coords[::2], dtype=float)
+    dec = np.array(coords[1::2], dtype=float)
+    sky_coordinates = SkyCoord(ra, dec, frame=frame, unit=unit)
+    sky_region = PolygonSkyRegion(sky_coordinates)
+
+    # Need these for zooming
+    length = sky_coordinates[0].separation(sky_coordinates[1])
+    width = sky_coordinates[1].separation(sky_coordinates[2])
+    sky_region.height = Angle(max(length, width), unit)
+    sky_region.center = SkyCoord(ra.mean(), dec.mean(), unit=unit)
+
+    return sky_region
+
+
+def _create_circle_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
+    """Create a `regions.CircleSkyRegion` from given coordinates.
+
+    Parameters
+    ----------
+    coords : list
+        List of coordinates in the form of [ra, dec, radius].
+
+    frame : str, optional
+        Coordinate frame. Default is 'icrs'.
+
+    unit : `~astropy.units.Unit`, optional
+        Unit of the coordinates. Default is `~astropy.units.deg`.
+
+    Returns
+    -------
+    sky_region : `regions.CircleSkyRegion`
+        A circle sky region.
+
+    Examples
+    --------
+    Create a `regions.CircleSkyRegion` from given coordinates:
+
+    >>> from jdaviz.core.region_translators import create_circle_skyregion_from_coords
+    >>> coords = [10.0, 20.0, 5.0]
+    >>> _create_circle_skyregion_from_coords(coords)
+    <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (10., 20.)>, radius=5.0 deg)>
+
+    """
+    sky_coordinates = SkyCoord(coords[0], coords[1], frame=frame, unit=unit)
+    sky_region = CircleSkyRegion(center=sky_coordinates, radius=coords[2] * unit)
+
+    return sky_region
+
+
+def _create_ellipse_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
+    """Create a `regions.EllipseSkyRegion` from given coordinates.
+
+    Parameters
+    ----------
+    coords : list
+        List of coordinates in the form of [ra, dec, width, height, angle].
+
+    frame : str, optional
+        Coordinate frame. Default is 'icrs'.
+
+    unit : `~astropy.units.Unit`, optional
+        Unit of the coordinates. Default is `~astropy.units.deg`.
+
+    Returns
+    -------
+    sky_region : `regions.EllipseSkyRegion`
+        An ellipse sky region.
+
+    Examples
+    --------
+    Create a `regions.EllipseSkyRegion` from given coordinates:
+
+    >>> from jdaviz.core.region_translators import create_ellipse_skyregion_from_coords
+    >>> coords = [10.0, 20.0, 5.0, 3.0, 45.0]
+    >>> _create_ellipse_skyregion_from_coords(coords)
+    <EllipseSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (10., 20.)>,
+        width=5.0 deg, height=3.0 deg, angle=45.0 deg)>
+
+    """
+    sky_coordinates = SkyCoord(coords[0], coords[1], frame=frame, unit=unit)
+    sky_region = EllipseSkyRegion(center=sky_coordinates, width=coords[2] * unit,
+                                  height=coords[3] * unit, angle=coords[4] * unit)
+
+    return sky_region
 
 
 def positions2pixcoord(positions):
