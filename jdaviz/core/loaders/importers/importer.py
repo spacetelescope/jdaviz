@@ -75,6 +75,9 @@ class BaseImporterToDataCollection(BaseImporter):
             self.data_label_invalid_msg = 'label must be provided'
             return
 
+        # ensure the default label is unique for the data-collection
+        self.data_label_default = self.app.return_unique_name(self.data_label_default)
+
         for data in self.app.data_collection:
             if self.data_label_value == data.label:
                 self.data_label_invalid_msg = 'label already in use'
