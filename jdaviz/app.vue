@@ -6,7 +6,8 @@
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="index > 1" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="['cubeviz', 'mosviz'].indexOf(config) !== -1 && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
+        <j-tooltip v-if="item.name === 'g-data-tools' && config === 'specviz'"></j-tooltip>
+        <j-tooltip v-else-if="config == ['cubeviz', 'mosviz'].indexOf(config) !== -1 && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
         <j-tooltip v-else :tipid="item.name">
           <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
         </j-tooltip>
@@ -28,7 +29,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state.show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="state.dev_loaders && (state.show_toolbar_buttons || state.drawer_content === 'loaders')" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="(state.dev_loaders || config === 'specviz') && (state.show_toolbar_buttons || state.drawer_content === 'loaders')" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
