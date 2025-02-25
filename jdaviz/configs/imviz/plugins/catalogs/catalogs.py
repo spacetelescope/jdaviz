@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.ma as ma
 from astropy import units as u
 from astropy.table import QTable, Table as AstropyTable
 from astropy.coordinates import SkyCoord
@@ -293,27 +292,18 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         # coordinates found are converted to pixel coordinates
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)
-        # coordinates are filtered out (using a mask) if outside the zoom range
-        pair_pixel_table = np.dstack((pixel_table[0], pixel_table[1]))
-        # ma.masked_outside removes the coordinates outside the zoom range
-        # ma.compress_rows removes any row that has a mask mark
-        filtered_table = ma.compress_rows(
-            ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min], [zoom_x_max, zoom_y_max])
-            [0])
-        # coordinates are split into their respective x and y values
-        # then they are converted to sky coordinates
-        filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
-        x_coordinates = np.squeeze(filtered_pair_pixel_table[0])
-        y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
+        x_coordinates = []
+        y_coordinates = []
 
         if self.catalog_selected in ["SDSS", "Gaia"]:
-            # for single source convert table information to lists for zipping
-            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
-                x_coordinates = [x_coordinates]
-                y_coordinates = [y_coordinates]
-
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
-                                             x_coordinates, y_coordinates):
+                                             pixel_table[0], pixel_table[1]):
+                if (x_coord < zoom_x_min or x_coord > zoom_x_max or y_coord < zoom_y_min or
+                        y_coord > zoom_y_max):
+                    continue
+
+                x_coordinates.append(x_coord)
+                y_coordinates.append(y_coord)
                 row_id = row[src_id_colname]
                 # Check if the row contains the required keys
                 row_info = {'Right Ascension (degrees)': row['ra'],
@@ -323,14 +313,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
                             'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
                 self.table.add_item(row_info)
+
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
         elif self.catalog_selected in ["From File..."]:
-            # for single source convert table information to lists for zipping
-            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
-                x_coordinates = [x_coordinates]
-                y_coordinates = [y_coordinates]
-            for idx, (row, x_coord, y_coord) in enumerate(zip(self.app._catalog_source_table, x_coordinates, y_coordinates)):  # noqa:E501
+            for idx, (row, x_coord, y_coord) in enumerate(zip(self.app._catalog_source_table, pixel_table[0], pixel_table[1])):  # noqa:E501
                 row_info = {
                     'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
                     'Declination (degrees)': row['sky_centroid'].dec.deg,
@@ -339,6 +326,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                     'x_coord': x_coord,
                     'y_coord': y_coord,
                 }
+                x_coordinates.append(x_coord)
+                y_coordinates.append(y_coord)
                 # Add sky_centroid and label explicitly to row_info
                 row_info['sky_centroid'] = row['sky_centroid']
                 row_info['label'] = row.get('label', f"{idx + 1}")
