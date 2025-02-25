@@ -60,6 +60,10 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Download data products from VO-registered telescopes and missions.'
+
         self.viewer = ViewerSelect(
             self, "viewer_items", "viewer_selected", manual_options=["Manual"]
         )
