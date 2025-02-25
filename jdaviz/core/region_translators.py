@@ -356,72 +356,6 @@ def aperture2regions(aperture):
     return region_shape
 
 
-SUPPORTED_STCS_SHAPE_VALUES = ('POLYGON', 'CIRCLE', 'ELLIPSE', )
-SUPPORTED_STCS_FRAME_VALUES = ('ICRS', 'J2000', 'FK5', )
-STCS_SHAPE_PATTERN = '|'.join(SUPPORTED_STCS_SHAPE_VALUES)
-STCS_FRAME_PATTERN = '|'.join(SUPPORTED_STCS_FRAME_VALUES)
-SUPPORTED_STCS_PATTERN = re.compile(
-    fr"^(?P<shape>({'|'.join(SUPPORTED_STCS_SHAPE_VALUES)}))"
-    fr"(?P<frame>(\s+({'|'.join(SUPPORTED_STCS_FRAME_VALUES)})))*"
-    r"(?P<coordinates>(\s+-?\d+\.\d+)+$)",
-    re.IGNORECASE)
-
-def stcs_string2region(stcs_string):
-    """Convert a given STC-S string to ``regions`` shape.
-
-    Parameters
-    ----------
-    stcs_string : str
-        A valid STC-S string.
-
-    Returns
-    -------
-    sky_region : `regions.Region`
-        A supported ``regions`` shape.
-
-    Raises
-    ------
-    NotImplementedError
-        The given STC-S string is not supported.
-
-    ValueError
-        Invalid inputs.
-
-    Examples
-    --------
-    Translate an STC-S region to `regions.PolygonSkyRegion`:
-
-    >>> from jdaviz.core.region_translators import stcs_string2region
-    >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
-    >>> stcs_string2region(stcs_string)
-    <PolygonSkyRegion(vertices=[<SkyCoord (ICRS): (ra, dec) in deg
-        (10., 20.), (30., 40.), (50., 60.)>])>
-
-    """
-
-    if not isinstance(stcs_string, str):
-        raise ValueError('STC-S string must be a string.')
-
-    _match = SUPPORTED_STCS_PATTERN.match(stcs_string)
-
-    # Check if the STC-S string is valid, otherwise raise an error
-    if not _match:
-        raise ValueError(f'Invalid STC-S string: {stcs_string}')
-
-    # Extract the shape, frame, and coordinates from the STC-S string
-    shape = _match.group('shape').strip().lower()
-    frame = _match.group('frame').strip().lower() if _match.group('frame') else 'icrs'
-    coordinates = list(map(float, _match.group('coordinates').strip().split()))
-
-    sky_region_factory = {
-        'polygon': _create_polygon_skyregion_from_coords,
-        'circle': _create_circle_skyregion_from_coords,
-        'ellipse': _create_ellipse_skyregion_from_coords,
-    }
-
-    return sky_region_factory[shape](coordinates, frame=frame)
-
-
 def _create_polygon_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
     """Create a `regions.PolygonSkyRegion` from given coordinates.
 
@@ -536,6 +470,98 @@ def _create_ellipse_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
                                   height=coords[3] * unit, angle=coords[4] * unit)
 
     return sky_region
+
+
+SUPPORTED_STCS_SHAPE_VALUES = ('POLYGON', 'CIRCLE', 'ELLIPSE', )
+SUPPORTED_STCS_FRAME_VALUES = ('ICRS', 'J2000', 'FK5', )
+STCS_SHAPE_PATTERN = '|'.join(SUPPORTED_STCS_SHAPE_VALUES)
+STCS_FRAME_PATTERN = '|'.join(SUPPORTED_STCS_FRAME_VALUES)
+SUPPORTED_STCS_PATTERN = re.compile(
+    fr"^(?P<shape>({'|'.join(SUPPORTED_STCS_SHAPE_VALUES)}))"
+    fr"(?P<frame>(\s+({'|'.join(SUPPORTED_STCS_FRAME_VALUES)})))*"
+    r"(?P<coordinates>(\s+-?\d+\.\d+)+$)",
+    re.IGNORECASE)
+SKY_REGION_FROM_COORDS_FACTORY = {
+    'polygon': _create_polygon_skyregion_from_coords,
+    'circle': _create_circle_skyregion_from_coords,
+    'ellipse': _create_ellipse_skyregion_from_coords,
+}
+
+
+def is_stcs_string(stcs_string):
+    """Check if the given string is a valid STC-S string.
+
+    Parameters
+    ----------
+    stcs_string : str
+        A string to check.
+
+    Returns
+    -------
+    is_stcs : bool
+        `True` if the given string is a valid STC-S string, otherwise `False`.
+
+    Examples
+    --------
+    Check if a given string is a valid STC-S string:
+
+    >>> from jdaviz.core.region_translators import is_stcs_string
+    >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
+    >>> is_stcs_string(stcs_string)
+    True
+
+    """
+    return bool(SUPPORTED_STCS_PATTERN.match(stcs_string))
+
+
+def stcs_string2region(stcs_string):
+    """Convert a given STC-S string to ``regions`` shape.
+
+    Parameters
+    ----------
+    stcs_string : str
+        A valid STC-S string.
+
+    Returns
+    -------
+    sky_region : `regions.Region`
+        A supported ``regions`` shape.
+
+    Raises
+    ------
+    NotImplementedError
+        The given STC-S string is not supported.
+
+    ValueError
+        Invalid inputs.
+
+    Examples
+    --------
+    Translate an STC-S region to `regions.PolygonSkyRegion`:
+
+    >>> from jdaviz.core.region_translators import stcs_string2region
+    >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
+    >>> stcs_string2region(stcs_string)
+    <PolygonSkyRegion(vertices=[<SkyCoord (ICRS): (ra, dec) in deg
+        (10., 20.), (30., 40.), (50., 60.)>])>
+
+    """
+
+    if not isinstance(stcs_string, str):
+        raise ValueError('STC-S string must be a string.')
+
+    _match = SUPPORTED_STCS_PATTERN.match(stcs_string)
+
+    # Check if the STC-S string is valid, otherwise raise an error
+    if not _match:
+        raise ValueError(f'Invalid STC-S string: {stcs_string}')
+
+    # Extract the shape, frame, and coordinates from the STC-S string
+    shape = _match.group('shape').strip().lower()
+    frame = _match.group('frame').strip().lower() if _match.group('frame') else 'icrs'
+    coordinates = list(map(float, _match.group('coordinates').strip().split()))
+
+    return SKY_REGION_FROM_COORDS_FACTORY[shape](coordinates, frame=frame)
 
 
 def positions2pixcoord(positions):
