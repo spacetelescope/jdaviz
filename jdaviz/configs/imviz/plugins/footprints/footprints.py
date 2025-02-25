@@ -9,7 +9,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import LinkUpdatedMessage, ChangeRefDataMessage
 from jdaviz.core.marks import FootprintOverlay
-from jdaviz.core.region_translators import regions2roi
+from jdaviz.core.region_translators import is_stcs_string, regions2roi, stcs_string2region
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         EditableSelectPluginComponent, SelectPluginComponent,
@@ -473,8 +473,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self._ensure_first_overlay()
         if isinstance(region, (regions.Region, regions.Regions)):
             self.preset.import_obj(region)
-        elif isinstance(region, str):  # TODO: support path objects?
-            self.preset.import_file(region)
+        elif isinstance(region, str):
+            if is_stcs_string(region):
+                self.preset.import_obj(stcs_string2region(region))
+            else: # TODO: support path objects?
+                self.preset.import_file(region)
         else:
             raise TypeError("region must be a regions.Regions object or string (file path)")
         # _preset_args_changed was probably already triggered by from_file traitlet changing, but
