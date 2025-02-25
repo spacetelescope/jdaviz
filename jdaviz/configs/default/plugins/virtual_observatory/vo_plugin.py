@@ -83,10 +83,10 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.waveband.choices = (
             w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
         )
-        self.waveband_selected = ''
+        self.waveband_selected = ""
 
         self._full_registry_results = None
-        self.resource_selected = ''
+        self.resource_selected = ""
         self.resource = SelectPluginComponent(
             self, items="resource_choices", selected="resource_selected"
         )
@@ -135,12 +135,24 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         #   to detect when coords are centered on viewer, regardless of viewer tracking
         for viewer in self.viewer.viewers:
             if viewer == self.viewer.selected_obj:
-                viewer.state.add_callback("zoom_center_x", self.vue_center_on_data)
-                viewer.state.add_callback("zoom_center_y", self.vue_center_on_data)
+                viewer.state.add_callback(
+                    "zoom_center_x",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
+                viewer.state.add_callback(
+                    "zoom_center_y",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
             else:
                 # If not subscribed anyways, remove_callback should produce a no-op
-                viewer.state.remove_callback("zoom_center_x", self.vue_center_on_data)
-                viewer.state.remove_callback("zoom_center_y", self.vue_center_on_data)
+                viewer.state.remove_callback(
+                    "zoom_center_x",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
+                viewer.state.remove_callback(
+                    "zoom_center_y",
+                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                )
         self.vue_center_on_data()
 
     @observe("coord_follow_viewer_pan", type="change")
@@ -150,7 +162,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         if self.coord_follow_viewer_pan:
             self.vue_center_on_data()
 
-    def vue_center_on_data(self, event=None):
+    def vue_center_on_data(self, _=None, user_zoom_trigger=False):
         """
         This vue method serves two purposes:
         * UI entrypoint for the manual viewer center button
@@ -162,10 +174,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             return
 
         # If the user panned but tracking not enabled, don't recenter
-        # NOTE: float event typecheck assumes the only "float" type event triggering this method
-        #   is "zoom_center_x" and "zoom_center_y"
-        #   Otherwise, need some other way to determine the event = user panning
-        if isinstance(event, float) and not self.coord_follow_viewer_pan:
+        if (user_zoom_trigger) and not self.coord_follow_viewer_pan:
             # Thus, we're no longer centered
             self.viewer_centered = False
             return
@@ -252,7 +261,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         # Clear existing resources list
         self.resource.choices = []
-        self.resource_selected = ''
+        self.resource_selected = ""
 
         try:
             registry_args = [
