@@ -48,6 +48,46 @@ to load regions from a ``.reg`` file; also see :ref:`imviz-import-regions-api`.
 
 .. _imviz-import-api:
 
+Downloading data products through the Virtual Observatory
+---------------------------------------------------------
+Imviz supports querying and loading data products from the `IVOA's Virtual Observatory <https://ivoa.net/>`_.
+The plugin will search for registered archives that have observations which intersect the circular field
+specified by the user.
+
+To search the VO, enter a source location and a radius around which to search. The source utilizes
+:class:`~astropy.coordinates.SkyCoord`'s resolver and can accept a common source name (e.g. Messier or NGC) or 
+any string representations of astronomical coordinates understood by ``SkyCoord``. For more information,
+see :ref:`astropy:astropy-coordinates-high-level`. If a radius is not provided, a circular field of 1 degree
+centered on the source will be assumed.
+
+By default, the plugin will limit results to archives which report coverage intersecting the provided cirular
+field. To instead see all available archives on the IVOA registry, toggle the :guilabel:`Filter by Coverage` button.
+
+.. note::
+
+    Some archives have not provided coverage information, and thus will be excluded from the results.
+    If you are expecting an archive that does not appear, try disabling coverage filtering.
+
+Additionally, select the corresponding waveband of the archive you are looking for; this will limit the query to
+archives and services within your specified wavelength range. Waveband definitions can be found here.
+
+After selecting the waveband, the plugin will query the VO registry for services that match the provided criteria.
+If coverage filtering is enabled, only archives and surveys that report coverage within the user's specified area
+will be reported. Otherwise, the list will return all available archives and surveys in that waveband. Select your
+resource to query and press the :guilabel:`Query Archive` button to search your specified archive with your
+specific target.
+
+Once the query is complete, a table of results will be populated below, with the archive provided ``Title``,
+``Date``, and ``Instrument`` of each result. Select your desired data products to load and click
+:guilabel:`Load Data` to download and import your selected data products to Imviz.
+
+.. note::
+
+    Currently only SIA 1.0 services are implemented. VO services which offer only SIA2 endpoints are not
+    supported.
+
+.. _imviz-virtual-observatory:
+
 Importing data via the API
 ==========================
 
