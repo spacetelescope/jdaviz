@@ -11,6 +11,10 @@ __all__ = ['Spectrum2DAsListImporter']
 class Spectrum2DAsListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum2d_as_list.vue"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.data_label_default = '1D Spectrum'
+
     @property
     def is_valid(self):
         if self.app.config != 'specviz':
@@ -42,10 +46,6 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
                                  for i in range(self.input.flux.shape[0])])
         else:
             raise NotImplementedError(f"{self.input} is not supported")  # pragma: nocover
-
-    @property
-    def default_data_label(self):
-        return '1D Spectrum'
 
     @property
     def default_viewer(self):
