@@ -153,9 +153,10 @@ class LoaderUserApi(UserApiWrapper):
     """
     This is an API wrapper around an internal loader/resolver.  For a full list of
     attributes/methods, call dir(loader_object) and for help on any of those methods,
-    call help(loader_object.attribute).
+    call ``help(loader_object.attribute)``.
 
     For example::
+
       help(loader_object.show)
     """
     def __init__(self, loader, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
@@ -171,9 +172,10 @@ class ImporterUserApi(UserApiWrapper):
     """
     This is an API wrapper around an internal importer.  For a full list of attributes/methods,
     call dir(importer_object) and for help on any of those methods,
-    call help(importer_object.attribute).
+    call ``help(importer_object.attribute)``.
 
     For example::
+
       help(importer_object.show)
     """
     def __init__(self, importer, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):

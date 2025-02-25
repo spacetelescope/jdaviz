@@ -5,6 +5,9 @@ from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
 
 
+__all__ = ['SpecutilsSpectrumParser', 'SpecutilsSpectrumListParser']
+
+
 @loader_parser_registry('specutils.Spectrum')
 class SpecutilsSpectrumParser(BaseParser):
     SpecutilsCls = Spectrum1D
@@ -16,8 +19,7 @@ class SpecutilsSpectrumParser(BaseParser):
             return False
         try:
             self.output
-        except Exception as e:
-            print(f"{self.SpecutilsCls.__name__} read failed", str(e))
+        except Exception:
             return False
         return True
 

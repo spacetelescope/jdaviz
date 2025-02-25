@@ -6,6 +6,9 @@ from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
 
 
+__all__ = ['RegionsParser']
+
+
 @loader_parser_registry('Regions')
 class RegionsParser(BaseParser):
     @property
@@ -25,7 +28,6 @@ class RegionsParser(BaseParser):
     def output(self):
         if isinstance(self.input, (Regions, SpectralRegion)):
             return self.input
-        # region_format = kwargs.pop('region_format', None)
         region_format = None
         try:
             return Regions.read(self.input, format=region_format)

@@ -9,20 +9,22 @@ __all__ = ['BaseResolver']
 
 
 class FormatSelect(SelectPluginComponent):
+    """
+    Select component for the format field of a resolver.
+
+    Parameters
+    ----------
+    plugin
+        the parent plugin object
+    items : str
+        the name of the items traitlet defined in ``plugin``
+    selected : str
+        the name of the selected traitlet defined in ``plugin``
+    default_mode : str, optional
+        What mode to use when making the default selection.  Valid options: first, default_text,
+        empty.
+    """
     def __init__(self, plugin, items, selected, default_mode='first'):
-        """
-        Parameters
-        ----------
-        plugin
-            the parent plugin object
-        items : str
-            the name of the items traitlet defined in ``plugin``
-        selected : str
-            the name of the selected traitlet defined in ``plugin``
-        default_mode : str, optional
-            What mode to use when making the default selection.  Valid options: first, default_text,
-            empty.
-        """
         self._importers = {}
         super().__init__(plugin,
                          items=items,
@@ -81,20 +83,22 @@ class FormatSelect(SelectPluginComponent):
 
 
 class TargetSelect(SelectPluginComponent):
+    """
+    Select component for the target (filter on format) of a resolver.
+
+    Parameters
+    ----------
+    plugin
+        the parent plugin object
+    items : str
+        the name of the items traitlet defined in ``plugin``
+    selected : str
+        the name of the selected traitlet defined in ``plugin``
+    default_mode : str, optional
+        What mode to use when making the default selection.  Valid options: first, default_text,
+        empty.
+    """
     def __init__(self, plugin, items, selected, default_mode='first'):
-        """
-        Parameters
-        ----------
-        plugin
-            the parent plugin object
-        items : str
-            the name of the items traitlet defined in ``plugin``
-        selected : str
-            the name of the selected traitlet defined in ``plugin``
-        default_mode : str, optional
-            What mode to use when making the default selection.  Valid options: first, default_text,
-            empty.
-        """
         self._importers = {}
         super().__init__(plugin,
                          items=items,

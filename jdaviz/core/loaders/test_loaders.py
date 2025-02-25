@@ -1,5 +1,4 @@
 import pytest
-import warnings
 from astropy import units as u
 from specutils import SpectralRegion
 from jdaviz.core.registries import loader_resolver_registry
@@ -13,6 +12,7 @@ def test_loaders_registry(specviz_helper):
     assert len(specviz_helper.loaders) == len(loader_resolver_registry.members)
 
 
+@pytest.mark.remote_data
 def test_resolver_url(specviz_helper):
     specviz_helper.app.state.dev_loaders = True
 
@@ -51,9 +51,7 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     local_path = str(tmp_path / 'spectral_region.ecsv')
     s.write(local_path)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        specviz_helper.load_data(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
 
     specviz_helper.app.state.dev_loaders = True
     specviz_helper.plugins['Subset Tools']._obj.dev_loaders = True

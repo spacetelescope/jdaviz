@@ -7,6 +7,9 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.utils import download_uri_to_path
 
 
+__all__ = ['URLResolver']
+
+
 @loader_resolver_registry('url')
 class URLResolver(BaseResolver):
     template_file = __file__, "url.vue"

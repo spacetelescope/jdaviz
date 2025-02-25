@@ -223,7 +223,7 @@ class DataParserRegistry(UniqueDictRegistry):
 
 
 class LoaderStepRegistry(UniqueDictRegistry):
-    """Registry containing data parsing classes
+    """Registry containing data parsing classes.
     """
     def __init__(self, *args, **kwargs):
         self._step = kwargs.pop('step')

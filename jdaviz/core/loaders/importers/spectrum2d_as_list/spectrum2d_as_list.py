@@ -4,6 +4,9 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 
+__all__ = ['Spectrum2DAsListImporter']
+
+
 @loader_importer_registry('1D Spectrum List')
 class Spectrum2DAsListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum2d_as_list.vue"
@@ -38,7 +41,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
                                             meta=self.input.meta)
                                  for i in range(self.input.flux.shape[0])])
         else:
-            raise NotImplementedError()  # pragma: nocover
+            raise NotImplementedError(f"{self.input} is not supported")  # pragma: nocover
 
     @property
     def default_data_label(self):
@@ -53,5 +56,6 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
     def __call__(self, data_label=None):
         if data_label is None:
             data_label = self.default_data_label
-        for i, spec in enumerate(self.output):
-            self.add_to_data_collection(spec, f"{data_label}_{i}", show_in_viewer=True)
+        with self.app._jdaviz_helper.batch_load():
+            for i, spec in enumerate(self.output):
+                self.add_to_data_collection(spec, f"{data_label}_{i}", show_in_viewer=True)

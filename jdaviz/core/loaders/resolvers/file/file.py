@@ -7,6 +7,9 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 
+__all__ = ['FileResolver']
+
+
 @loader_resolver_registry('file')
 class FileResolver(BaseResolver):
     template_file = __file__, "file.vue"

@@ -4,6 +4,9 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 
+__all__ = ['Spectrum2DImporter']
+
+
 @loader_importer_registry('2D Spectrum')
 class Spectrum2DImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum2d.vue"

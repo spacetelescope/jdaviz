@@ -6,6 +6,9 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToPlugin
 
 
+__all__ = ['SubsetImporter']
+
+
 @loader_importer_registry('Subset')
 class SubsetImporter(BaseImporterToPlugin):
     template_file = __file__, "subset.vue"

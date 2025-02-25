@@ -1,5 +1,7 @@
 from functools import cached_property
 
+__all__ = ['BaseParser']
+
 
 class BaseParser:
     def __init__(self, app, inp):
