@@ -17,7 +17,7 @@
                     <plugin-select-filter
                       :items="target_items"
                       :selected.sync="target_selected"
-                      @update:selected="($event) => {$emit('update:target_selected', $event)}"
+                      @update:selected="$emit('update:target_selected', $event)"
                       tooltip_suffix="formats"
                       api_hint="loader.target ="
                       :api_hints_enabled="api_hints_enabled"
@@ -38,6 +38,7 @@
                       :show_if_single_entry="false"
                       :items="format_items.map(i => i.label)"
                       :selected.sync="format_selected"
+                      @update:selected="$emit('update:format_selected', $event)"
                       label="Format"
                       api_hint="loader.format ="
                       :api_hints_enabled="api_hints_enabled"
