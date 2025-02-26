@@ -19,8 +19,9 @@
       </j-tooltip>
     </template>
     <j-loader-dialog
+      :use_tabs="true"
       :loader_items="loader_items"
-      :loader_tab.sync="loader_tab"
+      :loader_selected.sync="loader_selected"
       :api_hints_enabled="api_hints_enabled"
       :config="config"
     ></j-loader-dialog>
@@ -29,6 +30,6 @@
 
 <script>
 module.exports = {
-  props: ['show_loader_dialog', 'loader_items', 'loader_tab', 'api_hints_enabled', 'config'],
+  props: ['show_loader_dialog', 'loader_items', 'loader_selected', 'api_hints_enabled', 'config'],
 }
 </script>

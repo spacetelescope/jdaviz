@@ -2,29 +2,6 @@
   <v-app id="web-app" :style="checkNotebookContext() ? 'display: inline' : 'display: flex'" :class="'jdaviz ' + config" ref="mainapp">
     <jupyter-widget :widget="style_registry_instance"></jupyter-widget>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
-      <v-toolbar-items v-if="state.dev_loaders">
-        <!-- NOTE: tabs are 150px, file browser is fixed at 500px in file_chooser.py -->
-        <v-dialog
-          scrollable
-          max-height="400px"
-          width="700px"
-          v-model="state.loader_dialog"
-        >
-          <template v-slot:activator="{ on }">
-            <j-tooltip tooltipcontent="Import data from a file or online source">
-              <v-btn tile depressed v-on="on" color="turquoise">
-                Import Data (DEV)
-              </v-btn>
-            </j-tooltip>
-          </template>
-          <j-loader-dialog
-            :loader_items="state.loader_items"
-            :loader_tab.sync="state.loader_tab"
-            :api_hints_enabled="state.show_api_hints"
-            :config="config"
-          ></j-loader-dialog>
-        </v-dialog>
-      </v-toolbar-items>
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="index > 1" vertical style="margin: 0px 10px"></v-divider>
@@ -49,7 +26,13 @@
             <img :src="state.icons['api']" width="24" class="invert-if-dark" style="opacity: 1.0"/>
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-if="state.show_toolbar_buttons || state.drawer_content === 'logger'" tipid="app-snackbar-history">
+        <v-divider v-if="state.show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
+        <j-tooltip v-if="state.dev_loaders && (state.show_toolbar_buttons || state.drawer_content === 'loaders')" tipid="app-toolbar-loaders">
+          <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
+            <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
+          </v-btn>
+        </j-tooltip>
+        <j-tooltip v-if="state.show_toolbar_buttons || state.drawer_content === 'logger'" tipid="app-toolbar-logger">
           <v-btn icon @click="() => {if (state.drawer_content === 'logger') {state.drawer_content = ''} else {state.drawer_content = 'logger'}}" :class="{active : state.drawer_content === 'logger'}">
             <v-icon medium style="padding-top: 2px">mdi-message-reply-text</v-icon>
           </v-btn>
@@ -96,6 +79,33 @@
             </golden-layout>
           </pane>
           <pane size="25" min-size="25" v-if="state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
+
+            <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <j-loader-dialog
+                :use_tabs="false"
+                :loader_items="state.loader_items"
+                :loader_selected.sync="state.loader_selected"
+                :api_hints_enabled="state.show_api_hints"
+                :config="config"
+              ></j-loader-dialog>
+            </v-card>
+
+            <v-card v-if="state.drawer_content === 'logger'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <v-alert v-if="state.snackbar_history.length === 0" dense type="info">No logger messages</v-alert>
+              <v-row
+                  dense
+                  @click="(e) => {e.stopImmediatePropagation()}"
+                  v-for="history in state.snackbar_history.slice().reverse()"
+                  style="margin: 6px 0px 0px 0px"
+              >
+                <v-alert
+                  dense
+                  :type="history.color">
+                    [{{history.time}}]: {{history.text}}
+                </v-alert>
+              </v-row>
+            </v-card>
+
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
                 v-model='state.tray_items_filter'
@@ -132,20 +142,6 @@
                 </v-expansion-panel>
               </v-expansion-panels>
               <v-divider></v-divider>
-            </v-card>
-            <v-card v-if="state.drawer_content === 'logger'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <v-row
-                  dense
-                  @click="(e) => {e.stopImmediatePropagation()}"
-                  v-for="history in state.snackbar_history.slice().reverse()"
-                  style="margin: 6px 0px 0px 0px"
-              >
-                <v-alert
-                  dense
-                  :type="history.color">
-                    [{{history.time}}]: {{history.text}}
-                </v-alert>
-              </v-row>
             </v-card>
           </pane>
         </splitpanes>

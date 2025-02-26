@@ -258,8 +258,8 @@ class ApplicationState(State):
         False, docstring='Whether the loader dialog is open.')
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
-    loader_tab = CallbackProperty(
-        0, docstring="Index of the active loader tab.")
+    loader_selected = CallbackProperty(
+        0, docstring="Index of the active loader tab shown in the tray.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -2871,7 +2871,7 @@ class Application(VuetifyTemplate, HubListener):
             self.state.loader_dialog = opened
 
         def set_tab(tab):
-            self.state.loader_tab = tab
+            self.state.loader_selected = tab
 
         # registry will be populated at import
         import jdaviz.core.loaders  # noqa

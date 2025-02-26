@@ -204,7 +204,7 @@ class WithCache:
 
 class LoadersMixin(VuetifyTemplate, HubListener):
     loader_items = List([]).tag(sync=True)
-    loader_tab = Int(0).tag(sync=True)
+    loader_selected = Int(0).tag(sync=True)
     show_loader_dialog = Bool(False).tag(sync=True)
 
     dev_loaders = Bool(False).tag(sync=True)
@@ -230,7 +230,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             self.show_loader_dialog = opened
 
         def set_tab(tab):
-            self.loader_tab = tab
+            self.loader_selected = tab
 
         # ensure registry has been populated
         import jdaviz.core.loaders  # noqa
