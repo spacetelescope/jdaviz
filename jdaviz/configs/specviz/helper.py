@@ -1,3 +1,4 @@
+import pathlib
 import warnings
 
 from astropy import units as u
@@ -6,9 +7,11 @@ from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
 
+from jdaviz.core import data_formats
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
+from jdaviz.utils import download_uri_to_path
 
 __all__ = ['Specviz']
 
@@ -33,6 +36,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
     _default_configuration = "specviz"
     _default_spectrum_viewer_reference_name = "spectrum-viewer"
+    _dev_deconfig = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,16 +78,47 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astropy.utils.data.download_file` or
             `~astroquery.mast.Conf.timeout`).
         """
+        parser = data_formats.get_parser(data, load_as_list=load_as_list)
+        if not self._dev_deconfig and parser != 'specviz-spectrum1d-parser':
+            raise NotImplementedError("Only Spectrum1D data is supported in Specviz.")
+
+        default_labels = {'mosviz-spec2d-parser': '2D Spectrum',
+                          'specreduce-trace': 'Trace',
+                          'specviz-spectrum1d-parser': 'Spectrum'}
+        if data_label is None:
+            data_label = default_labels.get(parser, 'Unknown')
+        data_label = self.app.return_unique_name(data_label)
+
+        if isinstance(data, str):
+            path = pathlib.Path(data)
+            if not path.is_file() and not path.is_dir():
+                data = download_uri_to_path(data, cache=cache,
+                                            local_path=local_path, timeout=timeout)
+
+        parser_kwargs = {'mosviz-spec2d-parser': {'show_in_viewer': False,
+                                                  'data_labels': data_label},
+                         'specreduce-trace': {'show_in_viewer': False,
+                                              'data_label': data_label},
+                         'specviz-spectrum1d-parser': {'format': format,
+                                                       'show_in_viewer': False,
+                                                       'concat_by_file': concat_by_file,
+                                                       'load_as_list': load_as_list,
+                                                       'data_label': data_label}}
+        kwargs = parser_kwargs.get(parser, {})
         super().load_data(data,
-                          parser_reference='specviz-spectrum1d-parser',
-                          data_label=data_label,
-                          format=format,
-                          show_in_viewer=show_in_viewer,
-                          concat_by_file=concat_by_file,
-                          cache=cache,
-                          local_path=local_path,
-                          timeout=timeout,
-                          load_as_list=load_as_list)
+                          parser_reference=parser,
+                          **kwargs)
+
+        if show_in_viewer:
+            # loop through existing viewers and show in any that support this data type
+            added = 0
+            for viewer in self.viewers.values():
+                if data_label in viewer.data_menu.data_labels_unloaded:
+                    added += 1
+                    viewer.data_menu.add_data(data_label)
+            if added == 0:
+                # TODO: in the future open a new viewer with some default type based on the data
+                print(f"*** No viewer found to display \'{data_label}\'")
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
