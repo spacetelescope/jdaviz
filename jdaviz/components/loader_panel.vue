@@ -16,7 +16,7 @@
     ></v-select>
 
     <span v-if="loader_selected.length && api_hints_enabled" class="api-hint" style="font-weight: bold; padding-left: 6px">
-      loader = {{ api_hints_obj }}.loaders['{{ loader_selected }}']
+      ldr = {{ api_hints_obj }}.loaders['{{ loader_selected }}']
     </span>
 
     <jupyter-widget v-if="loader_selected" :widget="loader_items.find((loader) => loader.name === loader_selected).widget"></jupyter-widget>
