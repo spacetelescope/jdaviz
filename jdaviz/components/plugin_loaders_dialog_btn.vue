@@ -6,12 +6,12 @@
           <span style="padding: 6px">Import</span>
         </v-expansion-panel-header>
         <v-expansion-panel-content class="plugin-expansion-panel-content">
-          <j-loader-dialog
+          <j-loader-panel
             :loader_items="loader_items"
             :loader_selected.sync="loader_selected"
             :api_hints_enabled="api_hints_enabled"
             :config="config"
-          ></j-loader-dialog>
+          ></j-loader-panel>
         </v-expansion-panel-content>
       </v-expansion-panel>
     </v-expansion-panels>

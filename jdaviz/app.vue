@@ -81,12 +81,12 @@
           <pane size="25" min-size="25" v-if="state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
 
             <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <j-loader-dialog
+              <j-loader-panel
                 :loader_items="state.loader_items"
                 :loader_selected.sync="state.loader_selected"
                 :api_hints_enabled="state.show_api_hints"
                 :config="config"
-              ></j-loader-dialog>
+              ></j-loader-panel>
             </v-card>
 
             <v-card v-if="state.drawer_content === 'logger'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
