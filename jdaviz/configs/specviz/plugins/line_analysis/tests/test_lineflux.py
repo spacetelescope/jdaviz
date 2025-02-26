@@ -60,7 +60,7 @@ def _calculate_line_flux(viz_helper):
     Assumes the plugin hasn't been opened yet
     '''
     # Open the plugin and force the calculation
-    viz_helper.app.state.drawer = True
+    viz_helper.app.state.drawer_content = 'plugins'
     line_analysis_plugin = viz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     line_analysis_plugin.keep_active = True
 

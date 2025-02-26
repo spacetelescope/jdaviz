@@ -9,7 +9,6 @@
         :format_selected.sync="format_selected"
         :importer_widget="importer_widget"
         :api_hints_enabled="api_hints_enabled"
-        @cancel-clicked="cancel_clicked"
         :import_spinner="import_spinner"
         @import-clicked="import_clicked"
     >
@@ -17,14 +16,14 @@
             v-model='url'
             prepend-icon='mdi-link-box'
             style="padding: 0px 8px"
-            :label="api_hints_enabled ? 'loader.url =' : ''"
+            :label="api_hints_enabled ? 'ldr.url =' : ''"
             :class="api_hints_enabled ? 'api-hint' : null"
         ></v-text-field>
 
         <plugin-switch
             :value.sync="cache"
             label="Cache File"
-            api_hint="loader.cache = "
+            api_hint="ldr.cache = "
             :api_hints_enabled="api_hints_enabled"
             hint="Whether to attempt to read from the cache if this same URL has been previously fetched."
         />

@@ -15,6 +15,8 @@ New Features
 
 - Plugin API methods and attributes are now searchable from the plugin tray (and visible when API hints are enabled). [#3384]
 
+- Snackbar history logger has been moved from an overlay to a separate tab in the right sidebar tray. [#3466]
+
 Cubeviz
 ^^^^^^^
 

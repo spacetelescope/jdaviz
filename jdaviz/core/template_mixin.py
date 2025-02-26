@@ -37,7 +37,7 @@ from photutils.aperture import CircularAperture, EllipticalAperture, Rectangular
 from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
-from traitlets import Any, Bool, Dict, Float, HasTraits, Int, List, Unicode, observe
+from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
@@ -204,8 +204,8 @@ class WithCache:
 
 class LoadersMixin(VuetifyTemplate, HubListener):
     loader_items = List([]).tag(sync=True)
-    loader_tab = Int(0).tag(sync=True)
-    show_loader_dialog = Bool(False).tag(sync=True)
+    loader_selected = Unicode().tag(sync=True)
+    loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
 
     dev_loaders = Bool(False).tag(sync=True)
 
@@ -220,17 +220,20 @@ class LoadersMixin(VuetifyTemplate, HubListener):
                    for item in self.loader_items}
         return loaders
 
-    @observe('show_loader_dialog')
-    def _show_loader_dialog_changed(self, change):
-        if self.show_loader_dialog and not len(self.loader_items):
+    @observe('loader_panel_ind')
+    def _loader_panel_ind_changed(self, change):
+        if self.loader_panel_ind == 0 and not len(self.loader_items):
             self._update_loader_items()
 
     def _update_loader_items(self):
-        def toggle_dialog(opened):
-            self.show_loader_dialog = opened
+        def open_accordion():
+            self.loader_panel_ind = 0
 
-        def set_tab(tab):
-            self.loader_tab = tab
+        def close_accordion():
+            self.loader_panel_ind = None
+
+        def set_active_loader(resolver):
+            self.loader_selected = resolver
 
         # ensure registry has been populated
         import jdaviz.core.loaders  # noqa
@@ -238,8 +241,9 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         loader_items = []
         for name, loader_cls in loader_resolver_registry.members.items():
             loader = loader_cls(app=self.app,
-                                toggle_dialog_callback=toggle_dialog,
-                                set_tab_callback=set_tab)
+                                open_callback=open_accordion,
+                                close_callback=close_accordion,
+                                set_active_loader_callback=set_active_loader)
             loader.target.set_filter_target_in(self._registry_label)
             if not len(loader.format.filters):
                 # if default input had no target choices, then the format filter
@@ -251,6 +255,8 @@ class LoadersMixin(VuetifyTemplate, HubListener):
                 'widget': "IPY_MODEL_" + loader.model_id
             })
         self.loader_items = loader_items
+        if len(loader_items):
+            self.loader_selected = loader_items[0]['name']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
@@ -645,7 +651,7 @@ class PluginTemplateMixin(TemplateMixin):
             Whether to immediately scroll to the plugin opened in the tray.
         """
         app_state = self.app.state
-        app_state.drawer = True
+        app_state.drawer_content = 'plugins'
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
@@ -667,7 +673,7 @@ class PluginTemplateMixin(TemplateMixin):
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         app_state.tray_items_open = [ind for ind in app_state.tray_items_open if ind != index]
         if close_sidebar:
-            self.app.state.drawer = False
+            self.app.state.drawer_content = ''
 
     @observe('plugin_opened', 'keep_active', 'irrelevant_msg')
     def _update_is_active(self, *args):

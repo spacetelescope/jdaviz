@@ -35,7 +35,7 @@ def test_plugin(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                         7400 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     assert 'Subset 1' in plugin.spectral_subset.labels
     plugin.selected_subset = 'Subset 1'
@@ -67,7 +67,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     cubeviz_helper.plugins['Subset Tools'].combination_mode = 'new'
     cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(3.623e-7 * unit,
                                                                         3.627e-7 * unit))
-    cubeviz_helper.app.state.drawer = True
+    cubeviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -287,7 +287,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                         7400 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -316,7 +316,7 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                         7400 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -345,7 +345,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                         7400 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -372,7 +372,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                         7400 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -401,12 +401,12 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6200 * unit,
                                                                         7000 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     specviz_helper.plugins['Subset Tools'].combination_mode = 'new'
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(7100 * unit,
                                                                         7700 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert plugin.spectral_subset.labels == ['Entire Spectrum', 'Subset 1', 'Subset 2']
@@ -436,7 +436,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                         8000 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -466,7 +466,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
                                                                         7500 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -496,7 +496,7 @@ def test_subset_changed(specviz_helper, spectrum1d):
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
                                                                         7500 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     assert 'Subset 1' in plugin.spectral_subset.labels
@@ -507,7 +507,7 @@ def test_subset_changed(specviz_helper, spectrum1d):
 
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                         7500 * unit))
-    specviz_helper.app.state.drawer = True
+    specviz_helper.app.state.drawer_content = 'plugins'
 
     # Values have not yet been validated
     np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)

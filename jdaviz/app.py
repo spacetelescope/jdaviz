@@ -134,7 +134,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-docs-link': 'components/docs_link.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
                      'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
-                     'j-loader-dialog': 'components/loader_dialog.vue',
+                     'j-loader-panel': 'components/loader_panel.vue',
                      'j-loader': 'components/loader.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
@@ -165,7 +165,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-slider': 'components/plugin_slider.vue',
                      'plugin-color-picker': 'components/plugin_color_picker.vue',
                      'plugin-input-header': 'components/plugin_input_header.vue',
-                     'plugin-loaders-dialog-btn': 'components/plugin_loaders_dialog_btn.vue',
+                     'plugin-loaders-panel': 'components/plugin_loaders_panel.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
                      'glue-state-select': 'components/glue_state_select.vue',
                      'data-menu-add': 'components/data_menu_add.vue',
@@ -197,8 +197,8 @@ class ApplicationState(State):
     dictionaries and makes it so incremental changes to nested values
     propagate to the traitlet in order to trigger a UI re-render.
     """
-    drawer = CallbackProperty(
-        True, docstring="State of the plugins drawer.")
+    drawer_content = CallbackProperty(
+        'plugins', docstring="Content shown in the tray drawer.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
@@ -254,12 +254,10 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
-    loader_dialog = CallbackProperty(
-        False, docstring='Whether the loader dialog is open.')
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
-    loader_tab = CallbackProperty(
-        0, docstring="Index of the active loader tab.")
+    loader_selected = CallbackProperty(
+        '', docstring="Index of the active loader tab shown in the tray.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -2867,23 +2865,30 @@ class Application(VuetifyTemplate, HubListener):
             self._application_handler._tools[name] = tool
 
         # Loaders
-        def toggle_dialog(opened):
-            self.state.loader_dialog = opened
+        def open():
+            self.state.drawer_content = 'loaders'
 
-        def set_tab(tab):
-            self.state.loader_tab = tab
+        def close():
+            self.state.loader_selected = ''
+
+        def set_active_loader(resolver):
+            self.state.loader_selected = resolver
 
         # registry will be populated at import
         import jdaviz.core.loaders  # noqa
         for name, loader_cls in loader_resolver_registry.members.items():
             loader = loader_cls(app=self,
-                                toggle_dialog_callback=toggle_dialog,
-                                set_tab_callback=set_tab)
+                                open_callback=open,
+                                close_callback=close,
+                                set_active_loader_callback=set_active_loader)
             self.state.loader_items.append({
                 'name': name,
                 'label': name,
                 'widget': "IPY_MODEL_" + loader.model_id
             })
+        # initialize selection (tab) to first entry
+        if len(self.state.loader_items):
+            self.state.loader_selected = self.state.loader_items[0]['name']
 
         # Tray plugins
         for name in config.get('tray', []):
