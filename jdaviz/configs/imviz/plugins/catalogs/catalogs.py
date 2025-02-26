@@ -316,8 +316,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'Declination (degrees)': row['dec'],
                             'Object ID': row_id.astype(str),
                             'id': len(self.table),
-                            'x_coord': row['x_coord'].item() if row['x_coord'].size == 1 else row['x_coord'],
-                            'y_coord': row['y_coord'].item() if row['x_coord'].size == 1 else row['x_coord']}
+                            'x_coord': row['x_coord'],
+                            'y_coord': row['y_coord']}
                 self.table.add_item(row_info)
 
         # NOTE: If performance becomes a problem, see
@@ -344,7 +344,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 self.table.add_item(row_info)
 
         filtered_skycoords = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
-                                                                                    y_coordinates)
+                                                                               y_coordinates)
 
         # QTable stores all the filtered sky coordinate points to be marked
         catalog_results = QTable({'coord': filtered_skycoords})
