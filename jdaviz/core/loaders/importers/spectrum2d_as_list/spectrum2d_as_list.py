@@ -55,7 +55,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
 
     def __call__(self, data_label=None):
         if data_label is None:
-            data_label = self.default_data_label
+            data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
                 self.add_to_data_collection(spec, f"{data_label}_{i}", show_in_viewer=True)
