@@ -226,8 +226,11 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             self._update_loader_items()
 
     def _update_loader_items(self):
-        def toggle_dialog(opened):
-            self.loader_panel_ind = 0 if opened else None
+        def open_accordion():
+            self.loader_panel_ind = 0
+
+        def close_accordion():
+            self.loader_panel_ind = None
 
         def set_active_loader(resolver):
             self.loader_selected = resolver
@@ -238,7 +241,8 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         loader_items = []
         for name, loader_cls in loader_resolver_registry.members.items():
             loader = loader_cls(app=self.app,
-                                toggle_dialog_callback=toggle_dialog,
+                                open_callback=open_accordion,
+                                close_callback=close_accordion,
                                 set_active_loader_callback=set_active_loader)
             loader.target.set_filter_target_in(self._registry_label)
             if not len(loader.format.filters):

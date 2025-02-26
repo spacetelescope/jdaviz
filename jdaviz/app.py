@@ -254,8 +254,6 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
-    loader_dialog = CallbackProperty(
-        False, docstring='Whether the loader dialog is open.')
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
@@ -2867,8 +2865,11 @@ class Application(VuetifyTemplate, HubListener):
             self._application_handler._tools[name] = tool
 
         # Loaders
-        def toggle_dialog(opened):
-            self.state.loader_dialog = opened
+        def open():
+            self.state.drawer_content = 'loaders'
+
+        def close():
+            self.state.loader_selected = ''
 
         def set_active_loader(resolver):
             self.state.loader_selected = resolver
@@ -2877,7 +2878,8 @@ class Application(VuetifyTemplate, HubListener):
         import jdaviz.core.loaders  # noqa
         for name, loader_cls in loader_resolver_registry.members.items():
             loader = loader_cls(app=self,
-                                toggle_dialog_callback=toggle_dialog,
+                                open_callback=open,
+                                close_callback=close,
                                 set_active_loader_callback=set_active_loader)
             self.state.loader_items.append({
                 'name': name,
