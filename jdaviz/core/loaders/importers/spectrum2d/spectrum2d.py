@@ -9,7 +9,7 @@ __all__ = ['Spectrum2DImporter']
 
 @loader_importer_registry('2D Spectrum')
 class Spectrum2DImporter(BaseImporterToDataCollection):
-    template_file = __file__, "spectrum2d.vue"
+    template_file = __file__, "../to_dc_with_label.vue"
 
     @property
     def is_valid(self):

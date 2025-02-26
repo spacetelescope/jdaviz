@@ -32,12 +32,15 @@ def test_resolver_url(specviz_helper):
     # test target filtering
     assert len(loader.target.choices) > 1
     assert loader.target.selected == 'Any'
-    loader.target = loader.target.choices[-1]
+    loader.target = 'specviz-profile-viewer'
     assert len(loader.format.choices) == 1
+    assert loader.format == '1D Spectrum List'
+    assert loader.importer.data_label == '1D Spectrum'
 
     loader.target = 'Any'
     assert len(loader.format.choices) == 2
     loader.format = '2D Spectrum'
+    assert loader.importer.data_label == '2D Spectrum'
 
     assert len(specviz_helper.app.data_collection) == 0
 

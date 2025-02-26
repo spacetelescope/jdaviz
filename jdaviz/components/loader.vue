@@ -43,9 +43,9 @@
                       api_hint="loader.format ="
                       :api_hints_enabled="api_hints_enabled"
                       hint="Choose input format"
-                  />
-                  <v-row v-if="format_selected.length" style="margin-top: 16px">
-                      <jupyter-widget :widget="importer_widget"></jupyter-widget>
+                  ></plugin-select>
+                  <v-row v-if="format_selected.length > 0" style="margin-top: 16px">
+                     <jupyter-widget :widget="importer_widget"></jupyter-widget>
                   </v-row>
                 </v-container>
             </div>

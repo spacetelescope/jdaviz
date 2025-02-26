@@ -1,4 +1,8 @@
-from jdaviz.core.template_mixin import PluginTemplateMixin
+from traitlets import Bool, Unicode
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage)
+
+from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
 from jdaviz.core.user_api import ImporterUserApi
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
@@ -37,9 +41,25 @@ class BaseImporter(PluginTemplateMixin):
 
 
 class BaseImporterToDataCollection(BaseImporter):
-    @property
-    def default_data_label(self):
-        return self._registry_label
+    data_label_value = Unicode().tag(sync=True)
+    data_label_default = Unicode().tag(sync=True)
+    data_label_auto = Bool(True).tag(sync=True)
+    data_label_invalid_msg = Unicode().tag(sync=True)
+
+    def __init__(self, app, input, **kwargs):
+        super().__init__(app, input, **kwargs)
+        self.data_label_default = self._registry_label
+        self.data_label = AutoTextField(self, 'data_label_value',
+                                        'data_label_default',
+                                        'data_label_auto',
+                                        'data_label_invalid_msg')
+
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=lambda _: self._on_label_changed())
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=lambda _: self._on_label_changed())
+        self.observe(self._on_label_changed, 'data_label_value')
+        self._on_label_changed()
 
     @property
     def default_viewer(self):
@@ -48,6 +68,22 @@ class BaseImporterToDataCollection(BaseImporter):
     @property
     def target(self):
         return self.default_viewer
+
+    def _on_label_changed(self, msg={}):
+        if not len(self.data_label_value.strip()):
+            # strip will raise the same error for a label of all spaces
+            self.data_label_invalid_msg = 'label must be provided'
+            return
+
+        # ensure the default label is unique for the data-collection
+        self.data_label_default = self.app.return_unique_name(self.data_label_default)
+
+        for data in self.app.data_collection:
+            if self.data_label_value == data.label:
+                self.data_label_invalid_msg = 'label already in use'
+                return
+
+        self.data_label_invalid_msg = ''
 
     def load_into_viewer(self, data_label):
         added = 0
@@ -60,7 +96,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def add_to_data_collection(self, data, data_label, show_in_viewer=True):
         if data_label is None:
-            data_label = self.default_data_label
+            data_label = self.data_label_value
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)
