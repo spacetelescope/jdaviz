@@ -2,7 +2,9 @@ import warnings
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
-from jdaviz.core.registries import loader_resolver_registry, loader_parser_registry, loader_importer_registry
+from jdaviz.core.registries import (loader_resolver_registry,
+                                    loader_parser_registry,
+                                    loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ['BaseResolver', 'find_matching_resolver']
@@ -169,7 +171,7 @@ class BaseResolver(PluginTemplateMixin):
     def from_input(cls, app, inp, **kwargs):
         self = cls(app=app)
         if self.default_input is None:
-            raise NotImplementedError("Resolver subclass must implement default_input")  # pragma: nocover
+            raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
         setattr(self, self.default_input, inp)
         user_api = self.user_api
         for k, v in kwargs.items():
