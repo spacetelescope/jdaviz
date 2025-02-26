@@ -112,6 +112,8 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results > 500
         prev_results = catalogs_plugin.number_of_results
+        table_last_ra = float(catalogs_plugin.table.items[-1]['Right Ascension (degrees)'])
+        assert_allclose(table_last_ra, imviz_helper.app._catalog_source_table[-1]['ra'], atol=0.0001)  # noqa
 
         # testing that every variable updates accordingly when markers are cleared
         catalogs_plugin.clear_table()
