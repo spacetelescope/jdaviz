@@ -204,7 +204,7 @@ class WithCache:
 
 class LoadersMixin(VuetifyTemplate, HubListener):
     loader_items = List([]).tag(sync=True)
-    loader_selected = Int(0).tag(sync=True)
+    loader_selected = Unicode().tag(sync=True)
     loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
 
     dev_loaders = Bool(False).tag(sync=True)
@@ -251,7 +251,8 @@ class LoadersMixin(VuetifyTemplate, HubListener):
                 'widget': "IPY_MODEL_" + loader.model_id
             })
         self.loader_items = loader_items
-
+        if len(loader_items):
+            self.loader_selected = loader_items[0]['name']
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)

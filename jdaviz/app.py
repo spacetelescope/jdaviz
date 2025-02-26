@@ -259,7 +259,7 @@ class ApplicationState(State):
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
-        0, docstring="Index of the active loader tab shown in the tray.")
+        '', docstring="Index of the active loader tab shown in the tray.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -2884,6 +2884,9 @@ class Application(VuetifyTemplate, HubListener):
                 'label': name,
                 'widget': "IPY_MODEL_" + loader.model_id
             })
+        # initialize selection (tab) to first entry
+        if len(self.state.loader_items):
+            self.state.loader_selected = self.state.loader_items[0]['name']
 
         # Tray plugins
         for name in config.get('tray', []):
