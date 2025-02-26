@@ -95,25 +95,14 @@
         and running `pip install pysiaf` and then launching Jdaviz.
       </v-alert>
 
-      <v-row justify="end" class="row-no-outside-padding" style="margin-bottom: -6px !important">
-        <div v-for="preset_obs_item in preset_obs_items">
-          <j-tooltip v-if="preset_obs_item.label !== 'Any'" :tooltipcontent="'Show only '+preset_obs_item.label+' footprints in preset list'">
-            <v-btn
-              tile
-              :elevation=0
-              x-small
-              dense 
-              :color="preset_obs_selected === preset_obs_item.label ? 'turquoise' : 'transparent'"
-              :dark="preset_obs_selected === preset_obs_item.label"
-              style="padding-left: 8px; padding-right: 6px;"
-              @click="() => {if (preset_obs_selected === preset_obs_item.label) {preset_obs_selected = 'Any'} else {preset_obs_selected = preset_obs_item.label}}"
-            >
-              <img :src="preset_obs_item.icon" width="16" class="invert-if-dark" style="margin-right: 2px"/>
-              {{ preset_obs_item.label }}
-            </v-btn>
-          </j-tooltip>
-        </div>
-      </v-row>
+      <plugin-select-filter
+        :items="preset_obs_items"
+        :selected.sync="preset_obs_selected"
+        @update:selected="($event) => {preset_obs_selected = $event}"
+        tooltip_suffix="footprints in preset list"
+        api_hint="plg.preset_obs ="
+        :api_hints_enabled="api_hints_enabled"
+      />
 
       <plugin-file-import-select
         :items="preset_items"

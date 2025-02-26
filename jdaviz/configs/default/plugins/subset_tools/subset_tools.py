@@ -31,7 +31,8 @@ from jdaviz.core.events import (SnackbarMessage, GlobalDisplayUnitChanged,
                                 LinkUpdatedMessage, SubsetRenameMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
-                                        SubsetSelect, SelectPluginComponent)
+                                        SubsetSelect, SelectPluginComponent,
+                                        LoadersMixin)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
@@ -65,7 +66,7 @@ COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
 @tray_registry('g-subset-tools', label="Subset Tools")
-class SubsetTools(PluginTemplateMixin):
+class SubsetTools(PluginTemplateMixin, LoadersMixin):
     """
     See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
 
@@ -177,6 +178,8 @@ class SubsetTools(PluginTemplateMixin):
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset']
+        if self.dev_loaders:
+            expose += ['loaders']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,

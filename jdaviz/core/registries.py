@@ -8,7 +8,8 @@ from ipywidgets import Widget
 __all__ = ['convert', 'UniqueDictRegistry', 'ViewerRegistry', 'TrayRegistry',
            'ToolRegistry', 'MenuRegistry', 'DataParserRegistry',
            'viewer_registry', 'tray_registry', 'tool_registry', 'menu_registry',
-           'data_parser_registry']
+           'data_parser_registry',
+           'loader_resolver_registry', 'loader_parser_registry', 'loader_importer_registry']
 
 
 def _to_snake(s):
@@ -221,8 +222,26 @@ class DataParserRegistry(UniqueDictRegistry):
         return decorator
 
 
+class LoaderStepRegistry(UniqueDictRegistry):
+    """Registry containing data parsing classes.
+    """
+    def __init__(self, *args, **kwargs):
+        self._step = kwargs.pop('step')
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, name=None):
+        def decorator(cls):
+            cls._registry_label = name
+            self.add(name, cls)
+            return cls
+        return decorator
+
+
 viewer_registry = ViewerRegistry()
 tray_registry = TrayRegistry()
 tool_registry = ToolRegistry()
 menu_registry = MenuRegistry()
-data_parser_registry = DataParserRegistry()
+data_parser_registry = DataParserRegistry()  # remove once deconfigging complete
+loader_resolver_registry = LoaderStepRegistry(step='resolver')
+loader_parser_registry = LoaderStepRegistry(step='parser')
+loader_importer_registry = LoaderStepRegistry(step='importer')

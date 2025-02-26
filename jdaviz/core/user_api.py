@@ -2,7 +2,9 @@ import warnings
 
 import astropy.units as u
 
-__all__ = ['UserApiWrapper', 'PluginUserApi', 'ViewerUserApi']
+__all__ = ['UserApiWrapper', 'PluginUserApi',
+           'LoaderUserApi', 'ImporterUserApi',
+           'ViewerUserApi']
 
 _internal_attrs = ('_obj', '_expose', '_items', '_readonly', '_exclude_from_dict',
                    '__doc__', '_deprecation_msg', '_deprecated')
@@ -144,6 +146,46 @@ class PluginUserApi(UserApiWrapper):
         if self._deprecation_msg:
             warnings.warn(self._deprecation_msg, DeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
+        return f'<{self._obj._registry_label} API>'
+
+
+class LoaderUserApi(UserApiWrapper):
+    """
+    This is an API wrapper around an internal loader/resolver.  For a full list of
+    attributes/methods, call dir(loader_object) and for help on any of those methods,
+    call ``help(loader_object.attribute)``.
+
+    For example::
+
+      help(loader_object.show)
+    """
+    def __init__(self, loader, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
+        expose = list(set(list(expose) + ['format', 'target', 'importer', 'show',
+                                          'show_in_dialog', 'close_dialog']))
+        super().__init__(loader, expose, readonly, excl_from_dict, deprecated)
+
+    def __repr__(self):
+        return f'<{self._obj._registry_label} API>'
+
+
+class ImporterUserApi(UserApiWrapper):
+    """
+    This is an API wrapper around an internal importer.  For a full list of attributes/methods,
+    call dir(importer_object) and for help on any of those methods,
+    call ``help(importer_object.attribute)``.
+
+    For example::
+
+      help(importer_object.show)
+    """
+    def __init__(self, importer, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
+        expose = list(set(list(expose) + ['input', 'output', 'target', 'show']))
+        super().__init__(importer, expose, readonly, excl_from_dict, deprecated)
+
+    def __call__(self):
+        return self._obj()
+
+    def __repr__(self):
         return f'<{self._obj._registry_label} API>'
 
 

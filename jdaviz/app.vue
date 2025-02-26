@@ -36,6 +36,29 @@
       </div>
     </v-overlay>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
+      <v-toolbar-items v-if="state.dev_loaders">
+        <!-- NOTE: tabs are 150px, file browser is fixed at 500px in file_chooser.py -->
+        <v-dialog
+          scrollable
+          max-height="400px"
+          width="700px"
+          v-model="state.loader_dialog"
+        >
+          <template v-slot:activator="{ on }">
+            <j-tooltip tooltipcontent="Import data from a file or online source">
+              <v-btn tile depressed v-on="on" color="turquoise">
+                Import Data (DEV)
+              </v-btn>
+            </j-tooltip>
+          </template>
+          <j-loader-dialog
+            :loader_items="state.loader_items"
+            :loader_tab.sync="state.loader_tab"
+            :api_hints_enabled="state.show_api_hints"
+            :config="config"
+          ></j-loader-dialog>
+        </v-dialog>
+      </v-toolbar-items>
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="index > 1" vertical style="margin: 0px 10px"></v-divider>
