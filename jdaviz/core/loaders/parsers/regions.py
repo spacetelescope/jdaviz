@@ -16,8 +16,6 @@ class RegionsParser(BaseParser):
         if self.app.config != 'specviz':
             # NOTE: temporary during deconfig process
             return False
-        if isinstance(self.input, (Regions, SpectralRegion)):
-            return True
         if isinstance(self.input, str):
             ext = self.input.split('.')[-1]
             # once deconfigging is complete:
@@ -26,8 +24,6 @@ class RegionsParser(BaseParser):
 
     @cached_property
     def output(self):
-        if isinstance(self.input, (Regions, SpectralRegion)):
-            return self.input
         region_format = None
         try:
             return Regions.read(self.input, format=region_format)
