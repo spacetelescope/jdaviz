@@ -10,7 +10,7 @@
 
     <plugin-loaders-dialog-btn
       v-if="dev_loaders"
-      :show_loader_dialog.sync="show_loader_dialog"
+      :loader_panel_ind.sync="loader_panel_ind"
       :loader_items="loader_items"
       :loader_selected.sync="loader_selected"
       :api_hints_enabled="api_hints_enabled"

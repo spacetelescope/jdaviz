@@ -205,7 +205,7 @@ class WithCache:
 class LoadersMixin(VuetifyTemplate, HubListener):
     loader_items = List([]).tag(sync=True)
     loader_selected = Int(0).tag(sync=True)
-    show_loader_dialog = Bool(False).tag(sync=True)
+    loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
 
     dev_loaders = Bool(False).tag(sync=True)
 
@@ -220,17 +220,17 @@ class LoadersMixin(VuetifyTemplate, HubListener):
                    for item in self.loader_items}
         return loaders
 
-    @observe('show_loader_dialog')
-    def _show_loader_dialog_changed(self, change):
-        if self.show_loader_dialog and not len(self.loader_items):
+    @observe('loader_panel_ind')
+    def _loader_panel_ind_changed(self, change):
+        if self.loader_panel_ind == 0 and not len(self.loader_items):
             self._update_loader_items()
 
     def _update_loader_items(self):
         def toggle_dialog(opened):
-            self.show_loader_dialog = opened
+            self.loader_panel_ind = 0 if opened else None
 
-        def set_tab(tab):
-            self.loader_selected = tab
+        def set_active_loader(resolver):
+            self.loader_selected = resolver
 
         # ensure registry has been populated
         import jdaviz.core.loaders  # noqa
@@ -239,7 +239,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         for name, loader_cls in loader_resolver_registry.members.items():
             loader = loader_cls(app=self.app,
                                 toggle_dialog_callback=toggle_dialog,
-                                set_tab_callback=set_tab)
+                                set_active_loader_callback=set_active_loader)
             loader.target.set_filter_target_in(self._registry_label)
             if not len(loader.format.filters):
                 # if default input had no target choices, then the format filter

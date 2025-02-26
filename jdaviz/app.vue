@@ -82,7 +82,6 @@
 
             <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <j-loader-dialog
-                :use_tabs="false"
                 :loader_items="state.loader_items"
                 :loader_selected.sync="state.loader_selected"
                 :api_hints_enabled="state.show_api_hints"

@@ -2870,15 +2870,15 @@ class Application(VuetifyTemplate, HubListener):
         def toggle_dialog(opened):
             self.state.loader_dialog = opened
 
-        def set_tab(tab):
-            self.state.loader_selected = tab
+        def set_active_loader(resolver):
+            self.state.loader_selected = resolver
 
         # registry will be populated at import
         import jdaviz.core.loaders  # noqa
         for name, loader_cls in loader_resolver_registry.members.items():
             loader = loader_cls(app=self,
                                 toggle_dialog_callback=toggle_dialog,
-                                set_tab_callback=set_tab)
+                                set_active_loader_callback=set_active_loader)
             self.state.loader_items.append({
                 'name': name,
                 'label': name,

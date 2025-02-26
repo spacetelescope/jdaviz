@@ -148,7 +148,7 @@ class BaseResolver(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         self.toggle_dialog_callback = kwargs.pop('toggle_dialog_callback', None)
-        self.set_tab_callback = kwargs.pop('set_tab_callback', None)
+        self.set_active_loader_callback = kwargs.pop('set_active_loader_callback', None)
         super().__init__(*args, **kwargs)
 
         # subclasses should call self._update_format_items on any change
@@ -221,10 +221,9 @@ class BaseResolver(PluginTemplateMixin):
         """
         if self.toggle_dialog_callback is None:
             raise NotImplementedError("toggle_dialog_callback must be set to open dialog")
-        if self.set_tab_callback is None:
-            raise NotImplementedError("set_tab_callback must be set to open dialog to specific tab")
-        tabs = [item.get('label') for item in self.app.state.loader_items]
-        self.set_tab_callback(tabs.index(self._registry_label))
+        if self.set_active_loader_callback is None:
+            raise NotImplementedError("set_active_loader_callback must be set to open dialog to specific tab")
+        self.set_active_loader_callback(self._registry_label)
         self.toggle_dialog_callback(True)
 
     def vue_cancel_clicked(self, *args, **kwargs):
