@@ -248,6 +248,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             loader_items.append({
                 'name': name,
                 'label': name,
+                'requires_api_support': loader.requires_api_support,
                 'widget': "IPY_MODEL_" + loader.model_id
             })
         self.loader_items = loader_items
