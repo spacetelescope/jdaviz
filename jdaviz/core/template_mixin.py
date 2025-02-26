@@ -3966,6 +3966,7 @@ class AutoTextField(BasePluginComponent):
                          invalid_msg=invalid_msg)
 
         if getattr(plugin, auto):
+            # ensure value starts at the default value
             setattr(plugin, value, getattr(plugin, default))
         self.add_observe(default, self._on_set_to_default)
         self.add_observe(auto, self._on_set_to_default)
