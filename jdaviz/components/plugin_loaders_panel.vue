@@ -10,7 +10,7 @@
             :loader_items="loader_items"
             :loader_selected.sync="loader_selected"
             :api_hints_enabled="api_hints_enabled"
-            :config="config"
+            api_hints_obj="plg"
           ></j-loader-panel>
         </v-expansion-panel-content>
       </v-expansion-panel>
@@ -20,6 +20,6 @@
 
 <script>
 module.exports = {
-  props: ['loader_panel_ind', 'loader_items', 'loader_selected', 'api_hints_enabled', 'config'],
+  props: ['loader_panel_ind', 'loader_items', 'loader_selected', 'api_hints_enabled'],
 }
 </script>

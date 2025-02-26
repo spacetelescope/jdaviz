@@ -8,14 +8,13 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <plugin-loaders-dialog-btn
+    <plugin-loaders-panel
       v-if="dev_loaders"
       :loader_panel_ind.sync="loader_panel_ind"
       :loader_items="loader_items"
       :loader_selected.sync="loader_selected"
       :api_hints_enabled="api_hints_enabled"
-      :config="config"
-    ></plugin-loaders-dialog-btn>
+    ></plugin-loaders-panel>
 
     <v-row v-if="api_hints_enabled && config === 'imviz'">
       <span class="api-hint">

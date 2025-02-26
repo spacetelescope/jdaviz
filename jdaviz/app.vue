@@ -85,7 +85,7 @@
                 :loader_items="state.loader_items"
                 :loader_selected.sync="state.loader_selected"
                 :api_hints_enabled="state.show_api_hints"
-                :config="config"
+                :api_hints_obj="config"
               ></j-loader-panel>
             </v-card>
 
