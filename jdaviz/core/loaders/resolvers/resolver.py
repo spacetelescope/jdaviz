@@ -232,10 +232,6 @@ class BaseResolver(PluginTemplateMixin):
         if self.open_callback is not None:
             self.open_callback()
 
-    def vue_cancel_clicked(self, *args, **kwargs):
-        self.close_dialog()
-
     @with_spinner('import_spinner')
     def vue_import_clicked(self, *args, **kwargs):
         self.importer()
-        self.close_dialog()
