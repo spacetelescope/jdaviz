@@ -97,7 +97,6 @@ class BaseImporterToDataCollection(BaseImporter):
     def add_to_data_collection(self, data, data_label, show_in_viewer=True):
         if data_label is None:
             data_label = self.data_label_value
-            print("*** using", data_label)
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)
