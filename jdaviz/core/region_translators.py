@@ -2,7 +2,6 @@
 :ref:`regions:shapes` to :ref:`photutils:photutils-aperture` apertures.
 """
 import re
-import numpy as np
 import photutils
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -372,16 +371,9 @@ def _create_polygon_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
         (10., 20.), (30., 40.), (50., 60.)>])>
 
     """
-    ra = np.array(coords[::2], dtype=float)
-    dec = np.array(coords[1::2], dtype=float)
+    ra, dec = coords[::2], coords[1::2]
     sky_coordinates = SkyCoord(ra, dec, frame=frame, unit=unit)
     sky_region = PolygonSkyRegion(sky_coordinates)
-
-    # Need these for zooming
-    length = sky_coordinates[0].separation(sky_coordinates[1])
-    width = sky_coordinates[1].separation(sky_coordinates[2])
-    sky_region.height = Angle(max(length, width), unit)
-    sky_region.center = SkyCoord(ra.mean(), dec.mean(), unit=unit)
 
     return sky_region
 
@@ -497,7 +489,11 @@ def is_stcs_string(stcs_string):
     True
 
     """
-    return bool(SUPPORTED_STCS_PATTERN.match(stcs_string))
+
+    try:
+        return bool(SUPPORTED_STCS_PATTERN.match(stcs_string))
+    except:
+        return False
 
 
 def stcs_string2region(stcs_string):
@@ -515,9 +511,6 @@ def stcs_string2region(stcs_string):
 
     Raises
     ------
-    NotImplementedError
-        The given STC-S string is not supported.
-
     ValueError
         Invalid inputs.
 

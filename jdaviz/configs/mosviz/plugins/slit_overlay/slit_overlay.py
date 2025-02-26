@@ -1,4 +1,7 @@
 import bqplot
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 from traitlets import Bool
 
 from jdaviz.core.events import SnackbarMessage
@@ -13,6 +16,16 @@ def jwst_header_to_skyregion(header):
     """Convert S_REGION in given FITS header for JWST data into sky region."""
     s_region = header['S_REGION']
     skyregion = stcs_string2region(s_region)
+
+    corners = skyregion.vertices
+    _ra, _dec = zip(*[(sky_coord.ra.value, sky_coord.dec.value) for sky_coord in corners])
+    ra, dec = np.array(_ra, dtype=float), np.array(_dec, dtype=float)
+
+    # Need these for zooming
+    length = corners[0].separation(corners[1])
+    width = corners[1].separation(corners[2])
+    skyregion.height = Angle(max(length, width), u.deg)
+    skyregion.center = SkyCoord(ra.mean(), dec.mean(), unit=u.deg)
 
     return skyregion
 
