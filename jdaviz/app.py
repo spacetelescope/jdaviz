@@ -197,8 +197,8 @@ class ApplicationState(State):
     dictionaries and makes it so incremental changes to nested values
     propagate to the traitlet in order to trigger a UI re-render.
     """
-    drawer = CallbackProperty(
-        True, docstring="State of the plugins drawer.")
+    drawer_content = CallbackProperty(
+        'plugins', docstring="Content shown in the tray drawer.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(

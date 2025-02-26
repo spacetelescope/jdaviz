@@ -89,7 +89,7 @@
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-plugins">
-          <v-btn icon @click="state.drawer = !state.drawer" :class="{active : state.drawer}">
+          <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}">
             <v-icon>mdi-menu</v-icon>
           </v-btn>
         </j-tooltip>
@@ -129,7 +129,7 @@
               </gl-row>
             </golden-layout>
           </pane>
-          <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
+          <pane size="25" min-size="25" v-if="state.drawer_content === 'plugins'" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
             <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
                 v-model='state.tray_items_filter'

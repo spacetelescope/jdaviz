@@ -645,7 +645,7 @@ class PluginTemplateMixin(TemplateMixin):
             Whether to immediately scroll to the plugin opened in the tray.
         """
         app_state = self.app.state
-        app_state.drawer = True
+        app_state.drawer_content = 'plugins'
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
@@ -667,7 +667,7 @@ class PluginTemplateMixin(TemplateMixin):
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         app_state.tray_items_open = [ind for ind in app_state.tray_items_open if ind != index]
         if close_sidebar:
-            self.app.state.drawer = False
+            self.app.state.drawer_content = ''
 
     @observe('plugin_opened', 'keep_active', 'irrelevant_msg')
     def _update_is_active(self, *args):
