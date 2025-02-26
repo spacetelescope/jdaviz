@@ -37,7 +37,7 @@ from photutils.aperture import CircularAperture, EllipticalAperture, Rectangular
 from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
-from traitlets import Any, Bool, Dict, Float, HasTraits, Int, List, Unicode, observe
+from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
@@ -253,6 +253,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         self.loader_items = loader_items
         if len(loader_items):
             self.loader_selected = loader_items[0]['name']
+
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)

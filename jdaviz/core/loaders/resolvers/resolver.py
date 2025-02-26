@@ -222,7 +222,7 @@ class BaseResolver(PluginTemplateMixin):
         if self.toggle_dialog_callback is None:
             raise NotImplementedError("toggle_dialog_callback must be set to open dialog")
         if self.set_active_loader_callback is None:
-            raise NotImplementedError("set_active_loader_callback must be set to open dialog to specific tab")
+            raise NotImplementedError("set_active_loader_callback must be set to open dialog to specific tab")  # noqa
         self.set_active_loader_callback(self._registry_label)
         self.toggle_dialog_callback(True)
 
