@@ -378,7 +378,7 @@ class TestParseImage:
         expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_2))[0] + '[DATA]'
         assert data.label == expected_label
         assert data.shape == (2048, 2048)
-        assert data.coords is None
+        assert data.coords is not None
         assert comp.units == 'DN/s'
         assert comp.data.shape == (2048, 2048)
 
