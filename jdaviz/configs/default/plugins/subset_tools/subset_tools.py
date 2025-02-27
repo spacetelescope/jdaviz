@@ -178,7 +178,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset']
-        if self.dev_loaders:
+        if self.dev_loaders or self.config == 'specviz':
             expose += ['loaders']
         return PluginUserApi(self, expose)
 

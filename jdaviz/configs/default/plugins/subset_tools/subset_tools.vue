@@ -9,7 +9,7 @@
     :scroll_to.sync="scroll_to">
 
     <plugin-loaders-panel
-      v-if="dev_loaders"
+      v-if="dev_loaders || config === 'specviz'"
       :loader_panel_ind.sync="loader_panel_ind"
       :loader_items="loader_items"
       :loader_selected.sync="loader_selected"
