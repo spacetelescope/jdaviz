@@ -224,6 +224,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
 
     def _update_loader_items(self):
         def open_accordion():
+            self.open_in_tray()
             self.loader_panel_ind = 0
 
         def close_accordion():
