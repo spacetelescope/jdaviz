@@ -896,7 +896,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting spectrum to the application, according to the options
             defined in the plugin.
         """
-        spec = self.export_bg(**kwargs).bkg_spectrum(bkg_statistic=self.bg_statistic.selected)
+        spec = self.export_bg(**kwargs).bkg_spectrum(bkg_statistic=self.bg_statistic.selected.lower())  # noqa
 
         if add_data:
             self.bg_spec_add_results.add_results_from_plugin(spec, replace=False)
