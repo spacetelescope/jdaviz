@@ -546,6 +546,27 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             if self.subset_selected != self.subset.default_text:
                 self._get_subset_definition(self.subset_selected)
 
+    def update_subset(self, subset_label, **kwargs):
+        '''
+        Method to update the attributes of an existing subset. The attributes of a subset
+        and their current values can be retrieved with the 'get_subset_definition` method.
+
+        Parameters
+        ----------
+
+        subset_label : str
+
+            The name of the subset to update. If this is not the currently selected subset in the
+            UI, it will be selected.
+
+        The attributes to update and their new values are passed as keyword arguments to this
+        function, for example:
+
+            >>> plg = imviz.plugins['Subset Tools']
+            >>> plg.update_subset('Subset 1', xmax = 9.522, xmin = 9.452)
+        '''
+        pass
+
     def vue_update_subset(self, *args):
 
         if self.multiselect:
