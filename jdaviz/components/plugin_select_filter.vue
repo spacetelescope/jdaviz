@@ -3,6 +3,8 @@
         <div v-if="api_hints_enabled && api_hint">
             <span class="api-hint" style="margin-right: 6px">{{ api_hint }}</span>
         </div>
+        <span v-if="api_hints_enabled && api_hint && selected === 'Any'" class="api-hint">'Any'</span>
+
         <div v-for="item in items">
             <j-tooltip v-if="item.label !== 'Any'" :tooltipcontent="'Show only '+item.label+' '+tooltip_suffix">
                 <v-btn
