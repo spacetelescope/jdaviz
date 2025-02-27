@@ -136,10 +136,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # set newsig to the sound for each layer
         # Do we need to change the sonified_cube/sonified_cube.newsig
         # code to be compatible with multiple sonified cubes?
+        self.sonified_cube.newsig = np.zeros(self.sonified_cube.newsig.shape)
         for k, v in self.uuid_lookup.items():
             if value not in v:
                 continue
-            self.sonified_cube.newsig = v[value]
+            self.sonified_cube.newsig += v[value]
             self.sonified_cube.cbuff = True
 
     def update_listener_wls(self, wranges, wunit):
@@ -163,7 +164,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln, use_pccut):
-        spectrum = self.active_image_layer.layer.get_object(statistic=None)
+        spectrum = self.active_cube_layer.layer.get_object(statistic=None)
         wlens = spectrum.wavelength.to('m').value
         flux = spectrum.flux.value
         self.sample_rate = sample_rate
@@ -234,7 +235,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.jdaviz_app.add_data_to_viewer('flux-viewer', data_name)
 
         # Set opacity to 0 and start the stream to hear sound when mousing over the flux viewer
-        self.state.layers[-1].alpha = 0
+        # self.state.layers[-1].alpha = 0
+        [layer for layer in self.state.layers if layer.layer.label == data_name][0].alpha = 0
         self.start_stream()
 
     def _viewer_mouse_event(self, data):

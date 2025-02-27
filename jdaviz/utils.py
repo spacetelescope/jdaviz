@@ -606,6 +606,11 @@ def layer_is_2d(layer):
     return isinstance(layer, BaseData) and layer.ndim == 2
 
 
+def layer_is_3d(layer):
+    # returns True for subclasses of BaseData with ndim=3:
+    return isinstance(layer, BaseData) and layer.ndim == 3
+
+
 def layer_is_2d_or_3d(layer):
     return isinstance(layer, BaseData) and layer.ndim in (2, 3)
 
