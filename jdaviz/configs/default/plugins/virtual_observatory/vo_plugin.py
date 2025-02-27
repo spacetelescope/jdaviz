@@ -24,7 +24,6 @@ from jdaviz.core.template_mixin import (
     UnitSelectPluginComponent,
     with_spinner,
 )
-from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ["VoPlugin"]
 vo_plugin_label = "Virtual Observatory"
