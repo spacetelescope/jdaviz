@@ -184,6 +184,12 @@ class BaseResolver(PluginTemplateMixin):
         # override by subclass
         return False  # pragma: nocover
 
+    @property
+    def input(self):
+        if self.default_input is None:
+            raise NotImplementedError("Resolver subclass must implement default_input")
+        return getattr(self, self.default_input)
+
     def __call__(self):
         # override by subclass - must convert any inputs into something
         # that can be interpretted by at least one parser
@@ -257,24 +263,19 @@ class BaseResolver(PluginTemplateMixin):
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():
-        # print("*** trying", resolver_name)
         if resolver is not None and resolver != resolver_name:
-            # print(f"*** skipping {resolver_name} because not {resolver}")
             continue
         try:
             this_resolver = Resolver.from_input(app, inp, **kwargs)
         except Exception:
-            # print(f"*** Resolver.from_input failed for {resolver_name}")
             this_resolver = None
         if this_resolver is None:
             continue
         try:
             is_valid = this_resolver.is_valid
         except Exception:
-            # print(f"*** resolver.is_valid failed for {resolver_name}")
             is_valid = False
         if not is_valid:
-            # print(f"*** resolver.is_valid = False for {resolver_name}")
             continue
 
         if target is not None:
@@ -292,4 +293,4 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
         vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
         raise ValueError(f"multiple valid resolvers found for input: {vrs}")
     else:
-        return valid_resolvers[0][0]
+        return valid_resolvers[0][0].user_api
