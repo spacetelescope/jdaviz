@@ -134,7 +134,7 @@ class TargetSelect(SelectPluginComponent):
             if target not in all_targets:
                 all_targets.append(target)
 
-        self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]
+        self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]  # noqa
         self._apply_default_selection()
 
 

@@ -527,7 +527,8 @@ class LineListTool(PluginTemplateMixin):
         self.send_state('loaded_lists')
         self.send_state('list_contents')
 
-        self.spectrum_viewer.plot_spectral_lines(tmp_names_rest, global_redshift=self._global_redshift)
+        self.spectrum_viewer.plot_spectral_lines(tmp_names_rest,
+                                                 global_redshift=self._global_redshift)
         self.update_line_mark_dict()
 
         msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
@@ -580,8 +581,9 @@ class LineListTool(PluginTemplateMixin):
 
         # Load the table into the main astropy table and get it back, to make
         # sure all values match between the main table and local plugin
-        temp_table = self.spectrum_viewer.load_line_list(temp_table, return_table=True,
-                                                 show=False)
+        temp_table = self.spectrum_viewer.load_line_list(temp_table,
+                                                         return_table=True,
+                                                         show=False)
 
         metadata = get_linelist_metadata()
         list_medium = metadata[self.list_to_load].get('medium', 'Unknown').capitalize()
@@ -738,7 +740,8 @@ class LineListTool(PluginTemplateMixin):
         self.list_contents = list_contents
 
         if show:
-            self.spectrum_viewer.plot_spectral_line(name_rest, global_redshift=self._global_redshift)
+            self.spectrum_viewer.plot_spectral_line(name_rest,
+                                                    global_redshift=self._global_redshift)
         else:
             self.spectrum_viewer.erase_spectral_lines(name_rest=name_rest)
 
