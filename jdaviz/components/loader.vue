@@ -19,7 +19,7 @@
                       :selected.sync="target_selected"
                       @update:selected="$emit('update:target_selected', $event)"
                       tooltip_suffix="formats"
-                      api_hint="loader.target ="
+                      api_hint="ldr.target ="
                       :api_hints_enabled="api_hints_enabled"
                     />
                   </v-row>  
@@ -30,7 +30,7 @@
                       </v-alert>
                   </v-row>
                   <v-row v-if="format_items.length === 1" style="margin-top: 16px">
-                      <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">loader.format = '{{ format_selected }}'</span>
+                      <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
                       <span v-else>Format: {{ format_selected }}</span>
                   </v-row>
                   <plugin-select
@@ -40,7 +40,7 @@
                       :selected.sync="format_selected"
                       @update:selected="$emit('update:format_selected', $event)"
                       label="Format"
-                      api_hint="loader.format ="
+                      api_hint="ldr.format ="
                       :api_hints_enabled="api_hints_enabled"
                       hint="Choose input format"
                   ></plugin-select>
@@ -68,16 +68,6 @@
     </v-card-text>
     <v-card-actions>
         <v-spacer></v-spacer>
-        <!-- do not show cancel button by default, but only if wrapped in loader-in-dialog 
-             class which set display: block in <style> below -->
-        <div class="cancel-btn" style="display: none">
-          <plugin-action-button 
-            :results_isolated_to_plugin="false"
-            :api_hints_enabled="false"
-            @click="$emit('cancel-clicked')">
-            Cancel
-          </plugin-action-button>
-        </div>
         <plugin-action-button 
           :spinner="import_spinner"
           :disabled="!format_selected.length"
@@ -85,7 +75,7 @@
           :api_hints_enabled="api_hints_enabled"
           @click="$emit('import-clicked')">
           {{ api_hints_enabled ?
-            'loader.importer()'
+            'ldr.importer()'
             :
             'Import'
           }}
@@ -103,9 +93,3 @@ module.exports = {
           'api_hints_enabled'],
 }
 </script>
-
-<style scoped>
-  .loader-in-dialog .cancel-btn {
-    display: block !important;
-  }
-</style>

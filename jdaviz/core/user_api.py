@@ -161,7 +161,7 @@ class LoaderUserApi(UserApiWrapper):
     """
     def __init__(self, loader, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
         expose = list(set(list(expose) + ['format', 'target', 'importer', 'show',
-                                          'show_in_dialog', 'close_dialog']))
+                                          'open_in_tray', 'close_in_tray']))
         super().__init__(loader, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):
