@@ -17,6 +17,11 @@
             and click "IMPORT".
             Note that single clicks navigate into directories.
         </v-row>
+        <v-row v-if="api_hints_enabled">
+            <span class="api-hint">
+                ldr.filepath = '{{ filepath }}'
+            </span>
+        </v-row>
         <v-row>
           <g-file-import id="file-uploader"></g-file-import>
         </v-row>
