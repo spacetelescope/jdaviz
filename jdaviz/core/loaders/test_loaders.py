@@ -12,6 +12,32 @@ def test_loaders_registry(specviz_helper):
     assert len(specviz_helper.loaders) == len(loader_resolver_registry.members)
 
 
+def test_user_api(specviz_helper):
+    specviz_helper.app.state.dev_loaders = True
+
+    assert specviz_helper.app.state.drawer_content == 'plugins'
+
+    loader = specviz_helper.loaders['file']
+    loader.open_in_tray()
+    assert specviz_helper.app.state.drawer_content == 'loaders'
+    loader.close_in_tray()
+    assert specviz_helper.app.state.drawer_content == 'loaders'
+    loader.close_in_tray(close_sidebar=True)
+    assert specviz_helper.app.state.drawer_content == ''
+
+    subset_plg = specviz_helper.plugins['Subset Tools']
+    subset_plg.open_in_tray()
+    assert specviz_helper.app.state.drawer_content == 'plugins'
+
+    assert subset_plg._obj.loader_panel_ind is None  # loader panel not open
+    subset_plg._obj.loaders['url'].open_in_tray()
+    assert subset_plg._obj.loader_panel_ind == 0  # loader panel open
+    subset_plg._obj.loaders['url'].close_in_tray()
+    assert subset_plg._obj.loader_panel_ind is None  # loader panel not open
+    subset_plg._obj.loaders['url'].close_in_tray(close_sidebar=True)
+    assert specviz_helper.app.state.drawer_content == ''
+
+
 @pytest.mark.remote_data
 def test_resolver_url(specviz_helper):
     specviz_helper.app.state.dev_loaders = True

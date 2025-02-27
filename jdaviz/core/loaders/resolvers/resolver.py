@@ -220,7 +220,7 @@ class BaseResolver(PluginTemplateMixin):
         if self.close_callback is not None:
             self.close_callback()
         if close_sidebar:
-            self.app.drawer_content = ''
+            self.app.state.drawer_content = ''
 
     def open_in_tray(self):
         """
