@@ -11,7 +11,7 @@
             Import Data
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-else-if="config == ['cubeviz', 'mosviz'].indexOf(config) !== -1 && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
+        <j-tooltip v-else-if="['cubeviz', 'mosviz'].indexOf(config) !== -1 && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
         <j-tooltip v-else :tipid="item.name">
           <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
         </j-tooltip>
