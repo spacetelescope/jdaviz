@@ -9,7 +9,7 @@ from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
-from regions import CirclePixelRegion, PixCoord, RectanglePixelRegion
+from regions import CirclePixelRegion, EllipsePixelRegion, PixCoord, RectanglePixelRegion
 from skimage.io import imsave
 from stdatamodels import asdf_in_fits
 
@@ -252,13 +252,12 @@ class TestParseImage:
 
         # --- Since download is expensive, we attach GWCS-specific tests here. ---
 
-        # Ensure interactive region supports GWCS. Also see test_regions.py
-        imviz_helper._apply_interactive_region('bqplot:truecircle',
-                                               (965, 1122),
-                                               (976.9, 1110.1))  # Star
-        imviz_helper._apply_interactive_region('bqplot:rectangle',
-                                               (982, 1088),
-                                               (1008, 1077))  # Background
+        # Ensure region supports GWCS. Also see test_regions.py
+        imviz_helper.plugins['Subset Tools'].import_region([
+            CirclePixelRegion(center=PixCoord(x=970.95, y=1116.05), radius=5.95),
+            RectanglePixelRegion(center=PixCoord(x=995.0, y=1082.5), width=26, height=11)
+        ], combination_mode="new")
+
         subsets = imviz_helper.plugins['Subset Tools'].get_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         # check that retrieved subsets-as-regions from subset plugin match what was loaded.
@@ -402,9 +401,8 @@ class TestParseImage:
         # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
 
         # Test simple aperture photometry plugin.
-        imviz_helper._apply_interactive_region('bqplot:ellipse',
-                                               (1465, 2541),
-                                               (1512, 2611))  # Galaxy
+        imviz_helper.plugins['Subset Tools'].import_region(
+            EllipsePixelRegion(center=PixCoord(x=1488.5, y=2576), width=47, height=70))  # Galaxy
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.data_selected = 'contents[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 1'

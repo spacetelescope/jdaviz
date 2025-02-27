@@ -212,7 +212,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
     def test_batch_phot(self):
         self.imviz.link_data(align_by='wcs')  # They are dithered by 1 pixel on X
-        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
+        self.imviz.plugins['Subset Tools'].import_region(
+            CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
+        )  # Draw a circle
 
         # TODO: remove ._obj when API is made public
         phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
@@ -249,7 +251,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
     def test_plugin_no_wcs(self):
         # Most things already tested above, so not re-tested here.
-        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
+        self.imviz.plugins['Subset Tools'].import_region(
+            CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
+        )  # Draw a circle
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
         phot_plugin.dataset_selected = 'has_wcs[SCI,1]'
