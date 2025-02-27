@@ -48,7 +48,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
             raise NotImplementedError(f"{self.input} is not supported")  # pragma: nocover
 
     @property
-    def default_viewer(self):
+    def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'specviz-profile-viewer'

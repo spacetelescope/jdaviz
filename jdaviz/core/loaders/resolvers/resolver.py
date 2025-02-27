@@ -128,10 +128,13 @@ class TargetSelect(SelectPluginComponent):
         # note that the selection of a target may affect the available formats
         # so we want to store all importers in the target select even if they are not valid there
         # and use that list when compiling list of valid targets
-        all_targets = list(set([importer.target for importer
-                                in self.plugin.format._importers.values()]))
+        all_targets = []
+        for importer in self.plugin.format._importers.values():
+            target = importer.target
+            if target not in all_targets:
+                all_targets.append(target)
 
-        all_items = [{'label': 'Any'}]+[{'label': target} for target in all_targets]
+        all_items = [{'label': 'Any'}] + all_targets
         self.items = [item for item in all_items if self._is_valid_item(item)]
         self._apply_default_selection()
 

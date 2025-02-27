@@ -19,7 +19,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         return isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 2
 
     @property
-    def default_viewer(self):
+    def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'mosviz-profile-2d-viewer'

@@ -10,6 +10,10 @@ from jdaviz.core.user_api import ImporterUserApi
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
 
 
+vid_map = {'specviz-profile-viewer': '1D Spectrum',
+           'mosviz-profile-2d-viewer': '2D Spectrum'}
+
+
 class BaseImporter(PluginTemplateMixin):
     def __init__(self, app, input, **kwargs):
         self._input = input
@@ -64,12 +68,18 @@ class BaseImporterToDataCollection(BaseImporter):
         self._on_label_changed()
 
     @property
-    def default_viewer(self):
-        raise NotImplementedError("Importer subclass must implement default_viewer")  # noqa pragma: nocover
+    def default_viewer_reference(self):
+        raise NotImplementedError("Importer subclass must implement default_viewer_reference")  # noqa pragma: nocover
+
+    @property
+    def default_viewer_label(self):
+        return vid_map.get(self.default_viewer_reference, self.default_viewer_reference)
 
     @property
     def target(self):
-        return self.default_viewer
+        return {'type': 'viewer',
+                'icon': 'mdi-window-maximize',
+                'label': self.default_viewer_label}
 
     def _on_label_changed(self, msg={}):
         if not len(self.data_label_value.strip()):
@@ -94,9 +104,9 @@ class BaseImporterToDataCollection(BaseImporter):
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
-            viewer_dict = viewer_registry.members.get(self.default_viewer)
+            viewer_dict = viewer_registry.members.get(self.default_viewer_reference)
             viewer_cls = viewer_dict.get('cls')
-            vid = viewer_dict.get('label')
+            vid = self.default_viewer_label
             self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
                                     vid=vid, name=vid,
                                     open_data_menu_if_empty=False)
@@ -121,7 +131,9 @@ class BaseImporterToPlugin(BaseImporter):
 
     @property
     def target(self):
-        return self.default_plugin
+        return {'type': 'plugin',
+                'icon': 'mdi-toy-brick-outline',
+                'label': self.default_plugin}
 
     @property
     def has_default_plugin(self):

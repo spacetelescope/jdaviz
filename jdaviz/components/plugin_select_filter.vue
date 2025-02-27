@@ -17,7 +17,8 @@
                 >
                     <span v-if="api_hints_enabled && api_hint && selected === item.label" style="text-transform: none">'{{ item.label }}'</span>
                     <span v-else>
-                        <img v-if="item.icon" :src="item.icon" width="16" class="invert-if-dark" style="margin-right: 2px"/>
+                        <img v-if="item.icon && !item.icon.startsWith('mdi')" :src="item.icon" width="16" class="invert-if-dark" style="margin-right: 2px"/>
+                        <v-icon v-if="item.icon && item.icon.startsWith('mdi')" style="margin-right: 2px" small>{{ item.icon }}</v-icon>
                         {{ item.label }}
                     </span>
                 </v-btn>

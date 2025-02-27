@@ -18,7 +18,7 @@
                       :items="target_items"
                       :selected.sync="target_selected"
                       @update:selected="$emit('update:target_selected', $event)"
-                      tooltip_suffix="formats"
+                      tooltip_suffix="compatible formats"
                       api_hint="ldr.target ="
                       :api_hints_enabled="api_hints_enabled"
                     />
