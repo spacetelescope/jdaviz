@@ -1,5 +1,5 @@
 <template>
-  <v-row>
+  <v-row v-if="loader_items.length > 0">
     <v-expansion-panels accordion focusable v-model="loader_panel_ind" @change="$emit('update:loader_panel_ind', $event)">
       <v-expansion-panel>
         <v-expansion-panel-header v-slot="{ open }">

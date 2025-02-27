@@ -33,7 +33,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state.show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="(state.dev_loaders || config === 'specviz') && (state.show_toolbar_buttons || state.drawer_content === 'loaders')" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="(state.dev_loaders || config === 'specviz') && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>

@@ -237,11 +237,13 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         import jdaviz.core.loaders  # noqa
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
-        for name, loader_cls in loader_resolver_registry.members.items():
-            loader = loader_cls(app=self.app,
-                                open_callback=open_accordion,
-                                close_callback=close_accordion,
-                                set_active_loader_callback=set_active_loader)
+        for name, Resolver in loader_resolver_registry.members.items():
+            if Resolver.disabled:
+                continue
+            loader = Resolver(app=self.app,
+                              open_callback=open_accordion,
+                              close_callback=close_accordion,
+                              set_active_loader_callback=set_active_loader)
             loader.target.set_filter_target_in(self._registry_label)
             if not len(loader.format.filters):
                 # if default input had no target choices, then the format filter
