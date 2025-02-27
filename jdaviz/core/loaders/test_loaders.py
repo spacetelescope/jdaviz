@@ -1,7 +1,9 @@
+import numpy as np
 import pytest
 from astropy import units as u
-from specutils import SpectralRegion
+from specutils import SpectralRegion, Spectrum1D
 from jdaviz.core.registries import loader_resolver_registry
+from jdaviz.core.loaders.resolvers import find_matching_resolver
 
 
 def test_loaders_registry(specviz_helper):
@@ -12,7 +14,7 @@ def test_loaders_registry(specviz_helper):
     assert len(specviz_helper.loaders) == len(loader_resolver_registry.members)
 
 
-def test_user_api(specviz_helper):
+def test_open_close(specviz_helper):
     specviz_helper.app.state.dev_loaders = True
 
     assert specviz_helper.app.state.drawer_content == 'plugins'
@@ -36,6 +38,18 @@ def test_user_api(specviz_helper):
     assert subset_plg._obj.loader_panel_ind is None  # loader panel not open
     subset_plg._obj.loaders['url'].close_in_tray(close_sidebar=True)
     assert specviz_helper.app.state.drawer_content == ''
+
+
+def test_resolver_matching(specviz_helper):
+    sp = Spectrum1D(spectral_axis=np.array([1, 2, 3])*u.nm,
+                    flux=np.array([1, 2, 3])*u.Jy)
+
+    res_sp = find_matching_resolver(specviz_helper.app, sp)
+    assert res_sp._obj._registry_label == 'object'
+    assert res_sp.format == '1D Spectrum'
+
+    specviz_helper._load(sp)
+    assert len(specviz_helper.app.data_collection) == 1
 
 
 @pytest.mark.remote_data
