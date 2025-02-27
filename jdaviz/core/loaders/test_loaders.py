@@ -10,7 +10,7 @@ def test_loaders_registry(specviz_helper):
     with pytest.raises(NotImplementedError):
         specviz_helper.loaders
     specviz_helper.app.state.dev_loaders = True
-    # built-in loaders: file, url
+    # built-in loaders: file, url, etc
     assert len(specviz_helper.loaders) == len(loader_resolver_registry.members)
 
 
@@ -50,6 +50,36 @@ def test_resolver_matching(specviz_helper):
 
     specviz_helper._load(sp)
     assert len(specviz_helper.app.data_collection) == 1
+
+
+def test_trace_importer(specviz2d_helper, spectrum2d):
+    specviz2d_helper.app.state.dev_loaders = True
+    specviz2d_helper._load(spectrum2d)
+
+    trace = specviz2d_helper.plugins['Spectral Extraction'].export_trace()
+
+    res_sp = find_matching_resolver(specviz2d_helper.app, trace)
+    assert res_sp._obj._registry_label == 'object'
+    assert res_sp.format == 'Trace'
+
+    # import through loader API
+    ldr = specviz2d_helper.loaders['object']
+    ldr.object = trace
+    assert ldr.format == 'Trace'
+    ldr.importer.data_label = 'Trace 1'
+    ldr.importer()
+    assert specviz2d_helper.app.data_collection[1].label == 'Trace 1'
+
+    # import through load method
+    specviz2d_helper._load(trace, data_label='Trace 2')
+    assert specviz2d_helper.app.data_collection[2].label == 'Trace 2'
+
+
+def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
+    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
+    specviz2d_helper.load_data(spectrum2d)
 
 
 @pytest.mark.remote_data
