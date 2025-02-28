@@ -396,7 +396,11 @@ class SpectralExtraction(PluginTemplateMixin):
         # positive (ie. columns of all zeros)
         trace_flux = self.trace_dataset.get_selected_spectrum(use_display_units=True).flux
         trace_flux_ignore_zeros = trace_flux[:, np.nanmedian(trace_flux, axis=0) > 0]
-        brightest_pixel = int(np.nanmedian(np.argmax(trace_flux_ignore_zeros, axis=0)))
+        if trace_flux_ignore_zeros.shape[1] == 0:
+            # default to trace in middle of image
+            brightest_pixel = int(trace_flux.shape[0]/2)
+        else:
+            brightest_pixel = int(np.nanmedian(np.argmax(trace_flux_ignore_zeros, axis=0)))
         # do not allow to be an edge pixel
         if brightest_pixel < 1:
             brightest_pixel = 1
