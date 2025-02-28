@@ -67,11 +67,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.image_unit = None
 
         # subscribe/unsubscribe to mouse events across all existing viewers
-        viewer_refs = []
         for viewer in self.app._viewer_store.values():
             if isinstance(viewer, self._supported_viewer_classes):
                 self._create_viewer_callbacks(viewer)
-                viewer_refs.append(viewer.reference_id)
 
         self.dataset._manual_options = ['auto', 'none']
 
@@ -102,7 +100,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._marks[id] = PluginScatter(viewer,
                                             marker='rectangle', stroke_width=1,
                                             visible=False)
-        if isinstance(viewer, MosvizProfileView):
+        if isinstance(viewer, SpecvizProfileView):
             matched_id = f"{id}:matched"
             self._marks[matched_id] = PluginLine(viewer,
                                                  x=[0, 0], y=[0, 1],
@@ -156,6 +154,15 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if self.app.config == 'mosviz':
             return {'mosviz-1': ['mosviz-2:matched'],
                     'mosviz-2': ['mosviz-1']}
+        if self.app.config == 'specviz':
+            # note: this is the deconfigged specviz which has dynamic matched viewers
+            matched_markers = {}
+            for viewer_id, viewer in self.app._viewer_store.items():
+                if isinstance(viewer, SpecvizProfileView):
+                    matched_markers[viewer_id] = [vid for vid, v in self.app._viewer_store.items() if isinstance(v, MosvizProfile2DView)]
+                elif isinstance(viewer, MosvizProfile2DView):
+                    matched_markers[viewer_id] = [f"{vid}:matched" for vid, v in self.app._viewer_store.items() if isinstance(v, SpecvizProfileView)]
+            return matched_markers
         return {}
 
     def as_text(self):
