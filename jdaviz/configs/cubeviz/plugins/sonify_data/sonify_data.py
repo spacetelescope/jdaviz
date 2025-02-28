@@ -1,7 +1,5 @@
 from traitlets import Bool, List, Unicode, observe
 import astropy.units as u
-from glue.core.message import (SubsetDeleteMessage,
-                               SubsetUpdateMessage)
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
