@@ -33,7 +33,7 @@ def test_2d_parser_jwst(specviz2d_helper):
 
     # Also check the coordinates info panel.
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})
     assert label_mouseover.as_text() == ('Pixel x=0350.0 y=0030.0 Value +3.22142e+04 MJy / sr',
@@ -76,7 +76,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     # Also check the coordinates info panels.
 
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00000.0 y=00000.0 Value +3.74540e-01 Jy',

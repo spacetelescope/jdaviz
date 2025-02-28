@@ -116,6 +116,10 @@ class ConfigHelper(HubListener):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
     @property
+    def _coords_info(self):
+        return self.app.session.application._tools.get('g-coords-info')
+
+    @property
     def loaders(self):
         """
         Access API objects for data loaders in the import dialog.

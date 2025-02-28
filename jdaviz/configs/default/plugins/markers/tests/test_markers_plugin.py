@@ -33,7 +33,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     sb_unit = 'Jy / pix2'  # cubes loaded in Jy have sb unit of Jy / pix2
     flux_unit = 'Jy'
 
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
 
     mp = cubeviz_helper.plugins['Markers']
     mp.keep_active = True
@@ -216,7 +216,7 @@ def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
     mp.keep_active = True
 
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(fv,
                                         {'event': 'mousemove',
                                          'domain': {'x': 0, 'y': 0}})
@@ -254,7 +254,7 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     mp = specviz2d_helper.plugins['Markers']
     mp.keep_active = True
 
-    label_mouseover = specviz2d_helper.app.session.application._tools["g-coords-info"]
+    label_mouseover = specviz2d_helper._coords_info
     viewer2d = specviz2d_helper.app.get_viewer("spectrum-2d-viewer")
     label_mouseover._viewer_mouse_event(viewer2d, {"event": "mousemove",
                                                    "domain": {"x": 6, "y": 3}})
@@ -300,7 +300,7 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
 
 class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
     def test_markers_layer_cycle(self):
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
 
         mp = self.imviz.plugins['Markers']
         mp._obj.plugin_opened = True
@@ -384,7 +384,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         assert len(_get_markers_from_viewer(self.viewer).x) == 3
 
     def test_markers_custom_viewer(self):
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
 
         mp = self.imviz.plugins['Markers']
         mp._obj.plugin_opened = True
