@@ -457,7 +457,7 @@ STCS_FRAME_PATTERN = '|'.join(SUPPORTED_STCS_FRAME_VALUES)
 SUPPORTED_STCS_PATTERN = re.compile(
     fr"^(?P<shape>({'|'.join(SUPPORTED_STCS_SHAPE_VALUES)}))"
     fr"(?P<frame>(\s+({'|'.join(SUPPORTED_STCS_FRAME_VALUES)})))*"
-    r"(?P<coordinates>(\s+-?\d+\.\d+)+$)",
+    r"(?P<coordinates>(\s+-?\d+\.\d+){2,}$)",
     re.IGNORECASE)
 SKY_REGION_FROM_COORDS_FACTORY = {
     'polygon': _create_polygon_skyregion_from_coords,
