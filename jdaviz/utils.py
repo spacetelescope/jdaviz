@@ -27,7 +27,7 @@ from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index',
-           'get_subset_type', 'download_uri_to_path', 'layer_is_2d',
+           'get_subset_type', 'chain_regions', 'download_uri_to_path', 'layer_is_2d',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
@@ -359,12 +359,13 @@ class ColorCycler:
     def reset(self):
         self.counter = -1
 
+
 def chain_regions(regions, operators):
     """
     Combine ``regions`` to Compound pixel/sky region if ``operators`` joining
     them are basic binary operators understood by glue and Regions. If not,
     returns a list of individual regions.
-    
+
     Parameters
     ----------
         regions : list

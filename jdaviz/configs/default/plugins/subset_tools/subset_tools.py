@@ -10,7 +10,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
-                              MaskSubsetState, Subset)
+                              MaskSubsetState)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -183,7 +183,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                        use_display_units=False):
+                    use_display_units=False):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
@@ -225,9 +225,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             region_type = [region_type]
 
         else:  # determine subset return type(s) by config, if not specified
-            region_type = {'imviz': ['spatial'], 
-                           'specviz': ['spectral']}.get(self.config,
-                                                       ['spatial', 'spectral'])
+            region_type = {'imviz': ['spatial'],
+                           'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
 
         reg_type = 'sky_region' if self.app._align_by == 'wcs' else 'region'
 
@@ -245,7 +244,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             try:
                 ss = subsets[subset_label]
                 if isinstance(ss, SpectralRegion):
-                        regions[subset_label] = ss
+                    regions[subset_label] = ss
                 else:
                     if len(ss) == 1:
                         regions[subset_label] = ss[0][reg_type]
