@@ -367,6 +367,10 @@ class ConfigHelper(HubListener):
             self.app.layout.height = height
             self.app.state.settings['context']['notebook']['max_height'] = height
 
+        if self.app.config == 'specviz' or self.app.state.dev_loaders:
+            if not len(self.viewers):
+                self.app.state.drawer_content = 'loaders'
+
         show_widget(self.app, loc=loc, title=title)
 
     def show_in_sidecar(self, anchor=None, title=None):  # pragma: no cover
