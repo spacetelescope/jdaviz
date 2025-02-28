@@ -3,7 +3,8 @@ import numpy as np
 from functools import cached_property
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
@@ -540,7 +541,7 @@ class SpectralExtraction(PluginTemplateMixin):
         viewer2d = self.viewer2d.selected_obj
         viewer1d = self.viewer1d.selected_obj
 
-        if viewer2d is None or viewer1d is None:
+        if viewer2d is None:
             return {}
 
         if not viewer2d.state.reference_data:
@@ -549,34 +550,47 @@ class SpectralExtraction(PluginTemplateMixin):
 
         # the marks haven't been initialized yet, so initialize with empty
         # marks that will be populated once the first analysis is done.
-        self._marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
-                       'ext_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'ext_upper': PluginLine(viewer2d, visible=self.is_active),
-                       'bg1_center': PluginLine(viewer2d, visible=self.is_active,
-                                                line_style='dotted'),
-                       'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
-                       'bg2_center': PluginLine(viewer2d, visible=self.is_active,
-                                                line_style='dotted'),
-                       'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
+        marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
+                 'ext_lower': PluginLine(viewer2d, visible=self.is_active),
+                 'ext_upper': PluginLine(viewer2d, visible=self.is_active),
+                 'bg1_center': PluginLine(viewer2d, visible=self.is_active,
+                                          line_style='dotted'),
+                 'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
+                 'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
+                 'bg2_center': PluginLine(viewer2d, visible=self.is_active,
+                                          line_style='dotted'),
+                 'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
+                 'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
         # NOTE: += won't trigger the figure to notice new marks
-        viewer2d.figure.marks = viewer2d.figure.marks + list(self._marks.values())
+        viewer2d.figure.marks = viewer2d.figure.marks + list(marks.values())
 
-        self._marks['extract'] = PluginLine(viewer1d, visible=self.is_active)
-        self._marks['bg_spec'] = PluginLine(viewer1d, visible=self.is_active, stroke_width=1)  # noqa
+        if viewer1d is None:
+            return marks
+
+        marks['extract'] = PluginLine(viewer1d, visible=self.is_active)
+        marks['bg_spec'] = PluginLine(viewer1d, visible=self.is_active, stroke_width=1)  # noqa
 
         # NOTE: += won't trigger the figure to notice new marks
-        viewer1d.figure.marks = viewer1d.figure.marks + [self._marks['extract'],
-                                                         self._marks['bg_spec']]
+        viewer1d.figure.marks = viewer1d.figure.marks + [marks['extract'],
+                                                         marks['bg_spec']]
 
-        return self._marks
+        return marks
 
     @observe('interactive_extract')
     @skip_if_no_updates_since_last_active()
     @skip_if_not_tray_instance()
     @skip_if_not_relevant()
     def _update_interactive_extract(self, event={}):
+        if 'extract' not in self.marks:
+            # no spectrum1d viewer
+            # NOTE: this logic will probably be moved by auto-extraction when importing a 2D spectrum
+            # by copying logic from the parser now that uses a clone of the plugin to create an extraction
+            # and moving that to the new loader (potentially with a checkbox to disable)
+            self.app._on_new_viewer(NewViewerMessage(SpecvizProfileView, data=None, sender=self.app),
+                                    vid='1D Spectrum', name='1D Spectrum',
+                                    open_data_menu_if_empty=False)
+            self._clear_cache('marks')
+
         # also called by any of the _interaction_in_*_step
         if self.interactive_extract:
             try:
