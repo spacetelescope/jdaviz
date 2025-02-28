@@ -416,18 +416,31 @@ class SpectralExtraction(PluginTemplateMixin):
         else:
             self.irrelevant_msg = ''
 
-    @observe('irrelevant_msg')
-    def _updates_when_becoming_relevant(self, msg):
-        if msg.get('new') != '':
-            return
-        # reset all defaults for the selected trace dataset, _trace_dataset_selected
-        # should be triggered shortly after
+    def _clear_default_inputs(self):
         self.trace_pixel = 0
         self.trace_window = 0
         self.bg_trace_pixel = 0
         self.bg_separation = 0
         self.bg_width = 0
         self.ext_width = 0
+
+    @observe('irrelevant_msg')
+    def _updates_when_becoming_relevant(self, msg):
+        if msg.get('new') != '':
+            return
+        # reset all defaults for the selected trace dataset, _trace_dataset_selected
+        # should be triggered shortly after
+        self._clear_default_inputs()
+
+    def _extract_in_new_instance(self, dataset=None, add_data=False):
+        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
+        # the tray) and extract the entire cube with defaults.
+        plg = self.new()
+        # all other settings remain at their plugin defaults
+        plg._clear_default_inputs()
+        plg.trace_dataset.selected = self.trace_dataset.selected if dataset is None else dataset
+        plg._trace_dataset_selected()  # should only be necessary if default dataset
+        return plg.export_extract_spectrum(add_data=add_data)
 
     @observe('trace_dataset_selected')
     @skip_if_not_relevant()

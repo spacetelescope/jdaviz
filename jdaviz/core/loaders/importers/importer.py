@@ -97,31 +97,36 @@ class BaseImporterToDataCollection(BaseImporter):
 
         self.data_label_invalid_msg = ''
 
-    def load_into_viewer(self, data_label):
+    def load_into_viewer(self, data_label, default_viewer_reference=None):
+        if default_viewer_reference is None:
+            default_viewer_reference = self.default_viewer_reference
+            default_viewer_label = self.default_viewer_label
+        else:
+            default_viewer_label = vid_map.get(default_viewer_reference, default_viewer_reference)
         added = 0
         for viewer in self.app._jdaviz_helper.viewers.values():
             if data_label in viewer.data_menu.data_labels_unloaded:
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
-            viewer_dict = viewer_registry.members.get(self.default_viewer_reference)
+            viewer_dict = viewer_registry.members.get(default_viewer_reference)
             viewer_cls = viewer_dict.get('cls')
-            vid = self.default_viewer_label
             self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
-                                    vid=vid, name=vid,
+                                    vid=default_viewer_label,
+                                    name=default_viewer_label,
                                     open_data_menu_if_empty=False)
-            viewer = self.app._jdaviz_helper.viewers.get(vid)
+            viewer = self.app._jdaviz_helper.viewers.get(default_viewer_label)
             viewer.data_menu.add_data(data_label)
 
-    def add_to_data_collection(self, data, data_label, show_in_viewer=True):
+    def add_to_data_collection(self, data, data_label=None, show_in_viewer=True):
         if data_label is None:
             data_label = self.data_label_value
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)
 
-    def __call__(self, data_label=None):
-        self.add_to_data_collection(self.output, data_label, show_in_viewer=True)
+    def __call__(self):
+        self.add_to_data_collection(self.output, show_in_viewer=True)
 
 
 class BaseImporterToPlugin(BaseImporter):
