@@ -368,7 +368,7 @@ def _create_polygon_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
     >>> coords = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0]
     >>> _create_polygon_skyregion_from_coords(coords)
     <PolygonSkyRegion(vertices=<SkyCoord (ICRS): (ra, dec) in deg
-        (10., 20.), (30., 40.), (50., 60.)>)>
+        [(10., 20.), (30., 40.), (50., 60.)]>)>
 
     """
     ra, dec = coords[::2], coords[1::2]
@@ -522,7 +522,7 @@ def stcs_string2region(stcs_string):
     >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
     >>> stcs_string2region(stcs_string)
     <PolygonSkyRegion(vertices=<SkyCoord (ICRS): (ra, dec) in deg
-        (10., 20.), (30., 40.), (50., 60.)>)>
+        [(10., 20.), (30., 40.), (50., 60.)]>)>
 
     """
 
