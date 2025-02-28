@@ -57,11 +57,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         data_label = self.data_label_value
         ext_data_label = self.ext_data_label_value
 
-        try:
-            super().__call__()
-        except:
-            # TODO: remove this... just to get around unit conversion traceback for now
-            pass
+        super().__call__()
 
         if not self.auto_extract:
             return
