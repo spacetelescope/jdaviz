@@ -1,5 +1,4 @@
 import bqplot
-import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from traitlets import Bool
