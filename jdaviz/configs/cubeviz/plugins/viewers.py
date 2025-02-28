@@ -69,7 +69,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # Dictionary that contains keys with UUIDs for each
         # sonified data layer. The value of each key is another dictionary containing
-        # integers as keys and arrays representing sounds as the value.
+        # coordinates as keys and arrays representing sounds as the value.
         self.uuid_lookup = {}
         self.same_pix = None
 
