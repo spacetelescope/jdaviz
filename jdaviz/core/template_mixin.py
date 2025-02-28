@@ -3439,10 +3439,10 @@ class ViewerSelect(SelectPluginComponent):
     """
 
     def __init__(self, plugin, items, selected,
-                 multiselect=None,
+                 multiselect=None, filters=[],
                  default_text=None, manual_options=[], default_mode='first'):
         super().__init__(plugin, items=items, selected=selected,
-                         multiselect=multiselect,
+                         multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
 

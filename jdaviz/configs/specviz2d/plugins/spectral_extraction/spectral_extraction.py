@@ -1,12 +1,14 @@
 import numpy as np
 
-from traitlets import Bool, List, Unicode, observe
+from functools import cached_property
+from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
+                                        ViewerSelect,
                                         AddResults,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
@@ -46,6 +48,10 @@ class SpectralExtraction(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * :attr:`interactive_extract`
+    * ``viewer1d`` (:class:`~jdaviz.core.template_mixin.ViewerSelectMixin`):
+      which 1d spectrum viewer(s) to show the live-preview marks.
+    * ``viewer2d`` (:class:`~jdaviz.core.template_mixin.ViewerSelectMixin`):
+      which 2d spectrum viewer(s) to show the live-preview marks.
     * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       controls the input dataset for generating the trace.
     * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
@@ -114,7 +120,17 @@ class SpectralExtraction(PluginTemplateMixin):
     uses_active_status = Bool(True).tag(sync=True)
 
     active_step = Unicode().tag(sync=True)
+
+    # SETTINGS
     interactive_extract = Bool(True).tag(sync=True)
+
+    viewer1d_items = List().tag(sync=True)
+    viewer1d_selected = Any().tag(sync=True)
+    viewer1d_multiselect = Bool(False).tag(sync=True)
+
+    viewer2d_items = List().tag(sync=True)
+    viewer2d_selected = Any().tag(sync=True)  # Any needed for multiselect
+    viewer2d_multiselect = Bool(False).tag(sync=True)
 
     # TRACE
     trace_trace_items = List().tag(sync=True)
@@ -230,6 +246,18 @@ class SpectralExtraction(PluginTemplateMixin):
         self._plugin_description = 'Extract 1D spectrum from 2D image.'
 
         self._marks = {}
+
+        self.viewer1d = ViewerSelect(self,
+                                     'viewer1d_items',
+                                     'viewer1d_selected',
+                                     'viewer1d_multiselect',
+                                     filters=['is_spectrum_viewer'])
+
+        self.viewer2d = ViewerSelect(self,
+                                     'viewer2d_items',
+                                     'viewer2d_selected',
+                                     'viewer2d_multiselect',
+                                     filters=['is_spectrum_2d_viewer'])
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -356,7 +384,8 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('interactive_extract',
+        return PluginUserApi(self, expose=('viewer',
+                                           'interactive_extract',
                                            'trace_dataset', 'trace_type',
                                            'trace_order', 'trace_peak_method',
                                            'trace_pixel',
@@ -453,12 +482,15 @@ class SpectralExtraction(PluginTemplateMixin):
             else:
                 raise ValueError("step must be one of: trace, bg, ext")
 
-    @observe('is_active', 'active_step')
+    @observe('is_active', 'active_step', 'viewer1d_selected', 'viewer2d_selected')
     @skip_if_not_tray_instance()
     def _update_plugin_marks(self, msg={}):
         if self.app._jdaviz_helper is None:
             return
-        if not len(self._marks):
+        if msg.get('name') in ['viewer1d_selected', 'viewer2d_selected']:
+            self._clear_cache('marks')
+
+        if not len(self.marks):
             # plugin has never been opened, no need to create marks just to hide them,
             # we'll create marks when the plugin is first opened
             return
@@ -484,20 +516,19 @@ class SpectralExtraction(PluginTemplateMixin):
         for step, mark in self.marks.items():
             mark.visible = step in display_marks.get(self.active_step, [])
 
-    @property
+    @cached_property
     def marks(self):
         """
         Access the marks created by this plugin in both the spectrum-viewer and spectrum-2d-viewer.
         """
-        if self._marks:
-            # TODO: replace with cache property?
-            return self._marks
-
         if not self._tray_instance:
             return {}
 
-        viewer2d = self.spectrum_2d_viewer
-        viewer1d = self.spectrum_viewer
+        viewer2d = self.viewer2d.selected_obj
+        viewer1d = self.viewer1d.selected_obj
+
+        if viewer2d is None or viewer1d is None:
+            return {}
 
         if not viewer2d.state.reference_data:
             # we don't have data yet for scales, defer initializing
@@ -572,6 +603,9 @@ class SpectralExtraction(PluginTemplateMixin):
                 or not self.is_active):
             return
 
+        if not self.marks:
+            self._clear_cache('marks')
+
         try:
             trace = self.export_trace(add_data=False)
         except Exception:
@@ -596,6 +630,9 @@ class SpectralExtraction(PluginTemplateMixin):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
             return
+
+        if not self.marks:
+            self._clear_cache('marks')
 
         try:
             trace = self._get_bg_trace()
@@ -650,6 +687,9 @@ class SpectralExtraction(PluginTemplateMixin):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
             return
+
+        if not self.marks:
+            self._clear_cache('marks')
 
         try:
             trace = self._get_ext_trace()
