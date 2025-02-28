@@ -71,6 +71,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # sonified data layer. The value of each key is another dictionary containing
         # integers as keys and arrays representing sounds as the value.
         self.uuid_lookup = {}
+        self.same_pix = None
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -121,27 +122,18 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         if self.stream and not self.stream.closed and self.stream_active:
             self.stream.stop()
 
-    def update_sonified_cube(self, x, y):
-        if (not self.sonified_cube or not hasattr(self.sonified_cube, 'newsig') or
-                not hasattr(self.sonified_cube, 'sigcube')):
-            return
-        self.sonified_cube.newsig = self.sonified_cube.sigcube[x, y, :]
-        self.sonified_cube.cbuff = True
-
-    def update_sonified_cube_value(self, value):
-        if (not self.sonified_cube or not hasattr(self.sonified_cube, 'newsig') or
-                not hasattr(self.sonified_cube, 'sigcube')):
-            return
-        # Loop through all sonified layers and
-        # set newsig to the sound for each layer
-        # Do we need to change the sonified_cube/sonified_cube.newsig
-        # code to be compatible with multiple sonified cubes?
+    def update_sonified_cube_with_coord(self, coord):
+        # Loop through all sonified layers and set newsig to the sound for each layer
         self.sonified_cube.newsig = np.zeros(self.sonified_cube.newsig.shape)
+
         for k, v in self.uuid_lookup.items():
-            if value not in v:
+            # Each (x, y) coordinate corresponds to a different sound for each layer.
+            # These sounds can be combined together and played by setting cbuff to True.
+            # TODO: is there a better way to combine sounds or normalize them?
+            if coord not in v:
                 continue
-            self.sonified_cube.newsig += v[value]
-            self.sonified_cube.cbuff = True
+            self.sonified_cube.newsig += v[coord]
+        self.sonified_cube.cbuff = True
 
     def update_listener_wls(self, wranges, wunit):
         self.sonification_wl_ranges = wranges
@@ -213,17 +205,17 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         y_size = self.sonified_cube.sigcube.shape[1]
 
         # Create a new entry for the sonified layer in uuid_lookup. The value is a dictionary
-        # containing x_size * y_size keys with values being arrays that represent sounds
+        # containing (x_size * y_size) keys with values being arrays that represent sounds
         data_name = str(uuid.uuid4())
-        self.uuid_lookup[data_name] = {x*y: self.sonified_cube.sigcube[x-1, y-1, :]
-                                       for x in range(1, x_size + 1)
-                                       for y in range(1, y_size + 1)}
+        self.uuid_lookup[data_name] = {(x, y): self.sonified_cube.sigcube[x, y, :]
+                                       for x in range(0, x_size)
+                                       for y in range(0, y_size)}
 
-        # Create a 2D array with integers starting at 1 and going until x_size * y_size
-        # TODO: instead of a dictionary inside another dictionary, we could continue the numbering
-        #  for subsequent layers and use a dictionary to map ints to sound arrays
+        # Create a 2D array with coordinates starting at (0, 0) and going until (x_size, y_size)
         a = np.arange(1, x_size * y_size + 1).reshape((x_size, y_size))
 
+        # Create fake WCS so the sonified layer can be added to a CCDData object and
+        # then get added to the image viewer
         wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
                    'CRPIX1': 1, 'CRVAL1': 337.5202808,
                    'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
@@ -234,26 +226,33 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.jdaviz_app.data_collection[data_name] = test
         self.jdaviz_app.add_data_to_viewer('flux-viewer', data_name)
 
-        # Set opacity to 0 and start the stream to hear sound when mousing over the flux viewer
-        # self.state.layers[-1].alpha = 0
+        # Set opacity to 0
         [layer for layer in self.state.layers if layer.layer.label == data_name][0].alpha = 0
-        self.start_stream()
 
     def _viewer_mouse_event(self, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
+            self.stop_stream()
             return
-
         if len(self.jdaviz_app.data_collection) < 1:
             return
 
         # Extract data coordinates - these are pixels in the reference image
-        x = data['domain']['x']
-        y = data['domain']['y']
+        x = np.floor(data['domain']['x'])
+        y = np.floor(data['domain']['y'])
 
-        if x is None or y is None or int(x) < 0 or int(y) < 0:  # Out of bounds
+        if x is None or y is None or x < 0 or y < 0:  # Out of bounds
             return
-        index = (int(x)+1) * (int(y)+1)
-        self.update_sonified_cube_value(index)
+
+        if self.same_pix is None:
+            self.same_pix = (x, y)
+        elif (x, y) == self.same_pix:
+            return
+
+        if (not self.sonified_cube or not hasattr(self.sonified_cube, 'newsig') or
+                not hasattr(self.sonified_cube, 'sigcube')):
+            return
+        self.start_stream()
+        self.update_sonified_cube_with_coord((x, y))
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
