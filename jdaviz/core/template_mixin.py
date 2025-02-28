@@ -68,6 +68,7 @@ from jdaviz.utils import (
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
+           'skip_if_not_relevant',
            'with_spinner', 'with_temp_disable',
            'WithCache', 'LoadersMixin', 'ViewerPropertiesMixin',
            'BasePluginComponent',
@@ -238,8 +239,6 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
         for name, Resolver in loader_resolver_registry.members.items():
-            if Resolver.disabled:
-                continue
             loader = Resolver(app=self.app,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
@@ -399,6 +398,17 @@ def skip_if_not_tray_instance():
         @wraps(meth)
         def wrapper(self, *args, **kwargs):
             if not self._tray_instance:
+                return
+            return meth(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def skip_if_not_relevant():
+    def decorator(meth):
+        @wraps(meth)
+        def wrapper(self, *args, **kwargs):
+            if len(self.irrelevant_msg):
                 return
             return meth(self, *args, **kwargs)
         return wrapper
@@ -3718,7 +3728,11 @@ class DatasetSelect(SelectPluginComponent):
 
     def get_selected_spectrum(self, use_display_units=True):
         # retrieves the 1d spectrum
-        if len(self.selected_obj.shape) == 3:
+        if isinstance(self.selected_obj, NDData):
+            shape = self.selected_obj.data.shape
+        else:
+            shape = self.selected_obj.shape
+        if len(shape) == 3:
             # then this is a cube, but we want the 1D spectrum,
             # so we can pass through the Spectral Extraction plugin
             if self.plugin.config != 'cubeviz':
@@ -3730,6 +3744,7 @@ class DatasetSelect(SelectPluginComponent):
                                                        add_data=False)
             return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
+                                                    cls=Spectrum1D,
                                                     use_display_units=use_display_units)
 
     @cached_property
@@ -3767,7 +3782,10 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
-            return data.label in [l.layer.label for l in self.spectrum_viewer.layers]  # noqa E741
+            sv = self.spectrum_viewer
+            if sv is None:
+                return False
+            return data.label in [l.layer.label for l in sv.layers]  # noqa E741
 
         def layer_in_spectrum_2d_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
@@ -3776,7 +3794,7 @@ class DatasetSelect(SelectPluginComponent):
             s2dv = self.spectrum_2d_viewer
             if s2dv is None:
                 return False
-            return data.label in [l.layer.label for l in self.spectrum_2d_viewer.layers]  # noqa E741
+            return data.label in [l.layer.label for l in s2dv.layers]  # noqa E741
 
         def layer_in_flux_viewer(data):
             if not len(self.app.get_viewer_reference_names()):

@@ -10,6 +10,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AddResults,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
+                                        skip_if_not_relevant,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
@@ -354,14 +355,6 @@ class SpectralExtraction(PluginTemplateMixin):
         self._set_relevant()
 
     @property
-    def _default_spectrum_viewer_reference_name(self):
-        return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
-
-    @property
-    def _default_spectrum_2d_viewer_reference_name(self):
-        return self.app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
-
-    @property
     def user_api(self):
         return PluginUserApi(self, expose=('interactive_extract',
                                            'trace_dataset', 'trace_type',
@@ -386,17 +379,20 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'import_extract',
                                            'export_extract', 'export_extract_spectrum'))
 
-    @observe('trace_dataset')
+    @observe('trace_dataset_items')
     def _set_relevant(self, *args):
-        if len(self.trace_dataset_items) < 2:
+        if len(self.trace_dataset_items) < 1:
             self.irrelevant_msg = 'Requires at least one 2D spectrum'
         else:
             self.irrelevant_msg = ''
 
     @observe('trace_dataset_selected')
+    @skip_if_not_relevant()
     def _trace_dataset_selected(self, msg=None):
         if not hasattr(self, 'trace_dataset'):
             # happens when first initializing plugin outside of tray
+            return
+        if not len(self.trace_dataset.selected):
             return
 
         width = self.trace_dataset.get_selected_spectrum(use_display_units=True).shape[0]
@@ -500,8 +496,8 @@ class SpectralExtraction(PluginTemplateMixin):
         if not self._tray_instance:
             return {}
 
-        viewer2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
-        viewer1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer2d = self.spectrum_2d_viewer
+        viewer1d = self.spectrum_viewer
 
         if not viewer2d.state.reference_data:
             # we don't have data yet for scales, defer initializing
@@ -535,6 +531,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('interactive_extract')
     @skip_if_no_updates_since_last_active()
     @skip_if_not_tray_instance()
+    @skip_if_not_relevant()
     def _update_interactive_extract(self, event={}):
         # also called by any of the _interaction_in_*_step
         if self.interactive_extract:
@@ -569,6 +566,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
+    @skip_if_not_relevant()
     def _interaction_in_trace_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
                 or not self.is_active):
@@ -593,6 +591,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
+    @skip_if_not_relevant()
     def _interaction_in_bg_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
@@ -646,6 +645,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'self_prof_interp_degree_x', 'self_prof_interp_degree_y')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
+    @skip_if_not_relevant()
     def _interaction_in_ext_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
