@@ -150,6 +150,8 @@ Specviz2d
 
 - Fixes missing API entry for spectral extraction's export_bg_spectrum.  [#3447]
 
+- Fixes default location of trace in spectral extraction when some columns are filled with all zeros or nans. [#3475]
+
 4.1.1 (2025-01-31)
 ==================
 
