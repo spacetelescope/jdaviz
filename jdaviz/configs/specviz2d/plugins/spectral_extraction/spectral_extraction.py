@@ -391,9 +391,12 @@ class SpectralExtraction(PluginTemplateMixin):
             return
 
         width = self.trace_dataset.get_selected_spectrum(use_display_units=True).shape[0]
-        # estimate the pixel number by taking the median of the brightest pixel index in each column
+        # estimate the pixel number by taking the median of the brightest pixel index
+        # in each column, ignoring columns where the median in that column is not
+        # positive (ie. columns of all zeros)
         trace_flux = self.trace_dataset.get_selected_spectrum(use_display_units=True).flux
-        brightest_pixel = int(np.median(np.argmax(trace_flux, axis=0)))
+        trace_flux_ignore_zeros = trace_flux[:, np.nanmedian(trace_flux, axis=0) > 0]
+        brightest_pixel = int(np.nanmedian(np.argmax(trace_flux_ignore_zeros, axis=0)))
         # do not allow to be an edge pixel
         if brightest_pixel < 1:
             brightest_pixel = 1
