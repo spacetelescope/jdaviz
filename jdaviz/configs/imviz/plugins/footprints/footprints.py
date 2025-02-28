@@ -464,7 +464,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     def import_region(self, region):
         """
-        Import an Astropy regions object (or file).
+        Import an Astropy regions object or if a string is provided, attempt to parse it as a
+        STC-S string or region file.
 
         Parameters
         ----------
@@ -479,7 +480,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             else: # TODO: support path objects?
                 self.preset.import_file(region)
         else:
-            raise TypeError("region must be a regions.Regions object or string (file path)")
+            raise TypeError("region must be a regions.Regions object, STC-S string or file path")
         # _preset_args_changed was probably already triggered by from_file traitlet changing, but
         # that may have been before the file was fully parsed and available from preset.selected_obj
         self._preset_args_changed()
