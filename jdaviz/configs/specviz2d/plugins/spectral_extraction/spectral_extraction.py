@@ -415,6 +415,19 @@ class SpectralExtraction(PluginTemplateMixin):
         else:
             self.irrelevant_msg = ''
 
+    @observe('irrelevant_msg')
+    def _updates_when_becoming_relevant(self, msg):
+        if msg.get('new') != '':
+            return
+        # reset all defaults for the selected trace dataset, _trace_dataset_selected
+        # should be triggered shortly after
+        self.trace_pixel = 0
+        self.trace_window = 0
+        self.bg_trace_pixel = 0
+        self.bg_separation = 0
+        self.bg_width = 0
+        self.ext_width = 0
+
     @observe('trace_dataset_selected')
     @skip_if_not_relevant()
     def _trace_dataset_selected(self, msg=None):
