@@ -3772,7 +3772,7 @@ class DatasetSelect(SelectPluginComponent):
         def layer_in_viewers(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bar Application object, so ignore this filter
-                return True
+                return False
             for viewer in self.viewers:
                 if data.label in [l.layer.label for l in viewer.layers]:  # noqa E741
                     return True
@@ -3781,7 +3781,7 @@ class DatasetSelect(SelectPluginComponent):
         def layer_in_spectrum_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
-                return True
+                return False
             sv = self.spectrum_viewer
             if sv is None:
                 return False
@@ -3790,7 +3790,7 @@ class DatasetSelect(SelectPluginComponent):
         def layer_in_spectrum_2d_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
-                return True
+                return False
             s2dv = self.spectrum_2d_viewer
             if s2dv is None:
                 return False
@@ -3799,7 +3799,7 @@ class DatasetSelect(SelectPluginComponent):
         def layer_in_flux_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
-                return True
+                return False
             return data.label in [lyr.layer.label for lyr in self.flux_viewer.layers]  # noqa E741
 
         def is_trace(data):
