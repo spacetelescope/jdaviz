@@ -364,11 +364,11 @@ def _create_polygon_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
     --------
     Create a `regions.PolygonSkyRegion` from given coordinates:
 
-    >>> from jdaviz.core.region_translators import create_polygon_skyregion_from_coords
+    >>> from jdaviz.core.region_translators import _create_polygon_skyregion_from_coords
     >>> coords = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0]
     >>> _create_polygon_skyregion_from_coords(coords)
-    <PolygonSkyRegion(vertices=[<SkyCoord (ICRS): (ra, dec) in deg
-        (10., 20.), (30., 40.), (50., 60.)>])>
+    <PolygonSkyRegion(vertices=<SkyCoord (ICRS): (ra, dec) in deg
+        (10., 20.), (30., 40.), (50., 60.)>)>
 
     """
     ra, dec = coords[::2], coords[1::2]
@@ -401,7 +401,7 @@ def _create_circle_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
     --------
     Create a `regions.CircleSkyRegion` from given coordinates:
 
-    >>> from jdaviz.core.region_translators import create_circle_skyregion_from_coords
+    >>> from jdaviz.core.region_translators import _create_circle_skyregion_from_coords
     >>> coords = [10.0, 20.0, 5.0]
     >>> _create_circle_skyregion_from_coords(coords)
     <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (10., 20.)>, radius=5.0 deg)>
@@ -436,11 +436,11 @@ def _create_ellipse_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
     --------
     Create a `regions.EllipseSkyRegion` from given coordinates:
 
-    >>> from jdaviz.core.region_translators import create_ellipse_skyregion_from_coords
+    >>> from jdaviz.core.region_translators import _create_ellipse_skyregion_from_coords
     >>> coords = [10.0, 20.0, 5.0, 3.0, 45.0]
     >>> _create_ellipse_skyregion_from_coords(coords)
-    <EllipseSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (10., 20.)>,
-        width=5.0 deg, height=3.0 deg, angle=45.0 deg)>
+    <EllipseSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg
+        (10., 20.)>, width=5.0 deg, height=3.0 deg, angle=45.0 deg)>
 
     """
     sky_coordinates = SkyCoord(coords[0], coords[1], frame=frame, unit=unit)
@@ -521,8 +521,8 @@ def stcs_string2region(stcs_string):
     >>> from jdaviz.core.region_translators import stcs_string2region
     >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
     >>> stcs_string2region(stcs_string)
-    <PolygonSkyRegion(vertices=[<SkyCoord (ICRS): (ra, dec) in deg
-        (10., 20.), (30., 40.), (50., 60.)>])>
+    <PolygonSkyRegion(vertices=<SkyCoord (ICRS): (ra, dec) in deg
+        (10., 20.), (30., 40.), (50., 60.)>)>
 
     """
 

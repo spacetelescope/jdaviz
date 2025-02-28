@@ -18,8 +18,7 @@ def jwst_header_to_skyregion(header):
     skyregion = stcs_string2region(s_region)
 
     corners = skyregion.vertices
-    _ra, _dec = zip(*[(sky_coord.ra.value, sky_coord.dec.value) for sky_coord in corners])
-    ra, dec = np.array(_ra, dtype=float), np.array(_dec, dtype=float)
+    ra, dec = corners.ra.degree, corners.dec.degree
 
     # Need these for zooming
     length = corners[0].separation(corners[1])
