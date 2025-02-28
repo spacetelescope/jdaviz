@@ -78,7 +78,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # Mouseover should automatically jump from one spectrum
     # to another, depending on which one is closer.
 
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 60}})
     assert label_mouseover.as_text() == ('Cursor 4.62360e-07, 6.00000e+01',
@@ -145,7 +145,7 @@ def test_specviz_smooth(specviz_helper, spectrum1d):
     # Mouseover should automatically jump from one spectrum
     # to another, depending on which one is closer.
 
-    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 6400, 'y': 120}})
     assert label_mouseover.as_text() == ('Cursor 6.40000e+03, 1.20000e+02',

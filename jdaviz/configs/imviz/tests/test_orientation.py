@@ -54,7 +54,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
             self.viewer.blink_once()
 
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
         mp = self.imviz.plugins['Markers']
 
         with mp.as_active():
@@ -90,7 +90,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
             self.viewer.blink_once()
 
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
         mp = self.imviz.plugins['Markers']
 
         with mp.as_active():

@@ -172,7 +172,7 @@ def test_mosviz_profile_view_mouseover(specviz2d_helper, spectrum2d):
     assert not hasattr(plg, 'sb_unit')
     assert not hasattr(plg, 'spectral_y_type')
 
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove',
                                          'domain': {'x': 5, 'y': 3}})

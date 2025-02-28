@@ -26,6 +26,7 @@ from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
+from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
@@ -115,6 +116,10 @@ class ConfigHelper(HubListener):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
     @property
+    def _coords_info(self):
+        return self.app.session.application._tools.get('g-coords-info')
+
+    @property
     def loaders(self):
         """
         Access API objects for data loaders in the import dialog.
@@ -124,11 +129,44 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not self.app.state.dev_loaders:
+        if not (self.app.state.dev_loaders or self.app.config == 'specviz'):
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}
         return loaders
+
+    def _load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        """
+        Load data into the app.  A single valid loader/importer must be able to be
+        matched based on the input, otherwise an error will be raised suggesting
+        what further information to provide.  For an interactive approach,
+        see ``loaders``.
+
+        Parameters
+        ----------
+        inp : string or object or None
+            Input filename, url, data object, etc.
+        loader : string, optional
+            Only consider a specific loader/resolver
+        format : string, optional
+            Only consider a specific format
+        target : string, optional
+            Only consider a specific target
+        kwargs :
+            Additional kwargs are passed on to both the loader and importer, as applicable.
+            Any kwargs that do not match valid inputs are silently ignored.
+        """
+        resolver = find_matching_resolver(self.app, inp,
+                                          resolver=loader,
+                                          format=format,
+                                          target=target,
+                                          **kwargs)
+
+        importer = resolver.importer
+        for k, v in kwargs.items():
+            if hasattr(importer, k):
+                setattr(importer, k, v)
+        return importer()
 
     @property
     def data_labels(self):
@@ -328,6 +366,10 @@ class ConfigHelper(HubListener):
                 height = f"{height}px"
             self.app.layout.height = height
             self.app.state.settings['context']['notebook']['max_height'] = height
+
+        if self.app.config == 'specviz' or self.app.state.dev_loaders:
+            if not len(self.viewers):
+                self.app.state.drawer_content = 'loaders'
 
         show_widget(self.app, loc=loc, title=title)
 
