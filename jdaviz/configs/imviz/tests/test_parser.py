@@ -9,7 +9,7 @@ from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
-from regions import CirclePixelRegion, PixCoord, RectanglePixelRegion
+from regions import CirclePixelRegion, EllipsePixelRegion, PixCoord, RectanglePixelRegion
 from skimage.io import imsave
 from stdatamodels import asdf_in_fits
 
@@ -402,7 +402,7 @@ class TestParseImage:
 
         # Test simple aperture photometry plugin.
         imviz_helper.plugins['Subset Tools'].import_region(
-            EllipsePixelRegion(center=PixCoord(x=1488.5, y=2576), width=47, height=70)) # Galaxy
+            EllipsePixelRegion(center=PixCoord(x=1488.5, y=2576), width=47, height=70))  # Galaxy
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.data_selected = 'contents[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 1'
