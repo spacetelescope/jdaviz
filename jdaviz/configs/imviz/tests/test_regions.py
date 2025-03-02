@@ -54,7 +54,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
                                                        return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
 
-        # Unsupported functionality from outside load_regions
+        # Unsupported functionality
         reg = PointSkyRegion(center=sky)
         bad_regions = self.subset_plugin.import_region(reg, return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Failed to load: NotImplementedError()'  # noqa
