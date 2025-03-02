@@ -118,8 +118,9 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         assert len(self.imviz.plugins['Subset Tools'].get_regions()) == 1
 
     def test_regions_sky_has_wcs(self):
-        # Mimic interactive region (before)
-        self.imviz._apply_interactive_region('bqplot:truecircle', (1.5, 2.5), (3.6, 4.6))
+        my_reg_pix_1 = CirclePixelRegion(center=PixCoord(x=2.55, y=3.55), radius=1.05)
+        my_reg_pix_2 = EllipsePixelRegion(center=PixCoord(x=1.5, y=2.25), width=7.0, height=4.5)
+        my_reg_pix_3 = RectanglePixelRegion(center=PixCoord(x=5.0, y=5.0), width=10, height=10)
 
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
         # These will become indistinguishable from normal Subset.
@@ -127,20 +128,17 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         my_reg_sky_2 = CircleAnnulusSkyRegion(center=sky, inner_radius=0.0004 * u.deg,
                                               outer_radius=0.0005 * u.deg)
         # Masked subset.
-        my_reg_sky_3 = PolygonPixelRegion(vertices=PixCoord(x=[1, 1, 3, 3, 1], y=[1, 3, 3, 1, 1]))
+        my_reg_poly_1 = PolygonPixelRegion(vertices=PixCoord(x=[1, 1, 3, 3, 1], y=[1, 3, 3, 1, 1]))
+
         # Add them all.
-        bad_regions = self.subset_plugin.import_region([my_reg_sky_1, my_reg_sky_2, my_reg_sky_3],
-                                                       return_bad_regions=True,
-                                                       combination_mode='new')
+        bad_regions = self.subset_plugin.import_region(
+            [my_reg_pix_1, my_reg_sky_1, my_reg_sky_2, my_reg_poly_1, my_reg_pix_2, my_reg_pix_3],
+            return_bad_regions=True, combination_mode='new')
         assert len(bad_regions) == 0
 
-        # Mimic interactive regions (after)
-        self.imviz._apply_interactive_region('bqplot:ellipse', (-2, 0), (5, 4.5))
-        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (10, 10))
-
-        # Check interactive regions. We do not check if the translation is correct,
+        # Check regions. We do not check if the translation is correct,
         # that check hopefully is already done in glue-astronomy.
-        # Apparently, static region ate up one number...
+        # Polygon becomes MaskedSubset 1, thus cannot round-trip but made Subset 4 name unavailable.
         subsets = self.imviz.plugins['Subset Tools'].get_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3', 'Subset 5', 'Subset 6'], subsets  # noqa: E501
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
@@ -149,7 +147,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         assert isinstance(subsets['Subset 5'], EllipsePixelRegion)
         assert isinstance(subsets['Subset 6'], RectanglePixelRegion)
 
-        # Check static region
+        # Polygon becomes MaskedSubset 1.
         self.verify_region_loaded('MaskedSubset 1')
 
     def test_regions_annulus_from_load_data(self):
@@ -244,10 +242,10 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
 
 class TestGetRegions(BaseImviz_WCS_NoWCS):
     def test_annulus(self):
-        # Outer circle
-        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))
-        # Inner circle
-        self.imviz._apply_interactive_region('bqplot:truecircle', (2, 2), (7, 7))
+        self.imviz.import_region([
+            CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5),  # Outer circle
+            CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=2.5),  # Inner circle
+        ], combination_mode="new")
 
         # At this point, there should be two normal circles.
         subsets = self.imviz.plugins['Subset Tools'].get_regions()
