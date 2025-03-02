@@ -242,7 +242,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
 
 class TestGetRegions(BaseImviz_WCS_NoWCS):
     def test_annulus(self):
-        self.imviz.import_region([
+        self.imviz.plugins['Subset Tools'].import_region([
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5),  # Outer circle
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=2.5),  # Inner circle
         ], combination_mode="new")
@@ -260,6 +260,7 @@ class TestGetRegions(BaseImviz_WCS_NoWCS):
         assert ss['Subset 2'][0]['region'] == subsets['Subset 2']
 
         # Create a third subset that is an annulus.
+        self.imviz.plugins['Subset Tools'].combination_mode = "new"
         subset_groups = self.imviz.app.data_collection.subset_groups
         new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
         self.viewer.apply_subset_state(new_subset)
