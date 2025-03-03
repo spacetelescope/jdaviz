@@ -437,7 +437,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         y_min = 99999
         y_max = -99999
         for coord in selected_rows:  # list of dict
-            cur_x, cur_y = viewer._get_real_xy(image, float(coord['x_coord']), float(coord['y_coord']))[:2]
+            cur_x, cur_y = viewer._get_real_xy(
+                image, float(coord['x_coord']), float(coord['y_coord']))[:2]
             if cur_x < x_min:
                 x_min = cur_x
             if cur_x > x_max:
@@ -450,7 +451,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         if x_min == x_max and y_min == y_max:  # Only one selected
             pass
         elif x_min >= x_max or y_min >= y_max:
-            raise ValueError(f"Zoom failed: x_min={x_min}, x_max={x_max}, y_min={y_min}, y_max={y_max}")
+            raise ValueError(
+                f"Zoom failed: x_min={x_min}, x_max={x_max}, y_min={y_min}, y_max={y_max}")
 
         pix_pad = padding * max(x_max, y_max)
         x_min -= pix_pad
