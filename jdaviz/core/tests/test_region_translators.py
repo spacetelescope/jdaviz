@@ -415,7 +415,6 @@ def test_is_stcs_string(stcs_string, expected):
 ])
 def test_stcs_string2region_correctness(stcs_string, expected):
     reg = stcs_string2region(stcs_string)
-    assert isinstance(reg, expected.__class__)
     assert reg == expected
 
 
