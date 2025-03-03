@@ -492,7 +492,7 @@ def is_stcs_string(stcs_string):
 
     try:
         return bool(SUPPORTED_STCS_PATTERN.match(stcs_string))
-    except:
+    except Exception:
         return False
 
 

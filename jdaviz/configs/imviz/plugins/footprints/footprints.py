@@ -477,7 +477,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         elif isinstance(region, str):
             if is_stcs_string(region):
                 self.preset.import_obj(stcs_string2region(region))
-            else: # TODO: support path objects?
+            else:  # TODO: support path objects?
                 self.preset.import_file(region)
         else:
             raise TypeError("region must be a regions.Regions object, STC-S string or file path")
