@@ -20,6 +20,7 @@ from jdaviz.core.user_api import PluginUserApi
 from specutils import Spectrum1D
 from astropy import units as u
 from astropy.nddata import CCDData
+import bqplot
 
 try:
     import cv2
@@ -560,32 +561,69 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
             self.overwrite_warn = False
 
-    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
-        if filetype == "png":
+    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False, width: str | None = None, height: str | None = None):
+        def get_png(figure: bqplot.Figure):
+            nonlocal filename
+            if filetype == "png":
 
-            if filename is None:
-                filename = self.filename_default
+                if filename is None:
+                    filename = self.filename_default
 
-            def on_img_received(data):
-                try:
-                    with filename.open(mode='bw') as f:
-                        f.write(data)
-                except Exception as e:
-                    self.hub.broadcast(SnackbarMessage(
-                        f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
-                        sender=self, color="error"))
-                finally:
-                    self.hub.broadcast(SnackbarMessage(
-                        f"{self.viewer.selected} exported to {str(filename)}",
-                        sender=self, color="success"))
+                def on_img_received(data):
+                    try:
+                        with filename.open(mode='bw') as f:
+                            f.write(data)
+                    except Exception as e:
+                        self.hub.broadcast(SnackbarMessage(
+                            f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
+                            sender=self, color="error"))
+                    finally:
+                        self.hub.broadcast(SnackbarMessage(
+                            f"{self.viewer.selected} exported to {str(filename)}",
+                            sender=self, color="success"))
 
-            if viewer.figure._upload_png_callback is not None:
-                raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
+                if figure._upload_png_callback is not None:
+                    raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
 
-            viewer.figure.get_png_data(on_img_received)
+                figure.get_png_data(on_img_received)
 
-        elif filetype == "svg":
-            viewer.figure.save_svg(str(filename) if filename is not None else None)
+            elif filetype == "svg":
+                figure.save_svg(str(filename) if filename is not None else None)
+
+        if width is not None or height is not None:
+            assert width is not None and height is not None, "Both width and height must be provided"
+            import ipywidgets as widgets
+            from typing import Callable
+
+            def _show_hidden(widget: widgets.Widget, width: str, height: str):
+                import ipyvuetify as v
+                wrapper_widget = v.Html(
+                    children=[
+                        v.Html(children=[
+                            widget
+                        ], tag="div", style_=f"width: {width}; height: {height};")
+                    ],
+                tag="div",
+                style_="overflow: hidden; width: 0px; height: 0px")
+                display(wrapper_widget)
+
+
+            def _widget_after_first_display(widget: widgets.Widget, callback: Callable):
+                if widget._view_count is None:
+                    widget._view_count = 0
+                called_callback = False
+                def view_count_changed(change):
+                    nonlocal called_callback
+                    if change["new"] == 1 and not called_callback:
+                        called_callback = True
+                        callback()
+                widget.observe(view_count_changed, "_view_count")
+
+            cloned_viewer = viewer._clone_viewer()
+            _widget_after_first_display(cloned_viewer.figure, lambda: get_png(cloned_viewer.figure))
+            _show_hidden(cloned_viewer.figure, width, height)
+        else:
+            get_png(viewer.figure)
 
     @with_spinner('movie_recording')
     def _save_movie(self, viewer, i_start, i_end, fps, filename, rm_temp_files):
