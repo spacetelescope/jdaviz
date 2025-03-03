@@ -1,3 +1,4 @@
+import operator
 import os
 import time
 import threading
@@ -26,7 +27,7 @@ from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index',
-           'get_subset_type', 'download_uri_to_path', 'layer_is_2d',
+           'get_subset_type', 'chain_regions', 'download_uri_to_path', 'layer_is_2d',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
@@ -357,6 +358,40 @@ class ColorCycler:
 
     def reset(self):
         self.counter = -1
+
+
+def chain_regions(regions, operators):
+    """
+    Combine ``regions`` to Compound pixel/sky region if ``operators`` joining
+    them are basic binary operators understood by glue and Regions. If not,
+    returns a list of individual regions.
+
+    Parameters
+    ----------
+        regions : list
+            List of region objects (e.g., `PixelRegion`, `SkyRegion`).
+        operators : list of str
+            List of names of glue states representing operators to combine
+            regions.
+    """
+
+    valid_operators = {
+        'AndState': operator.and_,
+        'OrState': operator.or_,
+        'XorState': operator.xor
+    }
+
+    # if any of the operators linking subsets aren't understood by Regions/glue,
+    # then just return list of regions (like app.get_subsets does)
+    if not np.all(np.isin(operators, list(valid_operators.keys()))):
+        return regions
+
+    # otherwise, create CompoundRegion
+    combined = regions[0]
+    for i in range(len(operators)):
+        combined = valid_operators[operators[i]](combined, regions[i + 1])
+
+    return combined
 
 
 def get_subset_type(subset):
