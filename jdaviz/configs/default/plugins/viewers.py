@@ -220,7 +220,7 @@ class JdavizViewerMixin(WithCache):
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
     def _expected_subset_layer_default(self, layer_state):
-        if self.__class__.__name__ in ('CubevizImageView', 'RampvizImageView'):
+        if self.__class__.__name__ == 'RampvizImageView':
             # Do not override default for subsets as for some reason
             # this isn't getting called when they're first added, but rather when
             # the next state change is made (for example: manually changing the visibility)
@@ -229,6 +229,10 @@ class JdavizViewerMixin(WithCache):
         # default visibility based on the visibility of the "parent" data layer
         if self.__class__.__name__ == 'RampvizProfileView':
             # Rampviz doesn't show subset profiles by default:
+            layer_state.visible = False
+        elif (self.__class__.__name__ == 'CubevizImageView' and
+              get_subset_type(layer_state.layer) != 'spatial'):
+            # set visibility of spectral subsets to false in Cubeviz image-viewers
             layer_state.visible = False
         else:
             layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
