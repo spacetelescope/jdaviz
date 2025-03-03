@@ -152,7 +152,8 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-    cubeviz_helper.load_regions([aper, bg])
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        [aper, bg], combination_mode='new')
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX]"

@@ -53,15 +53,22 @@ API Changes
   directly if you wish to test your copy of ``jdaviz``. [#3451]
 
 - ``**kwargs`` from ``viz.plugins['Subset Tools'].import_region(..., **kwargs)`` is removed, ``region_format=None``
-  is now explicitly supported. [#3453]
+  is now explicitly supported. The default value for ``max_num_regions`` option
+  is now 20 instead of ``None`` (load everything). [#3453, #3474]
 
 Cubeviz
 ^^^^^^^
+
+- ``cubeviz.load_regions()`` and ``cubeviz.load_regions_from_file()`` are deprecated.
+  Use ``cubeviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
 
 Imviz
 ^^^^^
 
 - Orientation plugin: ``link_type`` and ``wcs_use_affine`` (previously deprecated) have now been removed. [#3385]
+
+- ``imviz.load_regions()`` and ``imviz.load_regions_from_file()`` are deprecated.
+  Use ``imviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
 
 Mosviz
 ^^^^^^

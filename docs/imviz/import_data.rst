@@ -275,9 +275,4 @@ You could also define :ref:`regions:shapes` programmatically and load them; e.g.
     from regions import CirclePixelRegion, PixCoord
     aper_1 = CirclePixelRegion(center=PixCoord(x=42, y=43), radius=4.2)
     aper_2 = CirclePixelRegion(center=PixCoord(x=10, y=20), radius=3)
-    imviz.load_regions([aper_1, aper_2])
-
-For more details on the API, please see
-:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
-and :meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
-in Imviz.
+    imviz.plugins['Subset Tools'].import_region([aper_1, aper_2])

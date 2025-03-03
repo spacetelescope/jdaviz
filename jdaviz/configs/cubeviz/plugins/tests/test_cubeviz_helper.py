@@ -1,4 +1,5 @@
 import pytest
+from regions import EllipsePixelRegion, PixCoord
 from specutils import SpectralRegion
 
 from jdaviz import Cubeviz
@@ -42,14 +43,12 @@ def test_remote_server_disable_save_serverside():
 
 def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
-    # Subset 1 (spatial)
-    cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
-
-    # Subset 2 (spectral)
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     unit = spectrum1d_cube_larger.spectral_axis.unit
-    subset_plugin.import_region(SpectralRegion(4.62440061e-07 * unit, 4.62520112e-07 * unit))
-
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
+    subset_plugin.import_region([
+        EllipsePixelRegion(center=PixCoord(x=4.5, y=4), width=9, height=8),  # Subset 1 (spatial)
+        SpectralRegion(4.62440061e-07 * unit, 4.62520112e-07 * unit),  # Subset 2 (spectral)
+    ], combination_mode="new")
     spatial_with_spec = cubeviz_helper.get_data(data_label="Spectrum (Subset 1, sum)",
                                                 spectral_subset="Subset 2")
     assert spatial_with_spec.flux.ndim == 1

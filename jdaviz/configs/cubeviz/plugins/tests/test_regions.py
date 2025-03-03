@@ -54,13 +54,12 @@ class TestLoadRegions(BaseRegionHandler):
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
 
     def test_spatial_spectral_mix(self):
-        # Manually draw ellipse.
-        self.cubeviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
-
-        # Manually draw wavelength range.
+        # Draw ellipse and wavelength range.
         unit = u.Unit(self.cubeviz.plugins['Unit Conversion'].spectral_unit.selected)
-        self.cubeviz.plugins['Subset Tools'].import_region(SpectralRegion(4.892 * unit,
-                                                                          4.896 * unit))
+        self.cubeviz.plugins['Subset Tools'].import_region([
+            EllipsePixelRegion(center=PixCoord(x=4.5, y=4.0), width=9.0, height=8.0),
+            SpectralRegion(4.892 * unit, 4.896 * unit)
+        ], combination_mode="new")
         self.cubeviz.app.session.edit_subset_mode.edit_subset = None
 
         # Get spatial regions only.
@@ -78,8 +77,8 @@ class TestLoadRegions(BaseRegionHandler):
         with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
             spectral_subsets = self.cubeviz.specviz.get_spectra()
         assert list(spectral_subsets.keys()) == ['Spectrum (sum)',
-                                                 'Spectrum (Subset 1, sum)',
                                                  'Spectrum (sum) (Subset 2)',
+                                                 'Spectrum (Subset 1, sum)',
                                                  'Spectrum (Subset 1, sum) (Subset 2)']
         for sp in spectral_subsets.values():
             assert isinstance(sp, Spectrum1D)

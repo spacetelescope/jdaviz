@@ -209,10 +209,6 @@ form ``(region, reason)``:
 
 .. note:: Sky regions are currently unsupported in Cubeviz, unlike Imviz.
 
-For more details on the API, please see
-:py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
-and :py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
-in Cubeviz.
 
 Loading from a URL or URI
 -------------------------
