@@ -418,12 +418,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
             if "nan" in (world_ra, world_dec, world_ra_deg, world_dec_deg):
                 self.reset_coords_display()
+            else:
+                self.row2_title = 'World'
+                self.row2_text = f'{world_ra} {world_dec} (ICRS)'
+                self.row2_unreliable = unreliable_world
+                self.row3_title = ''
+                self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
 
-            self.row2_title = 'World'
-            self.row2_text = f'{world_ra} {world_dec} (ICRS)'
-            self.row2_unreliable = unreliable_world
-            self.row3_title = ''
-            self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
             self.row3_unreliable = unreliable_world
             self._dict['world_ra'] = sky.ra.value
             self._dict['world_dec'] = sky.dec.value
@@ -460,9 +461,15 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row3_unreliable = False
 
         maxsize = int(np.ceil(np.log10(np.max(active_layer.layer.shape)))) + 3
-        fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
+        if any(['nan' in map(str, (x, y))]):
+            # don't show nan coordinates:
+            row1a_text = ""
+        else:
+            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
+            row1a_text = fmt.format(x, y)
+
+        self.row1a_text = row1a_text
         self.row1a_title = 'Pixel'
-        self.row1a_text = (fmt.format(x, y))
         self.row1_unreliable = unreliable_pixel
         self._dict['pixel_x'] = float(x)
         self._dict['pixel_y'] = float(y)

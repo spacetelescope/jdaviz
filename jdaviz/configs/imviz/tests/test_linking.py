@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from astropy.table import Table
 from astropy.wcs import WCS
 from glue.core.link_helpers import LinkSame
@@ -218,11 +219,10 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
                          [-2.697746, 11.137127],
                          [10.148055, 10.554429],
                          [10.439091, -2.170755]], rtol=1e-5)
-        assert_allclose(gwcs_zoom_limits,
-                        [[2.636299, 12.732915],
-                         [13.375281, 5.007547],
-                         [6.300587, -5.126264],
-                         [-4.438394, 2.599103]], rtol=1e-5)
+
+        # this GWCS has a bounding box, and outside of the bounding box will
+        # return nans:
+        assert_allclose(gwcs_zoom_limits, np.nan)
 
         # Also check the coordinates display: Last loaded is on top.
         # Cycle order: GWCS, FITS WCS
@@ -237,18 +237,20 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert not label_mouseover.row2_unreliable
         assert not label_mouseover.row3_unreliable
 
-        # Make sure GWCS now can extrapolate.
+        # Make sure GWCS does not extrapolate.
         xy = self.viewer._get_real_xy(self.imviz.app.data_collection[1], -1, -1, reverse=True)
         label_mouseover._viewer_mouse_event(
             self.viewer, {'event': 'mousemove', 'domain': {'x': xy[0], 'y': xy[1]}})
-        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',
-                                             'World 00h14m19.5829s -30d23m30.9860s (ICRS)',
-                                             '3.5815955408 -30.3919405616 (deg)')
+        assert label_mouseover.as_text() == ('Pixel', '', '')
         # FITS WCS is reference data and has no concept of bounding box
         # but cursor is outside GWCS bounding box
         assert label_mouseover.row1_unreliable
-        assert label_mouseover.row2_unreliable
         assert label_mouseover.row3_unreliable
+
+        # row2 was "unreliable" when the WCS-only layer used GWCS.
+        # now with FITS WCS as the coordinate frame, there is no bounding
+        # box and row2 is reliable.
+        assert not label_mouseover.row2_unreliable
 
         xy = self.viewer._get_real_xy(self.imviz.app.data_collection[0], 0, 0, reverse=True)
         self.viewer.blink_once()
@@ -281,12 +283,16 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove', 'domain': {'x': -1, 'y': -1}})
-        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',
-                                             'World 00h14m19.5987s -30d23m31.0683s (ICRS)',
-                                             '3.5816611274 -30.3919634282 (deg)')
+
+        # do not display world coordinates outside of the bounding box
+        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0', '', '')
         assert not label_mouseover.row1_unreliable
-        assert label_mouseover.row2_unreliable
         assert label_mouseover.row3_unreliable
+
+        # `row2_unreliable` was True when the WCS-only layer used GWCS.
+        # now with FITS WCS as the coordinate frame, there is no bounding
+        # box and row2 is reliable.
+        assert not label_mouseover.row2_unreliable
 
         # Back to reference image with bounds check.
         label_mouseover._viewer_mouse_event(self.viewer,
@@ -294,12 +300,16 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
                                              'domain': {'x': -1, 'y': -1}})
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': -1, 'y': -1}})
-        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',
-                                             'World 00h14m19.5829s -30d23m30.9860s (ICRS)',
-                                             '3.5815955408 -30.3919405616 (deg)')
+
+        # do not display world coordinates outside of the bounding box
+        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0', '', '')
         assert not label_mouseover.row1_unreliable
-        assert label_mouseover.row2_unreliable
         assert label_mouseover.row3_unreliable
+
+        # row2 was "unreliable" when the WCS-only layer used GWCS.
+        # now with FITS WCS as the coordinate frame, there is no bounding
+        # box and row2 is reliable.
+        assert not label_mouseover.row2_unreliable
 
 
 def test_imviz_no_data(imviz_helper):

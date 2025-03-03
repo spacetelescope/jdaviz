@@ -35,6 +35,8 @@ Imviz
 
 - Virtual Observatory plugin to query resources and download data products. [#2872, #3470]
 
+- Improve perfomance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483]
+
 Mosviz
 ^^^^^^
 
