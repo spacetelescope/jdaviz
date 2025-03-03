@@ -2876,14 +2876,15 @@ class Application(VuetifyTemplate, HubListener):
 
         # registry will be populated at import
         import jdaviz.core.loaders  # noqa
-        for name, loader_cls in loader_resolver_registry.members.items():
-            loader = loader_cls(app=self,
-                                open_callback=open,
-                                close_callback=close,
-                                set_active_loader_callback=set_active_loader)
+        for name, Resolver in loader_resolver_registry.members.items():
+            loader = Resolver(app=self,
+                              open_callback=open,
+                              close_callback=close,
+                              set_active_loader_callback=set_active_loader)
             self.state.loader_items.append({
                 'name': name,
                 'label': name,
+                'requires_api_support': loader.requires_api_support,
                 'widget': "IPY_MODEL_" + loader.model_id
             })
         # initialize selection (tab) to first entry

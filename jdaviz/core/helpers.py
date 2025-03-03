@@ -26,6 +26,7 @@ from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
+from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
@@ -129,6 +130,39 @@ class ConfigHelper(HubListener):
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}
         return loaders
+
+    def _load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        """
+        Load data into the app.  A single valid loader/importer must be able to be
+        matched based on the input, otherwise an error will be raised suggesting
+        what further information to provide.  For an interactive approach,
+        see ``loaders``.
+
+        Parameters
+        ----------
+        inp : string or object or None
+            Input filename, url, data object, etc.
+        loader : string, optional
+            Only consider a specific loader/resolver
+        format : string, optional
+            Only consider a specific format
+        target : string, optional
+            Only consider a specific target
+        kwargs :
+            Additional kwargs are passed on to both the loader and importer, as applicable.
+            Any kwargs that do not match valid inputs are silently ignored.
+        """
+        resolver = find_matching_resolver(self.app, inp,
+                                          resolver=loader,
+                                          format=format,
+                                          target=target,
+                                          **kwargs)
+
+        importer = resolver.importer
+        for k, v in kwargs.items():
+            if hasattr(importer, k):
+                setattr(importer, k, v)
+        return importer()
 
     @property
     def data_labels(self):

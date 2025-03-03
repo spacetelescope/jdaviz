@@ -15,7 +15,8 @@ class SubsetImporter(BaseImporterToPlugin):
 
     @property
     def is_valid(self):
-        return isinstance(self.input, (Regions, SpectralRegion))
+        return (isinstance(self.input, (Regions, SpectralRegion))
+                and self.has_default_plugin)
 
     @property
     def default_plugin(self):
