@@ -66,6 +66,11 @@ class TestCatalogs:
     def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
+        # Since we are not really displaying, need this to test zoom.
+        viewer = imviz_helper.default_viewer._obj
+        viewer.shape = (100, 100)
+        viewer.state._set_axes_aspect_ratio(1)
+
         # header is based on the data provided above
         hdu1 = fits.ImageHDU(arr, name='SCI')
         hdu1.header.update({'CTYPE1': 'RA---TAN',
@@ -171,8 +176,8 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 2047.5
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 279.0
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1768.0
         assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
         assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
@@ -188,13 +193,13 @@ class TestCatalogs:
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.x_min, 1022.57570000, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.state.x_min, 1045.877555, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.x_max, 1122.5757, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.state.x_max, 1098.248805, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.y_min, 675.29611, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.state.y_min, 699.110485, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.y_max, 775.29611, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.state.y_max, 751.481735, atol=0.1)
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -227,6 +232,11 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 
 
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
+    # Since we are not really displaying, need this to test zoom.
+    viewer = imviz_helper.default_viewer._obj
+    viewer.shape = (100, 100)
+    viewer.state._set_axes_aspect_ratio(1)
+
     sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
                    dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
     tbl = QTable({'sky_centroid': sky})  # Table has no "Label" column
@@ -285,13 +295,17 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.19966, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, 0.20034, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.80001, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.20001, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.519664, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, -0.479663, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.980008, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.020008, rtol=1e-4)
 
 
 def test_zoom_to_selected(imviz_helper, image_2d_wcs):
+    # Since we are not really displaying, need this to test zoom.
+    viewer = imviz_helper.default_viewer._obj
+    viewer.shape = (100, 100)
+    viewer.state._set_axes_aspect_ratio(1)
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
@@ -322,16 +336,16 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     # should be centered at roughly pixel coords (150, 150)
     xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
 
-    assert_allclose((xmin + xmax) / 2, 150., atol=0.1)
+    assert_allclose((xmin + xmax) / 2, 149.5, atol=0.1)
     assert_allclose((ymin + ymax) / 2, 150., atol=0.1)
 
     # and the zoom box size should reflect the default padding of 2% of the image
     # size around the bounding box containing the source(s), which in this case is
     # 10 pixels around
-    assert_allclose(xmin, 100 - 10, atol=0.1)  # min x of selected sources minus pad
-    assert_allclose(xmax, 200 + 10, atol=0.1)  # max x of selected sources plus pad
-    assert_allclose(ymin, 100 - 10, atol=0.1)  # min y of selected sources minus pad
-    assert_allclose(ymax, 200 + 10, atol=0.1)  # max y of selected sources plus pad
+    assert_allclose(xmin, 95.5, atol=0.1)  # min x of selected sources minus pad
+    assert_allclose(xmax, 203.5, atol=0.1)  # max x of selected sources plus pad
+    assert_allclose(ymin, 96, atol=0.1)  # min y of selected sources minus pad
+    assert_allclose(ymax, 204, atol=0.1)  # max y of selected sources plus pad
 
     # select one source now
     catalogs_plugin._obj.table.selected_rows = catalogs_plugin._obj.table.items[0:1]
@@ -341,19 +355,19 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 
     # check that zoom window is centered correctly on the source at 100, 100
     xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
-    assert_allclose((xmin + xmax) / 2, 100., atol=0.1)
+    assert_allclose((xmin + xmax) / 2, 99.5, atol=0.1)
     assert_allclose((ymin + ymax) / 2, 100., atol=0.1)
 
     # and the zoom box size should reflect the default padding of 5% of the image
     # size around the bounding box containing the source(s), which in this case is
     # 25 pixels around
-    assert_allclose(xmin, 100 - 25, atol=0.1)  # min x of selected source minus pad
-    assert_allclose(xmax, 100 + 25, atol=0.1)  # max x of selected source plus pad
-    assert_allclose(ymin, 100 - 25, atol=0.1)  # min y of selected source minus pad
-    assert_allclose(ymax, 100 + 25, atol=0.1)  # max y of selected source plus pad
+    assert_allclose(xmin, 94.5, atol=0.1)  # min x of selected source minus pad
+    assert_allclose(xmax, 104.5, atol=0.1)  # max x of selected source plus pad
+    assert_allclose(ymin, 95, atol=0.1)  # min y of selected source minus pad
+    assert_allclose(ymax, 105, atol=0.1)  # max y of selected source plus pad
 
     # test that appropriate error is raised when padding is not a valud percentage
-    with pytest.raises(ValueError, match="`padding` must be between 0 and 1."):
+    with pytest.raises(ValueError, match="padding must be between 0 .* and 1.*"):
         catalogs_plugin.zoom_to_selected(padding=5)
 
 

@@ -14,6 +14,7 @@ from jdaviz.core.events import CatalogResultsChangedMessage, CatalogSelectClickE
 from jdaviz.core.marks import CatalogMark
 from jdaviz.core.template_mixin import Table, TableMixin
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.utils import get_top_layer_index
 
 __all__ = ['Catalogs']
 
@@ -394,7 +395,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                                            getattr(y, 'value', y))
 
     def vue_zoom_in(self, *args, **kwargs):
-
         self.zoom_to_selected()
 
     def zoom_to_selected(self, padding=0.02, return_bounding_box=False):
@@ -414,41 +414,62 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         Returns
         -------
-        list of float or None
+        bb : list of float or None
             If there are activley selected rows, and ``return_bounding_box`` is
             True, returns a list containing the bounding
-            box coordinates: [x_min, x_max, y_min, y_max].
-            Otherwise, returns None.
+            box coordinates: ``[x_min, x_max, y_min, y_max]``.
+            Otherwise, returns `None`.
 
         """
-
-        viewer = self.app._jdaviz_helper._default_viewer
+        viewer = self.viewer.selected_obj  # gets the current viewer
 
         selected_rows = self.table.selected_rows
         if not selected_rows:  # Check if no rows are selected
             return
 
         if padding <= 0 or padding > 1:
-            raise ValueError("`padding` must be between 0 and 1.")
+            raise ValueError("padding must be between 0 (exclusive) and 1 (inclusive).")
 
-        x = [float(coord['x_coord']) for coord in selected_rows]
-        y = [float(coord['y_coord']) for coord in selected_rows]
+        i_top = get_top_layer_index(viewer)
+        image = viewer.layers[i_top].layer
+        x_min = 99999
+        x_max = -99999
+        y_min = 99999
+        y_max = -99999
+        for coord in selected_rows:  # list of dict
+            cur_x, cur_y = viewer._get_real_xy(
+                image, float(coord['x_coord']), float(coord['y_coord']))[:2]
+            if cur_x < x_min:
+                x_min = cur_x
+            if cur_x > x_max:
+                x_max = cur_x
+            if cur_y < y_min:
+                y_min = cur_y
+            if cur_y > y_max:
+                y_max = cur_y
 
-        limits = viewer.state._get_reset_limits()
-        max_dim = max((limits[1] - limits[0]), (limits[3] - limits[2]))
-        padding = max_dim * padding
+        if x_min == x_max and y_min == y_max:  # Only one selected
+            pass
+        elif x_min >= x_max or y_min >= y_max:
+            raise ValueError(
+                f"Zoom failed: x_min={x_min}, x_max={x_max}, y_min={y_min}, y_max={y_max}")
 
-        # this works with single selected points
-        # zooming when the range is too large is not performing correctly
-        x_min = min(x) - padding
-        x_max = max(x) + padding
-        y_min = min(y) - padding
-        y_max = max(y) + padding
+        pix_pad = padding * max(x_max, y_max)
+        x_min -= pix_pad
+        x_max += pix_pad
+        y_min -= pix_pad
+        y_max += pix_pad
 
-        viewer.set_limits(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        screenx = viewer.shape[1]
+        screeny = viewer.shape[0]
+        zoom_x = screenx / (x_max - x_min)
+        zoom_y = screeny / (y_max - y_min)
+
+        viewer.center_on((0.5 * (x_min + x_max), 0.5 * (y_min + y_max)))
+        viewer.zoom_level = min(zoom_x, zoom_y)
 
         if return_bounding_box:
-            return [x_min, x_max, y_min, y_max]
+            return [viewer.state.x_min, viewer.state.x_max, viewer.state.y_min, viewer.state.y_max]
 
     def import_catalog(self, catalog):
         """
