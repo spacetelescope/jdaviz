@@ -2,10 +2,12 @@ import warnings
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
-from jdaviz.core.registries import loader_parser_registry, loader_importer_registry
+from jdaviz.core.registries import (loader_resolver_registry,
+                                    loader_parser_registry,
+                                    loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
 
-__all__ = ['BaseResolver']
+__all__ = ['BaseResolver', 'find_matching_resolver']
 
 
 class FormatSelect(SelectPluginComponent):
@@ -126,15 +128,20 @@ class TargetSelect(SelectPluginComponent):
         # note that the selection of a target may affect the available formats
         # so we want to store all importers in the target select even if they are not valid there
         # and use that list when compiling list of valid targets
-        all_targets = list(set([importer.target for importer
-                                in self.plugin.format._importers.values()]))
+        all_targets = []
+        for importer in self.plugin.format._importers.values():
+            target = importer.target
+            if target not in all_targets:
+                all_targets.append(target)
 
-        all_items = [{'label': 'Any'}]+[{'label': target} for target in all_targets]
-        self.items = [item for item in all_items if self._is_valid_item(item)]
+        self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]  # noqa
         self._apply_default_selection()
 
 
 class BaseResolver(PluginTemplateMixin):
+    default_input = None
+    requires_api_support = False
+
     importer_widget = Unicode().tag(sync=True)
 
     import_spinner = Bool(False).tag(sync=True)
@@ -162,10 +169,28 @@ class BaseResolver(PluginTemplateMixin):
                                    items='target_items',
                                    selected='target_selected')
 
+    @classmethod
+    def from_input(cls, app, inp, **kwargs):
+        self = cls(app=app)
+        if self.default_input is None:
+            raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
+        setattr(self, self.default_input, inp)
+        user_api = self.user_api
+        for k, v in kwargs.items():
+            if hasattr(user_api, k):
+                setattr(user_api, k, v)
+        return self
+
     @property
     def is_valid(self):
         # override by subclass
         return False  # pragma: nocover
+
+    @property
+    def input(self):
+        if self.default_input is None:
+            raise NotImplementedError("Resolver subclass must implement default_input")
+        return getattr(self, self.default_input)
 
     def __call__(self):
         # override by subclass - must convert any inputs into something
@@ -235,3 +260,39 @@ class BaseResolver(PluginTemplateMixin):
     @with_spinner('import_spinner')
     def vue_import_clicked(self, *args, **kwargs):
         self.importer()
+
+
+def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
+    valid_resolvers = []
+    for resolver_name, Resolver in loader_resolver_registry.members.items():
+        if resolver is not None and resolver != resolver_name:
+            continue
+        try:
+            this_resolver = Resolver.from_input(app, inp, **kwargs)
+        except Exception:
+            this_resolver = None
+        if this_resolver is None:
+            continue
+        try:
+            is_valid = this_resolver.is_valid
+        except Exception:
+            is_valid = False
+        if not is_valid:
+            continue
+
+        if target is not None:
+            if target not in this_resolver.target.choices:
+                continue
+            this_resolver.target = target
+        for fmt in this_resolver.format.choices:
+            if format is not None and fmt != format:
+                continue
+            valid_resolvers.append((this_resolver, resolver_name, fmt))
+
+    if len(valid_resolvers) == 0:
+        raise ValueError("no valid resolvers found for input")
+    elif len(valid_resolvers) > 1:
+        vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
+        raise ValueError(f"multiple valid resolvers found for input: {vrs}")
+    else:
+        return valid_resolvers[0][0].user_api

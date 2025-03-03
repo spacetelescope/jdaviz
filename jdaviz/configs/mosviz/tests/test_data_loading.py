@@ -171,7 +171,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     spec2d_viewer = mosviz_helper.app.get_viewer('spectrum-2d-viewer')
 
     # Coordinates info panel should not crash even when nothing is loaded.
-    label_mouseover = mosviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = mosviz_helper._coords_info
     label_mouseover._viewer_mouse_event(image_viewer, {'event': 'mousemove',
                                                        'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('', '', '')

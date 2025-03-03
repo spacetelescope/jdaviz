@@ -287,7 +287,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     # Mouseover without data should not crash.
-    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
     assert label_mouseover.as_text() == ('', '', '')
@@ -485,7 +485,7 @@ def test_spectra_partial_overlap(specviz_helper):
 
     # Test mouseover outside of left but in range for right.
     # Should show right spectrum even when mouse is near left flux.
-    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 7022, 'y': 1000}})
     assert label_mouseover.as_text() == ('Cursor 7.02200e+03, 1.00000e+03',
