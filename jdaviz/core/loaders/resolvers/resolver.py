@@ -285,6 +285,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
         for fmt in this_resolver.format.choices:
             if format is not None and fmt != format:
                 continue
+            this_resolver.format.selected = fmt
             valid_resolvers.append((this_resolver, resolver_name, fmt))
 
     if len(valid_resolvers) == 0:
