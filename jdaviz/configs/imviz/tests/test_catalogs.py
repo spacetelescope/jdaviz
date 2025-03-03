@@ -176,10 +176,10 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 2047.5
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -280.0
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1768.0
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 279.0
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1768.0
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
 
         # Re-populate the table with a new search
         with pytest.warns(ResourceWarning):
