@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.ma as ma
 from astropy import units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
@@ -48,6 +47,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             'x_coord': np.nan,
             'y_coord': np.nan}
 
+    # initializing the headers in the table that is displayed in the UI
+    headers = ['Right Ascension (degrees)', 'Declination (degrees)',
+               'Object ID', 'x_coord', 'y_coord']
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('clear_table', 'export_table',
@@ -71,12 +74,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.catalog._file_parser = self._file_parser
         self._marker_name = 'catalog_results'
 
-        # initializing the headers in the table that is displayed in the UI
-        headers = ['Right Ascension (degrees)', 'Declination (degrees)',
-                   'Object ID', 'x_coord', 'y_coord']
-
-        self.table.headers_avail = headers
-        self.table.headers_visible = headers
+        self.table.headers_avail = self.headers
+        self.table.headers_visible = self.headers
         self.table._default_values_by_colname = self._default_table_values
         self.table._selected_rows_changed_callback = lambda msg: self.plot_selected_points()
         self.table.item_key = 'id'
@@ -110,7 +109,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         Returns
         -------
-        skycoord_table : `~astropy.coordinates.SkyCoord` or `None`
+        skycoords : `~astropy.coordinates.SkyCoord` or `None`
             Sky coordinates (or None if no results available).
 
         """
@@ -185,9 +184,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             # TODO: Filter this table the same way as the actual displayed markers.
             # attach the table to the app for Python extraction
             self.app._catalog_source_table = query_region_result
-            skycoord_table = SkyCoord(query_region_result['ra'],
-                                      query_region_result['dec'],
-                                      unit='deg')
 
         elif self.catalog_selected == 'Gaia':
             from astroquery.gaia import Gaia
@@ -203,7 +199,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             if len(sources) == self.max_sources:
                 max_sources_used = True
             self.app._catalog_source_table = sources
-            skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
 
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
@@ -211,10 +206,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             table = self.catalog.selected_obj
             self.app._catalog_source_table = table
             if len(table['sky_centroid']) > self.max_sources:
-                skycoord_table = table['sky_centroid'][:self.max_sources]
+                self.app._catalog_source_table = table[:self.max_sources]
                 max_sources_used = True
             else:
-                skycoord_table = table['sky_centroid']
+                self.app._catalog_source_table = table
         else:
             self.results_available = False
             self.number_of_results = 0
@@ -222,7 +217,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             raise NotImplementedError(f"{self.catalog_selected} not a supported catalog")
 
         self.results_available = True
-        if not len(skycoord_table):
+        if not len(self.app._catalog_source_table):
             self.number_of_results = 0
             self.app._catalog_source_table = None
             return
@@ -234,45 +229,61 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                     sender=self)
             self.hub.broadcast(snackbar_message)
 
-        # coordinates found are converted to pixel coordinates
-        pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)
-        # coordinates are filtered out (using a mask) if outside the zoom range
-        pair_pixel_table = np.dstack((pixel_table[0], pixel_table[1]))
-        # ma.masked_outside removes the coordinates outside the zoom range
-        # ma.compress_rows removes any row that has a mask mark
-        filtered_table = ma.compress_rows(
-            ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min], [zoom_x_max, zoom_y_max])
-            [0])
-        # coordinates are split into their respective x and y values
-        # then they are converted to sky coordinates
-        filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
-        x_coordinates = np.squeeze(filtered_pair_pixel_table[0])
-        y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
+        # Convert to pixel coordinates and filter results to be within viewer bounds
+        if self.catalog_selected in ["SDSS", "Gaia"]:
+            skycoords = SkyCoord(self.app._catalog_source_table['ra'],
+                                 self.app._catalog_source_table['dec'],
+                                 unit='deg')
+        elif self.catalog_selected in ["From File..."]:
+            skycoords = self.app._catalog_source_table['sky_centroid']
+
+        pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+        self.app._catalog_source_table['x_coord'] = pixel_table[0]
+        self.app._catalog_source_table['y_coord'] = pixel_table[1]
+        x_coordinates = []
+        y_coordinates = []
+        source_table = self.app._catalog_source_table
+        mask = ((source_table['x_coord'] < zoom_x_min) |
+                (source_table['x_coord'] > zoom_x_max) |
+                (source_table['y_coord'] < zoom_y_min) |
+                (source_table['y_coord'] > zoom_y_max))
+        self.app._catalog_source_table = self.app._catalog_source_table[~mask]
+        skycoords = skycoords[~mask]
 
         if self.catalog_selected in ["SDSS", "Gaia"]:
-            # for single source convert table information to lists for zipping
-            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
-                x_coordinates = [x_coordinates]
-                y_coordinates = [y_coordinates]
-
-            for row, x_coord, y_coord in zip(self.app._catalog_source_table,
-                                             x_coordinates, y_coordinates):
+            for row in self.app._catalog_source_table:
+                x_coordinates.append(row['x_coord'])
+                y_coordinates.append(row['y_coord'])
                 row_id = row[src_id_colname]
                 # Check if the row contains the required keys
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
                             'Object ID': row_id.astype(str),
                             'id': len(self.table),
-                            'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
-                            'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
+                            'x_coord': row['x_coord'],
+                            'y_coord': row['y_coord']}
                 self.table.add_item(row_info)
+
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
         elif self.catalog_selected in ["From File..."]:
-            # for single source convert table information to lists for zipping
-            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
-                x_coordinates = [x_coordinates]
-                y_coordinates = [y_coordinates]
+            for row in self.app._catalog_source_table:  # noqa:E501
+                row_info = {
+                    'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
+                    'Declination (degrees)': row['sky_centroid'].dec.deg,
+                    'Object ID': str(row.get('label', f"{len(self.table) + 1}")),
+                    'id': len(self.table),
+                    'x_coord': row['x_coord'],
+                    'y_coord': row['y_coord'],
+                }
+                x_coordinates.append(row['x_coord'])
+                y_coordinates.append(row['y_coord'])
+                # Add sky_centroid and label explicitly to row_info
+                row_info['sky_centroid'] = row['sky_centroid']
+                row_info['label'] = row_info['Object ID']
+                for col in table.colnames:
+                    if col not in self.headers:  # Skip already processed columns
+                        row_info[col] = row[col]
 
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
                                              x_coordinates, y_coordinates):
@@ -285,17 +296,18 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'y_coord': y_coord.item() if y_coord.size == 1 else y_coord}
                 self.table.add_item(row_info)
 
-        filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
-                                                                                    y_coordinates)
+        filtered_skycoords = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
+                                                                               y_coordinates)
 
         # QTable stores all the filtered sky coordinate points to be marked
-        catalog_results = QTable({'coord': filtered_skycoord_table})
+        catalog_results = QTable({'coord': filtered_skycoords})
 
         self.number_of_results = len(catalog_results)
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'blue', 'alpha': 0.8, 'markersize': 30, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
-        return skycoord_table
+
+        return skycoords
 
     def _get_mark(self, viewer):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, CatalogMark)]

@@ -17,6 +17,8 @@ Imviz
 
 - Improve performance of re-rendering during orientation change. [#3452]
 
+- Fix incorrect matching between RA/Dec and pixel coordinates in Catalog search results. [#3464]
+
 Mosviz
 ^^^^^^
 
