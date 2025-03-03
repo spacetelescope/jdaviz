@@ -111,7 +111,7 @@ Other Changes and Additions
 
 - Refactored flux conversion to use a single function for all plugin/viewer flux/surface brightness
   conversions. [#3457]
-  
+
 
 4.1.2 (unreleased)
 ==================
@@ -127,13 +127,15 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
-- Hide spectral subset layer visibility in flux/uncertainty viewers when slice indicator 
+- Hide spectral subset layer visibility in flux/uncertainty viewers when slice indicator
   is within the spectral subset bounds. [#3437]
 
 Imviz
 ^^^^^
 
 - Improve performance of re-rendering during orientation change. [#3452]
+
+- Fix incorrect matching between RA/Dec and pixel coordinates in Catalog search results. [#3464]
 
 Mosviz
 ^^^^^^

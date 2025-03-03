@@ -103,18 +103,36 @@ class TestCatalogs:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
+
+        # Zoom in so we have to filter sources outside the viewer bounds
+        viewer = imviz_helper.app.get_viewer('imviz-0')
+        viewer.state.x_min = 800
+        viewer.state.x_max = 1200
+        viewer.state.y_min = 800
+        viewer.state.y_max = 1200
+
         catalogs_plugin.search(error_on_fail=True)
 
         assert catalogs_plugin.catalog.selected == 'SDSS'
 
-        # number of results should be > 500 or so
-        # Answer was determined by running the search with the image in the notebook.
         assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results > 500
+        assert catalogs_plugin.number_of_results == 136
         prev_results = catalogs_plugin.number_of_results
+        last_row = catalogs_plugin.table.items[-1]
+        last_ra = float(last_row['Right Ascension (degrees)'])
+        coords = viewer.state.reference_data.coords
+        table_calc_ra = coords.pixel_to_world(float(last_row['x_coord']), float(last_row['y_coord'])).ra.value  # noqa
+        assert_allclose(last_ra, table_calc_ra, rtol=0.00001)
+        assert_allclose(last_ra, imviz_helper.app._catalog_source_table[-1]['ra'], atol=0.0001)  # noqa
 
         # testing that every variable updates accordingly when markers are cleared
         catalogs_plugin.clear_table()
+
+        # Default zoom for the rest of the tests
+        viewer.state.x_min = -0.5
+        viewer.state.x_max = 2047.5
+        viewer.state.y_min = -0.5
+        viewer.state.y_max = 1488.5
 
         assert not catalogs_plugin.results_available
 
