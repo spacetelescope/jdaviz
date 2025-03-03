@@ -47,6 +47,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             'x_coord': np.nan,
             'y_coord': np.nan}
 
+    # initializing the headers in the table that is displayed in the UI
+    headers = ['Right Ascension (degrees)', 'Declination (degrees)',
+               'Object ID', 'x_coord', 'y_coord']
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('clear_table', 'export_table',
@@ -70,12 +74,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.catalog._file_parser = self._file_parser
         self._marker_name = 'catalog_results'
 
-        # initializing the headers in the table that is displayed in the UI
-        headers = ['Right Ascension (degrees)', 'Declination (degrees)',
-                   'Object ID', 'x_coord', 'y_coord']
-
-        self.table.headers_avail = headers
-        self.table.headers_visible = headers
+        self.table.headers_avail = self.headers
+        self.table.headers_visible = self.headers
         self.table._default_values_by_colname = self._default_table_values
         self.table._selected_rows_changed_callback = lambda msg: self.plot_selected_points()
         self.table.item_key = 'id'
