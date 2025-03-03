@@ -304,7 +304,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         assert self.viewer.layers[2].state.fill is True
 
         # TODO: How to check imviz.app.data_collection.links is correct?
-        assert len(self.imviz.app.data_collection.links) == 14
+        assert len(self.imviz.app.data_collection.links) == 6
 
         # Just want to make sure nothing crashes. Zooming already testing elsewhere.
         # https://github.com/spacetelescope/jdaviz/pull/1971
@@ -320,7 +320,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         assert self.imviz.app.data_collection.labels == [
             'has_wcs[SCI,1]', 'no_wcs[SCI,1]']
 
-        assert len(self.imviz.app.data_collection.links) == 10
+        assert len(self.imviz.app.data_collection.links) == 2
 
         # NOTE: This changes the state of self.imviz for this test class!
 
