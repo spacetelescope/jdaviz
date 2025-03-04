@@ -332,11 +332,6 @@ def test_get_regions_composite(imviz_helper):
     regions = plg.get_regions()
     assert isinstance(regions['Subset 6'], CircleAnnulusPixelRegion)
 
-    # now, when get_regions is called, the combined subset should be represented as a
-    # CircleAnnulusPixelRegion rather than two circlular subsets
-    regions = plg.get_regions()
-    assert isinstance(regions['Subset 6'], CircleAnnulusPixelRegion)
-
     # If and/or/xor are used to create composite subsets, they can be
     # represented as CompoundRegions.
     for sub, op in [('7', operator.and_), ('8', operator.or_), ('9', operator.xor)]:
