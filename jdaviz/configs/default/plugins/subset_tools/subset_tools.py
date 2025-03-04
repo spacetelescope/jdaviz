@@ -548,69 +548,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             if self.subset_selected != self.subset.default_text:
                 self._get_subset_definition(self.subset_selected)
 
-    def update_subset(self, subset_label, subregion=None, **kwargs):
-        '''
-        Method to update the attributes of an existing subset. The attributes of a subset
-        and their current values can be retrieved with the 'get_subset_definition` method.
-
-        Parameters
-        ----------
-
-        subset_label : str
-
-            The name of the subset to update. If this is not the currently selected subset in the
-            UI, it will be selected.
-
-        subregion : int, optional
-
-            The integer subregion index (in the subset_definitions dictionary) for which to modify
-            the specified attributes.
-
-        The attributes to update and their new values are passed as keyword arguments to this
-        function, for example:
-
-            >>> plg = imviz.plugins['Subset Tools']
-            >>> plg.update_subset('Subset 1', xmax = 9.522, xmin = 9.452)
-        '''
-        if subset_label not in self.subset.choices:
-            raise ValueError(f"{subset_label} is not an existing subset. "
-                             f"Available choices are: {self.subset.choices}")
-
-        if subset_label != self.subset.selected:
-            self.subset.selected = subset_label
-
-        if len(self.subset_definitions) == 1:
-            subregion = 0
-        elif subregion is None:
-            raise ValueError("Specified subset has more than one subregion, please "
-                             "specify which integer subregion index to modify.")
-
-        for key, value in kwargs.items():
-            print(f"Checking for {key}")
-            for att_dict in self.subset_definitions[subregion]:
-                if att_dict['att'] == key:
-                    print(f"Found it, setting to {value}")
-                    att_dict['value'] = value
-                    print(att_dict)
-                    break
-            else:
-                raise ValueError(f"{key} is not an attribute of the specified subset/subregion.")
-
-        # Force UI to update on browser without changing the subset.
-        tmp = self.subset_definitions
-        self.subset_definitions = []
-        self.subset_definitions = tmp
-
-        self._push_update_to_ui()
-
-    def vue_update_subset(self, *args):
-
-        if self.multiselect:
-            self.hub.broadcast(SnackbarMessage("Cannot update subset "
-                                               "when multiselect is active", color='warning',
-                                               sender=self))
-            return
-
+    def _update_subset(self):
         status, reason = self._check_input()
         if not status:
             self.hub.broadcast(SnackbarMessage(reason, color='error', sender=self))
@@ -670,6 +608,66 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         setattr(sub_states.roi, d_att["att"], d_val)
 
         self._push_update_to_ui()
+
+    def update_subset(self, subset_label, subregion=None, **kwargs):
+        '''
+        Method to update the attributes of an existing subset. The attributes of a subset
+        and their current values can be retrieved with the 'get_subset_definition` method.
+
+        Parameters
+        ----------
+
+        subset_label : str
+
+            The name of the subset to update. If this is not the currently selected subset in the
+            UI, it will be selected.
+
+        subregion : int, optional
+
+            The integer subregion index (in the subset_definitions dictionary) for which to modify
+            the specified attributes.
+
+        The attributes to update and their new values are passed as keyword arguments to this
+        function, for example:
+
+            plg = imviz.plugins['Subset Tools']
+            plg.update_subset('Subset 1', xmax = 9.522, xmin = 9.452)
+        '''
+        if subset_label not in self.subset.choices:
+            raise ValueError(f"{subset_label} is not an existing subset. "
+                             f"Available choices are: {self.subset.choices}")
+
+        if subset_label != self.subset.selected:
+            self.subset.selected = subset_label
+
+        if len(self.subset_definitions) == 1:
+            subregion = 0
+        elif subregion is None:
+            raise ValueError("Specified subset has more than one subregion, please "
+                             "specify which integer subregion index to modify.")
+
+        for key, value in kwargs.items():
+            print(f"Checking for {key}")
+            for i in range(len(self.subset_definitions[subregion])):
+                att_dict = self.subset_definitions[subregion][i]
+                if att_dict['att'] == key:
+                    att_dict['value'] = value
+                    self.subset_definitions[subregion][i] = att_dict
+                    break
+            else:
+                raise ValueError(f"{key} is not an attribute of the specified subset/subregion.")
+
+        self._update_subset()
+
+    def vue_update_subset(self, *args):
+
+        if self.multiselect:
+            self.hub.broadcast(SnackbarMessage("Cannot update subset "
+                                               "when multiselect is active", color='warning',
+                                               sender=self))
+            return
+
+        self._update_subset()
 
     def _push_update_to_ui(self, subset_name=None):
         """
