@@ -632,6 +632,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
             plg = imviz.plugins['Subset Tools']
             plg.update_subset('Subset 1', xmax = 9.522, xmin = 9.452)
+
+        If no values to update are specified, this function will return the current definition of
+        the specified subset. The "att" keys in the returned dictionaries are the attributes that
+        can be updated with this method.
         '''
         if subset_label not in self.subset.choices:
             raise ValueError(f"{subset_label} is not an existing subset. "
@@ -639,6 +643,18 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if subset_label != self.subset.selected:
             self.subset.selected = subset_label
+
+        if not kwargs:
+            # If no updates were requested, we instead return the current definition
+            public_definition = {}
+            for i in range(len(self.subset_definitions)):
+                public_definition[f'subregion {i}'] = []
+                for d in self.subset_definitions[i]:
+                    if d['att'] == 'parent':
+                        continue
+                    public_definition[f'subregion {i}'].append({key:d[key] for key in d if key != "orig"})  # noqa
+
+            return public_definition
 
         if len(self.subset_definitions) == 1:
             subregion = 0
