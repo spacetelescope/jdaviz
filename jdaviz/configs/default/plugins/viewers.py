@@ -67,6 +67,19 @@ class JdavizViewerMixin(WithCache):
 
         self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
 
+    def _clone_viewer(self):
+        new_viewer = type(self)(session=self.session)
+        new_viewer._reference_id = self._reference_id + "_TODO"
+        d = self.state.as_dict()
+        new_viewer.state.update_from_dict(d)
+
+        for this_layer_state, new_layer_state in zip(self.state.layers, new_viewer.state.layers):
+            for k, v in this_layer_state.as_dict().items():
+                if k in ('layer',):
+                    continue
+                setattr(new_layer_state, k, v)
+        return new_viewer
+
     @property
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
