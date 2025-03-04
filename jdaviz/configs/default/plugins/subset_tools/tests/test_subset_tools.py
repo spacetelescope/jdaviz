@@ -312,7 +312,7 @@ def test_get_regions_composite(imviz_helper):
     get_subsets = imviz_helper.app.get_subsets()
     assert sorted(get_subsets) == ["Subset 1", "Subset 2", "Subset 3"]
 
-    # Now, create two concentric circular subsets and combine them to form a circular annulus. 
+    # Now, create two concentric circular subsets and combine them to form a circular annulus.
     plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
                                         radius=45.0), combination_mode='new')
     plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
