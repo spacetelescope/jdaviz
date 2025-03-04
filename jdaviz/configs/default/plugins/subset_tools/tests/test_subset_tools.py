@@ -1,3 +1,4 @@
+import operator
 import warnings
 
 import numpy as np
@@ -301,12 +302,16 @@ def test_get_regions_composite(imviz_helper):
     new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
     imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
 
-    # call get_regions and make sure Subset 3, the composite subset, is retrieved, but as a list
-    # of its individual subsets since they were created with &~ and do not form
-    # an exact circular annulus
+    # call get_regions and make sure Subset 3, the composite subset, is retrieved,
+    # but as a list of tuples of  individual subsets and their combination modes,
+    # since they were created with &~ and do not form an exact circular annulus
     regions = plg.get_regions()
     assert sorted(regions) == ["Subset 1", "Subset 2", "Subset 3"]
     assert len(regions['Subset 3']) == 2
+    assert isinstance(regions['Subset 3'][0][0], CirclePixelRegion)
+    assert regions['Subset 3'][0][1] == ''  # first operator should be ''
+    assert isinstance(regions['Subset 3'][1][0], CirclePixelRegion)
+    assert regions['Subset 3'][1][1] == 'AndNotState'
 
     # make sure the same regions are returned by app.get_subsets
     get_subsets = imviz_helper.app.get_subsets()
@@ -332,28 +337,14 @@ def test_get_regions_composite(imviz_helper):
     regions = plg.get_regions()
     assert isinstance(regions['Subset 6'], CircleAnnulusPixelRegion)
 
-    # If and/or/xor are used to create composite subsets, they can be represented
-    # as CompoundRegions.
-    # and
-    imviz_helper.app.session.edit_subset_mode._mode = NewMode
-    new_subset = subset_groups[3].subset_state & subset_groups[4].subset_state
-    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
-    regions = plg.get_regions()
-    assert isinstance(regions['Subset 7'], CompoundPixelRegion)
-
-    # or
-    imviz_helper.app.session.edit_subset_mode._mode = NewMode
-    new_subset = subset_groups[3].subset_state | subset_groups[4].subset_state
-    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
-    regions = plg.get_regions()
-    assert isinstance(regions['Subset 8'], CompoundPixelRegion)
-
-    # xor
-    imviz_helper.app.session.edit_subset_mode._mode = NewMode
-    new_subset = subset_groups[3].subset_state ^ subset_groups[4].subset_state
-    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
-    regions = plg.get_regions()
-    assert isinstance(regions['Subset 9'], CompoundPixelRegion)
+    # If and/or/xor are used to create composite subsets, they can be
+    # represented as CompoundRegions.
+    for sub, op in [('7', operator.and_), ('8', operator.or_), ('9', operator.xor)]:
+        imviz_helper.app.session.edit_subset_mode._mode = NewMode
+        new_subset = op(subset_groups[3].subset_state, subset_groups[4].subset_state)
+        imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+        regions = plg.get_regions()
+        assert isinstance(regions[f'Subset {sub}'], CompoundPixelRegion)
 
 
 def test_check_valid_subset_label(imviz_helper):
