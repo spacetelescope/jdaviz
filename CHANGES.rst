@@ -115,6 +115,8 @@ New Features
 
 - Snackbar history logger has been moved from an overlay to a separate tab in the right sidebar tray. [#3466]
 
+- Added an STC-S string region parser to the Footprints plugin. [#3479]
+
 Cubeviz
 ^^^^^^^
 
