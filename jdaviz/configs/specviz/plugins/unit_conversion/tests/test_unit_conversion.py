@@ -156,7 +156,7 @@ def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
     assert uc_plg.flux_unit.choices == expected_choices
 
 
-def test_mosviz_profile_view_mouseover(specviz2d_helper, spectrum2d):
+def test_mosviz_profile_view_mouseover(specviz2d_helper):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
     spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
