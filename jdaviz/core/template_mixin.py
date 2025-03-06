@@ -493,7 +493,6 @@ class PluginTemplateMixin(TemplateMixin):
         # <j-tray-plugin> component
         self._ping_delay_ms = 200
 
-
         # _methods_skip_since_last_active: methods that should be skipped when is_active is next
         # set to True because no changes have been made.  This can be used to prevent queuing
         # of expensive method calls, especially when the browser throttles the ping resulting
