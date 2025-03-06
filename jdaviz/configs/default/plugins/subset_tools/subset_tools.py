@@ -882,9 +882,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             x = float(x)
             y = float(y)
             sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
-                sbst_obj.move_to(x, y)
-            elif isinstance(sbst_obj, RectangularROI):
+            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI)):  # noqa
                 sbst_obj.move_to(x, y)
             else:  # pragma: no cover
                 raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')

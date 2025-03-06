@@ -39,7 +39,7 @@
 
     <v-row align=center>
       <v-col cols=10 justify="left">
-        <plugin-subset-select 
+        <plugin-subset-select
           :items="subset_items"
           :selected.sync="subset_selected"
           :multiselect="multiselect"
@@ -87,11 +87,11 @@
               <j-tooltip tooltipcontent="Recenter subset to centroid of selected data">
                 <v-btn
                   color="primary"
-                  text 
+                  text
                   @click="recenter_subset"
                   :class="api_hints_enabled ? 'api-hint' : null"
                 >
-                  {{ api_hints_enabled ? 
+                  {{ api_hints_enabled ?
                     'plg.recenter()'
                     :
                     'Recenter'
@@ -154,6 +154,10 @@
             type="number"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
             :suffix="item.unit ? item.unit.replace('Angstrom', 'A') : ''"
+            :api_hints_enabled="api_hints_enabled"
+            :api_hint="'plg.update_subset('"
+            :hint="api_hints_enabled ? api_hint : null"
+            persistent-hint
           ></v-text-field>
         </v-row>
       </div>
