@@ -541,17 +541,14 @@ def get_cloud_fits(possible_uri, cache=None, cloud=True, local_path=os.curdir, t
 
     # TODO: Caching logic for this files
     if parsed_uri.scheme.lower() == 's3':
-        # logic preventing full download of file accidentally
-        if ext is None:
-            ext = [1]
-
-        if not isinstance(ext, list):
-            ext = [ext]
-
         downloaded_hdus = []
         # this loads the requested extensions into local memory:
         with fits.open(possible_uri, fsspec_kwargs={"anon": True}) as hdul:
-            for extension in ext:
+            if ext is None or ext == "*":
+                ext_list = list(range(len(hdul)))
+            elif isinstance(ext, list):
+                ext_list = ext
+            for extension in ext_list:
                 hdu_obj = hdul[extension]
                 downloaded_hdus.append(hdu_obj.copy())
 
