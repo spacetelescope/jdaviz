@@ -149,14 +149,12 @@
         </v-row>
         <v-row v-else class="row-no-outside-padding">
           <v-text-field
-            :label="item.name"
+            :label="api_hints_enabled ? 'plg.update_subset(\'' + subset_selected + '\', subregion=' + index + ', ' + item.att + '=' + item.value + ')' : item.name"
             v-model.number="item.value"
             type="number"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
             :suffix="item.unit ? item.unit.replace('Angstrom', 'A') : ''"
-            :api_hints_enabled="api_hints_enabled"
-            :api_hint="'plg.update_subset('"
-            :hint="api_hints_enabled ? api_hint : null"
+            :class="api_hints_enabled ? 'api-hint' : null"
             persistent-hint
           ></v-text-field>
         </v-row>
