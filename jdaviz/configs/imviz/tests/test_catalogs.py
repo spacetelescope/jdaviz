@@ -193,9 +193,9 @@ class TestCatalogs:
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.x_min, 1045.877555, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.state.x_min, 1046.377555, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.x_max, 1098.248805, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.state.x_max, 1098.748805, atol=0.1)
         assert_allclose(
             imviz_helper.viewers['imviz-0']._obj.state.y_min, 699.110485, atol=0.1)
         assert_allclose(
@@ -295,8 +295,8 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.519664, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, -0.479663, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.01966, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, 0.02034, rtol=1e-4)
     assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.980008, rtol=1e-4)
     assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.020008, rtol=1e-4)
 
@@ -336,14 +336,14 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     # should be centered at roughly pixel coords (150, 150)
     xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
 
-    assert_allclose((xmin + xmax) / 2, 149.5, atol=0.1)
+    assert_allclose((xmin + xmax) / 2, 150., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 150., atol=0.1)
 
     # and the zoom box size should reflect the default padding of 2% of the image
     # size around the bounding box containing the source(s), which in this case is
     # 10 pixels around
-    assert_allclose(xmin, 95.5, atol=0.1)  # min x of selected sources minus pad
-    assert_allclose(xmax, 203.5, atol=0.1)  # max x of selected sources plus pad
+    assert_allclose(xmin, 96, atol=0.1)  # min x of selected sources minus pad
+    assert_allclose(xmax, 204, atol=0.1)  # max x of selected sources plus pad
     assert_allclose(ymin, 96, atol=0.1)  # min y of selected sources minus pad
     assert_allclose(ymax, 204, atol=0.1)  # max y of selected sources plus pad
 
@@ -355,14 +355,14 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 
     # check that zoom window is centered correctly on the source at 100, 100
     xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
-    assert_allclose((xmin + xmax) / 2, 99.5, atol=0.1)
+    assert_allclose((xmin + xmax) / 2, 100., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 100., atol=0.1)
 
     # and the zoom box size should reflect the default padding of 5% of the image
     # size around the bounding box containing the source(s), which in this case is
     # 25 pixels around
-    assert_allclose(xmin, 94.5, atol=0.1)  # min x of selected source minus pad
-    assert_allclose(xmax, 104.5, atol=0.1)  # max x of selected source plus pad
+    assert_allclose(xmin, 95, atol=0.1)  # min x of selected source minus pad
+    assert_allclose(xmax, 105, atol=0.1)  # max x of selected source plus pad
     assert_allclose(ymin, 95, atol=0.1)  # min y of selected source minus pad
     assert_allclose(ymax, 105, atol=0.1)  # max y of selected source plus pad
 

@@ -2,6 +2,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import QTable, Table as AstropyTable
 from astropy.coordinates import SkyCoord
+from echo import delay_callback
 from traitlets import List, Unicode, Bool, Int, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -459,14 +460,20 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         x_max += pix_pad
         y_min -= pix_pad
         y_max += pix_pad
+        new_y_min = viewer._get_real_xy(image, x_min, y_min, reverse=True)[1]
+        new_y_max = viewer._get_real_xy(image, x_max, y_max, reverse=True)[1]
 
-        screenx = viewer.shape[1]
-        screeny = viewer.shape[0]
-        zoom_x = screenx / (x_max - x_min)
-        zoom_y = screeny / (y_max - y_min)
-
+        # First, we center using image's coordinates.
         viewer.center_on((0.5 * (x_min + x_max), 0.5 * (y_min + y_max)))
-        viewer.zoom_level = min(zoom_x, zoom_y)
+
+        # Then, we zoom using reference data's coordinates. This is important when WCS linked.
+        # We cannot use viewer.zoom_level because it is wonky when WCS linked.
+        # Given most displays are wider in X, we make sure Y coordinates all fit first
+        # and X will naturally all fit within after aspect ratio is taken into account.
+        with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            viewer.state.y_min = new_y_min
+            viewer.state.y_max = new_y_max
+        viewer.state._adjust_limits_aspect()
 
         if return_bounding_box:
             return [viewer.state.x_min, viewer.state.x_max, viewer.state.y_min, viewer.state.y_max]
