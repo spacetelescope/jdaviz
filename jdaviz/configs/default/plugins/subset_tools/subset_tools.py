@@ -663,7 +663,6 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                              "specify which integer subregion index to modify.")
 
         for key, value in kwargs.items():
-            print(f"Checking for {key}")
             for i in range(len(self.subset_definitions[subregion])):
                 att_dict = self.subset_definitions[subregion][i]
                 if att_dict['att'] == key:
