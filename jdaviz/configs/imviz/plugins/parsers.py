@@ -16,7 +16,7 @@ from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.utils import (
     standardize_metadata, standardize_roman_metadata,
-    PRIHDR_KEY, _wcs_only_label, download_uri_to_path
+    PRIHDR_KEY, _wcs_only_label, download_uri_to_path, get_cloud_fits
 )
 
 try:
@@ -81,6 +81,12 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
     """
+    file_obj = get_cloud_fits(file_obj)
+
+    if not isinstance(file_obj, str):
+        _parse_image(app, file_obj, data_label, ext=ext, parent=parent)
+        return
+
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
