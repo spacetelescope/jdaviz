@@ -3,7 +3,7 @@
     <v-select
       :menu-props="{ left: true }"
       attach
-      :items="loader_items"
+      :items="loader_items_filtered"
       v-model="loader_selected"
       @change="$emit('update:loader_selected', $event)"
       label="Source"
@@ -27,6 +27,20 @@
 <script>
 module.exports = {
   props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj'],
+  computed: {
+    loader_items_filtered() {
+      var has_api_support = this.checkNotebookContext();
+      return this.loader_items.filter(item => {return !item.requires_api_support || has_api_support});
+    },
+  },
+  methods: {
+    checkNotebookContext() {
+      this.notebook_context = document.getElementById("ipython-main-app")
+        || document.querySelector('.jp-LabShell')
+        || document.querySelector(".lm-Widget#main"); /* Notebook 7 */
+      return this.notebook_context;
+    },
+  }
 }
 </script>
 

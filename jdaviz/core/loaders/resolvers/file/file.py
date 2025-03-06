@@ -13,6 +13,7 @@ __all__ = ['FileResolver']
 @loader_resolver_registry('file')
 class FileResolver(BaseResolver):
     template_file = __file__, "file.vue"
+    default_input = 'filepath'
 
     filepath = Unicode().tag(sync=True)
 

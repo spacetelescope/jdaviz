@@ -13,6 +13,7 @@ __all__ = ['URLResolver']
 @loader_resolver_registry('url')
 class URLResolver(BaseResolver):
     template_file = __file__, "url.vue"
+    default_input = 'url'
 
     url = Unicode("").tag(sync=True)
     cache = Bool(True).tag(sync=True)

@@ -25,8 +25,6 @@ class SpecutilsSpectrumParser(BaseParser):
 
     @cached_property
     def output(self):
-        if isinstance(self.input, self.SpecutilsCls):
-            return self.input
         return self.SpecutilsCls.read(self.input)
 
 
