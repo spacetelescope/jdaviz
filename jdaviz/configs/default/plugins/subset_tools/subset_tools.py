@@ -609,7 +609,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         self._push_update_to_ui()
 
-    def update_subset(self, subset_label, subregion=None, **kwargs):
+    def update_subset(self, subset_label=None, subregion=None, **kwargs):
         '''
         Method to update the attributes of an existing subset. The attributes of a subset
         and their current values can be retrieved with the 'get_subset_definition` method.
