@@ -155,7 +155,7 @@ class PluginMark:
     def _on_global_display_unit_changed(self, msg):
         if not self.auto_update_units:
             return
-        if self.viewer.__class__.__name__ in ['SpecvizProfileView',
+        if self.viewer.__class__.__name__ in ['Spectrum1DViewer',
                                               'CubevizProfileView',
                                               'MosvizProfileView',
                                               'MosvizProfile2DView']:

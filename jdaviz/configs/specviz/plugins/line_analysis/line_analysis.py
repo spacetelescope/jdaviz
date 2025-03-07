@@ -8,7 +8,7 @@ from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
 from specutils import analysis, Spectrum1D
 
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 SpectralMarksChangedMessage,
@@ -165,7 +165,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def _on_viewers_changed(self, msg):
         # when accessing the selected data, access the spectrum-viewer version
         self.dataset._viewers = [v.reference_id for v in self.app._viewer_store.values()
-                                 if isinstance(v, SpecvizProfileView)]
+                                 if isinstance(v, Spectrum1DViewer)]
 
     def _on_viewer_data_changed(self, msg):
         self._set_relevant()

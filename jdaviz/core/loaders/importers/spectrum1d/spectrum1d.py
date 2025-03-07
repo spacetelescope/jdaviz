@@ -22,4 +22,4 @@ class Spectrum1DImporter(BaseImporterToDataCollection):
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'mosviz-profile-viewer'
+        return 'spectrum-1d-viewer'

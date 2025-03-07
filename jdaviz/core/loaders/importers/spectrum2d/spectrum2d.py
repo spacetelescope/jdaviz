@@ -83,4 +83,4 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, show_in_viewer=False)
-            self.load_into_viewer(ext_data_label, "mosviz-profile-viewer")
+            self.load_into_viewer(ext_data_label, "spectrum-1d-viewer")

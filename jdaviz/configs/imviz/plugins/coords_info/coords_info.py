@@ -12,7 +12,7 @@ from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
@@ -30,7 +30,7 @@ __all__ = ['CoordsInfo']
 class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "coords_info.vue"
 
-    _supported_viewer_classes = (SpecvizProfileView,
+    _supported_viewer_classes = (Spectrum1DViewer,
                                  ImvizImageView,
                                  CubevizImageView,
                                  RampvizImageView,
@@ -38,7 +38,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                  MosvizImageView,
                                  MosvizProfile2DView)
 
-    _viewer_classes_with_marker = (RampvizProfileView, SpecvizProfileView, MosvizProfile2DView)
+    _viewer_classes_with_marker = (RampvizProfileView, Spectrum1DViewer, MosvizProfile2DView)
 
     dataset_icon = Unicode("").tag(
         sync=True
@@ -100,7 +100,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._marks[id] = PluginScatter(viewer,
                                             marker='rectangle', stroke_width=1,
                                             visible=False)
-        if isinstance(viewer, SpecvizProfileView):
+        if isinstance(viewer, Spectrum1DViewer):
             matched_id = f"{id}:matched"
             self._marks[matched_id] = PluginLine(viewer,
                                                  x=[0, 0], y=[0, 1],
@@ -158,14 +158,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             # note: this is the deconfigged specviz which has dynamic matched viewers
             matched_markers = {}
             for viewer_id, viewer in self.app._viewer_store.items():
-                if isinstance(viewer, SpecvizProfileView):
+                if isinstance(viewer, Spectrum1DViewer):
                     matched_markers[viewer_id] = [vid
                                                   for vid, v in self.app._viewer_store.items()
                                                   if isinstance(v, MosvizProfile2DView)]
                 elif isinstance(viewer, MosvizProfile2DView):
                     matched_markers[viewer_id] = [f"{vid}:matched"
                                                   for vid, v in self.app._viewer_store.items()
-                                                  if isinstance(v, SpecvizProfileView)]
+                                                  if isinstance(v, Spectrum1DViewer)]
             return matched_markers
         return {}
 
@@ -250,7 +250,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def update_display(self, viewer, x, y):
         self._dict = {}
-        if isinstance(viewer, (SpecvizProfileView, RampvizProfileView)):
+        if isinstance(viewer, (Spectrum1DViewer, RampvizProfileView)):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
                         (ImvizImageView, CubevizImageView,

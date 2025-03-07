@@ -12,16 +12,16 @@ from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
 
-__all__ = ['SpecvizProfileView']
+__all__ = ['Spectrum1DViewer']
 
 
-@viewer_registry("specviz-profile-viewer", label="Profile 1D (Specviz)")
-class SpecvizProfileView(JdavizProfileView):
+@viewer_registry("spectrum-1d-viewer", label="1D Spectrum")
+class Spectrum1DViewer(JdavizProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
-                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                    ['mosviz:homezoom', 'jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['mosviz:boxzoom', 'jdaviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
+                    ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
                     ['bqplot:xrange'],
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
@@ -35,6 +35,8 @@ class SpecvizProfileView(JdavizProfileView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data_menu._obj.dataset.add_filter('is_spectrum')
+        self.data_menu.layer.add_filter('not_trace')
+        self.data_menu._obj.dataset.add_filter('same_mosviz_row')
 
     @property
     def redshift(self):
@@ -242,3 +244,7 @@ class SpecvizProfileView(JdavizProfileView):
 
     def available_linelists(self):
         return get_available_linelists()
+
+    def set_plot_axes(self):
+        super().set_plot_axes()
+        self.figure.axes[1].num_ticks = 5

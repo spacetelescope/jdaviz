@@ -10,7 +10,7 @@ from jdaviz.core.user_api import ImporterUserApi
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
 
 
-vid_map = {'specviz-profile-viewer': '1D Spectrum',
+vid_map = {'spectrum-1d-viewer': '1D Spectrum',
            'mosviz-profile-2d-viewer': '2D Spectrum'}
 
 

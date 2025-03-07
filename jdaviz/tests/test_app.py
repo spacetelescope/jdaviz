@@ -46,10 +46,10 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
               'viewer_area': [{'container': 'col',
                                'children': [{'container': 'row',
                                              'viewers': [{'name': 'H',
-                                                          'plot': 'specviz-profile-viewer',
+                                                          'plot': 'spectrum-1d-viewer',
                                                           'reference': 'h'},
                                                          {'name': 'K',
-                                                          'plot': 'specviz-profile-viewer',
+                                                          'plot': 'spectrum-1d-viewer',
                                                           'reference': 'k'}]}]}]}
 
     class Customviz(Specviz):

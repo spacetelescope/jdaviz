@@ -16,7 +16,7 @@ from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 
 __all__ = ['MosvizImageView', 'MosvizProfile2DView',
            'MosvizProfileView', 'MosvizTableViewer']
@@ -238,7 +238,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
 
 @viewer_registry("mosviz-profile-viewer", label="Profile 1D")
-class MosvizProfileView(SpecvizProfileView):
+class MosvizProfileView(Spectrum1DViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['mosviz:homezoom'],
@@ -248,17 +248,6 @@ class MosvizProfileView(SpecvizProfileView):
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # NOTE: is_spectrum filter already applied by SpecvizProfileView
-        self.data_menu.layer.add_filter('not_trace')
-        self.data_menu._obj.dataset.add_filter('same_mosviz_row')
-
-    def set_plot_axes(self):
-        super().set_plot_axes()
-        self.figure.axes[1].num_ticks = 5
 
 
 @viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")
