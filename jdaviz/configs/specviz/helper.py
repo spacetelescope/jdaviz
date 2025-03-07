@@ -32,7 +32,7 @@ class Specviz(ConfigHelper, LineListMixin):
     """Specviz Helper class."""
 
     _default_configuration = "specviz"
-    _default_spectrum_viewer_reference_name = "spectrum-viewer"
+    _default_spectrum_viewer_reference_name = "1D Spectrum"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

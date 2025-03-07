@@ -1,19 +1,16 @@
 from jdaviz.configs.specviz import Specviz
-from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction import SpectralExtraction  # noqa
 
 __all__ = ['Specviz2d']
 
 
-class Specviz2d(ConfigHelper, LineListMixin):
+class Specviz2d(Specviz):
     """Specviz2D Helper class"""
 
-    _default_configuration = "specviz2d"
-    _default_spectrum_viewer_reference_name = "spectrum-viewer"
-    _default_spectrum_2d_viewer_reference_name = "spectrum-2d-viewer"
-    _default_table_viewer_reference_name = "table-viewer"
+    _default_configuration = "specviz"
+    _default_spectrum_viewer_reference_name = "1D Spectrum"
+    _default_spectrum_2d_viewer_reference_name = "2D Spectrum"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
