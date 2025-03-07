@@ -378,8 +378,8 @@ class SpectralExtraction(PluginTemplateMixin):
                                           'ext_add_to_viewer_selected')
         self.ext_add_results.viewer.filters = ['is_spectrum_viewer']
         # NOTE: defaults to overwriting original spectrum
-        self.ext_add_results.label_whitelist_overwrite = ['Spectrum 1D']
-        self.ext_results_label_default = 'Spectrum 1D'
+        self.ext_add_results.label_whitelist_overwrite = ['2D Spectrum (auto-ext)']
+        self.ext_results_label_default = '2D Spectrum (auto-ext)'
 
         self._set_relevant()
 
