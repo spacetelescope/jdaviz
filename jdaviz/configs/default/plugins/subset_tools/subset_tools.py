@@ -637,12 +637,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         the specified subset. The "att" keys in the returned dictionaries are the attributes that
         can be updated with this method.
         '''
-        if subset_label not in self.subset.choices:
-            raise ValueError(f"{subset_label} is not an existing subset. "
-                             f"Available choices are: {self.subset.choices}")
+        if subset_label is not None:
+            if subset_label not in self.subset.choices:
+                raise ValueError(f"{subset_label} is not an existing subset. "
+                                 f"Available choices are: {self.subset.choices}")
 
-        if subset_label != self.subset.selected:
-            self.subset.selected = subset_label
+            if subset_label != self.subset.selected:
+                self.subset.selected = subset_label
 
         if not kwargs:
             # If no updates were requested, we instead return the current definition

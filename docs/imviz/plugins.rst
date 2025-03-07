@@ -144,23 +144,24 @@ with only the subset specified:
 .. code-block:: python
 
   st = imviz.plugins['Subset Tools']
-  st.update_subset('Subset 1')
+  st.update_subset(subset_label='Subset 1')
 
 This will return a dictionary with the name (as displayed in the UI), attribute, and
 value for each editable attribute of each subregion of the specified subset. Note that
-any call to the ``update_subset`` method will also set the selected subset in the plugin
-UI to the specified subset. The attributes returned by the call above can be updated by
-passing their new values as keyword arguments, for example:
+passing ``subset_label`` in the ``update_subset`` call will also set the selected subset
+in the plugin UI to the specified subset, while not specifying ``subset_label`` will operate
+on the currently selected subset in the plugin. The attributes returned by the call above can
+be updated by passing their new values as keyword arguments, for example:
 
 .. code-block:: python
 
-  st.update_subset('Subset 1', xmin=10, xmax = 20)
+  st.update_subset(subset_label='Subset 1', xmin=10, xmax = 20)
 
 In the case of a compound subset, the subregion to update must be specified as well:
 
 .. code-block:: python
 
-  st.update_subset('Subset 1', subregion=0, xmin=10, xmax = 20)
+  st.update_subset(subset_label='Subset 1', subregion=0, xmin=10, xmax = 20)
 
 .. _markers-plugin:
 
