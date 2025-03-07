@@ -359,6 +359,7 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
     with pytest.raises(ValueError, match="No subset named BadLabel to rename"):
         plg.rename_subset("BadLabel", "Failure")
 
+
 def test_update_subset(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
@@ -374,10 +375,10 @@ def test_update_subset(cubeviz_helper, spectrum1d_cube):
     assert len(subset_def) == 2
 
     with pytest.raises(ValueError, match='subset has more than one subregion'):
-        plg.update_subset('Subset 1', xc = 1)
+        plg.update_subset('Subset 1', xc=1)
 
     with pytest.raises(ValueError, match='not an attribute of the specified subset/subregion.'):
-        plg.update_subset('Subset 1', subregion=0, notanattribute = 1)
+        plg.update_subset('Subset 1', subregion=0, notanattribute=1)
 
     plg.update_subset('Subset 1', subregion=0, xc=3, yc=1, radius=1)
 
