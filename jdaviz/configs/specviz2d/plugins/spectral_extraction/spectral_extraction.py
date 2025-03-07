@@ -596,10 +596,13 @@ class SpectralExtraction(PluginTemplateMixin):
     def _update_interactive_extract(self, event={}):
         if 'extract' not in self.marks:
             # no spectrum1d viewer
-            # NOTE: this logic will probably be moved by auto-extraction when importing a 2D spectrum
-            # by copying logic from the parser now that uses a clone of the plugin to create an extraction
-            # and moving that to the new loader (potentially with a checkbox to disable)
-            self.app._on_new_viewer(NewViewerMessage(SpecvizProfileView, data=None, sender=self.app),
+            # NOTE: this logic will probably be moved by auto-extraction when importing
+            # a 2D spectrum by copying logic from the parser now that uses a clone of
+            # the plugin to create an extraction and moving that to the new loader
+            # (potentially with a checkbox to disable)
+            self.app._on_new_viewer(NewViewerMessage(SpecvizProfileView,
+                                                     data=None,
+                                                     sender=self.app),
                                     vid='1D Spectrum', name='1D Spectrum',
                                     open_data_menu_if_empty=False)
             self._clear_cache('marks')

@@ -9,7 +9,7 @@ from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
+from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
@@ -159,9 +159,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             matched_markers = {}
             for viewer_id, viewer in self.app._viewer_store.items():
                 if isinstance(viewer, SpecvizProfileView):
-                    matched_markers[viewer_id] = [vid for vid, v in self.app._viewer_store.items() if isinstance(v, MosvizProfile2DView)]
+                    matched_markers[viewer_id] = [vid
+                                                  for vid, v in self.app._viewer_store.items()
+                                                  if isinstance(v, MosvizProfile2DView)]
                 elif isinstance(viewer, MosvizProfile2DView):
-                    matched_markers[viewer_id] = [f"{vid}:matched" for vid, v in self.app._viewer_store.items() if isinstance(v, SpecvizProfileView)]
+                    matched_markers[viewer_id] = [f"{vid}:matched"
+                                                  for vid, v in self.app._viewer_store.items()
+                                                  if isinstance(v, SpecvizProfileView)]
             return matched_markers
         return {}
 
