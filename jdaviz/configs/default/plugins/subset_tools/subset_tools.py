@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import numpy as np
 
@@ -10,7 +11,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
-                              MaskSubsetState, Subset)
+                              MaskSubsetState)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -36,7 +37,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
-from jdaviz.utils import MultiMaskSubsetState, data_has_valid_wcs
+from jdaviz.utils import MultiMaskSubsetState, _chain_regions, data_has_valid_wcs
 
 from jdaviz.configs.default.plugins.subset_tools import utils
 
@@ -224,61 +225,43 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 raise ValueError(f"No {region_type} subests in {self.config}.")
             region_type = [region_type]
 
-        else:  # determine which subset types should be returned by config, if type not specified
-            if self.config == 'imviz':
-                region_type = ['spatial']
-            elif self.config == 'specviz':
-                region_type = ['spectral']
-            else:
-                region_type = ['spatial', 'spectral']
+        else:  # determine subset return type(s) by config, if not specified
+            region_type = {'imviz': ['spatial'],
+                           'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
 
-        regions = {}
+        reg_type = 'sky_region' if self.app._align_by == 'wcs' else 'region'
 
-        if 'spatial' in region_type:
-            from glue_astronomy.translators.regions import roi_subset_state_to_region
+        # first get ALL subsets of specified spatial/spectral type(s)
+        subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
+                                       spatial_only=region_type == ['spatial'],
+                                       include_sky_region=reg_type == 'sky_region',
+                                       use_display_units=use_display_units)
 
-            failed_regs = set()
-            to_sky = self.app._align_by == 'wcs'
+        labels = list_of_subset_labels or subsets.keys()
+        labels = [labels] if not hasattr(labels, '__iter__') else labels
 
-            # Subset is global, so we just use default viewer.
-            for lyr in self.app._jdaviz_helper.default_viewer._obj.layers:
-                if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
-                        or lyr.layer.ndim not in (2, 3)):
-                    continue
-
-                subset_data = lyr.layer
-                subset_label = subset_data.label
-
-                if isinstance(subset_data.subset_state, MaskSubsetState):
-                    # Ignore MaskSubsetState here
-                    continue
-
-                try:
-                    if self.app.config == "imviz" and to_sky:
-                        region = roi_subset_state_to_region(subset_data.subset_state,
-                                                            to_sky=to_sky)
-                    else:
-                        region = subset_data.data.get_selection_definition(
-                            subset_id=subset_label, format='astropy-regions')
-                except (NotImplementedError, ValueError):
-                    failed_regs.add(subset_label)
+        regions, failed_regs = {}, set()
+        for subset_label in labels:
+            try:
+                ss = subsets[subset_label]
+                if isinstance(ss, SpectralRegion):
+                    regions[subset_label] = ss
                 else:
-                    regions[subset_label] = region
+                    reg = _chain_regions([x[reg_type] for x in ss],
+                                         [x['glue_state'] for x in ss])
+                    if reg is None:
+                        failed_regs.add(subset_label)
+                    else:
+                        regions[subset_label] = reg
+            except ValueError:  # key doesnt exist, subset wasn't retrieved
+                failed_regs.add(subset_label)
 
-            if len(failed_regs) > 0:
-                self.app.hub.broadcast(SnackbarMessage(
-                    f"Regions skipped: {', '.join(sorted(failed_regs))}",
-                    color="warning", timeout=8000, sender=self.app))
-
-        if 'spectral' in region_type:
-            spec_regions = self.app.get_subsets(spectral_only=True,
-                                                use_display_units=use_display_units)
-            if spec_regions:
-                regions.update(spec_regions)
-
-        # filter by list_of_subset_labels
-        if list_of_subset_labels is not None:
-            regions = {key: regions[key] for key in list_of_subset_labels}
+        if len(failed_regs) > 0:
+            warn_msg = f"Regions skipped: {', '.join(sorted(failed_regs))}"
+            self.app.hub.broadcast(SnackbarMessage(warn_msg,
+                                   color="warning", timeout=8000,
+                                   sender=self.app))
+            warnings.warn(warn_msg, UserWarning)
 
         return regions
 

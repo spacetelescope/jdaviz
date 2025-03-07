@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 from astropy.table import Table
 from astropy.wcs import WCS
@@ -122,7 +124,10 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         all_labels = [layer.layer.label for layer in self.viewer.state.layers]
         # Retrieved subsets as sky regions from Subset plugin, and ensure they
         # match what was loaded and that they are in sky coordinates.
-        subset_as_regions = self.imviz.plugins['Subset Tools'].get_regions()
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='Regions skipped: MaskedSubset 1, MaskedSubset 2')
+            subset_as_regions = self.imviz.plugins['Subset Tools'].get_regions()
         assert sorted(subset_as_regions) == ['Subset 1', 'Subset 2']
         assert_allclose(subset_as_regions['Subset 1'].center.ra.deg, 337.519449)
         assert_allclose(subset_as_regions['Subset 2'].center.ra.deg, 337.518498)

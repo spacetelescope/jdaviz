@@ -81,6 +81,9 @@ Bug Fixes
 
 - Fixed some broken flux conversions that were dropping the factor of solid angle. [#3457]
 
+- subset_tools.get_regions uses app.get_subsets under the hood, which fixes retrieving composite subsets when sky linked as
+  well as an errant snackbar message when a mix of spectral/spatial subsets are present. [#3476]
+
 Cubeviz
 ^^^^^^^
 
