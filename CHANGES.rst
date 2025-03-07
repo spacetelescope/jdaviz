@@ -96,6 +96,8 @@ Imviz
 
 - ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
+- Fixed "zoom to selected" in Catalog Search plugin when multiple sources are selected. [#3482]
+
 Mosviz
 ^^^^^^
 
