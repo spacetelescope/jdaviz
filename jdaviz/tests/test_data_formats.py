@@ -8,7 +8,9 @@ from jdaviz.core.config import list_configurations
 
 def create_sdss(n_dim=2, **kwargs):
     """ create a fake SDSS single fiber spectral fits file """
-    primary = fits.PrimaryHDU(header=fits.Header({'TELESCOP': "SDSS 2.5-M", 'FIBERID': 555}))
+    primary = fits.PrimaryHDU(header=fits.Header({'TELESCOP': "SDSS 2.5-M",
+                                                  'FIBERID': 555,
+                                                  'VERS2D': 'v5'}))
     ext = fits.BinTableHDU(name='DATA', header=fits.Header({'TTYPE3': "ivar"}))
     return fits.HDUList([primary, ext])
 
