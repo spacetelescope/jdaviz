@@ -1,6 +1,7 @@
 from traitlets import Any
 from solara import FileDrop
 from ipywidgets import widget_serialization
+import reacton
 
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
@@ -16,10 +17,12 @@ class UploadResolver(BaseResolver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._file_info = None
-        self.file_drop_widget = FileDrop.widget(label="Drop file here",
-                                                on_total_progress=self._on_total_progress,
-                                                on_file=self._on_file_updated,
-                                                lazy=False)
+
+        self.file_drop_widget_el = FileDrop(label="Drop file here",
+                                            on_total_progress=self._on_total_progress,
+                                            on_file=self._on_file_updated,
+                                            lazy=False)
+        self.file_drop_widget, rc = reacton.render(self.file_drop_widget_el)
 
     @property
     def user_api(self):
