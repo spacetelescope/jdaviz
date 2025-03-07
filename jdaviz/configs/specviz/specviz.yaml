@@ -30,3 +30,4 @@ tray:
   - export
   - about
 viewer_area:
+  - container: col

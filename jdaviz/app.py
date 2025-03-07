@@ -2763,7 +2763,11 @@ class Application(VuetifyTemplate, HubListener):
         self._viewer_store[vid] = viewer
 
         # Add viewer locally
-        self.state.stack_items.append(new_stack_item)
+        if self.config == 'specviz':
+            # add to bottom (eventually will want more control in placement)
+            self.state.stack_items[0]['children'].append(new_stack_item)
+        else:
+            self.state.stack_items.append(new_stack_item)
 
         self.session.application.viewers.append(viewer)
 
