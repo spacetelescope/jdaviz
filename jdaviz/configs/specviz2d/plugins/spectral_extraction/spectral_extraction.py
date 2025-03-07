@@ -3,7 +3,7 @@ import numpy as np
 from functools import cached_property
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.configs.mosviz.plugins.viewers import MosvizProfileView
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
@@ -600,7 +600,7 @@ class SpectralExtraction(PluginTemplateMixin):
             # a 2D spectrum by copying logic from the parser now that uses a clone of
             # the plugin to create an extraction and moving that to the new loader
             # (potentially with a checkbox to disable)
-            self.app._on_new_viewer(NewViewerMessage(SpecvizProfileView,
+            self.app._on_new_viewer(NewViewerMessage(MosvizProfileView,
                                                      data=None,
                                                      sender=self.app),
                                     vid='1D Spectrum', name='1D Spectrum',
