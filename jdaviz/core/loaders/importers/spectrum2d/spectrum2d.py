@@ -46,7 +46,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'mosviz-profile-2d-viewer'
+        return 'spectrum-2d-viewer'
 
     @observe('data_label_value')
     def _data_label_changed(self, msg={}):

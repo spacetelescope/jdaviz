@@ -12,7 +12,7 @@ from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
-from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer, Spectrum2DViewer
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
@@ -31,6 +31,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "coords_info.vue"
 
     _supported_viewer_classes = (Spectrum1DViewer,
+                                 Spectrum2DViewer,
                                  ImvizImageView,
                                  CubevizImageView,
                                  RampvizImageView,
@@ -38,7 +39,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                  MosvizImageView,
                                  MosvizProfile2DView)
 
-    _viewer_classes_with_marker = (RampvizProfileView, Spectrum1DViewer, MosvizProfile2DView)
+    _viewer_classes_with_marker = (Spectrum1DViewer, Spectrum2DViewer,
+                                   RampvizProfileView, MosvizProfile2DView)
 
     dataset_icon = Unicode("").tag(
         sync=True
@@ -90,7 +92,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             id = viewer.reference_id
         if id in self._marks:
             return
-        if isinstance(viewer, MosvizProfile2DView):
+        if isinstance(viewer, Spectrum2DViewer):
             self._marks[id] = PluginLine(viewer,
                                          x=[0, 0], y=[0, 1],
                                          scales={'x': viewer.scales['x'],
@@ -161,8 +163,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if isinstance(viewer, Spectrum1DViewer):
                     matched_markers[viewer_id] = [vid
                                                   for vid, v in self.app._viewer_store.items()
-                                                  if isinstance(v, MosvizProfile2DView)]
-                elif isinstance(viewer, MosvizProfile2DView):
+                                                  if isinstance(v, Spectrum2DViewer)]
+                elif isinstance(viewer, Spectrum2DViewer):
                     matched_markers[viewer_id] = [f"{vid}:matched"
                                                   for vid, v in self.app._viewer_store.items()
                                                   if isinstance(v, Spectrum1DViewer)]
@@ -253,7 +255,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if isinstance(viewer, (Spectrum1DViewer, RampvizProfileView)):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
-                        (ImvizImageView, CubevizImageView,
+                        (Spectrum2DViewer,
+                         ImvizImageView, CubevizImageView,
                          MosvizImageView, MosvizProfile2DView,
                          RampvizImageView)
                         ):
@@ -412,7 +415,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 self.reset_coords_display()
                 coords_status = False
 
-        elif isinstance(viewer, MosvizProfile2DView):
+        elif isinstance(viewer, Spectrum2DViewer):
             self._dict['spectral_axis'] = self._dict['axes_x']
             self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
             self._dict['value'] = self._dict['axes_y']
@@ -439,7 +442,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._dict['world_ra'] = sky.ra.value
             self._dict['world_dec'] = sky.dec.value
             self._dict['world:unreliable'] = unreliable_world
-        elif isinstance(viewer, MosvizProfile2DView) and hasattr(getattr(image, 'coords', None),
+        elif isinstance(viewer, Spectrum2DViewer) and hasattr(getattr(image, 'coords', None),
                                                                  'pixel_to_world'):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
             try:
@@ -498,7 +501,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
             attribute = active_layer.attribute
 
-            if isinstance(viewer, (ImvizImageView, MosvizImageView, MosvizProfile2DView)):
+            if isinstance(viewer, (ImvizImageView, MosvizImageView, Spectrum2DViewer)):
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
 
                 if associated_dq_layers is not None:
@@ -508,7 +511,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_value = dq_data[int(round(y)), int(round(x))]
 
                 unit = u.Unit(image.get_component(attribute).units)
-                if (isinstance(viewer, MosvizProfile2DView) and unit != ''
+                if (isinstance(viewer, Spectrum2DViewer) and unit != ''
                    and u.Unit(self.app._get_display_unit(attribute)).physical_type
                    not in ['frequency', 'wavelength', 'length']
                    and unit != self.app._get_display_unit(attribute)):
@@ -587,7 +590,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row1b_title = ''
             self.row1b_text = ''
 
-        if isinstance(viewer, MosvizProfile2DView):
+        if isinstance(viewer, Spectrum2DViewer):
             self.marks[viewer._reference_id].update_xy([x, x], [0, 1])
             self.marks[viewer._reference_id].visible = True
 

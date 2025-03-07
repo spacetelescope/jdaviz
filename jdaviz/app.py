@@ -1862,7 +1862,7 @@ class Application(VuetifyTemplate, HubListener):
         to require that the viewer supports spectrum visualization.
         """
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-        from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
+        from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer, Spectrum2DViewer
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import (
             MosvizTableViewer, MosvizProfile2DView
@@ -1872,7 +1872,7 @@ class Application(VuetifyTemplate, HubListener):
         )
 
         spectral_viewers = (Spectrum1DViewer, CubevizProfileView)
-        spectral_2d_viewers = (MosvizProfile2DView, )
+        spectral_2d_viewers = (Spectrum2DViewer, MosvizProfile2DView)
         table_viewers = (MosvizTableViewer, )
         image_viewers = (ImvizImageView, CubevizImageView, RampvizImageView)
         flux_viewers = (CubevizImageView, RampvizImageView)
