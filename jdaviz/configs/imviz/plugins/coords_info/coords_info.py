@@ -513,14 +513,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                    not in ['frequency', 'wavelength', 'length']
                    and unit != self.app._get_display_unit(attribute)):
                     to_unit = self.app._get_display_unit(attribute)
-                    if (check_if_unit_is_per_solid_angle(unit) == True and attribute == 'flux'):
+                    if (check_if_unit_is_per_solid_angle(unit) and attribute == 'flux'):
                         to_unit = self.app._get_display_unit('sb')
 
                     equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
                     value = flux_conversion_general(value, unit,
-                                                to_unit,
-                                                equivalencies,
-                                                with_unit=False)
+                                                    to_unit,
+                                                    equivalencies,
+                                                    with_unit=False)
                     unit = to_unit
 
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
