@@ -41,6 +41,8 @@ dependencies = [
     "nbclassic",
     # pyvo pin can be removed once astroquery's pyvo dep pulls in 1.5.3
     "pyvo>=1.5.3",
+    "s3fs",
+    "boto3"
 ]
 dynamic = [
     "version",
