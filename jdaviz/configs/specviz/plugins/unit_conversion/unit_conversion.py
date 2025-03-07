@@ -26,7 +26,7 @@ def _valid_glue_display_unit(unit_str, sv, axis='x'):
     # need to make sure the unit string is formatted according to the list of valid choices
     # that glue will accept (may not be the same as the defaults of the installed version of
     # astropy)
-    if not unit_str:
+    if not unit_str or not sv:
         return unit_str
     unit_u = u.Unit(unit_str)
     choices_str = getattr(sv.state.__class__, f'{axis}_display_unit').get_choices(sv.state)
@@ -49,8 +49,7 @@ def _flux_to_sb_unit(flux_unit, angle_unit):
     return sb_unit
 
 
-@tray_registry('g-unit-conversion', label="Unit Conversion",
-               viewer_requirements='spectrum')
+@tray_registry('g-unit-conversion', label="Unit Conversion")
 class UnitConversion(PluginTemplateMixin):
     """
     The Unit Conversion plugin handles global app-wide unit-conversion.
@@ -280,7 +279,43 @@ class UnitConversion(PluginTemplateMixin):
             # set the attribute display unit (contour and stretch units) for the new layer
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
-            self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
+
+            if not len(self.spectral_unit_selected):
+                try:
+                    self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
+                except ValueError:
+                    self.spectral_unit.selected = ''
+
+                # get flux/sb unit from data object
+                flux_unit = str(data_obj.flux.unit)
+                angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit, return_unit=True)
+                flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
+
+            if not self.flux_unit_selected:
+                self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
+                try:
+                    self.flux_unit.selected = str(flux_unit)
+                except ValueError:
+                    self.flux_unit.selected = ''
+
+            if not self.angle_unit_selected:
+                self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
+                try:
+                    if angle_unit is None:
+                        if self.config in ['specviz', 'specviz2d']:
+                            self.has_angle = False
+                            self.has_sb = False
+                        else:
+                            # default to pix2 if input data is not in surface brightness units
+                            # TODO: for cubeviz, should we check the cube itself?
+                            self.angle_unit.selected = 'pix2'
+                    else:
+                        self.angle_unit.selected = str(angle_unit)
+                except ValueError:
+                    self.angle_unit.selected = ''
+
+            if angle_unit:
+                self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
             self._clear_cache('image_layers')
 
     def _on_slice_changed(self, msg):
@@ -302,7 +337,7 @@ class UnitConversion(PluginTemplateMixin):
 
         axis = msg.get('name').split('_')[0]
 
-        if axis == 'spectral':
+        if axis == 'spectral' and self.spectrum_viewer:
             xunit = _valid_glue_display_unit(self.spectral_unit.selected, self.spectrum_viewer, 'x')
             self.spectrum_viewer.state.x_display_unit = xunit
             self.spectrum_viewer.set_plot_axes()
