@@ -178,7 +178,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'recenter_dataset', 'recenter',
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
-                  'rename_selected', 'rename_subset']
+                  'rename_selected', 'rename_subset',
+                  'update_subset']
         if self.dev_loaders:
             expose += ['loaders']
         return PluginUserApi(self, expose)
@@ -465,6 +466,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                       "value": total_masked,
                                       "orig": total_masked}]
                 subset_type = "Mask"
+
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.
                 self.subset_definitions = self.subset_definitions + [subset_definition]
@@ -529,14 +531,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             if self.subset_selected != self.subset.default_text:
                 self._get_subset_definition(self.subset_selected)
 
-    def vue_update_subset(self, *args):
-
-        if self.multiselect:
-            self.hub.broadcast(SnackbarMessage("Cannot update subset "
-                                               "when multiselect is active", color='warning',
-                                               sender=self))
-            return
-
+    def _update_subset(self):
         status, reason = self._check_input()
         if not status:
             self.hub.broadcast(SnackbarMessage(reason, color='error', sender=self))
@@ -596,6 +591,82 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         setattr(sub_states.roi, d_att["att"], d_val)
 
         self._push_update_to_ui()
+
+    def update_subset(self, subset_label=None, subregion=None, **kwargs):
+        '''
+        Method to update the attributes of an existing subset. The attributes of a subset
+        and their current values can be retrieved with the 'get_subset_definition` method.
+
+        Parameters
+        ----------
+
+        subset_label : str
+
+            The name of the subset to update. If this is not the currently selected subset in the
+            UI, it will be selected.
+
+        subregion : int, optional
+
+            The integer subregion index (in the subset_definitions dictionary) for which to modify
+            the specified attributes.
+
+        The attributes to update and their new values are passed as keyword arguments to this
+        function, for example:
+
+            plg = imviz.plugins['Subset Tools']
+            plg.update_subset('Subset 1', xmax = 9.522, xmin = 9.452)
+
+        If no values to update are specified, this function will return the current definition of
+        the specified subset. The "att" keys in the returned dictionaries are the attributes that
+        can be updated with this method.
+        '''
+        if subset_label is not None:
+            if subset_label not in self.subset.choices:
+                raise ValueError(f"{subset_label} is not an existing subset. "
+                                 f"Available choices are: {self.subset.choices}")
+
+            if subset_label != self.subset.selected:
+                self.subset.selected = subset_label
+
+        if not kwargs:
+            # If no updates were requested, we instead return the current definition
+            public_definition = {}
+            for i in range(len(self.subset_definitions)):
+                public_definition[f'subregion {i}'] = []
+                for d in self.subset_definitions[i]:
+                    if d['att'] == 'parent':
+                        continue
+                    public_definition[f'subregion {i}'].append({key:d[key] for key in d if key != "orig"})  # noqa
+
+            return public_definition
+
+        if len(self.subset_definitions) == 1:
+            subregion = 0
+        elif subregion is None:
+            raise ValueError("Specified subset has more than one subregion, please "
+                             "specify which integer subregion index to modify.")
+
+        for key, value in kwargs.items():
+            for i in range(len(self.subset_definitions[subregion])):
+                att_dict = self.subset_definitions[subregion][i]
+                if att_dict['att'] == key:
+                    att_dict['value'] = value
+                    self.subset_definitions[subregion][i] = att_dict
+                    break
+            else:
+                raise ValueError(f"{key} is not an attribute of the specified subset/subregion.")
+
+        self._update_subset()
+
+    def vue_update_subset(self, *args):
+
+        if self.multiselect:
+            self.hub.broadcast(SnackbarMessage("Cannot update subset "
+                                               "when multiselect is active", color='warning',
+                                               sender=self))
+            return
+
+        self._update_subset()
 
     def _push_update_to_ui(self, subset_name=None):
         """
@@ -794,9 +865,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             x = float(x)
             y = float(y)
             sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
-                sbst_obj.move_to(x, y)
-            elif isinstance(sbst_obj, RectangularROI):
+            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI)):  # noqa
                 sbst_obj.move_to(x, y)
             else:  # pragma: no cover
                 raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')

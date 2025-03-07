@@ -448,3 +448,33 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
 
     with pytest.raises(ValueError, match="No subset named BadLabel to rename"):
         plg.rename_subset("BadLabel", "Failure")
+
+
+def test_update_subset(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    plg.import_region(spatial_reg, combination_mode='new')
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
+    plg.import_region(spatial_reg, combination_mode='and')
+
+    subset_def = plg.update_subset('Subset 1')
+    print(subset_def)
+    assert isinstance(subset_def, dict)
+    assert len(subset_def) == 2
+
+    with pytest.raises(ValueError, match='subset has more than one subregion'):
+        plg.update_subset('Subset 1', xc=1)
+
+    with pytest.raises(ValueError, match='not an attribute of the specified subset/subregion.'):
+        plg.update_subset('Subset 1', subregion=0, notanattribute=1)
+
+    plg.update_subset('Subset 1', subregion=0, xc=3, yc=1, radius=1)
+
+    # Check xc
+    assert plg._obj.subset_definitions[0][1]['value'] == 3
+    # Check yc
+    assert plg._obj.subset_definitions[0][2]['value'] == 1
+    # Check radius
+    assert plg._obj.subset_definitions[0][3]['value'] == 1

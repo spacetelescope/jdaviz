@@ -6,6 +6,8 @@ New Features
 
 - Added API and UI for renaming subsets to Subset Tools plugin. [#3356, #3392]
 
+- Added API for updating subsets to Subset Tools plugin. [#3484]
+
 - Viewer data-menus are now found in the legend on the right of the viewer. [#3281]
 
 - Added 'select_rows' method to plugin tables to enable changing
