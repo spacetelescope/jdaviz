@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import asdf
 import numpy as np
@@ -9,7 +10,6 @@ from astropy.wcs import WCS
 from astropy.utils.data import cache_contents
 
 from glue.core.data import Component, Data
-from gwcs.wcs import WCS as GWCS
 from stdatamodels import asdf_in_fits
 
 from jdaviz.core.registries import data_parser_registry
@@ -235,14 +235,6 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
         if sci_ext is None and data.ndim == 2 and ('[DATA' in data_label or '[SCI' in data_label):
             sci_ext = data_label
 
-        if isinstance(data.coords, GWCS) and (data.coords.bounding_box is not None):
-            # keep a copy of the original bounding box so we can detect
-            # when extrapolating beyond, but then remove the bounding box
-            # so that image layers are not cropped.
-            # NOTE: if extending this beyond GWCS, the mouseover logic
-            # for outside_*_bounding_box should also be updated.
-            data.coords._orig_bounding_box = data.coords.bounding_box
-            data.coords.bounding_box = None
         if not data.meta.get(_wcs_only_label, False):
             data_label = app.return_data_label(data_label, alt_name="image_data")
 
@@ -347,7 +339,27 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
     yield data, new_data_label
 
 
-def _jwst2data(file_obj, ext, data_label):
+def _try_gwcs_to_fits_sip(gwcs):
+    """
+    Try to convert this GWCS to FITS SIP. Some GWCS models
+    cannot be converted to FITS SIP. In that case, a warning
+    is raised and the GWCS is used, as is.
+    """
+    try:
+        result = WCS(gwcs.to_fits_sip())
+    except ValueError as err:
+        warnings.warn(
+            "The GWCS coordinates could not be simplified to "
+            "a SIP-based FITS WCS, the following error was "
+            f"raised: {err}",
+            UserWarning
+        )
+        result = gwcs
+
+    return result
+
+
+def _jwst2data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
     comp_label = ext.upper()
     new_data_label = f'{data_label}[{comp_label}]'
     data = Data(label=new_data_label)
@@ -367,7 +379,14 @@ def _jwst2data(file_obj, ext, data_label):
 
             # This is instance of gwcs.WCS, not astropy.wcs.WCS
             if 'wcs' in dm_meta:
-                data.coords = dm_meta['wcs']
+                gwcs = dm_meta['wcs']
+
+                if try_gwcs_to_fits_sip:
+                    coords = _try_gwcs_to_fits_sip(gwcs)
+                else:
+                    coords = gwcs
+
+                data.coords = coords
 
             imdata = dm[ext]
             component = Component.autotyped(imdata, units=bunit)
@@ -425,7 +444,7 @@ def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
         yield data, new_data_label
 
 
-def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None):
+def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
     if ext == '*':
         # NOTE: Update as needed. Should cover all the image extensions available.
         ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
@@ -438,7 +457,12 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None):
 
     roman = file_obj.tree.get('roman')
     meta = roman.get('meta', {})
-    coords = meta.get('wcs', None)
+    gwcs = meta.get('wcs', None)
+
+    if try_gwcs_to_fits_sip and gwcs is not None:
+        coords = _try_gwcs_to_fits_sip(gwcs)
+    else:
+        coords = gwcs
 
     for cur_ext in ext_list:
         if cur_ext in roman:
