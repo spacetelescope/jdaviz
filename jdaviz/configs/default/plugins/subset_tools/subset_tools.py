@@ -179,7 +179,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset']
-        if self.dev_loaders:
+        if self.dev_loaders or self.config == 'specviz':
             expose += ['loaders']
         return PluginUserApi(self, expose)
 
@@ -1098,10 +1098,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 elif isinstance(region, SpectralRegion):
                     # Use viewer_name if provided in kwarg, otherwise use
                     # default spectrum viewer name
-                    viewer_name = (viewer_parameter or
-                                   self.app._jdaviz_helper._default_spectrum_viewer_reference_name)
-                    range_viewer = self.app.get_viewer(viewer_name)
-
+                    range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
                     s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
                                          att=range_viewer.state.x_att)
                     range_viewer.apply_subset_state(s)

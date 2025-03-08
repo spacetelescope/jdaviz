@@ -2,10 +2,16 @@ from traitlets import Bool, Unicode
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
+from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
 from jdaviz.core.user_api import ImporterUserApi
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
+
+
+vid_map = {'specviz-profile-viewer': '1D Spectrum',
+           'mosviz-profile-2d-viewer': '2D Spectrum'}
 
 
 class BaseImporter(PluginTemplateMixin):
@@ -62,12 +68,18 @@ class BaseImporterToDataCollection(BaseImporter):
         self._on_label_changed()
 
     @property
-    def default_viewer(self):
-        raise NotImplementedError("Importer subclass must implement default_viewer")  # noqa pragma: nocover
+    def default_viewer_reference(self):
+        raise NotImplementedError("Importer subclass must implement default_viewer_reference")  # noqa pragma: nocover
+
+    @property
+    def default_viewer_label(self):
+        return vid_map.get(self.default_viewer_reference, self.default_viewer_reference)
 
     @property
     def target(self):
-        return self.default_viewer
+        return {'type': 'viewer',
+                'icon': 'mdi-window-maximize',
+                'label': self.default_viewer_label}
 
     def _on_label_changed(self, msg={}):
         if not len(self.data_label_value.strip()):
@@ -85,24 +97,36 @@ class BaseImporterToDataCollection(BaseImporter):
 
         self.data_label_invalid_msg = ''
 
-    def load_into_viewer(self, data_label):
+    def load_into_viewer(self, data_label, default_viewer_reference=None):
+        if default_viewer_reference is None:
+            default_viewer_reference = self.default_viewer_reference
+            default_viewer_label = self.default_viewer_label
+        else:
+            default_viewer_label = vid_map.get(default_viewer_reference, default_viewer_reference)
         added = 0
         for viewer in self.app._jdaviz_helper.viewers.values():
             if data_label in viewer.data_menu.data_labels_unloaded:
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
-            print(f"*** will eventually create {self.default_viewer} and add data")
+            viewer_dict = viewer_registry.members.get(default_viewer_reference)
+            viewer_cls = viewer_dict.get('cls')
+            self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                    vid=default_viewer_label,
+                                    name=default_viewer_label,
+                                    open_data_menu_if_empty=False)
+            viewer = self.app._jdaviz_helper.viewers.get(default_viewer_label)
+            viewer.data_menu.add_data(data_label)
 
-    def add_to_data_collection(self, data, data_label, show_in_viewer=True):
+    def add_to_data_collection(self, data, data_label=None, show_in_viewer=True):
         if data_label is None:
             data_label = self.data_label_value
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)
 
-    def __call__(self, data_label=None):
-        self.add_to_data_collection(self.output, data_label, show_in_viewer=True)
+    def __call__(self):
+        self.add_to_data_collection(self.output, show_in_viewer=True)
 
 
 class BaseImporterToPlugin(BaseImporter):
@@ -112,7 +136,9 @@ class BaseImporterToPlugin(BaseImporter):
 
     @property
     def target(self):
-        return self.default_plugin
+        return {'type': 'plugin',
+                'icon': 'mdi-toy-brick-outline',
+                'label': self.default_plugin}
 
     @property
     def has_default_plugin(self):

@@ -116,6 +116,10 @@ class ConfigHelper(HubListener):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
     @property
+    def _coords_info(self):
+        return self.app.session.application._tools.get('g-coords-info')
+
+    @property
     def loaders(self):
         """
         Access API objects for data loaders in the import dialog.
@@ -125,7 +129,7 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not self.app.state.dev_loaders:
+        if not (self.app.state.dev_loaders or self.app.config == 'specviz'):
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}
@@ -362,6 +366,10 @@ class ConfigHelper(HubListener):
                 height = f"{height}px"
             self.app.layout.height = height
             self.app.state.settings['context']['notebook']['max_height'] = height
+
+        if self.app.config == 'specviz' or self.app.state.dev_loaders:
+            if not len(self.viewers):
+                self.app.state.drawer_content = 'loaders'
 
         show_widget(self.app, loc=loc, title=title)
 

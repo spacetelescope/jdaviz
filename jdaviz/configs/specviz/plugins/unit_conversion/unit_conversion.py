@@ -8,6 +8,7 @@ from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage, SliceValueUpdatedMessage
 from jdaviz.core.registries import tray_registry
@@ -211,9 +212,9 @@ class UnitConversion(PluginTemplateMixin):
                 or not len(self.angle_unit_selected)
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
             data_obj = msg.data.get_object()
-            if isinstance(data_obj, Spectrum1D):
+            if isinstance(data_obj, Spectrum1D) and isinstance(viewer, SpecvizProfileView):
 
-                self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)  # noqa
+                self.spectral_unit._addl_unit_strings = viewer.state.__class__.x_display_unit.get_choices(viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
                     try:
                         self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
