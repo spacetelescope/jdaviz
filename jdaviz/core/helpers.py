@@ -630,6 +630,7 @@ class ImageConfigHelper(ConfigHelper):
         (e.g., "imviz-0" or "cubeviz-0")."""
         return self._default_viewer.user_api
 
+    @deprecated(since="4.2", alternative="subset_tools.import_region")
     def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,
                                **kwargs):
         """Load regions defined in the given file.
@@ -662,6 +663,7 @@ class ImageConfigHelper(ConfigHelper):
         raw_regs = Regions.read(region_file, format=region_format)
         return self.load_regions(raw_regs, max_num_regions=max_num_regions, **kwargs)
 
+    @deprecated(since="4.2", alternative="subset_tools.import_region")
     def load_regions(self, regions, max_num_regions=None, refdata_label=None,
                      return_bad_regions=False, **kwargs):
         """Load given region(s) into the viewer.
@@ -896,19 +898,6 @@ class ImageConfigHelper(ConfigHelper):
                 color="warning", timeout=8000, sender=self.app))
 
         return regions
-
-    # See https://github.com/glue-viz/glue-jupyter/issues/253
-    def _apply_interactive_region(self, toolname, from_pix, to_pix):
-        """Mimic interactive region drawing.
-        This is for internal testing only.
-        """
-        self.app.session.edit_subset_mode._mode = NewMode
-        tool = self.default_viewer._obj.toolbar.tools[toolname]
-        tool.activate()
-        tool.interact.brushing = True
-        tool.interact.selected = [from_pix, to_pix]
-        tool.interact.brushing = False
-        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration
 
     # TODO: Make this public API?
     def _delete_region(self, subset_label):

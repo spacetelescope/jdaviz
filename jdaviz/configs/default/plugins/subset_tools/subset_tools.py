@@ -877,7 +877,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
 
-    def import_region(self, region, combination_mode=None, max_num_regions=None,
+    def import_region(self, region, combination_mode=None, max_num_regions=20,
                       refdata_label=None, return_bad_regions=False, region_format=None):
         """
         Method for creating subsets from regions or region files.
@@ -902,8 +902,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
-            Default is to load everything.  If you are providing a large file/list
-            input for ``region``, it is recommended
+            Default is 20.  If you want to load everything, set it to `None`.
+            Loading a large number of regions is not recommended due to performance impact.
 
         refdata_label : str or `None`
             **This is only applicable to non-spectral regions.**
