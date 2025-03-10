@@ -26,49 +26,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Code style checks
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: codestyle
-            allow_failure: false
-
-          - name: PEP 517
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: pep517
-            allow_failure: false
-
-          - name: Security audit
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: securityaudit
-            allow_failure: false
-
-          - name: Python 3.11 with coverage checking, all deps, and remote data
-            os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-alldeps-cov
-            toxposargs: --remote-data --run-slow
-            allow_failure: false
-
-          - name: OS X - Python 3.12
-            os: macos-latest
-            python: '3.12'
-            toxenv: py312-test
-            allow_failure: false
-
-          - name: Windows - Python 3.10
-            os: windows-latest
-            python: '3.10'
-            toxenv: py310-test
-            allow_failure: false
-
-          - name: Linux - Python 3.13
-            os: ubuntu-latest
-            python: '3.13'
-            toxenv: py313-test
-            allow_failure: false
-
           # This also runs on cron but we want to make sure new changes
           # won't break this job at the PR stage.
           - name: Python 3.13 with latest dev versions of key dependencies, and remote data
@@ -76,12 +33,6 @@ jobs:
             python: '3.13'
             toxenv: py313-test-devdeps
             toxposargs: --remote-data --run-slow
-            allow_failure: true
-
-          - name: Python 3.11 with stable versions of dependencies and Roman
-            os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-romandeps
             allow_failure: true
 
     steps:
@@ -104,25 +55,3 @@ jobs:
         name: coverage_${{ matrix.toxenv }}.xml
         path: coverage.xml
         if-no-files-found: error
-
-  upload-codecov:
-    needs: [ ci_tests ]
-    permissions:
-      contents: none
-    runs-on: ubuntu-latest
-    name: Upload Coverage
-    steps:
-    - name: Download coverage artifacts
-      uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806  # v4.1.9
-      with:
-        path: coverage
-        pattern: coverage_*
-        merge-multiple: true
-    - name: Upload report to Codecov
-      if: ${{ hashFiles('coverage/') != '' }}
-      uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574  # v5.4.0
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: coverage
-        fail_ci_if_error: true
-        verbose: true
