@@ -64,6 +64,8 @@ Cubeviz
 - ``cubeviz.load_regions()`` and ``cubeviz.load_regions_from_file()`` are deprecated.
   Use ``cubeviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
 
+- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
+
 Imviz
 ^^^^^
 
@@ -71,6 +73,11 @@ Imviz
 
 - ``imviz.load_regions()`` and ``imviz.load_regions_from_file()`` are deprecated.
   Use ``imviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
+
+- ``imviz.get_catalog_source_results()`` is deprecated.
+  Use ``imviz.plugins['Catalog Search'].export_table()`` instead. [#3497]
+
+- ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 Mosviz
 ^^^^^^
@@ -98,12 +105,8 @@ Cubeviz
 
 - Fixed copious warnings from spaxel tool when data has INF. [#3368]
 
-- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
-
 Imviz
 ^^^^^
-
-- ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 - Fixed "zoom to selected" in Catalog Search plugin when multiple sources are selected. [#3482]
 
