@@ -12,5 +12,6 @@
         @import-clicked="import_clicked"
     >
         <jupyter-widget :widget="file_drop_widget"></jupyter-widget>
+        <v-progress-linear v-if="progress !== 100" :value="progress"></v-progress-linear>
     </j-loader>
 </template>

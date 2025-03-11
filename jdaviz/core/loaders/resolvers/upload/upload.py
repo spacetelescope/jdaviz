@@ -1,6 +1,7 @@
-from traitlets import Any
+from traitlets import Any, Int
 from solara import FileDrop
 from ipywidgets import widget_serialization
+import io
 import reacton
 
 from jdaviz.core.registries import loader_resolver_registry
@@ -12,6 +13,7 @@ from jdaviz.core.user_api import LoaderUserApi
 class UploadResolver(BaseResolver):
     template_file = __file__, "upload.vue"
 
+    progress = Int(100).tag(sync=True)
     file_drop_widget = Any().tag(sync=True, **widget_serialization)
 
     def __init__(self, *args, **kwargs):
@@ -30,15 +32,16 @@ class UploadResolver(BaseResolver):
 
     @property
     def is_valid(self):
-        return False
+        return True
 
     def _on_total_progress(self, progress):
-        print("*** UploadResolver._on_total_progress", progress)
+        self.progress = progress
 
     def _on_file_updated(self, file_info):
-        print("*** UploadResolver._on_file_updated")
         self._file_info = file_info
         self._update_format_items()
+        self.progress = 100
 
     def __call__(self, local_path=None, timeout=60):
-        return self._file_info.file_obj
+        # this will return a bytes object of the file contents
+        return io.BytesIO(self._file_info.get('data'))
