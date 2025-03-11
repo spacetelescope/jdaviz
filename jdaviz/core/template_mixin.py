@@ -4815,6 +4815,7 @@ class Table(PluginSubcomponent):
     # NOTE: These UI features are not covered in test coverage. Plugins making use of
     # this feature should ensure test coverage for their respective tables.
     show_rowselect = Bool(False).tag(sync=True)  # Flag to enable row selection boxes
+    single_select = Bool(False).tag(sync=True)  # Flag to limit selection to single entry
     item_key = Unicode().tag(sync=True)  # Unique field to identify row for selection
     selected_rows = List().tag(sync=True)  # List of selected rows
 

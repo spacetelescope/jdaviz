@@ -51,6 +51,7 @@
         :items="items"
         :item-key="item_key"
         :show-select="show_rowselect"
+        :single-select="single_select"
         v-model="selected_rows"
         class="elevation-1 width-100"
       ></v-data-table>
