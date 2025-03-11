@@ -1,6 +1,6 @@
 <template>
     <j-loader
-        title="Upload Local File"
+        title="File Drop"
         :target_items="target_items"
         :target_selected.sync="target_selected"
         :format_items_spinner="format_items_spinner"

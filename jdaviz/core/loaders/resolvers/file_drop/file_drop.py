@@ -9,9 +9,9 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 
-@loader_resolver_registry('upload')
-class UploadResolver(BaseResolver):
-    template_file = __file__, "upload.vue"
+@loader_resolver_registry('file drop')
+class FileDropResolver(BaseResolver):
+    template_file = __file__, "file_drop.vue"
 
     progress = Int(100).tag(sync=True)
     nfiles = Int(0).tag(sync=True)
