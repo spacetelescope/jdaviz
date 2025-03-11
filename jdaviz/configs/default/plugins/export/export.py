@@ -615,7 +615,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     ],
                     tag="div",
                     style_="overflow: hidden; width: 0px; height: 0px")
-                IPython.display(wrapper_widget)
+                IPython.display.display(wrapper_widget)
 
             def _widget_after_first_display(widget: widgets.Widget, callback: Callable):
                 if widget._view_count is None:
@@ -630,7 +630,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 widget.observe(view_count_changed, "_view_count")
 
             cloned_viewer = viewer._clone_viewer()
-            _widget_after_first_display(cloned_viewer.figure, lambda: get_png(cloned_viewer.figure))
+            # make sure we will the size of our container which defines the
+            # size of the figure
+            cloned_viewer.figure.layout.width = "100%"
+            cloned_viewer.figure.layout.height = "100%"
+
+            def on_figure_displayed(fig):
+                # we need a bit of a delay to ensure the figure is fully displayed
+                # maybe this can be fixed on the bqplot side in the future
+                import time
+                time.sleep(0.1)
+                get_png(cloned_viewer.figure)
+            _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
             _show_hidden(cloned_viewer.figure, width, height)
         else:
             get_png(viewer.figure)

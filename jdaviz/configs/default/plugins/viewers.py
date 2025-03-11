@@ -69,15 +69,17 @@ class JdavizViewerMixin(WithCache):
 
     def _clone_viewer(self):
         new_viewer = type(self)(session=self.session)
-        new_viewer._reference_id = self._reference_id + "_TODO"
+        # TODO: this is needed for jdaviz only, without it it should also
+        # work for glue-jupyter
+        new_viewer._reference_id = self.reference_id + "_TODO_IS_THIS_OK?"
         d = self.state.as_dict()
         new_viewer.state.update_from_dict(d)
 
-        for this_layer_state, new_layer_state in zip(self.state.layers, new_viewer.state.layers):
-            for k, v in this_layer_state.as_dict().items():
-                if k in ('layer',):
-                    continue
-                setattr(new_layer_state, k, v)
+        for layer in self.layers:
+            layer_state = layer.state
+            new_layer = type(layer)(view=new_viewer, viewer_state=new_viewer.state,
+                                    layer_state=layer_state)
+            new_layer.update()
         return new_viewer
 
     @property
