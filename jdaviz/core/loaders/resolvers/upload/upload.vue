@@ -14,6 +14,9 @@
         <v-row>
             Select a file from your local file system and send to jdaviz through the browser.
         </v-row>
+        <v-alert v-if="api_hints_enabled" type="info">
+            Use UI to select file (no API access available).
+        </v-alert>
         <jupyter-widget :widget="file_drop_widget"></jupyter-widget>
         <v-progress-linear v-if="progress !== 100" :value="progress"></v-progress-linear>
         <v-alert v-if="nfiles > 1" type="warning">
