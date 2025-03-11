@@ -11,6 +11,9 @@
         :import_spinner="import_spinner"
         @import-clicked="import_clicked"
     >
+        <v-row>
+            Select a file from your local file system and send to jdaviz through the browser.
+        </v-row>
         <jupyter-widget :widget="file_drop_widget"></jupyter-widget>
         <v-progress-linear v-if="progress !== 100" :value="progress"></v-progress-linear>
     </j-loader>
