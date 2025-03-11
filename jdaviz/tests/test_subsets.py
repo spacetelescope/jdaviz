@@ -852,7 +852,7 @@ def test_multi_mask_subset(specviz_helper, spectrum1d):
     assert reg["Subset 1"][0]["region"] == 4
 
 
-def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
+def test_delete_subsets_toolbar_selection(cubeviz_helper, spectral_cube_wcs):
     """
     Test that the toolbar selections get reset when the subset being actively edited gets deleted.
     """
@@ -878,6 +878,52 @@ def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
     dc.remove_subset_group(dc.subset_groups[0])
 
     assert flux_viewer.toolbar.active_tool is None
+
+
+def test_delete_subsets_app_api(cubeviz_helper, spectral_cube_wcs):
+    """Test app.delete_subsets."""
+
+    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    cubeviz_helper.load_data(data, data_label="Test Flux")
+    dc = cubeviz_helper.app.data_collection
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
+    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+
+    # spectral and spatial region to be loaded as subsets
+    spectral = SpectralRegion(6200 * unit, 6800 * unit)
+    spatial = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
+
+    # add one spatial and one spectral subset
+    subset_plugin.import_region([spectral, spatial], combination_mode='new')
+    assert len(dc.subset_groups) == 2  # initially 2 subsets
+    cubeviz_helper.app.delete_subsets()  # no args, will delete all subsets
+    assert len(dc.subset_groups) == 0  # after delete all
+
+    # re-add both subsets, test deletion while specifying single label
+    subset_plugin.import_region([spectral, spatial], combination_mode='new')
+    assert len(dc.subset_groups) == 2
+    cubeviz_helper.app.delete_subsets('Subset 3')
+    assert len(dc.subset_groups) == 1
+    assert dc.subset_groups[0].label == 'Subset 4'  # Subset 4 should remain
+
+    # same as previous scenario, but single label is in list
+    assert len(dc.subset_groups) == 1
+    cubeviz_helper.app.delete_subsets(['Subset 4'])
+    assert len(dc.subset_groups) == 0  # now no subsets remain
+
+    # re-add both subsets, test deletion while specifying list of labels
+    subset_plugin.import_region([spectral, spatial], combination_mode='new')
+    assert len(dc.subset_groups) == 2
+    cubeviz_helper.app.delete_subsets(['Subset 5', 'Subset 6'])
+    assert len(dc.subset_groups) == 0  # both should have been deleted
+
+    # test that the proper error is raised for non-existent subsets
+    match_str = r'not in data collection, can not delete\.'
+    with pytest.raises(ValueError, match='Subset 5 ' + match_str):
+        cubeviz_helper.app.delete_subsets(['Subset 5'])
+
+    with pytest.raises(ValueError, match='Subset 5, Subset 6 ' + match_str):
+        cubeviz_helper.app.delete_subsets(['Subset 5', 'Subset 6'])
 
 
 class TestRegionsFromSubsets:

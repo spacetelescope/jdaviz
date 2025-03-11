@@ -276,11 +276,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         Delete all subsets app-wide.  Required before changing ``align_by``.
         """
         # subsets will be deleted on changing link type:
-        for subset_group in self.app.data_collection.subset_groups:
-            self.app.data_collection.remove_subset_group(subset_group)
+        self.app.delete_subsets()
 
     def vue_delete_subsets(self, *args):
-        self.delete_subsets()
+        self.app.delete_subsets()
 
     def vue_reset_astrowidget_markers(self, *args):
         for viewer in self.app._viewer_store.values():
