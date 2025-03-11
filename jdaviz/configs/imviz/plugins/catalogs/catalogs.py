@@ -15,7 +15,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.events import CatalogResultsChangedMessage, CatalogSelectClickEventMessage
 from jdaviz.core.marks import CatalogMark
-from jdaviz.core.template_mixin import Table, TableMixin
+from jdaviz.core.template_mixin import Table, TableMixin, LoadersMixin
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import get_top_layer_index
 
@@ -24,7 +24,8 @@ __all__ = ['Catalogs']
 
 @tray_registry('imviz-catalogs', label="Catalog Search",
                category="data:analysis")
-class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, TableMixin):
+class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect,
+               TableMixin, LoadersMixin):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
 
@@ -132,6 +133,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     @property
     def user_api(self):
+        # TODO: add 'loaders' once enabled and considered stable (or check dev flag)
         return PluginUserApi(self, expose=('clear_table', 'export_table', 'import_catalog',
                                            'zoom_to_selected', 'select_rows',
                                            'select_all', 'select_none',

@@ -88,7 +88,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'NonFiniteUncertaintyMismatchMixin',
            'DatasetSelect', 'DatasetSelectMixin', 'DatasetMultiSelectMixin',
            'FileImportSelectPluginComponent', 'HasFileImportSelect',
-           'Table', 'TableMixin',
+           'Table', 'TableMixin', 'json_safe_table_item',
            'Plot', 'PlotMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
@@ -169,6 +169,49 @@ def _is_spectrum_2d_viewer(viewer):
 
 def _is_image_viewer(viewer):
     return 'ImageView' in viewer.__class__.__name__
+
+
+def json_safe_table_item(column, item):
+    def float_precision(column, item):
+        if column in ('slice', 'index'):
+            # stored in astropy table as a float so we can also store nans,
+            # but should display in the UI without any decimals
+            return f"{item:.0f}"
+        elif column in ('pixel', 'pixel_x', 'pixel_y'):
+            return f"{item:0.3f}"
+        elif column in ('xcenter', 'ycenter'):
+            return f"{item:0.1f}"
+        elif column in ('sum', 'spectral_axis'):
+            return f"{item:.3e}"
+        else:
+            return f"{item:0.5f}"
+
+    if isinstance(item, SkyCoord):
+        return item.to_string('hmsdms', precision=4)
+    elif isinstance(item, u.Quantity) and not np.isnan(item):
+        return f"{float_precision(column, item.value)} {item.unit.to_string()}"
+
+    elif hasattr(item, 'to_string'):
+        return item.to_string()
+    elif isinstance(item, float) and np.isnan(item):
+        return ''
+    elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
+        return ''
+    elif isinstance(item, float):
+        return float_precision(column, item)
+    elif isinstance(item, (list, tuple)):
+        return [float_precision(column, i) if isinstance(i, float) else i for i in item]
+    elif isinstance(item, (np.float32, np.float64)):
+        return float(item)
+    elif isinstance(item, u.Quantity):
+        return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}     # noqa: E501
+    elif isinstance(item, np.bool_):
+        return bool(item)
+    elif isinstance(item, np.ndarray):
+        return item.tolist()
+    elif isinstance(item, tuple):
+        return tuple(json_safe_table_item(v) for v in item)
+    return item
 
 
 class ViewerPropertiesMixin:
@@ -5175,48 +5218,6 @@ class Table(PluginSubcomponent):
         ----------
         item : QTable, QTableRow, or dictionary of row-name, value pairs
         """
-        def json_safe(column, item):
-            def float_precision(column, item):
-                if column in ('slice', 'index'):
-                    # stored in astropy table as a float so we can also store nans,
-                    # but should display in the UI without any decimals
-                    return f"{item:.0f}"
-                elif column in ('pixel', 'pixel_x', 'pixel_y'):
-                    return f"{item:0.3f}"
-                elif column in ('xcenter', 'ycenter'):
-                    return f"{item:0.1f}"
-                elif column in ('sum', 'spectral_axis'):
-                    return f"{item:.3e}"
-                else:
-                    return f"{item:0.5f}"
-
-            if isinstance(item, SkyCoord):
-                return item.to_string('hmsdms', precision=4)
-            elif isinstance(item, u.Quantity) and not np.isnan(item):
-                return f"{float_precision(column, item.value)} {item.unit.to_string()}"
-
-            elif hasattr(item, 'to_string'):
-                return item.to_string()
-            elif isinstance(item, float) and np.isnan(item):
-                return ''
-            elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
-                return ''
-            elif isinstance(item, float):
-                return float_precision(column, item)
-            elif isinstance(item, (list, tuple)):
-                return [float_precision(column, i) if isinstance(i, float) else i for i in item]
-            elif isinstance(item, (np.float32, np.float64)):
-                return float(item)
-            elif isinstance(item, u.Quantity):
-                return {"value": item.value.tolist() if item.size > 1 else item.value, "unit": str(item.unit)}     # noqa: E501
-            elif isinstance(item, np.bool_):
-                return bool(item)
-            elif isinstance(item, np.ndarray):
-                return item.tolist()
-            elif isinstance(item, tuple):
-                return tuple(json_safe(v) for v in item)
-            return item
-
         if isinstance(item, QTable):
             for row in item:
                 self.add_item(row)
@@ -5245,7 +5246,7 @@ class Table(PluginSubcomponent):
             self.headers_visible = self.headers_visible + [m for m in missing_headers if self._new_col_visible(m)]  # noqa
 
         # clean data to show in the UI
-        self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
+        self.items = self.items + [{k: json_safe_table_item(k, v) for k, v in item.items()}]
         self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
