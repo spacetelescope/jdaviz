@@ -117,7 +117,7 @@ jobs:
         python-version: "3.11"
 
     - name: Install jdaviz
-      run: pip install .[test]
+      run: pip install .[test,qt]
 
     - name: Install pyinstaller
       run: pip install "pyinstaller<6"
