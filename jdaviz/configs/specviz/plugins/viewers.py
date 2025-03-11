@@ -27,9 +27,9 @@ __all__ = ['Spectrum1DViewer', 'Spectrum2DViewer']
 class Spectrum1DViewer(JdavizProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['mosviz:homezoom', 'jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['mosviz:boxzoom', 'jdaviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
-                    ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
+                    ['jdaviz:homezoom_matchx', 'jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom_matchx', 'jdaviz:xrangezoom_matchx', 'jdaviz:boxzoom', 'jdaviz:yrangezoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
+                    ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx', 'jdaviz:panzoom_y', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
                     ['bqplot:xrange'],
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
@@ -265,9 +265,9 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['mosviz:homezoom'],
-                    ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],
-                    ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],
+                    ['jdaviz:homezoom_matchx', 'jdaviz:homezoom'],
+                    ['jdaviz:boxzoom_matchx', 'jdaviz:xrangezoom_matchx', 'jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]

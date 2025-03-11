@@ -155,7 +155,7 @@ class _MatchedZoomMixin:
                             setattr(viewer.state, k, value)
 
     def is_visible(self):
-        return len(list(self._iter_matched_viewers())) > 1
+        return len(list(self._iter_matched_viewers())) > 0
 
 
 @viewer_tool
