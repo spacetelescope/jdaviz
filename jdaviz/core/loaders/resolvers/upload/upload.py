@@ -1,5 +1,5 @@
 from traitlets import Any, Int
-from solara import FileDrop
+from solara import FileDropMultiple
 from ipywidgets import widget_serialization
 import io
 import reacton
@@ -14,16 +14,17 @@ class UploadResolver(BaseResolver):
     template_file = __file__, "upload.vue"
 
     progress = Int(100).tag(sync=True)
+    nfiles = Int(0).tag(sync=True)
     file_drop_widget = Any().tag(sync=True, **widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._file_info = None
 
-        self.file_drop_widget_el = FileDrop(label="Drop file here",
-                                            on_total_progress=self._on_total_progress,
-                                            on_file=self._on_file_updated,
-                                            lazy=False)
+        self.file_drop_widget_el = FileDropMultiple(label="Drop file here",
+                                                    on_total_progress=self._on_total_progress,
+                                                    on_file=self._on_file_updated,
+                                                    lazy=False)
         self.file_drop_widget, rc = reacton.render(self.file_drop_widget_el)
 
     @property
@@ -37,8 +38,9 @@ class UploadResolver(BaseResolver):
     def _on_total_progress(self, progress):
         self.progress = progress
 
-    def _on_file_updated(self, file_info):
-        self._file_info = file_info
+    def _on_file_updated(self, file_infos):
+        self.nfiles = len(file_infos)
+        self._file_info = file_infos[0]
         self._update_format_items()
         self.progress = 100
 

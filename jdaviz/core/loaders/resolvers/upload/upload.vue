@@ -16,5 +16,9 @@
         </v-row>
         <jupyter-widget :widget="file_drop_widget"></jupyter-widget>
         <v-progress-linear v-if="progress !== 100" :value="progress"></v-progress-linear>
+        <v-alert v-if="nfiles > 1" type="warning">
+            Multiple files dropped, only using first entry.
+        </v-alert>
+
     </j-loader>
 </template>
