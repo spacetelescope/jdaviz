@@ -143,6 +143,8 @@ Imviz
 - Catalog Search now shows a table of selected entries and allows selecting/deselecting via a tool in the image viewer. [#3429]
 
 - Virtual Observatory plugin to query resources and download data products. [#2872, #3470]
+  
+- Added ability to load remote data from a S3 URI to Imviz. [#3500]
 
 Specviz2d
 ^^^^^^^^^
