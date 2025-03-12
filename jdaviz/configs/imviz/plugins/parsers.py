@@ -81,13 +81,13 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
     """
-    file_obj = get_cloud_fits(file_obj)
 
     if not isinstance(file_obj, str):
         _parse_image(app, file_obj, data_label, ext=ext, parent=parent)
         return
 
     if isinstance(file_obj, str):
+        file_obj = get_cloud_fits(file_obj)
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
 
