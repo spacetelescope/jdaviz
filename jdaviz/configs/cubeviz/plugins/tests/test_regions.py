@@ -50,8 +50,7 @@ class TestLoadRegions(BaseRegionHandler):
         bad_regions = self.cubeviz.plugins['Subset Tools'].import_region(
             my_reg_sky_1, return_bad_regions=True)
 
-        # TODO: Update expected results when we support sky regions in Cubeviz.
-        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
+        assert len(bad_regions) == 0
 
     def test_spatial_spectral_mix(self):
         # Draw ellipse and wavelength range.
