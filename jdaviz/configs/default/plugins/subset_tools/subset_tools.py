@@ -1099,7 +1099,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         else:
             data = self.app.data_collection[refdata_label]
 
-        has_wcs = data_has_valid_wcs(data, ndim=2)
+        has_wcs = data_has_valid_wcs(data, ndim=2) or data_has_valid_wcs(data, ndim=3)
 
         combo_mode_is_list = isinstance(combination_mode, list)
         if combo_mode_is_list and len(combination_mode) != (len(regions)):
@@ -1153,11 +1153,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
                 # region: Convert to ROI.
                 # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
-                if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
-                                       EllipsePixelRegion, EllipseSkyRegion,
-                                       RectanglePixelRegion, RectangleSkyRegion,
-                                       CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
-                    state = regions2roi(region, wcs=data.coords)
+                if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                        EllipsePixelRegion, EllipseSkyRegion,
+                                        RectanglePixelRegion, RectangleSkyRegion,
+                                        CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
+                    try:
+                        state = regions2roi(region, wcs=data.coords)
+                    except ValueError:
+                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'].celestial)
                     viewer.apply_roi(state)
 
                 elif isinstance(region, (CircularROI, CircularAnnulusROI,
