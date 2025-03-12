@@ -19,8 +19,6 @@ New Features
 
 - Snackbar history logger has been moved from an overlay to a separate tab in the right sidebar tray. [#3466]
 
-- Exposed single_select attribute on TableMixin as "multiselect". [#3499]
-
 Cubeviz
 ^^^^^^^
 
