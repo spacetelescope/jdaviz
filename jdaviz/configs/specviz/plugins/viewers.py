@@ -257,7 +257,7 @@ class Spectrum1DViewer(JdavizProfileView):
         self.figure.axes[1].num_ticks = 5
 
 
-@viewer_registry("spectrum-2d-viewer", label="2D Spectrum")
+@viewer_registry('2D Spectrum', label="2D Spectrum")
 class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes

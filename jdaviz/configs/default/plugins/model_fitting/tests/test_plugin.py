@@ -212,7 +212,7 @@ def test_refit_plot_options(specviz_helper, spectrum1d):
     with pytest.warns(AstropyUserWarning):
         modelfit_plugin.calculate_fit(add_data=True)
 
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper.app.get_viewer('1D Spectrum')
     atts = {"color": "red", "linewidth": 2, "alpha": 0.8}
     layer_state = [layer.state for layer in sv.layers if layer.layer.label == "model"][0]
     for att in atts:

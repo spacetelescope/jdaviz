@@ -131,7 +131,7 @@ def test_specviz_smooth(specviz_helper, spectrum1d):
     data_label = 'test'
     dc = specviz_helper.app.data_collection
     specviz_helper.load_data(spectrum1d, data_label=data_label)
-    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    spec_viewer = specviz_helper.app.get_viewer('1D Spectrum')
 
     gs = specviz_helper.plugins['Gaussian Smooth']._obj
     gs.dataset_selected = data_label
@@ -188,7 +188,7 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
 
     # Ensure all marks were created properly (i.e. not in their initialized state)
     # [0,1] is the default (initialization) value for the marks
-    marks = specviz2d_helper.app.get_viewer('spectrum-viewer').native_marks
+    marks = specviz2d_helper.app.get_viewer('1D Spectrum').native_marks
     assert len(marks) == 2
 
     gp_mark = marks[-1]

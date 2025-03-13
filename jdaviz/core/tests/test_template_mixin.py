@@ -10,7 +10,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     spectrum1d.mask = mask
 
     specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper.app.get_viewer('1D Spectrum')
     # create a "Subset 1" entry
     subset_plugin = specviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(SpectralRegion(6500 * spectrum1d.spectral_axis.unit,
@@ -60,7 +60,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     app.add_data(spectrum1d_cube, 'test')
     app.add_data_to_viewer("flux-viewer", "test")
     fv = app.get_viewer("flux-viewer")
-    sv = app.get_viewer("spectrum-viewer")
+    sv = app.get_viewer('1D Spectrum')
 
     # export plugin uses the mixin
     p = cubeviz_helper.plugins['Export']
@@ -70,7 +70,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     assert p.viewer.selected_obj == fv
 
     # set by reference
-    p.viewer = 'spectrum-viewer'
+    p.viewer = '1D Spectrum'
     assert p.viewer.selected_obj == sv
 
     # try setting based on id instead of reference

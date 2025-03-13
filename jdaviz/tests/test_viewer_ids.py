@@ -36,11 +36,11 @@ def test_default_viewer_ids_mosviz(mosviz_helper):
 
 def test_default_viewer_ids_specviz(specviz_helper):
     x = specviz_helper.app
-    assert x.get_viewer_reference_names() == ['spectrum-viewer']
+    assert x.get_viewer_reference_names() == ['1D Spectrum']
     assert x.get_viewer_ids() == ['specviz-0']
 
 
 def test_default_viewer_ids_specviz2d(specviz2d_helper):
     x = specviz2d_helper.app
-    assert x.get_viewer_reference_names() == ['spectrum-2d-viewer', 'spectrum-viewer']
+    assert x.get_viewer_reference_names() == ['2D Spectrum', '1D Spectrum']
     assert x.get_viewer_ids() == ['specviz2d-0', 'specviz2d-1']

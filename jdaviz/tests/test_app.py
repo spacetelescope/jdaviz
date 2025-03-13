@@ -151,7 +151,7 @@ def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
 
 def test_viewer_renaming_specviz(specviz_helper):
     viewer_names = [
-        'spectrum-viewer',
+        '1D Spectrum',
         'second-viewer-name',
         'third-viewer-name'
     ]
