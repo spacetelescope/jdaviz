@@ -1,6 +1,5 @@
 import numpy as np
 
-from functools import cached_property
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.configs.mosviz.plugins.viewers import Spectrum1DViewer
@@ -514,8 +513,6 @@ class SpectralExtraction(PluginTemplateMixin):
     def _update_plugin_marks(self, msg={}):
         if self.app._jdaviz_helper is None:
             return
-        if msg.get('name') in ['viewer1d_selected', 'viewer2d_selected']:
-            self._clear_cache('marks')
 
         if not len(self.marks):
             # plugin has never been opened, no need to create marks just to hide them,
@@ -543,7 +540,7 @@ class SpectralExtraction(PluginTemplateMixin):
         for step, mark in self.marks.items():
             mark.visible = step in display_marks.get(self.active_step, [])
 
-    @cached_property
+    @property
     def marks(self):
         """
         Access the marks created by this plugin in both the spectrum-viewer and spectrum-2d-viewer.
@@ -561,33 +558,31 @@ class SpectralExtraction(PluginTemplateMixin):
             # we don't have data yet for scales, defer initializing
             return {}
 
-        # the marks haven't been initialized yet, so initialize with empty
-        # marks that will be populated once the first analysis is done.
-        marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
-                 'ext_lower': PluginLine(viewer2d, visible=self.is_active),
-                 'ext_upper': PluginLine(viewer2d, visible=self.is_active),
-                 'bg1_center': PluginLine(viewer2d, visible=self.is_active,
-                                          line_style='dotted'),
-                 'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
-                 'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
-                 'bg2_center': PluginLine(viewer2d, visible=self.is_active,
-                                          line_style='dotted'),
-                 'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
-                 'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
-        # NOTE: += won't trigger the figure to notice new marks
-        viewer2d.figure.marks = viewer2d.figure.marks + list(marks.values())
+        if 'trace' not in self._marks:
+            # the marks haven't been initialized yet, so initialize with empty
+            # marks that will be populated once the first analysis is done.
+            marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
+                     'ext_lower': PluginLine(viewer2d, visible=self.is_active),
+                     'ext_upper': PluginLine(viewer2d, visible=self.is_active),
+                     'bg1_center': PluginLine(viewer2d, visible=self.is_active,
+                                              line_style='dotted'),
+                     'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
+                     'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
+                     'bg2_center': PluginLine(viewer2d, visible=self.is_active,
+                                              line_style='dotted'),
+                     'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
+                     'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
+            # NOTE: += won't trigger the figure to notice new marks
+            viewer2d.figure.marks = viewer2d.figure.marks + list(marks.values())
+            self._marks = self._marks | marks
 
-        if viewer1d is None:
-            return marks
+        if viewer1d is not None and 'extract' not in self._marks:
+            marks = {'extract': PluginLine(viewer1d, visible=self.is_active),
+                     'bg_spec': PluginLine(viewer1d, visible=self.is_active, stroke_width=1)}
+            viewer1d.figure.marks = viewer1d.figure.marks + list(marks.values())
+            self._marks = self._marks | marks
 
-        marks['extract'] = PluginLine(viewer1d, visible=self.is_active)
-        marks['bg_spec'] = PluginLine(viewer1d, visible=self.is_active, stroke_width=1)  # noqa
-
-        # NOTE: += won't trigger the figure to notice new marks
-        viewer1d.figure.marks = viewer1d.figure.marks + [marks['extract'],
-                                                         marks['bg_spec']]
-
-        return marks
+        return self._marks
 
     @observe('interactive_extract')
     @skip_if_no_updates_since_last_active()
@@ -605,7 +600,6 @@ class SpectralExtraction(PluginTemplateMixin):
                                                      sender=self.app),
                                     vid='1D Spectrum', name='1D Spectrum',
                                     open_data_menu_if_empty=False)
-            self._clear_cache('marks')
 
         # also called by any of the _interaction_in_*_step
         if self.interactive_extract:
@@ -646,9 +640,6 @@ class SpectralExtraction(PluginTemplateMixin):
                 or not self.is_active):
             return
 
-        if not self.marks:
-            self._clear_cache('marks')
-
         try:
             trace = self.export_trace(add_data=False)
         except Exception:
@@ -673,9 +664,6 @@ class SpectralExtraction(PluginTemplateMixin):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
             return
-
-        if not self.marks:
-            self._clear_cache('marks')
 
         try:
             trace = self._get_bg_trace()
@@ -730,9 +718,6 @@ class SpectralExtraction(PluginTemplateMixin):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
             return
-
-        if not self.marks:
-            self._clear_cache('marks')
 
         try:
             trace = self._get_ext_trace()
