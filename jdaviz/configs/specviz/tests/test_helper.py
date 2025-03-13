@@ -284,18 +284,11 @@ def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
 
 
 def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
-    spec_viewer = specviz_helper.app.get_viewer('1D Spectrum')
-
-    # Mouseover without data should not crash.
-    label_mouseover = specviz_helper._coords_info
-    label_mouseover._viewer_mouse_event(spec_viewer,
-                                        {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
-    assert label_mouseover.as_text() == ('', '', '')
-    assert label_mouseover.icon == ''
-
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
     specviz_helper.load_data(spectrum1d)  # Originally Angstrom
+    spec_viewer = specviz_helper._spectrum_viewer
+    label_mouseover = specviz_helper._coords_info
 
     # Also check coordinates info panel.
     # x=0 -> 6000 A, x=1 -> 6222.222 A
@@ -341,6 +334,14 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     assert label_mouseover.as_text() == ('', '', '')
     assert label_mouseover.icon == ''
 
+    # Mouseover without data should not crash.
+    spec_viewer.data_menu.layer.select_all()
+    spec_viewer.data_menu.remove_from_viewer()
+    label_mouseover._viewer_mouse_event(spec_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
+    assert label_mouseover.as_text() == ('', '', '')
+    assert label_mouseover.icon == ''
+
 
 def test_subset_default_thickness(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
@@ -358,6 +359,7 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
 
 
 def test_app_links(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
     sv = specviz_helper.app.get_viewer('1D Spectrum')
     assert isinstance(sv.jdaviz_app, Application)
     assert isinstance(sv.jdaviz_helper, Specviz)

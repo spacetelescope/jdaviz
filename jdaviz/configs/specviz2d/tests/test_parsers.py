@@ -70,7 +70,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert dc_0.get_component('flux').units == 'Jy'
 
     dc_1 = specviz2d_helper.app.data_collection[1]
-    assert dc_1.label == 'Spectrum 1D'
+    assert dc_1.label == 'my_2d_spec 2D (auto-ext)'
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panels.

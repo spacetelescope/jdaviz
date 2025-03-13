@@ -3831,7 +3831,7 @@ class DatasetSelect(SelectPluginComponent):
         def is_2d_spectrum_or_trace(data):
             return (data.ndim == 2
                     and data.coords is not None
-                    and getattr(data.coords, 'is_spectral', True)) or 'Trace' in data.meta
+                    and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
 
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):

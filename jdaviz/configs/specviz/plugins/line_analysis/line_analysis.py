@@ -173,7 +173,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
 
         sv = self.spectrum_viewer
-        viewer_id = self.app._viewer_item_by_reference(sv.reference_id).get('id')
+        if sv is None:
+            return
+        viewer_id = sv.reference_id
         if msg is None or msg.viewer_id != viewer_id or msg.data is None:
             return
 

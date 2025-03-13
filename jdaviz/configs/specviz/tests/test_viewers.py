@@ -24,7 +24,7 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
         warnings.filterwarnings("ignore", message=".*contains multiple slashes, which is discouraged by the FITS standard.*")  # noqa
         specviz_helper.load_data(spec)
 
-    label = specviz_helper.app.get_viewer_by_id('specviz-0').figure.axes[1].label
+    label = specviz_helper._spectrum_viewer.figure.axes[1].label
 
     assert (y_axis_label in label)
 

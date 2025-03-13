@@ -175,7 +175,7 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     gs_plugin = specviz2d_helper.plugins['Gaussian Smooth']
 
     # The Autocollapsed spectrum is given the label of "Spectrum 1D" by default
-    smooth_source_dataset = "Spectrum 1D"
+    smooth_source_dataset = "test 2D (auto-ext)"
     gs_plugin.dataset = smooth_source_dataset
     test_stddev_level = 10.0
     gs_plugin.stddev = test_stddev_level
@@ -188,7 +188,7 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
 
     # Ensure all marks were created properly (i.e. not in their initialized state)
     # [0,1] is the default (initialization) value for the marks
-    marks = specviz2d_helper.app.get_viewer('1D Spectrum').native_marks
+    marks = specviz2d_helper._spectrum_viewer.native_marks
     assert len(marks) == 2
 
     gp_mark = marks[-1]

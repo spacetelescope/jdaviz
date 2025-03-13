@@ -149,7 +149,8 @@ def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
     assert dc[1].label == "this used to break (2)"
 
 
-def test_viewer_renaming_specviz(specviz_helper):
+def test_viewer_renaming_specviz(specviz_helper, spectrum1d):
+    specviz_helper.load(spectrum1d)
     viewer_names = [
         '1D Spectrum',
         'second-viewer-name',

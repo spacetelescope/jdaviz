@@ -70,7 +70,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     assert p.viewer.selected_obj == fv
 
     # set by reference
-    p.viewer = '1D Spectrum'
+    p.viewer = 'spectrum-viewer'
     assert p.viewer.selected_obj == sv
 
     # try setting based on id instead of reference

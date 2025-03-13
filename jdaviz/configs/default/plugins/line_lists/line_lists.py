@@ -163,8 +163,9 @@ class LineListTool(PluginTemplateMixin):
             return
 
         sv = self.spectrum_viewer
-        # case of no spectrum-viewer would have been caught above
-        viewer_id = self.app._viewer_item_by_reference(sv.reference_id).get('id')
+        if sv is None:
+            return
+        viewer_id = sv.reference_id
 
         # Subsets are global and are not linked to specific viewer instances,
         # so it's not required that we match any specific ids for that case.

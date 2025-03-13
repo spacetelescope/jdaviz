@@ -21,7 +21,8 @@ class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
         assert len(self.imviz.viewers) == 3
 
 
-def test_specviz_zoom_level(specviz_helper):
+def test_specviz_zoom_level(specviz_helper, spectrum1d):
+    specviz_helper.load(spectrum1d)
     v = specviz_helper.viewers['1D Spectrum']
     v.set_limits(x_min=1, x_max=2, y_min=1, y_max=2)
     assert v._obj.state.x_min == 1

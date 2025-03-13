@@ -87,8 +87,19 @@ class Specviz(ConfigHelper, LineListMixin):
             format = '1D Spectrum List'
         else:
             format = '1D Spectrum'
-        self.load(data, format=format, show_in_viewer=show_in_viewer,
+        self.load(data, format=format, data_label=data_label,
+                  show_in_viewer=show_in_viewer,
                   cache=cache, local_path=local_path, timeout=timeout)
+
+    @property
+    def _spectrum_viewer(self):
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_spectrum_viewer=True
+        )
+        if viewer_reference is None:
+            return None
+
+        return self.app.get_viewer(viewer_reference)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
@@ -97,7 +108,9 @@ class Specviz(ConfigHelper, LineListMixin):
         spectra = {}
         # Just to save line length
         get_data_method = self.app._jdaviz_helper.get_data
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer = self._spectrum_viewer
+        if viewer is None:
+            return spectra
         all_subsets = self.app.get_subsets(object_only=True)
 
         if data_label is not None:

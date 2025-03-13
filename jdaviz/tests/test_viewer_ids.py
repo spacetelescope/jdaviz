@@ -34,13 +34,19 @@ def test_default_viewer_ids_mosviz(mosviz_helper):
     assert x.get_viewer_ids() == ['mosviz-0', 'mosviz-1', 'mosviz-2', 'mosviz-3']
 
 
-def test_default_viewer_ids_specviz(specviz_helper):
+def test_default_viewer_ids_specviz(specviz_helper, spectrum1d):
     x = specviz_helper.app
+    assert x.get_viewer_reference_names() == []
+
+    specviz_helper.load(spectrum1d)
     assert x.get_viewer_reference_names() == ['1D Spectrum']
-    assert x.get_viewer_ids() == ['specviz-0']
+    assert x.get_viewer_ids() == ['1D Spectrum']
 
 
-def test_default_viewer_ids_specviz2d(specviz2d_helper):
+def test_default_viewer_ids_specviz2d(specviz2d_helper, mos_spectrum2d):
     x = specviz2d_helper.app
+    assert x.get_viewer_reference_names() == []
+
+    specviz2d_helper.load(mos_spectrum2d, format='2D Spectrum')
     assert x.get_viewer_reference_names() == ['2D Spectrum', '1D Spectrum']
-    assert x.get_viewer_ids() == ['specviz2d-0', 'specviz2d-1']
+    assert x.get_viewer_ids() == ['2D Spectrum', '1D Spectrum']
