@@ -431,7 +431,7 @@ are not stored. To save the current result before submitting a new query, you ca
 
 .. code-block:: python
 
-    results = imviz.get_catalog_source_results()
+    results = imviz.plugins["Catalog Search"].export_table()
 
 .. note::
 

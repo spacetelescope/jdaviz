@@ -117,7 +117,7 @@ jobs:
         python-version: "3.11"
 
     - name: Install jdaviz
-      run: pip install .[test]
+      run: pip install .[test,qt]
 
     - name: Install pyinstaller
       run: pip install "pyinstaller<6"
@@ -141,6 +141,7 @@ jobs:
         rm -rf standalone/dist/jdaviz.app/Contents/MacOS/shapely/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/shapely/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/special/*.dylib
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/special/*.dylib
 
