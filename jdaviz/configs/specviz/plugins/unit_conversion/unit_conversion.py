@@ -28,14 +28,17 @@ def _valid_glue_display_unit(unit_str, sv, axis='x'):
     # astropy)
     if not unit_str:
         return unit_str
-    unit_u = u.Unit(unit_str)
-    choices_str = getattr(sv.state.__class__, f'{axis}_display_unit').get_choices(sv.state)
-    choices_str = [choice for choice in choices_str if choice is not None]
-    choices_u = [u.Unit(choice) for choice in choices_str]
-    if unit_u not in choices_u:
-        raise ValueError(f"{unit_str} could not find match in valid {axis} display units {choices_str}")  # noqa
-    ind = choices_u.index(unit_u)
-    return choices_str[ind]
+    if sv.__class__.__name__.endswith('ProfileView'):
+        unit_u = u.Unit(unit_str)
+        choices_str = getattr(sv.state.__class__, f'{axis}_display_unit').get_choices(sv.state)
+        choices_str = [choice for choice in choices_str if choice is not None]
+        choices_u = [u.Unit(choice) for choice in choices_str]
+        if unit_u not in choices_u:
+            raise ValueError(f"{unit_str} could not find match in valid {axis} display units {choices_str}")  # noqa
+        ind = choices_u.index(unit_u)
+        return choices_str[ind]
+    elif sv.__class__.__name__.endswith('2DView'):
+        return unit_str
 
 
 def _flux_to_sb_unit(flux_unit, angle_unit):
@@ -49,8 +52,7 @@ def _flux_to_sb_unit(flux_unit, angle_unit):
     return sb_unit
 
 
-@tray_registry('g-unit-conversion', label="Unit Conversion",
-               viewer_requirements='spectrum')
+@tray_registry('g-unit-conversion', label="Unit Conversion")
 class UnitConversion(PluginTemplateMixin):
     """
     The Unit Conversion plugin handles global app-wide unit-conversion.
@@ -280,7 +282,43 @@ class UnitConversion(PluginTemplateMixin):
             # set the attribute display unit (contour and stretch units) for the new layer
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
-            self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
+
+            if not len(self.spectral_unit_selected):
+                try:
+                    self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
+                except ValueError:
+                    self.spectral_unit.selected = ''
+
+                # get flux/sb unit from data object
+                flux_unit = str(data_obj.flux.unit)
+                angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit, return_unit=True)
+                flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
+
+            if not self.flux_unit_selected:
+                self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
+                try:
+                    self.flux_unit.selected = str(flux_unit)
+                except ValueError:
+                    self.flux_unit.selected = ''
+
+            if not self.angle_unit_selected:
+                self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
+                try:
+                    if angle_unit is None:
+                        if self.config in ['specviz', 'specviz2d']:
+                            self.has_angle = False
+                            self.has_sb = False
+                        else:
+                            # default to pix2 if input data is not in surface brightness units
+                            # TODO: for cubeviz, should we check the cube itself?
+                            self.angle_unit.selected = 'pix2'
+                    else:
+                        self.angle_unit.selected = str(angle_unit)
+                except ValueError:
+                    self.angle_unit.selected = ''
+
+            if angle_unit:
+                self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
             self._clear_cache('image_layers')
 
     def _on_slice_changed(self, msg):
@@ -302,16 +340,21 @@ class UnitConversion(PluginTemplateMixin):
 
         axis = msg.get('name').split('_')[0]
 
-        if axis == 'spectral':
+        if axis == 'spectral' and self.spectrum_viewer:
             xunit = _valid_glue_display_unit(self.spectral_unit.selected, self.spectrum_viewer, 'x')
             self.spectrum_viewer.state.x_display_unit = xunit
             self.spectrum_viewer.set_plot_axes()
+        elif axis == 'spectral' and self.spectrum_2d_viewer:
+            xunit = _valid_glue_display_unit(self.spectral_unit.selected,
+                                             self.spectrum_2d_viewer, 'x')
 
         elif axis == 'flux':
             # handle spectral y-unit first since that is a more apparent change to the user
             # and feels laggy if it is done later
-            if self.spectral_y_type_selected == 'Flux':
+            if self.spectral_y_type and self.spectral_y_type_selected == 'Flux':
                 self._handle_spectral_y_unit()
+            if self.spectrum_viewer:
+                self.spectrum_viewer.set_plot_axes()
 
             if len(self.angle_unit_selected):
                 # NOTE: setting sb_unit_selected will call this method again with axis=='sb',
@@ -333,10 +376,13 @@ class UnitConversion(PluginTemplateMixin):
         elif axis == 'sb':
             # handle spectral y-unit first since that is a more apparent change to the user
             # and feels laggy if it is done later
-            if self.spectral_y_type_selected == 'Surface Brightness':
+            if self.spectral_y_type and self.spectral_y_type_selected == 'Surface Brightness':
                 self._handle_spectral_y_unit()
 
             self._handle_attribute_display_unit(self.sb_unit_selected)
+            if self.spectrum_viewer:
+                self.spectrum_viewer.state.y_display_unit = self.app._get_display_unit('sb')
+                self.spectrum_viewer.set_plot_axes()
 
         # custom axes downstream can override _on_unit_selected if anything needs to be
         # processed before the GlobalDisplayUnitChanged message is broadcast
@@ -353,7 +399,12 @@ class UnitConversion(PluginTemplateMixin):
         the spectrum viewer with the new unit, and then emit a
         GlobalDisplayUnitChanged message to notify
         """
-        yunit = _valid_glue_display_unit(self.spectral_y_unit, self.spectrum_viewer, 'y')
+        if self.spectral_y_type_selected:
+            yunit = _valid_glue_display_unit(self.spectral_y_unit, self.spectrum_viewer, 'y')
+        elif self.sb_unit_selected:
+            yunit = _valid_glue_display_unit(self.sb_unit_selected, self.spectrum_viewer, 'y')
+        else:
+            yunit = _valid_glue_display_unit(self.flux_unit_selected, self.spectrum_viewer, 'y')
         if self.spectrum_viewer.state.y_display_unit == yunit:
             self.spectrum_viewer.set_plot_axes()
             return

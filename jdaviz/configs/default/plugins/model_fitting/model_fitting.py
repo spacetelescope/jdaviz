@@ -607,7 +607,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._check_model_equation_invalid()
 
     def _on_global_display_unit_changed(self, msg):
-        if msg.axis == 'spectral_y':
+        if msg.axis in ('spectral_y', 'sb', 'flux'):
             axis = 'y'
         elif msg.axis == 'spectral':
             axis = 'x'

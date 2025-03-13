@@ -113,8 +113,12 @@ class PluginMark:
     def set_x_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
-                return
-            unit = self.viewer.state.x_display_unit
+                if self.viewer.data():
+                    unit = self.viewer.data()[0].spectral_axis.unit
+                else:
+                    return
+            else:
+                unit = self.viewer.state.x_display_unit
         unit = u.Unit(unit)
 
         if self.xunit is not None and not np.all([s == 0 for s in self.x.shape]):
@@ -126,8 +130,12 @@ class PluginMark:
     def set_y_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
-                return
-            unit = self.viewer.state.y_display_unit
+                if self.viewer.data():
+                    unit = self.viewer.data()[0].flux.unit
+                else:
+                    return
+            else:
+                unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
 
         # spectrum y-values in viewer have already been converted, don't convert again
@@ -143,7 +151,7 @@ class PluginMark:
                     return
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
 
-                pixar_sr = spec.meta.get('PIXAR_SR', 1)
+                pixar_sr = spec.meta.get('PIXAR_SR', None)
                 cube_wave = self.x * self.xunit
                 equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
                 y = flux_conversion_general(self.y, self.yunit, unit,
