@@ -1,6 +1,6 @@
+from astropy.utils.decorators import deprecated
+
 from jdaviz.configs.specviz import Specviz
-from jdaviz.core.events import SnackbarMessage
-from jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction import SpectralExtraction  # noqa
 
 __all__ = ['Specviz2d']
 
@@ -25,6 +25,10 @@ class Specviz2d(Specviz):
             self._specviz = Specviz(app=self.app)
         return self._specviz
 
+    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        return self._load(inp, loader, format, target, **kwargs)
+
+    @deprecated(since="4.3", alternative="load")
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
                   spectrum_2d_label=None, show_in_viewer=True, ext=1,
                   transpose=False, cache=None, local_path=None, timeout=None):
@@ -86,69 +90,29 @@ class Specviz2d(Specviz):
         if spectrum_1d_label is None:
             spectrum_1d_label = spectrum_2d_label.replace("2D", "1D")
 
-        load_1d = False
+        if ext != 1:
+            # TODO: implement in new importer
+            raise NotImplementedError()
+        if transpose:
+            # TODO: implement in new importer
+            raise NotImplementedError()
 
         if spectrum_2d is not None:
-            self.app.load_data(spectrum_2d, parser_reference="mosviz-spec2d-parser",
-                               data_labels=spectrum_2d_label,
-                               show_in_viewer=False, add_to_table=False,
-                               ext=ext, transpose=transpose,
-                               cache=cache, local_path=local_path, timeout=timeout)
+            self.load(spectrum_2d, format='2D Spectrum',
+                      data_label=spectrum_2d_label,
+                      show_in_viewer=show_in_viewer,
+                      cache=cache,
+                      local_path=local_path,  # is this implemented by url-resolver?
+                      timeout=timeout)
+        if spectrum_1d is not None:
+            self.load(spectrum_1d, format='1D Spectrum',
+                      data_label=spectrum_1d_label,
+                      show_in_viewer=show_in_viewer,
+                      cache=cache,
+                      local_path=local_path,  # is this implemented by url-resolver?
+                      timeout=timeout)
 
-            # Passing show_in_viewer into app.load_data does not work anymore,
-            # so we force it to show here.
-            if show_in_viewer:
-                self.app.add_data_to_viewer(
-                    self._default_spectrum_2d_viewer_reference_name, spectrum_2d_label
-                )
-            # Collapse the 2D spectrum to 1D if no 1D spectrum provided
-            if spectrum_1d is None:
-                # create a non-interactive (so that it does not create duplicate marks with the
-                # plugin-instance created later) instance of the SpectralExtraction plugin,
-                # and use the defaults to generate the initial 1D extracted spectrum
-                spext = SpectralExtraction(
-                    app=self.app, interactive=False,
-                    spectrum_viewer_reference_name=self._default_spectrum_viewer_reference_name,
-                    spectrum_2d_viewer_reference_name=(
-                        self._default_spectrum_2d_viewer_reference_name
-                    )
-                )
-                # for some reason, the trailets are resetting to their default values even
-                # though _trace_dataset_selected was called internally to set them to reasonable
-                # new defaults.  We'll just call it again manually.
-                spext._trace_dataset_selected()
-                try:
-                    spext.export_extract_spectrum(add_data=True)
-                except Exception:
-                    msg = SnackbarMessage(
-                        "Automatic spectrum extraction failed. See the spectral extraction"
-                        " plugin to perform a custom extraction",
-                        color='error', sender=self, timeout=10000)
-                else:
-                    # Warn that this shouldn't be used for science
-                    msg = SnackbarMessage(
-                        "The extracted 1D spectrum was generated automatically."
-                        " See the spectral extraction plugin for details or to"
-                        " perform a custom extraction.",
-                        color='warning', sender=self, timeout=10000)
-                self.app.hub.broadcast(msg)
-
-            else:
-                load_1d = True
-
-        else:
-            load_1d = True
-
-        if load_1d:
-            self.app.load_data(
-                spectrum_1d, data_label=spectrum_1d_label,
-                parser_reference="specviz-spectrum1d-parser",
-                show_in_viewer=show_in_viewer,
-                cache=cache,
-                local_path=local_path,
-                timeout=timeout
-            )
-
+    @deprecated(since="4.3", alternative="load")
     def load_trace(self, trace, data_label, show_in_viewer=True):
         """
         Load a trace object and load into the spectrum-2d-viewer
@@ -162,11 +126,8 @@ class Specviz2d(Specviz):
         show_in_viewer : bool
             Whether to load into the spectrum-2d-viewer.
         """
-        self.app.add_data(trace, data_label=data_label)
-        if show_in_viewer:
-            self.app.add_data_to_viewer(
-                self._default_spectrum_2d_viewer_reference_name, data_label
-            )
+        self.load(trace, format='trace', data_label=data_label,
+                  show_in_viewer=show_in_viewer)
 
     def get_data(self, data_label=None, spectral_subset=None,
                  cls=None, use_display_units=False):
