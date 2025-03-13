@@ -23,12 +23,12 @@
       @destroy="destroy($event, viewer.id)"
       style="display: flex; flex-flow: column; height: 100%; overflow-y: auto; overflow-x: hidden"
     >
-        <div>
+        <div v-if="viewer.id !== 'aladin-lite'">
           <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
             <j-tooltip tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
               <v-btn
-                text 
-                elevation="3" 
+                text
+                elevation="3"
                 color="white"
                 tile
                 icon
