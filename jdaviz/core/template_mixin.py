@@ -3528,10 +3528,12 @@ class ViewerSelect(SelectPluginComponent):
 
     def _is_valid_item(self, viewer):
         def is_spectrum_viewer(viewer):
-            return 'ProfileView' in viewer.__class__.__name__
+            return ('ProfileView' in viewer.__class__.__name__
+                    or viewer.__class__.__name__ == 'Spectrum1DViewer')
 
         def is_spectrum_2d_viewer(viewer):
-            return 'Profile2DView' in viewer.__class__.__name__
+            return ('Profile2DView' in viewer.__class__.__name__
+                    or viewer.__class__.__name__ == 'Spectrum2DViewer')
 
         def is_image_viewer(viewer):
             return 'ImageView' in viewer.__class__.__name__
