@@ -1,8 +1,19 @@
 <template>
-  <j-tray-plugin
-    description='Download a data product from the Virtual Observatory'
-    :link="'https://www.ivoa.net/astronomers/index.html'"
-    :popout_button="popout_button">
+  <j-loader
+    title="Virtual Observatory"
+    :popout_button="popout_button"
+    :target_items="target_items"
+    :target_selected.sync="target_selected"
+    :format_items_spinner="format_items_spinner"
+    :format_items="format_items"
+    :format_selected.sync="format_selected"
+    :importer_widget="importer_widget"
+    :api_hints_enabled="api_hints_enabled"
+    :import_spinner="import_spinner"
+    @import-clicked="import_clicked"
+  >
+  
+
     <v-form v-model="all_fields_filled">
 
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
@@ -144,15 +155,7 @@
 
     <jupyter-widget :widget="table_widget"></jupyter-widget>
 
-    <v-row class="row-no-outside-padding">
-        <v-col>
-          <plugin-action-button
-            :loading="data_loading" @click="load_selected_data">Load Data
-          </plugin-action-button>
-        </v-col>
-    </v-row>
-
-  </j-tray-plugin>
+  </j-loader>
 </template>
 
 <script>
