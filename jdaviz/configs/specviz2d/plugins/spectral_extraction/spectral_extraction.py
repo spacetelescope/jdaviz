@@ -790,7 +790,7 @@ class SpectralExtraction(PluginTemplateMixin):
             if hasattr(trace.trace_model, 'degree'):
                 self.trace_order = trace.trace_model.degree
         elif isinstance(trace, tracing.ArrayTrace):  # pragma: no cover
-            raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load_trace instead")  # noqa
+            raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load instead")  # noqa
         else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 
