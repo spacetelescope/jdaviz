@@ -1347,6 +1347,43 @@ class Application(VuetifyTemplate, HubListener):
             elif isinstance(subset_state, MultiMaskSubsetState):
                 return self._get_multi_mask_subset_definition(subset_state)
 
+    def delete_subsets(self, subset_labels=None):
+        """
+        Delete all or specified subsets in app.
+
+        This method removes subsets based on the provided ``subset_labels`` (a
+        single subset label or multiple labels). If ``subset_labels``
+        is None (default), all subsets will be removed.
+
+        Parameters
+        ----------
+        subset_labels : str or list of str or None
+            The label(s) of the subsets to delete. If None, all subsets will be
+            removed.
+        """
+
+        # delete all subsets
+        if subset_labels is None:
+            for subset_group in self.data_collection.subset_groups:
+                self.data_collection.remove_subset_group(subset_group)
+
+        else:
+            if isinstance(subset_labels, str):
+                subset_labels = [subset_labels]
+            labels = np.asarray(subset_labels)
+            sg = self.data_collection.subset_groups
+            subset_grp_labels = {s.label: s for s in sg}
+
+            # raise ValueError if any subset in 'subset_labels' isn't actually
+            # in the data collection, before deleting subsets
+            invalid_labels = ~np.isin(labels, list(subset_grp_labels.keys()))
+            if np.any(invalid_labels):
+                bad = ', '.join([x for x in labels[invalid_labels]])
+                raise ValueError(f'{bad} not in data collection, can not delete.')
+            else:
+                for label in labels:
+                    self.data_collection.remove_subset_group(subset_grp_labels[label])
+
     def _get_display_unit(self, axis):
         if self._jdaviz_helper is None:
             # cannot access either the plugin or the spectrum viewer.

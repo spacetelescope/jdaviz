@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 from astropy.table import Table
 from astropy.wcs import WCS
@@ -99,13 +101,13 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         self.viewer.stretch = 'sqrt'
         self.viewer.cuts = (0, 100)
 
-        # Add subsets, both interactive and static.
-        self.imviz._apply_interactive_region('bqplot:truecircle', (1.5, 2.5), (3.6, 4.6))
-        self.imviz.plugins['Subset Tools'].combination_mode = 'new'
+        # Add subsets
         self.imviz.plugins['Subset Tools'].import_region([
+            CirclePixelRegion(center=PixCoord(x=2.55, y=3.55), radius=1.05),
             CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5).to_sky(self.wcs_1),
             PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2])).to_sky(self.wcs_1),
-            PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3])).to_sky(self.wcs_1)])
+            PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3])).to_sky(self.wcs_1)
+        ], combination_mode="new")
 
         # Add markers.
         tbl = Table({'x': (0, 0), 'y': (0, 1)})
@@ -122,7 +124,10 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         all_labels = [layer.layer.label for layer in self.viewer.state.layers]
         # Retrieved subsets as sky regions from Subset plugin, and ensure they
         # match what was loaded and that they are in sky coordinates.
-        subset_as_regions = self.imviz.plugins['Subset Tools'].get_regions()
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='Regions skipped: MaskedSubset 1, MaskedSubset 2')
+            subset_as_regions = self.imviz.plugins['Subset Tools'].get_regions()
         assert sorted(subset_as_regions) == ['Subset 1', 'Subset 2']
         assert_allclose(subset_as_regions['Subset 1'].center.ra.deg, 337.519449)
         assert_allclose(subset_as_regions['Subset 2'].center.ra.deg, 337.518498)

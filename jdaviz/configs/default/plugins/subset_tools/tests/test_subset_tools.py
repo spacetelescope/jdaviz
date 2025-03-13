@@ -1,13 +1,17 @@
+import operator
 import warnings
 
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from glue.core.edit_subset_mode import ReplaceMode, OrMode, NewMode
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from numpy.testing import assert_allclose
-from regions import CirclePixelRegion, PixCoord
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
+                     CircleSkyRegion, CompoundPixelRegion, CompoundSkyRegion,
+                     PixCoord)
 from specutils import SpectralRegion
 
 from jdaviz.configs.default.plugins.subset_tools import utils
@@ -263,6 +267,7 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
     assert spectral_regions['Subset 1']
 
     # now test a composite spatial subset, make sure it is retrieved
+    # as a CompoundRegion (since operator is &)
     sr1 = CirclePixelRegion(center=PixCoord(x=2.5, y=2.5), radius=2)
     sr2 = CirclePixelRegion(center=PixCoord(x=2.5, y=3), radius=2)
     plg.import_region(sr1, combination_mode='new')
@@ -279,39 +284,124 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
 
 def test_get_regions_composite(imviz_helper):
     """
-    If you apply a circular subset mask to a circular subset to make a
-    composite subset, and they aren't exactly aligned at the center to form a
-    circular annulus, obtaining the region through ``get_interactive_regions``
-    (now deprecated, replaced with get_regions in Subset Tools) fails.
-    However, you can retrieve the compound subset as a ``region`` with
-    ``app.get_subsets``. This test ensures that a region is returned through
-    both ``app.get_subsets`` and ``get_regions``.
+    Test the behavior of retrieving composite subsets as regions
+    using subset_tools.get_regions
     """
     a = np.ones((200, 200))
     imviz_helper.load_data(a, data_label="test")
     plg = imviz_helper.plugins['Subset Tools']
 
-    # apply two circular subsets
+    # apply two (not concentric) circular subsets
     plg.import_region(CirclePixelRegion(center=PixCoord(x=96.0, y=96.0),
                                         radius=45.0), combination_mode='new')
-    plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
+    plg.import_region(CirclePixelRegion(center=PixCoord(x=100.0, y=100.0),
                                         radius=25.0), combination_mode='new')
 
-    # apply composite subset created from two existing circular subsets
+    # create a composite subset created from these circular subsets
+    # that are applied with remove/and not to subtract the smaller from the larger
     imviz_helper.app.session.edit_subset_mode._mode = NewMode
     subset_groups = imviz_helper.app.data_collection.subset_groups
     new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
     imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
 
-    # FIXME: make sure Subset 3, the composite subset, is retrieved.
-    # This needs https://jira.stsci.edu/browse/JDAT-5035
+    # call get_regions and make sure Subset 3, the composite subset, is retrieved,
+    # but as a list of tuples of  individual subsets and their combination modes,
+    # since they were created with &~ and do not form an exact circular annulus
     regions = plg.get_regions()
-    assert sorted(regions) == ["Subset 1", "Subset 2"]  # What we have
-    # assert sorted(regions) == ["Subset 1", "Subset 2", "Subset 3"]  # What we want after JDAT-5035
+    assert sorted(regions) == ["Subset 1", "Subset 2", "Subset 3"]
+    assert len(regions['Subset 3']) == 2
+    assert isinstance(regions['Subset 3'][0][0], CirclePixelRegion)
+    assert regions['Subset 3'][0][1] == ''  # first operator should be ''
+    assert isinstance(regions['Subset 3'][1][0], CirclePixelRegion)
+    assert regions['Subset 3'][1][1] == 'AndNotState'
 
     # make sure the same regions are returned by app.get_subsets
     get_subsets = imviz_helper.app.get_subsets()
     assert sorted(get_subsets) == ["Subset 1", "Subset 2", "Subset 3"]
+
+    # Now, create two concentric circular subsets and combine them to form a circular annulus.
+    plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
+                                        radius=45.0), combination_mode='new')
+    plg.import_region(CirclePixelRegion(center=PixCoord(x=95.0, y=95.0),
+                                        radius=25.0), combination_mode='new')
+    imviz_helper.app.session.edit_subset_mode._mode = NewMode
+    subset_groups = imviz_helper.app.data_collection.subset_groups
+    new_subset = subset_groups[3].subset_state & ~subset_groups[4].subset_state
+    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+
+    # now, when get_regions is called, the combined subset should be represented as a
+    # CircleAnnulusPixelRegion rather than two circlular subsets
+    regions = plg.get_regions()
+    assert isinstance(regions['Subset 6'], CircleAnnulusPixelRegion)
+
+    # If and/or/xor are used to create composite subsets, they can be
+    # represented as CompoundRegions.
+    for sub, op in [('7', operator.and_), ('8', operator.or_), ('9', operator.xor)]:
+        imviz_helper.app.session.edit_subset_mode._mode = NewMode
+        new_subset = op(subset_groups[3].subset_state, subset_groups[4].subset_state)
+        imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+        regions = plg.get_regions()
+        assert isinstance(regions[f'Subset {sub}'], CompoundPixelRegion)
+
+
+def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data)
+
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    st = imviz_helper.plugins['Subset Tools']
+
+    sr1 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr2 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+    st.import_region(sr1, combination_mode='new')
+    st.import_region(sr2, combination_mode='and')
+
+    # composite subset should be a sky region, and combined to a compound region
+    regs = st.get_regions()
+
+    cr = regs['Subset 1']
+    assert isinstance(cr, CompoundSkyRegion)
+    assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
+    assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
+    assert cr.operator == operator.and_
+
+
+@pytest.mark.skip(reason="Unskip after JDAT-5186.")
+def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
+    """
+    Test to ensure bug fixed by JDAT-5186 is fixed, where get_subsets
+    for compoisute subset applied with 'remove' when WCS linked was not
+    correctly retrieving the second subset.
+    """
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data)
+
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    st = imviz_helper.plugins['Subset Tools']
+
+    sr1 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr2 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+    st.import_region(sr1, combination_mode='new')
+    st.import_region(sr2, combination_mode='andnot')
+
+    # app.get_subsets
+    ss = imviz_helper.app.get_subsets(include_sky_region=True)
+
+    # composite region should be returned as 2 sky regions
+    assert isinstance(ss['Subset 1'][0]['sky_region'], CircleSkyRegion)
+    assert isinstance(ss['Subset 1'][1]['sky_region'], CircleSkyRegion)
+
+    # now make sure Subset Tools get_regions agrees and both sky regions
+    # are returned for Subset 1
+    regs = st.get_regions()
+    assert isinstance(regs['Subset 1'][0], CircleSkyRegion)
+    assert isinstance(regs['Subset 1'][1], CircleSkyRegion)
 
 
 def test_check_valid_subset_label(imviz_helper):
@@ -358,3 +448,33 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
 
     with pytest.raises(ValueError, match="No subset named BadLabel to rename"):
         plg.rename_subset("BadLabel", "Failure")
+
+
+def test_update_subset(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    plg.import_region(spatial_reg, combination_mode='new')
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
+    plg.import_region(spatial_reg, combination_mode='and')
+
+    subset_def = plg.update_subset('Subset 1')
+    print(subset_def)
+    assert isinstance(subset_def, dict)
+    assert len(subset_def) == 2
+
+    with pytest.raises(ValueError, match='subset has more than one subregion'):
+        plg.update_subset('Subset 1', xc=1)
+
+    with pytest.raises(ValueError, match='not an attribute of the specified subset/subregion.'):
+        plg.update_subset('Subset 1', subregion=0, notanattribute=1)
+
+    plg.update_subset('Subset 1', subregion=0, xc=3, yc=1, radius=1)
+
+    # Check xc
+    assert plg._obj.subset_definitions[0][1]['value'] == 3
+    # Check yc
+    assert plg._obj.subset_definitions[0][2]['value'] == 1
+    # Check radius
+    assert plg._obj.subset_definitions[0][3]['value'] == 1

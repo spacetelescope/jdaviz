@@ -6,6 +6,8 @@ New Features
 
 - Added API and UI for renaming subsets to Subset Tools plugin. [#3356, #3392]
 
+- Added API for updating subsets to Subset Tools plugin. [#3484]
+
 - Viewer data-menus are now found in the legend on the right of the viewer. [#3281]
 
 - Added 'select_rows' method to plugin tables to enable changing
@@ -16,6 +18,7 @@ New Features
 - Plugin API methods and attributes are now searchable from the plugin tray (and visible when API hints are enabled). [#3384]
 
 - Snackbar history logger has been moved from an overlay to a separate tab in the right sidebar tray. [#3466]
+
 
 Cubeviz
 ^^^^^^^
@@ -53,15 +56,29 @@ API Changes
   directly if you wish to test your copy of ``jdaviz``. [#3451]
 
 - ``**kwargs`` from ``viz.plugins['Subset Tools'].import_region(..., **kwargs)`` is removed, ``region_format=None``
-  is now explicitly supported. [#3453]
+  is now explicitly supported. The default value for ``max_num_regions`` option
+  is now 20 instead of ``None`` (load everything). [#3453, #3474]
 
 Cubeviz
 ^^^^^^^
+
+- ``cubeviz.load_regions()`` and ``cubeviz.load_regions_from_file()`` are deprecated.
+  Use ``cubeviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
+
+- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 Imviz
 ^^^^^
 
 - Orientation plugin: ``link_type`` and ``wcs_use_affine`` (previously deprecated) have now been removed. [#3385]
+
+- ``imviz.load_regions()`` and ``imviz.load_regions_from_file()`` are deprecated.
+  Use ``imviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
+
+- ``imviz.get_catalog_source_results()`` is deprecated.
+  Use ``imviz.plugins['Catalog Search'].export_table()`` instead. [#3497]
+
+- ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 Mosviz
 ^^^^^^
@@ -81,17 +98,18 @@ Bug Fixes
 
 - Fixed some broken flux conversions that were dropping the factor of solid angle. [#3457]
 
+- subset_tools.get_regions uses app.get_subsets under the hood, which fixes retrieving composite subsets when sky linked as
+  well as an errant snackbar message when a mix of spectral/spatial subsets are present. [#3476]
+
 Cubeviz
 ^^^^^^^
 
 - Fixed copious warnings from spaxel tool when data has INF. [#3368]
 
-- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
-
 Imviz
 ^^^^^
 
-- ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
+- Fixed "zoom to selected" in Catalog Search plugin when multiple sources are selected. [#3482]
 
 Mosviz
 ^^^^^^
@@ -149,6 +167,8 @@ Specviz2d
 - Fix subset linking/displaying between pixel/wavelength in Specviz2d viewers. [#2736]
 
 - Fixes missing API entry for spectral extraction's export_bg_spectrum.  [#3447]
+
+- Fixes default location of trace in spectral extraction when some columns are filled with all zeros or nans. [#3475]
 
 4.1.1 (2025-01-31)
 ==================
