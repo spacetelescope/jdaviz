@@ -206,6 +206,8 @@ class BaseResolver(PluginTemplateMixin):
     def _update_format_items(self):
         self.format._update_items()
         self.target._update_items()  # assumes format._importers is updated from above
+        # ensure the importer updates even if the format selection remains fixed
+        self._on_format_selected_changed()
 
     @property
     def importer(self):
@@ -227,7 +229,7 @@ class BaseResolver(PluginTemplateMixin):
             self.format.filters = [matches_target_factory(self.target_selected)]
 
     @observe('format_selected')
-    def _on_format_selected_changed(self, change):
+    def _on_format_selected_changed(self, change={}):
         if self.format_selected == '':
             self.importer_widget = ''
         else:
