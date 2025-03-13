@@ -144,7 +144,10 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             self.sonified_cube.newsig = np.clip(compsig, -INT_MAX, INT_MAX).astype('int16')
         elif vollim == 'buff':
             # renormalise buffer
-            self.sonified_cube.newsig = ((INT_MAX/abs(compsig).max())*compsig).astype('int16')
+            sigmax = abs(compsig).max()
+            if sigmax > INT_MAX:
+                compsig = ((INT_MAX/abs(compsig).max())*compsig)
+            self.sonified_cube.newsig = compsig.astype('int16')
         self.sonified_cube.cbuff = True
 
     def update_listener_wls(self, wranges, wunit):
