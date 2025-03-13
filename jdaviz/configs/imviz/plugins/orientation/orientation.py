@@ -279,7 +279,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.app.delete_subsets()
 
     def vue_delete_subsets(self, *args):
-        self.app.delete_subsets()
+        self.delete_subsets()
 
     def vue_reset_astrowidget_markers(self, *args):
         for viewer in self.app._viewer_store.values():

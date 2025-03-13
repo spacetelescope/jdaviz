@@ -178,7 +178,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
             self.imviz.link_data(align_by='pixels', wcs_fallback_scheme=None)
 
         self.viewer.reset_markers()
-        self.imviz.app.delete_subsets()
+        self.imviz.plugins["Orientation"].delete_subsets()
         self.imviz.link_data(align_by='pixels', wcs_fallback_scheme=None)
         assert 'xy_markers' not in self.imviz.app.data_collection.labels
         assert len(self.viewer._marktags) == 0
