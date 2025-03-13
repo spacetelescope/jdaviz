@@ -443,7 +443,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._dict['world_dec'] = sky.dec.value
             self._dict['world:unreliable'] = unreliable_world
         elif isinstance(viewer, Spectrum2DViewer) and hasattr(getattr(image, 'coords', None),
-                                                                 'pixel_to_world'):
+                                                              'pixel_to_world'):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
             try:
                 wave, pixel = image.coords.pixel_to_world(x, y)

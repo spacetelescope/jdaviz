@@ -70,6 +70,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         else:
             self.sound_device_indexes = None
             self.refresh_device_list()
+
     @property
     def user_api(self):
         expose = []

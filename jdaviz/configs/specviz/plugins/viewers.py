@@ -266,8 +266,10 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom_matchx', 'jdaviz:homezoom'],
-                    ['jdaviz:boxzoom_matchx', 'jdaviz:xrangezoom_matchx', 'jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
-                    ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                    ['jdaviz:boxzoom_matchx', 'jdaviz:xrangezoom_matchx',
+                     'jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx',
+                     'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
