@@ -46,6 +46,7 @@ class SnackbarQueue:
     Class that performs the role of VSnackbarQueue, which is not
     implemented in ipyvuetify.
     '''
+
     def __init__(self):
         self.queue = deque()
         # track whether we're showing a loading message which won't clear by timeout,
@@ -535,6 +536,29 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
+def get_cloud_fits(possible_uri, cache=None, local_path=os.curdir, timeout=None,
+                   dryrun=False, ext=None):
+    parsed_uri = urlparse(possible_uri)
+
+    # TODO: Add caching logic
+    if parsed_uri.scheme.lower() == 's3':
+        downloaded_hdus = []
+        # this loads the requested extensions into local memory:
+        with fits.open(possible_uri, fsspec_kwargs={"anon": True}) as hdul:
+            if ext is None:
+                ext_list = list(range(len(hdul)))
+            elif not isinstance(ext, list):
+                ext_list = [ext]
+            for extension in ext_list:
+                hdu_obj = hdul[extension]
+                downloaded_hdus.append(hdu_obj.copy())
+
+        file_obj = fits.HDUList(downloaded_hdus)
+        return file_obj
+    # not s3 resource, return string as is
+    return possible_uri
+
+
 def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,
                          dryrun=False):
     """
@@ -620,6 +644,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
     if parsed_uri.scheme.lower() == 'mast':
         if cache_warning:
             warnings.warn(cache_none_msg, UserWarning)
+        Observations.enable_cloud_dataset()
 
         if local_path is not None and os.path.isdir(local_path):
             # if you give a directory, save the file there with default name:
