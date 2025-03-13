@@ -909,12 +909,6 @@ class ImageConfigHelper(ConfigHelper):
         subset_grp = self.app.data_collection.subset_groups[i]
         self.app.data_collection.remove_subset_group(subset_grp)
 
-    # TODO: Make this public API?
-    def _delete_all_regions(self):
-        """Delete all regions."""
-        for subset_grp in self.app.data_collection.subset_groups:  # should be a copy
-            self.app.data_collection.remove_subset_group(subset_grp)
-
 
 def _next_subset_num(label_prefix, subset_groups):
     """Assumes ``prefix i`` format.
