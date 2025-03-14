@@ -131,7 +131,7 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-- Bumped minimum version of ``photutils`` to v1.12.1. [#3432]
+- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
 
 - Refactored flux conversion to use a single function for all plugin/viewer flux/surface brightness
   conversions. [#3457]
