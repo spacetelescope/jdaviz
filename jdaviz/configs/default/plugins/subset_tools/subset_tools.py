@@ -185,11 +185,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False):
+                    use_display_units=False, return_sky_region=True):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
-        respectivley.
+        respectively.
 
         Parameters
         ----------
@@ -197,7 +197,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             Specifies the type of subsets to retrieve. Options are ``spatial``
             to retrieve only spatial subsets, ``spectral`` to retrieve only
             spectral subsets or ``None`` (default) to retrieve both spatial
-            and spectral subsets, when relevent to the current configuration.
+            and spectral subsets, when relevant to the current configuration.
 
         list_of_subset_labels : list of str or None, optional
             If specified, only subsets matching these labels will be included.
@@ -208,6 +208,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             (For spectral subsets) If False (default), subsets are returned in
             the native data unit. If True, subsets are returned in the spectral
             axis display unit set in the Unit Conversion plugin.
+
+        return_sky_region : bool, optional
+            The default return type is a ``SkyRegion`` unless this is set to False,
+            in which case a ``PixelRegion`` object is returned instead.
 
         Returns
         -------
@@ -230,7 +234,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             region_type = {'imviz': ['spatial'],
                            'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
 
-        reg_type = 'sky_region' if self.app._align_by == 'wcs' else 'region'
+        sky_region_check = ((self.app._align_by == 'wcs' or self.config == 'cubeviz')
+                            and return_sky_region)
+        reg_type = 'sky_region' if sky_region_check else 'region'
 
         # first get ALL subsets of specified spatial/spectral type(s)
         subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
