@@ -28,7 +28,7 @@ def test_plugin(specviz2d_helper):
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
 
     # test trace marks - won't be created until after opening the plugin
-    sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
+    sp2dv = specviz2d_helper.app.get_viewer('2D Spectrum')
     assert len(sp2dv.figure.marks) == 3
 
     pext.keep_active = True

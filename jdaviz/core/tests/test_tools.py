@@ -34,7 +34,7 @@ def _get_lims(viewer):
 def test_rangezoom(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label='test')
 
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper.app.get_viewer('1D Spectrum')
     assert_allclose(_get_lims(sv), [6000, 8000, 12.30618014327326, 16.542560043585965])
 
     t = sv.toolbar.tools['jdaviz:xrangezoom']

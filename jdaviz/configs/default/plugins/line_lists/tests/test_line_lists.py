@@ -47,13 +47,13 @@ def test_line_lists(specviz_helper):
 
 
 def test_redshift(specviz_helper, spectrum1d):
-    # Also test that plugin is disabled before data is loaded.
-    ll_plugin = specviz_helper.plugins['Line Lists']._obj
-    assert ll_plugin.disabled_msg
+    # Also test that plugin is irrelevant before data is loaded.
+    assert 'Line Lists' not in specviz_helper.plugins
 
     label = "Test 1D Spectrum"
     specviz_helper.load_data(spectrum1d, data_label=label)
 
+    ll_plugin = specviz_helper.plugins['Line Lists']._obj
     assert not ll_plugin.disabled_msg
 
     lt = QTable()
@@ -95,7 +95,7 @@ def test_redshift(specviz_helper, spectrum1d):
     # https://github.com/spacetelescope/jdaviz/issues/1168
     ll_plugin.vue_set_identify(('Test List', line, 0))
     ll_plugin.vue_remove_list('Test List')
-    assert ll_plugin._viewer.spectral_lines is None
+    assert ll_plugin.spectrum_viewer.spectral_lines is None
     assert ll_plugin.identify_label == ''
 
 

@@ -32,8 +32,8 @@ def test_2d_parser_jwst(specviz2d_helper):
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panel.
-    viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    viewer_2d = specviz2d_helper.app.get_viewer('2D Spectrum')
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})
     assert label_mouseover.as_text() == ('Pixel x=0350.0 y=0030.0 Value +3.22142e+04 MJy / sr',
@@ -70,20 +70,20 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert dc_0.get_component('flux').units == 'Jy'
 
     dc_1 = specviz2d_helper.app.data_collection[1]
-    assert dc_1.label == 'Spectrum 1D'
+    assert dc_1.label == 'my_2d_spec 2D (auto-ext)'
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panels.
 
-    viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    viewer_2d = specviz2d_helper.app.get_viewer('2D Spectrum')
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00000.0 y=00000.0 Value +3.74540e-01 Jy',
                                          'Wave 1.00000e-06 m', '')
     assert label_mouseover.icon == 'a'
 
-    viewer_1d = specviz2d_helper.app.get_viewer('spectrum-viewer')
+    viewer_1d = specviz2d_helper.app.get_viewer('1D Spectrum')
     # need to trigger a mouseleave or mouseover to reset the traitlets
     label_mouseover._viewer_mouse_event(viewer_1d, {'event': 'mouseenter'})
     label_mouseover._viewer_mouse_event(viewer_1d,
@@ -138,13 +138,13 @@ def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d, spectrum_1d=spectrum1d)
     assert specviz2d_helper.app.data_collection.labels == ['Spectrum 2D', 'Spectrum 1D']
 
-    spec2d_viewer = specviz2d_helper.app.get_viewer("spectrum-2d-viewer")
+    spec2d_viewer = specviz2d_helper.app.get_viewer('2D Spectrum')
     assert spec2d_viewer.figure.axes[0].label == "x: pixels"  # -0.5, 14.5
     spec2d_viewer.apply_roi(XRangeROI(10, 12))
 
     spec2d_viewer.session.edit_subset_mode._mode = NewMode
 
-    spec1d_viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
+    spec1d_viewer = specviz2d_helper.app.get_viewer('1D Spectrum')
     assert spec1d_viewer.figure.axes[0].label == "Wavelength [Angstrom]"  # 6000, 8000
     spec1d_viewer.apply_roi(XRangeROI(7000, 7100))
 

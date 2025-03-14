@@ -4,7 +4,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from jdaviz.core.registries import viewer_registry
 from jdaviz.configs.cubeviz.plugins.mixins import WithSliceIndicator, WithSliceSelection
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL
 import numpy as np
@@ -182,7 +182,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
-class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
+class CubevizProfileView(Spectrum1DViewer, WithSliceIndicator):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],

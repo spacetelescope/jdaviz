@@ -260,14 +260,14 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     specviz2d_helper.load_data(data)
 
     gs = specviz2d_helper.plugins["Gaussian Smooth"]
-    smooth_source_dataset = "Spectrum 1D"
+    smooth_source_dataset = "Spectrum 2D (auto-ext)"
     gs.dataset = smooth_source_dataset
     gs.stddev = 3
     gs.smooth(add_data=True)
 
     ep = specviz2d_helper.plugins["Export"]._obj
-    assert "Spectrum 1D smooth stddev-3.0" in ep.dataset.choices
-    ep.dataset_selected = "Spectrum 1D smooth stddev-3.0"
+    assert "Spectrum 2D (auto-ext) smooth stddev-3.0" in ep.dataset.choices
+    ep.dataset_selected = "Spectrum 2D (auto-ext) smooth stddev-3.0"
     assert ep.dataset.selected_obj.unit == "DN/s"
     assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."  # noqa
 

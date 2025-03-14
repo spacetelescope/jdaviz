@@ -136,8 +136,10 @@ div.output_wrapper {
   display: none !important;
 }
 
-.cubeviz .lm_close_tab {
+.cubeviz .lm_close_tab, .specviz .lm_close_tab {
   /* do not allow closing any viewer tabs in cubeviz */
+  /* specviz (deconfigging): temporarily do not allow closing
+     tabs until viewer creator is migrated */
   display: none;
 }
 

@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.utils.decorators import deprecated
 from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
-from specutils import SpectralRegion, Spectrum1D
+from specutils import SpectralRegion, Spectrum1D, SpectrumList
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
@@ -32,7 +32,7 @@ class Specviz(ConfigHelper, LineListMixin):
     """Specviz Helper class."""
 
     _default_configuration = "specviz"
-    _default_spectrum_viewer_reference_name = "spectrum-viewer"
+    _default_spectrum_viewer_reference_name = "1D Spectrum"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -41,6 +41,10 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
+    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        return self._load(inp, loader, format, target, **kwargs)
+
+    @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
                   concat_by_file=False, cache=None, local_path=None, timeout=None,
                   load_as_list=False):
@@ -74,16 +78,45 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astropy.utils.data.download_file` or
             `~astroquery.mast.Conf.timeout`).
         """
-        super().load_data(data,
-                          parser_reference='specviz-spectrum1d-parser',
-                          data_label=data_label,
-                          format=format,
-                          show_in_viewer=show_in_viewer,
-                          concat_by_file=concat_by_file,
-                          cache=cache,
-                          local_path=local_path,
-                          timeout=timeout,
-                          load_as_list=load_as_list)
+        if format is not None:
+            raise NotImplementedError()
+        if concat_by_file:
+            raise NotImplementedError()
+
+        if isinstance(data, SpectrumList) and isinstance(data_label, list):
+            if len(data_label) != len(data):
+                raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
+                                 f" than length of list of data ({len(data)})")
+            # new infrastructure doesn't support passing a list, but we'll
+            # wrap it for now during deprecation period
+            for spec, label in zip(data, data_label):
+                self.load_data(spec, data_label=label,
+                               show_in_viewer=show_in_viewer,
+                               cache=cache, local_path=local_path, timeout=timeout)
+            return
+
+        if load_as_list:
+            format = '1D Spectrum List'
+        else:
+            format = '1D Spectrum'
+        if isinstance(data, SpectrumList):
+            format = '1D Spectrum List'
+        if data_label is not None:
+            data_label = self.app.return_unique_name(data_label)
+        self.load(data, format=format,
+                  data_label=data_label,
+                  show_in_viewer=show_in_viewer,
+                  cache=cache, local_path=local_path, timeout=timeout)
+
+    @property
+    def _spectrum_viewer(self):
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_spectrum_viewer=True
+        )
+        if viewer_reference is None:
+            return None
+
+        return self.app.get_viewer(viewer_reference)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
@@ -92,7 +125,9 @@ class Specviz(ConfigHelper, LineListMixin):
         spectra = {}
         # Just to save line length
         get_data_method = self.app._jdaviz_helper.get_data
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer = self._spectrum_viewer
+        if viewer is None:
+            return spectra
         all_subsets = self.app.get_subsets(object_only=True)
 
         if data_label is not None:
@@ -168,7 +203,7 @@ class Specviz(ConfigHelper, LineListMixin):
         """
         return self.app.get_subsets(spectral_only=True, use_display_units=use_display_units)
 
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
 
@@ -191,7 +226,7 @@ class Specviz(ConfigHelper, LineListMixin):
         ref_spec = self.get_spectra(ref_index, apply_slider_redshift=False)
         self._set_scale(scale, ref_spec.spectral_axis, x_min, x_max)
 
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
     def y_limits(self, y_min=None, y_max=None):
         """Sets the limits of the y-axis
 
@@ -251,21 +286,21 @@ class Specviz(ConfigHelper, LineListMixin):
 
             scale.max = float(max_val)
 
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].reset_limits")
+    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].reset_limits")
     def autoscale_x(self):
         """Sets the x-axis limits to the min/max of the reference data
 
         """
         self.x_limits("auto", "auto")
 
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].reset_limits")
+    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].reset_limits")
     def autoscale_y(self):
         """Sets the y-axis limits to the min/max of the reference data
 
         """
         self.y_limits("auto", "auto")
 
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
     def flip_x(self):
         """Flips the current limits of the x-axis
 
@@ -273,7 +308,7 @@ class Specviz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer(self._default_spectrum_viewer_reference_name).scale_x
         self.x_limits(x_min=scale.max, x_max=scale.min)
 
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
     def flip_y(self):
         """Flips the current limits of the y-axis
 
@@ -281,7 +316,7 @@ class Specviz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer(self._default_spectrum_viewer_reference_name).scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
 
-    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_tick_format")
+    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_tick_format")
     def set_spectrum_tick_format(self, fmt, axis=None):
         """
         Manually set the tick format of one of the axes of the profile viewer.

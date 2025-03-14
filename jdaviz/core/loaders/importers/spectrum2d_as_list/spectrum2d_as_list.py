@@ -48,14 +48,13 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
             raise NotImplementedError(f"{self.input} is not supported")  # pragma: nocover
 
     @property
-    def default_viewer(self):
+    def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'specviz-profile-viewer'
+        return 'spectrum-1d-viewer'
 
-    def __call__(self, data_label=None):
-        if data_label is None:
-            data_label = self.data_label_value
+    def __call__(self):
+        data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
                 self.add_to_data_collection(spec, f"{data_label}_{i}", show_in_viewer=True)

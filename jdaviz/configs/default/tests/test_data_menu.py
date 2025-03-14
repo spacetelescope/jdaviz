@@ -14,7 +14,7 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     specviz_helper.load_data(new_spec, data_label="test2")
 
     # check that both are enabled in the data menu
-    sv = specviz_helper.viewers['spectrum-viewer']
+    sv = specviz_helper.viewers['1D Spectrum']
     dm = sv._obj.data_menu
     assert len(dm._obj.layer_items) == 2
     assert len(dm._obj.visible_layers) == 2
@@ -45,7 +45,7 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
     specviz_helper.load_data(new_spec, data_label="test2")
 
-    sv = specviz_helper.viewers['spectrum-viewer']
+    sv = specviz_helper.viewers['1D Spectrum']
     dm = sv._obj.data_menu
 
     # no selection by default
@@ -63,7 +63,7 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     # test that sync remains during layer deletion
     dm._obj.dm_layer_selected = [1]
     assert dm.layer.selected == ['test']
-    specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "test2")
+    specviz_helper.app.remove_data_from_viewer('1D Spectrum', "test2")
     specviz_helper.app.data_item_remove("test2")
     assert len(dm._obj.layer_items) == 1
     assert dm._obj.dm_layer_selected == [0]
@@ -119,7 +119,7 @@ def test_data_menu_remove_subset(specviz_helper, spectrum1d):
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
     specviz_helper.load_data(new_spec, data_label="test2")
 
-    dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
+    dm = specviz_helper.viewers['1D Spectrum']._obj.data_menu
     sp = specviz_helper.plugins['Subset Tools']
 
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
@@ -180,7 +180,7 @@ def test_data_menu_subset_appearance(specviz_helper, spectrum1d):
     # are two data entries, but not in this case with just one
     specviz_helper.load_data(spectrum1d, data_label="test")
 
-    dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
+    dm = specviz_helper.viewers['1D Spectrum']._obj.data_menu
     sp = specviz_helper.plugins['Subset Tools']
 
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
@@ -196,7 +196,7 @@ def test_data_menu_view_info(specviz_helper, spectrum1d):
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
     specviz_helper.load_data(new_spec, data_label="test2")
 
-    dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
+    dm = specviz_helper.viewers['1D Spectrum']._obj.data_menu
     mp = specviz_helper.plugins['Metadata']
     sp = specviz_helper.plugins['Subset Tools']
 

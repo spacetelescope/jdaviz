@@ -69,7 +69,9 @@ class FormatSelect(SelectPluginComponent):
                 if importer_input is None:
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
-                    this_importer = Importer(app=self.plugin.app, input=importer_input)
+                    this_importer = Importer(app=self.plugin.app,
+                                             resolver=self.plugin,
+                                             input=importer_input)
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             all_resolvers.append({'label': importer_name,
@@ -128,11 +130,13 @@ class TargetSelect(SelectPluginComponent):
         # note that the selection of a target may affect the available formats
         # so we want to store all importers in the target select even if they are not valid there
         # and use that list when compiling list of valid targets
-        all_targets = list(set([importer.target for importer
-                                in self.plugin.format._importers.values()]))
+        all_targets = []
+        for importer in self.plugin.format._importers.values():
+            target = importer.target
+            if target not in all_targets:
+                all_targets.append(target)
 
-        all_items = [{'label': 'Any'}]+[{'label': target} for target in all_targets]
-        self.items = [item for item in all_items if self._is_valid_item(item)]
+        self.items = [{'label': 'Any'}] + [item for item in all_targets if self._is_valid_item(item)]  # noqa
         self._apply_default_selection()
 
 
@@ -141,7 +145,7 @@ class BaseResolver(PluginTemplateMixin):
     requires_api_support = False
 
     importer_widget = Unicode().tag(sync=True)
-
+    import_disabled = Bool(False).tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
@@ -204,6 +208,8 @@ class BaseResolver(PluginTemplateMixin):
     def _update_format_items(self):
         self.format._update_items()
         self.target._update_items()  # assumes format._importers is updated from above
+        # ensure the importer updates even if the format selection remains fixed
+        self._on_format_selected_changed()
 
     @property
     def importer(self):
@@ -225,7 +231,7 @@ class BaseResolver(PluginTemplateMixin):
             self.format.filters = [matches_target_factory(self.target_selected)]
 
     @observe('format_selected')
-    def _on_format_selected_changed(self, change):
+    def _on_format_selected_changed(self, change={}):
         if self.format_selected == '':
             self.importer_widget = ''
         else:
@@ -261,6 +267,7 @@ class BaseResolver(PluginTemplateMixin):
 
 
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
+    formats = format if isinstance(format, list) else [format]
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():
         if resolver is not None and resolver != resolver_name:
@@ -283,15 +290,15 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
                 continue
             this_resolver.target = target
         for fmt in this_resolver.format.choices:
-            if format is not None and fmt != format:
+            if format is not None and fmt not in formats:
                 continue
             this_resolver.format.selected = fmt
             valid_resolvers.append((this_resolver, resolver_name, fmt))
 
     if len(valid_resolvers) == 0:
-        raise ValueError("no valid resolvers found for input")
+        raise ValueError("no valid loaders found for input")
     elif len(valid_resolvers) > 1:
         vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
-        raise ValueError(f"multiple valid resolvers found for input: {vrs}")
+        raise ValueError(f"multiple valid loaders found for input: {vrs}")
     else:
         return valid_resolvers[0][0].user_api
