@@ -1,7 +1,7 @@
 [project]
 name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "JDADF Developers", email = "help@stsci.edu" },
 ]
@@ -24,7 +24,7 @@ dependencies = [
     "pyyaml>=5.4.1",
     "specutils>=1.18",
     "specreduce>=1.4.1,<1.5",
-    "photutils>=1.12.1",
+    "photutils>=2.2",
     "glue-astronomy>=0.10",
     "asteval>=0.9.23",
     "idna",

@@ -67,6 +67,9 @@ Cubeviz
 
 - Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
 Imviz
 ^^^^^
 
@@ -79,6 +82,9 @@ Imviz
   Use ``imviz.plugins['Catalog Search'].export_table()`` instead. [#3497]
 
 - ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
 
 Mosviz
 ^^^^^^
@@ -125,7 +131,7 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-- Bumped minimum version of ``photutils`` to v1.12.1. [#3432]
+- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
 
 - Refactored flux conversion to use a single function for all plugin/viewer flux/surface brightness
   conversions. [#3457]
