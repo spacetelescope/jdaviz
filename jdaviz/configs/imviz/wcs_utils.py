@@ -12,12 +12,10 @@ import numpy as np
 from astropy import units as u
 from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
-from astropy.modeling import models
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from gwcs import coordinate_frames as cf
 from gwcs.wcs import WCS as GWCS
 
 from matplotlib.patches import Polygon
@@ -276,10 +274,9 @@ def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=No
 def data_outside_gwcs_bounding_box(data, x, y):
     """This is for internal use by Imviz coordinates transformation only."""
     outside_bounding_box = False
-    if hasattr(data.coords, '_orig_bounding_box'):
-        # then coords is a GWCS object and had its bounding box cleared
-        # by the Imviz parser
-        ints = data.coords._orig_bounding_box.intervals
+    if getattr(data.coords, 'bounding_box', None) is not None:
+        # then coords is a GWCS object
+        ints = data.coords.bounding_box.intervals
         if isinstance(ints[0].lower, u.Quantity):
             bb_xmin = ints[0].lower.value
             bb_xmax = ints[0].upper.value
@@ -295,7 +292,7 @@ def data_outside_gwcs_bounding_box(data, x, y):
     return outside_bounding_box
 
 
-def _rotated_gwcs(
+def _rotated_wcs(
     center_world_coord,
     rotation_angle,
     pixel_scales,
@@ -303,70 +300,26 @@ def _rotated_gwcs(
     refdata_shape=(10, 10),
     image_shape=None
 ):
-    # based on ``gwcs_simple_imaging_units`` in gwcs:
-    #   https://github.com/spacetelescope/gwcs/blob/
-    #   eec9a2b6de8356495f405de3dc6531538589ce5d/gwcs/tests/conftest.py#L165
     image_extent = u.Quantity(image_shape, u.pix) * u.Quantity(pixel_scales)
     refdata_extent = image_extent.max()
     pixel_scales = refdata_extent / u.Quantity(refdata_shape, u.pix)
 
-    # multiplying by +/-1 can flip north/south or east/west:
-    flip_direction = (
-        models.Multiply(cdelt_signs[0]) &
-        models.Multiply(cdelt_signs[1])
+    wcs_keywords = dict(
+        wcsaxes=2,
+        ctype1='RA---TAN',
+        ctype2='DEC--TAN',
+        crpix1=refdata_shape[0] / 2 + 0.75,
+        crpix2=refdata_shape[1] / 2 + 0.75,
+        crval1=center_world_coord.ra.deg,
+        crval2=center_world_coord.dec.deg,
+        cdelt1=cdelt_signs[0] * pixel_scales[0].to_value(u.deg/u.pix),
+        cdelt2=cdelt_signs[1] * pixel_scales[1].to_value(u.deg/u.pix),
+        lonpole=180 - rotation_angle.to_value(u.deg),
+        cname1='lon',
+        cname2='lat',
     )
-
-    # shift to compensate for the difference between the center and corner:
-    shift = (
-        models.Shift((0.5 - refdata_shape[0])/2 * u.pix) &
-        models.Shift((0.5 - refdata_shape[1])/2 * u.pix)
-    )
-
-    # rotate field of view:
-    rho = rotation_angle
-    sin_rho = np.sin(rho.to_value(u.rad))
-    cos_rho = np.cos(rho.to_value(u.rad))
-    rotation_matrix = np.array([[cos_rho, -sin_rho],
-                                [sin_rho, cos_rho]])
-    rotation = models.AffineTransformation2D(
-        rotation_matrix * u.deg, translation=[0, 0] * u.deg
-    )
-    rotation.input_units_equivalencies = {
-        "x": u.pixel_scale(pixel_scales[0]),
-        "y": u.pixel_scale(pixel_scales[1])
-    }
-    rotation.inverse = models.AffineTransformation2D(
-        np.linalg.inv(rotation_matrix) * u.pix, translation=[0, 0] * u.pix
-    )
-    rotation.inverse.input_units_equivalencies = {
-        "x": u.pixel_scale(1 / pixel_scales[0]),
-        "y": u.pixel_scale(1 / pixel_scales[1])
-    }
-
-    tan = models.Pix2Sky_TAN()
-    celestial_rotation = models.RotateNative2Celestial(
-        center_world_coord.ra, center_world_coord.dec, 180 * u.deg
-    )
-
-    det2sky = shift | flip_direction | rotation | tan | celestial_rotation
-    det2sky.name = "linear_transform"
-
-    detector_frame = cf.Frame2D(
-        name="detector",
-        axes_names=("x", "y"),
-        unit=(u.pix, u.pix)
-    )
-    sky_frame = cf.CelestialFrame(
-        reference_frame=coord.ICRS(),
-        name='icrs',
-        unit=(u.deg, u.deg)
-    )
-    pipeline = [
-        (detector_frame, det2sky),
-        (sky_frame, None)
-    ]
-
-    return GWCS(pipeline)
+    wcs = WCS(wcs_keywords)
+    return wcs
 
 
 def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape,
@@ -436,9 +389,9 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     center_world_coord = wcs.pixel_to_world(*center_pixel_coord[::-1])
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
-    # create a GWCS centered on ``filename``,
+    # create a WCS centered on ``filename``,
     # and rotated by ``rotation_angle``:
-    new_rotated_gwcs = _rotated_gwcs(
+    new_rotated_wcs = _rotated_wcs(
         center_world_coord,
         rotation_angle,
         pixel_scales,
@@ -448,12 +401,12 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     )
 
     # create a fake NDData (we use arange so data boundaries show up in Imviz
-    # if it ever is accidentally exposed) with the rotated GWCS:
+    # if it ever is accidentally exposed) with the rotated WCS:
     placeholder_data = np.nan * np.ones(refdata_shape)
 
     ndd = NDData(
         data=placeholder_data,
-        wcs=new_rotated_gwcs,
+        wcs=new_rotated_wcs,
         meta={wcs_only_key: True, '_pixel_scales': pixel_scales}
     )
     return ndd
@@ -464,7 +417,7 @@ def _get_rotated_nddata_from_label(
     cdelt_signs=None, target_wcs_east_left=True, target_wcs_north_up=True
 ):
     """
-    Create a synthetic NDData which stores GWCS that approximate
+    Create a synthetic NDData which stores WCS that approximate
     the WCS in the coords attr of the Data object with label ``data_label``
     loaded into ``app``.
 
