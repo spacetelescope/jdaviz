@@ -1,4 +1,4 @@
-from traitlets import Bool, Unicode
+from traitlets import Bool, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
@@ -15,14 +15,19 @@ vid_map = {'spectrum-1d-viewer': '1D Spectrum',
 
 
 class BaseImporter(PluginTemplateMixin):
-    def __init__(self, app, input, **kwargs):
+    def __init__(self, app, resolver, input, **kwargs):
         self._input = input
+        self._resolver = resolver
         super().__init__(app, **kwargs)
 
     @property
     def is_valid(self):
         # override by subclass
         return False  # pragma: nocover
+
+    @property
+    def resolver(self):
+        return self._resolver
 
     @property
     def input(self):
@@ -52,8 +57,8 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
 
-    def __init__(self, app, input, **kwargs):
-        super().__init__(app, input, **kwargs)
+    def __init__(self, app, resolver, input, **kwargs):
+        super().__init__(app, resolver, input, **kwargs)
         self.data_label_default = self._registry_label
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
@@ -84,7 +89,7 @@ class BaseImporterToDataCollection(BaseImporter):
     def _on_label_changed(self, msg={}):
         if not len(self.data_label_value.strip()):
             # strip will raise the same error for a label of all spaces
-            self.data_label_invalid_msg = 'label must be provided'
+            self.data_label_invalid_msg = 'data_label must be provided'
             return
 
         # ensure the default label is unique for the data-collection
@@ -92,17 +97,16 @@ class BaseImporterToDataCollection(BaseImporter):
 
         for data in self.app.data_collection:
             if self.data_label_value == data.label:
-                self.data_label_invalid_msg = 'label already in use'
+                self.data_label_invalid_msg = 'data_label already in use'
                 return
 
         self.data_label_invalid_msg = ''
 
+    @observe('data_label_invalid_msg')
+    def _set_import_disabled(self, change={}):
+        self.resolver.import_disabled = len(self.data_label_invalid_msg) > 0
+
     def load_into_viewer(self, data_label, default_viewer_reference=None):
-        if default_viewer_reference is None:
-            default_viewer_reference = self.default_viewer_reference
-            default_viewer_label = self.default_viewer_label
-        else:
-            default_viewer_label = vid_map.get(default_viewer_reference, default_viewer_reference)
         added = 0
         for viewer in self.app._jdaviz_helper.viewers.values():
             if data_label in viewer.data_menu.data_labels_unloaded:
@@ -135,6 +139,8 @@ class BaseImporterToDataCollection(BaseImporter):
             self.load_into_viewer(data_label)
 
     def __call__(self):
+        if self.data_label_invalid_msg:
+            raise ValueError(self.data_label_invalid_msg)
         self.add_to_data_collection(self.output, show_in_viewer=True)
 
 

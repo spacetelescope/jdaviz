@@ -69,7 +69,9 @@ class FormatSelect(SelectPluginComponent):
                 if importer_input is None:
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
-                    this_importer = Importer(app=self.plugin.app, input=importer_input)
+                    this_importer = Importer(app=self.plugin.app,
+                                             resolver=self.plugin,
+                                             input=importer_input)
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             all_resolvers.append({'label': importer_name,
@@ -143,7 +145,7 @@ class BaseResolver(PluginTemplateMixin):
     requires_api_support = False
 
     importer_widget = Unicode().tag(sync=True)
-
+    import_disabled = Bool(False).tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
