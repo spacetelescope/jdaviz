@@ -14,9 +14,8 @@ from jdaviz.core.events import (
     RemoveDataMessage,
     LinkUpdatedMessage,
 )
-from jdaviz.core.registries import tray_registry
+from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin,
     AddResultsMixin,
     TableMixin,
     ViewerSelect,
@@ -24,13 +23,15 @@ from jdaviz.core.template_mixin import (
     UnitSelectPluginComponent,
     with_spinner,
 )
+from jdaviz.core.loaders.resolvers import BaseResolver
+from jdaviz.utils import download_uri_to_path
 
 __all__ = ["VoPlugin"]
 vo_plugin_label = "Virtual Observatory"
 
 
-@tray_registry("VoPlugin", label=vo_plugin_label)
-class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
+@loader_resolver_registry(vo_plugin_label)
+class VoPlugin(BaseResolver, AddResultsMixin, TableMixin):
     """Plugin to query the Virtual Observatory and load data into Imviz"""
 
     template_file = __file__, "vo_plugin.vue"
@@ -55,7 +56,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
-    data_loading = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,6 +103,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         self.table.show_rowselect = True
         self.table.item_key = "URL"
+        self.table.multiselect = False
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
@@ -454,9 +455,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         """UI entrypoint for load data btn"""
         self.load_selected_data()
 
-    @with_spinner(spinner_traitlet="data_loading")
-    def load_selected_data(self, _=None):
-        """Load the files selected by the user in the table"""
+    @property
+    def is_valid(self):
+        return True
+
+    def __call__(self, local_path=None, timeout=60):
         if (
             self.app._jdaviz_helper.plugins["Orientation"].align_by != "WCS"
             and len(self.app.data_collection) > 0
@@ -466,22 +469,15 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 "switch link type to WCS in the Orientation plugin"
             )
             self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
+        
+        # Resolver infrastructure only supports one data product at a time
+        if len(self.table.selected_rows) != 1:
+            error_msg = (
+                "Only one data product is supported at a time. Loading first selection."
+            )
+            self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
 
-        for entry in self.table.selected_rows:
-            try:
-                self.app._jdaviz_helper.load_data(
-                    str(entry["URL"]),  # Open URL as FITS object
-                    data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}",  # noqa: E501
-                    cache=False,
-                    timeout=1e6,  # Set to arbitrarily large value to prevent timeouts
-                )
-            except Exception as e:
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"Unable to load file to viewer: {entry['URL']}: {e}",
-                        sender=self,
-                        color="error",
-                    )
-                )
+        return download_uri_to_path(self.table.selected_rows[0]["URL"], local_path=local_path,  timeout=timeout)
+    
         # Clear selected entries' checkboxes on table
         self.table.selected_rows = []
