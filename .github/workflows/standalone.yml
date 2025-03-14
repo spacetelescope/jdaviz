@@ -127,24 +127,6 @@ jobs:
         DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
-    - name: Remove invalid files for OSX
-      # hopefully we can improve this in the future
-      # by using good hooks
-      # i think the issue is that we have a . in the name, there are many
-      # google hits on pyqt having the same issue
-      # and we might be able to remove it after https://github.com/pyinstaller/pyinstaller/pull/7619
-      # is released (pyinstaller 5.13 probably)
-      if: ${{ matrix.os == 'macos-14' }}
-      run: |
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/skimage/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/shapely/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/shapely/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/special/*.dylib
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/special/*.dylib
-
     - name: Codesign (OSX)
       if: ${{ matrix.os == 'macos-14' }}
       run: |
