@@ -345,16 +345,12 @@ an interactively selected region. A typical workflow is as follows:
    to not applying any scaling. This field is only used if data has a valid unit.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
-9. Select the desired radial profile plot type using the :guilabel:`Plot Type` dropdown menu:
+9. Select the desired radial profile plot type using the :guilabel:`Plot Type` dropdown menu
+   (see :ref:`photutils:profiles` for more details):
 
-  * Curve of Growth: :attr:`~photutils.aperture.ApertureStats.sum` (sum of flux in the aperture)
-    across radii from center out to the edge of the aperture. This is calculated in the same
-    way as the final aperture sum in the output table, which is explained farther down on
-    this page.
-  * Radial Profile: Binned average as a function of radius from the center of the region.
-  * Radial Profile (Raw): Raw image data points as a function of radius from the center of the region.
-    Caution: having too many data points may cause performance issues with this feature.
-    The exact limitations depend on your hardware.
+  * Curve of Growth
+  * Radial Profile
+  * Radial Profile (Raw)
 
 10. Toggle :guilabel:`Fit Gaussian` on to fit a `~astropy.modeling.functional_models.Gaussian1D`
     model to the radial profile data. This is disabled for curve-of-growth.
