@@ -51,7 +51,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return '1D Spectrum'
+        return 'spectrum-1d-viewer'
 
     def __call__(self):
         data_label = self.data_label_value

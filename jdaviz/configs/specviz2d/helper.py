@@ -98,16 +98,20 @@ class Specviz2d(Specviz):
             raise NotImplementedError()
 
         if spectrum_2d is not None:
+            if spectrum_2d_label is not None:
+                spectrum_2d_label = self.app.return_unique_name(spectrum_2d_label)
             self.load(spectrum_2d, format='2D Spectrum',
-                      data_label=self.app.return_unique_name(spectrum_2d_label),
+                      data_label=spectrum_2d_label,
                       auto_extract=spectrum_1d is None,
                       show_in_viewer=show_in_viewer,
                       cache=cache,
                       local_path=local_path,  # is this implemented by url-resolver?
                       timeout=timeout)
         if spectrum_1d is not None:
+            if spectrum_1d_label is not None:
+                spectrum_1d_label = self.app.return_unique_name(spectrum_1d_label)
             self.load(spectrum_1d, format='1D Spectrum',
-                      data_label=self.app.return_unique_name(spectrum_1d_label),
+                      data_label=spectrum_1d_label,
                       show_in_viewer=show_in_viewer,
                       cache=cache,
                       local_path=local_path,  # is this implemented by url-resolver?

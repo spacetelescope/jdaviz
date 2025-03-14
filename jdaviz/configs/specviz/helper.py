@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.utils.decorators import deprecated
 from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
-from specutils import SpectralRegion, Spectrum1D
+from specutils import SpectralRegion, Spectrum1D, SpectrumList
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
@@ -87,8 +87,12 @@ class Specviz(ConfigHelper, LineListMixin):
             format = '1D Spectrum List'
         else:
             format = '1D Spectrum'
+        if isinstance(data, SpectrumList):
+            format = '1D Spectrum List'
+        if data_label is not None:
+            data_label = self.app.return_unique_name(data_label)
         self.load(data, format=format,
-                  data_label=self.app.return_unique_name(data_label),
+                  data_label=data_label,
                   show_in_viewer=show_in_viewer,
                   cache=cache, local_path=local_path, timeout=timeout)
 

@@ -267,6 +267,7 @@ class BaseResolver(PluginTemplateMixin):
 
 
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
+    formats = format if isinstance(format, list) else [format]
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():
         if resolver is not None and resolver != resolver_name:
@@ -289,15 +290,15 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
                 continue
             this_resolver.target = target
         for fmt in this_resolver.format.choices:
-            if format is not None and fmt != format:
+            if format is not None and fmt not in formats:
                 continue
             this_resolver.format.selected = fmt
             valid_resolvers.append((this_resolver, resolver_name, fmt))
 
     if len(valid_resolvers) == 0:
-        raise ValueError("no valid resolvers found for input")
+        raise ValueError("no valid loaders found for input")
     elif len(valid_resolvers) > 1:
         vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
-        raise ValueError(f"multiple valid resolvers found for input: {vrs}")
+        raise ValueError(f"multiple valid loaders found for input: {vrs}")
     else:
         return valid_resolvers[0][0].user_api

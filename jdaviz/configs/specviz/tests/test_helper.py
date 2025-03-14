@@ -60,7 +60,7 @@ class TestSpecvizHelper:
         self.spec_app.load_data(self.spec_list)
         assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
-            assert "specviz_data" in self.spec_app.app.data_collection[i].label
+            assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
 
     def test_load_spectrum_list_with_labels(self):
         # now load three more spectra from a SpectrumList, with labels:
