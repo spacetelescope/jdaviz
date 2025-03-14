@@ -453,21 +453,21 @@ class TestRadialProfile():
         data = np.ones((51, 51)) * u.nJy
         aperture = EllipticalAperture((25, 25), 20, 15)
         phot_aperstats = ApertureStats(data, aperture)
-        self.data_cutout = phot_aperstats.data_cutout
+        self.data = data
         self.bbox = phot_aperstats.bbox
         self.centroid = phot_aperstats.centroid
 
     def test_profile_raw(self):
-        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.centroid, raw=True)
+        x_arr, y_arr = _radial_profile(self.data, self.bbox, self.centroid, raw=True)
         # Too many data points to compare each one for X.
-        assert x_arr.shape == y_arr.shape == (923, )
+        assert x_arr.shape == y_arr.shape == (1371, )
         assert_allclose(x_arr.min(), 0)
-        assert_allclose(x_arr.max(), 19.4164878389476)
+        assert_allclose(x_arr.max(), 21)
         assert_allclose(y_arr, 1)
 
     def test_profile_imexam(self):
-        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.centroid, raw=False)
-        assert_allclose(x_arr, range(20))
+        x_arr, y_arr = _radial_profile(self.data, self.bbox, self.centroid, raw=False)
+        assert_allclose(x_arr, np.arange(21) + 0.5)
         assert_allclose(y_arr, 1)
 
 
@@ -479,45 +479,34 @@ def test_curve_of_growth(with_unit):
     cen = (25, 25)
     if with_unit:
         data = data << (u.MJy / u.sr)
+        data_unit = data.unit.to_string()
         bg = 0 * data.unit
         pixarea_fac = 1 * u.sr
         expected_ylabel = 'MJy'
     else:
+        data_unit = None
         bg = 0
         pixarea_fac = None
         expected_ylabel = 'Value'
 
     apertures = (CircularAperture(cen, 20),
                  EllipticalAperture(cen, 20, 15),
-                 RectangularAperture(cen, 20, 15))
+                 RectangularAperture(cen, 40, 30))
 
     for aperture in apertures:
         astat = ApertureStats(data, aperture)
-        final_sum = astat.sum
-        if pixarea_fac is not None:
-            final_sum = final_sum * pixarea_fac
         x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-            data, astat.centroid, aperture, final_sum, background=bg, pixarea_fac=pixarea_fac)
+            data, astat.centroid, aperture, background=bg, pixarea_fac=pixarea_fac,
+            image_unit=data_unit)
         assert_allclose(x_arr, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
         assert y_label == expected_ylabel
-
-        if isinstance(aperture, CircularAperture):
-            assert x_label == 'Radius (pix)'
-            assert_allclose(sum_arr, [
-                12.566371, 50.265482, 113.097336, 201.06193, 314.159265,
-                452.389342, 615.75216, 804.247719, 1017.87602, 1256.637061])
-        elif isinstance(aperture, EllipticalAperture):
-            assert x_label == 'Semimajor axis (pix)'
-            assert_allclose(sum_arr, [
-                9.424778, 37.699112, 84.823002, 150.796447, 235.619449,
-                339.292007, 461.81412, 603.185789, 763.407015, 942.477796])
-        else:  # RectangularAperture
-            assert x_label == 'Width (pix)'
-            assert_allclose(sum_arr, [3, 12, 27, 48, 75, 108, 147, 192, 243, 300])
+        assert x_label == 'Radius (pix)'
+        assert_allclose(sum_arr, [
+            12.566371, 50.265482, 113.097336, 201.06193, 314.159265,
+            452.389342, 615.75216, 804.247719, 1017.87602, 1256.637061])
 
     with pytest.raises(TypeError, match='Unsupported aperture'):
-        _curve_of_growth(data, cen, EllipticalAnnulus(cen, 3, 8, 5), 100,
-                         pixarea_fac=pixarea_fac)
+        _curve_of_growth(data, cen, EllipticalAnnulus(cen, 3, 8, 5), pixarea_fac=pixarea_fac)
 
 
 def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):

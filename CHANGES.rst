@@ -25,8 +25,14 @@ API Changes
 Cubeviz
 ^^^^^^^
 
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
 Imviz
 ^^^^^
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
 
 Mosviz
 ^^^^^^
@@ -57,6 +63,8 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+
+- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
 
 4.2.1 (unreleased)
 ==================
