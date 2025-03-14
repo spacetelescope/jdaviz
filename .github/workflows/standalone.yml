@@ -120,7 +120,7 @@ jobs:
       run: pip install .[test,qt]
 
     - name: Install pyinstaller
-      run: pip install "pyinstaller<6"
+      run: pip install "pyinstaller"
 
     - name: Create standalone binary
       env:
