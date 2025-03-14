@@ -63,6 +63,7 @@ class TestSpecvizHelper:
             assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
 
     def test_load_spectrum_list_with_labels(self):
+        # NOTE: will be removed after load_data deprecation is removed
         # now load three more spectra from a SpectrumList, with labels:
         labels = ["List test 1", "List test 2", "List test 3"]
         self.spec_app.load_data(self.spec_list, data_label=labels)
@@ -75,6 +76,7 @@ class TestSpecvizHelper:
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
+        # NOTE: will be removed after load_data deprecation is removed
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
             self.spec_app.load_data(self.spec_list, data_label=labels)

@@ -83,6 +83,18 @@ class Specviz(ConfigHelper, LineListMixin):
         if concat_by_file:
             raise NotImplementedError()
 
+        if isinstance(data, SpectrumList) and isinstance(data_label, list):
+            if len(data_label) != len(data):
+                raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
+                                 f" than length of list of data ({len(data)})")
+            # new infrastructure doesn't support passing a list, but we'll
+            # wrap it for now during deprecation period
+            for spec, label in zip(data, data_label):
+                self.load_data(spec, data_label=label,
+                               show_in_viewer=show_in_viewer,
+                               cache=cache, local_path=local_path, timeout=timeout)
+            return
+
         if load_as_list:
             format = '1D Spectrum List'
         else:
