@@ -1161,6 +1161,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     try:
                         state = regions2roi(region, wcs=data.coords)
                     except ValueError:
+                        if '_orig_spatial_wcs' not in data.meta:
+                            bad_regions.append((region,
+                                                f'Failed to load: _orig_spatial_wcs'
+                                                f' meta tag not in {data.label}'))
+                            continue
                         state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'].celestial)
                     viewer.apply_roi(state)
 
