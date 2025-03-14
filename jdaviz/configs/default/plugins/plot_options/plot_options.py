@@ -718,11 +718,16 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         viewer = self.app.get_viewer_by_id(msg.viewer_id)
         viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer))
 
-    def _layers_changed(self, viewer):
-        if self.viewer_multiselect:
+    @observe('viewer_selected')
+    def _layers_changed(self, viewer=None):
+        if self.viewer_multiselect or not hasattr(self, 'viewer'):
             self.active_layer = None
+            return
 
-        if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():
+        if viewer is None:
+            print(f"viewer is None, setting to {self.viewer.selected}")
+            viewer = self.viewer.selected_obj
+        if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():  # noqa
             self.active_layer = viewer.active_image_layer.layer.label
 
     def vue_unmix_state(self, names):
