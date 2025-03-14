@@ -1660,43 +1660,48 @@ class Application(VuetifyTemplate, HubListener):
 
         return data_label
 
-    def return_unique_name(self, data_label, ext=None):
-        if data_label is None:
-            data_label = "Unknown"
+    def return_unique_name(self, label, typ='data', ext=None):
+        if typ == 'data':
+            exist_labels = self.data_collection.labels
+        elif typ == 'viewer':
+            exist_labels = list(self._viewer_store.keys())
+        else:
+            raise ValueError("typ must be either 'data' or 'viewer'")
+        if label is None:
+            label = "Unknown"
 
         # This regex checks for any length of characters that end
         # with a space followed by parenthesis with a number inside.
         # If there is a match, the space and parenthesis section will be
         # removed so that the remainder of the label can be checked
-        # against the data_label.
+        # against the label.
         check_if_dup = re.compile(r"(.*)(\s\(\d*\))$")
-        labels = self.data_collection.labels
         number_of_duplicates = 0
         max_number = 0
-        for label in labels:
+        for exist_label in exist_labels:
             # If label is a duplicate of another label
-            if re.fullmatch(check_if_dup, label):
-                label_split = label.split(" ")
-                label_without_dup = " ".join(label_split[:-1])
-                label = label_without_dup
+            if re.fullmatch(check_if_dup, exist_label):
+                exist_label_split = exist_label.split(" ")
+                exist_label_without_dup = " ".join(exist_label_split[:-1])
+                exist_label = exist_label_without_dup
                 # Remove parentheses and cast to float
-                number_dup = int(label_split[-1][1:-1])
+                number_dup = int(exist_label_split[-1][1:-1])
                 # Used to keep track the max number of duplicates,
                 # even if not all duplicates are loaded (or some
                 # are renamed)
                 if number_dup > max_number:
                     max_number = number_dup
 
-            if ext and f"{data_label}[{ext}]" == label:
+            if ext and f"{label}[{ext}]" == exist_label:
                 number_of_duplicates += 1
-            elif ext is None and data_label == label:
+            elif ext is None and label == exist_label:
                 number_of_duplicates += 1
 
         if ext:
-            data_label = f"{data_label}[{ext}]"
+            label = f"{label}[{ext}]"
 
         if number_of_duplicates > 0:
-            data_label = f"{data_label} ({number_of_duplicates})"
+            label = f"{label} ({number_of_duplicates})"
 
         # It is possible to add data named "test (1)" and then
         # add another data named "test" and return_unique_name will see the
@@ -1705,12 +1710,12 @@ class Application(VuetifyTemplate, HubListener):
         # causes issues. This block alters the duplicate number to be something unique
         # (one more than the max number duplicate found)
         # if a duplicate is still found in data_collection.
-        if data_label in self.data_collection.labels:
-            label_split = data_label.split(" ")
+        if label in exist_labels:
+            label_split = label.split(" ")
             label_without_dup = " ".join(label_split[:-1])
-            data_label = f"{label_without_dup} ({max_number + 1})"
+            label = f"{label_without_dup} ({max_number + 1})"
 
-        return data_label
+        return label
 
     def add_data_to_viewer(self, viewer_reference, data_label,
                            visible=True, clear_other_data=False):

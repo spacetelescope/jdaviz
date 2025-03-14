@@ -87,7 +87,8 @@ class Specviz(ConfigHelper, LineListMixin):
             format = '1D Spectrum List'
         else:
             format = '1D Spectrum'
-        self.load(data, format=format, data_label=data_label,
+        self.load(data, format=format,
+                  data_label=self.app.return_unique_name(data_label),
                   show_in_viewer=show_in_viewer,
                   cache=cache, local_path=local_path, timeout=timeout)
 

@@ -48,5 +48,5 @@ def test_default_viewer_ids_specviz2d(specviz2d_helper, mos_spectrum2d):
     assert x.get_viewer_reference_names() == []
 
     specviz2d_helper.load(mos_spectrum2d, format='2D Spectrum')
-    assert x.get_viewer_reference_names() == ['2D Spectrum', '1D Spectrum']
-    assert x.get_viewer_ids() == ['2D Spectrum', '1D Spectrum']
+    assert sorted(x.get_viewer_reference_names()) == ['1D Spectrum', '2D Spectrum']
+    assert sorted(x.get_viewer_ids()) == ['1D Spectrum', '2D Spectrum']

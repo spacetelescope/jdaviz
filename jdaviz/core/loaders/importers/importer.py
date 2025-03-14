@@ -109,6 +109,15 @@ class BaseImporterToDataCollection(BaseImporter):
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
+            if default_viewer_reference is None:
+                default_viewer_reference = self.default_viewer_reference
+                default_viewer_label = self.default_viewer_label
+            else:
+                default_viewer_label = vid_map.get(default_viewer_reference,
+                                                   default_viewer_reference)
+            default_viewer_label = self.app.return_unique_name(default_viewer_label,
+                                                               typ='viewer')
+
             viewer_dict = viewer_registry.members.get(default_viewer_reference)
             viewer_cls = viewer_dict.get('cls')
             self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
