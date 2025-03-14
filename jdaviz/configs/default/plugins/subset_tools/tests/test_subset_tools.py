@@ -1,5 +1,6 @@
 import operator
 import warnings
+
 import numpy as np
 import pytest
 from astropy import units as u
@@ -246,6 +247,7 @@ def test_import_sky_region_in_cubeviz(cubeviz_helper, spectrum1d_cube):
 
     status = plg.import_region(aperture, return_bad_regions=True)
     assert status == []
+    assert cubeviz_helper.app.get_subsets('Subset 1')
 
 
 def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
