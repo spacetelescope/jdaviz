@@ -83,7 +83,7 @@ class TestSpecvizHelper:
 
     def test_load_spectrum_collection(self):
         with pytest.raises(TypeError):
-            collection = SpectrumCollection([1]*u.AA)
+            collection = SpectrumCollection([1]*u.Jy, [1]*u.AA)
             self.spec_app.load_data(collection)
 
     def test_get_spectra(self):
@@ -418,7 +418,7 @@ def test_load_2d_flux(specviz_helper):
     specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test [0]"
+    assert specviz_helper.app.data_collection[0].label == "test_0"
 
     spec2 = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                        flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
@@ -428,7 +428,7 @@ def test_load_2d_flux(specviz_helper):
     specviz_helper.load_data(spec_list, data_label="second test")
 
     assert len(specviz_helper.app.data_collection) == 10
-    assert specviz_helper.app.data_collection[-1].label == "second test [5]"
+    assert specviz_helper.app.data_collection[-1].label == "second test_5"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
