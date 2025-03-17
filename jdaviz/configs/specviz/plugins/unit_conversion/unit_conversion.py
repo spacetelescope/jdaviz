@@ -281,8 +281,9 @@ class UnitConversion(PluginTemplateMixin):
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
 
-            if not len(self.spectral_unit_selected):
+            if not len(self.spectral_unit_selected) and data_obj.__class__.__name__ != 'FlatTrace':
                 try:
+                    print(dir(data_obj))
                     self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
                 except ValueError:
                     self.spectral_unit.selected = ''
@@ -299,7 +300,7 @@ class UnitConversion(PluginTemplateMixin):
                 except ValueError:
                     self.flux_unit.selected = ''
 
-            if not self.angle_unit_selected:
+            if not self.angle_unit_selected and data_obj.__class__.__name__ != 'FlatTrace':
                 self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
                 try:
                     if angle_unit is None:
