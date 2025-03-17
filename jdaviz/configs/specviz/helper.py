@@ -338,7 +338,7 @@ class Specviz(ConfigHelper, LineListMixin):
         sv = self.viewers[self._default_spectrum_viewer_reference_name]
         sv.set_tick_format(fmt, axis=['x', 'y'][axis])
 
-    def get_data(self, data_label=None, spectral_subset=None, cls=None,
+    def get_data(self, data_label=None, spectral_subset=None, cls=Spectrum1D,
                  use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from

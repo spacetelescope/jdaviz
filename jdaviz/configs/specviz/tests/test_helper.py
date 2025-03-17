@@ -237,8 +237,7 @@ class TestSpecvizHelper:
 
 
 def test_get_spectra_no_spectra(specviz_helper, spectrum1d):
-    with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
-        spectra = specviz_helper.get_spectra()
+    spectra = specviz_helper.get_spectra()
 
     assert spectra == {}
 

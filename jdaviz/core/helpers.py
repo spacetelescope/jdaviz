@@ -537,8 +537,7 @@ class ConfigHelper(HubListener):
 
         if not spatial_subset and not mask_subset:
             if 'Trace' in data.meta:
-                if cls is not None:  # pragma: no cover
-                    raise ValueError("cls not supported for Trace object")
+                # ignore cls
                 data = data.get_object()
             else:
                 data = data.get_object(cls=cls, **object_kwargs)
