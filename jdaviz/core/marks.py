@@ -113,7 +113,7 @@ class PluginMark:
     def set_x_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
-                if self.viewer.data():
+                if self.viewer.data() and hasattr(self.viewer.data()[0], 'spectral_axis'):
                     unit = self.viewer.data()[0].spectral_axis.unit
                 else:
                     return
@@ -130,7 +130,7 @@ class PluginMark:
     def set_y_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
-                if self.viewer.data():
+                if self.viewer.data() and hasattr(self.viewer.data()[0], 'flux'):
                     unit = self.viewer.data()[0].flux.unit
                 else:
                     return
