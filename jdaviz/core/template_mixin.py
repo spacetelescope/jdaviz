@@ -2341,10 +2341,12 @@ class SubsetSelect(SelectPluginComponent):
 
         if self.selected_obj is None:
             return np.nanmin(dataset.spectral_axis), np.nanmax(dataset.spectral_axis)
-        if self.selected_item.get('type') != 'spectral':
-            raise TypeError("This action is only supported on spectral-type subsets")
         else:
-            return self.selected_obj.lower, self.selected_obj.upper
+            try:
+                return self.selected_obj.lower, self.selected_obj.upper
+            except AttributeError:
+                if self.selected_item.get('type') != 'spectral':
+                    raise TypeError("This action is only supported on spectral-type subsets")
 
 
 class SubsetSelectMixin(VuetifyTemplate, HubListener):
@@ -2413,7 +2415,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        spectrum_viewer = kwargs.get('spectrum_viewer_reference_name')
+        spectrum_viewer = kwargs.get('spectrum_viewer_reference_name', '1D Spectrum')
         self.spectral_subset = SubsetSelect(self,
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
