@@ -166,7 +166,7 @@ jobs:
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os == 'macos-14' }}
-      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
+      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz --port=8765 &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
