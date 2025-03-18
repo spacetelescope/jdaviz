@@ -95,7 +95,7 @@ jobs:
   # Do not want to deal with OSX certs in pull request builds.
   build_binary_osx:
     runs-on: ${{ matrix.os }}
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [macos-14]
@@ -166,7 +166,7 @@ jobs:
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os == 'macos-14' }}
-      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
+      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz --port=8765 &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
