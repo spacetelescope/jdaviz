@@ -190,7 +190,7 @@ def test_spectrum_on_top(specviz2d_helper):
 
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
     pext.trace_pixel = 14.2
-    assert pext.bg_type_selected == 'OneSided'
+    assert pext.bg_type_selected == 'TwoSided'
     np.testing.assert_allclose(pext.bg_separation, 6)
 
 
