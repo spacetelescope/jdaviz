@@ -283,7 +283,6 @@ class UnitConversion(PluginTemplateMixin):
 
             if not len(self.spectral_unit_selected) and data_obj.__class__.__name__ != 'FlatTrace':
                 try:
-                    print(dir(data_obj))
                     self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
                 except ValueError:
                     self.spectral_unit.selected = ''
