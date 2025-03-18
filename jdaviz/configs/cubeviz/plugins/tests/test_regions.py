@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from regions import PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion
+from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion,
+                     EllipseSkyRegion)
 from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
@@ -63,9 +64,12 @@ class TestLoadRegions(BaseRegionHandler):
 
         # Get spatial regions only.
         st = self.cubeviz.plugins['Subset Tools']._obj
+
+        # Default return type for get_regions is SkyRegion (if possible)
+        assert isinstance(st.get_regions(region_type='spatial')['Subset 1'], EllipseSkyRegion)
+
         spatial_subsets_as_regions = st.get_regions(region_type='spatial', return_sky_region=False)
         assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
-        print(spatial_subsets_as_regions)
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
         ss = self.cubeviz.app.get_subsets()
