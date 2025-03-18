@@ -296,6 +296,7 @@ class Application(VuetifyTemplate, HubListener):
 
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
+    api_hints_obj = Unicode("").tag(sync=True)  # will use config if not defined
     vdocs = Unicode("").tag(sync=True)
     docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
@@ -2805,7 +2806,7 @@ class Application(VuetifyTemplate, HubListener):
         self._viewer_store[vid] = viewer
 
         # Add viewer locally
-        if self.config == 'specviz':
+        if self.config in ('deconfigged', 'specviz', 'specviz2d'):
             # add to bottom (eventually will want more control in placement)
             self.state.stack_items[0]['children'].append(new_stack_item)
         else:

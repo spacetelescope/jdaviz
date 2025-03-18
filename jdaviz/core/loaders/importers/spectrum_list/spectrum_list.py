@@ -18,7 +18,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config != 'specviz':
+        if self.app.config not in ('deconfigged', 'specviz'):
             # NOTE: temporary during deconfig process
             return False
         # TODO: should this be split into two loaders?

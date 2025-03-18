@@ -11,6 +11,9 @@ class TraceImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
+        if self.app.config not in ('deconfigged', 'specviz2d'):
+            # NOTE: temporary during deconfig process
+            return False
         return (isinstance(self.input, Trace)
                 and 'Spectral Extraction' in self.app._jdaviz_helper.plugins)
 

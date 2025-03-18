@@ -13,7 +13,7 @@ __all__ = ['RegionsParser']
 class RegionsParser(BaseParser):
     @property
     def is_valid(self):
-        if self.app.config != 'specviz':
+        if self.app.config not in ('deconfigged', 'specviz'):
             # NOTE: temporary during deconfig process
             return False
         if isinstance(self.input, str):

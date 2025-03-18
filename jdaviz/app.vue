@@ -91,7 +91,7 @@
                 :loader_items="state.loader_items"
                 :loader_selected.sync="state.loader_selected"
                 :api_hints_enabled="state.show_api_hints"
-                :api_hints_obj="config"
+                :api_hints_obj="api_hints_obj || config"
               ></j-loader-panel>
             </v-card>
 
@@ -130,7 +130,7 @@
                           </j-tooltip>
                         </v-list-item-title>
                         <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                          <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  config }}.plugins['{{ trayItem.label }}']</span>
+                          <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
                         </v-list-item-subtitle>
                         <v-list-item-subtitle v-if="state.show_api_hints && state.tray_items_filter.length" v-for="api_method in trayItemMethodMatch(trayItem, state.tray_items_filter)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
                           <span class="api-hint">plg.{{ api_method }}</span>

@@ -261,6 +261,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)
+    api_hints_obj = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
     api_hints_enabled = Bool(False).tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
@@ -278,6 +279,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
 
         # give the vue templates access to the current config/layout
         obj.config = app.state.settings.get("configuration", "default")
+        obj.api_hints_obj = app.api_hints_obj if app.api_hints_obj else obj.config
 
         # give the vue templates access to jdaviz version
         obj.vdocs = app.vdocs
