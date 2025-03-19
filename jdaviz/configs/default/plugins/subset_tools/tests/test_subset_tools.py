@@ -376,7 +376,7 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     st.import_region(sr2, combination_mode='and')
 
     # composite subset should be a sky region, and combined to a compound region
-    regs = st.get_regions()
+    regs = st.get_regions(return_sky_region=True)
 
     cr = regs['Subset 1']
     assert isinstance(cr, CompoundSkyRegion)
