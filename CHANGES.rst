@@ -72,6 +72,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Significantly improved performance for panning and zooming with large datasets. [#3513]
+
 Cubeviz
 ^^^^^^^
 
