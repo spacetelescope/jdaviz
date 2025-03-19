@@ -7,7 +7,7 @@ from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMess
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import LinkUpdatedMessage, ChangeRefDataMessage
+from jdaviz.core.events import LinkUpdatedMessage, ChangeRefDataMessage, FootprintSelectClickEventMessage
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import is_stcs_string, regions2roi, stcs_string2region
 from jdaviz.core.registries import tray_registry
@@ -160,7 +160,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_rotation)  # noqa
+        self.hub.subscribe(self, FootprintSelectClickEventMessage,
+                           handler=self._on_select_footprint_overlay)
         self._on_link_type_updated()
+
+    def _on_select_footprint_overlay(self, data):
+        x, y = data.x, data.y
 
     @property
     def user_api(self):

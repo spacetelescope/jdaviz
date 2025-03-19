@@ -18,7 +18,7 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
-                                CatalogSelectClickEventMessage)
+                                CatalogSelectClickEventMessage, FootprintSelectClickEventMessage)
 from jdaviz.core.marks import SpectralLine
 
 __all__ = []
@@ -408,6 +408,25 @@ class SelectCatalogMark(CheckableTool, HubListener):
     def is_visible(self):
         # NOTE: this assumes Catalogs._marker_name remains fixed at the default of 'catalog_results'
         return 'catalog_results' in [dci.label for dci in self.viewer.jdaviz_app.data_collection]
+
+
+@viewer_tool
+class SelectFootprintOverlay(CheckableTool, HubListener):
+    icon = os.path.join(ICON_DIR, 'footprint_select.svg')
+    tool_id = 'jdaviz:selectfootprint'
+    action_text = 'Select/identify overlay'
+    tool_tip = 'Select/identify overlay'
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event,
+                                       events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        msg = FootprintSelectClickEventMessage(data, sender=self)
+        self.viewer.session.hub.broadcast(msg)
 
 
 @viewer_tool
