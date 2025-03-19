@@ -46,6 +46,9 @@ class FormatSelect(SelectPluginComponent):
         # check for valid parser > importer combinations given the current filters
         # and resolver inputs
         try:
+            # NOTE: plugin is just because this inherits from SelectPluginComponent,
+            # but is actually the resolver.  This calls the implemented __call__ method
+            # on the parent resolver.
             parser_input = self.plugin()
         except Exception:
             self.items = []
@@ -206,6 +209,7 @@ class BaseResolver(PluginTemplateMixin):
 
     @with_spinner('format_items_spinner')
     def _update_format_items(self):
+        # NOTE: this will result in a call to the implemented __call__ on the resolver
         self.format._update_items()
         self.target._update_items()  # assumes format._importers is updated from above
         # ensure the importer updates even if the format selection remains fixed
