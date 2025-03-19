@@ -40,6 +40,7 @@ const tooltips = {
       some ad blockers or browser settings may block popup windows,
       causing this feature not to work.
     </div>`, 
+  'plugin-table-send-to-app': 'Show table in main app view',
 
   'g-data-tools': 
     'Load data from file',
