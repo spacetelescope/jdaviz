@@ -4,7 +4,8 @@ import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum1D
-from jdaviz import Application, Specviz
+from jdaviz import Specviz
+from jdaviz.app import Application
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                viewer_flux_conversion_equivalencies)
@@ -152,7 +153,7 @@ def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
 def test_viewer_renaming_specviz(specviz_helper, spectrum1d):
     specviz_helper.load(spectrum1d)
     viewer_names = [
-        '1D Spectrum',
+        'spectrum-viewer',
         'second-viewer-name',
         'third-viewer-name'
     ]

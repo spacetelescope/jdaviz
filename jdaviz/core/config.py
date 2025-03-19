@@ -94,4 +94,4 @@ def list_configurations():
     """Get a list of pre-built configurations."""
 
     path = pathlib.Path(__file__).resolve().parent.parent / "configs"
-    return [i.stem for i in path.rglob('*.yaml')]
+    return [i.stem for i in path.rglob('*.yaml') if i.stem != 'deconfigged']

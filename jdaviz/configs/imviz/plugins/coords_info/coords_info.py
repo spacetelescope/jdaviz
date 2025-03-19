@@ -156,7 +156,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if self.app.config == 'mosviz':
             return {'mosviz-1': ['mosviz-2:matched'],
                     'mosviz-2': ['mosviz-1']}
-        if self.app.config == 'specviz':
+        if self.app.config == 'deconfigged':
             # note: this is the deconfigged specviz which has dynamic matched viewers
             matched_markers = {}
             for viewer_id, viewer in self.app._viewer_store.items():

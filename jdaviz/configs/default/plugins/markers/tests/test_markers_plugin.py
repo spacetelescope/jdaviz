@@ -255,7 +255,7 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     mp.keep_active = True
 
     label_mouseover = specviz2d_helper._coords_info
-    viewer2d = specviz2d_helper.app.get_viewer('2D Spectrum')
+    viewer2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     label_mouseover._viewer_mouse_event(viewer2d, {"event": "mousemove",
                                                    "domain": {"x": 6, "y": 3}})
     assert label_mouseover.as_text() == ('Pixel x=06.0 y=03.0 Value +6.00000e+00 MJy',

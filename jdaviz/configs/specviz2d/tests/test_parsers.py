@@ -32,7 +32,7 @@ def test_2d_parser_jwst(specviz2d_helper):
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panel.
-    viewer_2d = specviz2d_helper.app.get_viewer('2D Spectrum')
+    viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})
@@ -75,7 +75,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
 
     # Also check the coordinates info panels.
 
-    viewer_2d = specviz2d_helper.app.get_viewer('2D Spectrum')
+    viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
@@ -83,7 +83,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
                                          'Wave 1.00000e-06 m', '')
     assert label_mouseover.icon == 'a'
 
-    viewer_1d = specviz2d_helper.app.get_viewer('1D Spectrum')
+    viewer_1d = specviz2d_helper.app.get_viewer('spectrum-viewer')
     # need to trigger a mouseleave or mouseover to reset the traitlets
     label_mouseover._viewer_mouse_event(viewer_1d, {'event': 'mouseenter'})
     label_mouseover._viewer_mouse_event(viewer_1d,
@@ -138,13 +138,13 @@ def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d, spectrum_1d=spectrum1d)
     assert specviz2d_helper.app.data_collection.labels == ['Spectrum 2D', 'Spectrum 1D']
 
-    spec2d_viewer = specviz2d_helper.app.get_viewer('2D Spectrum')
+    spec2d_viewer = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     assert spec2d_viewer.figure.axes[0].label == "x: pixels"  # -0.5, 14.5
     spec2d_viewer.apply_roi(XRangeROI(10, 12))
 
     spec2d_viewer.session.edit_subset_mode._mode = NewMode
 
-    spec1d_viewer = specviz2d_helper.app.get_viewer('1D Spectrum')
+    spec1d_viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
     assert spec1d_viewer.figure.axes[0].label == "Wavelength [Angstrom]"  # 6000, 8000
     spec1d_viewer.apply_roi(XRangeROI(7000, 7100))
 

@@ -11,6 +11,13 @@ __all__ = ['Spectrum1DImporter']
 class Spectrum1DImporter(BaseImporterToDataCollection):
     template_file = __file__, "../to_dc_with_label.vue"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.app.config == 'specviz':
+            self.data_label_default = '1D Spectrum'
+        elif self.app.config == 'specviz2d':
+            self.data_label_default = '1D Spectrum (auto-ext)'
+
     @property
     def is_valid(self):
         if self.app.config not in ('deconfigged', 'specviz', 'specviz2d'):

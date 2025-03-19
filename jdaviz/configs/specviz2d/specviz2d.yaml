@@ -1,7 +1,5 @@
 settings:
-  configuration: specviz
-  data:
-    parser: specviz-spectrum1d-parser
+  configuration: specviz2d
   visible:
     menu_bar: false
     toolbar: true
@@ -21,10 +19,10 @@ tray:
   - g-plot-options
   - g-subset-tools
   - g-markers
+  - g-unit-conversion
   - spectral-extraction
   - g-gaussian-smooth
   - g-model-fitting
-  - g-unit-conversion
   - g-line-list
   - specviz-line-analysis
   - export
@@ -34,6 +32,11 @@ viewer_area:
     children:
       - container: row
         viewers:
+          - name: 2D Spectrum viewer
+            plot: mosviz-profile-2d-viewer
+            reference: spectrum-2d-viewer
+      - container: row
+        viewers:
           - name: Spectrum
-            plot: spectrum-1d-viewer
+            plot: mosviz-profile-viewer
             reference: spectrum-viewer

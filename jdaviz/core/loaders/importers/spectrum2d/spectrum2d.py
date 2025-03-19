@@ -25,6 +25,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        if self.app.config == 'specviz2d':
+            self.data_label_default = '2D Spectrum'
+
         self.ext_data_label = AutoTextField(self,
                                             'ext_data_label_value',
                                             'ext_data_label_default',
@@ -46,7 +49,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return '2D Spectrum'
+        return 'spectrum-2d-viewer'
 
     @observe('data_label_value')
     def _data_label_changed(self, msg={}):

@@ -22,7 +22,7 @@ def test_plugin(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -278,7 +278,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -307,7 +307,7 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -336,7 +336,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -363,7 +363,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -392,7 +392,7 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -427,7 +427,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -457,7 +457,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
@@ -487,7 +487,7 @@ def test_subset_changed(specviz_helper, spectrum1d):
     plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])

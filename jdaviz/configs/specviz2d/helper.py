@@ -9,9 +9,9 @@ __all__ = ['Specviz2d']
 class Specviz2d(Specviz):
     """Specviz2D Helper class"""
 
-    _default_configuration = "specviz"
-    _default_spectrum_viewer_reference_name = "1D Spectrum"
-    _default_spectrum_2d_viewer_reference_name = "2D Spectrum"
+    _default_configuration = "specviz2d"
+    _default_spectrum_viewer_reference_name = "spectrum-viewer"
+    _default_spectrum_2d_viewer_reference_name = "spectrum-2d-viewer"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

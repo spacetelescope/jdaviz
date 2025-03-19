@@ -10,7 +10,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     spectrum1d.mask = mask
 
     specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     # create a "Subset 1" entry
     subset_plugin = specviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(SpectralRegion(6500 * spectrum1d.spectral_axis.unit,

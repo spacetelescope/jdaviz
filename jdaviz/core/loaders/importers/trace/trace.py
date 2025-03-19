@@ -21,4 +21,4 @@ class TraceImporter(BaseImporterToDataCollection):
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return '2D Spectrum'
+        return 'spectrum-2d-viewer'

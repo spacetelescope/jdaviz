@@ -237,7 +237,8 @@ class TestSpecvizHelper:
 
 
 def test_get_spectra_no_spectra(specviz_helper, spectrum1d):
-    spectra = specviz_helper.get_spectra()
+    with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
+        spectra = specviz_helper.get_spectra()
 
     assert spectra == {}
 
@@ -285,11 +286,18 @@ def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
 
 
 def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
+    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+
+    # Mouseover without data should not crash.
+    label_mouseover = specviz_helper._coords_info
+    label_mouseover._viewer_mouse_event(spec_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
+    assert label_mouseover.as_text() == ('', '', '')
+    assert label_mouseover.icon == ''
+
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
     specviz_helper.load_data(spectrum1d)  # Originally Angstrom
-    spec_viewer = specviz_helper._spectrum_viewer
-    label_mouseover = specviz_helper._coords_info
 
     # Also check coordinates info panel.
     # x=0 -> 6000 A, x=1 -> 6222.222 A
@@ -347,7 +355,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 def test_subset_default_thickness(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     sv.toolbar.active_tool = sv.toolbar.tools['bqplot:xrange']
 
     spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
@@ -361,7 +369,7 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
 
 def test_app_links(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer('1D Spectrum')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     assert isinstance(sv.jdaviz_app, Application)
     assert isinstance(sv.jdaviz_helper, Specviz)
 
@@ -434,7 +442,7 @@ def test_load_2d_flux(specviz_helper):
 def test_plot_uncertainties(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    specviz_viewer = specviz_helper.app.get_viewer('1D Spectrum')
+    specviz_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
@@ -473,7 +481,7 @@ def test_data_label_as_posarg(specviz_helper, spectrum1d):
 
 
 def test_spectra_partial_overlap(specviz_helper):
-    spec_viewer = specviz_helper.app.get_viewer('1D Spectrum')
+    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     wave_1 = np.linspace(6000, 7000, 10) * u.AA
     flux_1 = ([1200] * wave_1.size) * u.nJy
@@ -527,7 +535,7 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     assert subset1.subset_state.att.parent.label == "my_spec_AA"
     np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
-    specviz_helper.app.remove_data_from_viewer('1D Spectrum', "my_spec_AA")
+    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
     specviz_helper.app.data_item_remove("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened

@@ -21,9 +21,8 @@ class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
         assert len(self.imviz.viewers) == 3
 
 
-def test_specviz_zoom_level(specviz_helper, spectrum1d):
-    specviz_helper.load(spectrum1d)
-    v = specviz_helper.viewers['1D Spectrum']
+def test_specviz_zoom_level(specviz_helper):
+    v = specviz_helper.viewers['spectrum-viewer']
     v.set_limits(x_min=1, x_max=2, y_min=1, y_max=2)
     assert v._obj.state.x_min == 1
     assert v._obj.state.x_max == 2
@@ -36,8 +35,8 @@ def test_specviz_data_labels(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     assert specviz_helper.data_labels == [label]
-    assert specviz_helper.viewers['1D Spectrum'].data_menu.data_labels_loaded == [label]
-    assert specviz_helper.viewers['1D Spectrum'].data_menu.data_labels_visible == [label]
+    assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded == [label]
+    assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_visible == [label]
 
 
 def test_toggle_api_hints(specviz_helper):

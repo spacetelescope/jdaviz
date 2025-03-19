@@ -131,7 +131,7 @@ def test_specviz_smooth(specviz_helper, spectrum1d):
     data_label = 'test'
     dc = specviz_helper.app.data_collection
     specviz_helper.load_data(spectrum1d, data_label=data_label)
-    spec_viewer = specviz_helper.app.get_viewer('1D Spectrum')
+    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     gs = specviz_helper.plugins['Gaussian Smooth']._obj
     gs.dataset_selected = data_label
