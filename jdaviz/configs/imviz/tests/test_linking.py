@@ -127,7 +127,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore',
                                     message='Regions skipped: MaskedSubset 1, MaskedSubset 2')
-            subset_as_regions = self.imviz.plugins['Subset Tools'].get_regions()
+            subset_as_regions = self.imviz.plugins['Subset Tools'].get_regions(return_sky_region=True)
         assert sorted(subset_as_regions) == ['Subset 1', 'Subset 2']
         assert_allclose(subset_as_regions['Subset 1'].center.ra.deg, 337.519449)
         assert_allclose(subset_as_regions['Subset 2'].center.ra.deg, 337.518498)

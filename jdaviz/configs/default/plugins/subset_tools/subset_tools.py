@@ -185,7 +185,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False, return_sky_region=True):
+                    use_display_units=False, return_sky_region=False):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
@@ -210,8 +210,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             axis display unit set in the Unit Conversion plugin.
 
         return_sky_region : bool, optional
-            The default return type is a ``SkyRegion`` unless this is set to False,
-            in which case a ``PixelRegion`` object is returned instead.
+            The default return type is a ``PixelRegion`` unless this is set to False,
+            in which case a ``SkyRegion`` object is returned instead, if WCS is present.
 
         Returns
         -------
