@@ -201,8 +201,8 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
 
                 pixel_ids = layer.layer.pixel_component_ids
                 world_bottom_left = data.coords.pixel_to_world(0, 0)
-                world_top_right = data.coords.pixel_to_world(layer.layer.data[pixel_ids[1]].max(),
-                                                             layer.layer.data[pixel_ids[0]].max())
+                world_top_right = data.coords.pixel_to_world(layer.layer.data.shape[pixel_ids[1].axis] - 1,
+                                                             layer.layer.data.shape[pixel_ids[0].axis] - 1)
 
                 if return_as_world:
                     x_min = min(x_min, world_bottom_left.ra.value)
