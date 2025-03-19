@@ -234,8 +234,8 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 pixel_id_x = [comp for comp in pixel_ids if comp.label.endswith('[x]')][0]
                 pixel_id_y = [comp for comp in pixel_ids if comp.label.endswith('[y]')][0]
 
-                x_max = max(x_max, layer.layer.data[pixel_id_x].max() + 0.5)
-                y_max = max(y_max, layer.layer.data[pixel_id_y].max() + 0.5)
+                x_max = max(x_max, layer.layer.data.shape[pixel_id_x.axis] - 0.5)
+                y_max = max(y_max, layer.layer.data.shape[pixel_id_y.axis] - 0.5)
 
         return x_min, x_max, y_min, y_max
 
