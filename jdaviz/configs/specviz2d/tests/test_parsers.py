@@ -120,7 +120,7 @@ def test_2d_parser_hdulist_ext(tmp_path, specviz2d_helper, mos_spectrum2d_as_hdu
     assert dc_0.get_component('flux').units == 'ct'
 
     dc_1 = specviz2d_helper.app.data_collection[1]
-    assert dc_1.label == 'Spectrum 1D'
+    assert dc_1.label == 'Spectrum 2D (auto-ext)'
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # The rest already checked in test_2d_parser_no_unit above.

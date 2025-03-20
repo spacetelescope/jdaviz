@@ -91,13 +91,6 @@ class Specviz2d(Specviz):
         if spectrum_1d_label is None:
             spectrum_1d_label = spectrum_2d_label.replace("2D", "1D")
 
-        if ext != 1:
-            # TODO: implement in new importer
-            raise NotImplementedError()
-        if transpose:
-            # TODO: implement in new importer
-            raise NotImplementedError()
-
         if spectrum_2d is not None:
             if spectrum_2d_label is not None:
                 spectrum_2d_label = self.app.return_unique_name(spectrum_2d_label)
@@ -107,7 +100,9 @@ class Specviz2d(Specviz):
                       show_in_viewer=show_in_viewer,
                       cache=cache,
                       local_path=local_path,  # is this implemented by url-resolver?
-                      timeout=timeout)
+                      timeout=timeout,
+                      extension=ext,
+                      transpose=transpose)
         if spectrum_1d is not None:
             if spectrum_1d_label is not None:
                 spectrum_1d_label = self.app.return_unique_name(spectrum_1d_label)
