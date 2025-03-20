@@ -400,7 +400,7 @@ class SpectralExtraction(PluginTemplateMixin):
             # default to trace in middle of image
             brightest_pixel = int(trace_flux.shape[0]/2)
         else:
-            brightest_pixel = int(np.nanmedian(np.argmax(trace_flux_ignore_zeros, axis=0)))
+            brightest_pixel = int(np.nanmedian(np.nanargmax(trace_flux_ignore_zeros, axis=0)))
         # do not allow to be an edge pixel
         if brightest_pixel < 1:
             brightest_pixel = 1
