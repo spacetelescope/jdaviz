@@ -79,9 +79,10 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astroquery.mast.Conf.timeout`).
         """
         if format is not None:
-            raise NotImplementedError()
-        if concat_by_file:
-            raise NotImplementedError()
+            raise NotImplementedError("format is ignored and will be removed in a future release")
+
+        if load_as_list and concat_by_file:
+            raise ValueError("Cannot set both load_as_list and concat_by_file")
 
         if isinstance(data, (SpectrumList, SpectrumCollection)) and isinstance(data_label, list):
             if len(data_label) != len(data):
@@ -97,11 +98,13 @@ class Specviz(ConfigHelper, LineListMixin):
 
         if load_as_list:
             format = '1D Spectrum List'
-        else:
-            format = '1D Spectrum'
-        if (isinstance(data, (SpectrumList, SpectrumCollection))
+        elif concat_by_file:
+            format = '1D Spectrum Concatenated'
+        elif (isinstance(data, (SpectrumList, SpectrumCollection))
                 or (isinstance(data, Spectrum1D) and len(data.shape) == 2)):
             format = '1D Spectrum List'
+        else:
+            format = '1D Spectrum'
         if data_label is not None:
             data_label = self.app.return_unique_name(data_label)
         self.load(data, format=format,

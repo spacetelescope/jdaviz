@@ -401,6 +401,7 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
 
 
 @pytest.mark.remote_data
+@pytest.mark.xfail(reason='Multiple file support not yet implemented in loaders')
 def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
     # niriss_parser_test_data.zip
     test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'

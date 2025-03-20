@@ -1,11 +1,13 @@
 import itertools
+import numpy as np
+from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 
-__all__ = ['SpectrumListImporter']
+__all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
 
 
 @loader_importer_registry('1D Spectrum List')
@@ -68,3 +70,83 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
                 self.add_to_data_collection(spec, f"{data_label}_{i}", show_in_viewer=True)
+
+
+def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
+    """
+    Combine lists of 1D spectra into a composite `~specutils.Spectrum1D` object.
+
+    Parameters
+    ----------
+    wl : list of `~astropy.units.Quantity`s
+        Wavelength in each spectral channel
+    fnu : list of `~astropy.units.Quantity`s
+        Flux in each spectral channel
+    dfnu : list of `~astropy.units.Quantity`s or None
+        Uncertainty on each flux
+
+    Returns
+    -------
+    spec : `~specutils.Spectrum1D`
+        Composite 1D spectrum.
+    """
+    # COPIED FROM specviz.plugins.parsers since cannot import
+    wlallarr = np.array(wl)
+    fnuallarr = np.array(fnu)
+    srtind = np.argsort(wlallarr)
+    if dfnu is not None:
+        dfnuallarr = np.array(dfnu)
+        fnuallerr = dfnuallarr[srtind]
+    wlall = wlallarr[srtind]
+    fnuall = fnuallarr[srtind]
+
+    # units are not being handled properly yet.
+    if dfnu is not None:
+        unc = StdDevUncertainty(fnuallerr * flux_units)
+    else:
+        unc = None
+
+    spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
+                      uncertainty=unc)
+    return spec
+
+
+@loader_importer_registry('1D Spectrum Concatenated')
+class SpectrumListConcatenatedImporter(SpectrumListImporter):
+    @property
+    def output(self):
+        spectrum_list = super().output
+        if spectrum_list is None:
+            return
+
+        wlallorig = []  # to collect wavelengths
+        fnuallorig = []  # fluxes
+        dfnuallorig = []  # and uncertanties (if present)
+
+        for spec in spectrum_list:
+            for wlind in range(len(spec.spectral_axis)):
+                wlallorig.append(spec.spectral_axis[wlind].value)
+                fnuallorig.append(spec.flux[wlind].value)
+
+                # because some spec in the list might have uncertainties and
+                # others may not, if uncert is None, set to list of NaN. later,
+                # if the concatenated list of uncertanties is all nan (meaning
+                # they were all nan to begin with, or all None), it will be set
+                # to None on the final Spectrum1D
+                if spec.uncertainty is not None and spec.uncertainty[wlind] is not None:
+                    dfnuallorig.append(spec.uncertainty[wlind].array)
+                else:
+                    dfnuallorig.append(np.nan)
+
+        wave_units = spec.spectral_axis.unit
+        flux_units = spec.flux.unit
+
+        return combine_lists_to_1d_spectrum(wlallorig,
+                                            fnuallorig,
+                                            dfnuallorig,
+                                            wave_units,
+                                            flux_units)
+
+    def __call__(self):
+        data_label = self.data_label_value
+        self.add_to_data_collection(self.output, f"{data_label}", show_in_viewer=True)
