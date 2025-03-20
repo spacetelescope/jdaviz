@@ -644,7 +644,6 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
     if parsed_uri.scheme.lower() == 'mast':
         if cache_warning:
             warnings.warn(cache_none_msg, UserWarning)
-        Observations.enable_cloud_dataset()
 
         if local_path is not None and os.path.isdir(local_path):
             # if you give a directory, save the file there with default name:
