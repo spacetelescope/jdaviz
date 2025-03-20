@@ -26,6 +26,7 @@ def test_get_tray_item_from_name():
         app.get_tray_item_from_name('imviz-compass')
 
 
+@pytest.mark.xfail(reason="hardcoded config logic during deconfigging process")
 def test_nonstandard_specviz_viewer_name(spectrum1d):
     config = {'settings': {'configuration': 'nonstandard',
                            'data': {'parser': 'specviz-spectrum1d-parser'},

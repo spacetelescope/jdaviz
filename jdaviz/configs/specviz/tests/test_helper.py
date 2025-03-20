@@ -82,8 +82,8 @@ class TestSpecvizHelper:
             self.spec_app.load_data(self.spec_list, data_label=labels)
 
     def test_load_spectrum_collection(self):
-        with pytest.raises(TypeError):
-            collection = SpectrumCollection([1]*u.Jy, [1]*u.AA)
+        with pytest.raises(ValueError):
+            collection = SpectrumCollection([1]*u.AA)
             self.spec_app.load_data(collection)
 
     def test_get_spectra(self):
