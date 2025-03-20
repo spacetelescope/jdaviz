@@ -231,7 +231,7 @@ class UnitConversion(PluginTemplateMixin):
                     except ValueError:
                         self.flux_unit.selected = ''
 
-                if not self.angle_unit_selected and hasattr(self.angle_unit, 'choices'):
+                if not self.angle_unit_selected:
                     self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
 
                     try:
@@ -242,7 +242,7 @@ class UnitConversion(PluginTemplateMixin):
                             else:
                                 # default to pix2 if input data is not in surface brightness units
                                 # TODO: for cubeviz, should we check the cube itself?
-                                self.angle_unit = 'pix2'
+                                self.angle_unit.selected = 'pix2'
                         else:
                             self.angle_unit.selected = str(angle_unit)
                     except ValueError:
@@ -281,7 +281,8 @@ class UnitConversion(PluginTemplateMixin):
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
 
-            if not len(self.spectral_unit_selected) and data_obj.__class__.__name__ != 'FlatTrace':
+            if not len(self.spectral_unit_selected):
+                # and data_obj.__class__.__name__ != 'FlatTrace':
                 try:
                     self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
                 except ValueError:
@@ -299,7 +300,8 @@ class UnitConversion(PluginTemplateMixin):
                 except ValueError:
                     self.flux_unit.selected = ''
 
-            if not self.angle_unit_selected and data_obj.__class__.__name__ != 'FlatTrace':
+            if not self.angle_unit_selected:
+                # and data_obj.__class__.__name__ != 'FlatTrace':
                 self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
                 try:
                     if angle_unit is None:
