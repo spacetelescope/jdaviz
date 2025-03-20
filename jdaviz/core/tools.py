@@ -155,7 +155,8 @@ class _MatchedZoomMixin:
                             setattr(viewer.state, k, value)
 
     def is_visible(self):
-        return len(list(self._iter_matched_viewers())) > 0
+        return (len(self.viewer.jdaviz_app._viewer_store) > 1
+                and len(list(self._iter_matched_viewers())) > 0)
 
 
 @viewer_tool

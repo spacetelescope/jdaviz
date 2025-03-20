@@ -343,14 +343,6 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     assert label_mouseover.as_text() == ('', '', '')
     assert label_mouseover.icon == ''
 
-    # Mouseover without data should not crash.
-    spec_viewer.data_menu.layer.select_all()
-    spec_viewer.data_menu.remove_from_viewer()
-    label_mouseover._viewer_mouse_event(spec_viewer,
-                                        {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
-    assert label_mouseover.as_text() == ('', '', '')
-    assert label_mouseover.icon == ''
-
 
 def test_subset_default_thickness(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)

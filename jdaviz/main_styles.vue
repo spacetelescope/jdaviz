@@ -136,9 +136,9 @@ div.output_wrapper {
   display: none !important;
 }
 
-.cubeviz .lm_close_tab, .specviz .lm_close_tab {
+.cubeviz .lm_close_tab, .deconfigged .lm_close_tab {
   /* do not allow closing any viewer tabs in cubeviz */
-  /* specviz (deconfigging): temporarily do not allow closing
+  /* deconfigging: temporarily do not allow closing
      tabs until viewer creator is migrated */
   display: none;
 }
@@ -281,7 +281,7 @@ a:active {
 span.api-hint, span.api-hint-header {
   color: #007BA1 !important;
   font-family: monospace;
-  font-size: 12px;  
+  font-size: 12px;
   letter-spacing: -0.05em !important;
   text-transform: none !important;
 }
