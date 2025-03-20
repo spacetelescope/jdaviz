@@ -286,7 +286,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     marker_colormap_vmax_sync = Dict().tag(sync=True)
 
     # image viewer/layer options
-    active_layer = Any().tag(sync=True)
+    active_layer = Unicode().tag(sync=True)
     stretch_function_value = Unicode().tag(sync=True)
     stretch_function_sync = Dict().tag(sync=True)
 
@@ -721,7 +721,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     @observe('viewer_selected')
     def _layers_changed(self, viewer=None):
         if self.viewer_multiselect or not hasattr(self, 'viewer'):
-            self.active_layer = None
+            self.active_layer = ""
             return
 
         if viewer is None:
