@@ -65,13 +65,13 @@ class TestLoadRegions(BaseRegionHandler):
         # Get spatial regions only.
         st = self.cubeviz.plugins['Subset Tools']._obj
 
-        # Default return type for get_regions is PixelRegion, unless you set
-        # return_sky_region to True, in which case a SkyRegion object will be returned
+        assert isinstance(st.get_regions(region_type='spatial')['Subset 1'],
+                          EllipseSkyRegion)
         assert isinstance(st.get_regions(region_type='spatial',
                                          return_sky_region=True)['Subset 1'],
                           EllipseSkyRegion)
 
-        spatial_subsets_as_regions = st.get_regions(region_type='spatial')
+        spatial_subsets_as_regions = st.get_regions(region_type='spatial', return_sky_region=False)
         assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
