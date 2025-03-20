@@ -6,6 +6,7 @@ from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
 from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
+from specreduce import tracing
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
@@ -281,8 +282,7 @@ class UnitConversion(PluginTemplateMixin):
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
 
-            if not len(self.spectral_unit_selected):
-                # and data_obj.__class__.__name__ != 'FlatTrace':
+            if not len(self.spectral_unit_selected) and not isinstance(data_obj, tracing.FlatTrace):
                 try:
                     self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
                 except ValueError:
@@ -300,8 +300,7 @@ class UnitConversion(PluginTemplateMixin):
                 except ValueError:
                     self.flux_unit.selected = ''
 
-            if not self.angle_unit_selected:
-                # and data_obj.__class__.__name__ != 'FlatTrace':
+            if not self.angle_unit_selected and not isinstance(data_obj, tracing.FlatTrace):
                 self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
                 try:
                     if angle_unit is None:
