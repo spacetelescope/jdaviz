@@ -23,15 +23,15 @@ from jdaviz.core.unit_conversion_utils import (create_equivalent_spectral_axis_u
 __all__ = ['UnitConversion']
 
 
-def _valid_glue_display_unit(unit_str, sv, axis='x'):
+def _valid_glue_display_unit(unit_str, viewer, axis='x'):
     # need to make sure the unit string is formatted according to the list of valid choices
     # that glue will accept (may not be the same as the defaults of the installed version of
     # astropy)
     if not unit_str:
         return unit_str
-    if sv.__class__.__name__.endswith('ProfileView'):
+    if isinstance(viewer, JdavizProfileView):
         unit_u = u.Unit(unit_str)
-        choices_str = getattr(sv.state.__class__, f'{axis}_display_unit').get_choices(sv.state)
+        choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(sv.state)
         choices_str = [choice for choice in choices_str if choice is not None]
         choices_u = [u.Unit(choice) for choice in choices_str]
         if unit_u not in choices_u:
