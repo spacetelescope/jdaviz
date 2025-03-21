@@ -201,8 +201,10 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
 
                 pixel_ids = layer.layer.pixel_component_ids
                 world_bottom_left = data.coords.pixel_to_world(0, 0)
-                world_top_right = data.coords.pixel_to_world(layer.layer.data[pixel_ids[1]].max(),
-                                                             layer.layer.data[pixel_ids[0]].max())
+                world_top_right = data.coords.pixel_to_world(
+                    layer.layer.data.shape[pixel_ids[1].axis] - 1,
+                    layer.layer.data.shape[pixel_ids[0].axis] - 1
+                )
 
                 if return_as_world:
                     x_min = min(x_min, world_bottom_left.ra.value)
@@ -234,8 +236,8 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 pixel_id_x = [comp for comp in pixel_ids if comp.label.endswith('[x]')][0]
                 pixel_id_y = [comp for comp in pixel_ids if comp.label.endswith('[y]')][0]
 
-                x_max = max(x_max, layer.layer.data[pixel_id_x].max() + 0.5)
-                y_max = max(y_max, layer.layer.data[pixel_id_y].max() + 0.5)
+                x_max = max(x_max, layer.layer.data.shape[pixel_id_x.axis] - 0.5)
+                y_max = max(y_max, layer.layer.data.shape[pixel_id_y.axis] - 0.5)
 
         return x_min, x_max, y_min, y_max
 
