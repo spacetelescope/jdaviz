@@ -31,7 +31,7 @@ def _valid_glue_display_unit(unit_str, viewer, axis='x'):
         return unit_str
     if isinstance(viewer, JdavizProfileView):
         unit_u = u.Unit(unit_str)
-        choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(viewer.state)
+        choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(viewer.state)  # noqa
         choices_str = [choice for choice in choices_str if choice is not None]
         choices_u = [u.Unit(choice) for choice in choices_str]
         if unit_u not in choices_u:
