@@ -74,7 +74,7 @@ def test_destroy_viewer_with_subset(imviz_helper):
     imviz_helper.destroy_viewer('second')
 
     # Delete the Subset: Should have no traceback.
-    imviz_helper._delete_region('Subset 1')
+    imviz_helper.app.delete_subsets('Subset 1')
 
 
 def test_mastviz_config():

@@ -238,8 +238,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                        include_sky_region=reg_type == 'sky_region',
                                        use_display_units=use_display_units)
 
-        labels = list_of_subset_labels or subsets.keys()
-        labels = [labels] if not hasattr(labels, '__iter__') else labels
+        labels = list_of_subset_labels or list(subsets.keys())
+        if isinstance(labels, str):
+            labels = [labels]
 
         regions, failed_regs = {}, set()
         for subset_label in labels:

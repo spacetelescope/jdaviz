@@ -1,4 +1,97 @@
-4.2 (unreleased)
+4.3 (unreleased)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
+Imviz
+^^^^^
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
+
+4.2.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Significantly improved performance for panning and zooming with large datasets. [#3513]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+- Improved initial guess for trace for automatic extraction. May change results
+  for automatic extraction for data with nonfinite values. [#3512]
+
+4.2 (2025-03-17)
 ================
 
 New Features
@@ -37,12 +130,6 @@ Imviz
 
 - Virtual Observatory plugin to query resources and download data products. [#2872, #3470]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Specviz2d
 ^^^^^^^^^
 
@@ -79,9 +166,6 @@ Imviz
 
 - ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
@@ -95,6 +179,11 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Fix showing dataset dropdown in cubeviz's spectral extraction for flux-cube products from other plugins. [#3411]
+
+- SDSS line list now in vacuum, and SDSS IV in air. Previously, they were incorrectly categorized.
+  To keep categorization correct, SDSS IV list no longer carries wavelengths less than 2000 Angstrom. [#3458]
+
 - Fixed some broken flux conversions that were dropping the factor of solid angle. [#3457]
 
 - subset_tools.get_regions uses app.get_subsets under the hood, which fixes retrieving composite subsets when sky linked as
@@ -103,46 +192,7 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
-- Fixed copious warnings from spaxel tool when data has INF. [#3368]
-
-Imviz
-^^^^^
-
-- Fixed "zoom to selected" in Catalog Search plugin when multiple sources are selected. [#3482]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-- Fixed traceback in model fitting due to units not being represented as strings. [#3412]
-
-Specviz2d
-^^^^^^^^^
-
-Other Changes and Additions
----------------------------
-
-- Bumped minimum version of ``photutils`` to v1.12.1. [#3432]
-
-- Refactored flux conversion to use a single function for all plugin/viewer flux/surface brightness
-  conversions. [#3457]
-
-
-4.1.2 (unreleased)
-==================
-
-Bug Fixes
----------
-
-- Fix showing dataset dropdown in cubeviz's spectral extraction for flux-cube products from other plugins. [#3411]
-
-- SDSS line list now in vacuum, and SDSS IV in air. Previously, they were incorrectly categorized.
-  To keep categorization correct, SDSS IV list no longer carries wavelengths less than 2000 Angstrom. [#3458]
-
-Cubeviz
-^^^^^^^
+- Fixed copious warnings from spectrum-at-spaxel tool when data has INF. [#3368]
 
 - Hide spectral subset layer visibility in flux/uncertainty viewers when slice indicator
   is within the spectral subset bounds. [#3437]
@@ -154,11 +204,12 @@ Imviz
 
 - Fix incorrect matching between RA/Dec and pixel coordinates in Catalog search results. [#3464]
 
-Mosviz
-^^^^^^
+- Fixed "zoom to selected" in Catalog Search plugin when multiple sources are selected. [#3482]
 
 Specviz
 ^^^^^^^
+
+- Fixed traceback in model fitting due to units not being represented as strings. [#3412]
 
 Specviz2d
 ^^^^^^^^^
@@ -168,6 +219,14 @@ Specviz2d
 - Fixes missing API entry for spectral extraction's export_bg_spectrum.  [#3447]
 
 - Fixes default location of trace in spectral extraction when some columns are filled with all zeros or nans. [#3475]
+
+Other Changes and Additions
+---------------------------
+
+- Bumped minimum version of ``photutils`` to v1.12.1. [#3432]
+
+- Refactored flux conversion to use a single function for all plugin/viewer flux/surface brightness
+  conversions. [#3457]
 
 4.1.1 (2025-01-31)
 ==================

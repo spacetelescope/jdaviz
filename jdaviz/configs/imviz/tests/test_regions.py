@@ -31,7 +31,7 @@ class BaseRegionHandler:
 class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def teardown_method(self, method):
         """Clear all the subsets for the next test method."""
-        self.imviz._delete_all_regions()
+        self.imviz.app.delete_subsets()
 
     def test_regions_invalid(self):
         # Wrong object
@@ -103,7 +103,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
             assert self.imviz.plugins['Subset Tools'].get_regions() == {}
 
         # Also test deletion by label here.
-        self.imviz._delete_region('MaskedSubset 1')
+        self.imviz.app.delete_subsets('MaskedSubset 1')
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
         # Adding another mask will increment from 2 even when 1 is now available.
@@ -116,8 +116,9 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
                                     message='Regions skipped: MaskedSubset 2, MaskedSubset 3')
             assert self.imviz.plugins['Subset Tools'].get_regions() == {}
 
-        # Deletion of non-existent label is silent no-op.
-        self.imviz._delete_region('foo')
+        # Deletion of non-existent label raises error
+        with pytest.raises(ValueError, match=r'foo not in data collection, can not delete\.'):
+            self.imviz.app.delete_subsets('foo')
 
     def test_regions_pixel(self):
         # A little out-of-bounds should still overlay the overlapped part.
@@ -126,7 +127,10 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
                                                        combination_mode='new')
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
-        assert len(self.imviz.plugins['Subset Tools'].get_regions()) == 1
+        st = self.imviz.plugins['Subset Tools']
+        assert len(st.get_regions()) == 1
+        # test passing in the subset label as well
+        assert len(st.get_regions(list_of_subset_labels='Subset 1')) == 1
 
     def test_regions_sky_has_wcs(self):
         my_reg_pix_1 = CirclePixelRegion(center=PixCoord(x=2.55, y=3.55), radius=1.05)
@@ -292,5 +296,5 @@ class TestGetRegions(BaseImviz_WCS_NoWCS):
         assert subsets['Subset 3'].center == PixCoord(4.5, 4.5)
 
         # Clear the regions for next test.
-        self.imviz._delete_all_regions()
+        self.imviz.app.delete_subsets()
         assert len(self.imviz.app.data_collection.subset_groups) == 0

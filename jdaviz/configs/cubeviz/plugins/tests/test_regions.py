@@ -24,7 +24,7 @@ class TestLoadRegions(BaseRegionHandler):
 
     def teardown_method(self, method):
         """Clear all the subsets for the next test method."""
-        self.cubeviz._delete_all_regions()
+        self.cubeviz.app.delete_subsets()
 
     def test_regions_mask(self):
         mask = np.zeros((9, 10), dtype=np.bool_)

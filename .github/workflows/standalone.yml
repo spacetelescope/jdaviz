@@ -95,7 +95,7 @@ jobs:
   # Do not want to deal with OSX certs in pull request builds.
   build_binary_osx:
     runs-on: ${{ matrix.os }}
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [macos-14]
@@ -120,30 +120,12 @@ jobs:
       run: pip install .[test,qt]
 
     - name: Install pyinstaller
-      run: pip install "pyinstaller<6"
+      run: pip install "pyinstaller"
 
     - name: Create standalone binary
       env:
         DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
       run: (cd standalone; pyinstaller ./jdaviz.spec)
-
-    - name: Remove invalid files for OSX
-      # hopefully we can improve this in the future
-      # by using good hooks
-      # i think the issue is that we have a . in the name, there are many
-      # google hits on pyqt having the same issue
-      # and we might be able to remove it after https://github.com/pyinstaller/pyinstaller/pull/7619
-      # is released (pyinstaller 5.13 probably)
-      if: ${{ matrix.os == 'macos-14' }}
-      run: |
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/skimage/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/shapely/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/shapely/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/special/*.dylib
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/special/*.dylib
 
     - name: Codesign (OSX)
       if: ${{ matrix.os == 'macos-14' }}
@@ -184,7 +166,7 @@ jobs:
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os == 'macos-14' }}
-      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
+      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz --port=8765 &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
