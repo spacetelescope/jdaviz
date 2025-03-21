@@ -239,7 +239,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def update_display(self, viewer, x, y):
         self._dict = {}
-        if isinstance(viewer, (SpecvizProfileView, RampvizProfileView)):
+        if isinstance(viewer, (SpecvizProfileView, RampvizProfileView, MosvizProfileView)):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
                         (ImvizImageView, CubevizImageView,
@@ -501,12 +501,16 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                    and u.Unit(self.app._get_display_unit(attribute)).physical_type
                    not in ['frequency', 'wavelength', 'length']
                    and unit != self.app._get_display_unit(attribute)):
+                    to_unit = self.app._get_display_unit(attribute)
+                    if (check_if_unit_is_per_solid_angle(unit) and attribute == 'flux'):
+                        to_unit = self.app._get_display_unit('sb')
+
                     equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
                     value = flux_conversion_general(value, unit,
-                                                    self.app._get_display_unit(attribute),
+                                                    to_unit,
                                                     equivalencies,
                                                     with_unit=False)
-                    unit = self.app._get_display_unit(attribute)
+                    unit = to_unit
 
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
                 arr = image.get_component(attribute).data

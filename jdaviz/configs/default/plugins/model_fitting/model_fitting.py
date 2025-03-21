@@ -607,26 +607,29 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._check_model_equation_invalid()
 
     def _on_global_display_unit_changed(self, msg):
-        if msg.axis == 'spectral_y':
+        if msg.axis in ('spectral_y', 'sb', 'flux'):
             axis = 'y'
         elif msg.axis == 'spectral':
             axis = 'x'
         else:
             return
 
-        if axis == 'y' and self.cube_fit:
+        unit = msg.unit
+
+        if axis == 'y':
             # The units have to be in surface brightness for a cube fit.
             uc = self.app._jdaviz_helper.plugins['Unit Conversion']
-
-            if msg.unit != uc._obj.sb_unit_selected:
+            if self.cube_fit and unit != uc._obj.sb_unit_selected:
                 self._units[axis] = uc._obj.sb_unit_selected
                 self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                 return
+            elif msg.axis == 'flux' and uc._obj.has_sb:
+                unit = u.Unit(self.app._get_display_unit('sb'))
 
         # update internal tracking of current units
-        self._units[axis] = str(msg.unit)
+        self._units[axis] = str(unit)
 
-        self._check_model_component_compat([axis], [msg.unit])
+        self._check_model_component_compat([axis], [unit])
 
     def remove_model_component(self, model_component_label):
         """
