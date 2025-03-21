@@ -1,5 +1,7 @@
+import numpy as np
 from specutils import Spectrum1D
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
@@ -30,3 +32,22 @@ class Spectrum1DImporter(BaseImporterToDataCollection):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'spectrum-1d-viewer'
+
+    @property
+    def output(self):
+        # if the entire uncert. array is Nan and the data is not, model fitting won't
+        # work (more generally, if uncert[i] is nan/inf and flux[i] is not, fitting will
+        # fail, but just deal with the all nan case here since it is straightforward).
+        # set uncerts. to None if they are all nan/inf, and display a warning message.
+        data = self.input
+        if data.uncertainty is not None:
+            uncerts_finite = np.isfinite(data.uncertainty.array)
+            if not np.any(uncerts_finite):
+                data.uncertainty = None
+                set_nans_to_none = True
+
+                if set_nans_to_none:
+                    # alert user that we have changed their all-nan uncertainty array to None
+                    msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
+                    self.app.hub.broadcast(SnackbarMessage(msg, color="warning", sender=self.app))
+        return data
