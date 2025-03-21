@@ -633,7 +633,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         # Add layer callback to image viewers to track active layer
         for viewer in self.app._viewer_store.values():
-            viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer))
+            viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
@@ -716,18 +716,23 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     def _on_viewer_added(self, msg):
         viewer = self.app.get_viewer_by_id(msg.viewer_id)
-        viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer))
+        viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
 
     @observe('viewer_selected')
-    def _layers_changed(self, viewer=None):
+    def _layers_changed(self, msg=None, viewer=None):
+        # We need msg first in the keyword arguments to catch the msg value from the observe,
+        # even though we don't end up using it
         if self.viewer_multiselect or not hasattr(self, 'viewer'):
             self.active_layer = ""
             return
 
         if viewer is None:
-            print(f"viewer is None, setting to {self.viewer.selected}")
             viewer = self.viewer.selected_obj
+
         if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():  # noqa
+            if viewer.active_image_layer is None:
+                self.active_layer = ""
+                return
             self.active_layer = viewer.active_image_layer.layer.label
 
     def vue_unmix_state(self, names):
