@@ -536,10 +536,10 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     if solid_angle_string == 'sr':
         expected_unit_string = f'erg / (Angstrom s {solid_angle_string} cm2)'
-        assert mf.get_model_component('C').get('parameters').get('amplitude').get('unit') == f'erg / (Angstrom s {solid_angle_string} cm2)'  # noqa
+        assert mf.get_model_component('C').get('parameters').get('amplitude').get('unit') == expected_unit_string  # noqa
     else:
         expected_unit_string = f'erg / (Angstrom s cm2 {solid_angle_string})'
-        assert mf.get_model_component('C').get('parameters').get('amplitude').get('unit') == f'erg / (Angstrom s cm2 {solid_angle_string})'  # noqa
+        assert mf.get_model_component('C').get('parameters').get('amplitude').get('unit') == expected_unit_string  # noqa
 
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == expected_unit_string
 
