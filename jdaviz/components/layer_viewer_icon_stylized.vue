@@ -11,8 +11,8 @@
     >
       <v-icon v-if="String(icon).startsWith('mdi-')" style="color: white">
         {{  icon }}
-      </v-icon>"
-      <span v-else :style="'color: white; text-shadow: 0px 0px 3px black; '+borderStyle(linewidth)">
+      </v-icon>
+      <span v-else :style="'color: white; text-shadow: 0px 0px 3px black; '+icon_style+borderStyle(linewidth)">
         {{ icon }}
       </span>
     </v-btn>
@@ -22,7 +22,7 @@
 <script>
 module.exports = {
   // tooltip: undefined will use default generated, empty will skip tooltips, any other string will be used directly
-  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style', 'tooltip', 'disabled'],
+  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style', 'icon_style', 'tooltip', 'disabled'],
   methods: {
     tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset) {
       if (tooltip !== undefined) {
@@ -66,13 +66,13 @@ module.exports = {
       var cmap_strip_width = strip_width
       var style_colors = []
       var style = 'repeating-linear-gradient( 135deg, '
-  
+
       for ([mi, color_or_cmap] of colors.entries()) {
         if (color_or_cmap == 'from_list') {
           /* follow-up: use actual colors from the DQ plugins */
           color_or_cmap = 'rainbow'
         }
-  
+
         if (color_or_cmap.startsWith('#')) {
           style_colors = [color_or_cmap]
         } else {
@@ -92,12 +92,12 @@ module.exports = {
           style += ', '
         }
       }
-    
+
       style += ')'
       return style
     },
     borderStyle(linewidth) {
-      if (linewidth != 'mixed' && linewidth > 0) { 
+      if (linewidth != 'mixed' && linewidth > 0) {
         return 'border-bottom: '+Math.min(linewidth, 5)+'px solid white'
       }
       return ''
