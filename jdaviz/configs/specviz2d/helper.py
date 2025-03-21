@@ -96,6 +96,7 @@ class Specviz2d(Specviz):
                 spectrum_2d_label = self.app.return_unique_name(spectrum_2d_label)
             self.load(spectrum_2d, format='2D Spectrum',
                       data_label=spectrum_2d_label,
+                      ext_data_label=spectrum_1d_label,
                       auto_extract=spectrum_1d is None,
                       show_in_viewer=show_in_viewer,
                       cache=cache,

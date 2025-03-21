@@ -16,7 +16,7 @@ class Spectrum1DImporter(BaseImporterToDataCollection):
         if self.app.config == 'specviz':
             self.data_label_default = '1D Spectrum'
         elif self.app.config == 'specviz2d':
-            self.data_label_default = '1D Spectrum (auto-ext)'
+            self.data_label_default = '1D Spectrum'
 
     @property
     def is_valid(self):
