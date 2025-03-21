@@ -1360,7 +1360,7 @@ class Application(VuetifyTemplate, HubListener):
             elif hasattr(self._jdaviz_helper, '_default_spectrum_2d_viewer_reference_name'):
                 viewer_name = self._jdaviz_helper._default_spectrum_2d_viewer_reference_name
             else:
-                raise NotImplementedError("No default viewer reference found.")
+                return ''
             if axis == 'spectral':
                 sv = self.get_viewer(viewer_name)
                 return sv.data()[0].spectral_axis.unit
