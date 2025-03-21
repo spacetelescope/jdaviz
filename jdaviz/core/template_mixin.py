@@ -212,7 +212,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         if not len(self.loader_items):
             self._update_loader_items()
         from ipywidgets.widgets import widget_serialization
-        if not (self.app.state.dev_loaders or self.config == 'specviz'):
+        if not (self.app.state.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d')):  # noqa
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.loader_items}

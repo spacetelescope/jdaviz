@@ -180,7 +180,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset',
                   'update_subset']
-        if self.dev_loaders or self.config == 'specviz':
+        if self.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d'):
             expose += ['loaders']
         return PluginUserApi(self, expose)
 

@@ -40,9 +40,8 @@ class Specviz(ConfigHelper, LineListMixin):
         # Listen for new redshifts from the redshift slider
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
-
-    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
-        return self._load(inp, loader, format, target, **kwargs)
+        # Temporary during deconfigging (until _load exposed to all configs)
+        self.load = self._load
 
     @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,

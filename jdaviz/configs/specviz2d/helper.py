@@ -16,6 +16,9 @@ class Specviz2d(Specviz):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Temporary during deconfigging (until _load exposed to all configs)
+        self.load = self._load
+
     @property
     def specviz(self):
         """
@@ -25,9 +28,6 @@ class Specviz2d(Specviz):
         if not hasattr(self, '_specviz'):
             self._specviz = Specviz(app=self.app)
         return self._specviz
-
-    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
-        return self._load(inp, loader, format, target, **kwargs)
 
     @deprecated(since="4.3", alternative="load")
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
