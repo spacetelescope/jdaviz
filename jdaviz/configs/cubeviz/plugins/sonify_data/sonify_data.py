@@ -71,10 +71,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_device_indexes = None
             self.refresh_device_list()
 
-        # TODO: Remove hardcoded range and flux viewer
-        self.spec_viewer = self.app.get_viewer('spectrum-viewer')
-        self.flux_viewer = self.app.get_viewer('flux-viewer')
-
     @property
     def user_api(self):
         expose = []
@@ -90,7 +86,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         # Apply spectral subset bounds
         if self.spectral_subset_selected is not self.spectral_subset.default_text:
-            display_unit = self.spec_viewer.state.x_display_unit
+            display_unit = self.spectrum_viewer.state.x_display_unit
             min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
             max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
             self.flux_viewer.update_listener_wls((min_wavelength, max_wavelength), display_unit)
@@ -113,9 +109,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     @observe('spectral_subset_selected')
     def update_wavelength_range(self, event):
-        if not hasattr(self, 'spec_viewer'):
+        if not hasattr(self, 'spectral_subset'):
             return
-        display_unit = self.spec_viewer.state.x_display_unit
+        display_unit = self.spectrum_viewer.state.x_display_unit
         # is this spectral selection or the entire spectrum?
         if hasattr(self.spectral_subset.selected_obj, "subregions"):
             wlranges = self.spectral_subset.selected_obj.subregions

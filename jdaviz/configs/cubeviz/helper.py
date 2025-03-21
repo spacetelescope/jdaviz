@@ -33,8 +33,18 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, AddDataMessage,
                                handler=self._set_spectrum_x_axis)
 
+    @property
+    def _spectrum_viewer(self):
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_spectrum_viewer=True
+        )
+        if viewer_reference is None:
+            return None
+
+        return self.app.get_viewer(viewer_reference)
+
     def _set_spectrum_x_axis(self, msg):
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer = self._spectrum_viewer
         if msg.viewer_id != viewer.reference_id:
             return
         ref_data = viewer.state.reference_data

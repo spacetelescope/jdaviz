@@ -301,10 +301,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
     """
     spectrum_2d_viewer_reference_name = (
-        app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
+        getattr(app._jdaviz_helper, '_default_spectrum_2d_viewer_reference_name', None)
     )
     table_viewer_reference_name = (
-        app._jdaviz_helper._default_table_viewer_reference_name
+        getattr(app._jdaviz_helper, '_default_table_viewer_reference_name', None)
     )
 
     # Note: This is also used by Specviz2D

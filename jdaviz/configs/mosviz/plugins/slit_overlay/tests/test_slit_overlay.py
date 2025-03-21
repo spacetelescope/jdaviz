@@ -1,7 +1,7 @@
 import numpy as np
 
 from glue.core import Data
-from jdaviz import Application
+from jdaviz.app import Application
 
 from regions import RectangleSkyRegion
 from astropy.coordinates import Angle, SkyCoord

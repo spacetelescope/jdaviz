@@ -1,4 +1,4 @@
-from jdaviz import Application
+from jdaviz.app import Application
 
 
 def test_default_viewer_ids_default():

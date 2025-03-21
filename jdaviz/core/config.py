@@ -42,6 +42,8 @@ def read_configuration(path=None):
         path = default_path / "imviz" / "imviz.yaml"
     elif path == 'rampviz':
         path = default_path / "rampviz" / "rampviz.yaml"
+    elif path == 'deconfigged':
+        path = default_path / "deconfigged" / "deconfigged.yaml"
     elif not os.path.isfile(path):
         raise ValueError("Configuration must be path to a .yaml file.")
 
@@ -92,4 +94,4 @@ def list_configurations():
     """Get a list of pre-built configurations."""
 
     path = pathlib.Path(__file__).resolve().parent.parent / "configs"
-    return [i.stem for i in path.rglob('*.yaml')]
+    return [i.stem for i in path.rglob('*.yaml') if i.stem != 'deconfigged']

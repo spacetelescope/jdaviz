@@ -27,11 +27,28 @@
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
               />
             </v-row>
+            <plugin-viewer-select
+              :items="viewer2d_items"
+              :selected.sync="viewer2d_selected"
+              label="2D Spectrum Viewer"
+              api_hint='plg.viewer2d = '
+              :api_hints_enabled="api_hints_enabled"
+              :show_if_single_entry="false"
+              hint="Select the 2D Spectrum viewer to show live-previews of the spectral extraction inputs."
+            />
+            <plugin-viewer-select
+              :items="viewer1d_items"
+              :selected.sync="viewer1d_selected"
+              label="1D Spectrum Viewer"
+              api_hint='plg.viewer1d = '
+              :api_hints_enabled="api_hints_enabled"
+              :show_if_single_entry="false"
+              hint="Select the 1D Spectrum viewer to show live-previews of the spectral extraction outputs."
+            />
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
-
 
     <div @mouseover="() => active_step='trace'">
       <j-plugin-section-header :active="active_step==='trace'">Trace</j-plugin-section-header>
