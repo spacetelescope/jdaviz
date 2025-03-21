@@ -12,6 +12,7 @@ from glue.core.message import SubsetUpdateMessage
 from ipywidgets import widget_serialization
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
+from photutils.profiles import CurveOfGrowth, RadialProfile
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -923,9 +924,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     self.plot.figure.title = 'Curve of growth from aperture center'
                     eqv = []
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-                    comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
-                    wcs=data.coords, background=bg, pixarea_fac=pixarea_fac,
-                    display_unit=plot_display_unit, equivalencies=eqv)
+                    comp_data, (xcenter, ycenter), aperture, wcs=data.coords, background=bg,
+                    pixarea_fac=pixarea_fac, image_unit=img_unit, display_unit=plot_display_unit,
+                    equivalencies=eqv)
                 self.plot._update_data('profile', x=x_arr, y=sum_arr, reset_lims=True)
                 self.plot.update_style('profile', line_visible=True, color='gray', size=32)
                 self.plot.update_style('fit', visible=False)
@@ -947,9 +948,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                         self.plot.figure.title = 'Radial profile from aperture center'
                         eqv = []
                     x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                        raw=False, display_unit=plot_display_unit, image_unit=img_unit,
-                        equivalencies=eqv)
+                        comp_data, phot_aperstats.bbox, (xcenter, ycenter),
+                        raw=False, image_unit=img_unit, display_unit=plot_display_unit,
+                        equivalencies=eqv, background=bg)
                     self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
                     self.plot.update_style('profile', line_visible=True, color='gray', size=32)
 
@@ -959,13 +960,15 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     else:
                         self.plot.figure.title = 'Raw radial profile from aperture center'
                     x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                        raw=True, display_unit=plot_display_unit, image_unit=img_unit)
+                        comp_data, phot_aperstats.bbox, (xcenter, ycenter), raw=True,
+                        image_unit=img_unit, display_unit=plot_display_unit, background=bg)
 
                     self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
                     self.plot.update_style('profile', line_visible=False, color='gray', size=10)
 
                 # Fit Gaussian1D to radial profile data.
+                # Even though photutils radial profile has gaussian fit option, the fit is done
+                # before Jdaviz unit conversion, so we do our own fit here after unit conversion.
                 if self.fit_radial_profile:
                     fitter = TRFLSQFitter()
                     y_max = np.nanmax(y_data)
@@ -1230,14 +1233,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 # NOTE: These are hidden because the APIs are for internal use only
 # but we need them as a separate functions for unit testing.
 
-def _radial_profile(radial_cutout, reg_bb, centroid, raw=False,
-                    image_unit=None, display_unit=None, equivalencies=[]):
+def _radial_profile(data, reg_bb, centroid, raw=False,
+                    image_unit=None, display_unit=None, equivalencies=[], background=0):
     """Calculate radial profile.
 
     Parameters
     ----------
-    radial_cutout : ndarray
-        Cutout image from ``ApertureStats``.
+    data : ndarray or `~astropy.units.Quantity`
+        Data for radial profile.
 
     reg_bb : obj
         Bounding box from ``ApertureStats``.
@@ -1251,7 +1254,7 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False,
 
     image_unit : str or None
         (For cubeviz only to deal with display unit conversion). Unit of input
-        'radial cutout', used with `display_unit` to convert output to desired
+        data, used with `display_unit` to convert output to desired
         display unit.
 
     display_unit : str or None
@@ -1263,29 +1266,29 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False,
         to display unit selected in the unit conversion plugin, if it differs
         from the native data unit.
 
+    background : float or `~astropy.units.Quantity`
+        Background to subtract, if any. Unit must match ``data``.
+
+    Returns
+    -------
+    x_arr, y_arr : ndarray
+        X and Y data to plot. Y should already be background subtracted.
+
     """
-    reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
-    radial_dx = reg_ogrid[1] - centroid[0]
-    radial_dy = reg_ogrid[0] - centroid[1]
-    radial_r = np.hypot(radial_dx, radial_dy)
+    if isinstance(data, u.Quantity):
+        data = data.value
+    if isinstance(background, u.Quantity):
+        background = background.value  # data unit
 
-    # Sometimes the mask is smaller than radial_r
-    if radial_cutout.shape != reg_bb.shape:
-        radial_r = radial_r[:radial_cutout.shape[0], :radial_cutout.shape[1]]
-
-    radial_r = radial_r[~radial_cutout.mask].ravel()  # pix
-    radial_img = radial_cutout.compressed()  # data unit
+    edge_radii = np.arange(max(reg_bb.shape) // 2 + 2)  # Edges need one extra
+    rp = RadialProfile(data, centroid, edge_radii, error=None, mask=None)
 
     if raw:
-        i_arr = np.argsort(radial_r)
-        x_arr = radial_r[i_arr]
-        y_arr = radial_img[i_arr]
+        x_arr = rp.data_radius  # pix
+        y_arr = rp.data_profile - background  # data unit
     else:
-        # This algorithm is from the imexam package,
-        # see licenses/IMEXAM_LICENSE.txt for more details
-        radial_r = np.rint(radial_r).astype(int)
-        y_arr = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
-        x_arr = np.arange(y_arr.size)
+        x_arr = rp.radius  # pix
+        y_arr = rp.profile - background  # data unit
 
     if display_unit is not None:
         if image_unit is None:
@@ -1302,8 +1305,8 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False,
     return x_arr, y_arr
 
 
-def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0,
-                     n_datapoints=10, pixarea_fac=None, display_unit=None, equivalencies=[]):
+def _curve_of_growth(data, centroid, aperture, wcs=None, background=0, n_datapoints=10,
+                     pixarea_fac=None, image_unit=None, display_unit=None, equivalencies=[]):
     """Calculate curve of growth for aperture photometry.
 
     Parameters
@@ -1315,14 +1318,8 @@ def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0
         ``ApertureStats`` centroid or desired center in ``(x, y)``.
 
     aperture : obj
-        ``photutils`` aperture to use, except its center will be
-        changed to the given ``centroid``. This is because the aperture
-        might be hand-drawn and a more accurate centroid has been
-        recalculated separately.
-
-    final_sum : float or `~astropy.units.Quantity`
-        Aperture sum that is already calculated in the
-        main plugin above.
+        ``photutils`` aperture used to set radii for the curve.
+        Actual aperture used is always circular.
 
     wcs : obj or `None`
         Supported WCS objects or `None`.
@@ -1333,13 +1330,23 @@ def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0
     n_datapoints : int
         Number of data points in the curve.
 
-    pixarea_fac : float or `None`
+    pixarea_fac : `~astropy.units.Quantity` or `None`
         For ``flux_unit/sr`` to ``flux_unit`` conversion.
+
+    image_unit : str or None
+        (For cubeviz only to deal with display unit conversion). Unit of input
+        data, used with `display_unit` to convert output to desired
+        display unit.
 
     display_unit : str or None
         (For cubeviz only to deal with display unit conversion). Desired unit
         for output. If unit is a surface brightness, a Flux unit will be
         returned if pixarea_fac is provided.
+
+    equivalencies : list or None
+        Optional, equivalencies for unit conversion to convert radial profile
+        to display unit selected in the unit conversion plugin, if it differs
+        from the native data unit.
 
     Returns
     -------
@@ -1360,62 +1367,59 @@ def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0
     """
     n_datapoints += 1  # n + 1
 
-    # determined desired unit for output sum array and y label
-    # cubeviz only to handle unit conversion display unit changes
-    if display_unit is not None:
-        sum_unit = u.Unit(display_unit)
-    else:
-        if isinstance(data, u.Quantity):
-            sum_unit = data.unit
-        else:
-            sum_unit = None
-    if sum_unit and pixarea_fac is not None:
-        # multiply data unit by its solid angle to convert sum in sb to sum in flux
-        sum_unit *= check_if_unit_is_per_solid_angle(sum_unit, return_unit=True)
+    if isinstance(data, u.Quantity):
+        data = data.value
+    if isinstance(background, u.Quantity):
+        background = background.value  # data unit
 
     if hasattr(aperture, 'to_pixel'):
         aperture = aperture.to_pixel(wcs)
 
     if isinstance(aperture, CircularAperture):
-        x_label = 'Radius (pix)'
-        x_arr = np.linspace(0, aperture.r, num=n_datapoints)[1:]
-        aper_list = [CircularAperture(centroid, cur_r) for cur_r in x_arr[:-1]]
+        r = aperture.r
     elif isinstance(aperture, EllipticalAperture):
-        x_label = 'Semimajor axis (pix)'
-        x_arr = np.linspace(0, aperture.a, num=n_datapoints)[1:]
-        a_arr = x_arr[:-1]
-        b_arr = aperture.b * a_arr / aperture.a
-        aper_list = [EllipticalAperture(centroid, cur_a, cur_b, theta=aperture.theta)
-                     for (cur_a, cur_b) in zip(a_arr, b_arr)]
+        r = max(aperture.a, aperture.b)
     elif isinstance(aperture, RectangularAperture):
-        x_label = 'Width (pix)'
-        x_arr = np.linspace(0, aperture.w, num=n_datapoints)[1:]
-        w_arr = x_arr[:-1]
-        h_arr = aperture.h * w_arr / aperture.w
-        aper_list = [RectangularAperture(centroid, cur_w, cur_h, theta=aperture.theta)
-                     for (cur_w, cur_h) in zip(w_arr, h_arr)]
+        r = max(aperture.w, aperture.h) * 0.5
     else:
         raise TypeError(f'Unsupported aperture: {aperture}')
 
-    sum_arr = [ApertureStats(data, cur_aper, wcs=wcs, local_bkg=background).sum
-               for cur_aper in aper_list]
-    if isinstance(sum_arr[0], u.Quantity):
-        sum_arr = u.Quantity(sum_arr)
-    else:
-        sum_arr = np.array(sum_arr)
-    if pixarea_fac is not None:
-        sum_arr = sum_arr * pixarea_fac
-    if isinstance(final_sum, u.Quantity):
-        final_sum = flux_conversion_general(final_sum.value, final_sum.unit,
-                                            sum_arr.unit, equivalencies)
-    sum_arr = np.append(sum_arr, final_sum)
+    radii = np.linspace(0, r, num=n_datapoints)[1:]
+    cog = CurveOfGrowth(data, centroid, radii, error=None, mask=None)
+    x_arr = cog.radius
+    sum_arr = cog.profile - (cog.radii ** 2 * np.pi * background)
 
-    if sum_unit is None:
+    # Determine desired unit for output sum array and y label.
+    # Cubeviz only: To handle unit conversion when display unit changes.
+
+    if image_unit is not None:
+        sum_unit = u.Unit(image_unit)
+        if (display_unit is not None) and (image_unit != display_unit):
+            disp_unit = u.Unit(display_unit)
+            do_flux_conv = True
+        else:
+            do_flux_conv = False
+
+        # multiply data unit by its solid angle to convert sum in sb to sum in flux
+        if pixarea_fac is not None:
+            sa = check_if_unit_is_per_solid_angle(sum_unit, return_unit=True)
+            sum_unit *= sa
+            sum_arr = sum_arr * pixarea_fac.value
+            if do_flux_conv:
+                disp_unit *= sa
+
+        # convert array from native data unit to display unit, if they differ
+        if do_flux_conv:
+            sum_arr = flux_conversion_general(sum_arr,
+                                              sum_unit,
+                                              disp_unit,
+                                              equivalencies=equivalencies,
+                                              with_unit=False)
+            y_label = disp_unit.to_string()
+        else:
+            y_label = sum_unit.to_string()
+
+    else:
         y_label = 'Value'
-    else:
-        y_label = sum_unit.to_string()
-        # bqplot does not like Quantity
-        sum_arr = flux_conversion_general(sum_arr.value, sum_arr.unit, sum_unit,
-                                          equivalencies, with_unit=False)
 
-    return x_arr, sum_arr, x_label, y_label
+    return x_arr, sum_arr, 'Radius (pix)', y_label
