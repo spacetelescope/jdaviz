@@ -7,6 +7,8 @@ New Features
 - The Plot Options plugin now highlights the tab for the active (top-most) data layer
   in the selected viewer. [#3514]
 
+- Added an STC-S string region parser to the Footprints plugin. [#3479]
+
 Cubeviz
 ^^^^^^^
 
@@ -114,8 +116,6 @@ New Features
 - Plugin API methods and attributes are now searchable from the plugin tray (and visible when API hints are enabled). [#3384]
 
 - Snackbar history logger has been moved from an overlay to a separate tab in the right sidebar tray. [#3466]
-
-- Added an STC-S string region parser to the Footprints plugin. [#3479]
 
 Cubeviz
 ^^^^^^^
