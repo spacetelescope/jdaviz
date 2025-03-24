@@ -1,25 +1,10 @@
-4.2.1 (unreleased)
+4.2.1 (2025-03-24)
 ==================
 
 Bug Fixes
 ---------
 
 - Significantly improved performance for panning and zooming with large datasets. [#3513]
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 4.2 (2025-03-17)
 ================
