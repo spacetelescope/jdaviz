@@ -71,13 +71,11 @@ Other Changes and Additions
 
 - Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
 
-4.2.1 (unreleased)
+4.2.2 (unreleased)
 ==================
 
 Bug Fixes
 ---------
-
-- Significantly improved performance for panning and zooming with large datasets. [#3513]
 
 Cubeviz
 ^^^^^^^
@@ -93,8 +91,17 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
 - Improved initial guess for trace for automatic extraction. May change results
   for automatic extraction for data with nonfinite values. [#3512]
+
+4.2.1 (2025-03-24)
+==================
+
+Bug Fixes
+---------
+
+- Significantly improved performance for panning and zooming with large datasets. [#3513]
 
 4.2 (2025-03-17)
 ================
