@@ -120,6 +120,8 @@ Cubeviz
 
 - Enhancements for the cube sonification plugin. [#3377, #3387]
 
+- Ability to ingest and export ``SkyRegion`` objects. [#3502]
+
 Imviz
 ^^^^^
 

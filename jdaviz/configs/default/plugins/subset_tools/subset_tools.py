@@ -212,8 +212,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return_sky_region : bool or None, optional
             If None (default) or True, then the returned region will be ``SkyRegion`` if the
             configuration is Imviz and the data is linked by WCS, or if the configuration
-            is Cubeviz and the data has '_orig_spatial_wcs' in the metadata. If set to False, a
-            ``PixelRegion`` object will be returned.
+            is Cubeviz and the data has a WCS'. If set to False, a ``PixelRegion`` object will
+            be returned.
 
         Returns
         -------
