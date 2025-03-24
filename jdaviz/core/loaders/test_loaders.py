@@ -50,7 +50,6 @@ def test_resolver_matching(specviz_helper):
 
 
 def test_trace_importer(specviz2d_helper, spectrum2d):
-    specviz2d_helper.app.state.dev_loaders = True
     specviz2d_helper._load(spectrum2d, format='2D Spectrum')
 
     trace = specviz2d_helper.plugins['Spectral Extraction'].export_trace()
@@ -65,11 +64,11 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     assert ldr.format == 'Trace'
     ldr.importer.data_label = 'Trace 1'
     ldr.importer()
-    assert specviz2d_helper.app.data_collection[1].label == 'Trace 1'
+    assert specviz2d_helper.app.data_collection[-1].label == 'Trace 1'
 
     # import through load method
     specviz2d_helper._load(trace, data_label='Trace 2')
-    assert specviz2d_helper.app.data_collection[2].label == 'Trace 2'
+    assert specviz2d_helper.app.data_collection[-1].label == 'Trace 2'
 
 
 def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
