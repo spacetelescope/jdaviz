@@ -10,6 +10,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Ability to ingest and export ``SkyRegion`` objects. [#3502]
+
 Imviz
 ^^^^^
 
