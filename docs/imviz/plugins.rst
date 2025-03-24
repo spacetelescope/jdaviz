@@ -445,9 +445,9 @@ Footprints
 ==========
 
 This plugin supports loading and overplotting instrument footprint overlays on the image viewers.
-Any number of overlays can be plotted simultaneously from any number of the available preset
-instruments (requires pysiaf to be installed), by loading an Astropy regions object from a file, or
-by passing an STC-S string.
+Any number of overlays can be plotted simultaneously from any number of the available
+preset instruments (requires pysiaf to be installed), by loading an Astropy regions object from
+a file, or by passing an STC-S string.
 
 The top dropdown allows renaming, adding, and removing footprint overlays.  To modify the display
 and input parameters for a given overlay, select it in the dropdown, and modify the choices
