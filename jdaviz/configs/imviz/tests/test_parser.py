@@ -396,7 +396,9 @@ class TestParseImage:
         assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
         assert isinstance(data.coords, WCS)
         assert comp.units == 'electron/s'
-        assert comp.data.shape == (4299, 4219)
+        assert comp.data.shape[0] == 4299
+        # This file keeps slightly changing shape, it's very annoying.
+        assert comp.data.shape[1] in (4219, 4220)
 
         # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
 
