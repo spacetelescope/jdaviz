@@ -2,10 +2,8 @@
 :ref:`regions:shapes` to :ref:`photutils:photutils-aperture` apertures.
 """
 import re
-import photutils
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
-from astropy.utils import minversion
+from astropy.coordinates import SkyCoord
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, CircularAnnulusROI
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
