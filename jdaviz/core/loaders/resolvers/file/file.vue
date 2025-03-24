@@ -13,11 +13,11 @@
         @import-clicked="import_clicked"
     >
         <v-row>
-            Select a file with data you want to load into this instance of Jdaviz
-            and click "IMPORT".
+            Select a file with data you want to load into this instance of Jdaviz.
             Note that single clicks navigate into directories.
         </v-row>
         <v-row>
+          <span v-if="api_hints_enabled" class="api-hint">loader.filepath = '{{filepath}}'</span>
           <g-file-import id="file-uploader"></g-file-import>
         </v-row>
     </j-loader>
