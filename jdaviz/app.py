@@ -1392,11 +1392,20 @@ class Application(VuetifyTemplate, HubListener):
             return ''
         elif self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
+            if hasattr(self._jdaviz_helper, '_default_spectrum_viewer_reference_name'):
+                viewer_name = self._jdaviz_helper._default_spectrum_viewer_reference_name
+            elif hasattr(self._jdaviz_helper, '_default_spectrum_2d_viewer_reference_name'):
+                viewer_name = self._jdaviz_helper._default_spectrum_2d_viewer_reference_name
+            elif axis == 'temporal':
+                # No unit for ramp's time (group/resultant) axis:
+                return None
+            else:
+                raise NotImplementedError("No default viewer reference found.")
             if axis == 'spectral':
-                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+                sv = self.get_viewer(viewer_name)
                 return sv.data()[0].spectral_axis.unit
             elif axis in ('flux', 'sb', 'spectral_y'):
-                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+                sv = self.get_viewer(viewer_name)
                 sv_y_unit = sv.data()[0].flux.unit
                 if axis == 'spectral_y':
                     return sv_y_unit
@@ -1432,9 +1441,6 @@ class Application(VuetifyTemplate, HubListener):
                     if sv_y_angle_unit:
                         return sv_y_unit
                     return sv_y_unit / solid_angle_unit
-            elif axis == 'temporal':
-                # No unit for ramp's time (group/resultant) axis:
-                return None
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
         uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj

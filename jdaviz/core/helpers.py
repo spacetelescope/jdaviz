@@ -404,7 +404,10 @@ class ConfigHelper(HubListener):
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
-                y_unit = self.app._get_display_unit('spectral_y')
+                if self.app.config == 'specviz' and self.app._get_display_unit('sb'):
+                    y_unit = self.app._get_display_unit('sb')
+                else:
+                    y_unit = self.app._get_display_unit('spectral_y')
 
                 # if there is no pixel scale factor, and the requested conversion
                 # is between flux/sb, then skip. this case is encountered when
