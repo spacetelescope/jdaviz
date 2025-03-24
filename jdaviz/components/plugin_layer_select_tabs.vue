@@ -22,6 +22,7 @@
           :linewidth="item.linewidth"
           :colormode="colormode"
           :cmap_samples="cmap_samples"
+          :btn_style="item.label===active_layer ? 'border: 2px solid #C75109;' : ''"
           @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(!selectedAsList.includes(item.label)) {$emit('update:selected', selected.concat(item.label))} else if (selected.length > 1) {$emit('update:selected', selected.filter(select => select != item.label))} }"
         />
     </span>
@@ -31,15 +32,16 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'multiselect', 'colormode', 'cmap_samples',
-          'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck'],
+          'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck',
+          'active_layer'],
   computed: {
     selectedAsList() {
-      if (this.$props.multiselect) { 
+      if (this.$props.multiselect) {
         return this.$props.selected
       }
       return [this.$props.selected]
     }
   },
 };
-  
+
 </script>
