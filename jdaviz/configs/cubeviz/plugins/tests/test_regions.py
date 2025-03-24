@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from regions import PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion
+from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion,
+                     EllipseSkyRegion)
 from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
@@ -50,8 +51,7 @@ class TestLoadRegions(BaseRegionHandler):
         bad_regions = self.cubeviz.plugins['Subset Tools'].import_region(
             my_reg_sky_1, return_bad_regions=True)
 
-        # TODO: Update expected results when we support sky regions in Cubeviz.
-        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
+        assert len(bad_regions) == 0
 
     def test_spatial_spectral_mix(self):
         # Draw ellipse and wavelength range.
@@ -64,7 +64,14 @@ class TestLoadRegions(BaseRegionHandler):
 
         # Get spatial regions only.
         st = self.cubeviz.plugins['Subset Tools']._obj
-        spatial_subsets_as_regions = st.get_regions(region_type='spatial')
+
+        assert isinstance(st.get_regions(region_type='spatial')['Subset 1'],
+                          EllipseSkyRegion)
+        assert isinstance(st.get_regions(region_type='spatial',
+                                         return_sky_region=True)['Subset 1'],
+                          EllipseSkyRegion)
+
+        spatial_subsets_as_regions = st.get_regions(region_type='spatial', return_sky_region=False)
         assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions

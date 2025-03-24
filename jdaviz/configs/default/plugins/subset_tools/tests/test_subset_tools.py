@@ -234,6 +234,22 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
         plg.combination_mode = 'test'
 
 
+def test_import_sky_region_in_cubeviz(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    ra = 339.0149557 * u.deg
+    dec = 33.97591 * u.deg
+    coord = SkyCoord(ra=ra, dec=dec, unit=u.deg)
+    aper_rad = 0.5 * u.arcsec
+
+    aperture = CircleSkyRegion(coord, aper_rad)
+
+    status = plg.import_region(aperture, return_bad_regions=True)
+    assert status == []
+    assert cubeviz_helper.app.get_subsets('Subset 1')
+
+
 def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
 
     """Test Subset Tools.get regions."""
@@ -360,7 +376,7 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     st.import_region(sr2, combination_mode='and')
 
     # composite subset should be a sky region, and combined to a compound region
-    regs = st.get_regions()
+    regs = st.get_regions(return_sky_region=True)
 
     cr = regs['Subset 1']
     assert isinstance(cr, CompoundSkyRegion)
@@ -460,7 +476,6 @@ def test_update_subset(cubeviz_helper, spectrum1d_cube):
     plg.import_region(spatial_reg, combination_mode='and')
 
     subset_def = plg.update_subset('Subset 1')
-    print(subset_def)
     assert isinstance(subset_def, dict)
     assert len(subset_def) == 2
 

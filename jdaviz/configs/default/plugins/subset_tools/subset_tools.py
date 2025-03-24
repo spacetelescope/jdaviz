@@ -185,11 +185,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False):
+                    use_display_units=False, return_sky_region=None):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
-        respectivley.
+        respectively.
 
         Parameters
         ----------
@@ -197,7 +197,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             Specifies the type of subsets to retrieve. Options are ``spatial``
             to retrieve only spatial subsets, ``spectral`` to retrieve only
             spectral subsets or ``None`` (default) to retrieve both spatial
-            and spectral subsets, when relevent to the current configuration.
+            and spectral subsets, when relevant to the current configuration.
 
         list_of_subset_labels : list of str or None, optional
             If specified, only subsets matching these labels will be included.
@@ -208,6 +208,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             (For spectral subsets) If False (default), subsets are returned in
             the native data unit. If True, subsets are returned in the spectral
             axis display unit set in the Unit Conversion plugin.
+
+        return_sky_region : bool or None, optional
+            If None (default) or True, then the returned region will be ``SkyRegion`` if the
+            configuration is Imviz and the data is linked by WCS, or if the configuration
+            is Cubeviz and the data has a WCS'. If set to False, a ``PixelRegion`` object will
+            be returned.
 
         Returns
         -------
@@ -230,7 +236,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             region_type = {'imviz': ['spatial'],
                            'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
 
-        reg_type = 'sky_region' if self.app._align_by == 'wcs' else 'region'
+        sky_region_check = ((self.app._align_by == 'wcs' or self.config == 'cubeviz') and
+                            return_sky_region is None or return_sky_region)
+        reg_type = 'sky_region' if sky_region_check else 'region'
 
         # first get ALL subsets of specified spatial/spectral type(s)
         subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
@@ -1100,7 +1108,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         else:
             data = self.app.data_collection[refdata_label]
 
-        has_wcs = data_has_valid_wcs(data, ndim=2)
+        has_wcs = data_has_valid_wcs(data, ndim=2) or data_has_valid_wcs(data, ndim=3)
 
         combo_mode_is_list = isinstance(combination_mode, list)
         if combo_mode_is_list and len(combination_mode) != (len(regions)):
@@ -1154,11 +1162,19 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
                 # region: Convert to ROI.
                 # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
-                if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
-                                       EllipsePixelRegion, EllipseSkyRegion,
-                                       RectanglePixelRegion, RectangleSkyRegion,
-                                       CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
-                    state = regions2roi(region, wcs=data.coords)
+                if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                        EllipsePixelRegion, EllipseSkyRegion,
+                                        RectanglePixelRegion, RectangleSkyRegion,
+                                        CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
+                    try:
+                        state = regions2roi(region, wcs=data.coords)
+                    except ValueError:
+                        if '_orig_spatial_wcs' not in data.meta:
+                            bad_regions.append((region,
+                                                f'Failed to load: _orig_spatial_wcs'
+                                                f' meta tag not in {data.label}'))
+                            continue
+                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'].celestial)
                     viewer.apply_roi(state)
 
                 elif isinstance(region, (CircularROI, CircularAnnulusROI,
