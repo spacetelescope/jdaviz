@@ -392,11 +392,14 @@ class TestParseImage:
         comp = data.get_component('SCI,1')
         expected_label = os.path.splitext(os.path.basename(url))[0] + '[SCI,1]'
         assert data.label == expected_label
-        assert data.shape == (4299, 4219)
+        assert data.shape[0] == 4299
+        # This file keeps slightly changing shape, it's very annoying.
+        assert data.shape[1] in (4219, 4220)
         assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
         assert isinstance(data.coords, WCS)
         assert comp.units == 'electron/s'
-        assert comp.data.shape == (4299, 4219)
+        assert comp.data.shape[0] == 4299
+        assert comp.data.shape[1] in (4219, 4220)
 
         # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
 
@@ -418,29 +421,48 @@ class TestParseImage:
         assert_allclose(sky.dec.deg, 10.802045612042956, rtol=1e-3)
         data_unit = u.electron / u.s
         assert_quantity_allclose(tbl[0]['background'], 0.0014 * data_unit)
-        assert_quantity_allclose(tbl[0]['sum'], 112.712406 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['sum_aper_area'], 2583.959958 * PIX2, rtol=1e-3)
         assert_array_equal(tbl[0]['pixarea_tot'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts_err'], None)
         assert_array_equal(tbl[0]['counts_fac'], None)
         assert_array_equal(tbl[0]['aperture_sum_mag'], None)
         assert_array_equal(tbl[0]['flux_scaling'], None)
-        assert_quantity_allclose(tbl[0]['min'], -0.02422 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['max'], 1.577081 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['mean'], 0.043684 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['median'], 0.02129 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['mode'], -0.023497 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['std'], 0.09908 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['mad_std'], 0.023219 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['var'], 0.009817 * (data_unit * data_unit), rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['biweight_location'], 0.020978 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.000606 * (data_unit * data_unit), rtol=1e-3)  # noqa
-        assert_quantity_allclose(tbl[0]['fwhm'], 21.230628 * u.pix, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['semimajor_sigma'], 9.712415 * u.pix, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['semiminor_sigma'], 8.260686 * u.pix, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['orientation'], 80.054019 * u.deg, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['eccentricity'], 0.525929, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['sum_aper_area'], 2583.959958 * PIX2, rtol=1e-3)
+        # This file keeps changing in reprocessing between two shapes, which gives different values
+        if data.shape[1] == 4219:
+            assert_quantity_allclose(tbl[0]['sum'], 112.712406 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['min'], -0.02422 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['max'], 1.577081 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mean'], 0.043684 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['median'], 0.02129 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mode'], -0.023497 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['std'], 0.09908 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mad_std'], 0.023219 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['var'], 0.009817 * (data_unit * data_unit), rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['biweight_location'], 0.020978 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.000606 * (data_unit * data_unit), rtol=1e-3)  # noqa
+            assert_quantity_allclose(tbl[0]['fwhm'], 21.230628 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['semimajor_sigma'], 9.712415 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['semiminor_sigma'], 8.260686 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['orientation'], 80.054019 * u.deg, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['eccentricity'], 0.525929, rtol=1e-3)
+        elif data.shape[1] == 4220:
+            assert_quantity_allclose(tbl[0]['sum'], 116.499811 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['min'], -0.035154 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['max'], 1.592533 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mean'], 0.045163 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['median'], 0.021542 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mode'], -0.0257 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['std'], 0.101232 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mad_std'], 0.0237 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['var'], 0.010248 * (data_unit * data_unit), rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['biweight_location'], 0.021214 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.000631 * (data_unit * data_unit), rtol=1e-3)  # noqa
+            assert_quantity_allclose(tbl[0]['fwhm'], 22.203033 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['semimajor_sigma'], 10.543993 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['semiminor_sigma'], 8.162551 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['orientation'], 83.190667 * u.deg, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['eccentricity'], 0.633012, rtol=1e-3)
 
         # Request specific extension (name only), use given label
         imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
