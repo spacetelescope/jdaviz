@@ -447,22 +447,22 @@ class TestParseImage:
             assert_quantity_allclose(tbl[0]['orientation'], 80.054019 * u.deg, rtol=1e-3)
             assert_quantity_allclose(tbl[0]['eccentricity'], 0.525929, rtol=1e-3)
         elif data.shape[1] == 4220:
-            assert_quantity_allclose(tbl[0]['sum'], 126.636048 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['min'], -0.028581 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['max'], 3.942783 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['mean'], 0.0491 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['median'], 0.021689 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['mode'], -0.033133 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['std'], 0.144362 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['mad_std'], 0.023314 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['var'], 0.02084 * (data_unit * data_unit), rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['biweight_location'], 0.020978 * data_unit, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.000622 * (data_unit * data_unit), rtol=1e-3)  # noqa
-            assert_quantity_allclose(tbl[0]['fwhm'], 25.226272 * u.pix, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['semimajor_sigma'], 12.958123 * u.pix, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['semiminor_sigma'], 7.849021 * u.pix, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['orientation'], 88.733606 * u.deg, rtol=1e-3)
-            assert_quantity_allclose(tbl[0]['eccentricity'], 0.795676, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['sum'], 116.499811 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['min'], -0.035154 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['max'], 1.592533 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mean'], 0.045163 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['median'], 0.021542 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mode'], -0.0257 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['std'], 0.101232 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['mad_std'], 0.0237 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['var'], 0.010248 * (data_unit * data_unit), rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['biweight_location'], 0.021214 * data_unit, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.000631 * (data_unit * data_unit), rtol=1e-3)  # noqa
+            assert_quantity_allclose(tbl[0]['fwhm'], 22.203033 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['semimajor_sigma'], 10.543993 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['semiminor_sigma'], 8.162551 * u.pix, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['orientation'], 83.190667 * u.deg, rtol=1e-3)
+            assert_quantity_allclose(tbl[0]['eccentricity'], 0.633012, rtol=1e-3)
 
         # Request specific extension (name only), use given label
         imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
