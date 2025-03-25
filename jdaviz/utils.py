@@ -536,8 +536,8 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def get_cloud_fits(possible_uri, cache=None, local_path=os.curdir, timeout=None,
-                   dryrun=False, ext=None):
+def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, timeout=None,
+                   dryrun=False):
     parsed_uri = urlparse(possible_uri)
 
     # TODO: Add caching logic

@@ -83,7 +83,8 @@ def parse_data(app, file_obj, ext=None, data_label=None,
     """
 
     if isinstance(file_obj, str):
-        file_obj = get_cloud_fits(file_obj)
+        file_obj = get_cloud_fits(
+            file_obj, ext=ext, cache=cache, local_path=local_path, timeout=timeout)
         if not isinstance(file_obj, str):
             _parse_image(app, file_obj, data_label, ext=ext, parent=parent)
             return
