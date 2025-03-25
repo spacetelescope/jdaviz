@@ -108,6 +108,37 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         plugin._obj.vue_file_import_cancel()
         assert plugin.preset.selected == preset
 
+        # test that importing a proper STC-S string works
+        stc_s = 'POLYGON ICRS 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
+        plugin.import_region(stc_s)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert len(viewer_marks) == 1
+
+        stc_s = 'POLYGON 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
+        plugin.import_region(stc_s)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert len(viewer_marks) == 1
+
+        stc_s = 'CIRCLE ICRS 5.029 4.992 0.000314'
+        plugin.import_region(stc_s)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert len(viewer_marks) == 1
+
+        stc_s = 'CIRCLE 5.029 4.992 0.000314'
+        plugin.import_region(stc_s)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert len(viewer_marks) == 1
+
+        stc_s = 'ELLIPSE ICRS 5.029 4.992 0.0003143 0.00027 45.0'
+        plugin.import_region(stc_s)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert len(viewer_marks) == 1
+
+        stc_s = 'ELLIPSE 5.029 4.992 0.0003143 0.00027 45.0'
+        plugin.import_region(stc_s)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert len(viewer_marks) == 1
+
         tmp_file = str(tmp_path / 'test_region.reg')
         reg.write(tmp_file, format='ds9')
         plugin.import_region(tmp_file)
@@ -124,12 +155,18 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
                                               height=3 * u.deg, width=2 * u.deg)
         plugin.import_region(valid_region_sky)
 
+        # test invalid input
+        with pytest.raises(TypeError):
+            plugin.import_region(5)
+
+        # test invalid file path input
         tmp_invalid_path = str(tmp_path / 'invalid_path.reg')
         with pytest.raises(ValueError):
             plugin.import_region(tmp_invalid_path)
         with pytest.raises(TypeError):
             plugin.import_region(5)
 
+        # test invalid region input
         invalid_region = CirclePixelRegion(PixCoord(x=8, y=7), radius=3.5)
         with pytest.raises(ValueError):
             plugin.import_region(invalid_region)
@@ -137,6 +174,22 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         invalid_region.write(tmp_invalid_file, format='ds9')
         with pytest.raises(ValueError):
             plugin.import_region(tmp_invalid_file)
+        assert plugin.preset.selected == preset
+
+        # test invalid STC-S string input
+        invalid_stc_s = 'RECTANGLE 5.029 4.992 0.000314'
+        with pytest.raises(ValueError):
+            plugin.import_region(invalid_stc_s)
+        assert plugin.preset.selected == preset
+
+        invalid_stc_s = 'CIRCLE FK4 5.029 4.992 0.000314'
+        with pytest.raises(ValueError):
+            plugin.import_region(invalid_stc_s)
+        assert plugin.preset.selected == preset
+
+        invalid_stc_s = 'CIRCLE ICRS 5.029 4 0.000314'
+        with pytest.raises(ValueError):
+            plugin.import_region(invalid_stc_s)
         assert plugin.preset.selected == preset
 
     # with the plugin no longer active, marks should not be visible

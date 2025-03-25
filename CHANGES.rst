@@ -7,6 +7,8 @@ New Features
 - The Plot Options plugin now highlights the tab for the active (top-most) data layer
   in the selected viewer. [#3514]
 
+- Added an STC-S string region parser to the Footprints plugin. [#3479]
+
 Cubeviz
 ^^^^^^^
 
