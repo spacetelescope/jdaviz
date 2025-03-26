@@ -71,7 +71,7 @@ def test_uri_to_download_specviz2d(specviz2d_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_load_s3_fits(imviz_helper, tmp_path):
+def test_load_s3_fits(imviz_helper):
     """Test loading a JWST FITS file from an S3 URI into Imviz."""
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
     imviz_helper.load_data(s3_uri)
