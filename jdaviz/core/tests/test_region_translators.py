@@ -1,6 +1,6 @@
 import pytest
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle, ICRS, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from numpy.testing import assert_allclose
@@ -10,11 +10,16 @@ from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 CircularAnnulus, SkyCircularAnnulus,
                                 EllipticalAnnulus, SkyEllipticalAnnulus,
                                 RectangularAnnulus, SkyRectangularAnnulus)
-from regions import (CirclePixelRegion, EllipsePixelRegion, RectanglePixelRegion,
-                     CircleAnnulusPixelRegion, EllipseAnnulusPixelRegion,
-                     RectangleAnnulusPixelRegion, PolygonPixelRegion, PixCoord)
+from regions import (CirclePixelRegion, CircleSkyRegion,
+                     EllipsePixelRegion, EllipseSkyRegion,
+                     RectanglePixelRegion, CircleAnnulusPixelRegion,
+                     EllipseAnnulusPixelRegion, RectangleAnnulusPixelRegion,
+                     PolygonPixelRegion, PolygonSkyRegion,
+                     PixCoord)
 
 from jdaviz.core.region_translators import (
+    _create_polygon_skyregion_from_coords, _create_circle_skyregion_from_coords,
+    _create_ellipse_skyregion_from_coords, is_stcs_string, stcs_string2region,
     regions2roi, regions2aperture, aperture2regions)
 
 
@@ -333,3 +338,90 @@ def test_translation_polygon():
         regions2aperture(region_shape)
     with pytest.raises(NotImplementedError, match='is not supported'):
         regions2roi(region_shape)
+
+
+def test___create_polygon_skyregion_from_coords():
+    coords = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0]
+    reg = _create_polygon_skyregion_from_coords(coords)
+    assert isinstance(reg, PolygonSkyRegion)
+    assert_allclose(reg.vertices.ra.degree, [10, 30, 50])
+    assert_allclose(reg.vertices.dec.degree, [20, 40, 60])
+    # Check that the default frame is ICRS
+    assert isinstance(reg.vertices.frame, ICRS)
+    # Check that the default unit is deg
+    assert reg.vertices.ra.unit == u.deg
+
+
+def test___create_circle_skyregion_from_coords():
+    coords = [10.0, 20.0, 30.0]
+    reg = _create_circle_skyregion_from_coords(coords)
+    assert isinstance(reg, CircleSkyRegion)
+    assert_allclose(reg.center.ra.degree, 10)
+    assert_allclose(reg.center.dec.degree, 20)
+    # Check that the default frame is ICRS
+    assert isinstance(reg.center.frame, ICRS)
+    # Check that the default unit is deg
+    assert reg.center.ra.unit == u.deg
+
+
+def test___create_ellipse_skyregion_from_coords():
+    coords = [10.0, 20.0, 30.0, 40.0, 50.0]
+    reg = _create_ellipse_skyregion_from_coords(coords)
+    assert isinstance(reg, EllipseSkyRegion)
+    assert_allclose(reg.center.ra.degree, 10)
+    assert_allclose(reg.center.dec.degree, 20)
+    # Check that the default frame is ICRS
+    assert isinstance(reg.center.frame, ICRS)
+    # Check that the default unit is deg
+    assert reg.center.ra.unit == u.deg
+
+
+@pytest.mark.parametrize('stcs_string, expected', [
+    ('POLYGON ICRS 10.0 20.0', True),
+    ('CIRCLE ICRS 10.0 20.0', True),
+    ('ELLIPSE ICRS 10.0 20.0', True),
+    ('polygon icrs 10.0 20.0', True),
+    ('circle icrs 10.0 20.0', True),
+    ('ellipse icrs 10.0 20.0', True),
+    ('POLYGON J2000 10.0 20.0', True),
+    ('CIRCLE J2000 10.0 20.0', True),
+    ('ELLIPSE J2000 10.0 20.0', True),
+    ('POLYGON FK5 10.0 20.0', True),
+    ('CIRCLE FK5 10.0 20.0', True),
+    ('ELLIPSE FK5 10.0 20.0', True),
+    ('POLYGON 10.0 20.0', True),
+    ('CIRCLE 10.0 20.0', True),
+    ('ELLIPSE 10.0 20.0', True),
+    ('POLYGON ICRS 1.0', False),
+    ('POLYGON ICRS 1 2 3', False),
+    ('POLYGON 1.0', False),
+    ('POLYGON 1 2 3', False),
+    ('not a STC-S string', False),
+    # Invalid input type (not a string) should return False instead of raising an error
+    (123, False),
+])
+def test_is_stcs_string(stcs_string, expected):
+    assert is_stcs_string(stcs_string) is expected
+
+
+@pytest.mark.parametrize('stcs_string, expected', [
+    ('POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0',
+     PolygonSkyRegion(vertices=SkyCoord(ra=[10, 30, 50], dec=[20, 40, 60], unit='deg'))),
+    ('CIRCLE ICRS 10.0 20.0 30.0',
+     CircleSkyRegion(center=SkyCoord(ra=10, dec=20, unit='deg'), radius=30 * u.deg)),
+    ('ELLIPSE ICRS 10.0 20.0 30.0 40.0 50.0',
+     EllipseSkyRegion(center=SkyCoord(ra=10, dec=20, unit='deg'),
+                      width=30 * u.deg, height=40 * u.deg, angle=50 * u.deg)),
+])
+def test_stcs_string2region_correctness(stcs_string, expected):
+    reg = stcs_string2region(stcs_string)
+    assert reg == expected
+
+
+@pytest.mark.parametrize('stcs_string, exception_message', [
+    ('CIRCLE ICRS 10', 'Invalid STC-S string'),
+    (123, 'STC-S string must be a string.'),
+])
+def test_stcs_string2region_exceptions(stcs_string, exception_message):
+    with pytest.raises(ValueError, match=exception_message):
+        stcs_string2region(stcs_string)

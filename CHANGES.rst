@@ -7,8 +7,12 @@ New Features
 - The Plot Options plugin now highlights the tab for the active (top-most) data layer
   in the selected viewer. [#3514]
 
+- Added an STC-S string region parser to the Footprints plugin. [#3479]
+
 Cubeviz
 ^^^^^^^
+
+- Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
 Imviz
 ^^^^^
@@ -69,13 +73,11 @@ Other Changes and Additions
 
 - Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
 
-4.2.1 (unreleased)
+4.2.2 (unreleased)
 ==================
 
 Bug Fixes
 ---------
-
-- Significantly improved performance for panning and zooming with large datasets. [#3513]
 
 Cubeviz
 ^^^^^^^
@@ -91,8 +93,17 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
 - Improved initial guess for trace for automatic extraction. May change results
   for automatic extraction for data with nonfinite values. [#3512]
+
+4.2.1 (2025-03-24)
+==================
+
+Bug Fixes
+---------
+
+- Significantly improved performance for panning and zooming with large datasets. [#3513]
 
 4.2 (2025-03-17)
 ================
