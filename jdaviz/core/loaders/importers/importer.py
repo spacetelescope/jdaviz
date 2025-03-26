@@ -2,7 +2,7 @@ from traitlets import Bool, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
-from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
 from jdaviz.core.user_api import ImporterUserApi
@@ -113,6 +113,13 @@ class BaseImporterToDataCollection(BaseImporter):
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
+            if self.app.config != 'deconfigged':
+                # do not add additional viewers
+                msg = SnackbarMessage(
+                    "Data units are incompatible with viewer units, unload all data from viewer to add",  # noqa
+                    color='error', sender=self, timeout=10000)
+                self.app.hub.broadcast(msg)
+                return
             if default_viewer_reference is None:
                 default_viewer_reference = self.default_viewer_reference
                 default_viewer_label = self.default_viewer_label

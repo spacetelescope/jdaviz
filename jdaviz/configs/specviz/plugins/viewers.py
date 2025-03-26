@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 from astropy import table
+from astropy import units as u
 from functools import cached_property
 from matplotlib.colors import cnames
 from specutils import Spectrum1D
@@ -17,6 +18,9 @@ from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
+from jdaviz.core.unit_conversion_utils import (spectral_axis_conversion,
+                                               flux_conversion_general,
+                                               all_flux_unit_conversion_equivs)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
 
@@ -42,7 +46,33 @@ class Spectrum1DViewer(JdavizProfileView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.data_menu._obj.dataset.add_filter('is_spectrum')
+
+        def compatible_units(data):
+            if not len(self.layers):
+                return True
+
+            data_xunit = data.get_component(str(self.state.x_att)).units
+            data_yunit = data.get_component('flux').units
+
+            viewer_xunit = self.state.x_display_unit
+            viewer_yunit = self.state.y_display_unit
+
+            if None in (data_xunit, data_yunit, viewer_xunit, viewer_yunit):
+                return True
+
+            try:
+                spectral_axis_conversion([1], data_xunit, viewer_xunit)
+            except u.UnitConversionError:
+                return False
+            equivs = all_flux_unit_conversion_equivs(cube_wave=[1]*u.Unit(viewer_xunit))
+            try:
+                flux_conversion_general([1], data_yunit, viewer_yunit, equivalencies=equivs)
+            except u.UnitConversionError:
+                return False
+
+            return True
+
+        self.data_menu._obj.dataset.add_filter('is_spectrum', compatible_units)
         self.data_menu.layer.add_filter('not_trace')
 
     @property
