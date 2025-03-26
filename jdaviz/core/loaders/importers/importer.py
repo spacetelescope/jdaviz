@@ -6,6 +6,7 @@ from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.utils import standardize_metadata
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
 
@@ -141,6 +142,8 @@ class BaseImporterToDataCollection(BaseImporter):
     def add_to_data_collection(self, data, data_label=None, show_in_viewer=True):
         if data_label is None:
             data_label = self.data_label_value
+        if hasattr(data, 'meta'):
+            data.meta = standardize_metadata(data.meta)
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)

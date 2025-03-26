@@ -79,10 +79,8 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
 
 
 @pytest.mark.remote_data
-def test_resolver_url(specviz_helper):
-    specviz_helper.app.state.dev_loaders = True
-
-    loader = specviz_helper.loaders['url']
+def test_resolver_url(deconfigged_helper):
+    loader = deconfigged_helper.loaders['url']
 
     # no url, no valid formats
     assert len(loader.format.choices) == 0
@@ -92,27 +90,30 @@ def test_resolver_url(specviz_helper):
     assert len(loader.format.choices) == 0
 
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
-    assert len(loader.format.choices) == 2  # may change with future importers
-    assert loader.format.selected == '2D Spectrum'
+    assert len(loader.format.choices) == 3  # may change with future importers
+    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
     assert loader.target.selected == 'Any'
     loader.target = '1D Spectrum'
-    assert len(loader.format.choices) == 1
-    assert loader.format == '1D Spectrum List'
+    assert len(loader.format.choices) == 2  # may change with future importers
+    assert loader.format == '1D Spectrum List'  # default may change with future importers
     assert loader.importer.data_label == '1D Spectrum'
 
     loader.target = 'Any'
-    assert len(loader.format.choices) == 2
+    assert len(loader.format.choices) == 3
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == '2D Spectrum'
 
-    assert len(specviz_helper.app.data_collection) == 0
+    assert len(deconfigged_helper.app.data_collection) == 0
+    assert len(deconfigged_helper.viewers) == 0
 
     loader.importer()
 
-    assert len(specviz_helper.app.data_collection) == 1
+    # 2D spectrum and auto-extracted 1D spectrum
+    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(deconfigged_helper.viewers) == 2
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):

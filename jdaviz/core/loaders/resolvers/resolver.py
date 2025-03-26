@@ -226,7 +226,7 @@ class BaseResolver(PluginTemplateMixin):
     def _on_target_selected_changed(self, change={}):
         def matches_target_factory(target):
             def matches_target(importer):
-                return importer.target == target
+                return importer.target.get('label', '') == target
             return matches_target
 
         if self.target_selected == 'Any':
