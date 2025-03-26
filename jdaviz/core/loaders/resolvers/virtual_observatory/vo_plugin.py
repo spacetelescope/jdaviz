@@ -104,6 +104,7 @@ class VoPlugin(BaseResolver, AddResultsMixin, TableMixin):
         self.table.show_rowselect = True
         self.table.item_key = "URL"
         self.table.multiselect = False
+        self.table._selected_rows_changed_callback = self._on_table_select_change
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
@@ -451,6 +452,9 @@ class VoPlugin(BaseResolver, AddResultsMixin, TableMixin):
             )
         )
 
+    def _on_table_select_change(self, _=None):
+        self._update_format_items()
+
     def vue_load_selected_data(self, event=None):
         """UI entrypoint for load data btn"""
         self.load_selected_data()
@@ -473,7 +477,8 @@ class VoPlugin(BaseResolver, AddResultsMixin, TableMixin):
         # Resolver infrastructure only supports one data product at a time
         if len(self.table.selected_rows) != 1:
             error_msg = (
-                "Only one data product is supported at a time. Loading first selection."
+                "Only one data product is supported at a time. "
+                "Only the first selection will be loaded."
             )
             self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
 
