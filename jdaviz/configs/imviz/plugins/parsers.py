@@ -409,7 +409,10 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         data = Data(coords=coords, label=new_data_label)
 
         # This could be a quantity or a ndarray:
-        ext_values = getattr(file_obj, cur_ext)
+        if HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
+            ext_values = getattr(file_obj, cur_ext)
+        else:
+            ext_values = file_obj['roman'][cur_ext]
         bunit = getattr(ext_values, 'unit', '')
         component = Component.autotyped(np.array(ext_values), units=bunit)
         data.add_component(component=component, label=comp_label)
