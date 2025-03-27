@@ -92,6 +92,9 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Override glue's profile viewer state _convert_units_x_limits to ensure x-limits
+  update on spectral conversions. [#3518]
+
 Specviz2d
 ^^^^^^^^^
 
