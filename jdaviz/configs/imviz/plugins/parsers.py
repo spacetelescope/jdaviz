@@ -10,6 +10,7 @@ from astropy.utils.data import cache_contents
 
 from glue.core.data import Component, Data
 from gwcs.wcs import WCS as GWCS
+from stdatamodels import asdf_in_fits
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
@@ -29,6 +30,26 @@ __all__ = ['parse_data']
 
 INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
             " to the file name to load all of them.")
+
+
+def _try_gwcs_to_fits_sip(gwcs):
+    """
+    Try to convert this GWCS to FITS SIP. Some GWCS models
+    cannot be converted to FITS SIP. In that case, a warning
+    is raised and the GWCS is used, as is.
+    """
+    try:
+        result = WCS(gwcs.to_fits_sip())
+    except ValueError as err:
+        warnings.warn(
+            "The GWCS coordinates could not be simplified to "
+            "a SIP-based FITS WCS, the following error was "
+            f"raised: {err}",
+            UserWarning
+        )
+        result = gwcs
+
+    return result
 
 
 def prep_data_layer_as_dq(data):
@@ -353,33 +374,47 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
     yield data, new_data_label
 
 
-def _try_gwcs_to_fits_sip(gwcs):
-    """
-    Try to convert this GWCS to FITS SIP. Some GWCS models
-    cannot be converted to FITS SIP. In that case, a warning
-    is raised and the GWCS is used, as is.
-    """
-    try:
-        result = WCS(gwcs.to_fits_sip())
-    except ValueError as err:
-        warnings.warn(
-            "The GWCS coordinates could not be simplified to "
-            "a SIP-based FITS WCS, the following error was "
-            f"raised: {err}",
-            UserWarning
-        )
-        result = gwcs
-
-    return result
-
-
 def _jwst2data(file_obj, ext, data_label):
-    if ext == 'data':
-        ext = 'sci'
+    comp_label = ext.upper()
+    new_data_label = f'{data_label}[{comp_label}]'
+    data = Data(label=new_data_label)
+    unit_attr = f'bunit_{ext}'
 
-    hdu = file_obj[ext]
+    try:
+        # This is very specific to JWST pipeline image output.
+        with asdf_in_fits.open(file_obj) as af:
+            dm = af.tree
+            dm_meta = af.tree["meta"]
+            data.meta.update(standardize_metadata(dm_meta))
 
-    return _hdu2data(hdu, data_label, file_obj, include_wcs=False)
+            if unit_attr in dm_meta:
+                bunit = _validate_bunit(dm_meta[unit_attr], raise_error=False)
+            else:
+                bunit = ''
+
+            # This is instance of gwcs.WCS, not astropy.wcs.WCS
+            if 'wcs' in dm_meta:
+                data.coords = dm_meta['wcs']
+
+            imdata = dm[ext]
+            component = Component.autotyped(imdata, units=bunit)
+
+            # Might have bad GWCS. If so, we exclude it.
+            try:
+                data.add_component(component=component, label=comp_label)
+            except Exception:  # pragma: no cover
+                data.coords = None
+                data.add_component(component=component, label=comp_label)
+
+    # TODO: Do not need this when jwst.datamodels finally its own package.
+    # This might happen for grism image; fall back to FITS loader without WCS.
+    except Exception:
+        if ext == 'data':
+            ext = 'sci'
+        hdu = file_obj[ext]
+        return _hdu2data(hdu, data_label, file_obj, include_wcs=False)
+
+    return data, new_data_label
 
 
 # ---- Functions that handle input from Roman ASDF files -----
@@ -414,11 +449,10 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         else:
             ext_values = file_obj['roman'][cur_ext]
         bunit = getattr(ext_values, 'unit', '')
-        component = Component.autotyped(np.array(ext_values), units=bunit)
+        component = Component(np.array(ext_values), units=bunit)
         data.add_component(component=component, label=comp_label)
-        data.meta.update(meta)
-
-        if comp_label == 'dq':
+        data.meta.update(standardize_metadata(dict(meta)))
+        if comp_label == 'DQ':
             prep_data_layer_as_dq(data)
 
         yield data, new_data_label
