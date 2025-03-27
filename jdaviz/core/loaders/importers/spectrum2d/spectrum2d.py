@@ -131,7 +131,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             ext = spext._extract_in_new_instance(dataset=data_label,
                                                  add_data=False)
         except Exception:
-            raise
             ext = None
             msg = SnackbarMessage(
                 "Automatic spectrum extraction failed. See the spectral extraction"
