@@ -75,6 +75,8 @@ class JdavizViewerMixin(WithCache):
             expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
         else:
             expose = []
+        if self.jdaviz_app.config == 'deconfigged':
+            expose += ['clone_viewer']
         if isinstance(self, BqplotImageView):
             if isinstance(self, AstrowidgetsImageViewerMixin):
                 expose += ['save',
