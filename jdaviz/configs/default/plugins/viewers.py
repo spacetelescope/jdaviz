@@ -25,7 +25,7 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
@@ -128,6 +128,43 @@ class JdavizViewerMixin(WithCache):
             list of strings
         """
         return self.data_menu.data_labels_visible
+
+    def _get_clone_viewer_reference(self):
+        return self.jdaviz_helper._get_clone_viewer_reference(self.reference)
+
+    def clone_viewer(self):
+        name = self.jdaviz_helper._get_clone_viewer_reference(self.reference)
+
+        self.jdaviz_app._on_new_viewer(NewViewerMessage(self.__class__,
+                                                        data=None,
+                                                        sender=self.jdaviz_app),
+                                       vid=name, name=name)
+
+        nv = self.jdaviz_helper.viewers.get(name)
+
+        visible_layers = self.data_menu.data_labels_visible
+        for layer in self.data_menu.data_labels_loaded:
+            visible = layer in visible_layers
+            nv.data_menu.add_data(layer)
+            nv.data_menu.set_layer_visibility(layer, visible)
+            # TODO: don't revert color when adding same data to a new viewer
+            # (same happens when creating a phase-viewer from ephemeris plugin)
+
+        new_viewer = self.jdaviz_app.get_viewer(name)
+        if hasattr(self, 'ephemeris_component'):
+            new_viewer._ephemeris_component = self._ephemeris_component
+        for k, v in self.state.as_dict().items():
+            if k in ('layers',):
+                continue
+            setattr(new_viewer.state, k, v)
+
+        for this_layer_state, new_layer_state in zip(self.state.layers, new_viewer.state.layers):
+            for k, v in this_layer_state.as_dict().items():
+                if k in ('layer',):
+                    continue
+                setattr(new_layer_state, k, v)
+
+        return new_viewer.user_api
 
     def reset_limits(self):
         """
