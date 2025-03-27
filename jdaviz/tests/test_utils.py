@@ -4,6 +4,8 @@ import pytest
 from astropy.wcs import FITSFixedWarning
 
 from jdaviz.utils import alpha_index, download_uri_to_path
+from jdaviz.utils import get_cloud_fits
+from astropy.io import fits
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -76,3 +78,16 @@ def test_load_s3_fits(imviz_helper):
     s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
     imviz_helper.load_data(s3_uri)
     assert len(imviz_helper.app.data_collection) > 0
+
+
+@pytest.mark.remote_data
+def test_get_cloud_fits_ext():
+    s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
+    hdul = get_cloud_fits(s3_uri)
+    assert isinstance(hdul, fits.HDUList)
+
+    hdul = get_cloud_fits(s3_uri, ext="SCI")
+    assert isinstance(hdul, fits.HDUList)
+
+    hdul = get_cloud_fits(s3_uri, ext=["SCI"])
+    assert isinstance(hdul, fits.HDUList)
