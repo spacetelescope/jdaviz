@@ -23,7 +23,6 @@
             </span>
         </v-row>
         <v-row>
-          <span v-if="api_hints_enabled" class="api-hint">loader.filepath = '{{filepath}}'</span>
           <g-file-import id="file-uploader"></g-file-import>
         </v-row>
     </j-loader>
