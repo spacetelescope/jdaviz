@@ -538,6 +538,37 @@ class MultiMaskSubsetState(SubsetState):
 
 def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, timeout=None,
                    dryrun=False):
+    """
+    Retrieve and open a FITS file from an S3 URI using fsspec. Return the input
+    unchanged if it is not an S3 URI.
+
+    If ``possible_uri`` is an S3 URI, the specified extensions from the FITS
+    file will be opened remotely using `astropy.io.fits` with `fsspec`.
+    Anonymous access is assumed for S3. If the URI is not S3-based, the input
+    is returned as-is.
+
+    Parameters
+    ----------
+    possible_uri : str
+        A path or URI to the FITS file. If the URI uses the ``s3://`` scheme,
+        the file is accessed via fsspec and returned as an `~astropy.io.fits.HDUList`.
+        Otherwise, the string is returned unchanged.
+    ext : int, str, or list, optional
+        Extension(s) to load from the FITS file. Can be an integer index (e.g., 0),
+        a string name (e.g., "SCI"), or a list of such values. If `None`, all extensions
+        are loaded.
+    cache : None, bool, or str, optional
+    local_path : str, optional
+    timeout : float, optional
+    dryrun : bool, optional
+
+    Returns
+    -------
+    file_obj : `~astropy.io.fits.HDUList` or str
+        If the URI is an S3 FITS file, returns an `HDUList` containing the requested
+        extensions. Otherwise, returns the original input string.
+    """
+
     parsed_uri = urlparse(possible_uri)
 
     # TODO: Add caching logic
@@ -549,6 +580,8 @@ def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, tim
                 ext_list = list(range(len(hdul)))
             elif not isinstance(ext, list):
                 ext_list = [ext]
+            else:
+                ext_list = ext
             for extension in ext_list:
                 hdu_obj = hdul[extension]
                 downloaded_hdus.append(hdu_obj.copy())
