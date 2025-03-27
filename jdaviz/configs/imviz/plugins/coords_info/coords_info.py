@@ -599,8 +599,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if coords_status and hasattr(getattr(image, 'coords', None), 'pixel_to_world'):
                     # should already have wave computed from setting the coords-info
                     matched_viewer = self.app.get_viewer(matched_marker_id.split(':matched')[0])
-                    wave = wave.to_value(matched_viewer.state.x_display_unit)
-                    self.marks[matched_marker_id].update_xy([wave, wave], [0, 1])
+                    wave_matched = wave.to_value(matched_viewer.state.x_display_unit)
+                    self.marks[matched_marker_id].update_xy([wave_matched, wave_matched], [0, 1])
                     self.marks[matched_marker_id].visible = True
                 else:
                     self.marks[matched_marker_id].visible = False
