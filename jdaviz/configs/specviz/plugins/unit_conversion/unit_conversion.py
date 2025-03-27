@@ -116,7 +116,7 @@ class UnitConversion(PluginTemplateMixin):
 
         self._cached_properties = ['image_layers']
 
-        if self.config not in ['specviz', 'specviz2d', 'cubeviz']:
+        if self.config not in ['specviz', 'specviz2d', 'cubeviz', 'deconfigged']:
             # TODO [mosviz] x_display_unit is not implemented in glue for image viewer
             # TODO [mosviz]: add to yaml file
             # TODO [cubeviz, slice]: slice indicator broken after changing spectral_unit
@@ -129,13 +129,14 @@ class UnitConversion(PluginTemplateMixin):
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
-        self.has_spectral = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
+        self.has_spectral = self.config in ('specviz', 'cubeviz', 'specviz2d',
+                                            'mosviz', 'deconfigged')
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
         self.spectral_unit.choices = create_equivalent_spectral_axis_units_list(u.Hz)
 
-        self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
+        self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz', 'deconfigged')
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
@@ -143,7 +144,8 @@ class UnitConversion(PluginTemplateMixin):
         # initialize flux choices to empty list, will be populated when data is loaded
         self.flux_unit.choices = []
 
-        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz', 'specviz2d')
+        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz',
+                                         'specviz2d', 'deconfigged')
         self.angle_unit = UnitSelectPluginComponent(self,
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
