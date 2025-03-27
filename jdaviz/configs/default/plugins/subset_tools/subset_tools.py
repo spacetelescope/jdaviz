@@ -136,6 +136,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self._plugin_description = 'Select and interact with spatial subsets.'
         elif config == 'specviz':
             self._plugin_description = 'Select and interact with spectral subsets.'
+        else:
+            self._plugin_description = 'Select and interact with subsets.'
 
         self.components = {
             'g-subset-mode': SelectionModeMenu(session=self.session)
