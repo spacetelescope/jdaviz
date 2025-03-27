@@ -5013,7 +5013,15 @@ class Table(PluginSubcomponent):
             If ``filename`` already exists, should it be overwritten.
         """
         if filename is not None:
-            self._qtable.write(filename, overwrite=overwrite)
+            if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:
+                out_tbl = self._qtable[self._qtable.meta["_orig_colnames_for_jdaviz_export"]]
+                del out_tbl.meta["_orig_colnames_for_jdaviz_export"]
+            else:
+                out_tbl = self._qtable
+
+            out_tbl.write(filename, overwrite=overwrite)
+            return out_tbl
+
         # TODO: default to only showing selected columns?
         return self._qtable
 
