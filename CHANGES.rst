@@ -92,8 +92,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
-- Override glue's profile viewer state _convert_units_x_limits to ensure x-limits
-  update on spectral conversions. [#3518]
+- Fix bug where converting spectral units multiple times caused spectrum viewer limits
+  to stop resetting to correct x-limits. [#3518]
 
 Specviz2d
 ^^^^^^^^^
