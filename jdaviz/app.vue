@@ -6,7 +6,7 @@
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="index > 1" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="item.name === 'g-data-tools' && config === 'specviz'" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
+        <j-tooltip v-if="item.name === 'g-data-tools' && ['specviz', 'specviz2d'].indexOf(config) !== -1" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
           <v-btn tile depressed color="turquoise" @click="state.drawer_content = 'loaders'">
             Import Data
           </v-btn>
@@ -33,7 +33,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state.show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="(state.dev_loaders || config === 'specviz') && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="(state.dev_loaders || ['specviz', 'specviz2d'].indexOf(config) !== -1) && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
