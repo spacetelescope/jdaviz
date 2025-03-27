@@ -394,7 +394,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         for selected_row in selected_rows:
             self.table_selected.add_item(selected_row)
 
-        if self.table_selected._qtable and "_orig_colnames_for_jdaviz_export" in self.catalog._cached_obj:
+        if (self.table_selected._qtable and
+                "_orig_colnames_for_jdaviz_export" in self.catalog._cached_obj):
             self.table_selected._qtable.meta["_orig_colnames_for_jdaviz_export"] = self.catalog._cached_obj["_orig_colnames_for_jdaviz_export"]  # noqa: E501
 
         x = [float(coord['x_coord']) for coord in selected_rows]

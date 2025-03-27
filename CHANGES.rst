@@ -41,6 +41,9 @@ Imviz
 - Radial profile and curve of growth in Aperture Photometry plugin are now consistent
   with ``photutils.profiles``. [#3510]
 
+- Catalog Search: When catalog is imported from file, its original column names are
+  preserved on export. [#3519]
+
 Mosviz
 ^^^^^^
 
