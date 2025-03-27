@@ -640,6 +640,15 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
 
+        self._set_relevant()
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if not len(self.viewer_items):
+            self.irrelevant_msg = 'No viewers'
+        else:
+            self.irrelevant_msg = ''
+
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',

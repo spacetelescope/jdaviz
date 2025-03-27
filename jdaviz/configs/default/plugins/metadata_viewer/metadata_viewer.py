@@ -45,6 +45,15 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'View metadata.'
 
+        self._set_relevant()
+
+    @observe('dataset_items')
+    def _set_relevant(self, *args):
+        if not len(self.dataset_items):
+            self.irrelevant_msg = 'No data loaded'
+        else:
+            self.irrelevant_msg = ''
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('dataset', 'show_primary'),
