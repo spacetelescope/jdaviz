@@ -579,6 +579,7 @@ def test_spectral_extraction_unit_conv_one_spec(
     assert spectrum_viewer.state.y_display_unit == "MJy"
 
 
+@pytest.mark.skip(reason='MAST filename changed')
 @pytest.mark.usefixtures('_jail')
 @pytest.mark.remote_data
 @pytest.mark.parametrize(
