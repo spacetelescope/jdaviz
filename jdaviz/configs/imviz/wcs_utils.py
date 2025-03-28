@@ -91,7 +91,10 @@ def add_offset_xy(image_wcs, x, y, delta_deg_x, delta_deg_y):
     ra2_deg, dec2_deg = add_offset_radec(ra_deg, dec_deg, delta_deg_x, delta_deg_y)
 
     if hasattr(image_wcs, 'invert'):
-        return image_wcs.invert(ra2_deg, dec2_deg, with_bounding_box=False)
+        pixel_coords = image_wcs.invert(ra2_deg, dec2_deg, with_bounding_box=False)
+        if hasattr(pixel_coords[0], 'unit'):
+            return u.Quantity(pixel_coords).to_value(u.pix)
+        return pixel_coords
 
     # then back to new pixel coords
     return image_wcs.world_to_pixel_values(ra2_deg, dec2_deg)  # x2, y2
@@ -114,7 +117,6 @@ def calc_compass_radius(image_wcs, x, y, radius_px):
     # a bounding box set.
 
     delta = 0.1 / 3600  # 0.1 arcsec
-
     xe, ye = add_offset_xy(image_wcs, x, y, delta, 0.0)
     xn, yn = add_offset_xy(image_wcs, x, y, 0.0, delta)
 
