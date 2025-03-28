@@ -3,8 +3,7 @@ import os
 import pytest
 from astropy.wcs import FITSFixedWarning
 
-from jdaviz.utils import alpha_index, download_uri_to_path
-from jdaviz.utils import get_cloud_fits
+from jdaviz.utils import alpha_index, download_uri_to_path, get_cloud_fits
 from astropy.io import fits
 
 
