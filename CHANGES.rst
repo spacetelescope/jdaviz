@@ -17,7 +17,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Improve perfomance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483]
+- Improve perfomance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS. [#3483]
 
 Mosviz
 ^^^^^^
