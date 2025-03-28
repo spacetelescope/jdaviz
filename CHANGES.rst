@@ -9,6 +9,8 @@ New Features
 
 - Added an STC-S string region parser to the Footprints plugin. [#3479]
 
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475]
+
 Cubeviz
 ^^^^^^^
 
@@ -23,8 +25,18 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
+
 Specviz2d
 ^^^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
 
 API Changes
 -----------

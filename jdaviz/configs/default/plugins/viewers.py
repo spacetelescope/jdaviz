@@ -5,7 +5,6 @@ import numpy as np
 from glue.config import data_translator
 from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
-from glue.core.units import UnitConverter
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
@@ -32,11 +31,11 @@ from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMark
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache
 from jdaviz.core.user_api import ViewerUserApi
-from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
+from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
+                                               flux_conversion_general,
+                                               all_flux_unit_conversion_equivs)
 from jdaviz.utils import (ColorCycler, get_subset_type, _wcs_only_label,
                           layer_is_image_data, layer_is_not_dq)
-
-uc = UnitConverter()
 
 uncertainty_str_to_cls_mapping = {
     "std": StdDevUncertainty,
@@ -587,9 +586,16 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         else:
             # Check if the new data flux unit is actually compatible since flux not linked.
             try:
-                if self.state.y_display_unit not in ['None', None, 'DN']:
-                    uc.to_unit(data, data.find_component_id("flux"), [1, 1],
-                               u.Unit(self.state.y_display_unit))  # Error if incompatible
+                if (self.state.y_display_unit not in ['None', None, 'DN'] and
+                   hasattr(data.get_component('flux').data, 'units')):
+                    psc = data.meta.get('_pixel_scale_factor', None)
+                    cube_wave = data.get_component('spectral')
+
+                    eqv = all_flux_unit_conversion_equivs(pixar_sr=psc, cube_wave=cube_wave)
+                    flux_conversion_general([1, 1],
+                                            data.get_component('flux').data.units,
+                                            self.state.y_display_unit,
+                                            equivalencies=eqv)
             except Exception as err:
                 # Raising exception here introduces a dirty state that messes up next load_data
                 # but not raising exception also causes weird behavior unless we remove the data

@@ -9,6 +9,7 @@ from traitlets import List, Unicode, observe, Bool
 from specreduce import tracing
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage, SliceValueUpdatedMessage
 from jdaviz.core.registries import tray_registry
@@ -27,7 +28,7 @@ def _valid_glue_display_unit(unit_str, viewer, axis='x'):
     # need to make sure the unit string is formatted according to the list of valid choices
     # that glue will accept (may not be the same as the defaults of the installed version of
     # astropy)
-    if not unit_str:
+    if not unit_str or not viewer:
         return unit_str
     if isinstance(viewer, JdavizProfileView):
         unit_u = u.Unit(unit_str)
@@ -115,7 +116,7 @@ class UnitConversion(PluginTemplateMixin):
 
         self._cached_properties = ['image_layers']
 
-        if self.config not in ['specviz', 'specviz2d', 'cubeviz']:
+        if self.config not in ['specviz', 'specviz2d', 'cubeviz', 'deconfigged']:
             # TODO [mosviz] x_display_unit is not implemented in glue for image viewer
             # TODO [mosviz]: add to yaml file
             # TODO [cubeviz, slice]: slice indicator broken after changing spectral_unit
@@ -128,13 +129,14 @@ class UnitConversion(PluginTemplateMixin):
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
-        self.has_spectral = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
+        self.has_spectral = self.config in ('specviz', 'cubeviz', 'specviz2d',
+                                            'mosviz', 'deconfigged')
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
         self.spectral_unit.choices = create_equivalent_spectral_axis_units_list(u.Hz)
 
-        self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
+        self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz', 'deconfigged')
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
@@ -142,7 +144,8 @@ class UnitConversion(PluginTemplateMixin):
         # initialize flux choices to empty list, will be populated when data is loaded
         self.flux_unit.choices = []
 
-        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz', 'specviz2d')
+        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz',
+                                         'specviz2d', 'deconfigged')
         self.angle_unit = UnitSelectPluginComponent(self,
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
@@ -213,9 +216,9 @@ class UnitConversion(PluginTemplateMixin):
                 or not len(self.angle_unit_selected)
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
             data_obj = msg.data.get_object()
-            if isinstance(data_obj, Spectrum1D):
 
-                self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)  # noqa
+            if isinstance(data_obj, Spectrum1D) and isinstance(viewer, Spectrum1DViewer):
+                self.spectral_unit._addl_unit_strings = viewer.state.__class__.x_display_unit.get_choices(viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
                     try:
                         self.spectral_unit.selected = str(data_obj.spectral_axis.unit)

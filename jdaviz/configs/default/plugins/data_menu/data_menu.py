@@ -10,6 +10,7 @@ from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
                                 ChangeRefDataMessage, ViewerRenamedMessage)
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
+
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.icons import icon_path
@@ -119,7 +120,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # changing the selection has no consequence.
         def data_not_in_viewer(data):
             return data.label not in self.layer.choices
-        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer', data_not_in_viewer]
+
+        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
+                                data_not_in_viewer]
 
         self.orientation = LayerSelect(self,
                                        'orientation_layer_items',

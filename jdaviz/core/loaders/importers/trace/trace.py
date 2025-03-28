@@ -11,11 +11,14 @@ class TraceImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
+        if self.app.config not in ('deconfigged', 'specviz2d'):
+            # NOTE: temporary during deconfig process
+            return False
         return (isinstance(self.input, Trace)
                 and 'Spectral Extraction' in self.app._jdaviz_helper.plugins)
 
     @property
-    def default_viewer(self):
+    def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'mosviz-profile-2d-viewer'
+        return 'spectrum-2d-viewer'

@@ -78,7 +78,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # Mouseover should automatically jump from one spectrum
     # to another, depending on which one is closer.
 
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 60}})
     assert label_mouseover.as_text() == ('Cursor 4.62360e-07, 6.00000e+01',
@@ -145,7 +145,7 @@ def test_specviz_smooth(specviz_helper, spectrum1d):
     # Mouseover should automatically jump from one spectrum
     # to another, depending on which one is closer.
 
-    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 6400, 'y': 120}})
     assert label_mouseover.as_text() == ('Cursor 6.40000e+03, 1.20000e+02',
@@ -175,7 +175,8 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     gs_plugin = specviz2d_helper.plugins['Gaussian Smooth']
 
     # The Autocollapsed spectrum is given the label of "Spectrum 1D" by default
-    smooth_source_dataset = "Spectrum 1D"
+    # when going through load_data
+    smooth_source_dataset = "test 1D"
     gs_plugin.dataset = smooth_source_dataset
     test_stddev_level = 10.0
     gs_plugin.stddev = test_stddev_level
@@ -188,7 +189,7 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
 
     # Ensure all marks were created properly (i.e. not in their initialized state)
     # [0,1] is the default (initialization) value for the marks
-    marks = specviz2d_helper.app.get_viewer('spectrum-viewer').native_marks
+    marks = specviz2d_helper._spectrum_viewer.native_marks
     assert len(marks) == 2
 
     gp_mark = marks[-1]

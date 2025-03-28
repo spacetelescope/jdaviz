@@ -68,6 +68,7 @@ from jdaviz.utils import (
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
+           'skip_if_not_relevant',
            'with_spinner', 'with_temp_disable',
            'WithCache', 'LoadersMixin', 'ViewerPropertiesMixin',
            'BasePluginComponent',
@@ -156,36 +157,33 @@ def show_widget(widget, loc, title):  # pragma: no cover
 
 class ViewerPropertiesMixin:
     # assumes that self.app is defined by the class
-    @cached_property
+    @property
     def spectrum_viewer(self):
-        if hasattr(self, '_default_spectrum_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_viewer=True
-            )
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_spectrum_viewer=True
+        )
+        if viewer_reference is None:
+            return None
 
         return self.app.get_viewer(viewer_reference)
 
-    @cached_property
+    @property
     def spectrum_2d_viewer(self):
-        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_2d_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_2d_viewer=True
-            )
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_spectrum_2d_viewer=True
+        )
+        if viewer_reference is None:
+            return None
 
         return self.app.get_viewer(viewer_reference)
 
-    @cached_property
+    @property
     def flux_viewer(self):
-        if hasattr(self, '_default_flux_viewer_reference_name'):
-            viewer_reference = self._default_flux_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_flux_viewer=True
-            )
+        viewer_reference = self.app._get_first_viewer_reference_name(
+            require_flux_viewer=True
+        )
+        if viewer_reference is None:
+            return None
 
         return self.app.get_viewer(viewer_reference)
 
@@ -214,7 +212,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         if not len(self.loader_items):
             self._update_loader_items()
         from ipywidgets.widgets import widget_serialization
-        if not self.app.state.dev_loaders:
+        if not (self.app.state.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d')):  # noqa
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.loader_items}
@@ -227,6 +225,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
 
     def _update_loader_items(self):
         def open_accordion():
+            self.open_in_tray()
             self.loader_panel_ind = 0
 
         def close_accordion():
@@ -239,11 +238,11 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         import jdaviz.core.loaders  # noqa
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
-        for name, loader_cls in loader_resolver_registry.members.items():
-            loader = loader_cls(app=self.app,
-                                open_callback=open_accordion,
-                                close_callback=close_accordion,
-                                set_active_loader_callback=set_active_loader)
+        for name, Resolver in loader_resolver_registry.members.items():
+            loader = Resolver(app=self.app,
+                              open_callback=open_accordion,
+                              close_callback=close_accordion,
+                              set_active_loader_callback=set_active_loader)
             loader.target.set_filter_target_in(self._registry_label)
             if not len(loader.format.filters):
                 # if default input had no target choices, then the format filter
@@ -262,6 +261,7 @@ class LoadersMixin(VuetifyTemplate, HubListener):
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)
+    api_hints_obj = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
     api_hints_enabled = Bool(False).tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
@@ -279,6 +279,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
 
         # give the vue templates access to the current config/layout
         obj.config = app.state.settings.get("configuration", "default")
+        obj.api_hints_obj = app.api_hints_obj if app.api_hints_obj else obj.config
 
         # give the vue templates access to jdaviz version
         obj.vdocs = app.vdocs
@@ -399,6 +400,17 @@ def skip_if_not_tray_instance():
         @wraps(meth)
         def wrapper(self, *args, **kwargs):
             if not self._tray_instance:
+                return
+            return meth(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def skip_if_not_relevant():
+    def decorator(meth):
+        @wraps(meth)
+        def wrapper(self, *args, **kwargs):
+            if len(self.irrelevant_msg):
                 return
             return meth(self, *args, **kwargs)
         return wrapper
@@ -2331,10 +2343,12 @@ class SubsetSelect(SelectPluginComponent):
 
         if self.selected_obj is None:
             return np.nanmin(dataset.spectral_axis), np.nanmax(dataset.spectral_axis)
-        if self.selected_item.get('type') != 'spectral':
-            raise TypeError("This action is only supported on spectral-type subsets")
         else:
-            return self.selected_obj.lower, self.selected_obj.upper
+            try:
+                return self.selected_obj.lower, self.selected_obj.upper
+            except AttributeError:
+                if self.selected_item.get('type') != 'spectral':
+                    raise TypeError("This action is only supported on spectral-type subsets")
 
 
 class SubsetSelectMixin(VuetifyTemplate, HubListener):
@@ -2403,7 +2417,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        spectrum_viewer = kwargs.get('spectrum_viewer_reference_name')
+        spectrum_viewer = kwargs.get('spectrum_viewer_reference_name', '1D Spectrum')
         self.spectral_subset = SubsetSelect(self,
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
@@ -3181,7 +3195,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
     @property
     def continuum_marks(self):
         marks = {}
-        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer = self.spectrum_viewer
         if viewer is None:
             return {}
         for mark in viewer.figure.marks:
@@ -3429,10 +3443,10 @@ class ViewerSelect(SelectPluginComponent):
     """
 
     def __init__(self, plugin, items, selected,
-                 multiselect=None,
+                 multiselect=None, filters=[],
                  default_text=None, manual_options=[], default_mode='first'):
         super().__init__(plugin, items=items, selected=selected,
-                         multiselect=multiselect,
+                         multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
 
@@ -3518,10 +3532,12 @@ class ViewerSelect(SelectPluginComponent):
 
     def _is_valid_item(self, viewer):
         def is_spectrum_viewer(viewer):
-            return 'ProfileView' in viewer.__class__.__name__
+            return ('ProfileView' in viewer.__class__.__name__
+                    or viewer.__class__.__name__ == 'Spectrum1DViewer')
 
         def is_spectrum_2d_viewer(viewer):
-            return 'Profile2DView' in viewer.__class__.__name__
+            return ('Profile2DView' in viewer.__class__.__name__
+                    or viewer.__class__.__name__ == 'Spectrum2DViewer')
 
         def is_image_viewer(viewer):
             return 'ImageView' in viewer.__class__.__name__
@@ -3718,7 +3734,11 @@ class DatasetSelect(SelectPluginComponent):
 
     def get_selected_spectrum(self, use_display_units=True):
         # retrieves the 1d spectrum
-        if len(self.selected_obj.shape) == 3:
+        if isinstance(self.selected_obj, NDData):
+            shape = self.selected_obj.data.shape
+        else:
+            shape = self.selected_obj.shape
+        if len(shape) == 3:
             # then this is a cube, but we want the 1D spectrum,
             # so we can pass through the Spectral Extraction plugin
             if self.plugin.config != 'cubeviz':
@@ -3730,6 +3750,7 @@ class DatasetSelect(SelectPluginComponent):
                                                        add_data=False)
             return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
+                                                    cls=Spectrum1D,
                                                     use_display_units=use_display_units)
 
     @cached_property
@@ -3757,7 +3778,7 @@ class DatasetSelect(SelectPluginComponent):
         def layer_in_viewers(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bar Application object, so ignore this filter
-                return True
+                return False
             for viewer in self.viewers:
                 if data.label in [l.layer.label for l in viewer.layers]:  # noqa E741
                     return True
@@ -3766,19 +3787,25 @@ class DatasetSelect(SelectPluginComponent):
         def layer_in_spectrum_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
-                return True
-            return data.label in [l.layer.label for l in self.spectrum_viewer.layers]  # noqa E741
+                return False
+            sv = self.spectrum_viewer
+            if sv is None:
+                return False
+            return data.label in [l.layer.label for l in sv.layers]  # noqa E741
 
         def layer_in_spectrum_2d_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
-                return True
-            return data.label in [l.layer.label for l in self.spectrum_2d_viewer.layers]  # noqa E741
+                return False
+            s2dv = self.spectrum_2d_viewer
+            if s2dv is None:
+                return False
+            return data.label in [l.layer.label for l in s2dv.layers]  # noqa E741
 
         def layer_in_flux_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
-                return True
+                return False
             return data.label in [lyr.layer.label for lyr in self.flux_viewer.layers]  # noqa E741
 
         def is_trace(data):
@@ -3808,7 +3835,7 @@ class DatasetSelect(SelectPluginComponent):
         def is_2d_spectrum_or_trace(data):
             return (data.ndim == 2
                     and data.coords is not None
-                    and getattr(data.coords, 'is_spectral', True)) or 'Trace' in data.meta
+                    and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
 
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):

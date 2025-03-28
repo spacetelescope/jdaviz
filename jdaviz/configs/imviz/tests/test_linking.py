@@ -46,7 +46,7 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
         # Also check the coordinates display: Last loaded is on top.
 
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
 
@@ -70,7 +70,7 @@ class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
         # Also check the coordinates display: Last loaded is on top.
 
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove',
                                              'domain': {'x': 0, 'y': 0}})
@@ -157,7 +157,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Also check the coordinates display: Last loaded is on top.
 
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove',
                                              'domain': {'x': 0, 'y': 0}})
@@ -232,7 +232,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
 
         # Also check the coordinates display: Last loaded is on top.
         # Cycle order: GWCS, FITS WCS
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
         xy = self.viewer._get_real_xy(self.imviz.app.data_collection[0], 0, 0, reverse=True)
         label_mouseover._viewer_mouse_event(
             self.viewer, {'event': 'mousemove', 'domain': {'x': xy[0], 'y': xy[1]}})
@@ -284,7 +284,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         self.imviz.link_data(align_by='pixels')
 
         # Check the coordinates display: Last loaded is on top.
-        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover = self.imviz._coords_info
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove', 'domain': {'x': -1, 'y': -1}})
         assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',

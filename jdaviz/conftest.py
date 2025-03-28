@@ -14,7 +14,7 @@ from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection, SpectrumList
 
-from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz
+from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import create_wfi_image_model
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
@@ -53,6 +53,11 @@ def specviz2d_helper():
 @pytest.fixture
 def rampviz_helper():
     return Rampviz()
+
+
+@pytest.fixture
+def deconfigged_helper():
+    return App()
 
 
 @pytest.fixture

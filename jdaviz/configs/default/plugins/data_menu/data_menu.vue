@@ -59,13 +59,13 @@
             </div>
           </template>
           <v-list :id="'dm-content-' + viewer_id" style="width: 400px" class="overflow-y-auto">
-            <v-list-item v-if="api_hints_enabled" style="min-height: 12px"> 
-              <v-list-item-content> 
-                <span class="api-hint"> 
-                  <b>dm = {{ config }}.viewers['{{viewer_id}}'].data_menu</b>
-                </span> 
-              </v-list-item-content> 
-            </v-list-item> 
+            <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
+              <v-list-item-content>
+                <span class="api-hint">
+                  <b>dm = {{ api_hints_obj }}.viewers['{{viewer_id}}'].data_menu</b>
+                </span>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item class="dm-header">
               <v-list-item-icon>
                 <j-tooltip

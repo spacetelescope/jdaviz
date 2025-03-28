@@ -21,6 +21,7 @@ tray:
   - g-plot-options
   - g-subset-tools
   - g-markers
+  - spectral-extraction
   - g-gaussian-smooth
   - g-model-fitting
   - g-unit-conversion
@@ -34,5 +35,5 @@ viewer_area:
       - container: row
         viewers:
           - name: Spectrum
-            plot: specviz-profile-viewer
+            plot: spectrum-1d-viewer
             reference: spectrum-viewer
