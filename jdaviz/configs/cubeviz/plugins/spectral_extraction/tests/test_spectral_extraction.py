@@ -590,7 +590,7 @@ def test_spectral_extraction_unit_conv_one_spec(
          calspec_url + "delumi_mod_005.fits"),  # delta UMi
 
         (4.85, (28, 21, 12), 0.03,
-         "mast:jwst/product/jw01050-o003_t005_miri_ch1-shortmediumlong_s3d.fits",
+         "mast:jwst/product/jw01050-o003_t005_miri_ch1-medium_s3d.fits",
          calspec_url + "hd159222_mod_007.fits"),  # HD 159222
     )
 )
