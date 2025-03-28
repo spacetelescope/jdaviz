@@ -61,6 +61,9 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
         # override glue's _convert_units_x_limits to account
         # for spectral axis conversions that are not supported by glue.
 
+        if self.x_min is None or self.x_max is None:
+            return
+
         if old_unit is None or new_unit is None:
             self._reset_x_limits()
             return
