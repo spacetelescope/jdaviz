@@ -362,6 +362,7 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
             data.meta.get('wcsinfo', None) or
             data.meta.get('wcs', None)
         )
+        pixel_scales = None
         if wcsinfo is not None and not isinstance(wcsinfo, GWCS):
             crval1 = float(wcsinfo.get('CRVAL1', wcsinfo.get('crval1')))
             crval2 = float(wcsinfo.get('CRVAL2', wcsinfo.get('crval2')))
@@ -376,7 +377,7 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
                 if 'wcs' not in data.meta else data.meta['wcs'],
                 fiducial, None, 1
             )]) * u.deg / u.pix
-        else:
+        if pixel_scales is None or any(np.isnan(pixel_scales)):
             # fall back on simple approximation:
             compare_pixel_coords = [[0, 0], [0, 1]] * u.pix
             compare_sky_coords = data.coords.pixel_to_world(*compare_pixel_coords)
@@ -390,6 +391,13 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     # get the world coordinates of the pixel origin
     center_pixel_coord = np.array(real_image_shape) / 2 * u.pix
     center_world_coord = wcs.pixel_to_world(*center_pixel_coord[::-1])
+
+    if np.isnan(rotation_angle):
+        compare_pixel_coords = [[0, 0], [1, 0]] * u.pix
+        compare_sky_coords = data.coords.pixel_to_world(*compare_pixel_coords)
+        position_angle = compare_sky_coords[0].position_angle(compare_sky_coords[1])
+        rotation_angle = 180 * u.deg - position_angle
+
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
     # create a WCS centered on ``filename``,
@@ -538,7 +546,7 @@ def compute_scale(wcs, fiducial, disp_axis, pscale_ratio=1):
     delta[spatial_idx[0]] = 1
 
     crpix_with_offsets = np.vstack((crpix, crpix + delta, crpix + np.roll(delta, 1))).T
-    crval_with_offsets = wcs(*crpix_with_offsets, with_bounding_box=False)
+    crval_with_offsets = wcs(*crpix_with_offsets)
 
     coords = SkyCoord(
         ra=crval_with_offsets[spatial_idx[0]],
