@@ -58,6 +58,7 @@ Cubeviz
 
 Imviz
 ^^^^^
+- Added ability to load remote data from a S3 URI to Imviz. [#3500]
 
 Mosviz
 ^^^^^^
