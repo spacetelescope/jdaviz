@@ -71,16 +71,27 @@ def add_offset_radec(ra_deg, dec_deg, delta_deg_ra, delta_deg_dec):
 
 def add_offset_xy(image_wcs, x, y, delta_deg_x, delta_deg_y):
     # calculate ra/dec of x,y pixel
-    c = image_wcs.pixel_to_world(x, y)
+    if hasattr(image_wcs, '__call__'):
+        c = image_wcs(x, y, with_bounding_box=False)
+    else:
+        c = image_wcs.pixel_to_world(x, y)
+
     if isinstance(c, SkyCoord):
         ra_deg = c.ra.deg
         dec_deg = c.dec.deg
-    else:  # list of Quantity (e.g., from FITS primary header)
+    elif hasattr(c[0], 'unit'):
+        # list of Quantity (e.g., from FITS primary header)
         ra_deg = c[0].value
         dec_deg = c[1].value
+    else:
+        ra_deg = c[0]
+        dec_deg = c[1]
 
     # add offsets
     ra2_deg, dec2_deg = add_offset_radec(ra_deg, dec_deg, delta_deg_x, delta_deg_y)
+
+    if hasattr(image_wcs, 'invert'):
+        return image_wcs.invert(ra2_deg, dec2_deg, with_bounding_box=False)
 
     # then back to new pixel coords
     return image_wcs.world_to_pixel_values(ra2_deg, dec2_deg)  # x2, y2
@@ -396,7 +407,7 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
         compare_pixel_coords = [[0, 0], [1, 0]] * u.pix
         compare_sky_coords = data.coords.pixel_to_world(*compare_pixel_coords)
         position_angle = compare_sky_coords[0].position_angle(compare_sky_coords[1])
-        rotation_angle = 180 * u.deg - position_angle
+        rotation_angle = position_angle
 
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
