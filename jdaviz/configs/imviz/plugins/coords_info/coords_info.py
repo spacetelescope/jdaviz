@@ -179,23 +179,27 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def as_dict(self):
         return self._dict
 
-    def reset_coords_display(self):
-        self.row1a_title = '\u00A0'  # to force empty line if no other content
-        self.row1a_text = ""
-        self.row1b_title = ""
-        self.row1b_text = ""
-        self.row1_unreliable = False
+    def reset_coords_display(self, clear_rows=[1, 2, 3]):
+        if 1 in clear_rows:
+            self.row1a_title = '\u00A0'  # to force empty line if no other content
+            self.row1a_text = ""
+            self.row1b_title = ""
+            self.row1b_text = ""
+            self.row1_unreliable = False
 
-        self.row2_title = '\u00A0'
-        self.row2_text = ""
-        self.row2_unreliable = False
+        if 2 in clear_rows:
+            self.row2_title = '\u00A0'
+            self.row2_text = ""
+            self.row2_unreliable = False
 
-        self.row3_title = '\u00A0'
-        self.row3_text = ""
-        self.row3_unreliable = False
+        if 3 in clear_rows:
+            self.row3_title = '\u00A0'
+            self.row3_text = ""
+            self.row3_unreliable = False
 
-        self.icon = ""
-        self._dict = {}
+        if clear_rows == [1, 2, 3]:
+            self.icon = ""
+            self._dict = {}
 
     def _viewer_mouse_clear_event(self, viewer, data=None):
         self.reset_coords_display()
@@ -432,7 +436,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             world_dec_deg = celestial_coordinates_deg[1]
 
             if "nan" in (world_ra, world_dec, world_ra_deg, world_dec_deg):
-                self.reset_coords_display()
+                self.reset_coords_display(clear_rows=[2, 3])
             else:
                 self.row2_title = 'World'
                 self.row2_text = f'{world_ra} {world_dec} (ICRS)'
