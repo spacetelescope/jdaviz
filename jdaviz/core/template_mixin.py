@@ -155,6 +155,20 @@ def show_widget(widget, loc, title):  # pragma: no cover
         raise ValueError(f"Unrecognized display location: {loc}")
 
 
+def _is_spectrum_viewer(viewer):
+    return ('ProfileView' in viewer.__class__.__name__
+            or viewer.__class__.__name__ == 'Spectrum1DViewer')
+
+
+def _is_spectrum_2d_viewer(viewer):
+    return ('Profile2DView' in viewer.__class__.__name__
+            or viewer.__class__.__name__ == 'Spectrum2DViewer')
+
+
+def _is_image_viewer(viewer):
+    return 'ImageView' in viewer.__class__.__name__
+
+
 class ViewerPropertiesMixin:
     # assumes that self.app is defined by the class
     @property
@@ -3536,15 +3550,13 @@ class ViewerSelect(SelectPluginComponent):
             return len(viewer.layers) > 0
 
         def is_spectrum_viewer(viewer):
-            return ('ProfileView' in viewer.__class__.__name__
-                    or viewer.__class__.__name__ == 'Spectrum1DViewer')
+            return _is_spectrum_viewer(viewer)
 
         def is_spectrum_2d_viewer(viewer):
-            return ('Profile2DView' in viewer.__class__.__name__
-                    or viewer.__class__.__name__ == 'Spectrum2DViewer')
+            return _is_spectrum_2d_viewer(viewer)
 
         def is_image_viewer(viewer):
-            return 'ImageView' in viewer.__class__.__name__
+            return _is_image_viewer(viewer)
 
         def is_slice_indicator_viewer(viewer):
             return isinstance(viewer, WithSliceIndicator)
@@ -3678,7 +3690,8 @@ class DatasetSelect(SelectPluginComponent):
                          multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
-        self._cached_properties += ["selected_dc_item", "selected_spectrum"]
+        self._cached_properties += ["selected_dc_item", "selected_spectrum",
+                                    "viewers_with_selected_visible"]
         # override this for how to access on-the-fly spectral extraction of a cube
         self._spectral_extraction_function = 'sum'
         # Add/Remove Data are triggered when checked/unchecked from viewers
@@ -3761,6 +3774,11 @@ class DatasetSelect(SelectPluginComponent):
     def selected_spectrum(self):
         return self.get_selected_spectrum(use_display_units=True)
 
+    @cached_property
+    def viewers_with_selected_visible(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if self.selected in viewer.data_menu.data_labels_visible]
+
     def _is_valid_item(self, data):
         def from_plugin(data):
             return data.meta.get('Plugin', None) is not None
@@ -3792,19 +3810,17 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False
-            sv = self.spectrum_viewer
-            if sv is None:
-                return False
-            return data.label in [l.layer.label for l in sv.layers]  # noqa E741
+            svs = [viewer for viewer in self.app._viewer_store.values()
+                   if _is_spectrum_viewer(viewer)]
+            return data.label in [l.layer.label for sv in svs for l in sv.layers]  # noqa E741
 
         def layer_in_spectrum_2d_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False
-            s2dv = self.spectrum_2d_viewer
-            if s2dv is None:
-                return False
-            return data.label in [l.layer.label for l in s2dv.layers]  # noqa E741
+            s2dvs = [viewer for viewer in self.app._viewer_store.values()
+                   if _is_spectrum_2d_viewer(viewer)]
+            return data.label in [l.layer.label for s2dv in s2dvs for l in s2dv.layers]  # noqa E741
 
         def layer_in_flux_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
@@ -4178,6 +4194,15 @@ class AddResults(BasePluginComponent):
     @auto.setter
     def auto(self, auto):
         self.auto_label.auto = auto
+
+    @property
+    def results_viewers(self):
+        # return the viewers where the results will be added
+        if self.label_overwrite:
+            return [v for v in self.app._viewer_store.values()
+                    if self.label in v.data_menu.data_labels_visible]
+        else:
+            return [self.viewer.selected_obj] if self.viewer.selected_obj else []
 
     def _handle_default_viewer_selected(self, viewer_comp, is_valid):
         if len(viewer_comp.items) == 2:

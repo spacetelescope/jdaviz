@@ -67,6 +67,54 @@ class OffscreenLinesMarks(HubListener):
         self.right.text = [f'{oob_right} \u25b6' if oob_right > 0 else '']
 
 
+class PluginMarkCollection:
+    # This class allows for the creation of plugin preview marks across viewers
+    def __init__(self, mark_cls, **mark_kwargs):
+        self.mark_cls = mark_cls
+        self.mark_kwargs = mark_kwargs
+        self.marks = {}
+
+    def marks_for_viewers(self, viewers):
+        for viewer in viewers:
+            if viewer not in self.marks:
+                # Create a new mark for the given viewer
+                mark = self.mark_cls(viewer=viewer, **self.mark_kwargs)
+                viewer.figure.marks += [mark]
+                viewer.figure.send_state('marks')
+                self.marks[viewer] = mark
+        return [self.marks[viewer] for viewer in viewers]
+
+    def clear_if_not_in_viewers(self, viewers):
+        for viewer, mark in self.marks.items():
+            if viewer not in viewers:
+                # Clear the mark if the viewer is not in the list
+                mark.clear()
+                mark.visible = False
+
+    def clear(self):
+        return
+        for mark in self.marks.values():
+            mark.clear()
+
+    def update_xy(self, x, y, viewers):
+        for mark in self.marks_for_viewers(viewers):
+            mark.update_xy(x, y)
+            mark.visible = True
+        self.clear_if_not_in_viewers(viewers)
+
+    def set_for_viewers(self, name, value, viewers):
+        for mark in self.marks_for_viewers(viewers):
+            setattr(mark, name, value)
+
+    def __setattr__(self, name, value):
+        if name in ('plugin', 'mark_cls', 'mark_kwargs', 'marks'):
+            super().__setattr__(name, value)
+        else:
+            # pass on to all stored marks
+            for mark in self.marks.values():
+                setattr(mark, name, value)
+
+
 class PluginMark:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
