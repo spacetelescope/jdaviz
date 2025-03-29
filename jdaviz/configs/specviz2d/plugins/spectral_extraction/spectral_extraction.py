@@ -1,14 +1,15 @@
 import numpy as np
+from functools import cached_property
 
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.configs.mosviz.plugins.viewers import Spectrum1DViewer
-from jdaviz.core.events import SnackbarMessage, NewViewerMessage
+from jdaviz.core.events import (SnackbarMessage, NewViewerMessage,
+                                AddDataMessage, RemoveDataMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
-                                        ViewerSelect,
                                         AddResults,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
@@ -16,7 +17,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
-from jdaviz.core.marks import PluginLine
+from jdaviz.core.marks import PluginMarkCollection, PluginLine
 
 from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
@@ -32,8 +33,7 @@ _model_cls = {'Spline': models.Spline1D,
               'Chebyshev': models.Chebyshev1D}
 
 
-@tray_registry('spectral-extraction', label="Spectral Extraction",
-               viewer_requirements=['spectrum', 'spectrum-2d'])
+@tray_registry('spectral-extraction', label="Spectral Extraction")
 class SpectralExtraction(PluginTemplateMixin):
     """
     The Spectral Extraction plugin exposes specreduce methods for tracing, background subtraction,
@@ -48,10 +48,6 @@ class SpectralExtraction(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * :attr:`interactive_extract`
-    * ``viewer1d`` (:class:`~jdaviz.core.template_mixin.ViewerSelectMixin`):
-      which 1d spectrum viewer(s) to show the live-preview marks.
-    * ``viewer2d`` (:class:`~jdaviz.core.template_mixin.ViewerSelectMixin`):
-      which 2d spectrum viewer(s) to show the live-preview marks.
     * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       controls the input dataset for generating the trace.
     * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
@@ -123,14 +119,6 @@ class SpectralExtraction(PluginTemplateMixin):
 
     # SETTINGS
     interactive_extract = Bool(True).tag(sync=True)
-
-    viewer1d_items = List().tag(sync=True)
-    viewer1d_selected = Any().tag(sync=True)
-    viewer1d_multiselect = Bool(False).tag(sync=True)
-
-    viewer2d_items = List().tag(sync=True)
-    viewer2d_selected = Any().tag(sync=True)  # Any needed for multiselect
-    viewer2d_multiselect = Bool(False).tag(sync=True)
 
     # TRACE
     trace_trace_items = List().tag(sync=True)
@@ -244,20 +232,6 @@ class SpectralExtraction(PluginTemplateMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract 1D spectrum from 2D image.'
-
-        self._marks = {}
-
-        self.viewer1d = ViewerSelect(self,
-                                     'viewer1d_items',
-                                     'viewer1d_selected',
-                                     'viewer1d_multiselect',
-                                     filters=['is_spectrum_viewer'])
-
-        self.viewer2d = ViewerSelect(self,
-                                     'viewer2d_items',
-                                     'viewer2d_selected',
-                                     'viewer2d_multiselect',
-                                     filters=['is_spectrum_2d_viewer'])
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -379,6 +353,9 @@ class SpectralExtraction(PluginTemplateMixin):
         # NOTE: defaults to overwriting original spectrum
         self.ext_add_results.label_whitelist_overwrite = ['1D Spectrum', '2D Spectrum (auto-ext)']
         self.ext_results_label_default = '2D Spectrum (auto-ext)'
+
+        for msg in (AddDataMessage, RemoveDataMessage):
+            self.app.hub.subscribe(self, msg, lambda _: self.update_marks())
 
         self._set_relevant()
 
@@ -513,10 +490,16 @@ class SpectralExtraction(PluginTemplateMixin):
                 self._interaction_in_bg_step()
             elif step == 'ext':
                 self._interaction_in_ext_step()
+            elif step == '':
+                return
             else:
                 raise ValueError("step must be one of: trace, bg, ext")
 
-    @observe('is_active', 'active_step', 'viewer1d_selected', 'viewer2d_selected')
+    @observe('ext_add_to_viewer_selected', 'ext_results_label_overwrite')
+    def _spectrum1d_viewer_changed(self, *args):
+        self.update_marks(self.active_step)
+
+    @observe('is_active', 'active_step')
     @skip_if_not_tray_instance()
     def _update_plugin_marks(self, msg={}):
         if self.app._jdaviz_helper is None:
@@ -529,7 +512,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if not (self.is_active):
             for step, mark in self.marks.items():
-                mark.visible = False
+                mark.clear()
             return
 
         if self.active_step == '':
@@ -546,9 +529,20 @@ class SpectralExtraction(PluginTemplateMixin):
                                  'ext_upper', 'ext_lower',
                                  'extract']}
         for step, mark in self.marks.items():
-            mark.visible = step in display_marks.get(self.active_step, [])
+            visible = step in display_marks.get(self.active_step, [])
+            mark.set_for_viewers('visible', visible, self.marks_viewers2d+self.marks_viewers1d)
 
     @property
+    def marks_viewers2d(self):
+        if self.active_step == 'bg':
+            return self.bg_dataset.viewers_with_selected_visible
+        return self.trace_dataset.viewers_with_selected_visible
+
+    @property
+    def marks_viewers1d(self):
+        return self.ext_add_results.results_viewers
+
+    @cached_property
     def marks(self):
         """
         Access the marks created by this plugin in both the spectrum-viewer and spectrum-2d-viewer.
@@ -556,48 +550,31 @@ class SpectralExtraction(PluginTemplateMixin):
         if not self._tray_instance:
             return {}
 
-        viewer2d = self.viewer2d.selected_obj
-        viewer1d = self.viewer1d.selected_obj
+        # 2D viewers
+        marks = {'trace': PluginMarkCollection(PluginLine, visible=self.is_active),
+                 'ext_lower': PluginMarkCollection(PluginLine, visible=self.is_active),
+                 'ext_upper': PluginMarkCollection(PluginLine, visible=self.is_active),
+                 'bg1_center': PluginMarkCollection(PluginLine, visible=self.is_active,
+                                                    line_style='dotted'),
+                 'bg1_lower': PluginMarkCollection(PluginLine, visible=self.is_active),
+                 'bg1_upper': PluginMarkCollection(PluginLine, visible=self.is_active),
+                 'bg2_center': PluginMarkCollection(PluginLine, visible=self.is_active,
+                                                    line_style='dotted'),
+                 'bg2_lower': PluginMarkCollection(PluginLine, visible=self.is_active),
+                 'bg2_upper': PluginMarkCollection(PluginLine, visible=self.is_active)}
 
-        if viewer2d is None:
-            return {}
-
-        if not viewer2d.state.reference_data:
-            # we don't have data yet for scales, defer initializing
-            return {}
-
-        if 'trace' not in self._marks:
-            # the marks haven't been initialized yet, so initialize with empty
-            # marks that will be populated once the first analysis is done.
-            marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
-                     'ext_lower': PluginLine(viewer2d, visible=self.is_active),
-                     'ext_upper': PluginLine(viewer2d, visible=self.is_active),
-                     'bg1_center': PluginLine(viewer2d, visible=self.is_active,
-                                              line_style='dotted'),
-                     'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
-                     'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
-                     'bg2_center': PluginLine(viewer2d, visible=self.is_active,
-                                              line_style='dotted'),
-                     'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
-                     'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
-            # NOTE: += won't trigger the figure to notice new marks
-            viewer2d.figure.marks = viewer2d.figure.marks + list(marks.values())
-            self._marks = self._marks | marks
-
-        if viewer1d is not None and 'extract' not in self._marks:
-            marks = {'extract': PluginLine(viewer1d, visible=self.is_active),
-                     'bg_spec': PluginLine(viewer1d, visible=self.is_active, stroke_width=1)}
-            viewer1d.figure.marks = viewer1d.figure.marks + list(marks.values())
-            self._marks = self._marks | marks
-
-        return self._marks
+        # 1D viewers
+        marks['extract'] = PluginMarkCollection(PluginLine, visible=self.is_active)
+        marks['bg_spec'] = PluginMarkCollection(PluginLine, visible=self.is_active, stroke_width=1)
+        return marks
 
     @observe('interactive_extract')
     @skip_if_no_updates_since_last_active()
     @skip_if_not_tray_instance()
     @skip_if_not_relevant()
     def _update_interactive_extract(self, event={}):
-        if 'extract' not in self.marks:
+        # TODO: change this if-statement
+        if False and 'extract' not in self.marks:
             # no spectrum1d viewer
             self.app._on_new_viewer(NewViewerMessage(Spectrum1DViewer,
                                                      data=None,
@@ -618,7 +595,8 @@ class SpectralExtraction(PluginTemplateMixin):
             else:
                 self.ext_specreduce_err = ''
                 self.marks['extract'].update_xy(sp1d.spectral_axis.value,
-                                                sp1d.flux.value)
+                                                sp1d.flux.value,
+                                                viewers=self.marks_viewers1d)
         else:
             self.marks['extract'].clear()
 
@@ -628,7 +606,9 @@ class SpectralExtraction(PluginTemplateMixin):
             except Exception:
                 self.marks['bg_spec'].clear()
             else:
-                self.marks['bg_spec'].update_xy(spec.spectral_axis, spec.flux)
+                self.marks['bg_spec'].update_xy(spec.spectral_axis,
+                                                spec.flux,
+                                                viewers=self.marks_viewers1d)
         else:
             self.marks['bg_spec'].clear()
 
@@ -651,7 +631,8 @@ class SpectralExtraction(PluginTemplateMixin):
             self.marks['trace'].clear()
         else:
             self.marks['trace'].update_xy(range(len(trace.trace)),
-                                          trace.trace)
+                                          trace.trace,
+                                          viewers=self.marks_viewers2d)
             self.marks['trace'].line_style = 'solid'
 
         self._update_interactive_extract(event)
@@ -679,30 +660,39 @@ class SpectralExtraction(PluginTemplateMixin):
         else:
             xs = range(len(trace.trace))
             self.marks['trace'].update_xy(xs,
-                                          trace.trace)
+                                          trace.trace,
+                                          viewers=self.marks_viewers2d)
             self.marks['trace'].line_style = 'dashed'
 
             if self.bg_type_selected in ['OneSided', 'TwoSided']:
                 self.marks['bg1_center'].update_xy(xs,
-                                                   trace.trace+self.bg_separation)
+                                                   trace.trace+self.bg_separation,
+                                                   viewers=self.marks_viewers2d)
                 self.marks['bg1_lower'].update_xy(xs,
-                                                  trace.trace+self.bg_separation-self.bg_width/2)
+                                                  trace.trace+self.bg_separation-self.bg_width/2,
+                                                  viewers=self.marks_viewers2d)
                 self.marks['bg1_upper'].update_xy(xs,
-                                                  trace.trace+self.bg_separation+self.bg_width/2)
+                                                  trace.trace+self.bg_separation+self.bg_width/2,
+                                                  viewers=self.marks_viewers2d)
             else:
                 self.marks['bg1_center'].clear()
                 self.marks['bg1_lower'].update_xy(xs,
-                                                  trace.trace-self.bg_width/2)
+                                                  trace.trace-self.bg_width/2,
+                                                  viewers=self.marks_viewers2d)
                 self.marks['bg1_upper'].update_xy(xs,
-                                                  trace.trace+self.bg_width/2)
+                                                  trace.trace+self.bg_width/2,
+                                                  viewers=self.marks_viewers2d)
 
             if self.bg_type_selected == 'TwoSided':
                 self.marks['bg2_center'].update_xy(xs,
-                                                   trace.trace-self.bg_separation)
+                                                   trace.trace-self.bg_separation,
+                                                   viewers=self.marks_viewers2d)
                 self.marks['bg2_lower'].update_xy(xs,
-                                                  trace.trace-self.bg_separation-self.bg_width/2)
+                                                  trace.trace-self.bg_separation-self.bg_width/2,
+                                                  viewers=self.marks_viewers2d)
                 self.marks['bg2_upper'].update_xy(xs,
-                                                  trace.trace-self.bg_separation+self.bg_width/2)
+                                                  trace.trace-self.bg_separation+self.bg_width/2,
+                                                  viewers=self.marks_viewers2d)
             else:
                 for mark in ['bg2_center', 'bg2_lower', 'bg2_upper']:
                     self.marks[mark].clear()
@@ -732,13 +722,16 @@ class SpectralExtraction(PluginTemplateMixin):
         else:
             xs = range(len(trace.trace))
             self.marks['trace'].update_xy(xs,
-                                          trace.trace)
+                                          trace.trace,
+                                          viewers=self.marks_viewers2d)
             self.marks['trace'].line_style = 'dashed'
             if self.ext_type_selected == 'Boxcar':
                 self.marks['ext_lower'].update_xy(xs,
-                                                  trace.trace-self.ext_width/2)
+                                                  trace.trace-self.ext_width/2,
+                                                  viewers=self.marks_viewers2d)
                 self.marks['ext_upper'].update_xy(xs,
-                                                  trace.trace+self.ext_width/2)
+                                                  trace.trace+self.ext_width/2,
+                                                  viewers=self.marks_viewers2d)
             else:
                 for mark in ['ext_lower', 'ext_upper']:
                     self.marks[mark].clear()
