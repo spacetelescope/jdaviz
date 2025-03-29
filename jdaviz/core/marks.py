@@ -69,9 +69,12 @@ class OffscreenLinesMarks(HubListener):
 
 class PluginMarkCollection:
     # This class allows for the creation of plugin preview marks across viewers
-    def __init__(self, mark_cls, **mark_kwargs):
+    def __init__(self, mark_cls, shadow_cls=None, shadow_kwargs={}, **mark_kwargs):
         self.mark_cls = mark_cls
+        self.shadow_cls = shadow_cls
+        self.shadow_kwargs = shadow_kwargs
         self.mark_kwargs = mark_kwargs
+        self.shadow_marks = {}
         self.marks = {}
 
     def marks_for_viewers(self, viewers):
@@ -79,9 +82,15 @@ class PluginMarkCollection:
             if viewer not in self.marks:
                 # Create a new mark for the given viewer
                 mark = self.mark_cls(viewer=viewer, **self.mark_kwargs)
+                self.marks[viewer] = mark
+                if self.shadow_cls is not None:
+                    shadow_kwargs = {k: v.marks_for_viewers([viewer])[0] if isinstance(v, PluginMarkCollection) else v
+                                     for k, v in self.shadow_kwargs.items()}
+                    shadow = self.shadow_cls(shadowing=mark, **shadow_kwargs)
+                    self.shadow_marks[viewer] = shadow
+                    viewer.figure.marks += [shadow]
                 viewer.figure.marks += [mark]
                 viewer.figure.send_state('marks')
-                self.marks[viewer] = mark
         return [self.marks[viewer] for viewer in viewers]
 
     def clear_if_not_in_viewers(self, viewers):
@@ -92,7 +101,6 @@ class PluginMarkCollection:
                 mark.visible = False
 
     def clear(self):
-        return
         for mark in self.marks.values():
             mark.clear()
 
@@ -107,7 +115,9 @@ class PluginMarkCollection:
             setattr(mark, name, value)
 
     def __setattr__(self, name, value):
-        if name in ('plugin', 'mark_cls', 'mark_kwargs', 'marks'):
+        if name in ('plugin', 'mark_cls', 'shadow_cls',
+                    'shadow_kwargs', 'mark_kwargs',
+                    'shadow_marks', 'marks'):
             super().__setattr__(name, value)
         else:
             # pass on to all stored marks

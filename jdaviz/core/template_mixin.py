@@ -49,7 +49,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
                                 PluginPlotAddedMessage, PluginPlotModifiedMessage,
                                 GlobalDisplayUnitChanged, SubsetRenameMessage)
-from jdaviz.core.marks import (LineAnalysisContinuum,
+from jdaviz.core.marks import (PluginMarkCollection,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
@@ -3201,47 +3201,31 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                       manual_options=['None', 'Surrounding'],
                                       default_mode='first',
                                       filters=['is_spectral'])
+        # TODO: subscribe to data added/removed events and update marks
 
     def _continuum_remove_none_option(self):
         self.continuum.items = [item for item in self.continuum.items
                                 if item['label'] != 'None']
         self.continuum._apply_default_selection()
 
-    @property
+    @cached_property
     def continuum_marks(self):
-        marks = {}
-        viewer = self.spectrum_viewer
-        if viewer is None:
-            return {}
-        for mark in viewer.figure.marks:
-            if isinstance(mark, LineAnalysisContinuum):
-                # NOTE: we don't use isinstance anymore because of nested inheritance
-                if mark.__class__.__name__ == 'LineAnalysisContinuumLeft':
-                    marks['left'] = mark
-                elif mark.__class__.__name__ == 'LineAnalysisContinuumCenter':
-                    marks['center'] = mark
-                elif mark.__class__.__name__ == 'LineAnalysisContinuumRight':
-                    marks['right'] = mark
-
-        if not len(marks):
-            if not viewer.state.reference_data:
-                # we don't have data yet for scales, defer initializing
-                return {}
-            # then haven't been initialized yet, so initialize with empty
-            # marks that will be populated once the first analysis is done.
-            marks = {'left': LineAnalysisContinuumLeft(viewer,
-                                                       auto_update_units=self.continuum_auto_update_units,  # noqa
-                                                       visible=self.is_active),
-                     'center': LineAnalysisContinuumCenter(viewer,
-                                                           auto_update_units=self.continuum_auto_update_units,  # noqa
-                                                           visible=self.is_active),
-                     'right': LineAnalysisContinuumRight(viewer,
-                                                         auto_update_units=self.continuum_auto_update_units,  # noqa
-                                                         visible=self.is_active)}
-            shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
-            # NOTE: += won't trigger the figure to notice new marks
-            viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
-
+        marks = {'left': PluginMarkCollection(LineAnalysisContinuumLeft,
+                                              shadow_cls=ShadowLine,
+                                              shadow_kwargs={'shadow_width': 2},
+                                              auto_update_units=self.continuum_auto_update_units,
+                                              visible=self.is_active),
+                 'center': PluginMarkCollection(LineAnalysisContinuumCenter,
+                                                shadow_cls=ShadowLine,
+                                                shadow_kwargs={'shadow_width': 2},
+                                                auto_update_units=self.continuum_auto_update_units,
+                                                visible=self.is_active),
+                 'right': PluginMarkCollection(LineAnalysisContinuumRight,
+                                               shadow_cls=ShadowLine,
+                                               shadow_kwargs={'shadow_width': 2},
+                                               auto_update_units=self.continuum_auto_update_units,
+                                               visible=self.is_active)
+                 }
         return marks
 
     @observe('continuum_auto_update_units')
@@ -3252,9 +3236,11 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             # let's just convert units on the mark itself
             mark.auto_update_units = self.continuum_auto_update_units
 
-    def _update_continuum_marks(self, mark_x={}, mark_y={}):
+    def _update_continuum_marks(self, mark_x={}, mark_y={}, viewers=[]):
         for pos, mark in self.continuum_marks.items():
-            mark.update_xy(mark_x.get(pos, []), mark_y.get(pos, []))
+            mark.update_xy(mark_x.get(pos, []),
+                           mark_y.get(pos, []),
+                           viewers=viewers)
 
     def _get_continuum(self, dataset, spectral_subset, update_marks=False, per_pixel=False):
         if dataset.selected == '':
@@ -3401,7 +3387,9 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
         if update_marks:
             mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
-            self._update_continuum_marks(mark_x, mark_y)
+            self._update_continuum_marks(mark_x,
+                                         mark_y,
+                                         viewers=dataset.viewers_with_selected_visible)
 
         return spectrum, continuum, spectrum - continuum
 
