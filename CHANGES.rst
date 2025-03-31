@@ -9,7 +9,7 @@ New Features
 
 - Added an STC-S string region parser to the Footprints plugin. [#3479]
 
-- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526]
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522]
 
 Cubeviz
 ^^^^^^^
