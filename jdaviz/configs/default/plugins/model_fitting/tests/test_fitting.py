@@ -355,7 +355,7 @@ def test_results_table(specviz_helper, spectrum1d):
     mf.remove_model_component('G')
     assert len(mf_table) == 2
 
-    # verify Spectrum1D model fitting plugin and table can handle spectral density conversions
+    # verify Spectrum model fitting plugin and table can handle spectral density conversions
     uc.flux_unit = 'erg / (Angstrom s cm2)'
     mf.reestimate_model_parameters()
 

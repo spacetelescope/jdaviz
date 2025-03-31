@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from astropy import units as u
-from specutils import SpectralRegion, Spectrum1D
+from specutils import SpectralRegion, Spectrum
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 
@@ -38,7 +38,7 @@ def test_open_close(specviz_helper):
 
 
 def test_resolver_matching(specviz_helper):
-    sp = Spectrum1D(spectral_axis=np.array([1, 2, 3])*u.nm,
+    sp = Spectrum(spectral_axis=np.array([1, 2, 3])*u.nm,
                     flux=np.array([1, 2, 3])*u.Jy)
 
     res_sp = find_matching_resolver(specviz_helper.app, sp)
@@ -74,7 +74,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
 def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
+    spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
     specviz2d_helper.load_data(spectrum2d)
 
 
