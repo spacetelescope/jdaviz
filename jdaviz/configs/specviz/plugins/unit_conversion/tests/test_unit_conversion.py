@@ -159,7 +159,7 @@ def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
 def test_mosviz_viewer_mouseover_flux(specviz2d_helper):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
+    spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
     specviz2d_helper.load_data(spectrum2d)
     viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
@@ -207,7 +207,7 @@ def test_mosviz_viewer_mouseover_flux(specviz2d_helper):
 def test_mosviz_viewer_mouseover_sb(specviz2d_helper):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    spectrum2d = Spectrum1D(flux=data*u.MJy/u.sr, spectral_axis=data[3]*u.um)
+    spectrum2d = Spectrum(flux=data*u.MJy/u.sr, spectral_axis=data[3]*u.um)
 
     specviz2d_helper.load_data(spectrum2d)
     spectrum_viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
