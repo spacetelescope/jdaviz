@@ -142,23 +142,20 @@ class JdavizViewerMixin(WithCache):
                                                         sender=self.jdaviz_app),
                                        vid=name, name=name)
 
-        nv = self.jdaviz_helper.viewers.get(name)
+        new_viewer = self.jdaviz_app.get_viewer(name)
 
         visible_layers = self.data_menu.data_labels_visible
         for layer in self.data_menu.data_labels_loaded[::-1]:
             visible = layer in visible_layers
-            nv.data_menu.add_data(layer)
-            nv.data_menu.set_layer_visibility(layer, visible)
+            new_viewer.data_menu.add_data(layer)
+            new_viewer.data_menu.set_layer_visibility(layer, visible)
             # TODO: don't revert color when adding same data to a new viewer
-            # (same happens when creating a phase-viewer from ephemeris plugin)
 
-        new_viewer = self.jdaviz_app.get_viewer(name)
-        if hasattr(self, 'ephemeris_component'):
-            new_viewer._ephemeris_component = self._ephemeris_component
-        for k, v in self.state.as_dict().items():
-            if k in ('layers',):
-                continue
-            setattr(new_viewer.state, k, v)
+        # allow viewers to set attributes (not in state) on cloned viewers
+        for attr in getattr(self, '_clone_attrs', []):
+            if hasattr(self, attr):
+                setattr(new_viewer, attr, getattr(self, attr))
+        new_viewer.state.update_from_dict(self.state.as_dict())
 
         for this_layer_state, new_layer_state in zip(self.state.layers, new_viewer.state.layers):
             for k, v in this_layer_state.as_dict().items():
