@@ -793,7 +793,7 @@ def test_draw2d_linking_specviz2d(specviz2d_helper):
 
     # Create a continuous 2D
     data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
-    spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
+    spectrum_data = Spectrum(data, wcs=wcs, meta=header)
 
     specviz2d_helper.load_data(spectrum_2d=spectrum_data)
     viewer_1d = specviz2d_helper.app.get_viewer(
@@ -917,7 +917,7 @@ def test_delete_subsets_toolbar_selection(cubeviz_helper, spectral_cube_wcs):
 def test_delete_subsets_app_api(cubeviz_helper, spectral_cube_wcs):
     """Test app.delete_subsets."""
 
-    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    data = Spectrum(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
     cubeviz_helper.load_data(data, data_label="Test Flux")
     dc = cubeviz_helper.app.data_collection
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
