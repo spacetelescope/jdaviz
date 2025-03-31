@@ -17,6 +17,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Added ability to load remote data from a S3 URI to Imviz. [#3500]
+
 Mosviz
 ^^^^^^
 
@@ -61,7 +63,9 @@ Cubeviz
 
 Imviz
 ^^^^^
-- Added ability to load remote data from a S3 URI to Imviz. [#3500]
+
+- Catalog Search: Fixed a bug where the plugin modifies the input table if
+  ``import_catalog`` is used on a table instance (not from file). [#3519]
 
 Mosviz
 ^^^^^^

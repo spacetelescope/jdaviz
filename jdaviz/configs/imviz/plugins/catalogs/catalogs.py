@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from astropy import units as u
 from astropy.table import QTable, Table as AstropyTable
@@ -124,6 +126,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     @staticmethod
     def _file_parser(path):
         if isinstance(path, AstropyTable):  # includes QTable
+            path = deepcopy(path)  # Avoid overwriting original input
             from_file_string = f'API: {path.__class__.__name__} object'
             return '', {from_file_string: path, "_orig_colnames_for_jdaviz_export": path.colnames}
 
