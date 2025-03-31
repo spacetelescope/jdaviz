@@ -1054,9 +1054,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
             same length as regions. Each element describes how the corresponding region
-            in regions will be applied. If `None`, then it will follow the default glue
-            functionality for subset creation. Options are ['new', 'replace', 'or', 'and',
-            'xor', 'andnot']
+            in regions will be applied. If `None`, then a new subset will be created.
+            Options are ['new', 'replace', 'or', 'and', 'xor', 'andnot']
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
@@ -1129,7 +1128,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 else:
                     combo_mode = combination_mode
 
-                if combo_mode == 'new':
+                if combo_mode == 'new' or combo_mode is None:
                     # Remove selection of subset so that new one will be created
                     # No overwrite next iteration
                     self.app.session.edit_subset_mode.edit_subset = None
