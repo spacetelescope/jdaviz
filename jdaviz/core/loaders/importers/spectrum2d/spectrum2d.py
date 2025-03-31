@@ -1,4 +1,4 @@
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -16,7 +16,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if self.app.config not in ('specviz', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
-        return isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 2
+        return isinstance(self.input, Spectrum) and self.input.flux.ndim == 2
 
     @property
     def default_viewer(self):

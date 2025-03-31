@@ -1,14 +1,14 @@
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 
-__all__ = ['Spectrum1DImporter']
+__all__ = ['SpectrumImporter']
 
 
 @loader_importer_registry('1D Spectrum')
-class Spectrum1DImporter(BaseImporterToDataCollection):
+class SpectrumImporter(BaseImporterToDataCollection):
     template_file = __file__, "../to_dc_with_label.vue"
 
     @property
@@ -16,7 +16,7 @@ class Spectrum1DImporter(BaseImporterToDataCollection):
         if self.app.config not in ('specviz', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
-        return isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 1
+        return isinstance(self.input, Spectrum) and self.input.flux.ndim == 1
 
     @property
     def default_viewer(self):
