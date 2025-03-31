@@ -84,7 +84,8 @@ class PluginMarkCollection:
                 mark = self.mark_cls(viewer=viewer, **self.mark_kwargs)
                 self.marks[viewer] = mark
                 if self.shadow_cls is not None:
-                    shadow_kwargs = {k: v.marks_for_viewers([viewer])[0] if isinstance(v, PluginMarkCollection) else v
+                    shadow_kwargs = {k: v.marks_for_viewers([viewer])[0]
+                                     if isinstance(v, PluginMarkCollection) else v
                                      for k, v in self.shadow_kwargs.items()}
                     shadow = self.shadow_cls(shadowing=mark, **shadow_kwargs)
                     self.shadow_marks[viewer] = shadow
