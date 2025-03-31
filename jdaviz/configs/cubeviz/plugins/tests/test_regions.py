@@ -59,11 +59,10 @@ class TestLoadRegions(BaseRegionHandler):
         self.cubeviz.plugins['Subset Tools'].import_region([
             EllipsePixelRegion(center=PixCoord(x=4.5, y=4.0), width=9.0, height=8.0),
             SpectralRegion(4.892 * unit, 4.896 * unit)
-        ], combination_mode="new")
-        self.cubeviz.app.session.edit_subset_mode.edit_subset = None
+        ])
 
         # Get spatial regions only.
-        st = self.cubeviz.plugins['Subset Tools']._obj
+        st = self.cubeviz.plugins['Subset Tools']
 
         assert isinstance(st.get_regions(region_type='spatial')['Subset 1'],
                           EllipseSkyRegion)
