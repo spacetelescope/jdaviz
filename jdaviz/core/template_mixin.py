@@ -182,6 +182,11 @@ class ViewerPropertiesMixin:
         return self.app.get_viewer(viewer_reference)
 
     @property
+    def spectrum_1d_viewers(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if _is_spectrum_viewer(viewer)]
+
+    @property
     def spectrum_2d_viewer(self):
         viewer_reference = self.app._get_first_viewer_reference_name(
             require_spectrum_2d_viewer=True
@@ -190,6 +195,11 @@ class ViewerPropertiesMixin:
             return None
 
         return self.app.get_viewer(viewer_reference)
+
+    @property
+    def spectrum_2d_viewers(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if _is_spectrum_2d_viewer(viewer)]
 
     @property
     def flux_viewer(self):
