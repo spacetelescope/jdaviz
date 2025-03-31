@@ -231,7 +231,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
     assert catalogs_plugin.from_file_message == 'Table does not contain required sky_centroid column'  # noqa
 
 
-def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
+def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Since we are not really displaying, need this to test zoom.
     viewer = imviz_helper.default_viewer._obj
     viewer.shape = (100, 100)
@@ -249,6 +249,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)
     out_tbl = catalogs_plugin._obj.search(error_on_fail=True)
+    assert tbl.colnames == ["sky_centroid"]  # Ensure input table not overwritten by plugin
     assert len(out_tbl) == n_entries
     assert catalogs_plugin._obj.number_of_results == n_entries
     # Assert that Object ID is set to index + 1 when the label column is absent
@@ -258,6 +259,15 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs):
 
     catalogs_plugin._obj.table.selected_rows = [catalogs_plugin._obj.table.items[0]]
     assert len(catalogs_plugin._obj.table.selected_rows) == 1
+
+    # Test that exported table only has original input column.
+    export_plugin = imviz_helper.plugins['Export']
+    export_plugin.plugin_table = 'Catalog Search: table'
+    outfilename = tmp_path / "mycat.ecsv"
+    export_plugin.export(filename=str(outfilename), show_dialog=False, overwrite=True)
+    rt_tbl = QTable.read(outfilename)
+    assert rt_tbl.colnames == tbl.colnames
+    assert len(rt_tbl) == n_entries
 
     # test to ensure sources searched for respect the maximum sources traitlet
     catalogs_plugin._obj.max_sources = 1
