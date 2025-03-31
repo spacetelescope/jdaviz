@@ -1,4 +1,4 @@
-from specutils import Spectrum1D, SpectrumList
+from specutils import Spectrum, SpectrumList
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -23,7 +23,7 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
         # TODO: should this be split into two loaders?
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
-        return (isinstance(self.input, SpectrumList) or (isinstance(self.input, Spectrum1D)
+        return (isinstance(self.input, SpectrumList) or (isinstance(self.input, Spectrum)
                 and self.input.flux.ndim == 2))
 
     @property
@@ -32,13 +32,13 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
             return None
         if isinstance(self.input, SpectrumList):
             return self.input
-        elif isinstance(self.input, Spectrum1D):
+        elif isinstance(self.input, Spectrum):
             def this_row(field, i):
                 if field is None:
                     return None
                 return field[i, :]
 
-            return SpectrumList([Spectrum1D(spectral_axis=self.input.spectral_axis,
+            return SpectrumList([Spectrum(spectral_axis=self.input.spectral_axis,
                                             flux=this_row(self.input.flux, i),
                                             uncertainty=this_row(self.input.uncertainty, i),
                                             mask=this_row(self.input.mask, i),

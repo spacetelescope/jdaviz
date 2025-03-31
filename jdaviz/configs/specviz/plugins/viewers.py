@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 from astropy import table
 from matplotlib.colors import cnames
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import SpectralMarksChangedMessage, LineIdentifyMessage
 from jdaviz.core.registries import viewer_registry
@@ -27,7 +27,7 @@ class SpecvizProfileView(JdavizProfileView):
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
-    default_class = Spectrum1D
+    default_class = Spectrum
     spectral_lines = None
     _state_cls = FreezableProfileViewerState
     _default_profile_subset_type = 'spectral'
