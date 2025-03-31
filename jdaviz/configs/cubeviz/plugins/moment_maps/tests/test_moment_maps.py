@@ -30,18 +30,19 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
         cubeviz_helper.load_data(cube, data_label='test')
 
     mm = cubeviz_helper.plugins['Moment Maps']
-    assert not mm._obj.continuum_marks['center'].visible
+    cmc = mm._obj.continuum_marks['center']
+    assert len(cmc.marks) == 0
     with mm.as_active():
-        assert mm._obj.continuum_marks['center'].visible
         mm.n_moment = 0
         # no continuum so marks should be empty
-        assert len(mm._obj.continuum_marks['center'].x) == 0
+        assert len(cmc.marks) == 0
 
         mom = mm.calculate_moment()
 
         mm.continuum = 'Surrounding'
         mm.continuum_width = 10
-        assert len(mm._obj.continuum_marks['center'].x) > 0
+        cm = cmc.marks_list[0]
+        assert len(cm.x) > 0
 
         mom_sub = mm.calculate_moment()
         assert isinstance(mom_sub.wcs, WCS)
@@ -58,6 +59,9 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
         mm._obj.output_unit_selected = "Surface Brightness"
         with pytest.raises(ValueError, match="units must be in"):
             mm.calculate_moment()
+
+        mm.continuum = 'None'
+        assert len(cm.x) == 0
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])

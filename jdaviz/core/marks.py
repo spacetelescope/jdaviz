@@ -77,6 +77,10 @@ class PluginMarkCollection:
         self.shadow_marks = {}
         self.marks = {}
 
+    @property
+    def marks_list(self):
+        return list(self.marks.values())
+
     def marks_for_viewers(self, viewers):
         for viewer in viewers:
             if viewer not in self.marks:
