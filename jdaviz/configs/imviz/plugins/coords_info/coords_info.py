@@ -252,6 +252,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def update_display(self, viewer, x, y):
         self._dict = {}
+        self.app.state.show_toolbar_buttons = False
         if isinstance(viewer, (Spectrum1DViewer, RampvizProfileView)):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
@@ -295,7 +296,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
-        self.app.state.show_toolbar_buttons = False
         if self.dataset.selected == 'auto':
             image = active_layer.layer
         elif self.dataset.selected == 'none':
