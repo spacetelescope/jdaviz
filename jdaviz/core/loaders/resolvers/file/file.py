@@ -35,6 +35,8 @@ class FileResolver(BaseResolver):
     def _on_filepath_changed(self, change):
         if self._file_upload.file_path != change['new']:
             path, file = os.path.split(change['new'])
+            if path == '':
+                path = './'
             self._file_upload._set_form_values(path, file)
         self._update_format_items()
 
