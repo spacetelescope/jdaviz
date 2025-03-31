@@ -145,7 +145,7 @@ class JdavizViewerMixin(WithCache):
         nv = self.jdaviz_helper.viewers.get(name)
 
         visible_layers = self.data_menu.data_labels_visible
-        for layer in self.data_menu.data_labels_loaded:
+        for layer in self.data_menu.data_labels_loaded[::-1]:
             visible = layer in visible_layers
             nv.data_menu.add_data(layer)
             nv.data_menu.set_layer_visibility(layer, visible)
