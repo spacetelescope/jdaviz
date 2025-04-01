@@ -573,7 +573,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             target_wave_unit = cube.coords.spectral_wcs.world_axis_units[0]
             wcs = cube.coords.spectral_wcs
         elif hasattr(cube.coords, 'spectral'):
-            target_wave_unit = cube.coords.spectral.world_axis_units[self.spectral_axis_index]
+            target_wave_unit = cube.coords.spectral.world_axis_units[0]
             wcs = cube.coords.spectral
         else:
             target_wave_unit = None
@@ -594,7 +594,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             wcs_args[self.spectral_axis_index] = spec_indices
             wcs_args.reverse()
             spectral_and_spatial = wcs.pixel_to_world(*wcs_args)
-            spectral_axis = [x for x in spectral_and_spatial if isinstance(x, SpectralCoord)][0]  # noqa
+            spectral_axis = [x for x in spectral_and_spatial if isinstance(x, SpectralCoord)]
+            if len(spectral_axis):
+                spectral_axis = spectral_axis[0]
+            else:
+                # In this case we have a pixel spectral axis
+                world_index = cube.ndim - 1 - cube.meta['spectral_axis_index']
+                spectral_axis = spectral_and_spatial[world_index] * u.pixel
 
             collapsed_spec = _return_spectrum_with_correct_units(
                 flux, wcs, collapsed_nddata.meta, data_type='flux',

@@ -63,19 +63,16 @@ class WithSliceIndicator:
 
 
 class WithSliceSelection:
-    @cached_property
+    @property
     def slice_index(self):
         # index in state.slices corresponding to the slice axis
         for layer in self.layers:
-            try:
-                data_obj = layer.layer.data
+            data_obj = layer.layer.data
+            if 'spectral_axis_index' in data_obj.meta:
                 return data_obj.meta['spectral_axis_index']
-            except (AttributeError, KeyError):
-                raise
-            else:
-                break
-        else:
-            return 2
+
+        # Default to 2 if spectral axis index not found
+        return 2
 
     @property
     def slice_component_label(self):
@@ -119,7 +116,7 @@ class WithSliceSelection:
                     # rampviz uses coordinate components:
                     world_comp_ids = layer.layer.data.coordinate_components
 
-                if self.slice_index >= len(world_comp_ids):
+                if len(world_comp_ids) == 2:
                     # Case where 2D image is loaded in image viewer
                     continue
 
