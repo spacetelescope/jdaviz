@@ -3063,6 +3063,7 @@ class PluginPlotSelectMixin(VuetifyTemplate, HubListener):
         self.plugin_plot = PluginPlotSelect(self,
                                             'plugin_plot_items',
                                             'plugin_plot_selected',
+                                            filters=['not_empty_plot'],
                                             multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
     @observe('plugin_plot_selected')

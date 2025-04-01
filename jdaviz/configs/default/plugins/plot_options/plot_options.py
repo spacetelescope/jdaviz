@@ -4,6 +4,7 @@ import warnings
 
 import matplotlib
 import numpy as np
+from functools import cached_property
 from echo import delay_callback
 from astropy.visualization import ManualInterval, ContrastBiasStretch
 from glue.core.subset_group import GroupedSubset
@@ -539,40 +540,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                    'stretch_params_value', 'stretch_params_sync',
                                                    state_filter=is_image)
 
-        self.stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram',
-                                      update_callback=self._update_stretch_histogram)
-        # Add the stretch bounds tool to the default Plot viewer.
-        self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
-        self.stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])
-
-        self.stretch_histogram._add_data('histogram', x=[0, 1])
-
-        self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
-        self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
-        self.stretch_histogram.add_line(
-            label='stretch_curve',
-            x=[], y=[],
-            ynorm='vmin',
-            color="#007BA1",  # "inactive" blue
-            opacities=[0.5],
-        )
-        self.stretch_histogram.add_scatter(
-            label='stretch_knots',
-            x=[], y=[],
-            ynorm='vmin',
-            color="#c75d2c",  # "active" orange (tool enabled by default)
-        )
-        self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
-        self.stretch_histogram.viewer.state.update_bins_on_reset_limits = False
-        self.stretch_histogram.viewer.state.x_limits_percentile = 95
-        with self.stretch_histogram.figure.hold_sync():
-            self.stretch_histogram.figure.axes[0].label = 'pixel value'
-            self.stretch_histogram.figure.axes[0].num_ticks = 3
-            self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
-            self.stretch_histogram.figure.axes[1].label = 'density'
-            self.stretch_histogram.figure.axes[1].num_ticks = 2
-        self.stretch_histogram_widget = f'IPY_MODEL_{self.stretch_histogram.model_id}'
-
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
                                                    state_filter=is_spatial_subset)
@@ -689,6 +656,44 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             "This currently sets viewer_multiselect and layer_multiselect", DeprecationWarning)
         self.viewer_multiselect = value
         self.layer_multiselect = value
+
+    @cached_property
+    def stretch_histogram(self):
+        stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram',
+                                 update_callback=self._update_stretch_histogram)
+        # Add the stretch bounds tool to the default Plot viewer.
+        stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
+        stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])
+
+        stretch_histogram._add_data('histogram', x=[0, 1])
+
+        stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
+        stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
+        stretch_histogram.add_line(
+            label='stretch_curve',
+            x=[], y=[],
+            ynorm='vmin',
+            color="#007BA1",  # "inactive" blue
+            opacities=[0.5],
+        )
+        stretch_histogram.add_scatter(
+            label='stretch_knots',
+            x=[], y=[],
+            ynorm='vmin',
+            color="#c75d2c",  # "active" orange (tool enabled by default)
+        )
+        stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
+        stretch_histogram.viewer.state.update_bins_on_reset_limits = False
+        stretch_histogram.viewer.state.x_limits_percentile = 95
+        with stretch_histogram.figure.hold_sync():
+            stretch_histogram.figure.axes[0].label = 'pixel value'
+            stretch_histogram.figure.axes[0].num_ticks = 3
+            stretch_histogram.figure.axes[0].tick_format = '0.1e'
+            stretch_histogram.figure.axes[1].label = 'density'
+            stretch_histogram.figure.axes[1].num_ticks = 2
+        self.stretch_histogram_widget = f'IPY_MODEL_{stretch_histogram.model_id}'
+        self.send_state('stretch_histogram_widget')
+        return stretch_histogram
 
     def select_all(self, viewers=True, layers=True):
         """
