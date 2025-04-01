@@ -17,6 +17,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Footprints plugin now supports selecting the spatially closest overlay
+  to a clicked point in the image viewer. [#3525]
+
 Mosviz
 ^^^^^^
 
