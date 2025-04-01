@@ -573,7 +573,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             target_wave_unit = cube.coords.spectral_wcs.world_axis_units[0]
             wcs = cube.coords.spectral_wcs
         elif hasattr(cube.coords, 'spectral'):
-            target_wave_unit = cube.coords.spectral.world_axis_units[self.spectral_axis_index]
+            target_wave_unit = cube.coords.spectral.world_axis_units[0]
             wcs = cube.coords.spectral
         else:
             target_wave_unit = None

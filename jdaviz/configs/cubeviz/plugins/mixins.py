@@ -63,7 +63,7 @@ class WithSliceIndicator:
 
 
 class WithSliceSelection:
-    @cached_property
+    @property
     def slice_index(self):
         # index in state.slices corresponding to the slice axis
         for layer in self.layers:
