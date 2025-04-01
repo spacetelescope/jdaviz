@@ -216,16 +216,18 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     def _on_select_footprint_overlay(self, data):
         click_x, click_y = data.x, data.y
-        viewer = self.viewer.selected_obj[0]
-        overlays = self._get_marks(viewer)
-        overlay_data = []
+        viewers = self.viewer.selected_obj if isinstance(self.viewer.selected_obj, list) else [
+                                                     self.viewer.selected_obj]
 
-        for overlay in overlays:
-            overlay_data.append({
-                "overlay": overlay.overlay,
-                "x": np.array(overlay.x),
-                "y": np.array(overlay.y),
-            })
+        overlay_data = []
+        for viewer in viewers:
+            overlays = self._get_marks(viewer)
+            for overlay in overlays:
+                overlay_data.append({
+                    "overlay": overlay.overlay,
+                    "x": np.array(overlay.x),
+                    "y": np.array(overlay.y),
+                })
         closest_overlay_label, closest_point = find_closest_polygon_point(
             click_x, click_y, overlay_data)
         self.overlay_selected = closest_overlay_label
