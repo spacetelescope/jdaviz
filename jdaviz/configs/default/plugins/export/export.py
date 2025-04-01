@@ -190,6 +190,17 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             # on the user's machine, so export support in cubeviz should be disabled
             self.serverside_enabled = False
 
+        self._set_relevant()
+
+    @observe('viewer_items', 'dataset_items', 'subset_items',
+             'plugin_table_items', 'plugin_plot_items')
+    def _set_relevant(self, *args):
+        if not (len(self.viewer_items) or len(self.dataset_items) or len(self.subset_items)
+                or len(self.plugin_table_items) or len(self.plugin_plot_items)):
+            self.irrelevant_msg = 'Nothing to export'
+        else:
+            self.irrelevant_msg = ''
+
     @property
     def user_api(self):
         # TODO: backwards compat for save_figure, save_movie,
