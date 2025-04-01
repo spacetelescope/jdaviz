@@ -111,14 +111,12 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         else:
             w = data.coords
         data_wcs = getattr(w, 'celestial', None)
-        if data_wcs:
-            data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='No observer defined on WCS')
             spec = spectral_slab(cube, spec_min, spec_max)
             # Spatial-spatial image only.
-            collapsed_spec = spec.collapse(self.function_selected.lower(), axis=-1).T  # Quantity
+            collapsed_spec = spec.collapse(self.function_selected.lower(), axis=-1)  # Quantity
 
             # stuff for exporting to file
             self.collapsed_spec = CCDData(collapsed_spec, wcs=data_wcs)
@@ -128,7 +126,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
         if add_data:
             data = Data(coords=data_wcs)
-            data['flux'] = collapsed_spec.value
+            data['flux'] = collapsed_spec.flux.value
             data.get_component('flux').units = collapsed_spec.unit.to_string()
 
             self.add_results.add_results_from_plugin(data)
