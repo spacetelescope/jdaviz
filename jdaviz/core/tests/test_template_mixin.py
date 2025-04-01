@@ -60,7 +60,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     app.add_data(spectrum1d_cube, 'test')
     app.add_data_to_viewer("flux-viewer", "test")
     fv = app.get_viewer("flux-viewer")
-    sv = app.get_viewer("spectrum-viewer")
+    sv = app.get_viewer('spectrum-viewer')
 
     # export plugin uses the mixin
     p = cubeviz_helper.plugins['Export']

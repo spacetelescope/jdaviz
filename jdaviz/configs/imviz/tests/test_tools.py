@@ -119,7 +119,7 @@ def test_blink(imviz_helper):
     for i in range(3):
         imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}')
 
-    label_mouseover = imviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = imviz_helper._coords_info
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b', 'domain': {'x': 0, 'y': 0}})
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})

@@ -155,6 +155,8 @@ filterwarnings = [
     # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
     # and https://github.com/scipy/scipy/pull/19275
     "ignore:.*numpy\\.core.*:DeprecationWarning",
+    "ignore:The load_data function is deprecated.*",
+    "ignore:.*use_side_effect is deprecated.*",
 ]
 
 [tool.coverage.run]

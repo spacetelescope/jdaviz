@@ -213,7 +213,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
                             uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
     specviz2d_helper.load_data(objectspec)
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+    pext = specviz2d_helper.plugins['Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
                                  trace_model=models.Polynomial1D(degree=1),

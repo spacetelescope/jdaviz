@@ -16,7 +16,7 @@ from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, new_flux,
                                expected_spectral_axis, expected_flux):
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
-    viewer = specviz_helper.app.get_viewer("spectrum-viewer")
+    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
 
     try:
@@ -50,7 +50,7 @@ def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
         spectrum1d.uncertainty = None
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = specviz_helper.app.get_viewer("spectrum-viewer")
+    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
     plg.spectral_unit = new_spectral_axis
@@ -66,7 +66,7 @@ def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
         spectrum1d.uncertainty = None
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = specviz_helper.app.get_viewer("spectrum-viewer")
+    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
     new_flux = "erg / (s cm2 Angstrom)"
     plg._obj.flux_unit_selected = new_flux
@@ -82,7 +82,7 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
         spectrum1d.uncertainty = None
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
-    viewer = specviz_helper.app.get_viewer("spectrum-viewer")
+    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
     new_flux = "erg / (s cm2 Angstrom)"
@@ -162,7 +162,7 @@ def test_mosviz_viewer_mouseover_flux(specviz2d_helper):
     spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
     specviz2d_helper.load_data(spectrum2d)
-    viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
+    viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
     plg = specviz2d_helper.plugins["Unit Conversion"]
 
     # make sure we don't expose angle, sb, nor spectral-y units when native
@@ -172,7 +172,7 @@ def test_mosviz_viewer_mouseover_flux(specviz2d_helper):
     assert not hasattr(plg, 'sb_unit')
     assert not hasattr(plg, 'spectral_y_type')
 
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove',
                                          'domain': {'x': 5, 'y': 3}})

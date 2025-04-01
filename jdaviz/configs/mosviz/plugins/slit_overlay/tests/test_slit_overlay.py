@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from glue.core import Data
-from jdaviz import Application
+from jdaviz.app import Application
 from jdaviz.configs.mosviz.plugins.slit_overlay.slit_overlay import jwst_header_to_skyregion
 
 from regions import RectangleSkyRegion

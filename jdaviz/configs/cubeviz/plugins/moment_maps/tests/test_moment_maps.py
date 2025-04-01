@@ -116,7 +116,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     assert mm._obj.results_label_overwrite is True
 
     # Make sure coordinate display works in flux viewer (loaded data, not the moment map)
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 1)
@@ -196,7 +196,7 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
     mm.calculate_moment()
 
     # Make sure coordinate display works
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
                                                         'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -4.14668e+02 km / s",
@@ -390,7 +390,7 @@ def test_moment_zero_unit_flux_conversions(cubeviz_helper,
 
     # and flux viewer for mouseover info
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
 
     # convert to new flux unit
     uc.flux_unit.selected = new_flux_unit_str

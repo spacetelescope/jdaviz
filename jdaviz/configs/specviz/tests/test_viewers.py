@@ -24,7 +24,7 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
         warnings.filterwarnings("ignore", message=".*contains multiple slashes, which is discouraged by the FITS standard.*")  # noqa
         specviz_helper.load_data(spec)
 
-    label = specviz_helper.app.get_viewer_by_id('specviz-0').figure.axes[1].label
+    label = specviz_helper._spectrum_viewer.figure.axes[1].label
 
     assert (y_axis_label in label)
 
@@ -34,8 +34,8 @@ def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
     uc = specviz_helper.plugins["Unit Conversion"]
     assert uc.flux_unit == "Jy"
     uc.flux_unit = "MJy"
-    specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "Test")
-    specviz_helper.app.add_data_to_viewer("spectrum-viewer", "Test")
+    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "Test")
+    specviz_helper.app.add_data_to_viewer('spectrum-viewer', "Test")
     # Actual values not in display unit but should not affect display unit.
     spec = specviz_helper.get_spectra(data_label="Test", apply_slider_redshift=False)
     assert spec.flux.unit == u.Jy
@@ -49,7 +49,7 @@ class TestResetLimitsTwoTests:
     def test_reset_limits_01(self, specviz_helper, spectrum1d):
         """This should run first."""
         specviz_helper.load_data(spectrum1d)
-        sv = specviz_helper.app.get_viewer("spectrum-viewer")
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)
         orig_ylims = (sv.state.y_min, sv.state.y_max)
@@ -69,7 +69,7 @@ class TestResetLimitsTwoTests:
     def test_reset_limits_02(self, specviz_helper, spectrum1d_nm):
         """This should run second and see if first polutes it."""
         specviz_helper.load_data(spectrum1d_nm)
-        sv = specviz_helper.app.get_viewer("spectrum-viewer")
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)
         orig_ylims = (sv.state.y_min, sv.state.y_max)

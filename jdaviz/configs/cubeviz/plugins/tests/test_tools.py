@@ -61,7 +61,7 @@ def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts)
     assert len(flux_viewer.native_marks) == 3
 
     # Check in uncertainty viewer as well. Set mouseover here
-    cubeviz_helper.app.session.application._tools['g-coords-info'].dataset.selected = 'none'
+    cubeviz_helper._coords_info.dataset.selected = 'none'
     uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
     uncert_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -69,7 +69,7 @@ def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts)
     assert uncert_viewer.toolbar.active_tool._mark.visible is True
 
     # Select specific data
-    cubeviz_helper.app.session.application._tools['g-coords-info'].dataset.selected = 'test[FLUX]'
+    cubeviz_helper._coords_info.dataset.selected = 'test[FLUX]'
     uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
     uncert_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -108,7 +108,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
     sl = cubeviz_helper.plugins['Slice']
     sl.value = sl._obj.valid_indicator_values_sorted[1]
     assert flux_viewer.slice == 1
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 2, 'y': 1}})
     assert label_mouseover.as_text() == (f'Pixel x=02.0 y=01.0 Value +1.40000e+01 {cube_unit}',

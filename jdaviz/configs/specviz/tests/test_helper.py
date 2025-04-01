@@ -60,9 +60,10 @@ class TestSpecvizHelper:
         self.spec_app.load_data(self.spec_list)
         assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
-            assert "specviz_data" in self.spec_app.app.data_collection[i].label
+            assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
 
     def test_load_spectrum_list_with_labels(self):
+        # NOTE: will be removed after load_data deprecation is removed
         # now load three more spectra from a SpectrumList, with labels:
         labels = ["List test 1", "List test 2", "List test 3"]
         self.spec_app.load_data(self.spec_list, data_label=labels)
@@ -75,12 +76,13 @@ class TestSpecvizHelper:
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
+        # NOTE: will be removed after load_data deprecation is removed
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
             self.spec_app.load_data(self.spec_list, data_label=labels)
 
     def test_load_spectrum_collection(self):
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             collection = SpectrumCollection([1]*u.AA)
             self.spec_app.load_data(collection)
 
@@ -287,7 +289,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     # Mouseover without data should not crash.
-    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
     assert label_mouseover.as_text() == ('', '', '')
@@ -358,12 +360,14 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
 
 
 def test_app_links(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     assert isinstance(sv.jdaviz_app, Application)
     assert isinstance(sv.jdaviz_helper, Specviz)
 
 
 @pytest.mark.remote_data
+@pytest.mark.xfail(reason='Multiple file support not yet implemented in loaders')
 def test_load_spectrum_list_directory(tmpdir, specviz_helper):
     # niriss_parser_test_data.zip
     test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
@@ -390,6 +394,7 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
 
 
 @pytest.mark.remote_data
+@pytest.mark.xfail(reason='Multiple file support not yet implemented in loaders')
 def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
     # niriss_parser_test_data.zip
     test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
@@ -415,7 +420,7 @@ def test_load_2d_flux(specviz_helper):
     specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test [0]"
+    assert specviz_helper.app.data_collection[0].label == "test_0"
 
     spec2 = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                        flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
@@ -425,13 +430,13 @@ def test_load_2d_flux(specviz_helper):
     specviz_helper.load_data(spec_list, data_label="second test")
 
     assert len(specviz_helper.app.data_collection) == 10
-    assert specviz_helper.app.data_collection[-1].label == "second test [5]"
+    assert specviz_helper.app.data_collection[-1].label == "second test_5"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    specviz_viewer = specviz_helper.app.get_viewer("spectrum-viewer")
+    specviz_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
@@ -485,7 +490,7 @@ def test_spectra_partial_overlap(specviz_helper):
 
     # Test mouseover outside of left but in range for right.
     # Should show right spectrum even when mouse is near left flux.
-    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz_helper._coords_info
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 7022, 'y': 1000}})
     assert label_mouseover.as_text() == ('Cursor 7.02200e+03, 1.00000e+03',
@@ -506,7 +511,9 @@ def test_spectra_incompatible_flux(specviz_helper):
     specviz_helper.load_data(sp1, data_label="1")  # Not OK
     specviz_helper.load_data(sp3, data_label="3")  # OK
 
-    assert specviz_helper.app.data_collection.labels == ["2", "3"]
+    # all 3 load into data-collection, but only two in the viewer (with snackbar error)
+    assert len(specviz_helper.app.data_collection.labels) == 3
+    assert len(specviz_helper.viewers['spectrum-viewer']._obj.layers) == 2
 
 
 def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
@@ -524,7 +531,7 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     assert subset1.subset_state.att.parent.label == "my_spec_AA"
     np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
-    specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "my_spec_AA")
+    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
     specviz_helper.app.data_item_remove("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened

@@ -1,10 +1,10 @@
 settings:
-  configuration: specviz2d
+  configuration: deconfigged
   visible:
     menu_bar: false
     toolbar: true
     tray: true
-    tab_headers: false
+    tab_headers: true
   dense_toolbar: false
   server_is_remote: false
   context:
@@ -19,24 +19,13 @@ tray:
   - g-plot-options
   - g-subset-tools
   - g-markers
-  - g-unit-conversion
   - spectral-extraction
   - g-gaussian-smooth
   - g-model-fitting
+  - g-unit-conversion
   - g-line-list
   - specviz-line-analysis
   - export
   - about
 viewer_area:
   - container: col
-    children:
-      - container: row
-        viewers:
-          - name: 2D Spectrum viewer
-            plot: mosviz-profile-2d-viewer
-            reference: spectrum-2d-viewer
-      - container: row
-        viewers:
-          - name: Spectrum
-            plot: mosviz-profile-viewer
-            reference: spectrum-viewer
