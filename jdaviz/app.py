@@ -1108,7 +1108,7 @@ class Application(VuetifyTemplate, HubListener):
     def _is_subset_spectral(self, subset_region):
         if isinstance(subset_region, SpectralRegion):
             return True
-        elif isinstance(subset_region, list) and len(subset_region) > 0:
+        elif isinstance(subset_region, list):
             if isinstance(subset_region[0]['region'], SpectralRegion):
                 return True
         return False
@@ -1116,7 +1116,7 @@ class Application(VuetifyTemplate, HubListener):
     def _is_subset_temporal(self, subset_region):
         if isinstance(subset_region, Time):
             return True
-        elif isinstance(subset_region, list) and len(subset_region) > 0:
+        elif isinstance(subset_region, list):
             if isinstance(subset_region[0]['region'], Time):
                 return True
         return False

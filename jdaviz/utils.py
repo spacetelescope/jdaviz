@@ -19,6 +19,7 @@ from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
+from specutils.utils.wcs_utils import SpectralGWCS
 
 from glue.config import settings
 from glue.config import colormaps as glue_colormaps
@@ -484,7 +485,7 @@ def get_subset_type(subset):
 
             # check for spectral coordinate in GWCS by looking for SpectralFrame
             if isinstance(ss_data.coords, gwcs):
-                if isinstance(ss_data.coords, SpectralFrame):
+                if isinstance(ss_data.coords, (SpectralFrame, SpectralGWCS)):
                     return 'spectral'
                 elif isinstance(ss_data.coords, CompositeFrame):
                     if np.any([isinstance(frame, SpectralFrame) for frame in
