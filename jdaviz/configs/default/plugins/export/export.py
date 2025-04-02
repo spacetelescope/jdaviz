@@ -124,6 +124,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
                                 'from_plugin']
 
+        self.viewer.add_filter('is_not_empty')
+
         viewer_format_options = ['png', 'svg']
         if self.config == 'cubeviz':
             if not self.app.state.settings.get('server_is_remote'):
