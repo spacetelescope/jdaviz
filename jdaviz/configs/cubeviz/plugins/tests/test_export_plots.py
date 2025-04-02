@@ -82,7 +82,8 @@ def test_export_movie_cubeviz_empty(cubeviz_helper):
         plugin.export()
 
 
-def test_export_plot_exceptions(cubeviz_helper):
+def test_export_plot_exceptions(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
     plugin = cubeviz_helper.plugins["Export"]
 
     plugin.filename = "/fake/path/image.png"

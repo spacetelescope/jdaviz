@@ -384,8 +384,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('viewer',
-                                           'interactive_extract',
+        return PluginUserApi(self, expose=('interactive_extract',
                                            'trace_dataset', 'trace_type',
                                            'trace_order', 'trace_peak_method',
                                            'trace_pixel',

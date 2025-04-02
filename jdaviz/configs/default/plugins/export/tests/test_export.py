@@ -192,6 +192,8 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
         subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5))
 
+        export_plugin.subset.selected = 'Subset 1'
+        assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
         with pytest.raises(NotImplementedError,
                            match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
