@@ -43,6 +43,27 @@ def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
     assert specviz_helper.app._get_display_unit('spectral_y') == "MJy"
 
 
+def test_limits_on_unit_change(specviz_helper, spectrum1d):
+    """
+    Test that the x-limits are reset when changing units
+    """
+    specviz_helper.load_data(spectrum1d, data_label="Test")
+    uc = specviz_helper.plugins["Unit Conversion"]
+    sv = specviz_helper.viewers['spectrum-viewer']
+
+    assert uc.spectral_unit == "Angstrom"
+    assert np.allclose(sv._obj.get_limits(), (6000.0, 8000.0,
+                                              12.30618014327326, 16.542560043585965))
+
+    uc.spectral_unit = 'Ci'
+    assert np.allclose(sv._obj.get_limits(), (10128.0, 13504.164774774774,
+                                              12.30618014327326, 16.542560043585965))
+
+    uc.spectral_unit = 'erg'
+    assert np.allclose(sv._obj.get_limits(), (2.4830270237304e-12, 3.3107430952482144e-12,
+                                              12.30618014327326, 16.542560043585965))
+
+
 class TestResetLimitsTwoTests:
     """See https://github.com/spacetelescope/lcviz/pull/93"""
 

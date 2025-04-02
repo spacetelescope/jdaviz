@@ -104,6 +104,9 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fix bug where converting spectral units multiple times caused spectrum viewer limits
+  to stop resetting to correct x-limits. [#3518]
+
 Specviz2d
 ^^^^^^^^^
 
