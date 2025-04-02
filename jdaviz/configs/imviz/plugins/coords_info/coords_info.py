@@ -225,6 +225,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
+        self.app.state.show_toolbar_buttons = False
+
         # update last known cursor position (so another event like a change in layers can update
         # the coordinates with the last known position)
         self._x, self._y = x, y
@@ -252,7 +254,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def update_display(self, viewer, x, y):
         self._dict = {}
-        self.app.state.show_toolbar_buttons = False
         if isinstance(viewer, (Spectrum1DViewer, RampvizProfileView)):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
