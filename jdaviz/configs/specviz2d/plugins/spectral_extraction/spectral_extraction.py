@@ -573,15 +573,6 @@ class SpectralExtraction(PluginTemplateMixin):
     @skip_if_not_tray_instance()
     @skip_if_not_relevant()
     def _update_interactive_extract(self, event={}):
-        # TODO: change this if-statement
-        if False and 'extract' not in self.marks:
-            # no spectrum1d viewer
-            self.app._on_new_viewer(NewViewerMessage(Spectrum1DViewer,
-                                                     data=None,
-                                                     sender=self.app),
-                                    vid='1D Spectrum', name='1D Spectrum',
-                                    open_data_menu_if_empty=False)
-
         # also called by any of the _interaction_in_*_step
         if self.interactive_extract:
             try:
@@ -1088,6 +1079,18 @@ class SpectralExtraction(PluginTemplateMixin):
         spectrum = extract.spectrum
 
         if add_data:
+            # TODO: eventually generalize this logic into add_results_from_plugin
+            if not len(self.marks_viewers1d):
+                # no spectrum1d viewer, create one now and set the default viewer
+                viewer_ref = self.app.return_unique_name('1D Spectrum',
+                                                         typ='viewer')
+                self.app._on_new_viewer(NewViewerMessage(Spectrum1DViewer,
+                                                         data=None,
+                                                         sender=self.app),
+                                        vid=viewer_ref, name=viewer_ref,
+                                        open_data_menu_if_empty=False)
+                self.ext_add_results.viewer = viewer_ref
+
             self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
 
         return spectrum
