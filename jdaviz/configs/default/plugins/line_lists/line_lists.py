@@ -131,7 +131,10 @@ class LineListTool(PluginTemplateMixin):
         if sv is None:
             self.irrelevant_msg = 'Line Lists unavailable without spectrum viewer'
         elif not len(sv.layers):
-            self.irrelevant_msg = ''
+            if self.app.config == 'deconfigged':
+                self.irrelevant_msg = 'No data in spectrum viewer'
+            else:
+                self.irrelevant_msg = ''
             self.disabled_msg = 'Line Lists unavailable without data loaded in spectrum viewer'
         else:
             self.irrelevant_msg = ''

@@ -410,6 +410,8 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('trace_dataset_items')
     def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
         if len(self.trace_dataset_items) < 1:
             self.irrelevant_msg = 'Requires at least one 2D spectrum'
         else:

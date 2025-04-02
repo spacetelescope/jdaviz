@@ -77,6 +77,8 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
     @observe('dataset_items')
     def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
         if not len(self.dataset_items):
             self.irrelevant_msg = 'No valid datasets loaded'
         else:

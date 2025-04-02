@@ -195,6 +195,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     @observe('viewer_items', 'dataset_items', 'subset_items',
              'plugin_table_items', 'plugin_plot_items')
     def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
         if not (len(self.viewer_items) or len(self.dataset_items) or len(self.subset_items)
                 or len(self.plugin_table_items) or len(self.plugin_plot_items)):
             self.irrelevant_msg = 'Nothing to export'
