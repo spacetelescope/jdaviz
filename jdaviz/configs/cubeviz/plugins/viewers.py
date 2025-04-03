@@ -226,6 +226,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.jdaviz_app.data_collection[data_name] = test
         self.jdaviz_app.add_data_to_viewer('flux-viewer', data_name)
 
+        self.jdaviz_app.data_collection[data_name].meta['Sonified'] = True
+
         # Set opacity to 0
         [layer for layer in self.state.layers if layer.layer.label == data_name][0].alpha = 0
 
@@ -253,6 +255,20 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             return
         self.start_stream()
         self.update_sonified_cube_with_coord((x, y))
+
+    def get_data_layer_artist(self, layer=None, layer_state=None):
+        if 'Sonified' in layer.meta:
+            cls = SonifiedDataLayerArtist
+            self.get_layer_artist(cls, layer=layer, layer_state=layer_state)
+        else:
+            super().get_layer_artist(layer, layer_state)
+
+    def get_subset_layer_artist(self, layer=None, layer_state=None):
+        if 'Sonified' in layer.meta:
+            cls = SonifiedDataSubsetLayerArtist
+            self.get_subset_layer_artist(cls, layer=layer, layer_state=layer_state)
+        else:
+            super().get_subset_layer_artist(layer, layer_state)
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
