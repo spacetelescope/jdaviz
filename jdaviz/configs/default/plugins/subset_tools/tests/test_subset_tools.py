@@ -385,6 +385,70 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
     assert cr.operator == operator.and_
 
+    regs_wcs_with_pixel = st.get_regions(return_sky_region=False,
+                                         wrt_data='NDData[DATA]')
+    cr2 = regs_wcs_with_pixel['Subset 1']
+    assert isinstance(cr2, CompoundPixelRegion)
+
+    assert cr2.region1.center == PixCoord(x=48.468736969074506, y=89.44725743429322)
+    assert cr2.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
+
+    regs_wcs_with_pixel2 = st.get_regions(return_sky_region=False,
+                                          wrt_data='Default orientation')
+    cr3 = regs_wcs_with_pixel2['Subset 1']
+    assert isinstance(cr3, CompoundPixelRegion)
+
+    assert cr3.region1.center == PixCoord(x=3.5366202690326523, y=6.738066787118948)
+    assert cr3.region2.center == PixCoord(x=2.452846370740891, y=6.312337355089725)
+
+
+def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data, 'test 1')
+    imviz_helper.load_data(data, 'test 2')
+
+    imviz_helper.plugins['Orientation'].align_by = 'Pixels'
+
+    st = imviz_helper.plugins['Subset Tools']
+
+    pr1 = CirclePixelRegion(center=PixCoord(x=48.468736969074506, y=89.44725743429322),
+                            radius=28.800006270630806)
+    pr2 = CirclePixelRegion(center=PixCoord(x=34.59642971526391, y=83.99791791929273),
+                            radius=25.200004582170216)
+    st.import_region(pr1, combination_mode='new')
+    st.import_region(pr2, combination_mode='and')
+
+    # composite subset should be a sky region, and combined to a compound region
+    regs = st.get_regions(return_sky_region=True, wrt_data='test 1[DATA]')
+    sr1 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr2 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+    cr = regs['Subset 1']
+    assert isinstance(cr, CompoundSkyRegion)
+    assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
+    assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
+    assert cr.operator == operator.and_
+
+    regs2 = st.get_regions(return_sky_region=True, wrt_data='test 2[DATA]')
+    sr3 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr4 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+
+    cr2 = regs2['Subset 1']
+    assert isinstance(cr2, CompoundSkyRegion)
+    assert_allclose(cr2.region1.center.ra.deg, sr3.center.ra.deg)
+    assert_allclose(cr2.region2.center.ra.deg, sr4.center.ra.deg)
+    assert cr2.operator == operator.and_
+
+    regs_wcs_with_pixel = st.get_regions(return_sky_region=False,
+                                         wrt_data='test 1[DATA]')
+    cr3 = regs_wcs_with_pixel['Subset 1']
+    assert isinstance(cr3, CompoundPixelRegion)
+    assert cr3.region1.center == PixCoord(x=48.468736969074506, y=89.44725743429322)
+    assert cr3.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
+
 
 def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
     """
