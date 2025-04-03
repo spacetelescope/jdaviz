@@ -75,7 +75,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         return ((isinstance(self.input, Spectrum1D)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
-                 and len([hdu for hdu in self.input if len(getattr(hdu, 'shape', [])) == 2])))  # noqa
+                 and len([hdu for hdu in self.input if (len(getattr(hdu, 'shape', [])) == 2
+                                                        and hdu.header.get('CTYPE1', '') == 'WAVE')])))  # noqa
 
     @property
     def default_viewer_reference(self):
