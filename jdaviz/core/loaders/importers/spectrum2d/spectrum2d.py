@@ -2,6 +2,7 @@ from traitlets import Bool, List, Unicode, observe
 from astropy.io import fits
 from astropy import units as u
 from astropy.wcs import WCS
+from functools import cached_property
 from specutils import Spectrum1D
 
 from jdaviz.core.events import SnackbarMessage
@@ -51,14 +52,11 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                             'ext_data_label_invalid_msg')
 
         self.input_hdulist = not isinstance(self.input, Spectrum1D)
-        if self.is_valid and self.input_hdulist:
-            extension_options = [f"{i}: {hdu.name} {hdu.shape}"
-                                 for i, hdu in enumerate(self.input)
-                                 if len(getattr(hdu, 'shape', [])) == 2]
+        if self.input_hdulist and self.is_valid:
             self.extension = SelectExtensionComponent(self,
                                                       items='extension_items',
                                                       selected='extension_selected',
-                                                      manual_options=extension_options)
+                                                      manual_options=self.extension_options)
 
     @property
     def user_api(self):
@@ -75,8 +73,14 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         return ((isinstance(self.input, Spectrum1D)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
-                 and len([hdu for hdu in self.input if (len(getattr(hdu, 'shape', [])) == 2
-                                                        and hdu.header.get('CTYPE1', '') == 'WAVE')])))  # noqa
+                 and len(self.extension_options)))  # noqa
+
+    @cached_property
+    def extension_options(self):
+        return [f"{i}: {hdu.name} {hdu.shape}"
+                for i, hdu in enumerate(self.input)
+                if (len(getattr(hdu, 'shape', [])) == 2
+                    and hdu.header.get('CTYPE1', '') == 'WAVE')]
 
     @property
     def default_viewer_reference(self):
