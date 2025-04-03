@@ -268,6 +268,10 @@ class ApplicationState(State):
     tray_items = ListCallbackProperty(
         docstring="List of plugins displayed in the sidebar tray area.")
 
+    tray_items_loaded = ListCallbackProperty(
+        docstring="List of plugin registry items already loaded into tray_items."
+    )
+
     tray_items_open = CallbackProperty(
         [], docstring="The plugin(s) opened in sidebar tray area.")
 
@@ -2947,27 +2951,53 @@ class Application(VuetifyTemplate, HubListener):
             self.state.loader_selected = self.state.loader_items[0]['name']
 
         # Tray plugins
-        for name in config.get('tray', []):
+        if self.config == 'deconfigged':
+            self.update_tray_items_from_registry()
+        else:
+            for name in config.get('tray', []):
+                tray_registry_member = tray_registry.members.get(name)
+                self.state.tray_items.append(self._create_tray_item(tray_registry_member))
 
-            tray = tray_registry.members.get(name)
+    def update_tray_items_from_registry(self):
+        # need to rebuid in order, just pulling from existing dict if its already there
+        tray_items = []
+        for category in ['data:info', 'viewer:options',
+                         'subset:manipulation',
+                         'data:reduction', 'data:manipulation', 'data:analysis',
+                         'app:export', 'app:info']:
+            for tray_registry_member in tray_registry.members_in_category(category):
+                try:
+                    tray_item = self.get_tray_item_from_name(
+                        tray_registry_member.get('name'), return_widget=False)
+                except KeyError:
+                    try:
+                        tray_item = self._create_tray_item(tray_registry_member)
+                    except Exception as e:
+                        self.hub.broadcast(SnackbarMessage(
+                            f"Failed to load plugin {tray_registry_member.get('name')}: {e}",
+                            sender=self, color='error'))
+                tray_items.append(tray_item)
 
-            tray_item_instance = tray.get('cls')(app=self, tray_instance=True)
+        self.state.tray_items = tray_items
 
-            # store a copy of the tray name in the instance so it can be accessed by the
-            # plugin itself
-            tray_item_label = tray.get('label')
+    def _create_tray_item(self, tray_registry_member):
+        tray_item_instance = tray_registry_member.get('cls')(app=self, tray_instance=True)
 
-            tray_item_description = tray_item_instance.plugin_description
+        # store a copy of the tray name in the instance so it can be accessed by the
+        # plugin itself
+        tray_item_label = tray_registry_member.get('label')
 
-            # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
-            self.state.tray_items.append({
-                'name': name,
-                'label': tray_item_label,
-                'tray_item_description': tray_item_description,
-                'api_methods': tray_item_instance.api_methods,
-                'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
-                'widget': "IPY_MODEL_" + tray_item_instance.model_id
-            })
+        tray_item_description = tray_item_instance.plugin_description
+        # NOTE: is_relevant is later updated by observing irrelvant_msg traitlet
+        tray_item = {
+            'name': tray_registry_member.get('name'),
+            'label': tray_item_label,
+            'tray_item_description': tray_item_description,
+            'api_methods': tray_item_instance.api_methods,
+            'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
+            'widget': "IPY_MODEL_" + tray_item_instance.model_id
+        }
+        return tray_item
 
     def _reset_state(self):
         """ Resets the application state """
@@ -3001,7 +3031,7 @@ class Application(VuetifyTemplate, HubListener):
         cfg = get_configuration(path=path, section=section, config=config)
         return cfg
 
-    def get_tray_item_from_name(self, name):
+    def get_tray_item_from_name(self, name, return_widget=True):
         """Return the instance of a tray item for a given name.
         This is useful for direct programmatic access to Jdaviz plugins
         registered under tray items.
@@ -3028,7 +3058,10 @@ class Application(VuetifyTemplate, HubListener):
         for item in self.state.tray_items:
             if item['name'] == name or item['label'] == name:
                 ipy_model_id = item['widget']
-                tray_item = widget_serialization['from_json'](ipy_model_id, None)
+                if return_widget:
+                    tray_item = widget_serialization['from_json'](ipy_model_id, None)
+                else:
+                    tray_item = item
                 break
 
         if tray_item is None:

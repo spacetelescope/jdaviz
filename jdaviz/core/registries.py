@@ -105,7 +105,7 @@ class TrayRegistry(UniqueDictRegistry):
     }
 
     def __call__(self, name=None, label=None, icon=None,
-                 viewer_requirements=[], overwrite=False):
+                 viewer_requirements=[], category=None, overwrite=False):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -115,12 +115,12 @@ class TrayRegistry(UniqueDictRegistry):
                     f"registered components must inherit from "
                     f"`ipyvuetify.VuetifyTemplate`.")
 
-            self.add(name, cls, label, icon, viewer_requirements, overwrite)
+            self.add(name, cls, label, icon, viewer_requirements, category, overwrite)
             return cls
         return decorator
 
     def add(self, name, cls, label=None, icon=None,
-            viewer_requirements=[], overwrite=False):
+            viewer_requirements=[], category=None, overwrite=False):
         """Add an item to the registry.
 
         Parameters
@@ -169,8 +169,13 @@ class TrayRegistry(UniqueDictRegistry):
 
             cls._registry_name = name
             cls._registry_label = label
-            self.members[name] = {'label': label, 'icon': icon, 'cls': cls,
-                                  'viewer_reference_name_kwargs': viewer_reference_name_kwargs}
+            self.members[name] = {'name': name, 'label': label, 'icon': icon, 'cls': cls,
+                                  'viewer_reference_name_kwargs': viewer_reference_name_kwargs,
+                                  'category': category}
+
+    def members_in_category(self, category):
+        members = [m for m in self.members.values() if m['category'] == category]
+        return sorted(members, key=lambda x: x['label'].lower())
 
 
 class ToolRegistry(UniqueDictRegistry):
