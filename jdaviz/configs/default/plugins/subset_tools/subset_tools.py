@@ -185,7 +185,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False, return_sky_region=None):
+                    use_display_units=False, return_sky_region=None,
+                    wcs_from_data=None):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
@@ -214,6 +215,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             configuration is Imviz and the data is linked by WCS, or if the configuration
             is Cubeviz and the data has a WCS'. If set to False, a ``PixelRegion`` object will
             be returned.
+        wcs_from_data : str or None
+            Name of data to use for applying WCS to subset when returning as
+            a sky region object.
 
         Returns
         -------
@@ -244,7 +248,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
                                        spatial_only=region_type == ['spatial'],
                                        include_sky_region=reg_type == 'sky_region',
-                                       use_display_units=use_display_units)
+                                       use_display_units=use_display_units,
+                                       wcs_from_data=wcs_from_data)
 
         labels = list_of_subset_labels or list(subsets.keys())
         if isinstance(labels, str):
