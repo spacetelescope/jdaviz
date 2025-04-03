@@ -306,7 +306,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
             slab_sa = slab.spectral_axis.to("km/s", doppler_convention="relativistic",
                                             doppler_rest=ref_wavelength)
-            slab = Spectrum(slab.flux, slab_sa, uncertainty=slab.uncertainty)
+            slab = Spectrum(slab.flux, slab_sa, uncertainty=slab.uncertainty,
+                            spectral_axis_index=cube.spectral_axis_index)
         # Otherwise convert spectral axis to display units, have to do frequency <-> wavelength
         # before calculating
         else:
