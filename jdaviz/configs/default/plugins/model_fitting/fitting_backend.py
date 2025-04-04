@@ -170,7 +170,10 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
             fitted_models.append({"x": x, "y": y, "model": model})
 
             # Store fitted values
-            output_flux_cube[x, y, :] = fitted_values
+            if spectrum.spectral_axis_index in [2, -1]:
+                output_flux_cube[x, y, :] = fitted_values
+            elif spectrum.spectral_axis_index == 0:
+                output_flux_cube[:, y, x] = fitted_values
 
     # Run multiprocessor pool to fit each spaxel and
     # compute model values on that same spaxel.
@@ -190,7 +193,8 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                                   initial_model,
                                   param_set=spx,
                                   window=window,
-                                  mask=spectrum.mask)
+                                  mask=spectrum.mask,
+                                  spectral_axis_index=spectrum.spectral_axis_index)
             r = pool.apply_async(worker, callback=collect_result)
             results.append(r)
         for r in results:
@@ -232,13 +236,15 @@ class SpaxelWorker:
     instance. We need to use the current model instance while
     it still exists.
     """
-    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None, mask=None):
+    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None, mask=None,
+                 spectral_axis_index=2):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
         self.param_set = param_set
         self.window = window
         self.mask = mask
+        self.spectral_axis_index = spectral_axis_index
 
     def __call__(self):
         results = {'x': [], 'y': [], 'fitted_model': [], 'fitted_values': []}
@@ -255,10 +261,16 @@ class SpaxelWorker:
             # spectrum reference into the callable somehow prevents it
             # to execute. This behavior was seen also with other functions
             # passed to the callable.
-            flux = self.cube[x, y, :]
-            if self.mask is not None:
-                mask = self.mask[x, y, :]
-            else:
+            if self.spectral_axis_index in [2, -1]:
+                flux = self.cube[x, y, :]
+                if self.mask is not None:
+                    mask = self.mask[x, y, :]
+            elif self.spectral_axis_index == 0:
+                flux = self.cube[:, y, x]
+                if self.mask is not None:
+                    mask = self.mask[:, y, x]
+
+            if self.mask is None:
                 # If no mask is provided:
                 mask = np.zeros_like(flux.value).astype(bool)
 
@@ -336,14 +348,21 @@ def _generate_spaxel_list(spectrum):
     spaxels : list
         List with spaxels
     """
-    n_x, n_y, _ = spectrum.flux.shape
+    if spectrum.spectral_axis_index in [2, -1]:
+        n_x, n_y, _ = spectrum.flux.shape
+    elif spectrum.spectral_axis_index == 0:
+        _, n_y, n_x = spectrum.flux.shape
 
     if spectrum.mask is None:
         spx = [[(x, y) for x in range(n_x)] for y in range(n_y)]
     else:
         # return only non-masked spaxels
-        spx = [[(x, y) for x in range(n_x) if np.any(~spectrum.mask[x, y])]
-               for y in range(n_y) if np.any(~spectrum.mask[:, y])]
+        if spectrum.spectral_axis_index in [2, -1]:
+            spx = [[(x, y) for x in range(n_x) if np.any(~spectrum.mask[x, y])]
+                   for y in range(n_y) if np.any(~spectrum.mask[:, y])]
+        elif spectrum.spectral_axis_index == 0:
+            spx = [[(x, y) for y in range(n_y) if np.any(~spectrum.mask[:, y, x])]
+                   for x in range(n_x) if np.any(~spectrum.mask[:, :, x])]
 
     spaxels = [item for sublist in spx for item in sublist]
 

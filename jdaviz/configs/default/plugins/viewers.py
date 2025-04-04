@@ -798,24 +798,26 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                 uncert_cls = uncertainty_str_to_cls_mapping[uncertainty_type_str]
                 error = uncert_cls(error).represent_as(StdDevUncertainty).array
 
-                # Then we assume that last axis is always wavelength.
-                # This may need adjustment after the following
-                # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
-                spectral_axis = -1
+                spectral_axis = lyr.data.meta['spectral_axis_index']
                 data_obj = lyr.data.get_object(cls=self.default_class, statistic=None)
 
-                if isinstance(lyr.data.coords, SpectralCoordinates):
-                    spectral_wcs = lyr.data.coords
+                lyr_coords = lyr.data.coords
+
+                if isinstance(lyr_coords, SpectralCoordinates):
+                    spectral_wcs = lyr_coords
                     data_x = spectral_wcs.pixel_to_world_values(
                         np.arange(lyr.data.shape[spectral_axis])
                     )
                     if isinstance(data_x, tuple):
                         data_x = data_x[0]
                 else:
-                    if hasattr(lyr.data.coords, 'spectral_wcs'):
-                        spectral_wcs = lyr.data.coords.spectral_wcs
-                    elif hasattr(lyr.data.coords, 'spectral'):
-                        spectral_wcs = lyr.data.coords.spectral
+                    if hasattr(lyr_coords, 'spectral_wcs'):
+                        spectral_wcs = lyr_coords.spectral_wcs
+                    elif hasattr(lyr_coords, 'spectral'):
+                        spectral_wcs = lyr_coords.spectral
+                    elif hasattr(lyr_coords, "world_n_dim") and lyr_coords.world_n_dim == 1:
+                        # 1D GWCS in this case, just use the coords
+                        spectral_wcs = lyr_coords
                     data_x = spectral_wcs.pixel_to_world(
                         np.arange(lyr.data.shape[spectral_axis])
                     )

@@ -286,7 +286,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if image.ndim == 3:
             # cubeviz case:
             if self._spectral_axis_index == 0:
-                return arr[viewer.state.slices[-1], int(round(y)), int(round(x))]
+                return arr[viewer.state.slices[0], int(round(y)), int(round(x))]
             else:
                 return arr[int(round(x)), int(round(y)), viewer.state.slices[-1]]
         elif image.ndim == 2:

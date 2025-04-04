@@ -424,7 +424,7 @@ def test_incompatible_units(specviz_helper, spectrum1d):
 def test_cube_fit_with_nans(cubeviz_helper):
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
-    spec = Spectrum(flux=flux)
+    spec = Spectrum(flux=flux, spectral_axis_index=2)
     cubeviz_helper.load_data(spec, data_label="test")
 
     mf = cubeviz_helper.plugins["Model Fitting"]
@@ -445,7 +445,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     # Also test with existing mask
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
-    spec = Spectrum(flux=flux)
+    spec = Spectrum(flux=flux, spectral_axis_index=2)
     spec.flux[5, 5, 7] = 10 * u.nJy
     cubeviz_helper.load_data(spec, data_label="test")
 
@@ -467,7 +467,7 @@ def test_fit_with_count_units(cubeviz_helper):
     flux = np.random.random((7, 8, 9)) * u.count
     spectral_axis = np.linspace(4000, 5000, flux.shape[-1]) * u.AA
 
-    spec = Spectrum(flux=flux, spectral_axis=spectral_axis)
+    spec = Spectrum(flux=flux, spectral_axis=spectral_axis, spectral_axis_index=2)
     cubeviz_helper.load_data(spec, data_label="test")
 
     mf = cubeviz_helper.plugins["Model Fitting"]
@@ -508,15 +508,16 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit()
 
+    # It was easier to transpose this for new data shape than rewrite it
     expected_result_slice = np.array([[9.00e-05, 9.50e-05, 1.00e-04, 1.05e-04],
                                       [9.10e-05, 9.60e-05, 1.01e-04, 1.06e-04],
                                       [9.20e-05, 9.70e-05, 1.02e-04, 1.07e-04],
                                       [9.30e-05, 9.80e-05, 1.03e-04, 1.08e-04],
-                                      [9.40e-05, 9.90e-05, 1.04e-04, 1.09e-04]])
+                                      [9.40e-05, 9.90e-05, 1.04e-04, 1.09e-04]]).T
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'MJy / {solid_angle_string}'
-    assert np.allclose(model_flux.data[:, :, 1], expected_result_slice)
+    assert np.allclose(model_flux.data[1, :, :], expected_result_slice)
 
     # Switch back to Jy, see that the component didn't change but the output does
     uc.flux_unit = 'Jy'
@@ -527,7 +528,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'Jy / {solid_angle_string}'
-    assert np.allclose(model_flux.data[:, :, 1], expected_result_slice * 1e6)
+    assert np.allclose(model_flux.data[1, :, :], expected_result_slice * 1e6)
 
     # ensure conversions that require the spectral axis/translations are handled by the plugin
     uc.spectral_y_type = 'Surface Brightness'

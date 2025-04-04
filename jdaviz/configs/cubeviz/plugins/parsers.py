@@ -72,10 +72,14 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
     # TODO: this currently only supports fits files. We will want to make this
     #  generic enough to work with other file types (e.g. ASDF). For now, this
     #  supports MaNGA and JWST data.
+    metadata = {}
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
+        if 'PRIMARY' in file_obj:
+            metadata[PRIHDR_KEY] = standardize_metadata(file_obj['PRIMARY'].header)
+
         try:
             _parse_spectrum1d_3d(
-                app, Spectrum.read(file_obj), data_label=data_label,
+                app, Spectrum.read(file_obj, meta=metadata), data_label=data_label,
                 flux_viewer_reference_name=flux_viewer_reference_name,
                 uncert_viewer_reference_name=uncert_viewer_reference_name
             )
@@ -96,20 +100,21 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
             file_obj, cache=cache, local_path=local_path, timeout=timeout
         )
 
-        if specutils_format is not None:
-            sc = Spectrum.read(file_obj, format=specutils_format)
-            _parse_spectrum1d_3d(
-                app, sc, data_label=data_label,
-                flux_viewer_reference_name=flux_viewer_reference_name,
-                uncert_viewer_reference_name=uncert_viewer_reference_name
-            )
-            app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
-            return
-
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
             prihdr = hdulist[0].header
+
+            if specutils_format is not None:
+                sc = Spectrum.read(file_obj, format=specutils_format)
+                _parse_spectrum1d_3d(
+                    app, sc, data_label=data_label,
+                    flux_viewer_reference_name=flux_viewer_reference_name,
+                    uncert_viewer_reference_name=uncert_viewer_reference_name
+                )
+                app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
+                return
+
             telescop = prihdr.get('TELESCOP', '').lower()
             exptype = prihdr.get('EXP_TYPE', '').lower()
             # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
@@ -191,10 +196,10 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
             'ignore', message='Input WCS indicates that the spectral axis is not last',
             category=UserWarning)
         if spectral_axis is None:
-            sc = Spectrum(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
+            sc = Spectrum(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=metadata)
         else:
             sc = Spectrum(flux=flux, spectral_axis=spectral_axis,
-                          uncertainty=uncertainty, mask=mask)
+                          uncertainty=uncertainty, mask=mask, meta=metadata)
 
     # convert flux and uncertainty to per-pix2 if input is not a surface brightness
     target_flux_unit = None

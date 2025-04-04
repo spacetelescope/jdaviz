@@ -155,11 +155,19 @@ class SpectrumPerSpaxel(ProfileFromCube):
             new_spectral_axis = spectrum.spectral_axis.to(x_unit)
             spectrum = Spectrum(spectrum.flux, new_spectral_axis)
 
-        if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
+        if spectrum.spectral_axis_index in [2, -1]:
+            x_ind = 0
+        else:
+            x_ind = 2
+
+        if x >= spectrum.flux.shape[x_ind] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
             self._reset_profile_viewer_bounds()
             self._mark.visible = False
         else:
-            y_values = spectrum.flux[x, y, :].value
+            if spectrum.spectral_axis_index in [2, -1]:
+                y_values = spectrum.flux[x, y, :].value
+            else:
+                y_values = spectrum.flux[:, y, x].value
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
                 return

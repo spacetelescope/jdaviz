@@ -2866,11 +2866,12 @@ class ApertureSubsetSelect(SubsetSelect):
             mask_weights = subset_group.subsets[0].to_mask().astype(np.float32)
             return mask_weights
 
-        # Center is reverse coordinates
+        # Center is reverse coordinates if spectral axis is last
         center = (self.selected_spatial_region.center.y,
                   self.selected_spatial_region.center.x)
         aperture = regions2aperture(self.selected_spatial_region)
-        aperture.positions = center
+        if slice_axis == 2:
+            aperture.positions = center
 
         im_shape = (flux_cube.shape[spatial_axes[0]], flux_cube.shape[spatial_axes[1]])
         aperture_method = aperture_method.lower()

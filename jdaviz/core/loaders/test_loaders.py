@@ -39,7 +39,7 @@ def test_open_close(specviz_helper):
 
 def test_resolver_matching(specviz_helper):
     sp = Spectrum(spectral_axis=np.array([1, 2, 3])*u.nm,
-                    flux=np.array([1, 2, 3])*u.Jy)
+                  flux=np.array([1, 2, 3])*u.Jy)
 
     res_sp = find_matching_resolver(specviz_helper.app, sp)
     assert res_sp._obj._registry_label == 'object'

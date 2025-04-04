@@ -37,6 +37,7 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, List, Unicode, Any
 from specutils import Spectrum, SpectralRegion
+from specutils.utils.wcs_utils import SpectralGWCS
 
 from jdaviz import __version__
 from jdaviz import style_registry
@@ -803,6 +804,8 @@ class Application(VuetifyTemplate, HubListener):
         if self.config == 'mosviz':
             # In Mosviz, first data is always MOS Table. Use the next data
             default_refdata_index = 1
+        elif self.config == 'cubeviz':
+            spectral_axis_index = dc[0].meta['spectral_axis_index']
         ref_data = dc[reference_data] if reference_data else dc[default_refdata_index]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
@@ -814,10 +817,9 @@ class Application(VuetifyTemplate, HubListener):
 
         elif self.config == 'cubeviz' and linked_data.ndim == 1:
             # Don't want to use negative indices in case there are extra components like a mask
-            spectral_axis_index = dc[0].meta['spectral_axis_index']
             ref_wavelength_component = dc[0].components[spectral_axis_index]
             # May need to update this for specutils 2
-            linked_wavelength_component = dc[-1].components[1]
+            linked_wavelength_component = linked_data.components[1]
 
             dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
@@ -847,10 +849,12 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         # The glue-astronomy SpectralCoordinates currently seems incompatible with glue
-        # WCSLink. This gets around it until there's an upstream fix.
-        if isinstance(linked_data.coords, SpectralCoordinates):
-            wc_old = ref_data.world_component_ids[-1]
-            wc_new = linked_data.world_component_ids[0]
+        # WCSLink. This gets around it until there's an upstream fix. Also need to do this
+        # for SpectralGWCS in 1D case (pixel linking below handles cubes)
+        if (isinstance(linked_data.coords, SpectralCoordinates) or
+                isinstance(linked_data.coords, SpectralGWCS) and linked_data.ndim == 1):
+            wc_old = ref_data.world_component_ids[ref_data.meta['spectral_axis_index']]
+            wc_new = linked_data.world_component_ids[linked_data.meta['spectral_axis_index']]
             self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
 
@@ -877,7 +881,13 @@ class Application(VuetifyTemplate, HubListener):
             if (len_linked_pixel == 2 and
                     (linked_data.meta.get("Plugin", None) in
                      ['Moment Maps', 'Collapse'])):
-                if pixel_coord == 'z':
+
+                if spectral_axis_index in (2, -1):
+                    link_to_x = 'z'
+                elif spectral_axis_index == 0:
+                    link_to_x = 'x'
+
+                if pixel_coord == link_to_x:
                     linked_index = pc_linked.index('x')
                 elif pixel_coord == 'y':
                     linked_index = pc_linked.index('y')
@@ -2360,8 +2370,12 @@ class Application(VuetifyTemplate, HubListener):
 
                     elif isinstance(subset_group.subset_state, RangeSubsetState):
                         range_state = subset_group.subset_state
-                        cur_unit = old_parent.coords.spectral_axis.unit
-                        new_unit = new_parent.coords.spectral_axis.unit
+                        wcs_index = (old_parent.coords.world_n_dim - 1 -
+                                     old_parent.meta['spectral_axis_index'])
+                        cur_unit = u.Unit(old_parent.coords.world_axis_units[wcs_index])
+                        wcs_index = (new_parent.coords.world_n_dim - 1 -
+                                     new_parent.meta['spectral_axis_index'])
+                        new_unit = u.Unit(new_parent.coords.world_axis_units[wcs_index])
                         if cur_unit is not new_unit:
                             range_state.lo, range_state.hi = cur_unit.to(new_unit, [range_state.lo,
                                                                                     range_state.hi])

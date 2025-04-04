@@ -233,7 +233,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # Extend the 2D kernel to have a length 1 spectral dimension, so that
         # we can do "3d" convolution to the whole cube
-        kernel = np.expand_dims(Gaussian2DKernel(self.stddev), 2)
+        kernel = np.expand_dims(Gaussian2DKernel(self.stddev), cube.meta['spectral_axis_index'])
 
         convolved_data = convolve(cube, kernel)
 

@@ -217,7 +217,7 @@ def test_viewer_flux_conversion():
     # use viewer_flux_conversion_equivalencies to generate list of equivalencies,
     # which requires a Spectrum
     spec = Spectrum(flux=[1, 2, 3]*u.Jy, spectral_axis=[1, 2, 3]*u.um,
-                      meta={'_pixel_scale_factor': [0.1, 0.2, 0.3]})
+                    meta={'_pixel_scale_factor': [0.1, 0.2, 0.3]})
     viewer_equivs = viewer_flux_conversion_equivalencies([10, 20], spec)
 
     # test for when scale factor array len > 2 but there are 2 values to be

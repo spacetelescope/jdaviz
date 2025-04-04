@@ -21,20 +21,20 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
 
     assert len(dc) == 3
     assert dc[2].label == 'collapsed'
-    assert len(dc.external_links) == 4
+    assert len(dc.external_links) == 3
 
     # Link 3D z to 2D x and 3D y to 2D y
 
     # Link 1:
     # Pixel Axis 0 [z] from cube.pixel_component_ids[0]
     # Pixel Axis 1 [x] from plugin.pixel_component_ids[1]
-    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[0]
-    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[1]
+    assert dc.external_links[1].cids1[0] == dc[0].pixel_component_ids[0]
+    assert dc.external_links[1].cids2[0] == dc[-1].pixel_component_ids[1]
     # Link 2:
     # Pixel Axis 1 [y] from cube.pixel_component_ids[1]
     # Pixel Axis 0 [y] from plugin.pixel_component_ids[0]
-    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[1]
-    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[0]
+    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[1]
+    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[0]
 
 
 def test_collapse_exception_handling(cubeviz_helper, spectral_cube_wcs):
@@ -68,13 +68,13 @@ def test_collapsed_to_extract_plugin(cubeviz_helper, spectral_cube_wcs, tmp_path
     collapse_plugin = cubeviz_helper.plugins['Collapse']
 
     # make sure export enabled is true, and that before the collapse function
-    # is run `collapsed_spec_available` is correctly set to False
+    # is run `collapsed_flux_available` is correctly set to False
     assert collapse_plugin._obj.export_enabled
-    assert collapse_plugin._obj.collapsed_spec_available is False
+    assert collapse_plugin._obj.collapsed_flux_available is False
 
-    # run collapse function, and make sure `collapsed_spec_available` was set to True
+    # run collapse function, and make sure `collapsed_flux_available` was set to True
     collapse_plugin._obj.vue_collapse()
-    assert collapse_plugin._obj.collapsed_spec_available
+    assert collapse_plugin._obj.collapsed_flux_available
 
     # check that default filename is correct, then change path
     fname = 'collapsed_sum_Unknown spectrum object_FLUX.fits'
