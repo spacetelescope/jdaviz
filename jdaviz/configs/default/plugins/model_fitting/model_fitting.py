@@ -168,6 +168,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 
+        self._set_relevant()
+
+    @observe('dataset_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not len(self.dataset_items):
+            self.irrelevant_msg = 'No valid datasets loaded'
+        else:
+            self.irrelevant_msg = ''
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(

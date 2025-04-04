@@ -141,16 +141,25 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewers_changed)
 
-    def _set_relevant(self):
-        sv = self.spectrum_viewer
-        if sv is None:
-            self.irrelevant_msg = 'Line Analysis unavailable without spectrum viewer'
-        elif not len(sv.layers):
-            self.irrelevant_msg = ''
-            self.disabled_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'
+        self._set_relevant()
+
+    @observe('dataset_items')
+    def _set_relevant(self, *args):
+        if self.app.config == 'deconfigged':
+            if not len(self.dataset_items):
+                self.irrelevant_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'  # noqa
+            else:
+                self.irrelevant_msg = ''
         else:
-            self.irrelevant_msg = ''
-            self.disabled_msg = ''
+            sv = self.spectrum_viewer
+            if sv is None:
+                self.irrelevant_msg = 'Line Analysis unavailable without spectrum viewer'
+            elif not len(sv.layers):
+                self.irrelevant_msg = ''
+                self.disabled_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'  # noqa
+            else:
+                self.irrelevant_msg = ''
+                self.disabled_msg = ''
 
     @property
     def user_api(self):

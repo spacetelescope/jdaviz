@@ -3048,7 +3048,7 @@ class PluginPlotSelect(SelectPluginComponent):
         def not_empty_plot(plot):
             # checks plot.figure.marks to determine if figure is of an empty plot
             # not sure if this is a foolproof way to do this?
-            return len(plot.figure.marks) > 0
+            return len([m for m in plot.figure.marks if m.visible]) > 0
 
         return super()._is_valid_item(plot, locals())
 
@@ -3063,6 +3063,7 @@ class PluginPlotSelectMixin(VuetifyTemplate, HubListener):
         self.plugin_plot = PluginPlotSelect(self,
                                             'plugin_plot_items',
                                             'plugin_plot_selected',
+                                            filters=['not_empty_plot'],
                                             multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
     @observe('plugin_plot_selected')
@@ -3525,12 +3526,15 @@ class ViewerSelect(SelectPluginComponent):
 
     def add_filter(self, *filters):
         super().add_filter(*filters)
-        if 'reference_has_wcs' in filters:
+        if 'reference_has_wcs' in filters or 'is_not_empty' in filters:
             # reference data can change whenever data is added OR removed from a viewer
             self.hub.subscribe(self, AddDataMessage, handler=self._update_items)
             self.hub.subscribe(self, RemoveDataMessage, handler=self._update_items)
 
     def _is_valid_item(self, viewer):
+        def is_not_empty(viewer):
+            return len(viewer.layers) > 0
+
         def is_spectrum_viewer(viewer):
             return ('ProfileView' in viewer.__class__.__name__
                     or viewer.__class__.__name__ == 'Spectrum1DViewer')

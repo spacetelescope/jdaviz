@@ -56,16 +56,15 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
 
 
 def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_uncerts):
-    # Also test if gaussian smooth plugin is run before spec extract
+    # Test if gaussian smooth plugin is run before spec extract
     # that spec extract yields results of correct cube data
-    gs_plugin = cubeviz_helper.plugins['Gaussian Smooth']._obj
-
-    # give uniform unit uncertainties for spec extract test:
+    # give uniform unit uncertainties for spec extract test
     spectrum1d_cube_with_uncerts.uncertainty = StdDevUncertainty(
         np.ones_like(spectrum1d_cube_with_uncerts.data)
     )
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
+    gs_plugin = cubeviz_helper.plugins['Gaussian Smooth']._obj
 
     gs_plugin.dataset_selected = f'{cubeviz_helper.app.data_collection[0].label}'
     gs_plugin.mode_selected = 'Spatial'

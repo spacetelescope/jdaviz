@@ -384,8 +384,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('viewer',
-                                           'interactive_extract',
+        return PluginUserApi(self, expose=('interactive_extract',
                                            'trace_dataset', 'trace_type',
                                            'trace_order', 'trace_peak_method',
                                            'trace_pixel',
@@ -410,6 +409,8 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('trace_dataset_items')
     def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
         if len(self.trace_dataset_items) < 1:
             self.irrelevant_msg = 'Requires at least one 2D spectrum'
         else:
