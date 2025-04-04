@@ -240,9 +240,19 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             region_type = {'imviz': ['spatial'],
                            'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
 
-        sky_region_check = ((self.app._align_by == 'wcs' or self.config == 'cubeviz') and
-                            return_sky_region is None or return_sky_region)
-        reg_type = 'sky_region' if sky_region_check else 'region'
+        wcs_link = self.app._align_by == 'wcs' or self.config == 'cubeviz'
+        return_sky = return_sky_region is None or return_sky_region
+
+        # If both are True or both are False
+        if (wcs_link and return_sky) or (not wcs_link and return_sky is False):
+            # wcs_from_data must be None, throw exception if value is set
+            if wcs_from_data is not None:
+                raise ValueError('wcs_from_data must not be set when returning sky regions using wcs')
+            reg_type = 'sky_region'
+        else:
+            # wcs_from_data must be set and that data will be used to get the wcs for returning
+            # the pixel region
+            reg_type = 'region'
 
         # first get ALL subsets of specified spatial/spectral type(s)
         subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
