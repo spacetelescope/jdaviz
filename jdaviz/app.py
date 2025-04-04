@@ -944,21 +944,20 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_store.get(vid)
 
-    def _get_wcs_from_subset(self, subset_state):
+    def _get_wcs_from_subset(self, subset_state, data=None):
         """ Usually WCS is subset.parent.coords, except special cubeviz case."""
-
+        parent_data = subset_state.attributes[0].parent if not data else self.data_collection[data]
         if self.config == 'cubeviz':
-            parent_data = subset_state.attributes[0].parent
             wcs = parent_data.meta.get("_orig_spatial_wcs", None)
         else:
-            wcs = subset_state.xatt.parent.coords
+            wcs = subset_state.xatt.parent.coords if not data else parent_data.coords
 
         return wcs
 
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,
                     simplify_spectral=True, use_display_units=False,
-                    include_sky_region=False):
+                    include_sky_region=False, wcs_from_data=None):
         """
         Returns all branches of glue subset tree in the form that subset plugin
         can recognize.
@@ -985,6 +984,9 @@ class Application(VuetifyTemplate, HubListener):
             parent data, return a sky region in addition to pixel region. If
             subset is composite, a sky region for each constituent subset will
             be returned.
+        wcs_from_data : str or None
+            Name of data to use for applying WCS to subset when returning as
+            a sky region object.
 
         Returns
         -------
@@ -1018,11 +1020,13 @@ class Application(VuetifyTemplate, HubListener):
                 # objects that must be traversed
                 subset_region = self.get_sub_regions(subset.subset_state,
                                                      simplify_spectral, use_display_units,
-                                                     get_sky_regions=include_sky_region)
+                                                     get_sky_regions=include_sky_region,
+                                                     wcs_from_data=wcs_from_data)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
                 subset_region = self._get_roi_subset_definition(subset.subset_state,
-                                                                to_sky=include_sky_region)
+                                                                to_sky=include_sky_region,
+                                                                wcs_from_data=wcs_from_data)
 
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
@@ -1151,14 +1155,14 @@ class Application(VuetifyTemplate, HubListener):
                  "sky_region": None,
                  "subset_state": subset_state}]
 
-    def _get_roi_subset_definition(self, subset_state, to_sky=False):
+    def _get_roi_subset_definition(self, subset_state, to_sky=False, wcs_from_data=None):
 
         # pixel region
         roi_as_region = roi_subset_state_to_region(subset_state)
 
         wcs = None
         if to_sky:
-            wcs = self._get_wcs_from_subset(subset_state)
+            wcs = self._get_wcs_from_subset(subset_state, data=wcs_from_data)
 
         # if no spatial wcs on subset, we have to skip computing sky region for this subset
         # but want to do so without raising an error (since many subsets could be requested)
@@ -1173,16 +1177,19 @@ class Application(VuetifyTemplate, HubListener):
                  "subset_state": subset_state}]
 
     def get_sub_regions(self, subset_state, simplify_spectral=True,
-                        use_display_units=False, get_sky_regions=False):
+                        use_display_units=False, get_sky_regions=False,
+                        wcs_from_data=None):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
                 one = self.get_sub_regions(subset_state.state1,
                                            simplify_spectral, use_display_units,
-                                           get_sky_regions=get_sky_regions)
+                                           get_sky_regions=get_sky_regions,
+                                           wcs_from_data=wcs_from_data)
                 two = self.get_sub_regions(subset_state.state2,
                                            simplify_spectral, use_display_units,
-                                           get_sky_regions=get_sky_regions)
+                                           get_sky_regions=get_sky_regions,
+                                           wcs_from_data=wcs_from_data)
                 if simplify_spectral and isinstance(two, SpectralRegion):
                     merge_func = self._merge_overlapping_spectral_regions_worker
                 else:
@@ -1335,12 +1342,14 @@ class Application(VuetifyTemplate, HubListener):
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
                 return self.get_sub_regions(subset_state.state1,
-                                            simplify_spectral, use_display_units)
+                                            simplify_spectral, use_display_units,
+                                            wcs_from_data)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI, Range, or MultiMask.
             if isinstance(subset_state, RoiSubsetState):
-                return self._get_roi_subset_definition(subset_state, to_sky=get_sky_regions)
+                return self._get_roi_subset_definition(subset_state, to_sky=get_sky_regions,
+                                                       wcs_from_data=wcs_from_data)
 
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state,
