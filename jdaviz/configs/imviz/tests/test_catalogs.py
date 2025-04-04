@@ -216,7 +216,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 
     # setting to a blank string from the API resets the catalog selection to the
     # default/first entry
-    catalogs_plugin.from_file = ''
+    catalogs_plugin._obj.from_file_string = ''
     assert catalogs_plugin.catalog.selected == catalogs_plugin.catalog.choices[0]
 
     not_table_file = tmp_path / 'not_table.tst'
@@ -258,7 +258,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.table.select_rows(0)
-    assert len(catalogs_plugin.table.selected_rows) == 1
+    assert len(catalogs_plugin.table._obj.selected_rows) == 1
 
     # Test that exported table only has original input column.
     export_plugin = imviz_helper.plugins['Export']
@@ -288,7 +288,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
-    assert not catalogs_plugin._obj.results_available
+    assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
     assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5

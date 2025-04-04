@@ -33,14 +33,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`import_catalog`
     * :meth:`zoom_to_selected`
+    * :meth:`search`
     * :attr:`results_available`
     * :attr:`number_of_results`
     * :attr:`catalog`
     * :attr:`max_sources`
-    * :meth:`search`
+    * :attr:`table`
     * :attr:`table_selected`
-
     """
     template_file = __file__, "catalogs.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -72,7 +73,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                            'select_all', 'select_none',
                                            'results_available', 'number_of_results',
                                            'catalog', 'max_sources', 'search',
-                                           'table', 'from_file', 'table_selected'))
+                                           'table', 'table_selected'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
