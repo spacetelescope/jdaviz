@@ -19,6 +19,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Added ability to load remote data from a S3 URI to Imviz. [#3500]
+
 Mosviz
 ^^^^^^
 
@@ -53,6 +55,9 @@ Imviz
 - Radial profile and curve of growth in Aperture Photometry plugin are now consistent
   with ``photutils.profiles``. [#3510]
 
+- Catalog Search: When catalog is imported from file, its original column names are
+  preserved on export. [#3519]
+
 Mosviz
 ^^^^^^
 
@@ -70,7 +75,9 @@ Cubeviz
 
 Imviz
 ^^^^^
-- Added ability to load remote data from a S3 URI to Imviz. [#3500]
+
+- Catalog Search: Fixed a bug where the plugin modifies the input table if
+  ``import_catalog`` is used on a table instance (not from file). [#3519]
 
 Mosviz
 ^^^^^^
