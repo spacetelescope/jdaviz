@@ -492,7 +492,7 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
 
     # select a single row:
     catalogs_plugin.select_rows(3)
-    assert len(plugin_table._obj.selected_rows) == 1
+    assert len(plugin_table.selected_rows) == 1
     assert plugin_table.selected_rows[0]['Right Ascension (degrees)'] == '337.48000'
 
     # select multiple rows by indices
