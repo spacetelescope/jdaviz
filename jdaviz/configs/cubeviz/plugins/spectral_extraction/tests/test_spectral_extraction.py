@@ -585,7 +585,7 @@ def test_spectral_extraction_unit_conv_one_spec(
     "start_slice, aperture, expected_rtol, uri, calspec_url",
     (
         (5.2, (20.5, 17, 10.9), 0.03,
-         "mast:jwst/product/jw01524-o003_t002_miri_ch1-shortmediumlong_s3d.fits",
+         "mast:jwst/product/jw01524-o003_t002_miri_ch1-medium_s3d.fits",
          calspec_url + "delumi_mod_005.fits"),  # delta UMi
 
         (4.85, (28, 21, 12), 0.03,
