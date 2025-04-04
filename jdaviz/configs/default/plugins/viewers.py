@@ -25,7 +25,7 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage, ViewerVisibleLayersChangedMessage
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
@@ -75,6 +75,8 @@ class JdavizViewerMixin(WithCache):
             expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
         else:
             expose = []
+        if self.jdaviz_app.config == 'deconfigged':
+            expose += ['clone_viewer']
         if isinstance(self, BqplotImageView):
             if isinstance(self, AstrowidgetsImageViewerMixin):
                 expose += ['save',
@@ -128,6 +130,40 @@ class JdavizViewerMixin(WithCache):
             list of strings
         """
         return self.data_menu.data_labels_visible
+
+    def _get_clone_viewer_reference(self):
+        return self.jdaviz_helper._get_clone_viewer_reference(self.reference)
+
+    def clone_viewer(self):
+        name = self.jdaviz_helper._get_clone_viewer_reference(self.reference)
+
+        self.jdaviz_app._on_new_viewer(NewViewerMessage(self.__class__,
+                                                        data=None,
+                                                        sender=self.jdaviz_app),
+                                       vid=name, name=name)
+
+        new_viewer = self.jdaviz_app.get_viewer(name)
+
+        visible_layers = self.data_menu.data_labels_visible
+        for layer in self.data_menu.data_labels_loaded[::-1]:
+            visible = layer in visible_layers
+            new_viewer.data_menu.add_data(layer)
+            new_viewer.data_menu.set_layer_visibility(layer, visible)
+            # TODO: don't revert color when adding same data to a new viewer
+
+        # allow viewers to set attributes (not in state) on cloned viewers
+        for attr in getattr(self, '_clone_attrs', []):
+            if hasattr(self, attr):
+                setattr(new_viewer, attr, getattr(self, attr))
+        new_viewer.state.update_from_dict(self.state.as_dict())
+
+        for this_layer_state, new_layer_state in zip(self.state.layers, new_viewer.state.layers):
+            for k, v in this_layer_state.as_dict().items():
+                if k in ('layer',):
+                    continue
+                setattr(new_layer_state, k, v)
+
+        return new_viewer.user_api
 
     def reset_limits(self):
         """
@@ -349,6 +385,9 @@ class JdavizViewerMixin(WithCache):
                 if layer.layer.label in self._expected_subset_layers:
                     self._expected_subset_layers.remove(layer.layer.label)
                 self._expected_subset_layer_default(layer)
+
+        self.hub.broadcast(ViewerVisibleLayersChangedMessage(
+            viewer_reference=self.reference, visible_layers=selected_data_items, sender=self))
 
     def _on_subset_create(self, msg):
         from jdaviz.configs.mosviz.plugins.viewers import MosvizTableViewer

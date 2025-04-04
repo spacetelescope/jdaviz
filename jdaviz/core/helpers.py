@@ -222,6 +222,15 @@ class ConfigHelper(HubListener):
         return {viewer._ref_or_id: viewer.user_api
                 for viewer in self.app._viewer_store.values()}
 
+    def _get_clone_viewer_reference(self, reference):
+        base_name = reference.split("[")[0]
+        name = base_name
+        ind = 0
+        while name in self.viewers.keys():
+            ind += 1
+            name = f"{base_name}[{ind}]"
+        return name
+
     @property
     @deprecated(since="4.2", alternative="plugins['Model Fitting'].fitted_models")
     def fitted_models(self):
