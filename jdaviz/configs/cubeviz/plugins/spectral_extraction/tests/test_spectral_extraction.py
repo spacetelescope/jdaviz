@@ -34,8 +34,8 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     spectral_cube.uncertainty = uncert_cube
 
     # Collapse the spectral cube using the astropy.nddata machinery.
-    # Axes 0, 1 are the spatial ones.
-    collapsed_cube_nddata = spectral_cube.sum(axis=(0, 1))  # return NDDataArray
+    # Axes 1, 2 are the spatial ones.
+    collapsed_cube_nddata = spectral_cube.sum(axis=(1, 2))  # return NDDataArray
 
     # when loaded into app, cubes loaded in flux are converted to per-pixel-squared
     # surface brightness, so multiply by pix**2 to compare to NDData, if input
@@ -76,7 +76,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
             match='The following attributes were set on the data object, but will be ignored'):
         gs_plugin.vue_apply()
 
-    gs_data_label = cubeviz_helper.app.data_collection[2].label
+    gs_data_label = cubeviz_helper.app.data_collection[3].label
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', gs_data_label)
 
     # create a subset with a single pixel:

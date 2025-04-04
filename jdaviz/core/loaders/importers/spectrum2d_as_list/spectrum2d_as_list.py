@@ -39,10 +39,10 @@ class Spectrum2DAsListImporter(BaseImporterToDataCollection):
                 return field[i, :]
 
             return SpectrumList([Spectrum(spectral_axis=self.input.spectral_axis,
-                                            flux=this_row(self.input.flux, i),
-                                            uncertainty=this_row(self.input.uncertainty, i),
-                                            mask=this_row(self.input.mask, i),
-                                            meta=self.input.meta)
+                                          flux=this_row(self.input.flux, i),
+                                          uncertainty=this_row(self.input.uncertainty, i),
+                                          mask=this_row(self.input.mask, i),
+                                          meta=self.input.meta)
                                  for i in range(self.input.flux.shape[0])])
         else:
             raise NotImplementedError(f"{self.input} is not supported")  # pragma: nocover

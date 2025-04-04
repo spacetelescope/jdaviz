@@ -294,8 +294,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         else:
             w = data.coords
         data_wcs = getattr(w, 'celestial', None)
-        #if data_wcs:
-        #    data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
 
         # Convert spectral axis to velocity units if desired output is in velocity
         if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):
