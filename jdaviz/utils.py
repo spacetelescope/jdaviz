@@ -504,7 +504,7 @@ def get_subset_type(subset):
                 any(str(coord).startswith('WAVE') for coord in wcs_coords) or
 
                 # also check for a spectral coordinate from the glue_astronomy translator:
-                isinstance(ss_data.coords, SpectralCoordinates)
+                isinstance(ss_data.coords, (SpectralCoordinates, SpectralGWCS))
             )
 
             if has_spectral_coords:

@@ -89,9 +89,6 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
 
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
-    print(spectrum1d_cube.shape, spectrum1d_cube.spectral_axis_index)
-    print(flux_viewer.layers[0].layer.data.meta['spectral_axis_index'])
-
     # Since we are not really displaying, need this to trigger GUI stuff.
     flux_viewer.shape = (100, 100)
     flux_viewer.state._set_axes_aspect_ratio(1)
@@ -159,14 +156,13 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     mm._obj.vue_calculate_moment()
 
     assert dc[-1].label == 'moment 1'
-
-    assert len(dc.links) == 27
-    assert len(dc.external_links) == 6  # pixel linked
+    assert len(dc.links) == 25
+    assert len(dc.external_links) == 5  # pixel linked
     # Link 3D z to 2D x and 3D y to 2D y
-    assert (dc.external_links[2].cids1[0].label == "Pixel Axis 0 [z]" and
-            dc.external_links[2].cids2[0].label == "Pixel Axis 1 [x]" and
-            dc.external_links[3].cids1[0].label == "Pixel Axis 1 [y]" and
-            dc.external_links[3].cids2[0].label == "Pixel Axis 0 [y]")
+    assert (dc.external_links[3].cids1[0].label == "Pixel Axis 1 [y]" and
+            dc.external_links[3].cids2[0].label == "Pixel Axis 0 [y]" and
+            dc.external_links[4].cids1[0].label == "Pixel Axis 2 [x]" and
+            dc.external_links[4].cids2[0].label == "Pixel Axis 1 [x]")
 
     # Coordinate display should be unaffected.
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
