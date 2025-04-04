@@ -85,22 +85,25 @@ class TestCenter(BaseImviz_WCS_WCS):
     def test_center_on_pix(self):
         self.imviz.link_data(align_by='wcs')
 
-        # This is the second loaded data that is dithered by 1-pix.
+        # This is the second loaded data that is dithered by 1-pix in x
+        limits_first_data = np.array([-5.5, 5.5, -5.5, 5.5])
+        limits_dithered_data = limits_first_data.copy()
+        limits_dithered_data[:2] -= 1
+
         self.viewer.center_on((0, 0))
-        expected_position = [-6.75, 4.25, -5.75, 5.25]
         rtol = 1e-4
-        assert_allclose(self.viewer.get_limits(), expected_position, rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), limits_dithered_data, rtol=rtol)
 
         # This is the first data.
         self.viewer.blink_once()
         self.viewer.center_on((0, 0))
-        assert_allclose(self.viewer.get_limits(), [-5.75, 5.25, -5.75, 5.25], rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), limits_first_data, rtol=rtol)
 
         # Centering by sky on second data.
         self.viewer.blink_once()
         sky = self.wcs_2.pixel_to_world(0, 0)
         self.viewer.center_on(sky)
-        assert_allclose(self.viewer.get_limits(), expected_position, rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), limits_dithered_data, rtol=rtol)
 
 
 class TestZoom(BaseImviz_WCS_NoWCS):

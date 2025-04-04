@@ -62,9 +62,9 @@ because all transformations in glue go through the reference data. Such a situat
 is indicated by the affected coordinates becoming gray.
 
 If your data of interest also has a GWCS with a bounding box, only
-the mouseover data where it overlaps with the reference data's
-bounding box is completely reliable. Unreliable coordinates transformation here
-will also gray out in a similar fashion as above.
+the mouseover data inside the bounding box is completely reliable.
+Unreliable coordinates transformation here
+will also be hidden or grayed out in a similar fashion as above.
 
 To avoid inaccurate transforms, consider one of the following workflows:
 
