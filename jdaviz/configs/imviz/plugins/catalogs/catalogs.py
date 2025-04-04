@@ -38,10 +38,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`search`
     * :attr:`results_available`
     * :attr:`number_of_results`
-    * :attr:`catalog`
     * :attr:`max_sources`
-    * :attr:`table`
-    * :attr:`table_selected`
     """
     template_file = __file__, "catalogs.vue"
     uses_active_status = Bool(True).tag(sync=True)
