@@ -31,7 +31,7 @@ from astropy.nddata import NDData
 from astropy.table import Table, QTable
 
 
-#@pytest.mark.remote_data
+@pytest.mark.remote_data
 class TestCatalogs:
     # testing that the plugin search does not crash when no data/image is provided
     def test_plugin_no_image(self, imviz_helper):
@@ -62,7 +62,7 @@ class TestCatalogs:
     # https://dr12.sdss.org/fields/runCamcolField?field=76&camcol=5&run=7674
     # the z-band FITS image was downloaded and used
     # NOTE: We mark "slow" so it only runs on the dev job that is allowed to fail.
-    #@pytest.mark.slow
+    @pytest.mark.slow
     def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
