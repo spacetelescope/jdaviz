@@ -16,6 +16,13 @@
        hint="Select a viewer to search."
     />
 
+    <plugin-loaders-panel
+      :loader_panel_ind.sync="loader_panel_ind"
+      :loader_items="loader_items"
+      :loader_selected.sync="loader_selected"
+      :api_hints_enabled="api_hints_enabled"
+    ></plugin-loaders-panel>
+
     <plugin-file-import-select
       :items="catalog_items"
       :selected.sync="catalog_selected"
@@ -36,7 +43,7 @@
         See the <j-external-link link='https://astroquery.readthedocs.io/en/latest/gaia/gaia.html' linktext='astropy.gaia docs'></j-external-link> for details on the query defaults.
       </j-docs-link>
     </v-row>
-    
+
     <v-row v-if="catalog_selected && catalog_selected.endsWith('.ecsv')">
       <v-select
         v-model="selected_columns"
@@ -89,7 +96,7 @@
 
     <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
 
-    <jupyter-widget :widget="table_widget"></jupyter-widget> 
+    <jupyter-widget :widget="table_widget"></jupyter-widget>
 
   </j-tray-plugin>
 </template>
