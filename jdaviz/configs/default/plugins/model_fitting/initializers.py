@@ -60,7 +60,7 @@ class _Linear1DInitializer(object):
     the linear 1D model is more like a kind of polynomial.
     It doesn't mesh well with other non-linear models.
     """
-    def initialize(self, instance, x, y):
+    def initialize(self, instance, x, y, spectral_axis_index=2):
         """
         Initialize the model
 
@@ -79,7 +79,9 @@ class _Linear1DInitializer(object):
         """
         if y.ndim == 3:
             # For cube fitting, need to collapse before this calculation
-            y = np.nanmean(y, axis=(0, 1))
+            axes = [0, 1, 2]
+            axes.remove(spectral_axis_index)
+            y = np.nanmean(y, axis=tuple(axes))
         slope, intercept = np.polynomial.Polynomial.fit(x.value.flatten(), y.value.flatten(), 1)
 
         instance.slope.value = slope
@@ -170,7 +172,7 @@ class _LineProfile1DInitializer(object):
         """
         raise NotImplementedError
 
-    def initialize(self, instance, x, y):
+    def initialize(self, instance, x, y, spectral_axis_index=2):
         """
         Initialize the model
 
@@ -190,7 +192,9 @@ class _LineProfile1DInitializer(object):
 
         if y.ndim == 3:
             # For cube fitting, need to collapse before these calculations
-            y = np.nanmean(y, axis=(0, 1))
+            axes = [0, 1, 2]
+            axes.remove(spectral_axis_index)
+            y = np.nanmean(y, axis=tuple(axes))
 
         # X centroid estimates the position
         centroid = np.sum(x * y) / np.sum(y)
@@ -338,7 +342,7 @@ _p_names = {
     }
 
 
-def initialize(instance, x, y):
+def initialize(instance, x, y, spectral_axis_index=None):
     """
     Initialize given model.
 
@@ -369,7 +373,10 @@ def initialize(instance, x, y):
     try:
         initializer = _initializers[name]()
 
-        return initializer.initialize(instance, x, y)
+        if isinstance(initializer, (_Linear1DInitializer, _LineProfile1DInitializer)):
+            return initializer.initialize(instance, x, y, spectral_axis_index=spectral_axis_index)
+        else:
+            return initializer.initialize(instance, x, y)
 
     except KeyError:
         return instance

@@ -293,8 +293,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         else:
             w = data.coords
         data_wcs = getattr(w, 'celestial', None)
-        #if data_wcs:
-        #    data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
 
         # Convert spectral axis to velocity units if desired output is in velocity
         if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):
@@ -360,8 +358,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
-        print(f"moment shape: {self.moment.shape}")
-        print(self.moment)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"
