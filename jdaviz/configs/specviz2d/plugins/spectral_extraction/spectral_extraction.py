@@ -5,7 +5,7 @@ from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.configs.mosviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.events import (SnackbarMessage, NewViewerMessage,
-                                AddDataMessage, RemoveDataMessage)
+                                ViewerVisibleLayersChangedMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
@@ -354,8 +354,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.ext_add_results.label_whitelist_overwrite = ['1D Spectrum', '2D Spectrum (auto-ext)']
         self.ext_results_label_default = '2D Spectrum (auto-ext)'
 
-        for msg in (AddDataMessage, RemoveDataMessage):
-            self.app.hub.subscribe(self, msg, lambda _: self.update_marks())
+        self.app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
+                               lambda _: self._update_plugin_marks())
 
         self._set_relevant()
 
@@ -531,6 +531,7 @@ class SpectralExtraction(PluginTemplateMixin):
         for step, mark in self.marks.items():
             visible = step in display_marks.get(self.active_step, [])
             mark.set_for_viewers('visible', visible, self.marks_viewers2d+self.marks_viewers1d)
+            mark.clear_if_not_in_viewers(self.marks_viewers2d+self.marks_viewers1d)
 
     @property
     def marks_viewers2d(self):

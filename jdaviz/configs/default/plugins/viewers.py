@@ -25,7 +25,7 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
-from jdaviz.core.events import SnackbarMessage, NewViewerMessage
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage, ViewerVisibleLayersChangedMessage
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
@@ -385,6 +385,9 @@ class JdavizViewerMixin(WithCache):
                 if layer.layer.label in self._expected_subset_layers:
                     self._expected_subset_layers.remove(layer.layer.label)
                 self._expected_subset_layer_default(layer)
+
+        self.hub.broadcast(ViewerVisibleLayersChangedMessage(
+            viewer_reference=self.reference, visible_layers=selected_data_items, sender=self))
 
     def _on_subset_create(self, msg):
         from jdaviz.configs.mosviz.plugins.viewers import MosvizTableViewer
