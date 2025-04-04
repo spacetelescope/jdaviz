@@ -613,7 +613,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     def _set_relevant(self, *args):
         if self.app.config != 'deconfigged':
             return
-        if not len(self.viewer_items) or not len(self.layer_items):
+        if not len(self.viewer_items):
             self.irrelevant_msg = 'No viewers'
         else:
             self.irrelevant_msg = ''
