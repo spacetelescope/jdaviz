@@ -78,6 +78,10 @@ class BaseImporterToDataCollection(BaseImporter):
         raise NotImplementedError("Importer subclass must implement default_viewer_reference")  # noqa pragma: nocover
 
     @property
+    def ignore_viewers_with_cls(self):
+        return ()
+
+    @property
     def default_viewer_label(self):
         return vid_map.get(self.default_viewer_reference, self.default_viewer_reference)
 
@@ -110,6 +114,8 @@ class BaseImporterToDataCollection(BaseImporter):
     def load_into_viewer(self, data_label, default_viewer_reference=None):
         added = 0
         for viewer in self.app._jdaviz_helper.viewers.values():
+            if isinstance(viewer._obj, self.ignore_viewers_with_cls):
+                continue
             if data_label in viewer.data_menu.data_labels_unloaded:
                 added += 1
                 viewer.data_menu.add_data(data_label)
