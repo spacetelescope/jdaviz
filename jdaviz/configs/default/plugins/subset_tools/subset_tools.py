@@ -1136,12 +1136,16 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             for index, region in enumerate(regions):
                 # Set combination mode for how region will be applied to current subset
                 # or created as a new subset
-                combo_mode = (combination_mode if not combo_mode_is_list
-                              else combination_mode[index])
+                if combo_mode_is_list:
+                    combo_mode = combination_mode[index]
+                else:
+                    combo_mode = combination_mode
 
                 # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
-                self.combination_mode = ('new' if (combo_mode == 'new' or combo_mode is None)
-                                         else combo_mode)
+                if combo_mode == 'new' or combo_mode is None:
+                    self.combination_mode.selected = 'new'
+                elif combo_mode:
+                    self.combination_mode.selected = combo_mode
 
                 if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
                                         SkyRectangularAperture, SkyCircularAnnulus,
