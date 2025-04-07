@@ -59,7 +59,7 @@ Imviz
   preserved on export. [#3519]
 
 - User API for Catalog Search plugin (including ``catalog``,  ``max_sources``,``search``,
- ``table``, and ``table_selected``) is now public. [#3529]
+  ``table``, and ``table_selected``) is now public. [#3529]
 
 
 Mosviz
