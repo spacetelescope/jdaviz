@@ -247,7 +247,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if (wcs_link and return_sky) or (not wcs_link and return_sky is False):
             # wcs_from_data must be None, throw exception if value is set
             if wcs_from_data is not None:
-                raise ValueError('wcs_from_data must not be set when returning sky regions using wcs')
+                raise ValueError('wcs_from_data must not be set when'
+                                 ' returning sky regions using wcs')
             reg_type = 'sky_region'
         else:
             # wcs_from_data must be set and that data will be used to get the wcs for returning
