@@ -71,8 +71,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         return PluginUserApi(self, expose=('clear_table', 'export_table', 'import_catalog',
                                            'zoom_to_selected', 'select_rows',
                                            'select_all', 'select_none',
-                                           'catalog', 'catalog_selected',
-                                           'max_sources', 'search',
+                                           'catalog', 'max_sources', 'search',
                                            'table', 'table_selected'))
 
     def __init__(self, *args, **kwargs):
