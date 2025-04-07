@@ -62,8 +62,8 @@
         label="Max sources"
         hint="Maximum number of sources."
         persistent-hint
-        :api_hints_enabled="api_hints_enabled"
-        api_hint="plg.max_sources ="
+        :label="api_hints_enabled ? 'plg.max_sources =' : 'Max Sources'"
+        :class="api_hints_enabled ? 'api-hint' : null"
       ></v-text-field>
     </v-row>
 
