@@ -200,7 +200,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         y_params = ["amplitude", "amplitude_L", "intercept", "scale"]
 
         if param == "slope":
-            print(self._units)
             return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"]))
         elif model_type == 'Polynomial1D':
             # param names are all named cN, where N is the order

@@ -600,7 +600,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             else:
                 # In this case we have a pixel spectral axis
                 world_index = cube.ndim - 1 - cube.meta['spectral_axis_index']
-                spectral_axis = spectral_and_spatial[world_index] * u.pixel
+                spectral_axis = spectral_and_spatial[world_index]
+                if spectral_axis.unit == "":
+                    spectral_axis = spectral_axis * u.pixel
 
             collapsed_spec = _return_spectrum_with_correct_units(
                 flux, wcs, collapsed_nddata.meta, data_type='flux',
