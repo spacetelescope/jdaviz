@@ -49,9 +49,9 @@ class TestCatalogs:
 
         imviz_helper.load_data(ndd, data_label='no_results_data')
 
-        catalogs_plugin = imviz_helper.plugins["Catalog Search"]
-        catalogs_plugin._obj.plugin_opened = True
-        catalogs_plugin._obj.vue_do_search()
+        catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
+        catalogs_plugin.plugin_opened = True
+        catalogs_plugin.vue_do_search()
 
         # number of results should be 0
         assert catalogs_plugin.results_available
@@ -99,8 +99,8 @@ class TestCatalogs:
         catalogs_plugin.max_sources = 100
         catalogs_plugin.search(error_on_fail=True)
 
-        assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+        assert catalogs_plugin._obj.results_available
+        assert catalogs_plugin._obj.number_of_results == catalogs_plugin.max_sources
 
         # reset max_sources to it's default value
         catalogs_plugin.max_sources = 1000
@@ -120,9 +120,9 @@ class TestCatalogs:
 
         assert catalogs_plugin.catalog.selected == 'SDSS'
 
-        assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results == 136
-        prev_results = catalogs_plugin.number_of_results
+        assert catalogs_plugin._obj.results_available
+        assert catalogs_plugin._obj.number_of_results == 136
+        prev_results = catalogs_plugin._obj.number_of_results
         last_row = catalogs_plugin.table._obj.items[-1]
         last_ra = float(last_row['Right Ascension (degrees)'])
         coords = viewer.state.reference_data.coords
@@ -139,7 +139,7 @@ class TestCatalogs:
         viewer.state.y_min = -0.5
         viewer.state.y_max = 1488.5
 
-        assert not catalogs_plugin.results_available
+        assert not catalogs_plugin._obj.results_available
 
         # test loading from file
         table = imviz_helper.app._catalog_source_table
@@ -151,12 +151,12 @@ class TestCatalogs:
         # reset max_sources to it's default value
         catalogs_plugin.max_sources = 1000
 
-        catalogs_plugin.from_file = str(tmp_file)
+        catalogs_plugin._obj.from_file = str(tmp_file)
         # setting filename from API will automatically set catalog to 'From File...'
         assert catalogs_plugin.catalog.selected == 'From File...'
         catalogs_plugin.search(error_on_fail=True)
-        assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results == prev_results
+        assert catalogs_plugin._obj.results_available
+        assert catalogs_plugin._obj.number_of_results == prev_results
 
         catalogs_plugin.select_rows(slice(0, 2))
         assert len(catalogs_plugin.table._obj.selected_rows) == 2
@@ -173,8 +173,8 @@ class TestCatalogs:
         with pytest.warns(ResourceWarning):
             catalogs_plugin.search(error_on_fail=True)
 
-        assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+        assert catalogs_plugin._obj.results_available
+        assert catalogs_plugin._obj.number_of_results == catalogs_plugin.max_sources
 
         assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 279.0
         assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1768.0
@@ -251,7 +251,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     out_tbl = catalogs_plugin.search(error_on_fail=True)
     assert tbl.colnames == ["sky_centroid"]  # Ensure input table not overwritten by plugin
     assert len(out_tbl) == n_entries
-    assert catalogs_plugin.number_of_results == n_entries
+    assert catalogs_plugin._obj.number_of_results == n_entries
     # Assert that Object ID is set to index + 1 when the label column is absent
     for idx, item in enumerate(catalogs_plugin.table._obj.items):
         assert item['Object ID'] == str(idx + 1)
@@ -272,7 +272,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # test to ensure sources searched for respect the maximum sources traitlet
     catalogs_plugin.max_sources = 1
     catalogs_plugin.search(error_on_fail=True)
-    assert catalogs_plugin.number_of_results == catalogs_plugin.max_sources
+    assert catalogs_plugin._obj.number_of_results == catalogs_plugin.max_sources
 
     catalogs_plugin.clear_table()
 
@@ -284,11 +284,11 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     catalogs_plugin.import_catalog(tbl)
     out_tbl = catalogs_plugin.search()
     assert len([out_tbl]) == n_entries
-    assert catalogs_plugin.number_of_results == n_entries
+    assert catalogs_plugin._obj.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
     catalogs_plugin.clear_table()
-    assert not catalogs_plugin.results_available
+    assert not catalogs_plugin._obj.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
     assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
