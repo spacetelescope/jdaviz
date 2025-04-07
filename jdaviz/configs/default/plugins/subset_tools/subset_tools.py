@@ -1128,6 +1128,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 else:
                     combo_mode = combination_mode
 
+                # Checking what broke
                 if combo_mode == 'new' or combo_mode is None:
                     # Remove selection of subset so that new one will be created
                     # No overwrite next iteration
