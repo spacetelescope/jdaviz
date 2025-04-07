@@ -54,8 +54,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
                                ShadowLine, ApertureMark)
-from jdaviz.core.region_translators import (regions2roi, regions2aperture,
-                                            _get_region_from_spatial_subset)
+from jdaviz.core.region_translators import regions2roi, regions2aperture
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.core.registries import tray_registry
@@ -2313,9 +2312,14 @@ class SubsetSelect(SelectPluginComponent):
             subset_state = self._get_subset_state(subset)
         if subset_state is None:
             return None
-        region = _get_region_from_spatial_subset(self.plugin, subset_state)
-        region.meta['label'] = subset
-        return region
+
+        type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
+        reg = self.app.get_subsets(subset_name=subset,
+                                   include_sky_region=type == 'sky_region',
+                                   spatial_only=True)[0][type]
+        reg.meta['label'] = subset
+
+        return reg
 
     @cached_property
     def selected_spatial_region(self):
