@@ -375,24 +375,24 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     st.import_region(sr1, combination_mode='new')
     st.import_region(sr2, combination_mode='and')
 
+    with pytest.raises(ValueError, match="wcs_from_data must not be set when"):
+        st.get_regions(return_sky_region=True, wcs_from_data='NDData[DATA]')
+
     # composite subset should be a sky region, and combined to a compound region
-    regs = st.get_regions(return_sky_region=True, wcs_from_data='NDData[DATA]')
+    regs = st.get_regions(return_sky_region=True)
 
     cr = regs['Subset 1']
     assert isinstance(cr, CompoundSkyRegion)
-    # TODO: enable tests when subsets are being applied to NDData[DATA] correctly
-    # assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
-    # assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
-    # assert cr.operator == operator.and_
+    assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
+    assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
+    assert cr.operator == operator.and_
 
-    # TODO: Should be different from sr1 and sr2 but currently subsets are being
-    #  applied to the Default orientation for some reason
-    regs_default_orientation = st.get_regions(return_sky_region=True,
-                                              wcs_from_data='Default orientation')
-    cr2 = regs_default_orientation['Subset 1']
-    assert isinstance(cr2, CompoundSkyRegion)
-    assert_allclose(cr2.region1.center.ra.deg, sr1.center.ra.deg)
-    assert_allclose(cr2.region2.center.ra.deg, sr2.center.ra.deg)
+    regs_wcs_with_pixel = st.get_regions(return_sky_region=False,
+                                         wcs_from_data='NDData[DATA]')
+    cr2 = regs_wcs_with_pixel['Subset 1']
+    assert isinstance(cr2, CompoundPixelRegion)
+    assert cr2.region1.center == PixCoord(x=3.53662026903228, y=6.738066787118722)
+    assert cr2.region2.center == PixCoord(x=2.4528463707287766, y=6.312337355091)
 
 
 @pytest.mark.skip(reason="Unskip after JDAT-5186.")
