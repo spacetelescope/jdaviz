@@ -22,7 +22,7 @@
       :selected.sync="catalog_selected"
       label="Catalog"
       hint="Select a catalog to search."
-      api_hint="plg.catalog_selected ="
+      api_hint="plg.catalog ="
       :api_hints_enabled="api_hints_enabled"
       :from_file.sync="from_file"
       :from_file_message="from_file_message"

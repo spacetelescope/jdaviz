@@ -37,7 +37,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`zoom_to_selected`
     * :meth:`search`
     * :attr:`max_sources`
-    * :attr:`catalog_selected`
+    * ``catalog`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
       Table containing all search results.
     * ``table_selected`` (:class:`~jdaviz.core.template_mixin.Table`):
