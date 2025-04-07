@@ -1022,8 +1022,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 return self._load_regions(raw_regs, edit_subset, combination_mode, max_num_regions,
                                           refdata_label, return_bad_regions)
         else:
-            return self._load_regions(region, edit_subset, combination_mode, max_num_regions, refdata_label,
-                                      return_bad_regions)
+            return self._load_regions(region, edit_subset, combination_mode, max_num_regions,
+                                      refdata_label, return_bad_regions)
 
     def _load_regions(self, regions, edit_subset=None, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
