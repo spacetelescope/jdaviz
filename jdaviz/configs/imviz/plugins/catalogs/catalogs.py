@@ -36,9 +36,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`import_catalog`
     * :meth:`zoom_to_selected`
     * :meth:`search`
-    * :attr:`results_available`
-    * :attr:`number_of_results`
     * :attr:`max_sources`
+    * :attr:`catalog`
+    * :attr:`catalog_selected`
+    * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
+      Table containing all search results.
+    * ``table_selected`` (:class:`~jdaviz.core.template_mixin.Table`):
+      Table containing all selected search results.  
     """
     template_file = __file__, "catalogs.vue"
     uses_active_status = Bool(True).tag(sync=True)
