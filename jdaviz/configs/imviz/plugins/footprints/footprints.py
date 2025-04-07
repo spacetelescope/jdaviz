@@ -33,16 +33,12 @@ __all__ = ['Footprints']
 def closest_point_on_segment(px, py, x1, y1, x2, y2):
     """Find the closest point on a line segment to a given point."""
 
-    # Compute parameter t
     dx, dy = x2 - x1, y2 - y1
-
+    denominator = dx ** 2 + dy ** 2
     # Calculate t: how far along the segment the projection of the point falls
-    t = ((px - x1) * dx + (py - y1) * dy) / (dx ** 2 + dy ** 2)
-
-
-    # Restrict t to the valid range [0, 1]
-    t = max(0, min(1, t))
-
+    t = ((px - x1) * dx + (py - y1) * dy) / np.where(denominator == 0, 1, denominator)
+    t = np.where(denominator == 0, 0, t)  # t = 0 if denominator was actually 0
+    t = np.clip(t, 0, 1)
     closest_x = x1 + t * dx
     closest_y = y1 + t * dy
     return closest_x, closest_y
@@ -50,27 +46,28 @@ def closest_point_on_segment(px, py, x1, y1, x2, y2):
 
 def find_closest_polygon_point(px, py, polygons):
     """Return the closest point on a polygon AND its overlay label from a list of polygons."""
-
     min_dist = float('inf')
     closest_point = None
     closest_overlay = None
 
     for polygon in polygons:
-        x_coords, y_coords = polygon['x'], polygon['y']
+        x_coords, y_coords = np.array(polygon['x']), np.array(polygon['y'])
+        x1 = x_coords
+        x2 = np.roll(x_coords, -1)
+        y1 = y_coords
+        y2 = np.roll(y_coords, -1)
         label = polygon['overlay']
-        num_points = len(x_coords)
 
-        for i in range(num_points - 1):
-            x1, y1 = x_coords[i], y_coords[i]
-            x2, y2 = x_coords[i + 1], y_coords[i + 1]
+        cx, cy = closest_point_on_segment(px, py, x1, y1, x2, y2)
+        dist = (cx - px)**2 + (cy - py)**2
 
-            cx, cy = closest_point_on_segment(px, py, x1, y1, x2, y2)
-            dist = (cx - px) ** 2 + (cy - py) ** 2
+        min_idx = np.argmin(dist)
+        min_dist_for_this_polygon = dist[min_idx]
 
-            if dist < min_dist:
-                min_dist = dist
-                closest_point = (cx, cy)
-                closest_overlay = label
+        if min_dist_for_this_polygon < min_dist:
+            min_dist = min_dist_for_this_polygon
+            closest_point = (cx[min_idx], cy[min_idx])
+            closest_overlay = label
 
     return closest_overlay, closest_point
 
