@@ -955,7 +955,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
 
-    def import_region(self, region, combination_mode=None, max_num_regions=20,
+    def import_region(self, region, edit_subset=None, combination_mode=None, max_num_regions=20,
                       refdata_label=None, return_bad_regions=False, region_format=None):
         """
         Method for creating subsets from regions or region files.
@@ -972,6 +972,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
             A string which represents a ``regions`` or ``SpectralRegion`` file.
             If given as a list, it can only contain spectral or non-spectral regions, not both.
+
+        edit_subset : str or `None`
+            Subset to have region applied to it using combination_mode
 
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
@@ -1016,13 +1019,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 except Exception:  # nosec
                     raw_regs = SpectralRegion.read(region)
 
-                return self._load_regions(raw_regs, combination_mode, max_num_regions,
+                return self._load_regions(raw_regs, edit_subset, combination_mode, max_num_regions,
                                           refdata_label, return_bad_regions)
         else:
-            return self._load_regions(region, combination_mode, max_num_regions, refdata_label,
+            return self._load_regions(region, edit_subset, combination_mode, max_num_regions, refdata_label,
                                       return_bad_regions)
 
-    def _load_regions(self, regions, combination_mode=None, max_num_regions=None,
+    def _load_regions(self, regions, edit_subset=None, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
         """Load given region(s) into the viewer.
         WCS-to-pixel translation and mask creation, if needed, is relative
@@ -1050,6 +1053,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             * ``photutils`` apertures (limited support until ``photutils``
               fully supports ``regions``)
             * specutils ``SpectralRegion`` object
+
+        edit_subset : str or `None`
+            Subset to have region applied to it using combination_mode
 
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
@@ -1120,22 +1126,22 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         previous_mode = self.app.session.edit_subset_mode.mode
 
         with self.app._jdaviz_helper.batch_load():
+            # This method can edit a particular subset or create a new subset
+            # and apply the combination modes depending on this argument
+            if edit_subset:
+                self.subset_selected = edit_subset
+            else:
+                self.app.session.edit_subset_mode.edit_subset = None
+
             for index, region in enumerate(regions):
                 # Set combination mode for how region will be applied to current subset
                 # or created as a new subset
-                if combo_mode_is_list:
-                    combo_mode = combination_mode[index]
-                else:
-                    combo_mode = combination_mode
+                combo_mode = (combination_mode if not combo_mode_is_list
+                              else combination_mode[index])
 
-                # Checking what broke
-                if combo_mode == 'new' or combo_mode is None:
-                    # Remove selection of subset so that new one will be created
-                    # No overwrite next iteration
-                    self.app.session.edit_subset_mode.edit_subset = None
-                    self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
-                elif combo_mode:
-                    self.combination_mode.selected = combo_mode
+                # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
+                self.combination_mode = ('new' if (combo_mode == 'new' or combo_mode is None)
+                                         else combo_mode)
 
                 if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
                                         SkyRectangularAperture, SkyCircularAnnulus,
