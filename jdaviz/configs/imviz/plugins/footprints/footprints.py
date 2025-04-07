@@ -37,7 +37,8 @@ def closest_point_on_segment(px, py, x1, y1, x2, y2):
     dx, dy = x2 - x1, y2 - y1
 
     # Calculate t: how far along the segment the projection of the point falls
-    t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)
+    t = ((px - x1) * dx + (py - y1) * dy) / (dx ** 2 + dy ** 2)
+
 
     # Restrict t to the valid range [0, 1]
     t = max(0, min(1, t))
@@ -48,7 +49,8 @@ def closest_point_on_segment(px, py, x1, y1, x2, y2):
 
 
 def find_closest_polygon_point(px, py, polygons):
-    """Return the closest (x, y) point AND its overlay label from a list of polygons."""
+    """Return the closest point on a polygon AND its overlay label from a list of polygons."""
+
     min_dist = float('inf')
     closest_point = None
     closest_overlay = None
