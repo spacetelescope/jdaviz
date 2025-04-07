@@ -757,11 +757,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         from astropy.wcs.utils import pixel_to_pixel
         from photutils.aperture import ApertureStats
-        from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
+        from jdaviz.core.region_translators import regions2aperture
 
         def _do_recentering(subset, subset_state):
             try:
-                reg = _get_region_from_spatial_subset(self, subset_state)
+                type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
+                reg = self.app.get_subsets(subset_name=subset,
+                                           include_sky_region=self.app.config == 'imviz',
+                                           spatial_only=True)[0][type]
                 aperture = regions2aperture(reg)
                 data = self.recenter_dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])

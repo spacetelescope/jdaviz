@@ -19,7 +19,7 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import (GlobalDisplayUnitChanged, SnackbarMessage,
                                 LinkUpdatedMessage, SliceValueUpdatedMessage)
-from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
+from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
                                         SubsetSelect, ApertureSubsetSelectMixin,
@@ -547,7 +547,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         try:
-            reg = _get_region_from_spatial_subset(self, self.background.selected_subset_state)
+            type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
+            reg = self.app.get_subsets(subset_name=self.background_selected,
+                                       include_sky_region=self.app.config == 'imviz',
+                                       spatial_only=True)[0][type]
             self.background_value = self._calc_background_median(reg)
         except Exception as e:
             self.background_value = 0
