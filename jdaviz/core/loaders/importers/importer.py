@@ -114,7 +114,7 @@ class BaseImporterToDataCollection(BaseImporter):
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
-            if self.app.config != 'deconfigged':
+            if self.app.config not in ('deconfigged', 'lcviz'):
                 # do not add additional viewers
                 msg = SnackbarMessage(
                     "Data units are incompatible with viewer units, unload all data from viewer to add",  # noqa
