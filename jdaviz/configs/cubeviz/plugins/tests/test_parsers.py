@@ -44,7 +44,7 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
         assert cubeviz_helper.app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
     flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
 
@@ -105,7 +105,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
         assert cubeviz_helper.app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
@@ -135,7 +135,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
@@ -173,7 +173,7 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     assert cubeviz_helper.app.data_collection[0].meta['uncertainty_type'] == 'std'
 
     # Coordinate display is only for spatial image, which is missing here.
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     assert label_mouseover.as_text() == ('', '', '')
 
 

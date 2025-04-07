@@ -136,6 +136,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self._plugin_description = 'Select and interact with spatial subsets.'
         elif config == 'specviz':
             self._plugin_description = 'Select and interact with spectral subsets.'
+        else:
+            self._plugin_description = 'Select and interact with subsets.'
 
         self.components = {
             'g-subset-mode': SelectionModeMenu(session=self.session)
@@ -180,7 +182,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset',
                   'update_subset']
-        if self.dev_loaders:
+        if self.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d'):
             expose += ['loaders']
         return PluginUserApi(self, expose)
 
@@ -755,11 +757,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         from astropy.wcs.utils import pixel_to_pixel
         from photutils.aperture import ApertureStats
-        from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
+        from jdaviz.core.region_translators import regions2aperture
 
         def _do_recentering(subset, subset_state):
             try:
-                reg = _get_region_from_spatial_subset(self, subset_state)
+                type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
+                reg = self.app.get_subsets(subset_name=subset,
+                                           include_sky_region=type == 'sky_region',
+                                           spatial_only=True)[0][type]
                 aperture = regions2aperture(reg)
                 data = self.recenter_dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
@@ -1184,10 +1189,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 elif isinstance(region, SpectralRegion):
                     # Use viewer_name if provided in kwarg, otherwise use
                     # default spectrum viewer name
-                    viewer_name = (viewer_parameter or
-                                   self.app._jdaviz_helper._default_spectrum_viewer_reference_name)
-                    range_viewer = self.app.get_viewer(viewer_name)
-
+                    range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
                     s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
                                          att=range_viewer.state.x_att)
                     range_viewer.apply_subset_state(s)

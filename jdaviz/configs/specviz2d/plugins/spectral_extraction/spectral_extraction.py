@@ -1,15 +1,18 @@
 import numpy as np
 
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.configs.mosviz.plugins.viewers import Spectrum1DViewer
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
+                                        ViewerSelect,
                                         AddResults,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
+                                        skip_if_not_relevant,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
@@ -45,6 +48,10 @@ class SpectralExtraction(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * :attr:`interactive_extract`
+    * ``viewer1d`` (:class:`~jdaviz.core.template_mixin.ViewerSelectMixin`):
+      which 1d spectrum viewer(s) to show the live-preview marks.
+    * ``viewer2d`` (:class:`~jdaviz.core.template_mixin.ViewerSelectMixin`):
+      which 2d spectrum viewer(s) to show the live-preview marks.
     * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       controls the input dataset for generating the trace.
     * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
@@ -113,7 +120,17 @@ class SpectralExtraction(PluginTemplateMixin):
     uses_active_status = Bool(True).tag(sync=True)
 
     active_step = Unicode().tag(sync=True)
+
+    # SETTINGS
     interactive_extract = Bool(True).tag(sync=True)
+
+    viewer1d_items = List().tag(sync=True)
+    viewer1d_selected = Any().tag(sync=True)
+    viewer1d_multiselect = Bool(False).tag(sync=True)
+
+    viewer2d_items = List().tag(sync=True)
+    viewer2d_selected = Any().tag(sync=True)  # Any needed for multiselect
+    viewer2d_multiselect = Bool(False).tag(sync=True)
 
     # TRACE
     trace_trace_items = List().tag(sync=True)
@@ -229,6 +246,18 @@ class SpectralExtraction(PluginTemplateMixin):
         self._plugin_description = 'Extract 1D spectrum from 2D image.'
 
         self._marks = {}
+
+        self.viewer1d = ViewerSelect(self,
+                                     'viewer1d_items',
+                                     'viewer1d_selected',
+                                     'viewer1d_multiselect',
+                                     filters=['is_spectrum_viewer'])
+
+        self.viewer2d = ViewerSelect(self,
+                                     'viewer2d_items',
+                                     'viewer2d_selected',
+                                     'viewer2d_multiselect',
+                                     filters=['is_spectrum_2d_viewer'])
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -348,16 +377,10 @@ class SpectralExtraction(PluginTemplateMixin):
                                           'ext_add_to_viewer_selected')
         self.ext_add_results.viewer.filters = ['is_spectrum_viewer']
         # NOTE: defaults to overwriting original spectrum
-        self.ext_add_results.label_whitelist_overwrite = ['Spectrum 1D']
-        self.ext_results_label_default = 'Spectrum 1D'
+        self.ext_add_results.label_whitelist_overwrite = ['1D Spectrum', '2D Spectrum (auto-ext)']
+        self.ext_results_label_default = '2D Spectrum (auto-ext)'
 
-    @property
-    def _default_spectrum_viewer_reference_name(self):
-        return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
-
-    @property
-    def _default_spectrum_2d_viewer_reference_name(self):
-        return self.app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
+        self._set_relevant()
 
     @property
     def user_api(self):
@@ -384,10 +407,48 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'import_extract',
                                            'export_extract', 'export_extract_spectrum'))
 
+    @observe('trace_dataset_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if len(self.trace_dataset_items) < 1:
+            self.irrelevant_msg = 'Requires at least one 2D spectrum'
+        else:
+            self.irrelevant_msg = ''
+
+    def _clear_default_inputs(self):
+        self.trace_pixel = 0
+        self.trace_window = 0
+        self.bg_trace_pixel = 0
+        self.bg_separation = 0
+        self.bg_width = 0
+        self.ext_width = 0
+
+    @observe('irrelevant_msg')
+    def _updates_when_becoming_relevant(self, msg):
+        if msg.get('new') != '':
+            return
+        # reset all defaults for the selected trace dataset, _trace_dataset_selected
+        # should be triggered shortly after
+        self._clear_default_inputs()
+
+    def _extract_in_new_instance(self, dataset=None, add_data=False):
+        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
+        # the tray) and extract the entire cube with defaults.
+        plg = self.new()
+        # all other settings remain at their plugin defaults
+        plg._clear_default_inputs()
+        plg.trace_dataset.selected = self.trace_dataset.selected if dataset is None else dataset
+        plg._trace_dataset_selected()  # should only be necessary if default dataset
+        return plg.export_extract_spectrum(add_data=add_data)
+
     @observe('trace_dataset_selected')
+    @skip_if_not_relevant()
     def _trace_dataset_selected(self, msg=None):
         if not hasattr(self, 'trace_dataset'):
             # happens when first initializing plugin outside of tray
+            return
+        if not len(self.trace_dataset.selected):
             return
 
         width = self.trace_dataset.get_selected_spectrum(use_display_units=True).shape[0]
@@ -455,12 +516,13 @@ class SpectralExtraction(PluginTemplateMixin):
             else:
                 raise ValueError("step must be one of: trace, bg, ext")
 
-    @observe('is_active', 'active_step')
+    @observe('is_active', 'active_step', 'viewer1d_selected', 'viewer2d_selected')
     @skip_if_not_tray_instance()
     def _update_plugin_marks(self, msg={}):
         if self.app._jdaviz_helper is None:
             return
-        if not len(self._marks):
+
+        if not len(self.marks):
             # plugin has never been opened, no need to create marks just to hide them,
             # we'll create marks when the plugin is first opened
             return
@@ -491,49 +553,58 @@ class SpectralExtraction(PluginTemplateMixin):
         """
         Access the marks created by this plugin in both the spectrum-viewer and spectrum-2d-viewer.
         """
-        if self._marks:
-            # TODO: replace with cache property?
-            return self._marks
-
         if not self._tray_instance:
             return {}
 
-        viewer2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
-        viewer1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer2d = self.viewer2d.selected_obj
+        viewer1d = self.viewer1d.selected_obj
+
+        if viewer2d is None:
+            return {}
 
         if not viewer2d.state.reference_data:
             # we don't have data yet for scales, defer initializing
             return {}
 
-        # the marks haven't been initialized yet, so initialize with empty
-        # marks that will be populated once the first analysis is done.
-        self._marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
-                       'ext_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'ext_upper': PluginLine(viewer2d, visible=self.is_active),
-                       'bg1_center': PluginLine(viewer2d, visible=self.is_active,
-                                                line_style='dotted'),
-                       'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
-                       'bg2_center': PluginLine(viewer2d, visible=self.is_active,
-                                                line_style='dotted'),
-                       'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
-        # NOTE: += won't trigger the figure to notice new marks
-        viewer2d.figure.marks = viewer2d.figure.marks + list(self._marks.values())
+        if 'trace' not in self._marks:
+            # the marks haven't been initialized yet, so initialize with empty
+            # marks that will be populated once the first analysis is done.
+            marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
+                     'ext_lower': PluginLine(viewer2d, visible=self.is_active),
+                     'ext_upper': PluginLine(viewer2d, visible=self.is_active),
+                     'bg1_center': PluginLine(viewer2d, visible=self.is_active,
+                                              line_style='dotted'),
+                     'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
+                     'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
+                     'bg2_center': PluginLine(viewer2d, visible=self.is_active,
+                                              line_style='dotted'),
+                     'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
+                     'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
+            # NOTE: += won't trigger the figure to notice new marks
+            viewer2d.figure.marks = viewer2d.figure.marks + list(marks.values())
+            self._marks = self._marks | marks
 
-        self._marks['extract'] = PluginLine(viewer1d, visible=self.is_active)
-        self._marks['bg_spec'] = PluginLine(viewer1d, visible=self.is_active, stroke_width=1)  # noqa
-
-        # NOTE: += won't trigger the figure to notice new marks
-        viewer1d.figure.marks = viewer1d.figure.marks + [self._marks['extract'],
-                                                         self._marks['bg_spec']]
+        if viewer1d is not None and 'extract' not in self._marks:
+            marks = {'extract': PluginLine(viewer1d, visible=self.is_active),
+                     'bg_spec': PluginLine(viewer1d, visible=self.is_active, stroke_width=1)}
+            viewer1d.figure.marks = viewer1d.figure.marks + list(marks.values())
+            self._marks = self._marks | marks
 
         return self._marks
 
     @observe('interactive_extract')
     @skip_if_no_updates_since_last_active()
     @skip_if_not_tray_instance()
+    @skip_if_not_relevant()
     def _update_interactive_extract(self, event={}):
+        if 'extract' not in self.marks:
+            # no spectrum1d viewer
+            self.app._on_new_viewer(NewViewerMessage(Spectrum1DViewer,
+                                                     data=None,
+                                                     sender=self.app),
+                                    vid='1D Spectrum', name='1D Spectrum',
+                                    open_data_menu_if_empty=False)
+
         # also called by any of the _interaction_in_*_step
         if self.interactive_extract:
             try:
@@ -567,6 +638,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
+    @skip_if_not_relevant()
     def _interaction_in_trace_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
                 or not self.is_active):
@@ -591,6 +663,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
+    @skip_if_not_relevant()
     def _interaction_in_bg_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
@@ -644,6 +717,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'self_prof_interp_degree_x', 'self_prof_interp_degree_y')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
+    @skip_if_not_relevant()
     def _interaction_in_ext_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
@@ -713,7 +787,7 @@ class SpectralExtraction(PluginTemplateMixin):
             if hasattr(trace.trace_model, 'degree'):
                 self.trace_order = trace.trace_model.degree
         elif isinstance(trace, tracing.ArrayTrace):  # pragma: no cover
-            raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load_trace instead")  # noqa
+            raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load instead")  # noqa
         else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 

@@ -61,11 +61,15 @@ class UserApiWrapper:
                                                 PlotOptionsSyncState,
                                                 AddResults,
                                                 AutoTextField)
+        from jdaviz.core.loaders.importers.spectrum2d.spectrum2d import SelectExtensionComponent
         if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
+            elif isinstance(exp_obj, SelectExtensionComponent) and isinstance(value, int):
+                # allow setting by index
+                value = exp_obj.choices[value]
             exp_obj.selected = value
             return
         elif isinstance(exp_obj, AddResults):

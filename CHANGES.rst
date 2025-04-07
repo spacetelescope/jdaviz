@@ -9,6 +9,8 @@ New Features
 
 - Added an STC-S string region parser to the Footprints plugin. [#3479]
 
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526]
+
 Cubeviz
 ^^^^^^^
 
@@ -16,6 +18,8 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Added ability to load remote data from a S3 URI to Imviz. [#3500]
 
 - Footprints plugin now supports selecting the closest overlay
   to a clicked point in the image viewer. [#3525]
@@ -26,8 +30,18 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
+
 Specviz2d
 ^^^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
 
 API Changes
 -----------
@@ -43,6 +57,13 @@ Imviz
 
 - Radial profile and curve of growth in Aperture Photometry plugin are now consistent
   with ``photutils.profiles``. [#3510]
+
+- Catalog Search: When catalog is imported from file, its original column names are
+  preserved on export. [#3519]
+
+- User API for Catalog Search plugin (including ``catalog``,  ``max_sources``,``search``,
+  ``table``, and ``table_selected``) is now public. [#3529]
+
 
 Mosviz
 ^^^^^^
@@ -61,7 +82,9 @@ Cubeviz
 
 Imviz
 ^^^^^
-- Added ability to load remote data from a S3 URI to Imviz. [#3500]
+
+- Catalog Search: Fixed a bug where the plugin modifies the input table if
+  ``import_catalog`` is used on a table instance (not from file). [#3519]
 
 Mosviz
 ^^^^^^
@@ -94,6 +117,9 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
+- Fix bug where converting spectral units multiple times caused spectrum viewer limits
+  to stop resetting to correct x-limits. [#3518]
 
 Specviz2d
 ^^^^^^^^^

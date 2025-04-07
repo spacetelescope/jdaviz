@@ -1,12 +1,10 @@
 settings:
-  configuration: specviz
-  data:
-    parser: specviz-spectrum1d-parser
+  configuration: deconfigged
   visible:
     menu_bar: false
     toolbar: true
     tray: true
-    tab_headers: false
+    tab_headers: true
   dense_toolbar: false
   server_is_remote: false
   context:
@@ -21,6 +19,7 @@ tray:
   - g-plot-options
   - g-subset-tools
   - g-markers
+  - spectral-extraction
   - g-gaussian-smooth
   - g-model-fitting
   - g-unit-conversion
@@ -30,9 +29,3 @@ tray:
   - about
 viewer_area:
   - container: col
-    children:
-      - container: row
-        viewers:
-          - name: Spectrum
-            plot: spectrum-1d-viewer
-            reference: spectrum-viewer

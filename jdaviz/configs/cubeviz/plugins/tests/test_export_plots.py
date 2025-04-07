@@ -50,6 +50,8 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     assert plugin._obj.i_start == 0
     assert plugin._obj.i_end == 1
 
+    assert len(plugin.viewer.choices) == 2  # uncert-viewer empty
+
     plugin.viewer_format = 'mp4'
     plugin._obj.i_end = 0
     with pytest.raises(ValueError, match="No frames to write"):
@@ -65,7 +67,7 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     with pytest.raises(ValueError, match="Invalid path"):
         plugin.export()
 
-    plugin.viewer = 'uncert-viewer'
+    plugin.viewer = 'flux-viewer'
     plugin.filename = ""
     with pytest.raises(ValueError, match="Invalid filename"):
         plugin.export()
@@ -77,12 +79,14 @@ def test_export_movie_cubeviz_empty(cubeviz_helper):
     assert plugin._obj.i_start == 0
     assert plugin._obj.i_end == 0
 
+    assert len(plugin.viewer.choices) == 0  # no data loaded
     plugin.viewer_format = 'mp4'
-    with pytest.raises(ValueError, match="Selected viewer has no display shape"):
+    with pytest.raises(ValueError, match="nothing selected for export"):
         plugin.export()
 
 
-def test_export_plot_exceptions(cubeviz_helper):
+def test_export_plot_exceptions(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
     plugin = cubeviz_helper.plugins["Export"]
 
     plugin.filename = "/fake/path/image.png"

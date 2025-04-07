@@ -126,7 +126,7 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
     # check that mouseover shows dq values on bad pixels (flag == 0):
     # check that mouseover shows dq values on bad pixels (flag == 0):
     viewer = imviz_helper.default_viewer._obj
-    label_mouseover = imviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = imviz_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1366, 'y': 708}})
 

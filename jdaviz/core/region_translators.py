@@ -22,43 +22,6 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
 
 
-def _get_region_from_spatial_subset(plugin_obj, subset_state):
-    """Convert the given ``glue`` ROI subset state to ``regions`` shape.
-
-    .. note:: This is for internal use only in Imviz plugins.
-
-    Parameters
-    ----------
-    plugin_obj : obj
-        Plugin instance that needs this translation.
-        The plugin is assumed to have a special setup that gives
-        it access to these attributes: ``app`` and ``app._align_by``.
-
-    subset_state : obj
-        ROI subset state to translate.
-
-    Returns
-    -------
-    reg : `regions.Region`
-        An equivalent ``regions`` shape. This can be a pixel or sky
-        region, so the plugin needs to be able to deal with both.
-
-    See Also
-    --------
-    regions2roi
-
-    """
-    from glue_astronomy.translators.regions import roi_subset_state_to_region
-
-    # Subset is defined against its parent. This is not necessarily
-    # the current viewer reference data, which can be changed.
-
-    # Mixed link types no longer allowed, so just check app setting.
-    align_by = plugin_obj.app._align_by
-
-    return roi_subset_state_to_region(subset_state, to_sky=(align_by == 'wcs'))
-
-
 def regions2roi(region_shape, wcs=None):
     """Convert a given ``regions`` shape to ``glue`` ROI.
 

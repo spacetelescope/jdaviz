@@ -57,16 +57,16 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
-    app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer("flux-viewer", "test")
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     fv = app.get_viewer("flux-viewer")
-    sv = app.get_viewer("spectrum-viewer")
+    sv = app.get_viewer('spectrum-viewer')
 
     # export plugin uses the mixin
     p = cubeviz_helper.plugins['Export']
-    assert len(p.viewer.ids) == 3
-    assert len(p.viewer.references) == 3
-    assert len(p.viewer.labels) == 3
+    # 2 viewers available (no uncertainty cube loaded)
+    assert len(p.viewer.ids) == 2
+    assert len(p.viewer.references) == 2
+    assert len(p.viewer.labels) == 2
     assert p.viewer.selected_obj == fv
 
     # set by reference

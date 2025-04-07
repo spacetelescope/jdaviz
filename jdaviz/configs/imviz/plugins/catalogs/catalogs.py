@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from astropy import units as u
 from astropy.table import QTable, Table as AstropyTable
@@ -31,7 +33,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`import_catalog`
     * :meth:`zoom_to_selected`
+    * :meth:`search`
+    * :attr:`max_sources`
+    * ``catalog`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
+      Table containing all search results.
+    * ``table_selected`` (:class:`~jdaviz.core.template_mixin.Table`):
+      Table containing all selected search results.
     """
     template_file = __file__, "catalogs.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -60,7 +70,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     def user_api(self):
         return PluginUserApi(self, expose=('clear_table', 'export_table', 'import_catalog',
                                            'zoom_to_selected', 'select_rows',
-                                           'select_all', 'select_none'))
+                                           'select_all', 'select_none',
+                                           'catalog', 'max_sources', 'search',
+                                           'table', 'table_selected'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -124,8 +136,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     @staticmethod
     def _file_parser(path):
         if isinstance(path, AstropyTable):  # includes QTable
+            path = deepcopy(path)  # Avoid overwriting original input
             from_file_string = f'API: {path.__class__.__name__} object'
-            return '', {from_file_string: path}
+            return '', {from_file_string: path, "_orig_colnames_for_jdaviz_export": path.colnames}
 
         try:
             table = QTable.read(path)
@@ -138,7 +151,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         if 'sky_centroid' not in table.colnames:
             return 'Table does not contain required sky_centroid column', {}
 
-        return '', {path: table}
+        table.meta["_orig_colnames_for_jdaviz_export"] = table.colnames
+        return '', {path: table, "_orig_colnames_for_jdaviz_export": table.colnames}
 
     def _on_catalog_select_click_event(self, msg):
         xs, ys = self.table._qtable['x_coord'], self.table._qtable['y_coord']
@@ -356,6 +370,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         viewer.marker = {'color': 'blue', 'alpha': 0.8, 'markersize': 30, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
 
+        if "_orig_colnames_for_jdaviz_export" in self.catalog._cached_obj:
+            self.table._qtable.meta["_orig_colnames_for_jdaviz_export"] = self.catalog._cached_obj["_orig_colnames_for_jdaviz_export"]  # noqa: E501
+
         msg = CatalogResultsChangedMessage(sender=self)
         self.session.hub.broadcast(msg)
 
@@ -389,6 +406,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.table_selected._clear_table()
         for selected_row in selected_rows:
             self.table_selected.add_item(selected_row)
+
+        if (self.table_selected._qtable and
+                "_orig_colnames_for_jdaviz_export" in self.catalog._cached_obj):
+            self.table_selected._qtable.meta["_orig_colnames_for_jdaviz_export"] = self.catalog._cached_obj["_orig_colnames_for_jdaviz_export"]  # noqa: E501
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
