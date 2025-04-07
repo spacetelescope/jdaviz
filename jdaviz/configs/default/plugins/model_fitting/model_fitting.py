@@ -517,6 +517,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 if default_param.unit != default_units:
                     pixar_sr = self.app.data_collection[0].meta.get('PIXAR_SR', 1)
                     viewer = self.app.get_viewer("spectrum-viewer")
+                    # TODO: I suspect this doesn't actually work, but never gets called -Ricky
                     cube_wave = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
                     equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
 
@@ -548,9 +549,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             orig_flux_shape = masked_spectrum.flux.shape
             init_y = masked_spectrum.flux[~mask]
             if mask.ndim == 3:
-                init_y = init_y.reshape(orig_flux_shape[0],
-                                        orig_flux_shape[1],
-                                        len(init_x))
+                if data.spectral_axis_index in [2, -1]:
+                    init_y = init_y.reshape(orig_flux_shape[0],
+                                            orig_flux_shape[1],
+                                            len(init_x))
+                elif data.spectral_axis_index == 0:
+                    init_y = init_y.reshape(len(init_x),
+                                            orig_flux_shape[1],
+                                            orig_flux_shape[2])
         else:
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
@@ -558,9 +564,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if init_y.unit != self._units['y']:
             # equivs for spectral density and flux<>sb
             pixar_sr = masked_spectrum.meta.get('_pixel_scale_factor', 1.0)
-            equivs = all_flux_unit_conversion_equivs(pixar_sr, init_x)
+            equivs = all_flux_unit_conversion_equivs(pixar_sr, init_x.mean())
 
-            init_y = flux_conversion_general([init_y.value],
+            init_y = flux_conversion_general(init_y.value,
                                              init_y.unit,
                                              self._units['y'],
                                              equivs)
@@ -1229,7 +1235,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # ensure specutils has access to jdaviz custom unit equivalencies
             pixar_sr = spec.meta.get('_pixel_scale_factor', None)
             equivalencies = all_flux_unit_conversion_equivs(pixar_sr=pixar_sr,
-                                                            cube_wave=spec.spectral_axis)
+                                                            cube_wave=spec.spectral_axis.mean())
 
             pix2_in_flux = 'pix2' in spec.flux.unit.to_string()
             pix2_in_sb = 'pix2' in sb_unit

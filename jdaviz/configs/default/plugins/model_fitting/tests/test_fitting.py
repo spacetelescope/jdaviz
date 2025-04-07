@@ -527,7 +527,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'Jy / {solid_angle_string}'
-    assert np.allclose(model_flux.data[1,: :, :], expected_result_slice * 1e6)
+    assert np.allclose(model_flux.data[1, :, :], expected_result_slice * 1e6)
 
     # ensure conversions that require the spectral axis/translations are handled by the plugin
     uc.spectral_y_type = 'Surface Brightness'
