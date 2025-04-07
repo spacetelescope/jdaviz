@@ -143,7 +143,10 @@ class BaseImporterToDataCollection(BaseImporter):
         if data_label is None:
             data_label = self.data_label_value
         if hasattr(data, 'meta'):
-            data.meta = standardize_metadata(data.meta)
+            try:
+                data.meta = standardize_metadata(data.meta)
+            except TypeError:
+                pass
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)
