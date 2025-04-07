@@ -246,7 +246,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         xy = self.viewer._get_real_xy(self.imviz.app.data_collection[1], -1, -1, reverse=True)
         label_mouseover._viewer_mouse_event(
             self.viewer, {'event': 'mousemove', 'domain': {'x': xy[0], 'y': xy[1]}})
-        assert label_mouseover.as_text() == ('Pixel', '', '')
+        assert label_mouseover.as_text() == ('', '', '')
 
         # FITS WCS is reference data and has no concept of bounding box
         # but cursor is outside GWCS bounding box

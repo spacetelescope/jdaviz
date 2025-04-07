@@ -483,12 +483,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if any(['nan' in map(str, (x, y))]):
             # don't show nan coordinates:
             row1a_text = ""
+            row1a_title = ""
         else:
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
             row1a_text = fmt.format(x, y)
+            row1a_title = 'Pixel'
 
         self.row1a_text = row1a_text
-        self.row1a_title = 'Pixel'
+        self.row1a_title = row1a_title
 
         self.row1_unreliable = unreliable_pixel
         self._dict['pixel_x'] = float(x)

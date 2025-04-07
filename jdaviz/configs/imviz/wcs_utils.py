@@ -71,7 +71,7 @@ def add_offset_radec(ra_deg, dec_deg, delta_deg_ra, delta_deg_dec):
 
 def add_offset_xy(image_wcs, x, y, delta_deg_x, delta_deg_y):
     # calculate ra/dec of x,y pixel
-    if hasattr(image_wcs, '__call__'):
+    if isinstance(image_wcs, GWCS):
         c = image_wcs(x, y, with_bounding_box=False)
     else:
         c = image_wcs.pixel_to_world(x, y)
@@ -90,7 +90,7 @@ def add_offset_xy(image_wcs, x, y, delta_deg_x, delta_deg_y):
     # add offsets
     ra2_deg, dec2_deg = add_offset_radec(ra_deg, dec_deg, delta_deg_x, delta_deg_y)
 
-    if hasattr(image_wcs, 'invert'):
+    if isinstance(image_wcs, GWCS):
         pixel_coords = image_wcs.invert(ra2_deg, dec2_deg, with_bounding_box=False)
         if hasattr(pixel_coords[0], 'unit'):
             return u.Quantity(pixel_coords).to_value(u.pix)
@@ -334,8 +334,7 @@ def _rotated_wcs(
         cname1='lon',
         cname2='lat',
     )
-    wcs = WCS(wcs_keywords)
-    return wcs
+    return WCS(wcs_keywords)
 
 
 def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape,
