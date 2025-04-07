@@ -58,6 +58,10 @@ Imviz
 - Catalog Search: When catalog is imported from file, its original column names are
   preserved on export. [#3519]
 
+- User API for Catalog Search plugin (including ``catalog``,  ``max_sources``,``search``,
+  ``table``, and ``table_selected``) is now public. [#3529]
+
+
 Mosviz
 ^^^^^^
 
