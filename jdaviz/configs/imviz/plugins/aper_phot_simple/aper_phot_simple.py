@@ -549,7 +549,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         try:
             type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
             reg = self.app.get_subsets(subset_name=self.background_selected,
-                                       include_sky_region=self.app.config == 'imviz',
+                                       include_sky_region=type == 'sky_region',
                                        spatial_only=True)[0][type]
             self.background_value = self._calc_background_median(reg)
         except Exception as e:

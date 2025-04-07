@@ -2315,7 +2315,7 @@ class SubsetSelect(SelectPluginComponent):
 
         type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
         reg = self.app.get_subsets(subset_name=subset,
-                                   include_sky_region=self.app.config == 'imviz',
+                                   include_sky_region=type == 'sky_region',
                                    spatial_only=True)[0][type]
         reg.meta['label'] = subset
 

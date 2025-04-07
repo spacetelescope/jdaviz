@@ -763,7 +763,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             try:
                 type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
                 reg = self.app.get_subsets(subset_name=subset,
-                                           include_sky_region=self.app.config == 'imviz',
+                                           include_sky_region=type == 'sky_region',
                                            spatial_only=True)[0][type]
                 aperture = regions2aperture(reg)
                 data = self.recenter_dataset.selected_dc_item
