@@ -1124,6 +1124,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 raise ValueError(f"{unknown_options} not one of {COMBO_OPTIONS}")
 
         previous_mode = self.app.session.edit_subset_mode.mode
+        previous_subset = self.app.session.edit_subset_mode.edit_subset
 
         with self.app._jdaviz_helper.batch_load():
             # This method can edit a particular subset or create a new subset
@@ -1244,7 +1245,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if max_num_regions is not None and n_loaded >= max_num_regions:
                     break
 
-        # Revert edit mode to before the import_region call
+        # Revert edit mode and subset to before the import_region call
+        self.app.session.edit_subset_mode.edit_subset = previous_subset
         self.app.session.edit_subset_mode.mode = previous_mode
 
         n_reg_in = len(regions)
