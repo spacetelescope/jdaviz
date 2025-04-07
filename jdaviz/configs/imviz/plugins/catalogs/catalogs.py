@@ -42,7 +42,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
       Table containing all search results.
     * ``table_selected`` (:class:`~jdaviz.core.template_mixin.Table`):
-      Table containing all selected search results.  
+      Table containing all selected search results.
     """
     template_file = __file__, "catalogs.vue"
     uses_active_status = Bool(True).tag(sync=True)
