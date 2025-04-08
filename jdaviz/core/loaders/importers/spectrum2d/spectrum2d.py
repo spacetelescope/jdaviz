@@ -15,6 +15,23 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 __all__ = ['Spectrum2DImporter']
 
 
+def hdu_is_valid(hdu):
+    """
+    Check if the HDU is valid to be imported as a 2D Spectrum.
+
+    Parameters
+    ----------
+    hdu : `astropy.io.fits.hdu.base.HDUBase`
+        The HDU to check.
+
+    Returns
+    -------
+    bool
+        True if the HDU is a valid light curve HDU, False otherwise.
+    """
+    return len(getattr(hdu, 'shape', [])) == 2
+
+
 @loader_importer_registry('2D Spectrum')
 class Spectrum2DImporter(BaseImporterToDataCollection):
     template_file = __file__, "./spectrum2d.vue"
@@ -46,13 +63,11 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
 
         self.input_hdulist = not isinstance(self.input, Spectrum1D)
         if self.is_valid and self.input_hdulist:
-            extension_options = [f"{i}: {hdu.name} {hdu.shape}"
-                                 for i, hdu in enumerate(self.input)
-                                 if len(getattr(hdu, 'shape', [])) == 2]
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
-                                                          manual_options=extension_options)
+                                                          manual_options=self.input,
+                                                          filters=[hdu_is_valid])
 
     @property
     def user_api(self):
@@ -69,7 +84,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         return ((isinstance(self.input, Spectrum1D)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
-                 and len([hdu for hdu in self.input if len(getattr(hdu, 'shape', [])) == 2])))  # noqa
+                 and len([hdu for hdu in self.input if hdu_is_valid(hdu)])))  # noqa
 
     @property
     def default_viewer_reference(self):
@@ -87,9 +102,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             return self.input
 
         hdulist = self.input
-        ext = self.extension.selected_index
-        data = hdulist[ext].data
-        header = hdulist[ext].header
+        hdu = self.extension.selected_hdu
+        data = hdu.data
+        header = hdu.header
         metadata = standardize_metadata(header)
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         wcs = WCS(header, hdulist)
