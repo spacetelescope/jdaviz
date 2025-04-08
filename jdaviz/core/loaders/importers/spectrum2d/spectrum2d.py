@@ -7,7 +7,7 @@ from specutils import Spectrum1D
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.template_mixin import AutoTextField, SelectPluginComponent, SelectFileExtensionComponent
+from jdaviz.core.template_mixin import AutoTextField, SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
