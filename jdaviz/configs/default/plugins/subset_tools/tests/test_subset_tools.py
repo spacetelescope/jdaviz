@@ -437,7 +437,7 @@ def test_check_valid_subset_label(imviz_helper):
     st.import_region(CircularROI(25, 25, 10))
     st.import_region(CircularROI(30, 30, 10))
 
-    st.subset = "Subset 3"
+    st.subset.selected = "Subset 3"
 
     # we should not be able to rename or add a subset named 'Subset 1'.
     # Make sure this warns and returns accordingly.
