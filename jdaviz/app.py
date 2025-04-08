@@ -37,6 +37,7 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, Unicode, Any
 from specutils import Spectrum, SpectralRegion
+from specutils.utils.wcs_utils import SpectralGWCS
 
 from jdaviz import __version__
 from jdaviz import style_registry
@@ -804,8 +805,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # The glue-astronomy SpectralCoordinates currently seems incompatible with glue
         # WCSLink. This gets around it until there's an upstream fix.
-        if isinstance(linked_data.coords, SpectralCoordinates):
-            wc_old = ref_data.world_component_ids[-1]
+        if isinstance(linked_data.coords, (SpectralCoordinates, SpectralGWCS)):
+            wc_old = ref_data.world_component_ids[ref_data.meta['spectral_axis_index']]
             wc_new = linked_data.world_component_ids[0]
             self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
