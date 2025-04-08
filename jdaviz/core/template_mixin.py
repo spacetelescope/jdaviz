@@ -1181,7 +1181,8 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 class SelectFileExtensionComponent(SelectPluginComponent):
     @property
     def selected_index(self):
-        return int(float(self.selected.split(':')[0])) ## TODO: store in internal dict
+        return int(float(self.selected.split(':')[0]))  # TODO: store in internal dict
+
 
 class UnitSelectPluginComponent(SelectPluginComponent):
     def __init__(self, *args, **kwargs):
