@@ -969,7 +969,7 @@ class TestRegionsFromSubsets:
 
         # now test a composite subset, each component should have a sky region
         subset_plugin.import_region(CircularROI(30, 30, 10),
-                                edit_subset='Subset 1', combination_mode='and')
+                                    edit_subset='Subset 1', combination_mode='and')
 
         subsets = cubeviz_helper.app.get_subsets(include_sky_region=True)
         assert len(subsets['Subset 1']) == 2
@@ -1010,7 +1010,7 @@ class TestRegionsFromSubsets:
 
         # now test a composite subset, each component should have a sky region
         subset_plugin.import_region(CircularROI(30, 30, 10),
-                                edit_subset='Subset 1', combination_mode='and')
+                                    edit_subset='Subset 1', combination_mode='and')
 
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert len(subsets['Subset 1']) == 2
