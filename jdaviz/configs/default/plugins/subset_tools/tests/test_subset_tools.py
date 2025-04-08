@@ -6,7 +6,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
-from glue.core.edit_subset_mode import ReplaceMode, OrMode, NewMode
+from glue.core.edit_subset_mode import ReplaceMode, NewMode
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from numpy.testing import assert_allclose
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
