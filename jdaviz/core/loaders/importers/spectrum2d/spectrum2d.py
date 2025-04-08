@@ -7,18 +7,12 @@ from specutils import Spectrum1D
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.template_mixin import AutoTextField, SelectPluginComponent
+from jdaviz.core.template_mixin import AutoTextField, SelectPluginComponent, SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 
 __all__ = ['Spectrum2DImporter']
-
-
-class SelectExtensionComponent(SelectPluginComponent):
-    @property
-    def selected_index(self):
-        return self.choices.index(self.selected)
 
 
 @loader_importer_registry('2D Spectrum')
@@ -55,15 +49,15 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             extension_options = [f"{i}: {hdu.name} {hdu.shape}"
                                  for i, hdu in enumerate(self.input)
                                  if len(getattr(hdu, 'shape', [])) == 2]
-            self.extension = SelectExtensionComponent(self,
-                                                      items='extension_items',
-                                                      selected='extension_selected',
-                                                      manual_options=extension_options)
+            self.extension = SelectFileExtensionComponent(self,
+                                                          items='extension_items',
+                                                          selected='extension_selected',
+                                                          manual_options=extension_options)
 
     @property
     def user_api(self):
         expose = ['auto_extract', 'ext_data_label']
-        if isinstance(self.input, fits.HDUList):
+        if not isinstance(self.input, Spectrum1D):
             expose += ['extension', 'transpose']
         return ImporterUserApi(self, expose)
 
