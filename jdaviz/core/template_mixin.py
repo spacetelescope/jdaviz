@@ -915,7 +915,8 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         # Reserve the default and manual options strings so people can't use them as Subset labels
         self._plugin.app._reserved_labels.add(str(default_text).lower())
         self._plugin.app._reserved_labels.update([x["label"].lower() if isinstance(x, dict) else
-                                                  x.lower() for x in manual_options])
+                                                  x.lower() for x in manual_options
+                                                  if isinstance(x, (str, dict))])
 
         self.items = [self._to_item(opt) for opt in manual_options]
         # set default values for traitlets
@@ -1181,7 +1182,35 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 class SelectFileExtensionComponent(SelectPluginComponent):
     @property
     def selected_index(self):
-        return int(float(self.selected.split(':')[0]))  # TODO: store in internal dict
+        return self.selected_item.get('index', None)
+
+    @property
+    def selected_hdu(self):
+        return self.manual_options[self.selected_index]
+
+    @property
+    def indices(self):
+        return [item.get('index', None) for item in self.items]
+
+    @property
+    def names(self):
+        return [item.get('name', None) for item in self.items]
+
+    def _to_item(self, hdu, index=None):
+        if index is None:
+            # during init ignore
+            return {}
+        return {'label': f"{index}: {hdu.name}", 'name': hdu.name, 'index': index}
+
+    @observe('filters')
+    def _update_items(self, msg={}):
+        self.items = [self._to_item(hdu, ind) for ind, hdu in enumerate(self.manual_options)
+                      if self._is_valid_item(hdu)]
+
+        try:
+            self._apply_default_selection()
+        except ValueError:
+            pass
 
 
 class UnitSelectPluginComponent(SelectPluginComponent):
