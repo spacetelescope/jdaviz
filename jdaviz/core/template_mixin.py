@@ -74,6 +74,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
+           'SelectFileExtensionComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SubsetSelectMixin',
            'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
@@ -1176,6 +1177,11 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                 self.selected = event['old']
                 raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
 
+
+class SelectFileExtensionComponent(SelectPluginComponent):
+    @property
+    def selected_index(self):
+        return int(float(self.selected.split(':')[0])) ## TODO: store in internal dict
 
 class UnitSelectPluginComponent(SelectPluginComponent):
     def __init__(self, *args, **kwargs):
