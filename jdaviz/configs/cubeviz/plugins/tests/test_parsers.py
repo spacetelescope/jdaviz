@@ -36,7 +36,6 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     assert flux_cube.spectral_axis.unit == u.um
 
     # This tests the same data as test_fits_image_hdu_parse above.
-
     cubeviz_helper.app.data_collection[0].meta['EXTNAME'] == 'FLUX'
     cubeviz_helper.app.data_collection[1].meta['EXTNAME'] == 'MASK'
     cubeviz_helper.app.data_collection[2].meta['EXTNAME'] == 'ERR'
