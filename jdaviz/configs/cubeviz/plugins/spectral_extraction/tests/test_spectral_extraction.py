@@ -154,7 +154,7 @@ def test_extracted_file_in_export_plugin(cubeviz_helper, spectrum1d_cube_with_un
     extract_plugin = cubeviz_helper.plugins['Spectral Extraction']
 
     # make sure export enabled is true, and that before the collapse function
-    # is run `collapsed_spec_available` is correctly set to False
+    # is run `extraction_available` is correctly set to False
     assert extract_plugin._obj.export_enabled
     assert extract_plugin._obj.extraction_available is False
 

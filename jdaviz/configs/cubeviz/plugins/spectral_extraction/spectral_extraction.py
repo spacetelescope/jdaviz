@@ -228,9 +228,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def spatial_axes(self):
-        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
-        # is always wavelength. This may need adjustment after the following
-        # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
+        # Collapse an e.g. 3D spectral cube to 1D spectrum.
         spatial_axes = [0, 1, 2]
         spatial_axes.remove(self.spectral_axis_index)
         return tuple(spatial_axes)
