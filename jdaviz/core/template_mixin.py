@@ -918,7 +918,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                                                   x.lower() for x in manual_options
                                                   if isinstance(x, (str, dict))])
 
-        self.items = [self._to_item(opt) for opt in manual_options]
+        self._update_items()
         # set default values for traitlets
         if default_text is not None:
             self.selected = default_text
@@ -943,8 +943,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
-            # NOTE: selected is a list here so should not be wrapped with quotes
-            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            if self.is_multiselect and isinstance(self.selected, list):
+                # NOTE: selected is a list here so should not be wrapped with quotes
+                return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
@@ -1180,12 +1182,22 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
 
 class SelectFileExtensionComponent(SelectPluginComponent):
+    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
+        super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
+                         manual_options=manual_options, filters=filters)
+
     @property
     def selected_index(self):
         return self.selected_item.get('index', None)
 
     @property
+    def selected_name(self):
+        return self.selected_item.get('name', None)
+
+    @property
     def selected_hdu(self):
+        if self.is_multiselect:
+            return [self.manual_options[ind] for ind in self.selected_index]
         return self.manual_options[self.selected_index]
 
     @property
@@ -1209,7 +1221,7 @@ class SelectFileExtensionComponent(SelectPluginComponent):
 
         try:
             self._apply_default_selection()
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
 
