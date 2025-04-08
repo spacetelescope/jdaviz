@@ -14,7 +14,7 @@ class FITSParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz2d'):
+        if self.app.config not in ('deconfigged', 'specviz2d', 'lcviz'):
             # NOTE: temporary during deconfig process
             return False
 
