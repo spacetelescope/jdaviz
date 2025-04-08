@@ -1130,14 +1130,15 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             # This method can edit a particular subset or create a new subset
             # and apply the combination modes depending on this argument
             if edit_subset and combination_mode is not None:
-                self.subset_selected = edit_subset
+                self.subset.selected = edit_subset
             elif edit_subset and combination_mode is None:
                 # If combination_mode is not set, assume the user
                 # wants to update the subset in edit_subset
-                self.subset_selected = edit_subset
+                self.subset.selected = edit_subset
                 combination_mode = 'replace'
             else:
-                self.app.session.edit_subset_mode.edit_subset = None
+                # self.app.session.edit_subset_mode.edit_subset = None
+                self.subset.selected = self.subset.default_text
 
             for index, region in enumerate(regions):
                 # Set combination mode for how region will be applied to current subset
