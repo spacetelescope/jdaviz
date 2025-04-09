@@ -2958,6 +2958,10 @@ class Application(VuetifyTemplate, HubListener):
                 tray_registry_member = tray_registry.members.get(name)
                 self.state.tray_items.append(self._create_tray_item(tray_registry_member))
 
+    def update_loaders_from_registry(self):
+        for loader in self._jdaviz_helper.loaders.values():
+            loader.format._update_items()
+
     def update_tray_items_from_registry(self):
         # need to rebuid in order, just pulling from existing dict if its already there
         tray_items = []
