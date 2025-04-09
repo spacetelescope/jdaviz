@@ -807,7 +807,7 @@ class Application(VuetifyTemplate, HubListener):
         # WCSLink. This gets around it until there's an upstream fix.
         if isinstance(linked_data.coords, (SpectralCoordinates, SpectralGWCS)):
             wc_old = ref_data.world_component_ids[ref_data.meta['spectral_axis_index']]
-            wc_new = linked_data.world_component_ids[0]
+            wc_new = linked_data.world_component_ids[linked_data.meta['spectral_axis_index']]
             self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
 
