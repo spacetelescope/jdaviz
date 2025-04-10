@@ -110,6 +110,7 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Replace file and fix label in example notebook. [#3537]
 
 Imviz
 ^^^^^
@@ -128,6 +129,8 @@ Specviz2d
 
 - Improved initial guess for trace for automatic extraction. May change results
   for automatic extraction for data with nonfinite values. [#3512]
+
+- Replace file in example notebook. [#3537]
 
 4.2.1 (2025-03-24)
 ==================
