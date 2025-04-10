@@ -31,7 +31,28 @@ __all__ = ['Footprints']
 # This is useful when multiple regions are displayed and we want to know
 # which one the user meant to interact with.
 def closest_point_on_segment(px, py, x1, y1, x2, y2):
-    """Find the closest point on a line segment to a given point."""
+    """
+    Find the closest points on a line segment to a given point.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    x1, y1 : numpy.ndarray
+        Coordinates of the starting points of the segments.
+    x2, y2 : numpy.ndarray
+        Coordinates of the ending points of the segments.
+
+    Returns
+    -------
+    closest_xs : numpy.ndarray
+        The x coordinates of the closest points on the segments.
+    closest_ys : numpy.ndarray
+        The y coordinates of the closest points on the segments.
+
+    """
 
     dx, dy = x2 - x1, y2 - y1
     denominator = dx ** 2 + dy ** 2
@@ -39,13 +60,32 @@ def closest_point_on_segment(px, py, x1, y1, x2, y2):
     t = ((px - x1) * dx + (py - y1) * dy) / np.where(denominator == 0, 1, denominator)
     t = np.where(denominator == 0, 0, t)  # t = 0 if denominator was actually 0
     t = np.clip(t, 0, 1)
-    closest_x = x1 + t * dx
-    closest_y = y1 + t * dy
-    return closest_x, closest_y
+    closest_xs = x1 + t * dx
+    closest_ys = y1 + t * dy
+    return closest_xs, closest_ys
 
 
 def find_closest_polygon_point(px, py, polygons):
-    """Return the closest point on a polygon AND its overlay label from a list of polygons."""
+    """
+    Return the closest point on a polygon AND its overlay label from a list of polygons.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    polygons : list of dict
+        List of polygons to compare against the given point.
+        Each dict contains 'x', 'y' coordinates and an 'overlay' label.
+
+    Returns
+    -------
+    closest_overlay : str
+        Label of the closest overlay.
+    closest_point : tuple of float
+        The (x, y) coordinates of the closest point.
+    """
     min_dist = float('inf')
     closest_point = None
     closest_overlay = None
@@ -58,15 +98,15 @@ def find_closest_polygon_point(px, py, polygons):
         y2 = np.roll(y_coords, -1)
         label = polygon['overlay']
 
-        cx, cy = closest_point_on_segment(px, py, x1, y1, x2, y2)
-        dist = (cx - px)**2 + (cy - py)**2
+        closest_xs, closest_ys = closest_point_on_segment(px, py, x1, y1, x2, y2)
+        dist = (closest_xs - px)**2 + (closest_ys - py)**2
 
         min_idx = np.argmin(dist)
         min_dist_for_this_polygon = dist[min_idx]
 
         if min_dist_for_this_polygon < min_dist:
             min_dist = min_dist_for_this_polygon
-            closest_point = (cx[min_idx], cy[min_idx])
+            closest_point = (closest_xs[min_idx], closest_ys[min_idx])
             closest_overlay = label
 
     return closest_overlay, closest_point
