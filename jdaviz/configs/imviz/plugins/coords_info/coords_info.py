@@ -351,6 +351,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         elif isinstance(viewer, ImvizImageView):
             x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
+
+            if unreliable_world or unreliable_pixel:
+                # if the mouseover coords are outside the bounding box of `image`,
+                # extrapolate using the reference data layer as the image instead:
+                image = viewer.state.reference_data
+
             if coords_status:
                 try:
                     sky = image.coords.pixel_to_world(x, y).icrs
@@ -480,8 +486,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row3_unreliable = False
 
         maxsize = int(np.ceil(np.log10(np.max(active_layer.layer.shape)))) + 3
-        if any(['nan' in map(str, (x, y))]):
-            # don't show nan coordinates:
+        if unreliable_pixel or any(['nan' in map(str, (x, y))]):
             row1a_text = ""
             row1a_title = ""
         else:
@@ -511,8 +516,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # Check if shape is [x, y, z] or [y, x] and show value accordingly.
         ix_shape, iy_shape = self._image_shape_inds(image)
 
-        if (-0.5 < x < image.shape[ix_shape] - 0.5 and -0.5 < y < image.shape[iy_shape] - 0.5
-                and hasattr(active_layer, 'attribute')):
+        if (
+                (
+                    -0.5 < x < image.shape[ix_shape] - 0.5 and
+                    -0.5 < y < image.shape[iy_shape] - 0.5
+                    and hasattr(active_layer, 'attribute')
+                ) and not (unreliable_world or unreliable_pixel)
+        ):
 
             attribute = active_layer.attribute
 
