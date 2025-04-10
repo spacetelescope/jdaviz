@@ -7,7 +7,8 @@ from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMess
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import LinkUpdatedMessage, ChangeRefDataMessage
+from jdaviz.core.events import (LinkUpdatedMessage, ChangeRefDataMessage,
+                                FootprintSelectClickEventMessage)
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import is_stcs_string, regions2roi, stcs_string2region
 from jdaviz.core.registries import tray_registry
@@ -21,6 +22,94 @@ from jdaviz.configs.imviz.plugins.footprints import preset_regions
 
 
 __all__ = ['Footprints']
+
+
+# These functions help us determine which polygon overlay is spatially closest
+# to a user's click on the viewer. The math is based on projecting a point
+# onto line segments and computing the nearest one across all polygons.
+#
+# This is useful when multiple regions are displayed and we want to know
+# which one the user meant to interact with.
+def closest_point_on_segment(px, py, x1, y1, x2, y2):
+    """
+    Find the closest points on a line segment to a given point.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    x1, y1 : numpy.ndarray
+        Coordinates of the starting points of the segments.
+    x2, y2 : numpy.ndarray
+        Coordinates of the ending points of the segments.
+
+    Returns
+    -------
+    closest_xs : numpy.ndarray
+        The x coordinates of the closest points on the segments.
+    closest_ys : numpy.ndarray
+        The y coordinates of the closest points on the segments.
+
+    """
+
+    dx, dy = x2 - x1, y2 - y1
+    denominator = dx ** 2 + dy ** 2
+    # Calculate t: how far along the segment the projection of the point falls
+    t = ((px - x1) * dx + (py - y1) * dy) / np.where(denominator == 0, 1, denominator)
+    t = np.where(denominator == 0, 0, t)  # t = 0 if denominator was actually 0
+    t = np.clip(t, 0, 1)
+    closest_xs = x1 + t * dx
+    closest_ys = y1 + t * dy
+    return closest_xs, closest_ys
+
+
+def find_closest_polygon_point(px, py, polygons):
+    """
+    Return the closest point on a polygon AND its overlay label from a list of polygons.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    polygons : list of dict
+        List of polygons to compare against the given point.
+        Each dict contains 'x', 'y' coordinates and an 'overlay' label.
+
+    Returns
+    -------
+    closest_overlay : str
+        Label of the closest overlay.
+    closest_point : tuple of float
+        The (x, y) coordinates of the closest point.
+    """
+    min_dist = float('inf')
+    closest_point = None
+    closest_overlay = None
+
+    for polygon in polygons:
+        x_coords, y_coords = np.array(polygon['x']), np.array(polygon['y'])
+        x1 = x_coords
+        x2 = np.roll(x_coords, -1)
+        y1 = y_coords
+        y2 = np.roll(y_coords, -1)
+        label = polygon['overlay']
+
+        closest_xs, closest_ys = closest_point_on_segment(px, py, x1, y1, x2, y2)
+        dist = (closest_xs - px)**2 + (closest_ys - py)**2
+
+        min_idx = np.argmin(dist)
+        min_dist_for_this_polygon = dist[min_idx]
+
+        if min_dist_for_this_polygon < min_dist:
+            min_dist = min_dist_for_this_polygon
+            closest_point = (closest_xs[min_idx], closest_ys[min_idx])
+            closest_overlay = label
+
+    return closest_overlay, closest_point
 
 
 @tray_registry('imviz-footprints', label="Footprints")
@@ -160,7 +249,27 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_rotation)  # noqa
+        self.hub.subscribe(self, FootprintSelectClickEventMessage,
+                           handler=self._on_select_footprint_overlay)
         self._on_link_type_updated()
+
+    def _on_select_footprint_overlay(self, data):
+        click_x, click_y = data.x, data.y
+        viewers = self.viewer.selected_obj if isinstance(self.viewer.selected_obj, list) else [
+                                                     self.viewer.selected_obj]
+
+        overlay_data = []
+        for viewer in viewers:
+            overlays = self._get_marks(viewer)
+            for overlay in overlays:
+                overlay_data.append({
+                    "overlay": overlay.overlay,
+                    "x": np.array(overlay.x),
+                    "y": np.array(overlay.y),
+                })
+        closest_overlay_label, closest_point = find_closest_polygon_point(
+            click_x, click_y, overlay_data)
+        self.overlay_selected = closest_overlay_label
 
     @property
     def user_api(self):
