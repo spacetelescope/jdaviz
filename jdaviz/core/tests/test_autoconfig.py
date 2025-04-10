@@ -13,10 +13,10 @@ from jdaviz.core.launcher import Launcher, STATUS_HINTS
 
 
 AUTOCONFIG_EXAMPLES = (
-    ("mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits", Specviz),
+    ("mast:JWST/product/jw02732-o004_t004_miri_ch1-short_x1d.fits", Specviz),
     ("mast:JWST/product/jw01538160001_16101_00004_nrs1_s2d.fits", Specviz2d),
     ("mast:JWST/product/jw02727-o002_t062_nircam_clear-f090w_i2d.fits", Imviz),
-    ("mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_s3d.fits", Cubeviz),
+    ("mast:JWST/product/jw02732-o004_t004_miri_ch1-short_s3d.fits", Cubeviz),
     ("https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits", Cubeviz)
     # Check that MaNGA cubes go to cubeviz. This file is originally from:
     # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz)

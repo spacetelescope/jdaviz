@@ -223,7 +223,7 @@ def test_data_quality_plugin_hst_acs(imviz_helper, tmp_path):
 @pytest.mark.remote_data
 def test_cubeviz_layer_visibility_bug(cubeviz_helper, tmp_path):
     # regression test for bug:
-    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_s3d.fits"
+    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-short_s3d.fits"
     download_path = str(tmp_path / Path(uri).name)
     Observations.download_file(uri, local_path=download_path)
 
