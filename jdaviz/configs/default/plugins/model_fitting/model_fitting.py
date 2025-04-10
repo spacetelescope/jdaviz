@@ -535,25 +535,32 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 data = self.app.data_collection[self.dataset_selected].get_object(statistic=None)
             else:  # User selected some subset from spectrum viewer, just use original cube
                 data = self.app.data_collection[0].get_object(statistic=None)
-            masked_spectrum = self._apply_subset_masks(data, self.spectral_subset)
+            spatial_axes = [0, 1, 2]
+            spatial_axes.remove(data.spectral_axis_index)
+            masked_spectrum = self._apply_subset_masks(data, self.spectral_subset,
+                                                       spatial_axes=tuple(spatial_axes))
         else:
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
+
         mask = masked_spectrum.mask
         if mask is not None:
             if mask.ndim == 3:
-                spectral_mask = mask.all(axis=(0, 1))
+                if masked_spectrum.spectral_axis_index in [2, -1]:
+                    spectral_mask = mask.all(axis=(0, 1))
+                elif masked_spectrum.spectral_axis_index == 0:
+                    spectral_mask = mask.all(axis=(1, 2))
             else:
                 spectral_mask = mask
             init_x = masked_spectrum.spectral_axis[~spectral_mask]
             orig_flux_shape = masked_spectrum.flux.shape
             init_y = masked_spectrum.flux[~mask]
             if mask.ndim == 3:
-                if data.spectral_axis_index in [2, -1]:
+                if masked_spectrum.spectral_axis_index in [2, -1]:
                     init_y = init_y.reshape(orig_flux_shape[0],
                                             orig_flux_shape[1],
                                             len(init_x))
-                elif data.spectral_axis_index == 0:
+                elif masked_spectrum.spectral_axis_index == 0:
                     init_y = init_y.reshape(len(init_x),
                                             orig_flux_shape[1],
                                             orig_flux_shape[2])
@@ -571,11 +578,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                              self._units['y'],
                                              equivs)
 
+        # We need this for models where we average over the spatial axes to initialize
+        spectral_axis_index = masked_spectrum.spectral_axis_index
+
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
                                **initial_values,
                                **new_model.get("model_kwargs", {})),
-            init_x, init_y)
+            init_x, init_y, spectral_axis_index=spectral_axis_index)
 
         # need to loop over parameters again as the initializer may have overridden
         # the original default value. However, if we toggled cube_fit, we may need to override
@@ -1230,6 +1240,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             spec = data.get_object(cls=Spectrum, statistic=None)
 
+        spatial_axes = [0, 1, 2]
+        spatial_axes.remove(spec.spectral_axis_index)
+
         sb_unit = self.app._get_display_unit('sb')
         if spec.flux.unit != sb_unit:
             # ensure specutils has access to jdaviz custom unit equivalencies
@@ -1259,7 +1272,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         models_to_fit = self._reinitialize_with_fixed()
 
         # Apply masks from selected spectral subset
-        spec = self._apply_subset_masks(spec, self.spectral_subset)
+        spec = self._apply_subset_masks(spec, self.spectral_subset, spatial_axes=spatial_axes)
         # Also mask out NaNs for fitting. Simply adding filter_non_finite to the cube fit
         # didn't work out of the box, so doing this for now.
         if spec.mask is None:
@@ -1307,7 +1320,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         return fitted_model, output_cube
 
-    def _apply_subset_masks(self, spectrum, subset_component):
+    def _apply_subset_masks(self, spectrum, subset_component, spatial_axes=None):
         """
         For a spectrum/spectral cube ``spectrum``, add a mask attribute
         if none exists. Mask excludes non-selected spectral subsets.
@@ -1325,9 +1338,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     # if subset mask is 3D and the `spectrum` mask is 1D, which
                     # happens when `spectrum` has been collapsed from 3D->1D,
                     # then also collapse the 3D mask in the spatial
-                    # dimensions (0, 1) so that slices in the spectral axis that
+                    # dimensions so that slices in the spectral axis that
                     # are masked in all pixels become masked in the spectral subset:
-                    subset_mask = np.all(subset_mask, axis=(0, 1))
+                    subset_mask = np.all(subset_mask, axis=spatial_axes)
             spectrum.mask |= subset_mask
         else:
             if subset_mask.ndim < spectrum.flux.ndim:
