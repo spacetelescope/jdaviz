@@ -16,8 +16,6 @@ Cubeviz
 
 - Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
-- Replace file and fix label in example notebook. [#3537]
-
 Imviz
 ^^^^^
 
@@ -36,8 +34,6 @@ Specviz
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3473]
-
-- Replace file in example notebook. [#3537]
 
 Specviz2d
 ^^^^^^^^^
@@ -112,6 +108,7 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Replace file and fix label in example notebook. [#3537]
 
 Imviz
 ^^^^^
@@ -130,6 +127,8 @@ Specviz2d
 
 - Improved initial guess for trace for automatic extraction. May change results
   for automatic extraction for data with nonfinite values. [#3512]
+
+- Replace file in example notebook. [#3537]
 
 4.2.1 (2025-03-24)
 ==================
