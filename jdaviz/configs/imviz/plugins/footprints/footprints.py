@@ -8,7 +8,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (LinkUpdatedMessage, ChangeRefDataMessage,
-                                FootprintSelectClickEventMessage)
+                                FootprintSelectClickEventMessage, FootprintMarksChangedMessage)
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import is_stcs_string, regions2roi, stcs_string2region
 from jdaviz.core.registries import tray_registry
@@ -411,6 +411,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 continue
             viewer.figure.marks = [m for m in viewer.figure.marks
                                    if getattr(m, 'overlay', None) != lbl]
+        self.hub.broadcast(FootprintMarksChangedMessage(viewer_id=viewer.reference, sender=self))
 
     @observe('is_active', 'viewer_items')
     # NOTE: intentionally not using skip_if_no_updates_since_last_active since this only controls
@@ -436,6 +437,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 visible = self._mark_visible(viewer_id, overlay)
                 for mark in marks:
                     mark.visible = visible
+
+        # Notify toolbar to update tool visibility
+        for viewer in self.app._viewer_store.values():
+            if hasattr(viewer, 'figure'):
+                self.hub.broadcast(FootprintMarksChangedMessage(
+                    viewer_id=viewer.reference, sender=self))
 
     def center_on_viewer(self, viewer_ref=None):
         """
@@ -570,6 +577,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 mark.visible = visible
                 mark.colors = [self.color]
                 mark.fill_opacities = [self.fill_opacity]
+        self.hub.broadcast(FootprintMarksChangedMessage(viewer_id=viewer.reference, sender=self))
 
     def import_region(self, region):
         """
@@ -730,3 +738,5 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
             if not update_existing and len(new_marks):
                 viewer.figure.marks = viewer.figure.marks + new_marks
+            self.hub.broadcast(FootprintMarksChangedMessage(
+                viewer_id=viewer.reference, sender=self))
