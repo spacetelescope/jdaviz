@@ -3,6 +3,7 @@ from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage', 'SubsetRenameMessage',
+           'ViewerVisibleLayersChangedMessage',
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
@@ -255,6 +256,22 @@ class RemoveDataFromViewerMessage(Message):
     @property
     def data_label(self):
         return self._data_label
+
+
+class ViewerVisibleLayersChangedMessage(Message):
+    def __init__(self, viewer_reference, visible_layers, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._viewer_reference = viewer_reference
+        self._visible_layers = visible_layers
+
+    @property
+    def viewer_reference(self):
+        return self._viewer_reference
+
+    @property
+    def visible_layers(self):
+        return self._visible_layers
 
 
 class AddLineListMessage(Message):

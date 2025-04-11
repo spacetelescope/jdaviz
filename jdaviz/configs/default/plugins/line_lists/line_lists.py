@@ -22,7 +22,7 @@ from jdaviz.core.events import (AddDataMessage,
 from jdaviz.core.linelists import load_preset_linelist, get_linelist_metadata
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.unit_conversion_utils import create_equivalent_spectral_axis_units_list
 
@@ -33,7 +33,7 @@ __all__ = ['LineListTool']
     'g-line-list', label="Line Lists",
     viewer_requirements=['spectrum']
 )
-class LineListTool(PluginTemplateMixin):
+class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"
 
@@ -69,6 +69,8 @@ class LineListTool(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.viewer.add_filter('is_spectrum_viewer')
 
         self._spectrum1d = None
         self.list_to_load = None
@@ -126,11 +128,13 @@ class LineListTool(PluginTemplateMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot spectral lines from preset or custom line lists.'
 
-    def _set_relevant(self):
-        sv = self.spectrum_viewer
-        if sv is None:
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if not hasattr(self, 'viewer'):
+            return
+        if not len(self.viewer_items) or self.viewer.selected_obj is None:
             self.irrelevant_msg = 'Line Lists unavailable without spectrum viewer'
-        elif not len(sv.layers):
+        elif not len(self.viewer.selected_obj.layers):
             if self.app.config == 'deconfigged':
                 self.irrelevant_msg = 'No data in spectrum viewer'
             else:
@@ -142,7 +146,25 @@ class LineListTool(PluginTemplateMixin):
 
             if not len(self.available_lists):
                 # TODO: move this logic within the plugin itself and out of the viewer
-                self.available_lists = sv.available_linelists()
+                self.available_lists = self.viewer.selected_obj.available_linelists()
+
+    @observe('viewer_selected')
+    def _on_viewer_selected_changed(self, event):
+        if not hasattr(self, 'viewer'):
+            return
+        # NOTE: this is a temporary multiple-viewer solution
+        # until the line lists redesign which might include support
+        # for different line-lists per-viewer
+        old_viewer = self.app.get_viewer(event['old'])
+        if old_viewer is None:
+            return
+        new_viewer = self.viewer.selected_obj
+        if not hasattr(new_viewer, 'spectral_lines') or not hasattr(old_viewer, 'spectral_lines'):
+            # intermediate while initializing the plugin before filter is in place
+            return
+        new_viewer.spectral_lines = old_viewer.spectral_lines
+        new_viewer.plot_spectral_lines(global_redshift=self._global_redshift)
+        old_viewer.erase_spectral_lines()
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -617,7 +639,7 @@ class LineListTool(PluginTemplateMixin):
         self.loaded_lists = []
         self.loaded_lists = loaded_lists
 
-        self.spectrum_viewer.plot_spectral_lines()
+        self.spectrum_viewer.plot_spectral_lines(global_redshift=self._global_redshift)
         self.update_line_mark_dict()
 
         msg_text = ("Spectral lines loaded from preset. Lines can be shown/hidden"

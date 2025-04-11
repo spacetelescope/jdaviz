@@ -342,6 +342,17 @@ class YRangeZoom(_BaseSelectZoom):
 
 
 @viewer_tool
+class ViewerClone(Tool):
+    icon = os.path.join(ICON_DIR, 'viewer_clone')
+    tool_id = 'jdaviz:viewer_clone'
+    action_text = 'Clone viewer'
+    tool_tip = 'Clone this viewer'
+
+    def activate(self):
+        self.viewer.clone_viewer()
+
+
+@viewer_tool
 class SelectLine(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'
