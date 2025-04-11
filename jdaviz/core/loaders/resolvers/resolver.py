@@ -288,20 +288,20 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():
         if resolver is not None and resolver != resolver_name:
+            invalid_resolvers[resolver_name] = f'not {resolver}'
             continue
         try:
             this_resolver = Resolver.from_input(app, inp, **kwargs)
-        except Exception as e:
+        except Exception as e:  # nosec
             invalid_resolvers[resolver_name] = f'resolver exception: {e}'
-            this_resolver = None
-        if this_resolver is None:
             continue
         try:
             is_valid = this_resolver.is_valid
         except Exception:
-            invalid_resolvers[resolver_name] = 'not valid'
+            invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
             is_valid = False
         if not is_valid:
+            invalid_resolvers.setdefault(resolver_name, 'not valid')
             continue
 
         if target is not None:
