@@ -72,18 +72,22 @@ class FormatSelect(SelectPluginComponent):
                 if importer_input is None:
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
-                    this_importer = Importer(app=self.plugin.app,
-                                             resolver=self.plugin,
-                                             input=importer_input)
+                    try:
+                        this_importer = Importer(app=self.plugin.app,
+                                                 resolver=self.plugin,
+                                                 input=importer_input)
+                    except Exception:  # nosec
+                        continue
                     if this_importer.is_valid:
+                        label = f"{parser_name} > {importer_name}"
                         if self._is_valid_item(this_importer):
-                            all_resolvers.append({'label': importer_name,
+                            all_resolvers.append({'label': label,
                                                   'parser': parser_name,
                                                   'importer': importer_name,
                                                   'target': this_importer.target})
                         # we'll store the importer even if it isn't valid according to the filters
                         # so that they can be used when compiling the list of target filters
-                        self._importers[importer_name] = this_importer
+                        self._importers[label] = this_importer
 
         self.items = all_resolvers
         self._apply_default_selection()

@@ -62,6 +62,7 @@ class UserApiWrapper:
                                                 AddResults,
                                                 AutoTextField)
         from jdaviz.core.loaders.importers.spectrum2d.spectrum2d import SelectExtensionComponent
+        from jdaviz.core.loaders.resolvers.resolver import FormatSelect
         if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
@@ -70,6 +71,15 @@ class UserApiWrapper:
             elif isinstance(exp_obj, SelectExtensionComponent) and isinstance(value, int):
                 # allow setting by index
                 value = exp_obj.choices[value]
+            elif isinstance(exp_obj, FormatSelect):
+                if value not in exp_obj.choices:
+                    # allow setting by just parser or just importer if a unique match
+                    parsers = [item['parser'] for item in exp_obj.items]
+                    importers = [item['importer'] for item in exp_obj.items]
+                    if value in parsers and value not in importers:
+                        value = exp_obj.choices[parsers.index(value)]
+                    elif value in importers and value not in parsers:
+                        value = exp_obj.choices[importers.index(value)]
             exp_obj.selected = value
             return
         elif isinstance(exp_obj, AddResults):
