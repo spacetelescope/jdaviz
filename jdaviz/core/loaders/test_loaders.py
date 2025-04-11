@@ -43,7 +43,7 @@ def test_resolver_matching(specviz_helper):
 
     res_sp = find_matching_resolver(specviz_helper.app, sp)
     assert res_sp._obj._registry_label == 'object'
-    assert res_sp.format == '1D Spectrum'
+    assert res_sp.format == 'object > 1D Spectrum'
 
     specviz_helper._load(sp)
     assert len(specviz_helper.app.data_collection) == 1
@@ -56,12 +56,12 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
 
     res_sp = find_matching_resolver(specviz2d_helper.app, trace)
     assert res_sp._obj._registry_label == 'object'
-    assert res_sp.format == 'Trace'
+    assert res_sp.format == 'object > Trace'
 
     # import through loader API
     ldr = specviz2d_helper.loaders['object']
     ldr.object = trace
-    assert ldr.format == 'Trace'
+    assert ldr.format == 'object > Trace'
     ldr.importer.data_label = 'Trace 1'
     ldr.importer()
     assert specviz2d_helper.app.data_collection[-1].label == 'Trace 1'
@@ -90,20 +90,20 @@ def test_resolver_url(deconfigged_helper):
     assert len(loader.format.choices) == 0
 
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
-    assert len(loader.format.choices) == 3  # may change with future importers
-    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
+    assert len(loader.format.choices) == 4  # may change with future importers
+    assert loader.format.selected == 'fits > 2D Spectrum'  # noqa: default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
     assert loader.target.selected == 'Any'
     loader.target = '1D Spectrum'
     assert len(loader.format.choices) == 2  # may change with future importers
-    assert loader.format == '1D Spectrum List'  # default may change with future importers
+    assert loader.format.selected == 'specutils.Spectrum > 1D Spectrum List'  # noqa: default may change with future importers
     assert loader.importer.data_label == '1D Spectrum'
 
     loader.target = 'Any'
-    assert len(loader.format.choices) == 3
-    loader.format = '2D Spectrum'
+    assert len(loader.format.choices) == 4
+    loader.format = 'specutils.Spectrum > 2D Spectrum'
     assert loader.importer.data_label == '2D Spectrum'
 
     assert len(deconfigged_helper.app.data_collection) == 0
