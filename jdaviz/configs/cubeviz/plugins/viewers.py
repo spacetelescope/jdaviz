@@ -1,11 +1,16 @@
 import uuid
 
 from glue.core import BaseData
+from glue.viewers.image.layer_artist import ImageLayerArtist, BaseImageLayerArtist
+from glue.viewers.common.layer_artist import LayerArtist
 from glue_jupyter.bqplot.image import BqplotImageView
 import numpy as np
 from astropy import units as u
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
+import ipyvuetify as v
+from glue_jupyter.state_traitlets_helpers import GlueState
+from glue.viewers.image.state import ImageViewerState, ImageLayerState
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.configs.cubeviz.plugins.mixins import WithSliceIndicator, WithSliceSelection
@@ -20,7 +25,9 @@ try:
 except ImportError:
     pass
 
-__all__ = ['CubevizImageView', 'CubevizProfileView']
+__all__ = ['CubevizImageView', 'CubevizProfileView',
+           'SonifiedLayerStateWidget', 'SonifiedSubsetLayerStateWidget',
+           'SonifiedDataLayerArtist', 'SonifiedDataSubsetLayerArtist']
 
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
@@ -261,7 +268,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             cls = SonifiedDataLayerArtist
             self.get_layer_artist(cls, layer=layer, layer_state=layer_state)
         else:
-            super().get_layer_artist(layer, layer_state)
+            super().get_data_layer_artist(layer, layer_state)
 
     def get_subset_layer_artist(self, layer=None, layer_state=None):
         if 'Sonified' in layer.meta:
@@ -269,6 +276,86 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             self.get_subset_layer_artist(cls, layer=layer, layer_state=layer_state)
         else:
             super().get_subset_layer_artist(layer, layer_state)
+
+
+class SonifiedLayerStateWidget(v.VuetifyTemplate):
+    template_file = (__file__, 'layer_sonified.vue')
+
+    glue_state = GlueState().tag(sync=True)
+
+    def __init__(self, layer, *args, **kwargs):
+        print("SonifiedLayerStateWidget")
+        self.layer = layer
+        super(SonifiedLayerStateWidget, self).__init__(*args, **kwargs)
+
+# class SonifiedLayerStateWidget(ImageLayerState):
+#     template_file = (__file__, 'layer_sonified.vue')
+#
+#     glue_state = GlueState().tag(sync=True)
+#
+#     def __init__(self, layer, *args, **kwargs):
+#         print("SonifiedLayerStateWidget")
+#         self.layer = layer
+#         super(SonifiedLayerStateWidget, self).__init__(*args, **kwargs)
+
+
+class SonifiedSubsetLayerStateWidget(v.VuetifyTemplate):
+
+    def __init__(self, layer_state, *args, **kwargs):
+        print("SonifiedSubsetLayerStateWidget")
+        super().__init__(layer_state, *args, **kwargs)
+
+
+class SonifiedDataLayerArtist(ImageLayerArtist):
+
+    _layer_state_cls = SonifiedLayerStateWidget
+
+    def __init__(self, view, *args, **kwargs):
+        print("SonifiedDataLayerArtist", view)
+        super().__init__(view, *args, **kwargs)
+        self.view = view
+
+    def enable(self):
+        if self.enabled:
+            return
+
+    def redraw(self):
+        pass
+
+
+class SonifiedDataLayerArtist(ImageLayerArtist):
+
+    _layer_state_cls = SonifiedLayerStateWidget
+
+    def __init__(self, view, *args, **kwargs):
+        print("SonifiedDataLayerArtist", view)
+        super().__init__(view, *args, **kwargs)
+        self.view = view
+
+    def enable(self):
+        if self.enabled:
+            return
+
+    def redraw(self):
+        pass
+
+# class SonifiedDataLayerArtist(LayerArtist):
+#
+#     _layer_state_cls = SonifiedLayerStateWidget
+#
+#     def __init__(self, viewer_state, layer_state, layer, *args, **kwargs):
+#         print("SonifiedDataLayerArtist", viewer_state, layer_state, layer)
+#         super(LayerArtist).__init__(layer)
+
+
+class SonifiedDataSubsetLayerArtist(BaseImageLayerArtist):
+
+    _layer_state_cls = SonifiedSubsetLayerStateWidget
+
+    def __init__(self, view, viewer_state, layer_state=None, layer=None):
+        print("SonifiedDataSubsetLayerArtist")
+        super(SonifiedDataSubsetLayerArtist, self).__init__(view, viewer_state,
+                                                            layer_state=layer_state, layer=layer)
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
