@@ -24,6 +24,9 @@ Imviz
 - Footprints plugin now supports selecting the closest overlay
   to a clicked point in the image viewer. [#3525]
 
+- FootprintSelect tool now appears in the viewer toolbar only when
+  overlays are present, reducing toolbar clutter. [#3539]
+
 Mosviz
 ^^^^^^
 
@@ -63,7 +66,6 @@ Imviz
 
 - User API for Catalog Search plugin (including ``catalog``,  ``max_sources``,``search``,
   ``table``, and ``table_selected``) is now public. [#3529]
-
 
 Mosviz
 ^^^^^^
