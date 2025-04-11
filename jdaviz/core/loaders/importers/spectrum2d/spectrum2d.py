@@ -81,10 +81,16 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if self.app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
-        return ((isinstance(self.input, Spectrum1D)
+        if not ((isinstance(self.input, Spectrum1D)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
-                 and len([hdu for hdu in self.input if hdu_is_valid(hdu)])))  # noqa
+                 and len([hdu for hdu in self.input if hdu_is_valid(hdu)]))):  # noqa
+            return False
+        try:
+            self.output
+        except Exception:
+            return False
+        return True
 
     @property
     def default_viewer_reference(self):
