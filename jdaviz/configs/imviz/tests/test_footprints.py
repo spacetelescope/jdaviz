@@ -313,23 +313,21 @@ def test_footprint_select(imviz_helper):
     ndd = NDData(arr, wcs=wcs)
     imviz_helper.load_data(ndd)
     fp = imviz_helper.plugins["Footprints"]
+    toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
+    tool = toolbar.tools['jdaviz:selectfootprint']
+    assert tool.is_visible() is False
 
     with fp.as_active():
         current_overlay = fp.overlay.selected
         assert current_overlay == "default"
         fp.preset = "MIRI"
-        toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
-        tool = toolbar.tools['jdaviz:selectfootprint']
-        toolbar.active_tool_id = 'jdaviz:selectfootprint'
         tool.on_mouse_event({'domain': {'x': 95, 'y': 140}})
         assert current_overlay == "default"
+        assert tool.is_visible() is True
 
         # Add a new overlay
         fp.add_overlay("layer1")
         fp.overlay = "layer1"
         fp.v3_offset = 10
-        toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
-        tool = toolbar.tools['jdaviz:selectfootprint']
-        toolbar.active_tool_id = 'jdaviz:selectfootprint'
         tool.on_mouse_event({'domain': {'x': 95, 'y': 140}})
         assert fp.overlay.selected == "layer1"
