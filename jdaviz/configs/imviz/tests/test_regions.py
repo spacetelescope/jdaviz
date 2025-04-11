@@ -123,8 +123,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def test_regions_pixel(self):
         # A little out-of-bounds should still overlay the overlapped part.
         my_reg = CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)
-        bad_regions = self.subset_plugin.import_region([my_reg], return_bad_regions=True,
-                                                       combination_mode='new')
+        bad_regions = self.subset_plugin.import_region([my_reg], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
         st = self.imviz.plugins['Subset Tools']
@@ -148,7 +147,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # Add them all.
         bad_regions = self.subset_plugin.import_region(
             [my_reg_pix_1, my_reg_sky_1, my_reg_sky_2, my_reg_poly_1, my_reg_pix_2, my_reg_pix_3],
-            return_bad_regions=True, combination_mode='new')
+            return_bad_regions=True)
         assert len(bad_regions) == 0
 
         # Check regions. We do not check if the translation is correct,
@@ -216,7 +215,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
-            self.region_file, combination_mode='new', return_bad_regions=True)
+            self.region_file, return_bad_regions=True)
         assert len(bad_regions) == 1
 
         # Will load 8/9 and 7 of that become ROIs.
@@ -234,7 +233,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
-            self.region_file, combination_mode='new', max_num_regions=2, return_bad_regions=True)
+            self.region_file, max_num_regions=2, return_bad_regions=True)
         assert len(bad_regions) == 0
         subsets = imviz_helper.plugins['Subset Tools'].get_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
@@ -266,7 +265,7 @@ class TestGetRegions(BaseImviz_WCS_NoWCS):
         self.imviz.plugins['Subset Tools'].import_region([
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5),  # Outer circle
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=2.5),  # Inner circle
-        ], combination_mode="new")
+        ])
 
         # At this point, there should be two normal circles.
         subsets = self.imviz.plugins['Subset Tools'].get_regions()

@@ -465,8 +465,7 @@ def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
     # now remove from this subset a circular region in the center:
     circle = CircularROI(0.5, 1.5, 1)
 
-    subset_plugin.combination_mode = 'andnot'
-    subset_plugin.import_region(circle)
+    subset_plugin.import_region(circle, edit_subset='Subset 1', combination_mode='andnot')
 
     # now the subset is composite:
     assert spec_extr_plugin.aperture.is_composite
@@ -482,7 +481,6 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     upper_aperture = RectangularROI(2.5, 3.5, -0.5, 1.5)
 
     subset_plugin.import_region(lower_aperture)
-    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(upper_aperture)
 
     spec_extr_plugin.aperture_selected = 'Subset 1'
@@ -493,14 +491,13 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
 
     rectangle = RectangularROI(-0.5, 3.5, -0.5, 1.5)
 
-    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(rectangle)
 
     subset_plugin._obj.subset_selected = 'Subset 3'
     circle = CircularROI(1.5, 0.5, 1.1)
 
-    subset_plugin.combination_mode = 'andnot'
-    subset_plugin.import_region(circle)
+    subset_plugin.import_region(circle, edit_subset='Subset 3',
+                                combination_mode='andnot')
 
     spec_extr_plugin.aperture_selected = 'Subset 3'
 

@@ -80,8 +80,8 @@ class TestExportSubsets:
         cubeviz_helper.load_data(data)
         subset_plugin = cubeviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=255, yc=255, radius=50))
-        subset_plugin.combination_mode = 'and'
-        subset_plugin.import_region(CircularROI(xc=200, yc=250, radius=50))
+        subset_plugin.import_region(CircularROI(xc=200, yc=250, radius=50), edit_subset='Subset 1',
+                                    combination_mode='and')
 
         export_plugin = cubeviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
@@ -188,9 +188,10 @@ class TestExportSubsets:
             export_plugin.subset_format.selected = 'ecsv'
 
         # test that attempting to save a composite subset raises an error
-        subset_plugin.combination_mode.selected = 'and'
-        subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
-        subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5))
+        subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5), edit_subset='Subset 1',
+                                    combination_mode='and')
+        subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5), edit_subset='Subset 1',
+                                    combination_mode='and')
 
         export_plugin.subset.selected = 'Subset 1'
         assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
@@ -199,7 +200,6 @@ class TestExportSubsets:
             export_plugin.export()
 
         # Test saving spectral subset
-        subset_plugin.combination_mode = 'new'
         spectral_axis_unit = u.Unit(
             cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
         subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
