@@ -1668,8 +1668,10 @@ class Application(VuetifyTemplate, HubListener):
             exist_labels = self.data_collection.labels
         elif typ == 'viewer':
             exist_labels = list(self._viewer_store.keys())
+        elif isinstance(typ, list):
+            exist_labels = typ
         else:
-            raise ValueError("typ must be either 'data' or 'viewer'")
+            raise ValueError("typ must be either 'data', 'viewer', or a list of strings")
         if label is None:
             label = "Unknown"
 
