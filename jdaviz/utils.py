@@ -6,6 +6,7 @@ import warnings
 from collections import deque
 from urllib.parse import urlparse
 
+import asdf
 import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
@@ -311,8 +312,8 @@ def standardize_roman_metadata(data_model):
     d : dict
         Flattened dictionary of metadata
     """
-    import roman_datamodels.datamodels as rdm
-    if isinstance(data_model, rdm.DataModel):
+    # if the file is a Roman DataModel:
+    if hasattr(data_model, 'to_flat_dict'):
         # Roman metadata are in nested dicts that we flatten:
         flat_dict_meta = data_model.to_flat_dict()
 
@@ -322,6 +323,9 @@ def standardize_roman_metadata(data_model):
             for k, v in flat_dict_meta.items()
             if 'roman.meta' in k
         }
+    elif isinstance(data_model, asdf.AsdfFile):
+        # otherwise use default standardization
+        return standardize_metadata(data_model['roman']['meta'])
 
 
 class ColorCycler:

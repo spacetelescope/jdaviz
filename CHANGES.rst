@@ -24,6 +24,8 @@ Imviz
 - Footprints plugin now supports selecting the closest overlay
   to a clicked point in the image viewer. [#3525]
 
+- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483]
+
 - FootprintSelect tool now appears in the viewer toolbar only when
   overlays are present, reducing toolbar clutter. [#3539]
 
@@ -110,6 +112,7 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Replace file and fix label in example notebook. [#3537]
 
 Imviz
 ^^^^^
@@ -128,6 +131,8 @@ Specviz2d
 
 - Improved initial guess for trace for automatic extraction. May change results
   for automatic extraction for data with nonfinite values. [#3512]
+
+- Replace file in example notebook. [#3537]
 
 4.2.1 (2025-03-24)
 ==================
