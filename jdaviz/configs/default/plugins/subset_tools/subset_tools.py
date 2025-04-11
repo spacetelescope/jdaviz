@@ -213,7 +213,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         return_sky_region : bool or None, optional
             If None (default) or True, then the returned region will be ``SkyRegion`` if the
-            configuration is Imviz and the data is linked by WCS, or if the configuration
+            configuration is Imviz and the data is aligned by WCS, or if the configuration
             is Cubeviz and the data has a WCS'. If set to False, a ``PixelRegion`` object will
             be returned.
 
@@ -1155,7 +1155,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                         CirclePixelRegion, EllipsePixelRegion,
                                         RectanglePixelRegion, CircleAnnulusPixelRegion))
                         and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
-                    bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                    bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
                     continue
 
                 # photutils: Convert to region shape first

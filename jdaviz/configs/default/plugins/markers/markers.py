@@ -180,7 +180,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         # check for entries that do not correspond to a layer or only have pixel coordinates
         pixel_only_inds = data_labels == ''
         if np.any(pixel_only_inds):
-            # TODO: should we rescale these since pixel coordinates when linked by WCS are always
+            # TODO: should we rescale these since pixel coordinates when aligned by WCS are always
             # on the range 0-1 because of the orientation layer?  Or hide the pixel option in the
             # cycler when WCS-linked?
             pixel_x = np.asarray(self.table._qtable['pixel_x'])

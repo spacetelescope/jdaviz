@@ -199,7 +199,7 @@ class Imviz(ImageConfigHelper):
                     if not is_wcs_only and linked_by_wcs and not has_wcs:
                         self.app.hub.broadcast(SnackbarMessage(
                             f"'{applied_label}' will be added to the data collection but not "
-                            f"the viewer '{show_in_viewer}', since data are linked by WCS, but "
+                            f"the viewer '{show_in_viewer}', since data are aligned by WCS, but "
                             f"'{applied_label}' has no WCS.",
                             color="warning", timeout=8000, sender=self)
                         )
