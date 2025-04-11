@@ -73,6 +73,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
+           'SelectFileExtensionComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SubsetSelectMixin',
            'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
@@ -889,9 +890,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         # Reserve the default and manual options strings so people can't use them as Subset labels
         self._plugin.app._reserved_labels.add(str(default_text).lower())
         self._plugin.app._reserved_labels.update([x["label"].lower() if isinstance(x, dict) else
-                                                  x.lower() for x in manual_options])
+                                                  x.lower() for x in manual_options
+                                                  if isinstance(x, (str, dict))])
 
-        self.items = [self._to_item(opt) for opt in manual_options]
+        self._update_items()
         # set default values for traitlets
         if default_text is not None:
             self.selected = default_text
@@ -916,8 +918,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
-            # NOTE: selected is a list here so should not be wrapped with quotes
-            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            if self.is_multiselect and isinstance(self.selected, list):
+                # NOTE: selected is a list here so should not be wrapped with quotes
+                return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
@@ -1150,6 +1154,50 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             if event['new'] not in valid + ['']:
                 self.selected = event['old']
                 raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
+
+
+class SelectFileExtensionComponent(SelectPluginComponent):
+    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
+        super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
+                         manual_options=manual_options, filters=filters)
+
+    @property
+    def selected_index(self):
+        return self.selected_item.get('index', None)
+
+    @property
+    def selected_name(self):
+        return self.selected_item.get('name', None)
+
+    @property
+    def selected_hdu(self):
+        if self.is_multiselect:
+            return [self.manual_options[ind] for ind in self.selected_index]
+        return self.manual_options[self.selected_index]
+
+    @property
+    def indices(self):
+        return [item.get('index', None) for item in self.items]
+
+    @property
+    def names(self):
+        return [item.get('name', None) for item in self.items]
+
+    def _to_item(self, hdu, index=None):
+        if index is None:
+            # during init ignore
+            return {}
+        return {'label': f"{index}: {hdu.name}", 'name': hdu.name, 'index': index}
+
+    @observe('filters')
+    def _update_items(self, msg={}):
+        self.items = [self._to_item(hdu, ind) for ind, hdu in enumerate(self.manual_options)
+                      if self._is_valid_item(hdu)]
+
+        try:
+            self._apply_default_selection()
+        except (ValueError, TypeError):
+            pass
 
 
 class UnitSelectPluginComponent(SelectPluginComponent):
