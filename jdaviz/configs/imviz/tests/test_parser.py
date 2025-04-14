@@ -236,6 +236,10 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):
+        # use non-default GWCS rather than FITS SIP (not the default),
+        # to test the GWCS compatibility:
+        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = False
+
         # Default behavior: Science image
         with pytest.warns(UserWarning, match='You may be querying for a remote file'):
             # if you don't pass a `cache` value, a warning should be raised:
@@ -520,6 +524,17 @@ class TestParseImage:
         # Invalid FITS extension
         with pytest.raises(KeyError, match='not found'):
             parse_data(imviz_helper.app, filename, ext='DOES_NOT_EXIST', data_label='foo')
+
+    @pytest.mark.remote_data
+    def test_gwcs_to_fits_sip(self, imviz_helper):
+        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = True
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True)
+
+        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = False  # this is the default setting
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True)
+
+        assert isinstance(imviz_helper.app.data_collection[0].coords, WCS)
+        assert isinstance(imviz_helper.app.data_collection[1].coords, GWCS)
 
 
 def test_load_valid_not_valid(imviz_helper):
