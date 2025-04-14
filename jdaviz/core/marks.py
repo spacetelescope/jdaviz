@@ -67,6 +67,69 @@ class OffscreenLinesMarks(HubListener):
         self.right.text = [f'{oob_right} \u25b6' if oob_right > 0 else '']
 
 
+class PluginMarkCollection:
+    # This class allows for the creation of plugin preview marks across viewers
+    def __init__(self, mark_cls, shadow_cls=None, shadow_kwargs={}, **mark_kwargs):
+        self.mark_cls = mark_cls
+        self.shadow_cls = shadow_cls
+        self.shadow_kwargs = shadow_kwargs
+        self.mark_kwargs = mark_kwargs
+        self.shadow_marks = {}
+        self.marks = {}
+
+    @property
+    def marks_list(self):
+        return list(self.marks.values())
+
+    def marks_for_viewers(self, viewers):
+        for viewer in viewers:
+            if viewer not in self.marks:
+                # Create a new mark for the given viewer
+                mark = self.mark_cls(viewer=viewer, **self.mark_kwargs)
+                self.marks[viewer] = mark
+                if self.shadow_cls is not None:
+                    shadow_kwargs = {k: v.marks_for_viewers([viewer])[0]
+                                     if isinstance(v, PluginMarkCollection) else v
+                                     for k, v in self.shadow_kwargs.items()}
+                    shadow = self.shadow_cls(shadowing=mark, **shadow_kwargs)
+                    self.shadow_marks[viewer] = shadow
+                    viewer.figure.marks += [shadow]
+                viewer.figure.marks += [mark]
+                viewer.figure.send_state('marks')
+        return [self.marks[viewer] for viewer in viewers]
+
+    def clear_if_not_in_viewers(self, viewers):
+        for viewer, mark in self.marks.items():
+            if viewer not in viewers:
+                # Clear the mark if the viewer is not in the list
+                mark.clear()
+                mark.visible = False
+
+    def clear(self):
+        for mark in self.marks.values():
+            mark.clear()
+
+    def update_xy(self, x, y, viewers):
+        for mark in self.marks_for_viewers(viewers):
+            mark.update_xy(x, y)
+            mark.visible = True
+        self.clear_if_not_in_viewers(viewers)
+
+    def set_for_viewers(self, name, value, viewers):
+        for mark in self.marks_for_viewers(viewers):
+            setattr(mark, name, value)
+
+    def __setattr__(self, name, value):
+        if name in ('plugin', 'mark_cls', 'shadow_cls',
+                    'shadow_kwargs', 'mark_kwargs',
+                    'shadow_marks', 'marks'):
+            super().__setattr__(name, value)
+        else:
+            # pass on to all stored marks
+            for mark in self.marks.values():
+                setattr(mark, name, value)
+
+
 class PluginMark:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

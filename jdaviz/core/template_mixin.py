@@ -45,11 +45,12 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
+                                ViewerVisibleLayersChangedMessage,
                                 ChangeRefDataMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
                                 PluginPlotAddedMessage, PluginPlotModifiedMessage,
                                 GlobalDisplayUnitChanged, SubsetRenameMessage)
-from jdaviz.core.marks import (LineAnalysisContinuum,
+from jdaviz.core.marks import (PluginMarkCollection,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
@@ -154,6 +155,20 @@ def show_widget(widget, loc, title):  # pragma: no cover
         raise ValueError(f"Unrecognized display location: {loc}")
 
 
+def _is_spectrum_viewer(viewer):
+    return ('ProfileView' in viewer.__class__.__name__
+            or viewer.__class__.__name__ == 'Spectrum1DViewer')
+
+
+def _is_spectrum_2d_viewer(viewer):
+    return ('Profile2DView' in viewer.__class__.__name__
+            or viewer.__class__.__name__ == 'Spectrum2DViewer')
+
+
+def _is_image_viewer(viewer):
+    return 'ImageView' in viewer.__class__.__name__
+
+
 class ViewerPropertiesMixin:
     # assumes that self.app is defined by the class
     @property
@@ -167,6 +182,11 @@ class ViewerPropertiesMixin:
         return self.app.get_viewer(viewer_reference)
 
     @property
+    def spectrum_1d_viewers(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if _is_spectrum_viewer(viewer)]
+
+    @property
     def spectrum_2d_viewer(self):
         viewer_reference = self.app._get_first_viewer_reference_name(
             require_spectrum_2d_viewer=True
@@ -175,6 +195,11 @@ class ViewerPropertiesMixin:
             return None
 
         return self.app.get_viewer(viewer_reference)
+
+    @property
+    def spectrum_2d_viewers(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if _is_spectrum_2d_viewer(viewer)]
 
     @property
     def flux_viewer(self):
@@ -3191,47 +3216,32 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                       manual_options=['None', 'Surrounding'],
                                       default_mode='first',
                                       filters=['is_spectral'])
+        self.app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
+                               lambda _: self._clear_cache('continuum_marks'))
 
     def _continuum_remove_none_option(self):
         self.continuum.items = [item for item in self.continuum.items
                                 if item['label'] != 'None']
         self.continuum._apply_default_selection()
 
-    @property
+    @cached_property
     def continuum_marks(self):
-        marks = {}
-        viewer = self.spectrum_viewer
-        if viewer is None:
-            return {}
-        for mark in viewer.figure.marks:
-            if isinstance(mark, LineAnalysisContinuum):
-                # NOTE: we don't use isinstance anymore because of nested inheritance
-                if mark.__class__.__name__ == 'LineAnalysisContinuumLeft':
-                    marks['left'] = mark
-                elif mark.__class__.__name__ == 'LineAnalysisContinuumCenter':
-                    marks['center'] = mark
-                elif mark.__class__.__name__ == 'LineAnalysisContinuumRight':
-                    marks['right'] = mark
-
-        if not len(marks):
-            if not viewer.state.reference_data:
-                # we don't have data yet for scales, defer initializing
-                return {}
-            # then haven't been initialized yet, so initialize with empty
-            # marks that will be populated once the first analysis is done.
-            marks = {'left': LineAnalysisContinuumLeft(viewer,
-                                                       auto_update_units=self.continuum_auto_update_units,  # noqa
-                                                       visible=self.is_active),
-                     'center': LineAnalysisContinuumCenter(viewer,
-                                                           auto_update_units=self.continuum_auto_update_units,  # noqa
-                                                           visible=self.is_active),
-                     'right': LineAnalysisContinuumRight(viewer,
-                                                         auto_update_units=self.continuum_auto_update_units,  # noqa
-                                                         visible=self.is_active)}
-            shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
-            # NOTE: += won't trigger the figure to notice new marks
-            viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
-
+        marks = {'left': PluginMarkCollection(LineAnalysisContinuumLeft,
+                                              shadow_cls=ShadowLine,
+                                              shadow_kwargs={'shadow_width': 2},
+                                              auto_update_units=self.continuum_auto_update_units,
+                                              visible=self.is_active),
+                 'center': PluginMarkCollection(LineAnalysisContinuumCenter,
+                                                shadow_cls=ShadowLine,
+                                                shadow_kwargs={'shadow_width': 2},
+                                                auto_update_units=self.continuum_auto_update_units,
+                                                visible=self.is_active),
+                 'right': PluginMarkCollection(LineAnalysisContinuumRight,
+                                               shadow_cls=ShadowLine,
+                                               shadow_kwargs={'shadow_width': 2},
+                                               auto_update_units=self.continuum_auto_update_units,
+                                               visible=self.is_active)
+                 }
         return marks
 
     @observe('continuum_auto_update_units')
@@ -3242,9 +3252,11 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             # let's just convert units on the mark itself
             mark.auto_update_units = self.continuum_auto_update_units
 
-    def _update_continuum_marks(self, mark_x={}, mark_y={}):
+    def _update_continuum_marks(self, mark_x={}, mark_y={}, viewers=[]):
         for pos, mark in self.continuum_marks.items():
-            mark.update_xy(mark_x.get(pos, []), mark_y.get(pos, []))
+            mark.update_xy(mark_x.get(pos, []),
+                           mark_y.get(pos, []),
+                           viewers=viewers)
 
     def _get_continuum(self, dataset, spectral_subset, update_marks=False, per_pixel=False):
         if dataset.selected == '':
@@ -3391,7 +3403,9 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
         if update_marks:
             mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
-            self._update_continuum_marks(mark_x, mark_y)
+            self._update_continuum_marks(mark_x,
+                                         mark_y,
+                                         viewers=dataset.viewers_with_selected_visible)
 
         return spectrum, continuum, spectrum - continuum
 
@@ -3540,15 +3554,13 @@ class ViewerSelect(SelectPluginComponent):
             return len(viewer.layers) > 0
 
         def is_spectrum_viewer(viewer):
-            return ('ProfileView' in viewer.__class__.__name__
-                    or viewer.__class__.__name__ == 'Spectrum1DViewer')
+            return _is_spectrum_viewer(viewer)
 
         def is_spectrum_2d_viewer(viewer):
-            return ('Profile2DView' in viewer.__class__.__name__
-                    or viewer.__class__.__name__ == 'Spectrum2DViewer')
+            return _is_spectrum_2d_viewer(viewer)
 
         def is_image_viewer(viewer):
-            return 'ImageView' in viewer.__class__.__name__
+            return _is_image_viewer(viewer)
 
         def is_slice_indicator_viewer(viewer):
             return isinstance(viewer, WithSliceIndicator)
@@ -3682,7 +3694,8 @@ class DatasetSelect(SelectPluginComponent):
                          multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
-        self._cached_properties += ["selected_dc_item", "selected_spectrum"]
+        self._cached_properties += ["selected_dc_item", "selected_spectrum",
+                                    "viewers_with_selected_visible"]
         # override this for how to access on-the-fly spectral extraction of a cube
         self._spectral_extraction_function = 'sum'
         # Add/Remove Data are triggered when checked/unchecked from viewers
@@ -3693,6 +3706,8 @@ class DatasetSelect(SelectPluginComponent):
         self.hub.subscribe(self, SubsetRenameMessage, handler=self._update_items)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+        self.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
+                           handler=lambda _: self._clear_cache('viewers_with_selected_visible'))
 
         self.app.state.add_callback('layer_icons', lambda _: self._update_items())
         # initialize items from original viewers
@@ -3765,6 +3780,11 @@ class DatasetSelect(SelectPluginComponent):
     def selected_spectrum(self):
         return self.get_selected_spectrum(use_display_units=True)
 
+    @cached_property
+    def viewers_with_selected_visible(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if self.selected in viewer.data_menu.data_labels_visible]
+
     def _is_valid_item(self, data):
         def from_plugin(data):
             return data.meta.get('Plugin', None) is not None
@@ -3796,19 +3816,17 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False
-            sv = self.spectrum_viewer
-            if sv is None:
-                return False
-            return data.label in [l.layer.label for l in sv.layers]  # noqa E741
+            svs = [viewer for viewer in self.app._viewer_store.values()
+                   if _is_spectrum_viewer(viewer)]
+            return data.label in [l.layer.label for sv in svs for l in sv.layers]  # noqa E741
 
         def layer_in_spectrum_2d_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return False
-            s2dv = self.spectrum_2d_viewer
-            if s2dv is None:
-                return False
-            return data.label in [l.layer.label for l in s2dv.layers]  # noqa E741
+            s2dvs = [viewer for viewer in self.app._viewer_store.values()
+                     if _is_spectrum_2d_viewer(viewer)]
+            return data.label in [l.layer.label for s2dv in s2dvs for l in s2dv.layers]  # noqa E741
 
         def layer_in_flux_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
@@ -4182,6 +4200,15 @@ class AddResults(BasePluginComponent):
     @auto.setter
     def auto(self, auto):
         self.auto_label.auto = auto
+
+    @property
+    def results_viewers(self):
+        # return the viewers where the results will be added
+        if self.label_overwrite:
+            return [v for v in self.app._viewer_store.values()
+                    if self.label in v.data_menu.data_labels_visible]
+        else:
+            return [self.viewer.selected_obj] if self.viewer.selected_obj else []
 
     def _handle_default_viewer_selected(self, viewer_comp, is_valid):
         if len(viewer_comp.items) == 2:

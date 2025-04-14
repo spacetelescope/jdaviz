@@ -115,14 +115,14 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     la.keep_active = True
     la.spectral_subset.selected = 'Subset 1'
 
-    marks_before = [la._obj.continuum_marks['left'].y,
-                    la._obj.continuum_marks['right'].y]
+    marks_before = [la._obj.continuum_marks['left'].marks_list[0].y,
+                    la._obj.continuum_marks['right'].marks_list[0].y]
 
     # change flux unit and make sure result stays the same after conversion
     uc.flux_unit.selected = 'MJy'
 
-    marks_after = [la._obj.continuum_marks['left'].y,
-                   la._obj.continuum_marks['right'].y]
+    marks_after = [la._obj.continuum_marks['left'].marks_list[0].y,
+                   la._obj.continuum_marks['right'].marks_list[0].y]
 
     # ensure continuum marks update when spectral_y is changed by
     # multiply converted continuum marks by expected scale factor (MJy -> Jy)
@@ -141,8 +141,8 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     else:
         scaling_factor = cube.meta.get('PIXAR_SR')
 
-    marks_after = [la._obj.continuum_marks['left'].y,
-                   la._obj.continuum_marks['right'].y]
+    marks_after = [la._obj.continuum_marks['left'].marks_list[0].y,
+                   la._obj.continuum_marks['right'].marks_list[0].y]
 
     # ensure continuum marks update when spectral_y_type is changed
     # multiply converted continuum marks by expected pixel scale factor

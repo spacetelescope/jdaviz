@@ -242,7 +242,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # update display for a (possible) change to the active layer based on the last known
         # cursor position
-        self.update_display(viewer, self._x, self._y)
+        self.update_display(viewer, self._x, self._y, mouseevent=False)
 
     @observe('dataset_selected')
     def _selected_dataset_changed(self, *args):
@@ -256,17 +256,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def vue_next_layer(self, *args, **kwargs):
         self.dataset.select_next()
 
-    def update_display(self, viewer, x, y):
+    def update_display(self, viewer, x, y, mouseevent=True):
         self._dict = {}
         if isinstance(viewer, (Spectrum1DViewer, RampvizProfileView)):
-            self._spectrum_viewer_update(viewer, x, y)
+            self._spectrum_viewer_update(viewer, x, y, mouseevent=mouseevent)
         elif isinstance(viewer,
                         (Spectrum2DViewer,
                          ImvizImageView, CubevizImageView,
                          MosvizImageView, MosvizProfile2DView,
                          RampvizImageView)
                         ):
-            self._image_viewer_update(viewer, x, y)
+            self._image_viewer_update(viewer, x, y, mouseevent=mouseevent)
 
     def _image_shape_inds(self, image):
         # return the indices in image.shape for the x and y dimension, respectively
@@ -289,7 +289,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         else:  # pragma: no cover
             raise ValueError(f'does not support ndim={image.ndim}')
 
-    def _image_viewer_update(self, viewer, x, y):
+    def _image_viewer_update(self, viewer, x, y, mouseevent=True):
         # Display the current cursor coordinates (both pixel and world) as
         # well as data values. For now we use the first dataset in the
         # viewer for the data values.
@@ -613,13 +613,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if coords_status and hasattr(getattr(image, 'coords', None), 'pixel_to_world'):
                     # should already have wave computed from setting the coords-info
                     matched_viewer = self.app.get_viewer(matched_marker_id.split(':matched')[0])
-                    wave = wave.to_value(matched_viewer.state.x_display_unit)
-                    self.marks[matched_marker_id].update_xy([wave, wave], [0, 1])
+                    wave_matched = wave.to_value(matched_viewer.state.x_display_unit)
+                    self.marks[matched_marker_id].update_xy([wave_matched, wave_matched], [0, 1])
                     self.marks[matched_marker_id].visible = True
                 else:
                     self.marks[matched_marker_id].visible = False
 
-    def _spectrum_viewer_update(self, viewer, x, y):
+    def _spectrum_viewer_update(self, viewer, x, y, mouseevent=True):
         def _cursor_fallback():
             self._dict['axes_x'] = x
             self._dict['axes_x:unit'] = str(viewer.state.x_display_unit)
@@ -759,11 +759,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         else:
             self.icon = ""
 
-        self.marks[viewer._reference_id].update_xy([closest_wave], [closest_flux])
-        self.marks[viewer._reference_id].visible = True
-        for matched_marker_id in self._matched_markers.get(viewer._reference_id, []):
-            # NOTE: this currently assumes the the matched marker is a vertical line with a
-            # normalized y-scale
-            self.marks[matched_marker_id].update_xy([closest_i, closest_i], [0, 1])
-            self.marks[matched_marker_id].visible = True
         _copy_axes_to_spectral()
+
+        if mouseevent:
+            self.marks[viewer._reference_id].update_xy([closest_wave], [closest_flux])
+            self.marks[viewer._reference_id].visible = True
+            for matched_marker_id in self._matched_markers.get(viewer._reference_id, []):
+                # NOTE: this currently assumes the the matched marker is a vertical line with a
+                # normalized y-scale
+                self.marks[matched_marker_id].update_xy([closest_i, closest_i], [0, 1])
+                self.marks[matched_marker_id].visible = True
