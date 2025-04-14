@@ -74,6 +74,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_fast_approximation = Bool(True).tag(sync=True)
     wcs_linking_available = Bool(False).tag(sync=True)
+    gwcs_to_fits_sip = Bool(False).tag(sync=True)
 
     need_clear_astrowidget_markers = Bool(False).tag(sync=True)
     plugin_markers_exist = Bool(False).tag(sync=True)
@@ -156,6 +157,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 'delete_subsets', 'viewer', 'orientation',
                 'rotation_angle', 'east_left', 'add_orientation',
                 'set_north_up_east_left', 'set_north_up_east_right',
+                'gwcs_to_fits_sip'
             )
         )
 
