@@ -434,24 +434,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         if self.is_active:
             self._ensure_first_overlay()
 
-        selected_obj = self.viewer.selected_obj
-        if selected_obj is None:
-            return
-
-        viewers = self.viewer.selected_obj if self.viewer.is_multiselect else [self.viewer.selected_obj]    # noqa E501
-
-        for viewer in viewers:
-            if not hasattr(viewer, 'figure'):
-                continue
-
-            for overlay, viewer_marks in self.marks.items():
-                marks = viewer_marks.get(viewer.reference, [])
-                visible = self._mark_visible(viewer.reference, overlay)
+        for overlay, viewer_marks in self.marks.items():
+            for viewer_id, marks in viewer_marks.items():
+                visible = self._mark_visible(viewer_id, overlay)
                 for mark in marks:
                     mark.visible = visible
-
-            self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
-                viewer_id=viewer.reference, sender=self))
+                if marks:
+                    self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
+                        viewer_id=viewer_id, sender=self))
 
     def center_on_viewer(self, viewer_ref=None):
         """
