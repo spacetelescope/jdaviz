@@ -137,7 +137,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         else:
             kw = {'wcs': wcs}
 
-        return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
+        return Spectrum(flux=data * data_unit, meta=metadata, **kw)
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
