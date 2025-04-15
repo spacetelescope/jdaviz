@@ -199,12 +199,20 @@ class ApplicationState(State):
     """
     drawer_content = CallbackProperty(
         'plugins', docstring="Content shown in the tray drawer.")
+    add_subtab = CallbackProperty(
+        0, docstring="Index of the active add data tab shown in the tray.")
+    viewer_subtab = CallbackProperty(
+        0, docstring="Index of the active viewer tab shown in the viewer area.")
+    help_subtab = CallbackProperty(
+        0, docstring="Index of the active help tab shown in the viewer area.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
         False, docstring="Whether to show API hints.")
     logger_overlay = CallbackProperty(
         False, docstring="State of the logger history overlay.")
+    subset_mode_create = CallbackProperty(
+        False, docstring="Whether to create a new subset.")
 
     snackbar = DictCallbackProperty({
         'show': False,
@@ -247,6 +255,7 @@ class ApplicationState(State):
         'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml'),
         'api': read_icon(os.path.join(ICON_DIR, 'api.svg'), 'svg+xml'),
         'api-lock': read_icon(os.path.join(ICON_DIR, 'api_lock.svg'), 'svg+xml'),
+        'jdaviz': read_icon(os.path.join(ICON_DIR, 'jdaviz.svg'), 'svg+xml'),
     }, docstring="Custom application icons")
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa

@@ -295,10 +295,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             # during initial init, this can trigger before the component is initialized
             return
         if self.session.edit_subset_mode.edit_subset == []:
+            self.app.state.subset_mode_create = True
             if self.subset_selected != self.subset.default_text:
                 self.subset_selected = self.subset.default_text
                 self.show_region_info = False
         else:
+            self.app.state.subset_mode_create = False
             new_label = self.session.edit_subset_mode.edit_subset[0].label
             if new_label != self.subset_selected:
                 if new_label not in [s['label'] for s in self.subset_items]:
