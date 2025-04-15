@@ -231,7 +231,7 @@
       no layers selected
     </div>
     <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; margin-right: -24px; padding-right: 24px; border-bottom: 2px solid #00617E">
-      <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
+      <j-plugin-section-header v-if="layer_selected.length">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
         <plugin-switch
           :value.sync="marker_visible_value"
@@ -281,6 +281,18 @@
             max="1"
             step="0.01" 
             :value.sync="subset_opacity_value"
+          />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="volume_value" :sync="volume_sync"">
+        <plugin-slider
+            label='Volume'
+            api_hint="plg.volume = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="100"
+            step="1"
+            :value.sync="volume_value"
           />
       </glue-state-sync-wrapper>
 

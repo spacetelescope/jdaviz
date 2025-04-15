@@ -373,7 +373,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
     stretch_hist_spinner = Bool(False).tag(sync=True)
 
-    volume_value = Int().tag(sync=True)
+    volume_value = IntHandleEmpty(50).tag(sync=True)
     volume_sync = Dict().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -1126,6 +1126,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         # for some reason, this resets the internal marks, so we need to ensure the manual
         # marks are still plotted
         self.stretch_histogram._refresh_marks()
+
+    @observe("volume_value")
+    def _volume_level_changed(self, msg=None):
+        self.viewer.selected_obj.update_volume_level(self.volume_value)
 
     def set_histogram_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         # NOTE: leaving this out of user API until API is finalized with interactive setting
