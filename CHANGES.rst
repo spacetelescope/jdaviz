@@ -18,6 +18,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Improved initial guess for trace for automatic extraction. May change results
+  for automatic extraction for data with nonfinite values. [#3512]
 
 4.2.1 (2025-03-24)
 ==================
