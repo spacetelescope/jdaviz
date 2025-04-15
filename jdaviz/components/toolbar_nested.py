@@ -10,7 +10,7 @@ from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                                FootprintMarksChangedMessage)
+                                FootprintMarkVisibilityChangedMessage)
 
 __all__ = ['NestedJupyterToolbar']
 
@@ -71,7 +71,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         if hasattr(self.viewer, 'hub'):
             for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
                         SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                        FootprintMarksChangedMessage):
+                        FootprintMarkVisibilityChangedMessage):
                 self.viewer.hub.subscribe(self, msg,
                                           handler=lambda _: self._update_tool_visibilities())
 

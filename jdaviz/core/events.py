@@ -297,7 +297,7 @@ class CatalogResultsChangedMessage(Message):
         super().__init__(*args, **kwargs)
 
 
-class FootprintMarksChangedMessage(Message):
+class FootprintMarkVisibilityChangedMessage(Message):
     """Message to notify that footprint overlays have changed."""
 
     def __init__(self, viewer_id, *args, **kwargs):
