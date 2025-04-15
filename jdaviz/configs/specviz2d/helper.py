@@ -1,5 +1,5 @@
 from astropy.utils.decorators import deprecated
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.configs.specviz import Specviz
 
@@ -135,7 +135,7 @@ class Specviz2d(Specviz):
                   show_in_viewer=show_in_viewer)
 
     def get_data(self, data_label=None, spectral_subset=None,
-                 cls=Spectrum1D, use_display_units=False):
+                 cls=Spectrum, use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         spectral_subset.
