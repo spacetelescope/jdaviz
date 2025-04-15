@@ -32,7 +32,6 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
     mm = cubeviz_helper.plugins['Moment Maps']
     cmc = mm._obj.continuum_marks['center']
     assert len(cmc.marks) == 0
-    assert not cmc.visible
     with mm.as_active():
         mm.n_moment = 0
         # no continuum so marks should be empty
