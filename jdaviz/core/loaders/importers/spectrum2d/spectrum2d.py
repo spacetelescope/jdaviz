@@ -61,7 +61,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                             'ext_data_label_auto',
                                             'ext_data_label_invalid_msg')
 
-        self.input_hdulist = not isinstance(self.input, Spectrum1D)
+        self.input_hdulist = not isinstance(self.input, Spectrum)
         if self.is_valid and self.input_hdulist:
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
@@ -123,7 +123,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         else:
             kw = {'wcs': wcs}
 
-        return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
+        return Spectrum(flux=data * data_unit, meta=metadata, **kw)
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
