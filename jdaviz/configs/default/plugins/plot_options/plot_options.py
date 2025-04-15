@@ -26,6 +26,7 @@ from jdaviz.core.events import ChangeRefDataMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.configs.cubeviz.plugins.sonified_layers import SonifiedLayerState
 # by importing from utils, glue_colormaps will include the custom Random colormap
 from jdaviz.utils import is_not_wcs_only, cmap_samples, glue_colormaps
 
@@ -372,6 +373,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
     stretch_hist_spinner = Bool(False).tag(sync=True)
 
+    volume_value = IntHandleEmpty(50).tag(sync=True)
+    volume_sync = Dict().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -420,6 +424,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         def is_not_subset(state):
             return not is_spatial_subset(state)
+
+        def is_sonified(state):
+            return isinstance(state, SonifiedLayerState)
 
         def line_visible(state):
             # exclude for scatter layers where the marker is shown instead of the line
@@ -617,6 +624,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.contour_custom_levels = PlotOptionsSyncState(self, self.viewer, self.layer, 'levels',
                                                           'contour_custom_levels_value', 'contour_custom_levels_sync',   # noqa
                                                           spinner='contour_spinner')
+
+        self.volume_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'volume',
+                                                 'volume_value', 'volume_sync',
+                                                 state_filter=is_sonified)
 
         # Axes options:
         # axes_visible hidden for imviz in plot_options.vue
@@ -1115,6 +1126,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         # for some reason, this resets the internal marks, so we need to ensure the manual
         # marks are still plotted
         self.stretch_histogram._refresh_marks()
+
+    @observe("volume_value")
+    def _volume_level_changed(self, msg=None):
+        self.viewer.selected_obj.update_volume_level(self.volume_value)
 
     def set_histogram_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         # NOTE: leaving this out of user API until API is finalized with interactive setting
