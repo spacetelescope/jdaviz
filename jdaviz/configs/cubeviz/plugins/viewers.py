@@ -268,12 +268,12 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         else:
             return super().get_data_layer_artist(layer, layer_state)
 
-    def get_subset_layer_artist(self, layer=None, layer_state=None):
-        if 'Sonified' in layer.meta:
-            cls = SonifiedDataSubsetLayerArtist
-            self.get_subset_layer_artist(cls, layer=layer, layer_state=layer_state)
-        else:
-            super().get_subset_layer_artist(layer, layer_state)
+    # def get_subset_layer_artist(self, layer=None, layer_state=None):
+    #     if 'Sonified' in layer.meta:
+    #         cls = SonifiedDataSubsetLayerArtist
+    #         return self.get_subset_layer_artist(cls, layer=layer)
+    #     else:
+    #         return super().get_subset_layer_artist(layer, layer_state)
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")

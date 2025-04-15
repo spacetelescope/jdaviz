@@ -55,8 +55,8 @@ class SonifiedSubsetLayerState(ImageLayerState):
 
 class SonifiedSubsetLayerStateWidget(v.VuetifyTemplate):
 
-    def __init__(self, layer_state, *args, **kwargs):
-        super().__init__(layer_state, *args, **kwargs)
+    def __init__(self, layer, *args, **kwargs):
+        super().__init__(layer, *args, **kwargs)
 
 
 class SonifiedDataSubsetLayerArtist(BaseImageLayerArtist):
