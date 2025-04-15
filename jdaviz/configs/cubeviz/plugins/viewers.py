@@ -7,13 +7,14 @@ import numpy as np
 from astropy import units as u
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
+from scipy.special import erf
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.configs.cubeviz.plugins.mixins import WithSliceIndicator, WithSliceSelection
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
-from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL
+from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL, INT_MAX
 from jdaviz.configs.cubeviz.plugins.sonified_layers import (SonifiedDataLayerArtist,
                                                             SonifiedLayerStateWidget,
                                                             SonifiedDataSubsetLayerArtist,
@@ -130,17 +131,31 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         if self.stream and not self.stream.closed and self.stream_active:
             self.stream.stop()
 
-    def update_sonified_cube_with_coord(self, coord):
+    def update_sonified_cube_with_coord(self, coord, vollim='buff'):
         # Loop through all sonified layers and set newsig to the sound for each layer
         self.sonified_cube.newsig = np.zeros(self.sonified_cube.newsig.shape)
 
+        compsig = np.zeros(self.sonified_cube.newsig.size, dtype='int32')
         for k, v in self.uuid_lookup.items():
             # Each (x, y) coordinate corresponds to a different sound for each layer.
             # These sounds can be combined together and played by setting cbuff to True.
             # TODO: is there a better way to combine sounds or normalize them?
+            # TODO: apply 1/N or 1/N**0.5 normalisation per layer for N layers?
             if coord not in v:
                 continue
-            self.sonified_cube.newsig += v[coord]
+            compsig += v[coord]
+        if vollim == 'sig':
+            # sigmoidal volume limiting
+            self.sonified_cube.newsig = (erf(compsig/INT_MAX)* INT_MAX).astype('int16')
+        elif vollim == 'clip':
+            # hard-clipped volume limiting
+            self.sonified_cube.newsig = np.clip(compsig, -INT_MAX, INT_MAX).astype('int16')
+        elif vollim == 'buff':
+            # renormalise buffer
+            sigmax = abs(compsig).max()
+            if sigmax > INT_MAX:
+                compsig = ((INT_MAX/abs(compsig).max())*compsig)
+            self.sonified_cube.newsig = compsig.astype('int16')
         self.sonified_cube.cbuff = True
 
     def update_listener_wls(self, wranges, wunit):

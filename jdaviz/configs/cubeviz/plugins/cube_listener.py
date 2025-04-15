@@ -13,7 +13,8 @@ except ImportError:
     pass
 
 #  smallest fraction of the max audio amplitude that can be represented by a 16-bit signed integer
-MINVOL = 1/(2**15 - 1)
+INT_MAX = 2**15 - 1
+MINVOL = 1/INT_MAX
 
 
 @contextmanager
@@ -97,7 +98,8 @@ class CubeListenerData:
         self.cursig = np.zeros(self.siglen, dtype='int16')
         self.newsig = np.zeros(self.siglen, dtype='int16')
 
-        if self.cursig.nbytes * pow(1024, -3) > 2:
+        # ensure sigcube isn't too big before we initialise it
+        if self.cube[:,:,0].size * self.siglen * 2 * pow(1024, -3) > 2:
             raise Exception("Cube projected to be > 2Gb!")
 
         self.sigcube = np.zeros((*self.cube.shape[:2], self.siglen), dtype='int16')
