@@ -389,6 +389,8 @@ class SpectralExtraction(PluginTemplateMixin):
         if not hasattr(self, 'trace_dataset'):
             # happens when first initializing plugin outside of tray
             return
+        if not len(self.trace_dataset.selected):
+            return
 
         width = self.trace_dataset.get_selected_spectrum(use_display_units=True).shape[0]
         # estimate the pixel number by taking the median of the brightest pixel index
