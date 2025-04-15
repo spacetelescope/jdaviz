@@ -17,6 +17,7 @@ class SonifiedLayerState(ImageLayerState):
     def __init__(self, *args, **kwargs):
 
         super(SonifiedLayerState, self).__init__(*args, **kwargs)
+        self.alpha = 0
 
 
 class SonifiedDataLayerArtist(ImageLayerArtist):

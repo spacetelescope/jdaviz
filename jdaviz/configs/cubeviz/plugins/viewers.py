@@ -236,9 +236,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self.jdaviz_app.add_data_to_viewer('flux-viewer', data_name)
 
-        # Set opacity to 0
-        [layer for layer in self.state.layers if layer.layer.label == data_name][0].alpha = 0
-
     def _viewer_mouse_event(self, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
             self.stop_stream()
