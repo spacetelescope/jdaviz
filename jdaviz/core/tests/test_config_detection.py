@@ -9,10 +9,10 @@ from jdaviz.core.data_formats import identify_helper
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 @pytest.mark.parametrize(("uri, expected_helper"), [
     ('mast:HST/product/jclj01010_drz.fits', 'imviz'),
-    ('mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits', 'specviz'),
+    ('mast:JWST/product/jw02732-o004_t004_miri_ch1-short_x1d.fits', 'specviz'),
     ('mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits', 'specviz2d'),  # noqa: E501
     ('mast:JWST/product/jw02727-o002_t062_nircam_clear-f277w_i2d.fits', 'imviz'),
-    ('mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_s3d.fits', 'cubeviz')])
+    ('mast:JWST/product/jw02732-o004_t004_miri_ch1-short_s3d.fits', 'cubeviz')])
 def test_auto_config_detection(uri, expected_helper):
     url = f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}'
     fn = download_file(url, timeout=100)
