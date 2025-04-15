@@ -787,7 +787,7 @@ class ImageConfigHelper(ConfigHelper):
                                     CirclePixelRegion, EllipsePixelRegion,
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
                     and self.app._align_by == "wcs"):
-                bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
                 continue
 
             # photutils: Convert to regions shape first
