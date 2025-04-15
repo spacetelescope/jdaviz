@@ -3872,7 +3872,7 @@ class DatasetSelect(SelectPluginComponent):
                                                        add_data=False)
             return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
-                                                    cls=Spectrum1D,
+                                                    cls=Spectrum,
                                                     use_display_units=use_display_units)
 
     @cached_property
