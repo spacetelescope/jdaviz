@@ -8,7 +8,8 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (LinkUpdatedMessage, ChangeRefDataMessage,
-                                FootprintSelectClickEventMessage, FootprintMarkVisibilityChangedMessage)
+                                FootprintSelectClickEventMessage,
+                                FootprintMarkVisibilityChangedMessage)
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import is_stcs_string, regions2roi, stcs_string2region
 from jdaviz.core.registries import tray_registry
@@ -411,8 +412,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 continue
             viewer.figure.marks = [m for m in viewer.figure.marks
                                    if getattr(m, 'overlay', None) != lbl]
-        self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
-            viewer_id=viewer.reference, sender=self))
+            self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
+                viewer_id=viewer.reference, sender=self))
 
     @observe('is_active', 'viewer_items')
     # NOTE: intentionally not using skip_if_no_updates_since_last_active since this only controls
@@ -433,17 +434,24 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         if self.is_active:
             self._ensure_first_overlay()
 
-        for overlay, viewer_marks in self.marks.items():
-            for viewer_id, marks in viewer_marks.items():
-                visible = self._mark_visible(viewer_id, overlay)
+        selected_obj = self.viewer.selected_obj
+        if selected_obj is None:
+            return
+
+        viewers = self.viewer.selected_obj if self.viewer.is_multiselect else [self.viewer.selected_obj]    # noqa E501
+
+        for viewer in viewers:
+            if not hasattr(viewer, 'figure'):
+                continue
+
+            for overlay, viewer_marks in self.marks.items():
+                marks = viewer_marks.get(viewer.reference, [])
+                visible = self._mark_visible(viewer.reference, overlay)
                 for mark in marks:
                     mark.visible = visible
 
-        # Notify toolbar to update tool visibility
-        for viewer in self.app._viewer_store.values():
-            if hasattr(viewer, 'figure'):
-                self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
-                    viewer_id=viewer.reference, sender=self))
+            self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
+                viewer_id=viewer.reference, sender=self))
 
     def center_on_viewer(self, viewer_ref=None):
         """
@@ -578,8 +586,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 mark.visible = visible
                 mark.colors = [self.color]
                 mark.fill_opacities = [self.fill_opacity]
-        self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
-            viewer_id=viewer.reference, sender=self))
+                self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
+                    viewer_id=viewer.reference, sender=self))
 
     def import_region(self, region):
         """

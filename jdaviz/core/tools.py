@@ -430,7 +430,10 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
         self.viewer.session.hub.broadcast(msg)
 
     def is_visible(self):
-        return len([m for m in self.viewer.figure.marks if isinstance(m, FootprintOverlay)]) > 0
+        return any(
+            isinstance(m, FootprintOverlay) and m.visible
+            for m in self.viewer.figure.marks
+            )
 
 
 @viewer_tool
