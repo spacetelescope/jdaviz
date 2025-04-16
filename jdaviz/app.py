@@ -205,6 +205,8 @@ class ApplicationState(State):
         0, docstring="Index of the active viewer tab shown in the viewer area.")
     help_subtab = CallbackProperty(
         0, docstring="Index of the active help tab shown in the viewer area.")
+    jdaviz_version = CallbackProperty(
+        __version__, docstring="Version of Jdaviz.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(

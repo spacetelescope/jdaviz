@@ -23,6 +23,11 @@
             <v-icon>mdi-view-grid-outline</v-icon>
           </v-btn>
         </j-tooltip>
+        <j-tooltip tipid="app-toolbar-help">
+          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
+            <v-icon medium style="padding-top: 2px">mdi-format-list-bulleted</v-icon>
+          </v-btn>
+        </j-tooltip>
         <j-tooltip tipid="app-toolbar-subsets">
           <v-btn icon @click="() => {if (state.drawer_content === 'subsets') {state.drawer_content = ''} else {state.drawer_content = 'subsets'}}" :class="{active : state.drawer_content === 'subsets'}">
             <v-icon>
@@ -36,11 +41,7 @@
           </v-btn>
         </j-tooltip>
 
-        <j-tooltip tipid="app-toolbar-help">
-          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
-            <v-icon medium style="padding-top: 2px">mdi-information</v-icon>
-          </v-btn>
-        </j-tooltip>
+
 
         <v-divider vertical style="margin: 0px 10px"></v-divider>
       </v-toolbar-items>
@@ -70,9 +71,32 @@
         </j-tooltip>
 
 
-        <v-layout column style="height: 28px; padding-bottom: 12px">
+        <v-layout column style="height: 28px; padding-bottom: 12px" v-if="state.show_toolbar_buttons">
           <span style="display: inline-flex; align-items: right">
             <v-spacer></v-spacer>
+
+            <v-menu
+              absolute
+              offset-y
+              style="max-width: 600px"
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <j-tooltip tooltipcontent="Show app information and docs">
+                  <v-btn
+                    v-bind="attrs"
+                    v-on="on"
+                    color="toolbar"
+                    style="font-family: monospace; font-size: 10pt; text-transform: lowercase">
+                    v{{ state.jdaviz_version }}
+                  </v-btn>
+                </j-tooltip>
+              </template>
+
+              <v-card>
+                <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"></jupyter-widget>
+              </v-card>
+            </v-menu>
+
             <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
               <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
                 <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0"/>
@@ -81,15 +105,19 @@
             <j-tooltip tipid="app-toolbar-popout">
               <jupyter-widget :widget="popout_button" ></jupyter-widget>
             </j-tooltip>
-            </span>
-          <v-text-field
-              v-model='state.tray_items_filter'
-              append-icon='mdi-magnify'
-              outlined
-              dense
-              clearable
-              hide-details
-          ></v-text-field>
+          </span>
+          <span style="height: 8px"><v-spacer></v-spacer></span>
+          <span>
+            <v-text-field
+                v-model='state.tray_items_filter'
+                append-icon='mdi-magnify'
+                outlined
+                dense
+                style="height: 16px; font-size: 12px;"
+                clearable
+                hide-details
+            ></v-text-field>
+          </span>
         </v-layout>
 
       </v-toolbar-items>
@@ -101,7 +129,7 @@
     >
       <v-container class="fill-height pa-0" fluid>
         <splitpanes>
-          <pane size="25" min-size="25" v-if="state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 260px">
+          <pane size="25" min-size="25" v-if="state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 320px">
             <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.add_subtab">
                 <v-tab>Data</v-tab>
@@ -144,15 +172,11 @@
             <v-card v-if="state.drawer_content === 'help'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.help_subtab">
                 <v-tab>Metadata</v-tab>
-                <v-tab>About</v-tab>
                 <v-tab>Logger</v-tab>
               </v-tabs>
               <v-tabs-items v-model="state.help_subtab">
                 <v-tab-item>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
-                </v-tab-item>
-                <v-tab-item>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item>
                   <v-alert v-if="state.snackbar_history.length === 0" dense type="info" style="margin-top: 24px">No logger messages</v-alert>

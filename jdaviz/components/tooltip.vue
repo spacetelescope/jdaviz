@@ -28,7 +28,7 @@ const tooltips = {
   'app-toolbar-viewers': 'Viewer options',
   'app-toolbar-save': 'Export data, viewers, tables',
   'app-toolbar-subsets': 'View and edit subsets',
-  'app-toolbar-help': 'Help information and logger messages',
+  'app-toolbar-help': 'Metadata and logger messages',
   'app-toolbar-plugins': 'Data analysis plugins',
   'app-toolbar-popout': `Display in a new window<br /><br />
     <div style="width: 200px; border: 1px solid gray;" class="pa-2">
