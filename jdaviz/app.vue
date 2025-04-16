@@ -36,6 +36,12 @@
           </v-btn>
         </j-tooltip>
 
+        <j-tooltip tipid="app-toolbar-help">
+          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
+            <v-icon medium style="padding-top: 2px">mdi-information</v-icon>
+          </v-btn>
+        </j-tooltip>
+
         <v-divider vertical style="margin: 0px 10px"></v-divider>
       </v-toolbar-items>
 
@@ -62,25 +68,30 @@
             <v-icon medium>mdi-help-box</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
-          <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
-            <img :src="state.icons['api']" width="24" class="invert-if-dark" style="opacity: 1.0"/>
-          </v-btn>
-        </j-tooltip>
-        <v-divider vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip tipid="app-toolbar-search">
-          <v-btn icon @click="() => {if (state.drawer_content === 'search') {state.drawer_content = ''} else {state.drawer_content = 'search'}}" :class="{active : state.drawer_content === 'search'}">
-            <v-icon medium style="padding-top: 2px">mdi-magnify</v-icon>
-          </v-btn>
-        </j-tooltip>
-        <j-tooltip tipid="app-toolbar-help">
-          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
-            <v-icon medium style="padding-top: 2px">mdi-help-box</v-icon>
-          </v-btn>
-        </j-tooltip>
-        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-toolbar-popout">
-          <jupyter-widget :widget="popout_button" ></jupyter-widget>
-        </j-tooltip>
+
+
+        <v-layout column style="height: 28px; padding-bottom: 12px">
+          <span style="display: inline-flex; align-items: right">
+            <v-spacer></v-spacer>
+            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
+              <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
+                <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0"/>
+              </v-btn>
+            </j-tooltip>
+            <j-tooltip tipid="app-toolbar-popout">
+              <jupyter-widget :widget="popout_button" ></jupyter-widget>
+            </j-tooltip>
+            </span>
+          <v-text-field
+              v-model='state.tray_items_filter'
+              append-icon='mdi-magnify'
+              outlined
+              dense
+              clearable
+              hide-details
+          ></v-text-field>
+        </v-layout>
+
       </v-toolbar-items>
     </v-app-bar>
 
@@ -132,10 +143,14 @@
             </v-card>
             <v-card v-if="state.drawer_content === 'help'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.help_subtab">
+                <v-tab>Metadata</v-tab>
                 <v-tab>About</v-tab>
                 <v-tab>Logger</v-tab>
               </v-tabs>
               <v-tabs-items v-model="state.help_subtab">
+                <v-tab-item>
+                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
+                </v-tab-item>
                 <v-tab-item>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"></jupyter-widget>
                 </v-tab-item>
@@ -170,7 +185,7 @@
               ></v-text-field>
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
-                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && ['Plot Options', 'Markers', 'Subset Tools', 'About', 'Export'].indexOf(trayItem.label) === -1">
+                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && ['Plot Options', 'Metadata', 'Markers', 'Subset Tools', 'About', 'Export'].indexOf(trayItem.label) === -1">
                     <v-expansion-panel-header class="plugin-header" expand-icon=''>
                       <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
                         <v-list-item-title>
@@ -199,7 +214,7 @@
             </v-card>
           </pane>
 
-          <pane size="75" min-size='25' :style="['help', 'search'].indexOf(state.drawer_content) !== -1 ? 'border-top: 6px solid #C75109' : ''">
+          <pane size="75" min-size='25'>
             <golden-layout
               v-if="outputCellHasHeight"
               style="height: 100%;"
