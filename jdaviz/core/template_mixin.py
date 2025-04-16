@@ -1110,7 +1110,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _apply_default_selection(self, skip_if_current_valid=True):
         if self.is_multiselect:
-            if skip_if_current_valid and len(self.selected) == 0:
+            if skip_if_current_valid and (self.selected is None or len(self.selected) == 0):
                 # current selection is empty and so should remain that way
                 return
             is_valid = [s in self.labels for s in self.selected]
