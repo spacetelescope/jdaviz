@@ -10,15 +10,17 @@
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-save">
-          <v-btn icon @click="() => {if (state.drawer_content === 'save') {state.drawer_content = ''} else {state.drawer_content = 'save'}}" :class="{active : state.drawer_content === 'save'}">
+          <v-btn icon @click="() => {if (state.drawer_content === 'save') {state.drawer_content = ''} else {state.drawer_content = 'save'}}" :class="{active : state.drawer_content === 'save'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].is_relevant">
             <v-icon medium style="padding-top: 2px">mdi-content-save</v-icon>
           </v-btn>
         </j-tooltip>
+
         <v-divider vertical style="margin: 0px 10px"></v-divider>
 
-        <j-tooltip tipid="app-toolbar-viewers">
-          <v-btn icon @click="() => {if (state.drawer_content === 'viewers') {state.drawer_content = ''} else {state.drawer_content = 'viewers'}}" :class="{active : state.drawer_content === 'viewers'}">
-            <v-icon medium style="padding-top: 2px">mdi-chart-histogram</v-icon>
+
+        <j-tooltip tipid="app-toolbar-plugins">
+          <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}">
+            <v-icon>mdi-view-grid-outline</v-icon>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-subsets">
@@ -28,17 +30,12 @@
             </v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip tipid="app-toolbar-plugins">
-          <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}">
-            <v-icon>mdi-menu</v-icon>
+        <j-tooltip tipid="app-toolbar-viewers">
+          <v-btn icon @click="() => {if (state.drawer_content === 'viewers') {state.drawer_content = ''} else {state.drawer_content = 'viewers'}}" :class="{active : state.drawer_content === 'viewers'}">
+            <v-icon medium style="padding-top: 2px">mdi-chart-histogram</v-icon>
           </v-btn>
         </j-tooltip>
 
-        <j-tooltip tipid="app-toolbar-help">
-          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
-            <v-icon medium style="padding-top: 2px">mdi-help-box</v-icon>
-          </v-btn>
-        </j-tooltip>
         <v-divider vertical style="margin: 0px 10px"></v-divider>
       </v-toolbar-items>
 
@@ -58,11 +55,8 @@
       </v-toolbar-items>
 
       <v-spacer></v-spacer>
-      <v-toolbar-items style="margin-right: 16px">
-        <v-divider vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-toolbar-popout">
-          <jupyter-widget :widget="popout_button" ></jupyter-widget>
-        </j-tooltip>
+      <v-toolbar-items>
+
         <j-tooltip v-if="state.show_toolbar_buttons && config !== 'deconfigged'" tipid="app-help">
           <v-btn icon :href="docs_link" target="_blank">
             <v-icon medium>mdi-help-box</v-icon>
@@ -73,6 +67,20 @@
             <img :src="state.icons['api']" width="24" class="invert-if-dark" style="opacity: 1.0"/>
           </v-btn>
         </j-tooltip>
+        <v-divider vertical style="margin: 0px 10px"></v-divider>
+        <j-tooltip tipid="app-toolbar-search">
+          <v-btn icon @click="() => {if (state.drawer_content === 'search') {state.drawer_content = ''} else {state.drawer_content = 'search'}}" :class="{active : state.drawer_content === 'search'}">
+            <v-icon medium style="padding-top: 2px">mdi-magnify</v-icon>
+          </v-btn>
+        </j-tooltip>
+        <j-tooltip tipid="app-toolbar-help">
+          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
+            <v-icon medium style="padding-top: 2px">mdi-help-box</v-icon>
+          </v-btn>
+        </j-tooltip>
+        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-toolbar-popout">
+          <jupyter-widget :widget="popout_button" ></jupyter-widget>
+        </j-tooltip>
       </v-toolbar-items>
     </v-app-bar>
 
@@ -82,7 +90,7 @@
     >
       <v-container class="fill-height pa-0" fluid>
         <splitpanes>
-          <pane size="25" min-size="25" v-if="state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
+          <pane size="25" min-size="25" v-if="state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 260px">
             <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.add_subtab">
                 <v-tab>Data</v-tab>
@@ -107,7 +115,7 @@
             </v-card>
             <v-card v-if="state.drawer_content === 'viewers'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.viewer_subtab">
-                <v-tab>Plot Options</v-tab>
+                <v-tab :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">Plot Options</v-tab>
                 <v-tab>Markers</v-tab>
               </v-tabs>
               <v-tabs-items v-model="state.viewer_subtab">
@@ -148,6 +156,9 @@
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
+            <v-card v-if="state.drawer_content === 'search'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <p>search across all plugins (built-in and data-analysis) as well as data-menus, etc.  Search results then give buttons which open that panel/tab/menu</p>
+            </v-card>
 
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
@@ -160,7 +171,7 @@
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
                   <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && ['Plot Options', 'Markers', 'Subset Tools', 'About', 'Export'].indexOf(trayItem.label) === -1">
-                    <v-expansion-panel-header class="plugin-header">
+                    <v-expansion-panel-header class="plugin-header" expand-icon=''>
                       <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
                         <v-list-item-title>
                           <j-tooltip :tipid="trayItem.name">
@@ -188,7 +199,7 @@
             </v-card>
           </pane>
 
-            <pane size="75" min-size='25'>
+          <pane size="75" min-size='25' :style="['help', 'search'].indexOf(state.drawer_content) !== -1 ? 'border-top: 6px solid #C75109' : ''">
             <golden-layout
               v-if="outputCellHasHeight"
               style="height: 100%;"
