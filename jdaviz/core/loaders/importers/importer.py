@@ -78,6 +78,10 @@ class BaseImporterToDataCollection(BaseImporter):
         raise NotImplementedError("Importer subclass must implement default_viewer_reference")  # noqa pragma: nocover
 
     @property
+    def ignore_viewers_with_cls(self):
+        return ()
+
+    @property
     def default_viewer_label(self):
         return vid_map.get(self.default_viewer_reference, self.default_viewer_reference)
 
@@ -110,11 +114,13 @@ class BaseImporterToDataCollection(BaseImporter):
     def load_into_viewer(self, data_label, default_viewer_reference=None):
         added = 0
         for viewer in self.app._jdaviz_helper.viewers.values():
+            if isinstance(viewer._obj, self.ignore_viewers_with_cls):
+                continue
             if data_label in viewer.data_menu.data_labels_unloaded:
                 added += 1
                 viewer.data_menu.add_data(data_label)
         if added == 0:
-            if self.app.config != 'deconfigged':
+            if self.app.config not in ('deconfigged', 'lcviz'):
                 # do not add additional viewers
                 msg = SnackbarMessage(
                     "Data units are incompatible with viewer units, unload all data from viewer to add",  # noqa
@@ -143,7 +149,10 @@ class BaseImporterToDataCollection(BaseImporter):
         if data_label is None:
             data_label = self.data_label_value
         if hasattr(data, 'meta'):
-            data.meta = standardize_metadata(data.meta)
+            try:
+                data.meta = standardize_metadata(data.meta)
+            except TypeError:
+                pass
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)

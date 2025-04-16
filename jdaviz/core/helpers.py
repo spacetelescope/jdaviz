@@ -376,8 +376,8 @@ class ConfigHelper(HubListener):
             self.app.layout.height = height
             self.app.state.settings['context']['notebook']['max_height'] = height
 
-        if self.app.config == 'specviz' or self.app.state.dev_loaders:
-            if not len(self.viewers):
+        if self.app.config in ('specviz', 'specviz2d', 'lcviz') or self.app.state.dev_loaders:
+            if not len(self.app.data_collection):
                 self.app.state.drawer_content = 'loaders'
 
         show_widget(self.app, loc=loc, title=title)

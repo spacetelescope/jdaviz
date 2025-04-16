@@ -6,7 +6,7 @@
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="index > 1" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="item.name === 'g-data-tools' && ['specviz', 'specviz2d'].indexOf(config) !== -1" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
+        <j-tooltip v-if="item.name === 'g-data-tools' && ['specviz', 'specviz2d', 'lcviz'].indexOf(config) !== -1" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
           <v-btn tile depressed color="turquoise" @click="state.drawer_content = 'loaders'">
             Import Data
           </v-btn>
