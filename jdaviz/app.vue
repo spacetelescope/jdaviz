@@ -108,15 +108,33 @@
           </span>
           <span style="height: 8px"><v-spacer></v-spacer></span>
           <span>
-            <v-text-field
-                v-model='state.tray_items_filter'
-                append-icon='mdi-magnify'
-                outlined
-                dense
-                style="height: 16px; font-size: 12px;"
-                clearable
-                hide-details
-            ></v-text-field>
+            <v-menu
+              offset-y
+              style="max-width: 600px"
+              v-model="state.global_search_menu"
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-text-field
+                    v-model='state.global_search'
+                    append-icon='mdi-magnify'
+                    outlined
+                    dense
+                    style="height: 16px; font-size: 12px; width: 350px"
+                    clearable
+                    hide-details
+                    v-bind="attrs"
+                    v-on="on"
+                    @input="state.global_search_menu = !!state.global_search"
+                ></v-text-field>
+              </template>
+              <v-card style="min-width: 350px; margin-top: 24px">
+                <v-container>
+                  <v-row>
+                    <p>no search results</p>
+                  </v-row>
+                </v-container>
+              </v-card>
+            </v-menu>
           </span>
         </v-layout>
 

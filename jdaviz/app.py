@@ -207,6 +207,10 @@ class ApplicationState(State):
         0, docstring="Index of the active help tab shown in the viewer area.")
     jdaviz_version = CallbackProperty(
         __version__, docstring="Version of Jdaviz.")
+    global_search = CallbackProperty(
+        '', docstring="Global search string.")
+    global_search_menu = CallbackProperty(
+        False, docstring="Whether to show the global search menu.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
