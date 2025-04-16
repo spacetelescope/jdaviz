@@ -19,7 +19,7 @@ from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
                                 CatalogSelectClickEventMessage, FootprintSelectClickEventMessage)
-from jdaviz.core.marks import SpectralLine
+from jdaviz.core.marks import SpectralLine, FootprintOverlay
 
 __all__ = []
 
@@ -439,6 +439,12 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
     def on_mouse_event(self, data):
         msg = FootprintSelectClickEventMessage(data, sender=self)
         self.viewer.session.hub.broadcast(msg)
+
+    def is_visible(self):
+        return any(
+            isinstance(m, FootprintOverlay) and m.visible
+            for m in self.viewer.figure.marks
+            )
 
 
 @viewer_tool
