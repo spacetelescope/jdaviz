@@ -254,7 +254,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                            handler=self._on_select_footprint_overlay)
         self._on_link_type_updated()
 
-    def _highlight_overlay(self, overlay_label, viewers=None, stroke_width=4, reset_width=2):
+    def _highlight_overlay(self, overlay_label, viewers=None, stroke_width=4, reset_width=1):
         """
         Visually highlight one overlay by thickening its stroke.
         """
