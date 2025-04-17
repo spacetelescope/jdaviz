@@ -64,7 +64,7 @@ def _coerce_unit(quantity):
     return coerced_quantity
 
 
-@tray_registry('specviz-line-analysis', label="Line Analysis", viewer_requirements='spectrum')
+@tray_registry('specviz-line-analysis', label="Line Analysis", category="data:analysis")
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
                    DatasetSpectralSubsetValidMixin, SpectralContinuumMixin):
     """

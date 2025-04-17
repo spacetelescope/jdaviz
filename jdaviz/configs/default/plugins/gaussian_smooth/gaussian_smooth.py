@@ -16,8 +16,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['GaussianSmooth']
 
 
-@tray_registry('g-gaussian-smooth', label="Gaussian Smooth",
-               viewer_requirements=['spectrum', 'flux'])
+@tray_registry('g-gaussian-smooth', label="Gaussian Smooth", category="data:manipulation")
 class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Gaussian Smooth Plugin Documentation <gaussian-smooth>` for more details.

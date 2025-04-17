@@ -33,7 +33,8 @@ _model_cls = {'Spline': models.Spline1D,
               'Chebyshev': models.Chebyshev1D}
 
 
-@tray_registry('spectral-extraction', label="Spectral Extraction")
+@tray_registry('spectral-extraction', label="Spectral Extraction",
+               category="data:reduction")
 class SpectralExtraction(PluginTemplateMixin):
     """
     The Spectral Extraction plugin exposes specreduce methods for tracing, background subtraction,

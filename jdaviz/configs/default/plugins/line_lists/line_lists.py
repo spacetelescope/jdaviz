@@ -29,10 +29,7 @@ from jdaviz.core.unit_conversion_utils import create_equivalent_spectral_axis_un
 __all__ = ['LineListTool']
 
 
-@tray_registry(
-    'g-line-list', label="Line Lists",
-    viewer_requirements=['spectrum']
-)
+@tray_registry('g-line-list', label="Line Lists", category="data:analysis")
 class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"
