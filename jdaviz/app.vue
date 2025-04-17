@@ -59,10 +59,11 @@
         <splitpanes>
           <pane size="75">
             <golden-layout
-              v-if="outputCellHasHeight"
+              v-if="outputCellHasHeight && show"
               style="height: 100%;"
               :has-headers="state.settings.visible.tab_headers"
               @state="onLayoutChange"
+              :state="golden_layout_state"
             >
               <gl-row :closable="false">
                 <g-viewer-tab
@@ -188,6 +189,7 @@ export default {
   data() {
     return {
       outputCellHasHeight: false,
+      show: true,
     };
   },
   methods: {
@@ -213,7 +215,8 @@ export default {
       }
       return trayItem.api_methods.filter((item) => ("."+item.toLowerCase()).includes(tray_items_filter.toLowerCase()))
     },
-    onLayoutChange() {
+    onLayoutChange(v) {
+      this.golden_layout_state = v;
       /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */
       window.dispatchEvent(new Event('resize'));
     }
@@ -232,6 +235,18 @@ export default {
       this.outputCellHasHeight = entries[0].contentRect.height > 0;
     }).observe(this.$refs.mainapp.$el);
     this.outputCellHasHeight = this.$refs.mainapp.$el.offsetHeight > 0
+
+    /* workaround: when initializing with an existing golden_layout state, the layout doesn't show. rendering it a
+     * second time the layout does show.
+     */
+    if (this.golden_layout_state) {
+      setTimeout(() => {
+        this.show = false;
+        setTimeout(() => {
+          this.show = true;
+        }, 100);
+      }, 500);
+    }
   }
 };
 </script>
