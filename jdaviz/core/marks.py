@@ -714,7 +714,7 @@ class CatalogMark(PluginScatter):
 class FootprintOverlay(PluginLine):
     def __init__(self, viewer, overlay, **kwargs):
         self._overlay = overlay
-        kwargs.setdefault('stroke_width', 2)
+        kwargs.setdefault('stroke_width', 1)
         kwargs.setdefault('close_path', True)
         kwargs.setdefault('opacities', [0.8])
         kwargs.setdefault('fill', 'inside')
