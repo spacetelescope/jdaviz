@@ -310,6 +310,9 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             except ValueError:
                 invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
                 continue
+        if not len(this_resolver.format.items):
+            invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
+            continue
         for fmt_item in this_resolver.format.items:
             if (format is not None
                 and not any([format in (fmt_item['label'],
