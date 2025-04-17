@@ -113,7 +113,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         data = hdu.data
         header = hdu.header
         metadata = standardize_metadata(header)
-        metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
+        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         wcs = WCS(header, hdulist)
         if self.transpose:
             data = data.T
