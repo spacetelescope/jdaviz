@@ -377,33 +377,37 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     data_label = 'image-data'
     imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=True)
     subset_plugin.import_region(CircularROI(xc=5, yc=5, radius=2))
-    reg = imviz_helper.app.get_subsets("Subset 1")
+    reg = imviz_helper.app.get_subsets("Subset 1", include_sky_region=True)
     circle1 = CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1,
-                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
+                       'sky_region': circle1.to_sky(image_2d_wcs),
+                       'subset_state': reg[-1]['subset_state']}
 
     subset_plugin.combination_mode.selected = 'andnot'
     subset_plugin.import_region(RectangularROI(xmin=2, xmax=4, ymin=2, ymax=4))
-    reg = imviz_helper.app.get_subsets("Subset 1")
+    reg = imviz_helper.app.get_subsets("Subset 1", include_sky_region=True)
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=3, y=3),
                                       width=2, height=2, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1,
-                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
+                       'sky_region': rectangle1.to_sky(image_2d_wcs),
+                       'subset_state': reg[-1]['subset_state']}
 
     subset_plugin.combination_mode.selected = 'andnot'
     subset_plugin.import_region(EllipticalROI(xc=3, yc=3, radius_x=3, radius_y=6))
-    reg = imviz_helper.app.get_subsets("Subset 1")
+    reg = imviz_helper.app.get_subsets("Subset 1", include_sky_region=True)
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
                                   width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
-                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
+                       'sky_region': ellipse1.to_sky(image_2d_wcs),
+                       'subset_state': reg[-1]['subset_state']}
 
     subset_plugin.combination_mode.selected = 'or'
     subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=5, inner_radius=2.5, outer_radius=5))
-    reg = imviz_helper.app.get_subsets("Subset 1")
+    reg = imviz_helper.app.get_subsets("Subset 1", include_sky_region=True)
     ann1 = CircleAnnulusPixelRegion(center=PixCoord(x=5, y=5), inner_radius=2.5, outer_radius=5)
     assert reg[-1] == {'name': 'CircularAnnulusROI', 'glue_state': 'OrState', 'region': ann1,
-                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
+                       'sky_region': ann1.to_sky(image_2d_wcs),
+                       'subset_state': reg[-1]['subset_state']}
 
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI',
