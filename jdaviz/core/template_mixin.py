@@ -1201,10 +1201,6 @@ class SelectFileExtensionComponent(SelectPluginComponent):
         return self.manual_options[self.selected_index]
 
     @property
-    def selected_name(self):
-        return self.selected_item.get('name', None)
-
-    @property
     def indices(self):
         return [item.get('index', None) for item in self.items]
 
