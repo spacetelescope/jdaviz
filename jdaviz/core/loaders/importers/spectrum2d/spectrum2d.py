@@ -62,7 +62,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                             'ext_data_label_invalid_msg')
 
         self.input_hdulist = not isinstance(self.input, Spectrum1D)
-        if self.is_valid and self.input_hdulist:
+        if self.input_hdulist:
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
