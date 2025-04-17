@@ -590,6 +590,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 mark.visible = visible
                 mark.colors = [self.color]
                 mark.fill_opacities = [self.fill_opacity]
+                self._highlight_overlay(self.overlay_selected, viewers=[viewer])
                 self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
                     viewer_id=viewer.reference, sender=self))
 
