@@ -1,5 +1,5 @@
 import os
-from traitlets import Unicode, observe
+from traitlets import Any, observe
 
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import loader_resolver_registry
@@ -15,7 +15,7 @@ class FileResolver(BaseResolver):
     template_file = __file__, "file.vue"
     default_input = 'filepath'
 
-    filepath = Unicode().tag(sync=True)
+    filepath = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
@@ -33,6 +33,10 @@ class FileResolver(BaseResolver):
 
     @observe('filepath')
     def _on_filepath_changed(self, change):
+        if not isinstance(self.filepath, str):
+            # will trigger another call to _on_filepath_changed
+            self.filepath = str(self.filepath)
+            return
         if self._file_upload.file_path != change['new']:
             path, file = os.path.split(change['new'])
             if path == '':

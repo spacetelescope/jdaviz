@@ -9,7 +9,8 @@ class ObjectParser(BaseParser):
     # pass through an object from the object resolver directly to the importers
     @property
     def is_valid(self):
-        return self.input is not None
+        # resolver already checks to ensure not None, string, Path
+        return True
 
     @cached_property
     def output(self):

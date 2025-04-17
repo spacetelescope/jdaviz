@@ -67,7 +67,7 @@ class FormatSelect(SelectPluginComponent):
                     if this_parser.is_valid:
                         importer_input = this_parser()
                     else:
-                        self._invalid_importers[parser_name] = 'not valid'
+                        self._invalid_importers[parser_name] = 'parser not valid'
                         importer_input = None
                 except Exception as e:
                     self._invalid_importers[parser_name] = f'parser exception: {e}'
@@ -95,7 +95,7 @@ class FormatSelect(SelectPluginComponent):
                         # so that they can be used when compiling the list of target filters
                         self._importers[label] = this_importer
                     else:
-                        self._invalid_importers[label] = 'not valid'
+                        self._invalid_importers[label] = 'importer not valid'
 
         self.items = all_resolvers
         self._apply_default_selection()
@@ -325,7 +325,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             valid_resolvers.append((this_resolver, resolver_name, fmt_item['label']))
 
     if len(valid_resolvers) == 0:
-        raise ValueError("no valid loaders found for input, tried", invalid_resolvers)
+        raise ValueError(f"no valid loaders found for input, tried: {invalid_resolvers}")
     elif len(valid_resolvers) > 1:
         vrs = [f"resolver={vr[1]} > format={vr[2]}" for vr in valid_resolvers]
         raise ValueError(f"multiple valid loaders found for input: {vrs}")
