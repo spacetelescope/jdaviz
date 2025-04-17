@@ -84,7 +84,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if not ((isinstance(self.input, Spectrum1D)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
-                 and len([hdu for hdu in self.input if hdu_is_valid(hdu)])))  # noqa
+                 and len([hdu for hdu in self.input if hdu_is_valid(hdu)]))):  # noqa
             return False
         try:
             self.output

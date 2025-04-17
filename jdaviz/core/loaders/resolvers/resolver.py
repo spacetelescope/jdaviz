@@ -297,7 +297,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             continue
         try:
             is_valid = this_resolver.is_valid
-        except Exception:
+        except Exception as e:  # nosec
             invalid_resolvers[resolver_name] = f'is_valid exception: {e}'
             is_valid = False
         if not is_valid:

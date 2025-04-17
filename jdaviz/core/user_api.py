@@ -68,7 +68,7 @@ class UserApiWrapper:
             # .selected traitlet
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
-            elif isinstance(exp_obj, SelectExtensionComponent) and isinstance(value, int):
+            elif isinstance(exp_obj, SelectFileExtensionComponent) and isinstance(value, int):
                 # allow setting by index
                 value = exp_obj.choices[value]
             elif isinstance(exp_obj, FormatSelect):
