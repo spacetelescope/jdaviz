@@ -35,6 +35,7 @@ def hdu_is_valid(hdu):
 @loader_importer_registry('2D Spectrum')
 class Spectrum2DImporter(BaseImporterToDataCollection):
     template_file = __file__, "./spectrum2d.vue"
+    parser_preference = ['fits', 'specutils.Spectrum']
 
     auto_extract = Bool(True).tag(sync=True)
 
