@@ -268,10 +268,6 @@ class ApplicationState(State):
     tray_items = ListCallbackProperty(
         docstring="List of plugins displayed in the sidebar tray area.")
 
-    tray_items_loaded = ListCallbackProperty(
-        docstring="List of plugin registry items already loaded into tray_items."
-    )
-
     tray_items_open = CallbackProperty(
         [], docstring="The plugin(s) opened in sidebar tray area.")
 
@@ -2959,10 +2955,16 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.tray_items.append(self._create_tray_item(tray_registry_member))
 
     def update_loaders_from_registry(self):
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_loaders_from_registry is only "
+                                      "implemented for the deconfigged app")
         for loader in self._jdaviz_helper.loaders.values():
             loader.format._update_items()
 
     def update_tray_items_from_registry(self):
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_tray_items_from_registry is only "
+                                      "implemented for the deconfigged app")
         # need to rebuild in order, just pulling from existing dict if its already there
         tray_items = []
         # NOTE: eventually the core plugins will likely be moved out of the tray
