@@ -2,7 +2,7 @@ from traitlets import Bool, List, Unicode, observe
 from astropy.io import fits
 from astropy import units as u
 from astropy.wcs import WCS
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
@@ -61,7 +61,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                             'ext_data_label_auto',
                                             'ext_data_label_invalid_msg')
 
-        self.input_hdulist = not isinstance(self.input, Spectrum1D)
+        self.input_hdulist = not isinstance(self.input, Spectrum)
         if self.is_valid and self.input_hdulist:
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
@@ -81,7 +81,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if self.app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
-        return ((isinstance(self.input, Spectrum1D)
+        return ((isinstance(self.input, Spectrum)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
                  and len([hdu for hdu in self.input if hdu_is_valid(hdu)])))  # noqa
@@ -123,7 +123,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         else:
             kw = {'wcs': wcs}
 
-        return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
+        return Spectrum(flux=data * data_unit, meta=metadata, **kw)
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
