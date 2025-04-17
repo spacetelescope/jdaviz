@@ -213,13 +213,15 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             axis display unit set in the Unit Conversion plugin.
 
         return_sky_region : bool or None, optional
-            If None (default) or True, then the returned region will be ``SkyRegion`` if the
-            configuration is Imviz and the data is aligned by WCS, or if the configuration
+            If None (default) or True, then the returned region will be ``SkyRegion`` if
+            the data is aligned by WCS, if ``wrt_data`` is set, or if the configuration
             is Cubeviz and the data has a WCS'. If set to False, a ``PixelRegion`` object will
             be returned.
         wrt_data : str or None
             Name of data to use for applying WCS to subset when returning as
-            a sky region object.
+            a ``PixelRegion`` object. The default behavior is to use the WCS of the parent
+            of the subset, so this keyword overrides that to use the WCS of the data with
+            this name.
 
         Returns
         -------
