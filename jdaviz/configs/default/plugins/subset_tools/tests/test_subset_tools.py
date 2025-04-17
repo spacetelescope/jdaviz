@@ -389,7 +389,7 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
 def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
     """
     Test to ensure bug is fixed, where get_subsets
-    for composie subset applied with 'remove' when WCS linked was not
+    for composite subset applied with 'remove' when WCS linked was not
     correctly retrieving the second subset.
     """
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
