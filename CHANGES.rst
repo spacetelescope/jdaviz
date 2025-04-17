@@ -107,6 +107,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return
+  sky regions. [#3547]
+
 Cubeviz
 ^^^^^^^
 - Replace file and fix label in example notebook. [#3537]
