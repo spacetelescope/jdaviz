@@ -1755,7 +1755,7 @@ class LayerSelect(SelectPluginComponent):
             self.viewer = msg.new_viewer_ref
 
     def _get_viewer(self, viewer):
-        # newer will likely be the viewer name in most cases, but viewer id in the case
+        # viewer will likely be the viewer name in most cases, but viewer id in the case
         # of additional viewers in imviz.
         try:
             return self.app.get_viewer(viewer)
