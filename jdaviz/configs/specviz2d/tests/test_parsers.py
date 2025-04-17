@@ -40,7 +40,6 @@ def test_2d_parser_jwst(specviz2d_helper):
                                          'Wave 6.24985e+00 um', '')
 
 
-@pytest.mark.xfail(reason="Transpose not implemented for spectrum1d input")
 @pytest.mark.remote_data
 def test_2d_parser_ext_transpose_file(specviz2d_helper):
     # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
