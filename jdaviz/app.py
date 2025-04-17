@@ -2963,17 +2963,28 @@ class Application(VuetifyTemplate, HubListener):
             loader.format._update_items()
 
     def update_tray_items_from_registry(self):
-        # need to rebuid in order, just pulling from existing dict if its already there
+        # need to rebuild in order, just pulling from existing dict if its already there
         tray_items = []
+        # NOTE: eventually the core plugins will likely be moved out of the tray
+        # in which case we can either remove the categories OR at least simplify
+        # this down into reduction, manipulation, analysis.
         for category in ['data:info', 'viewer:options',
                          'subset:manipulation',
                          'data:reduction', 'data:manipulation', 'data:analysis',
                          'app:export', 'app:info']:
             for tray_registry_member in tray_registry.members_in_category(category):
-                try:
-                    tray_item = self.get_tray_item_from_name(
-                        tray_registry_member.get('name'), return_widget=False)
-                except KeyError:
+                if not tray_registry_member.get('overwrite', False):
+                    try:
+                        tray_item = self.get_tray_item_from_name(
+                            tray_registry_member.get('name'), return_widget=False)
+                    except KeyError:
+                        create_new = True
+                    else:
+                        create_new = False
+                else:
+                    create_new = True
+
+                if create_new:
                     try:
                         tray_item = self._create_tray_item(tray_registry_member)
                     except Exception as e:

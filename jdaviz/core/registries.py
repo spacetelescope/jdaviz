@@ -171,7 +171,7 @@ class TrayRegistry(UniqueDictRegistry):
             cls._registry_label = label
             self.members[name] = {'name': name, 'label': label, 'icon': icon, 'cls': cls,
                                   'viewer_reference_name_kwargs': viewer_reference_name_kwargs,
-                                  'category': category}
+                                  'category': category, 'overwrite': name in self.members}
 
     def members_in_category(self, category):
         members = [m for m in self.members.values() if m['category'] == category]
