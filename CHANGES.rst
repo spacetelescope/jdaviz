@@ -10,6 +10,7 @@ Bug Fixes
 
 - Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. 
 
+
 Cubeviz
 ^^^^^^^
 - Replace file and fix label in example notebook. [#3537]
