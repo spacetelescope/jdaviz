@@ -1164,8 +1164,8 @@ class Application(VuetifyTemplate, HubListener):
         roi_as_sky_region = None
         if wcs is not None:
             if self.config == 'cubeviz' and wrt_data is None:
-                # If configuration is cubeviz and the SkyRegion must get accessed, use the first data
-                # loaded as a default option incase wrt_data is not set.
+                # If configuration is cubeviz and the SkyRegion must get accessed, use the first
+                # data loaded as a default option incase wrt_data is not set.
                 default_wcs = (self.data_collection[0].meta.get("_orig_spatial_wcs", None)
                                if wrt_data is None else
                                self.data_collection[wrt_data].meta.get("_orig_spatial_wcs", None))
