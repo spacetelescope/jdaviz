@@ -395,12 +395,17 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     subset_plugin.combination_mode.selected = 'andnot'
     subset_plugin.import_region(EllipticalROI(xc=3, yc=3, radius_x=3, radius_y=6))
     reg = imviz_helper.app.get_subsets("Subset 1", include_sky_region=True)
-    ellipse1 = EllipsePixelRegion(center=PixCoord(x=3.0000000000324496, y=3.000000000026291),
+    ellipse1 = EllipsePixelRegion(center=PixCoord(x=3.0, y=3.0),
                                   width=6.0, height=12.0,
                                   angle=0.0 * u.deg)
     assert reg[-1]['name'] == 'EllipticalROI'
     assert reg[-1]['glue_state'] == 'AndNotState'
-    assert reg[-1]['region'] == ellipse1
+    assert_quantity_allclose(reg[-1]['region'].center.x, ellipse1.center.x)
+    assert_quantity_allclose(reg[-1]['region'].center.y, ellipse1.center.y)
+    assert_quantity_allclose(reg[-1]['region'].width, ellipse1.width)
+    assert_quantity_allclose(reg[-1]['region'].height, ellipse1.height)
+    assert_quantity_allclose(reg[-1]['region'].angle, ellipse1.angle)
+
     expected_sky = ellipse1.to_sky(image_2d_wcs)
     assert_quantity_allclose(reg[-1]['sky_region'].center.ra, expected_sky.center.ra)
     assert_quantity_allclose(reg[-1]['sky_region'].center.dec, expected_sky.center.dec)
