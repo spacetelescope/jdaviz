@@ -1,14 +1,5 @@
 <template>
   <v-container>
-    <v-row v-if="input_hdulist">
-      <plugin-switch
-        :value.sync="transpose"
-        label="Transpose"
-        api_hint="ldr.transpose = "
-        :api_hints_enabled="api_hints_enabled"
-        hint="Whether to transpose the data."
-      />
-    </v-row>
     <plugin-select
       v-if="input_hdulist"
       :items="extension_items.map(i => i.label)"

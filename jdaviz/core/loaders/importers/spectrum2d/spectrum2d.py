@@ -48,7 +48,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     input_hdulist = Bool(False).tag(sync=True)
     extension_items = List().tag(sync=True)
     extension_selected = Unicode().tag(sync=True)
-    transpose = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,7 +73,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     def user_api(self):
         expose = ['auto_extract', 'ext_data_label']
         if self.input_hdulist:
-            expose += ['extension', 'transpose']
+            expose += ['extension']
         return ImporterUserApi(self, expose)
 
     @property
@@ -116,8 +115,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         wcs = WCS(header, hdulist)
-        if self.transpose:
+        if data.shape[0] > data.shape[1]:
             data = data.T
+        if wcs.array_shape[0] > wcs.array_shape[1]:
             wcs = wcs.swapaxes(0, 1)
 
         try:
