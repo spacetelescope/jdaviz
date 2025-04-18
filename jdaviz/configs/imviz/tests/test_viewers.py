@@ -52,7 +52,7 @@ def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     assert dm._obj.orientation_align_by_wcs
-    assert imviz_helper.viewers['new-viewer'].data_menu.orientation.selected == 'Default orientation'  # noqa
+    assert dm.orientation.selected == 'Default orientation'
 
 
 def test_align_by_wcs_create_viewer(imviz_helper, image_2d_wcs):
@@ -66,7 +66,7 @@ def test_align_by_wcs_create_viewer(imviz_helper, image_2d_wcs):
     dm.add_data('my_data[DATA]')
 
     assert dm._obj.orientation_align_by_wcs
-    assert dm.orientation.selected == 'Default orientation'  # noqa
+    assert dm.orientation.selected == 'Default orientation'
 
 
 def test_get_viewer_created(imviz_helper):
