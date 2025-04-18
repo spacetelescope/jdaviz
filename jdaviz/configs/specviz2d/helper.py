@@ -102,8 +102,7 @@ class Specviz2d(Specviz):
                       cache=cache,
                       local_path=local_path,  # is this implemented by url-resolver?
                       timeout=timeout,
-                      extension=ext,
-                      transpose=transpose)
+                      extension=ext)
         if spectrum_1d is not None:
             if spectrum_1d_label is not None:
                 spectrum_1d_label = self.app.return_unique_name(spectrum_1d_label)

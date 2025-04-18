@@ -157,6 +157,9 @@ filterwarnings = [
     "ignore:.*numpy\\.core.*:DeprecationWarning",
     "ignore:The load_data function is deprecated.*",
     "ignore:.*use_side_effect is deprecated.*",
+    "ignore:.*The WCS transformation has more axes.*",
+    "ignore:.*from MJD-BEG.*",
+    "ignore:.*Set OBSGEO-L to.*",
 ]
 
 [tool.coverage.run]
