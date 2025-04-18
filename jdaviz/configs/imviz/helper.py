@@ -133,7 +133,7 @@ class Imviz(ImageConfigHelper):
         """
         prev_data_labels = self.app.data_collection.labels
 
-        if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins:
+        if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
             kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
 
         if isinstance(data, str):

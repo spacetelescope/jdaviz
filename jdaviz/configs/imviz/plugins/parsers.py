@@ -108,7 +108,7 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         improve image rendering performance for images with expensive GWCS
         transformations.
     """
-
+    print(f'parse_data - {gwcs_to_fits_sip=}')
     if isinstance(file_obj, str):
         file_obj = get_cloud_fits(
             file_obj, ext=ext, cache=cache, local_path=local_path, timeout=timeout)
@@ -433,7 +433,7 @@ def _jwst2data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
             if 'wcs' in dm_meta:
                 gwcs = dm_meta['wcs']
 
-                if try_gwcs_to_fits_sip and gwcs is not None:
+                if try_gwcs_to_fits_sip:
                     data.coords = _try_gwcs_to_fits_sip(gwcs)
                 else:
                     data.coords = gwcs
