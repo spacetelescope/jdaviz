@@ -60,6 +60,17 @@
         />
       </div>
 
+      <plugin-action-button
+        :results_isolated_to_plugin="true"
+        @click="measure_cross_dispersion_profile"
+        :spinner="spinner"
+      >
+            Plot Cross Dispersion Profile
+      </plugin-action-button>
+
+      <v-row v-if="plot_available">
+        <jupyter-widget :widget="plot_widget"/>
+      </v-row>
 
     </div>
 

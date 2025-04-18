@@ -198,10 +198,14 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
     def vue_measure_cross_dispersion_profile(self):
         self.measure_cross_dispersion_profile()
 
+    @observe('pixel', 'trace_selected', 'width', 'use_full_width')
     def measure_cross_dispersion_profile(self, update_plot=True,
                                          use_display_units=True):
 
         data = self.dataset.selected_obj
+
+        if data is None:
+            return
 
         if self.use_full_width:
             width = None
