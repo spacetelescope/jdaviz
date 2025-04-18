@@ -526,15 +526,29 @@ class TestParseImage:
             parse_data(imviz_helper.app, filename, ext='DOES_NOT_EXIST', data_label='foo')
 
     @pytest.mark.remote_data
-    def test_gwcs_to_fits_sip(self, imviz_helper):
-        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = True
+    @pytest.mark.parametrize(
+        ('gwcs_to_fits_sip', 'expected_cls'),
+        ((True, WCS),
+         (False, GWCS))
+    )
+    def test_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, gwcs_to_fits_sip=gwcs_to_fits_sip)
+
+        data = imviz_helper.app.data_collection[0]
+        assert isinstance(data.coords, expected_cls)
+
+    @pytest.mark.remote_data
+    @pytest.mark.parametrize(
+        ('gwcs_to_fits_sip', 'expected_cls'),
+        ((True, WCS),
+         (False, GWCS))
+    )
+    def test_orientation_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
+        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = gwcs_to_fits_sip
         imviz_helper.load_data(self.jwst_asdf_url_1, cache=True)
 
-        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = False  # this is the default setting
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True)
-
-        assert isinstance(imviz_helper.app.data_collection[0].coords, WCS)
-        assert isinstance(imviz_helper.app.data_collection[1].coords, GWCS)
+        data = imviz_helper.app.data_collection[0]
+        assert isinstance(data.coords, expected_cls)
 
 
 def test_load_valid_not_valid(imviz_helper):
