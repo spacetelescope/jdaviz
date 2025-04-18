@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+from astropy import units as u
+from astropy.nddata import NDData
 from regions import CirclePixelRegion, PixCoord
 
 from jdaviz.app import Application
@@ -35,6 +37,36 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
     assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
     assert po.viewer.selected == ['imviz-0']
     assert po.viewer.labels == ['imviz-0']
+
+
+def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data, data_label='my_data')
+
+    imviz_helper.create_image_viewer(viewer_name='new-viewer')
+    dm = imviz_helper.viewers['new-viewer'].data_menu
+    dm.add_data('my_data[DATA]')
+
+    assert not dm._obj.orientation_align_by_wcs
+
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    assert dm._obj.orientation_align_by_wcs
+    assert dm.orientation.selected == 'Default orientation'
+
+
+def test_align_by_wcs_create_viewer(imviz_helper, image_2d_wcs):
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data, data_label='my_data')
+
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    imviz_helper.create_image_viewer(viewer_name='new-viewer')
+    dm = imviz_helper.viewers['new-viewer'].data_menu
+    dm.add_data('my_data[DATA]')
+
+    assert dm._obj.orientation_align_by_wcs
+    assert dm.orientation.selected == 'Default orientation'
 
 
 def test_get_viewer_created(imviz_helper):

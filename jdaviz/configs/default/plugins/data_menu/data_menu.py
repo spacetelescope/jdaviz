@@ -199,6 +199,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.layer.viewer = self._viewer.reference
         except AttributeError:
             return
+        self._on_refdata_change()
 
     def _on_app_icons_updated(self, msg):
         if msg.icon_type == 'viewer':
@@ -207,13 +208,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.layer_icons = msg.icons
         self._set_viewer_id()
 
-    def _on_refdata_change(self, msg):
-        if msg.viewer_id != self.viewer_id:
+    def _on_refdata_change(self, msg=None):
+        if msg is not None and msg.viewer_id != self.viewer_id:
+            return
+        if self._viewer.state.reference_data is None:
             return
         self.orientation_align_by_wcs = self._viewer.state.reference_data.meta.get('_WCS_ONLY', False)  # noqa
         if self.orientation_align_by_wcs:
             with self.during_select_sync():
-                self.orientation.selected = str(self._viewer.state.reference_data.label)
+                ref_label = self._viewer.state.reference_data.label
+                if ref_label not in self.orientation.choices:
+                    self.orientation._update_items()
+                self.orientation.selected = str(ref_label)
 
     def _on_viewer_renamed_message(self, msg):
         if self.viewer_reference == msg.old_viewer_ref:
