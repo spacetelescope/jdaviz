@@ -254,16 +254,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                            handler=self._on_select_footprint_overlay)
         self._on_link_type_updated()
 
-    def _highlight_overlay(self, overlay_label, viewers=None, stroke_width=4, reset_width=1):
+    def _highlight_overlay(self, overlay_label, viewers=None):
         """
         Visually highlight one overlay by thickening its stroke.
         """
         for viewer in viewers:
             for mark in self._get_marks(viewer):
-                if mark.overlay == overlay_label:
-                    mark.stroke_width = stroke_width
-                else:
-                    mark.stroke_width = reset_width
+                mark.set_selected_style(is_selected=mark.overlay == overlay_label)
 
     def _on_select_footprint_overlay(self, data):
         click_x, click_y = data.x, data.y

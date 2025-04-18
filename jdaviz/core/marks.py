@@ -725,6 +725,12 @@ class FootprintOverlay(PluginLine):
     def overlay(self):
         return self._overlay
 
+    def set_selected_style(self, is_selected: bool=False) -> None:
+        if not isinstance(is_selected, bool):  # pragma: no cover
+            raise TypeError("is_selected must be of type bool")
+
+        self.stroke_width = 4 if is_selected else 1
+
 
 class ApertureMark(PluginLine):
     def __init__(self, viewer, id, **kwargs):
