@@ -62,7 +62,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                             'ext_data_label_auto',
                                             'ext_data_label_invalid_msg')
 
-        self.input_hdulist = not isinstance(self.input, Spectrum1D)
+        self.input_hdulist = isinstance(self.input, fits.HDUList)
         if self.input_hdulist:
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
@@ -73,7 +73,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     @property
     def user_api(self):
         expose = ['auto_extract', 'ext_data_label']
-        if not isinstance(self.input, Spectrum1D):
+        if self.input_hdulist:
             expose += ['extension', 'transpose']
         return ImporterUserApi(self, expose)
 
