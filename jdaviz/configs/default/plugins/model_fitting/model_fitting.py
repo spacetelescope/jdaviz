@@ -571,7 +571,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             pixar_sr = masked_spectrum.meta.get('_pixel_scale_factor', 1.0)
             equivs = all_flux_unit_conversion_equivs(pixar_sr, init_x)
 
-            init_y = flux_conversion_general([init_y.value],
+            init_y = flux_conversion_general(init_y.value,
                                              init_y.unit,
                                              self._units['y'],
                                              equivs)
