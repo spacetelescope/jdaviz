@@ -163,6 +163,32 @@ In the case of a compound subset, the subregion to update must be specified as w
 
   st.update_subset(subset_label='Subset 1', subregion=0, xmin=10, xmax = 20)
 
+.. note::
+
+    This is a new behavior introduced in version 4.3.
+
+
+You can also create a new subset using the ``import_region`` method. This method takes a
+region and either creates a new subset with that region or appends it to another subset
+using the ``edit_subset`` and ``combination_mode`` arguments. for example:
+
+.. code-block:: python
+
+  st.import_region(CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5))
+
+will create a new subset but
+
+.. code-block:: python
+
+  st.import_region(CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5), edit_subset='Subset 1',
+   combination_mode='or')
+
+will append the region to the existing Subset 1 using the 'or' ``combination_mode``. Other options for
+``combination_mode`` include 'and', 'andnot', 'new', 'replace', and 'xor'. If you set a value for ``edit_subset`` but
+not ``combination_mode``, the assumption will be that the new region is replacing the existing subset named in
+``edit_subset``. This API method acts independently of the UI so all settings from before ``import_region`` was called
+will be restored afterward.
+
 .. _markers-plugin:
 
 Markers

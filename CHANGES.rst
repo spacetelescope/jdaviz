@@ -54,6 +54,9 @@ Cubeviz
 - Radial profile and curve of growth in Aperture Photometry plugin are now consistent
   with ``photutils.profiles``. [#3510]
 
+- BEHAVIOR CHANGE: Change ``import_region`` method to default to creating a new subset when run.
+  Also allow editing a subset using the ``edit_subset`` argument. [#3523]
+
 Imviz
 ^^^^^
 
