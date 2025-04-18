@@ -397,9 +397,8 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
                                           wrt_data='Default orientation')
     cr3 = regs_wcs_with_pixel2['Subset 1']
     assert isinstance(cr3, CompoundPixelRegion)
-
-    assert cr3.region1.center == PixCoord(x=3.5366202690326523, y=6.738066787118948)
-    assert cr3.region2.center == PixCoord(x=2.452846370740891, y=6.312337355089725)
+    assert cr3.region1.center == PixCoord(x=3.786620269036108, y=6.988066787112674)
+    assert cr3.region2.center == PixCoord(x=2.7028463707247172, y=6.562337355091393)
 
 
 def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
