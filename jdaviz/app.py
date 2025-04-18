@@ -1156,6 +1156,8 @@ class Application(VuetifyTemplate, HubListener):
 
     def _get_roi_subset_definition(self, subset_state, to_sky=False, wrt_data=None):
         wcs = None
+        # If SkyRegion is explicitly requested or the user has specified something for
+        # wrt_data, this will be true
         if to_sky or wrt_data is not None:
             wcs = self._get_wcs_from_subset(subset_state, data=wrt_data)
 

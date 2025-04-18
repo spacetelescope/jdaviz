@@ -389,7 +389,6 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
                                          wrt_data='NDData[DATA]')
     cr2 = regs_wcs_with_pixel['Subset 1']
     assert isinstance(cr2, CompoundPixelRegion)
-
     assert cr2.region1.center == PixCoord(x=48.468736969074506, y=89.44725743429322)
     assert cr2.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
 
