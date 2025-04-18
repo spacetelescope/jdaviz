@@ -203,8 +203,8 @@ class ApplicationState(State):
         0, docstring="Index of the active add data tab shown in the tray.")
     viewer_subtab = CallbackProperty(
         0, docstring="Index of the active viewer tab shown in the viewer area.")
-    help_subtab = CallbackProperty(
-        0, docstring="Index of the active help tab shown in the viewer area.")
+    info_subtab = CallbackProperty(
+        0, docstring="Index of the active infotab shown in the viewer area.")
     jdaviz_version = CallbackProperty(
         __version__, docstring="Version of Jdaviz.")
     global_search = CallbackProperty(

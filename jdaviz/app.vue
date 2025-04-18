@@ -23,8 +23,8 @@
             <v-icon>mdi-view-grid-outline</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip tipid="app-toolbar-help">
-          <v-btn icon @click="() => {if (state.drawer_content === 'help') {state.drawer_content = ''} else {state.drawer_content = 'help'}}" :class="{active : state.drawer_content === 'help'}">
+        <j-tooltip tipid="app-toolbar-info">
+          <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}">
             <v-icon medium style="padding-top: 2px">mdi-format-list-bulleted</v-icon>
           </v-btn>
         </j-tooltip>
@@ -106,7 +106,6 @@
               <jupyter-widget :widget="popout_button" ></jupyter-widget>
             </j-tooltip>
           </span>
-          <span style="height: 8px"><v-spacer></v-spacer></span>
           <span>
             <v-menu
               offset-y
@@ -117,9 +116,9 @@
                 <v-text-field
                     v-model='state.global_search'
                     append-icon='mdi-magnify'
-                    outlined
+                    filled
                     dense
-                    style="height: 16px; font-size: 12px; width: 350px"
+                    style="width: 350px"
                     clearable
                     hide-details
                     v-bind="attrs"
@@ -127,7 +126,7 @@
                     @input="state.global_search_menu = !!state.global_search"
                 ></v-text-field>
               </template>
-              <v-card style="min-width: 350px; margin-top: 24px">
+              <v-card style="min-width: 350px">
                 <v-container>
                   <v-row>
                     <p>no search results</p>
@@ -170,53 +169,6 @@
             <v-card v-if="state.drawer_content === 'save'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].widget"></jupyter-widget>
             </v-card>
-            <v-card v-if="state.drawer_content === 'viewers'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.viewer_subtab">
-                <v-tab :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">Plot Options</v-tab>
-                <v-tab>Markers</v-tab>
-              </v-tabs>
-              <v-tabs-items v-model="state.viewer_subtab">
-                <v-tab-item>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
-                </v-tab-item>
-                <v-tab-item>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
-                </v-tab-item>
-              </v-tabs-items>
-            </v-card>
-            <v-card v-if="state.drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
-            </v-card>
-            <v-card v-if="state.drawer_content === 'help'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.help_subtab">
-                <v-tab>Metadata</v-tab>
-                <v-tab>Logger</v-tab>
-              </v-tabs>
-              <v-tabs-items v-model="state.help_subtab">
-                <v-tab-item>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
-                </v-tab-item>
-                <v-tab-item>
-                  <v-alert v-if="state.snackbar_history.length === 0" dense type="info" style="margin-top: 24px">No logger messages</v-alert>
-                  <v-row
-                      dense
-                      @click="(e) => {e.stopImmediatePropagation()}"
-                      v-for="history in state.snackbar_history.slice().reverse()"
-                      style="margin: 6px 0px 0px 0px"
-                  >
-                    <v-alert
-                      dense
-                      :type="history.color">
-                        [{{history.time}}]: {{history.text}}
-                    </v-alert>
-                  </v-row>
-                </v-tab-item>
-              </v-tabs-items>
-            </v-card>
-            <v-card v-if="state.drawer_content === 'search'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <p>search across all plugins (built-in and data-analysis) as well as data-menus, etc.  Search results then give buttons which open that panel/tab/menu</p>
-            </v-card>
-
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
                 v-model='state.tray_items_filter'
@@ -254,6 +206,50 @@
               </v-expansion-panels>
               <v-divider></v-divider>
             </v-card>
+            <v-card v-if="state.drawer_content === 'info'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.info_subtab">
+                <v-tab>Metadata</v-tab>
+                <v-tab>Logger</v-tab>
+              </v-tabs>
+              <v-tabs-items v-model="state.info_subtab">
+                <v-tab-item>
+                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
+                </v-tab-item>
+                <v-tab-item>
+                  <v-alert v-if="state.snackbar_history.length === 0" dense type="info" style="margin-top: 24px">No logger messages</v-alert>
+                  <v-row
+                      dense
+                      @click="(e) => {e.stopImmediatePropagation()}"
+                      v-for="history in state.snackbar_history.slice().reverse()"
+                      style="margin: 6px 0px 0px 0px"
+                  >
+                    <v-alert
+                      dense
+                      :type="history.color">
+                        [{{history.time}}]: {{history.text}}
+                    </v-alert>
+                  </v-row>
+                </v-tab-item>
+              </v-tabs-items>
+            </v-card>
+            <v-card v-if="state.drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
+            </v-card>
+            <v-card v-if="state.drawer_content === 'viewers'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.viewer_subtab">
+                <v-tab :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">Plot Options</v-tab>
+                <v-tab>Markers</v-tab>
+              </v-tabs>
+              <v-tabs-items v-model="state.viewer_subtab">
+                <v-tab-item>
+                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
+                </v-tab-item>
+                <v-tab-item>
+                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
+                </v-tab-item>
+              </v-tabs-items>
+            </v-card>
+
           </pane>
 
           <pane size="75" min-size='25'>
