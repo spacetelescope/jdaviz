@@ -18,7 +18,8 @@ from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVO
 from jdaviz.configs.cubeviz.plugins.sonified_layers import (SonifiedDataLayerArtist,
                                                             SonifiedLayerStateWidget,
                                                             SonifiedDataSubsetLayerArtist,
-                                                            SonifiedSubsetLayerStateWidget)
+                                                            SonifiedSubsetLayerStateWidget,
+                                                            SonifiedLayerState)
 
 
 try:
@@ -77,6 +78,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # sonified data layer. The value of each key is another dictionary containing
         # coordinates as keys and arrays representing sounds as the value.
         self.uuid_lookup = {}
+        self.layer_volume = {}
         self.same_pix = None
 
         self._layer_style_widget_cls[SonifiedDataLayerArtist] = SonifiedLayerStateWidget
@@ -143,7 +145,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             # TODO: apply 1/N or 1/N**0.5 normalisation per layer for N layers?
             if coord not in v:
                 continue
-            compsig += v[coord]
+            # Add all sound arrays together, adjusting them for volume based on the layer's
+            # volume attribute
+            compsig += (v[coord] * (int(self.layer_volume[k])/100)).astype(int)
         if vollim == 'sig':
             # sigmoidal volume limiting
             self.sonified_cube.newsig = (erf(compsig/INT_MAX)* INT_MAX).astype('int16')
@@ -254,6 +258,13 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     def _viewer_mouse_event(self, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
             self.stop_stream()
+            # Keep track of the volume attribute for each layer. This is done each time the
+            # mouse enters or exists the viewer.
+            # TODO: update when volume attribute is adjusted rather when moving into/out of the
+            #  viewer
+            self.layer_volume = {layer.layer.label: layer.volume for layer in self.state.layers if
+                                 isinstance(layer, SonifiedLayerState)}
+
             return
         if len(self.jdaviz_app.data_collection) < 1:
             return

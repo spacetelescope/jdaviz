@@ -12,7 +12,7 @@ __all__ = ['SonifiedLayerStateWidget', 'SonifiedSubsetLayerStateWidget',
 class SonifiedLayerState(ImageLayerState):
     bitmap_visible = CallbackProperty(False, 'whether to show the image as a bitmap')
     contour_visible = CallbackProperty(False, 'whether to show the image as contours')
-    volume = DDCProperty(50, docstring='The volume level of this layer')
+    volume = DDCProperty(100, docstring='The volume level of this layer')
 
     def __init__(self, *args, **kwargs):
 
