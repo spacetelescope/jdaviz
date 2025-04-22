@@ -22,7 +22,7 @@ Imviz
 - Added ability to load remote data from a S3 URI to Imviz. [#3500]
 
 - Footprints plugin now supports selecting the closest overlay
-  to a clicked point in the image viewer. [#3525, #3539, #3546]
+  to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
 
 - Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
 
