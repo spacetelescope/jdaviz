@@ -136,7 +136,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             self.stream.stop()
 
     def recalculate_combined_sonified_grid(self, event=None):
-        print("Recomputing")
         # Keep track of the volume attribute for each layer. This is done each time the
         # mouse enters or exists the viewer.
         # TODO: update when volume attribute is adjusted rather when moving into/out of the
