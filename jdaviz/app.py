@@ -2528,7 +2528,7 @@ class Application(VuetifyTemplate, HubListener):
         return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
     def vue_search_item_clicked(self, plugin_name):
-        self._jdaviz_helper.plugins[plugin_name].open_in_tray()
+        self._jdaviz_helper.plugins[plugin_name].open_in_tray(scroll_to=True)
 
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
