@@ -1,4 +1,5 @@
 import uuid
+from functools import cached_property
 
 from glue.core import BaseData
 
@@ -80,6 +81,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.uuid_lookup = {}
         self.layer_volume = {}
         self.same_pix = None
+        self._cached_properties = ['combined_sonified_grid']
 
         self._layer_style_widget_cls[SonifiedDataLayerArtist] = SonifiedLayerStateWidget
         self._layer_style_widget_cls[SonifiedDataSubsetLayerArtist] = SonifiedSubsetLayerStateWidget
@@ -133,21 +135,43 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         if self.stream and not self.stream.closed and self.stream_active:
             self.stream.stop()
 
-    def update_sonified_cube_with_coord(self, coord, vollim='buff'):
-        # Loop through all sonified layers and set newsig to the sound for each layer
-        self.sonified_cube.newsig = np.zeros(self.sonified_cube.newsig.shape)
+    def recalculate_combined_sonified_grid(self, event=None):
+        print("Recomputing")
+        # Keep track of the volume attribute for each layer. This is done each time the
+        # mouse enters or exists the viewer.
+        # TODO: update when volume attribute is adjusted rather when moving into/out of the
+        #  viewer
+        self.layer_volume = {layer.layer.label: layer.volume for layer in self.state.layers if
+                             isinstance(layer, SonifiedLayerState)}
+        if 'combined_sonified_grid' in self.__dict__:
+            del self.__dict__['combined_sonified_grid']
+        self.combined_sonified_grid
 
-        compsig = np.zeros(self.sonified_cube.newsig.size, dtype='int32')
+    @cached_property
+    def combined_sonified_grid(self):
+        compiled_coords = {}
         for k, v in self.uuid_lookup.items():
             # Each (x, y) coordinate corresponds to a different sound for each layer.
             # These sounds can be combined together and played by setting cbuff to True.
             # TODO: is there a better way to combine sounds or normalize them?
             # TODO: apply 1/N or 1/N**0.5 normalisation per layer for N layers?
-            if coord not in v:
-                continue
-            # Add all sound arrays together, adjusting them for volume based on the layer's
-            # volume attribute
-            compsig += (v[coord] * (int(self.layer_volume[k])/100)).astype(int)
+            for coord, sound_array in v.items():
+                if coord in compiled_coords:
+                    compiled_coords[coord] += (sound_array * (int(self.layer_volume[k]) / 100)).astype(int)
+                else:
+                    compiled_coords[coord] = (sound_array * (int(self.layer_volume[k]) / 100)).astype(int)
+                # Add all sound arrays together, adjusting them for volume based on the layer's
+                # volume attribute
+                compiled_coords[coord] += (sound_array * (int(self.layer_volume[k])/100)).astype(int)
+        return compiled_coords
+
+    def update_sonified_cube_with_coord(self, coord, vollim='buff'):
+        # Set newsig to the combined sound array at coord
+        if (int(coord[0]), int(coord[1])) not in self.combined_sonified_grid:
+            return
+        compsig = self.combined_sonified_grid[int(coord[0]), int(coord[1])]
+
+        # Adjust volume to remove clipping
         if vollim == 'sig':
             # sigmoidal volume limiting
             self.sonified_cube.newsig = (erf(compsig/INT_MAX)* INT_MAX).astype('int16')
@@ -255,16 +279,17 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self.jdaviz_app.add_data_to_viewer('flux-viewer', data_name)
 
+        # Find layer, add volume check to dictionary and add callback to volume changing
+        data_layer = [layer for layer in self.state.layers if layer.layer.label == data_name][0]
+        self.layer_volume[data_name] = data_layer.volume
+        data_layer.add_callback('volume', self.recalculate_combined_sonified_grid)
+
+        # Clear cache and recompute
+        self.recalculate_combined_sonified_grid()
+
     def _viewer_mouse_event(self, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
             self.stop_stream()
-            # Keep track of the volume attribute for each layer. This is done each time the
-            # mouse enters or exists the viewer.
-            # TODO: update when volume attribute is adjusted rather when moving into/out of the
-            #  viewer
-            self.layer_volume = {layer.layer.label: layer.volume for layer in self.state.layers if
-                                 isinstance(layer, SonifiedLayerState)}
-
             return
         if len(self.jdaviz_app.data_collection) < 1:
             return
@@ -293,13 +318,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             return self.get_layer_artist(cls, layer=layer)
         else:
             return super().get_data_layer_artist(layer, layer_state)
-
-    # def get_subset_layer_artist(self, layer=None, layer_state=None):
-    #     if 'Sonified' in layer.meta:
-    #         cls = SonifiedDataSubsetLayerArtist
-    #         return self.get_subset_layer_artist(cls, layer=layer)
-    #     else:
-    #         return super().get_subset_layer_artist(layer, layer_state)
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
