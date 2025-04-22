@@ -198,10 +198,10 @@ class ApplicationState(State):
     propagate to the traitlet in order to trigger a UI re-render.
     """
     drawer_content = CallbackProperty(
-        'plugins', docstring="Content shown in the tray drawer.")
+        '', docstring="Content shown in the tray drawer.")
     add_subtab = CallbackProperty(
         0, docstring="Index of the active add data tab shown in the tray.")
-    viewer_subtab = CallbackProperty(
+    viewers_subtab = CallbackProperty(
         0, docstring="Index of the active viewer tab shown in the viewer area.")
     info_subtab = CallbackProperty(
         0, docstring="Index of the active infotab shown in the viewer area.")
@@ -2527,6 +2527,9 @@ class Application(VuetifyTemplate, HubListener):
         kwargs = event.get('kwargs', {})
         return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
+    def vue_search_item_clicked(self, plugin_name):
+        self._jdaviz_helper.plugins[plugin_name].open_in_tray()
+
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
@@ -2978,6 +2981,8 @@ class Application(VuetifyTemplate, HubListener):
             self.state.tray_items.append({
                 'name': name,
                 'label': tray_item_label,
+                'sidebar': tray_item_instance._sidebar,
+                'subtab': tray_item_instance._subtab,
                 'tray_item_description': tray_item_description,
                 'api_methods': tray_item_instance.api_methods,
                 'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,

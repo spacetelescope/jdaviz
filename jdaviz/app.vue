@@ -128,9 +128,25 @@
               </template>
               <v-card style="min-width: 350px">
                 <v-container>
-                  <v-row>
-                    <p>no search results</p>
+                  <div v-for="(trayItem, index) in state.tray_items" :key="index">
+                  <v-row v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.global_search)">
+                    <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => search_item_clicked(trayItem.label)">
+                      <v-list-item-title>
+                        {{ trayItem.label }}
+                      </v-list-item-title>
+                      <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                        <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                      </v-list-item-subtitle>
+                      <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(trayItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                        <span class="api-hint">plg.{{ api_method }}</span>
+                      </v-list-item-subtitle>
+                      <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
+                        {{ trayItem.tray_item_description }}
+                      </v-list-item-subtitle>
+                    </v-list-item>
                   </v-row>
+                </div>
+
                 </v-container>
               </v-card>
             </v-menu>
@@ -179,7 +195,7 @@
               ></v-text-field>
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
-                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && ['Plot Options', 'Metadata', 'Markers', 'Subset Tools', 'About', 'Export'].indexOf(trayItem.label) === -1">
+                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && (trayItem.sidebar === 'plugins' || config !== 'deconfigged')">
                     <v-expansion-panel-header class="plugin-header" expand-icon=''>
                       <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
                         <v-list-item-title>
@@ -236,11 +252,11 @@
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'viewers'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.viewer_subtab">
+              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.viewers_subtab">
                 <v-tab :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">Plot Options</v-tab>
                 <v-tab>Markers</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.viewer_subtab">
+              <v-tabs-items v-model="state.viewers_subtab">
                 <v-tab-item>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
                 </v-tab-item>

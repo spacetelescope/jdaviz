@@ -502,6 +502,8 @@ class PluginTemplateMixin(TemplateMixin):
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     _plugin_name = None  # noqa overwritten by the registry - won't be populated by plugins instantiated directly
+    _sidebar = 'plugins'  # noqa overwritten by the registry
+    _subtab = None  # noqa overwritten by the registry
     disabled_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will show this message in place of plugin content
     irrelevant_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will exclude from the tray, and show this message in place of any content in other instances
     plugin_key = Unicode("").tag(sync=True)  # noqa set to non-empty to override value in vue file (when supported by vue file)
@@ -689,10 +691,14 @@ class PluginTemplateMixin(TemplateMixin):
             Whether to immediately scroll to the plugin opened in the tray.
         """
         app_state = self.app.state
-        app_state.drawer_content = 'plugins'
-        index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
-        if index not in app_state.tray_items_open:
-            app_state.tray_items_open = app_state.tray_items_open + [index]
+        app_state.drawer_content = self._sidebar
+
+        if self._sidebar == 'plugins':
+            index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
+            if index not in app_state.tray_items_open:
+                app_state.tray_items_open = app_state.tray_items_open + [index]
+        elif self._subtab is not None:
+            setattr(app_state, '{}_subtab'.format(self._sidebar), self._subtab)
         if scroll_to:
             # sleep 0.5s to ensure plugin is intialized and user can see scrolling
             time.sleep(0.5)
