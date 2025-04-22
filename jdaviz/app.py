@@ -2527,8 +2527,9 @@ class Application(VuetifyTemplate, HubListener):
         kwargs = event.get('kwargs', {})
         return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
-    def vue_search_item_clicked(self, plugin_name):
-        self._jdaviz_helper.plugins[plugin_name].open_in_tray(scroll_to=True)
+    def vue_search_item_clicked(self, event):
+        attr, label = event['attr'], event['label']
+        getattr(self._jdaviz_helper, attr)[label].open_in_tray()
 
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
@@ -2958,7 +2959,8 @@ class Application(VuetifyTemplate, HubListener):
                 'name': name,
                 'label': name,
                 'requires_api_support': loader.requires_api_support,
-                'widget': "IPY_MODEL_" + loader.model_id
+                'widget': "IPY_MODEL_" + loader.model_id,
+                'api_methods': loader.api_methods,
             })
         # initialize selection (tab) to first entry
         if len(self.state.loader_items):

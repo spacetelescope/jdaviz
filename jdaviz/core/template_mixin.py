@@ -290,6 +290,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
     vdocs = Unicode("").tag(sync=True)
     api_hints_enabled = Bool(False).tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
+    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __new__(cls, *args, **kwargs):
         """
@@ -326,6 +327,26 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
 
         self.app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
         self._update_api_hints_enabled()
+
+        # set user-API methods
+        if hasattr(self, 'user_api'):
+            def get_api_text(name, obj):
+                if type(obj).__name__ == 'method':
+                    if hasattr(obj, "__wrapped__"):
+                        orig_sig = str(inspect.signature(obj.__wrapped__))
+                        if "(self)" in orig_sig:
+                            orig_sig = orig_sig.replace("(self)", "()")
+                        elif "(self, " in orig_sig:
+                            orig_sig = orig_sig.replace("(self, ", "(")
+                        return f"{name}{orig_sig}"
+                    return f"{name}{inspect.signature(obj)}"
+                return name
+
+            with warnings.catch_warnings():
+                # Some API might be going through deprecation, so ignore the warning.
+                warnings.filterwarnings("ignore", category=DeprecationWarning)
+                self.api_methods = sorted([get_api_text(name, obj)
+                                           for name, obj in inspect.getmembers(self.user_api)])
 
     @property
     def app(self):
@@ -519,7 +540,6 @@ class PluginTemplateMixin(TemplateMixin):
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
-    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
@@ -566,23 +586,6 @@ class PluginTemplateMixin(TemplateMixin):
 
         super().__init__(app=app, **kwargs)
 
-        # set user-API methods
-        def get_api_text(name, obj):
-            if type(obj).__name__ == 'method':
-                if hasattr(obj, "__wrapped__"):
-                    orig_sig = str(inspect.signature(obj.__wrapped__))
-                    if "(self)" in orig_sig:
-                        orig_sig = orig_sig.replace("(self)", "()")
-                    elif "(self, " in orig_sig:
-                        orig_sig = orig_sig.replace("(self, ", "(")
-                    return f"{name}{orig_sig}"
-                return f"{name}{inspect.signature(obj)}"
-            return name
-        with warnings.catch_warnings():
-            # Some API might be going through deprecation, so ignore the warning.
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            self.api_methods = sorted([get_api_text(name, obj)
-                                       for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
         new = self.__class__(app=self.app)

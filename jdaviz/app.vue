@@ -92,7 +92,7 @@
       </v-toolbar-items>
 
       <v-toolbar-items v-if="config === 'deconfigged'">
-        <v-layout column style="height: 28px; padding-bottom: 12px" v-if="state.show_toolbar_buttons">
+        <v-layout column style="height: 28px; padding-bottom: 12px" v-if="state.show_toolbar_buttons || state.global_search_menu">
           <span style="display: inline-flex; align-items: right">
             <v-spacer></v-spacer>
 
@@ -147,27 +147,41 @@
                     @input="state.global_search_menu = !!state.global_search"
                 ></v-text-field>
               </template>
-              <v-card style="min-width: 350px">
+              <v-card style="min-width: 350px; max-height: 500px; overflow-y: scroll">
                 <v-container>
+                  <div v-for="ldrItem in state.loader_items" :key="ldrItem.label">
+                    <v-row v-if="trayItemVisible(ldrItem, state.global_search)">
+                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'loaders', label: ldrItem.label})}">
+                        <v-list-item-title>
+                          Loader: {{ ldrItem.label }}
+                        </v-list-item-title>
+                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">ldr = {{  api_hints_obj || config }}.loaders['{{ ldrItem.label }}']</span>
+                        </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(ldrItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">ldr.{{ api_method }}</span>
+                        </v-list-item-subtitle>
+                      </v-list-item>
+                    </v-row>
+                  </div>
                   <div v-for="(trayItem, index) in state.tray_items" :key="index">
-                  <v-row v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.global_search)">
-                    <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked(trayItem.label)}">
-                      <v-list-item-title>
-                        {{ trayItem.label }}
-                      </v-list-item-title>
-                      <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                        <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
-                      </v-list-item-subtitle>
-                      <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(trayItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
-                        <span class="api-hint">plg.{{ api_method }}</span>
-                      </v-list-item-subtitle>
-                      <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
-                        {{ trayItem.tray_item_description }}
-                      </v-list-item-subtitle>
-                    </v-list-item>
-                  </v-row>
-                </div>
-
+                    <v-row v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.global_search)">
+                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'plugins', label: trayItem.label})}">
+                        <v-list-item-title>
+                          {{ trayItem.label }}
+                        </v-list-item-title>
+                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">plg = {{  api_hints_obj || config }}.plugins['{{ trayItem.label }}']</span>
+                        </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(trayItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">plg.{{ api_method }}</span>
+                        </v-list-item-subtitle>
+                        <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
+                          {{ trayItem.tray_item_description }}
+                        </v-list-item-subtitle>
+                      </v-list-item>
+                    </v-row>
+                  </div>
                 </v-container>
               </v-card>
             </v-menu>
@@ -204,6 +218,7 @@
               </v-tabs-items>
             </v-card>
             <v-card v-if="state.drawer_content === 'save'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].widget"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -250,6 +265,7 @@
               </v-tabs>
               <v-tabs-items v-model="state.info_subtab">
                 <v-tab-item>
+                  <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item>
@@ -270,6 +286,7 @@
               </v-tabs-items>
             </v-card>
             <v-card v-if="state.drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'viewers'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -279,9 +296,11 @@
               </v-tabs>
               <v-tabs-items v-model="state.viewers_subtab">
                 <v-tab-item>
+                  <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item>
+                  <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
                 </v-tab-item>
               </v-tabs-items>
@@ -437,7 +456,8 @@ export default {
         return true
       }
       // simple exact text search match on the plugin title/description for now.
-      return trayItem.label.toLowerCase().includes(tray_items_filter.toLowerCase()) || trayItem.tray_item_description.toLowerCase().includes(tray_items_filter.toLowerCase()) || this.trayItemMethodMatch(trayItem, tray_items_filter).length > 0
+      description = trayItem.tray_item_description || ''
+      return trayItem.label.toLowerCase().includes(tray_items_filter.toLowerCase()) || description.toLowerCase().includes(tray_items_filter.toLowerCase()) || this.trayItemMethodMatch(trayItem, tray_items_filter).length > 0
     },
     trayItemMethodMatch(trayItem, tray_items_filter ) {
       if (tray_items_filter === null) {
