@@ -2532,7 +2532,7 @@ class Application(VuetifyTemplate, HubListener):
         if label == 'About':
             item.show_popup()
         else:
-            kw = {'scroll_to': 'plugins'} if (attr=='plugins' and item._obj._sidebar == 'plugins') else {}  # noqa
+            kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
             item.open_in_tray(**kw)
 
     def _get_data_item_by_id(self, data_id):
