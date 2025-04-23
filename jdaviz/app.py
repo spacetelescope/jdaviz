@@ -145,6 +145,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-subset-icon': 'components/subset_icon.vue',
                      'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
+                     'j-about-menu': 'components/about_menu.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
@@ -313,6 +314,7 @@ class Application(VuetifyTemplate, HubListener):
     docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
+    force_open_about = Bool(False).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2526,7 +2528,12 @@ class Application(VuetifyTemplate, HubListener):
 
     def vue_search_item_clicked(self, event):
         attr, label = event['attr'], event['label']
-        getattr(self._jdaviz_helper, attr)[label].open_in_tray()
+        item = getattr(self._jdaviz_helper, attr)[label]
+        if label == 'About':
+            item.show_popup()
+        else:
+            kw = {'scroll_to': 'plugins'} if (attr=='plugins' and item._obj._sidebar == 'plugins') else {}  # noqa
+            item.open_in_tray(**kw)
 
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items

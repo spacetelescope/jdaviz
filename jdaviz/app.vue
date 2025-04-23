@@ -92,31 +92,16 @@
       </v-toolbar-items>
 
       <v-toolbar-items v-if="config === 'deconfigged'">
-        <v-layout column style="height: 28px; padding-bottom: 12px" v-if="state.show_toolbar_buttons || state.global_search_menu">
+        <v-layout column style="height: 28px; padding-bottom: 12px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
           <span style="display: inline-flex; align-items: right">
             <v-spacer></v-spacer>
 
-            <v-menu
-              absolute
-              offset-y
-              style="max-width: 600px"
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <j-tooltip tooltipcontent="Show app information and docs">
-                  <v-btn
-                    v-bind="attrs"
-                    v-on="on"
-                    color="toolbar"
-                    style="font-family: monospace; font-size: 10pt; text-transform: lowercase">
-                    v{{ state.jdaviz_version }}
-                  </v-btn>
-                </j-tooltip>
-              </template>
-
-              <v-card>
-                <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"></jupyter-widget>
-              </v-card>
-            </v-menu>
+            <j-about-menu
+              :jdaviz_version="state.jdaviz_version"
+              :api_hints_obj="api_hints_obj"
+              :about_widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"
+              :force_open_about.sync="force_open_about"
+            ></j-about-menu>
 
             <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
               <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">

@@ -321,9 +321,9 @@
     },
     methods: {
       onScroll(e) {
-        const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
-        const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
         if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
+          const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
+          const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
           const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
           menuContent.parentElement.style.top = top + "px";
 
