@@ -79,12 +79,12 @@
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-if="state.show_toolbar_buttons || state.drawer_content === 'logger'" tipid="app-toolbar-logger">
+        <j-tooltip v-if="state.show_toolbar_buttons || state.drawer_content === 'logger'" tipid="app-toolbar-logger-configged">
           <v-btn icon @click="() => {if (state.drawer_content === 'logger') {state.drawer_content = ''} else {state.drawer_content = 'logger'}}" :class="{active : state.drawer_content === 'logger'}">
             <v-icon medium style="padding-top: 2px">mdi-message-reply-text</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-if="state.show_toolbar_buttons || state.drawer_content === 'plugins'" tipid="app-toolbar-plugins">
+        <j-tooltip v-if="state.show_toolbar_buttons || state.drawer_content === 'plugins'" tipid="app-toolbar-plugins-configged">
           <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}">
             <v-icon>mdi-menu</v-icon>
           </v-btn>

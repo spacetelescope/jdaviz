@@ -586,7 +586,6 @@ class PluginTemplateMixin(TemplateMixin):
 
         super().__init__(app=app, **kwargs)
 
-
     def new(self):
         new = self.__class__(app=self.app)
         new._plugin_name = self._plugin_name

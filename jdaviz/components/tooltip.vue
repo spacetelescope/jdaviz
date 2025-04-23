@@ -24,6 +24,8 @@ const tooltips = {
   // app toolbar
   'app-help': 'Open docs in new tab',
   'app-api-hints': 'Toggle API hints',
+  'app-toolbar-logger-configged': 'Toggle displaying logger in sidebar tray',  // non-deconfigged only
+  'app-toolbar-plugins-configged': 'Toggle displaying plugins in sidebar tray',  // non-deconfigged only
   'app-toolbar-loaders': 'Add data or viewers',
   'app-toolbar-viewers': 'Viewer options',
   'app-toolbar-save': 'Export data, viewers, tables',
