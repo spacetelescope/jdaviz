@@ -21,6 +21,7 @@ from jdaviz.core.events import (AddDataMessage,
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
+                                        TableMixin,
                                         SpectralSubsetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
                                         SpectralContinuumMixin,
@@ -65,8 +66,9 @@ def _coerce_unit(quantity):
 
 
 @tray_registry('specviz-line-analysis', label="Line Analysis", category="data:analysis")
-class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
-                   DatasetSpectralSubsetValidMixin, SpectralContinuumMixin):
+class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
+                   SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
+                   SpectralContinuumMixin):
     """
     The Line Analysis plugin returns specutils analysis for a single spectral line.
     See the :ref:`Line Analysis Plugin Documentation <line-analysis>` for more details.
@@ -89,6 +91,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
       (excluding the region containing the line). If 1, will use endpoints within line region
       only.
     * :meth:`get_results`
+    * :meth:`add_results_to_table`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 
     """
     dialog = Bool(False).tag(sync=True)
@@ -141,6 +145,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=self._on_viewers_changed)
 
+        stats = ['Line Flux', 'Equivalent Width', 'Gaussian Sigma Width',
+                 'Gaussian FWHM', 'Centroid']
+        headers = [h for stat in stats for h in [stat, f'{stat}:uncertainty', f'{stat}:unit']]
+        headers += ['data_label', 'subset_label']
+        self.table.headers_avail = headers
+        self.table.headers_visible = [h for h in headers if ':' not in h]
+
         self._set_relevant()
 
     @observe('dataset_items')
@@ -164,7 +175,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('dataset', 'spectral_subset',
-                                           'continuum', 'continuum_width', 'get_results'))
+                                           'continuum', 'continuum_width', 'get_results',
+                                           'add_results_to_table', 'export_table'))
 
     @property
     def line_items(self):
@@ -239,7 +251,21 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         else:
             self.results = results
 
-    def get_results(self):
+    def get_results(self, add_to_table=True):
+        """
+        Get the results of the line analysis.
+
+        Parameters
+        ----------
+        add_to_table : bool
+            If True, add the results to the table. If False, return the results without
+            adding them to the table.
+
+        Returns
+        -------
+        list
+            The results of the line analysis.
+        """
         # user-facing API call to force updating and retrieving results, even if the plugin
         # is closed
 
@@ -249,7 +275,24 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                              f" is outside data range of '{self.dataset.selected}' {spec_range}")
 
         self._calculate_statistics()
+        if add_to_table:
+            self.add_results_to_table()
+
         return self.results
+
+    def add_results_to_table(self):
+        """
+        Add the results of the line analysis to the table.
+        """
+        result_dict = {result_item['function']: result_item['result'] for result_item in self.results}
+        result_dict.update({result_item['function'] + ':uncertainty': result_item['uncertainty'] for result_item in self.results})
+        result_dict.update({result_item['function'] + ':unit': result_item['uncertainty'] for result_item in self.results})
+        result_dict['data_label'] = self.dataset.selected
+        result_dict['subset_label'] = self.spectral_subset.selected
+        self.table.add_item(result_dict)
+
+    def vue_add_results_to_table(self, *args):
+        self.add_results_to_table()
 
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks

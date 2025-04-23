@@ -126,6 +126,20 @@
             ></j-number-uncertainty>
           </v-col>
         </v-row>
+        <v-row justify="end">
+          <j-tooltip tooltipcontent="store current results in results history table">
+            <plugin-action-button
+              :results_isolated_to_plugin="true"
+              :api_hints_enabled="api_hints_enabled"
+              @click="add_results_to_table">
+              {{ api_hints_enabled ?
+                'plg.add_results_to_table()'
+                :
+                'Add To Table'
+              }}
+            </plugin-action-button>
+          </j-tooltip>
+        </v-row>
       </div>
       <div v-if="results_computing"
            class="text-center"
@@ -142,6 +156,9 @@
           width="6"
         ></v-progress-circular>
       </div>
+
+      <j-plugin-section-header>Results History</j-plugin-section-header>
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
 
       <div v-if="line_menu_items.length > 0">
         <j-plugin-section-header>Redshift from Centroid</j-plugin-section-header>
