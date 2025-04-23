@@ -131,7 +131,6 @@
             <v-menu
               offset-y
               style="max-width: 600px"
-              v-model="state.global_search_menu"
             >
               <template v-slot:activator="{ on, attrs }">
                 <v-text-field
@@ -144,7 +143,6 @@
                     hide-details
                     v-bind="attrs"
                     v-on="on"
-                    @input="state.global_search_menu = !!state.global_search"
                 ></v-text-field>
               </template>
               <v-card style="min-width: 350px; max-height: 500px; overflow-y: scroll">
