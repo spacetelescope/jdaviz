@@ -288,6 +288,8 @@ class ApplicationState(State):
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
+    viewer_items = ListCallbackProperty(
+        docstring="List (flat) of viewer objects")
 
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
@@ -2527,9 +2529,14 @@ class Application(VuetifyTemplate, HubListener):
 
     def vue_search_item_clicked(self, event):
         attr, label = event['attr'], event['label']
-        item = getattr(self._jdaviz_helper, attr)[label]
+        if attr == 'data_menus':
+            item = self._jdaviz_helper.viewers[label].data_menu
+        else:
+            item = getattr(self._jdaviz_helper, attr)[label]
         if label == 'About':
             item.show_popup()
+        elif attr == 'data_menus':
+            item.open_menu()
         else:
             kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
             item.open_in_tray(**kw)
@@ -2740,6 +2747,7 @@ class Application(VuetifyTemplate, HubListener):
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
             'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            'api_methods': viewer._data_menu.api_methods if hasattr(viewer, '_data_menu') else [],
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
@@ -2825,6 +2833,8 @@ class Application(VuetifyTemplate, HubListener):
         new_stack_item = self._create_stack_item(
             container='gl-stack',
             viewers=[new_viewer_item])
+
+        self.state.viewer_items.append(new_viewer_item)
 
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future

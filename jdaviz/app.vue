@@ -148,6 +148,21 @@
                       </v-list-item>
                     </v-row>
                   </div>
+                  <div v-for="dmItem in state.viewer_items" :key="dmItem.name">
+                    <v-row v-if="trayItemVisible(dmItem, state.global_search)">
+                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'data_menus', label: dmItem.name})}">
+                        <v-list-item-title>
+                          Data Menu: {{ dmItem.name }}
+                        </v-list-item-title>
+                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">dm = {{  api_hints_obj || config }}.viewers['{{ dmItem.name }}'].data_menu</span>
+                        </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(dmItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">dm.{{ api_method }}</span>
+                        </v-list-item-subtitle>
+                      </v-list-item>
+                    </v-row>
+                  </div>
                   <div v-for="(trayItem, index) in state.tray_items" :key="index">
                     <v-row v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'plugins', label: trayItem.label})}">
@@ -418,7 +433,8 @@ export default {
       }
       // simple exact text search match on the plugin title/description for now.
       description = trayItem.tray_item_description || ''
-      return trayItem.label.toLowerCase().includes(tray_items_filter.toLowerCase()) || description.toLowerCase().includes(tray_items_filter.toLowerCase()) || this.trayItemMethodMatch(trayItem, tray_items_filter).length > 0
+      label = trayItem.label || trayItem.name || ''
+      return label.toLowerCase().includes(tray_items_filter.toLowerCase()) || description.toLowerCase().includes(tray_items_filter.toLowerCase()) || this.trayItemMethodMatch(trayItem, tray_items_filter).length > 0
     },
     trayItemMethodMatch(trayItem, tray_items_filter ) {
       if (tray_items_filter === null) {
