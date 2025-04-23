@@ -11,6 +11,8 @@ New Features
 
 - General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531]
 
+- Added a results history table to the Line Analysis plugin. [#3557]
+
 Cubeviz
 ^^^^^^^
 
