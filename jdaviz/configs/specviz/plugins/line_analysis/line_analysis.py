@@ -284,9 +284,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         """
         Add the results of the line analysis to the table.
         """
-        result_dict = {result_item['function']: result_item['result'] for result_item in self.results}
-        result_dict.update({result_item['function'] + ':uncertainty': result_item['uncertainty'] for result_item in self.results})
-        result_dict.update({result_item['function'] + ':unit': result_item['uncertainty'] for result_item in self.results})
+        result_dict = {result_item['function']: result_item['result']
+                       for result_item in self.results}
+        result_dict.update({result_item['function'] + ':uncertainty': result_item['uncertainty']
+                            for result_item in self.results})
+        result_dict.update({result_item['function'] + ':unit': result_item['uncertainty']
+                            for result_item in self.results})
         result_dict['data_label'] = self.dataset.selected
         result_dict['subset_label'] = self.spectral_subset.selected
         self.table.add_item(result_dict)
