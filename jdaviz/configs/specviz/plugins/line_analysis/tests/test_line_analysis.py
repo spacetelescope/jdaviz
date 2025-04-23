@@ -47,6 +47,9 @@ def test_plugin(specviz_helper, spectrum1d):
             # should have an assigned uncertainty (with min required version of specutils)
             assert len(result_dict.get('uncertainty')) > 0
 
+    plugin.add_results_to_table()
+    assert len(plugin.table) == 1
+
 
 @pytest.mark.filterwarnings(r"ignore:'W/m2/m' contains multiple slashes")
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
