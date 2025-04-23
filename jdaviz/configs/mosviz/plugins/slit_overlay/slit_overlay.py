@@ -28,8 +28,7 @@ def jwst_header_to_skyregion(header):
     return skyregion
 
 
-@tray_registry('g-slit-overlay', label="Slit Overlay",
-               viewer_requirements=['table', 'image', 'spectrum-2d', 'spectrum'])
+@tray_registry('g-slit-overlay', label="Slit Overlay")
 class SlitOverlay(PluginTemplateMixin):
     template_file = __file__, "slit_overlay.vue"
     visible = Bool(True).tag(sync=True)
