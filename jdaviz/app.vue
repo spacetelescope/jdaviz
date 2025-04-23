@@ -59,7 +59,7 @@
         <splitpanes>
           <pane size="75">
             <golden-layout
-              v-if="outputCellHasHeight && show"
+              v-if="outputCellHasHeight && showGoldenLayout"
               style="height: 100%;"
               :has-headers="state.settings.visible.tab_headers"
               @state="onLayoutChange"
@@ -189,7 +189,7 @@ export default {
   data() {
     return {
       outputCellHasHeight: false,
-      show: true,
+      showGoldenLayout: true,
     };
   },
   methods: {
@@ -241,9 +241,9 @@ export default {
      */
     if (this.golden_layout_state) {
       setTimeout(() => {
-        this.show = false;
+        this.showGoldenLayout = false;
         setTimeout(() => {
-          this.show = true;
+          this.showGoldenLayout = true;
         }, 100);
       }, 500);
     }
