@@ -21,7 +21,7 @@
     </template>
 
     <v-card id="about-scroll-content">
-      <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj }}.plugins['About']</span>
+      <span v-if="api_hints_enabled" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj }}.plugins['About']</span>
       <jupyter-widget :widget="about_widget"></jupyter-widget>
     </v-card>
   </v-menu>
@@ -29,7 +29,7 @@
 
 <script>
   module.exports = {
-    props: ['jdaviz_version', 'api_hints_obj', 'about_widget', 'force_open_about'],
+    props: ['jdaviz_version', 'api_hints_obj', 'api_hints_enabled', 'about_widget', 'force_open_about'],
     data: function () {
       return {
         popup_open: false,

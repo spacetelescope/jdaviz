@@ -99,6 +99,7 @@
             <j-about-menu
               :jdaviz_version="state.jdaviz_version"
               :api_hints_obj="api_hints_obj"
+              :api_hints_enabled="state.show_api_hints"
               :about_widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"
               :force_open_about.sync="force_open_about"
             ></j-about-menu>
@@ -201,7 +202,7 @@
               </v-tabs-items>
             </v-card>
             <v-card v-if="state.drawer_content === 'save'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
+              <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Export']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Export')].widget"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -248,7 +249,7 @@
               </v-tabs>
               <v-tabs-items v-model="state.info_subtab">
                 <v-tab-item>
-                  <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
+                  <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item>
@@ -269,7 +270,7 @@
               </v-tabs-items>
             </v-card>
             <v-card v-if="state.drawer_content === 'subsets'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
+              <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
             </v-card>
             <v-card v-if="state.drawer_content === 'viewers'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -279,11 +280,11 @@
               </v-tabs>
               <v-tabs-items v-model="state.viewers_subtab">
                 <v-tab-item>
-                  <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
+                  <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item>
-                  <span class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
+                  <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
                 </v-tab-item>
               </v-tabs-items>
