@@ -251,15 +251,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         else:
             self.results = results
 
-    def get_results(self, add_to_table=True):
+    def get_results(self):
         """
         Get the results of the line analysis.
-
-        Parameters
-        ----------
-        add_to_table : bool
-            If True, add the results to the table. If False, return the results without
-            adding them to the table.
 
         Returns
         -------
@@ -275,9 +269,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                              f" is outside data range of '{self.dataset.selected}' {spec_range}")
 
         self._calculate_statistics()
-        if add_to_table:
-            self.add_results_to_table()
-
         return self.results
 
     def add_results_to_table(self):
