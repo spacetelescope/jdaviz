@@ -253,19 +253,8 @@
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item>
-                  <v-alert v-if="state.snackbar_history.length === 0" dense type="info" style="margin-top: 24px">No logger messages</v-alert>
-                  <v-row
-                      dense
-                      @click="(e) => {e.stopImmediatePropagation()}"
-                      v-for="history in state.snackbar_history.slice().reverse()"
-                      style="margin: 6px 0px 0px 0px"
-                  >
-                    <v-alert
-                      dense
-                      :type="history.color">
-                        [{{history.time}}]: {{history.text}}
-                    </v-alert>
-                  </v-row>
+                  <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
+                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Logger')].widget"></jupyter-widget>
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
@@ -332,19 +321,7 @@
             </v-card>
 
             <v-card v-if="state.drawer_content === 'logger'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
-              <v-alert v-if="state.snackbar_history.length === 0" dense type="info">No logger messages</v-alert>
-              <v-row
-                  dense
-                  @click="(e) => {e.stopImmediatePropagation()}"
-                  v-for="history in state.snackbar_history.slice().reverse()"
-                  style="margin: 6px 0px 0px 0px"
-              >
-                <v-alert
-                  dense
-                  :type="history.color">
-                    [{{history.time}}]: {{history.text}}
-                </v-alert>
-              </v-row>
+              <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Logger')].widget"></jupyter-widget>
             </v-card>
 
             <v-card v-if="state.drawer_content === 'plugins'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
@@ -357,7 +334,7 @@
               ></v-text-field>
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
-                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter)">
+                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && trayItem.label !== 'Logger'">
                     <v-expansion-panel-header class="plugin-header">
                       <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
                         <v-list-item-title>

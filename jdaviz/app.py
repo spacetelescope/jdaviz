@@ -229,8 +229,6 @@ class ApplicationState(State):
 
     snackbar_queue = SnackbarQueue()
 
-    snackbar_history = ListCallbackProperty(docstring="Previously dismissed snackbar items")
-
     settings = DictCallbackProperty({
         'data': {
             'auto_populate': False,
@@ -610,7 +608,8 @@ class Application(VuetifyTemplate, HubListener):
             return 'info'
 
         msg_level = _verbosity_levels.index(_color_to_level(msg.color))
-        self.state.snackbar_queue.put(self.state, msg,
+        logger_plg = self._jdaviz_helper.plugins.get('Logger', None)
+        self.state.snackbar_queue.put(self.state, logger_plg, msg,
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)
 
