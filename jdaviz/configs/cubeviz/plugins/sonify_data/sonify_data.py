@@ -24,8 +24,7 @@ else:
     _has_strauss = True
 
 
-@tray_registry('cubeviz-sonify-data', label="Sonify Data",
-               viewer_requirements=['spectrum', 'image'])
+@tray_registry('cubeviz-sonify-data', label="Sonify Data")
 class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     """
     See the :ref:`Sonify Data Plugin Documentation <cubeviz-sonify-data>` for more details.
