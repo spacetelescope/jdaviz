@@ -425,7 +425,7 @@ def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
     pr2 = CirclePixelRegion(center=PixCoord(x=34.59642971526391, y=83.99791791929273),
                             radius=25.200004582170216)
     st.import_region(pr1, combination_mode='new')
-    st.import_region(pr2, combination_mode='and')
+    st.import_region(pr2, edit_subset='Subset 1', combination_mode='and')
 
     # composite subset should be a compound region, and returned as a sky region
     regs = st.get_regions(wrt_data='test 1[DATA]')
