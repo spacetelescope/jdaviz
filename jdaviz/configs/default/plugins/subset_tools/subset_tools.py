@@ -231,28 +231,38 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         Examples
         --------
+        >>> from jdaviz import Imviz, Cubeviz
+        >>> from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
+        >>> from astropy.nddata import NDData
+        >>> import numpy as np
+        >>> import astropy.units as u
+        >>> imviz = Imviz()
         >>> imviz.link_data(align_by='pixels')
+        >>> data = NDData(np.ones((128, 128)) * u.nJy, wcs=getfixture('image_2d_wcs'))
+        >>> imviz.load_data(data)
         >>> plg = imviz.plugins['Subset Tools']
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
-        >>> plg.get_regions()
-        <CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344)>  # noqa E501
-        >>> plg.get_regions(wrt_data='data')
-        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg(9.42618983, -33.70035516)>, radius=4.344032595127815 arcsec)>  # noqa E501
+        >>> plg.get_regions()['Subset 1']
+        <CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344)>
+        >>> plg.get_regions(wrt_data='NDData[DATA]')['Subset 1']
+        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (337.17535851, -20.43481091)>, radius=141.27666333558804 arcsec)>
 
+        >>> imviz.app.delete_subsets()
         >>> imviz.link_data(align_by='wcs')
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
-        >>> plg.get_regions()
-        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg(9.42618983, -33.70035516)>, radius=4.344032595127815 arcsec)>  # noqa E501
-        >>> plg.get_regions(wrt_data='data')
-        <CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344)>  # noqa E501
+        >>> plg.get_regions()['Subset 2']
+        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (333.24622677, -15.70800854)>, radius=1789.5087461752655 arcsec)>
+        >>> plg.get_regions(wrt_data='NDData[DATA]')['Subset 2']
+        <CirclePixelRegion(center=PixCoord(x=14895.056562947997, y=18349.458692647266), radius=1808.6001087700988)>
 
+        >>> cubeviz = Cubeviz()
+        >>> cubeviz.load_data(getfixture('spectrum1d_cube'))
         >>> plg = cubeviz.plugins['Subset Tools']
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=24.27156066879736, y=22.183517455582475), radius=4.7523674964904785))  # noqa E501
-        >>> plg.get_regions()
-        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (339.0149694, 33.97590901)>, radius=0.6178077518628138 arcsec)>  # noqa E501
-        >>> plg.get_regions(wrt_data='data')
-        <CirclePixelRegion(center=PixCoord(x=24.27156066879736, y=22.183517455582475), radius=4.7523674964904785)>  # noqa E501
-
+        >>> plg.get_regions()['Subset 1']
+        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (204.99739799, 27.00252713)>, radius=1.7108522936606858 arcsec)>
+        >>> plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')['Subset 1']
+        <CirclePixelRegion(center=PixCoord(x=24.27156066871908, y=22.18351745562283), radius=4.7523674964904785)>
         """
         if return_sky_region is not None:
             raise ValueError('return_sky_region no longer used, use wrt_data instead')
