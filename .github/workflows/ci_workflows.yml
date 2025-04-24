@@ -95,6 +95,9 @@ jobs:
         python-version: ${{ matrix.python }}
     - name: Install base dependencies
       run: python -m pip install --upgrade pip tox
+    - name: Install extra dependencies for strauss
+      if: "contains(matrix.toxenv, 'alldeps')"
+      run: sudo apt-get install libportaudio2
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
     - name: Upload coverage to artifacts
