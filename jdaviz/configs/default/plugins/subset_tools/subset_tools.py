@@ -245,8 +245,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         >>> plg.get_regions()['Subset 1']
         <CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344)>
         >>> plg.get_regions(wrt_data='NDData[DATA]')['Subset 1']
-        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (337.17535851, -20.43481091)>, radius=141.27666333558804 arcsec)>
-
+        <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (337.17535851, -20.43481091)>, radius=141.27666333632487 arcsec)>
         >>> imviz.app.delete_subsets()
         >>> imviz.link_data(align_by='wcs')
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
