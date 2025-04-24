@@ -697,6 +697,8 @@ class Application(VuetifyTemplate, HubListener):
         refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
         if new_refdata_label not in refdata_choices:
             viewer.state.ref_data_helper.append_data(new_refdata)
+        if new_refdata_label not in [lyr.layer.label for lyr in viewer.layers]:
+            viewer.add_data(new_refdata)
         viewer.state.ref_data_helper.refresh()
 
         # set the new reference data in the viewer:
