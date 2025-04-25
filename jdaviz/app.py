@@ -3004,10 +3004,9 @@ class Application(VuetifyTemplate, HubListener):
                                       "implemented for the deconfigged app")
         # need to rebuild in order, just pulling from existing dict if its already there
         tray_items = []
-        # NOTE: eventually the core plugins will likely be moved out of the tray
-        # in which case we can either remove the categories OR at least simplify
-        # this down into reduction, manipulation, analysis.
-        for category in ['data:reduction', 'data:manipulation', 'data:analysis']:
+        for category in ['app:options', 'data:reduction',
+                         'data:manipulation', 'data:analysis',
+                         'core']:
             for tray_registry_member in tray_registry.members_in_category(category):
                 if not tray_registry_member.get('overwrite', False):
                     try:

@@ -148,7 +148,8 @@ class TrayRegistry(UniqueDictRegistry):
             cls._registry_label = label
             cls._sidebar = sidebar if sidebar is not None else 'plugins'
             cls._subtab = subtab
-            self.members[name] = {'label': label, 'icon': icon, 'cls': cls,
+            self.members[name] = {'label': label, 'name': name,
+                                  'icon': icon, 'cls': cls,
                                   'category': category, sidebar: sidebar,
                                   'subtab': subtab}
 

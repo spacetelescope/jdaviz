@@ -12,7 +12,8 @@ except ImportError:  # pragma: no cover
 __all__ = ['Logger']
 
 
-@tray_registry('logger', label="Logger", sidebar='info', subtab=1)
+@tray_registry('logger', label="Logger",
+               category='core', sidebar='info', subtab=1)
 class Logger(PluginTemplateMixin):
     """Show snackbar messages in a logger UI."""
     template_file = __file__, "logger.vue"

@@ -66,7 +66,8 @@ SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
 COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
-@tray_registry('g-subset-tools', label="Subset Tools", sidebar='subsets')
+@tray_registry('g-subset-tools', label="Subset Tools",
+               category='core', sidebar='subsets')
 class SubsetTools(PluginTemplateMixin, LoadersMixin):
     """
     See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
