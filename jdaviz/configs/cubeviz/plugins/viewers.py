@@ -156,12 +156,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             # TODO: apply 1/N or 1/N**0.5 normalisation per layer for N layers?
             for coord, sound_array in v.items():
                 if coord in compiled_coords:
-                    compiled_coords[coord] += (sound_array * (int(self.layer_volume[k]) / 100)).astype(int)
+                    compiled_coords[coord] += ((sound_array * (int(self.layer_volume[k]) / 100)).
+                                               astype(int))
                 else:
-                    compiled_coords[coord] = (sound_array * (int(self.layer_volume[k]) / 100)).astype(int)
-                # Add all sound arrays together, adjusting them for volume based on the layer's
-                # volume attribute
-                compiled_coords[coord] += (sound_array * (int(self.layer_volume[k])/100)).astype(int)
+                    compiled_coords[coord] = ((sound_array * (int(self.layer_volume[k]) / 100)).
+                                              astype(int))
         return compiled_coords
 
     def update_sonified_cube_with_coord(self, coord, vollim='buff'):
@@ -173,7 +172,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Adjust volume to remove clipping
         if vollim == 'sig':
             # sigmoidal volume limiting
-            self.sonified_cube.newsig = (erf(compsig/INT_MAX)* INT_MAX).astype('int16')
+            self.sonified_cube.newsig = (erf(compsig/INT_MAX) * INT_MAX).astype('int16')
         elif vollim == 'clip':
             # hard-clipped volume limiting
             self.sonified_cube.newsig = np.clip(compsig, -INT_MAX, INT_MAX).astype('int16')
@@ -181,7 +180,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             # renormalise buffer
             sigmax = abs(compsig).max()
             if sigmax > INT_MAX:
-                compsig = ((INT_MAX/abs(compsig).max())*compsig)
+                compsig = ((INT_MAX/abs(compsig).max()) * compsig)
             self.sonified_cube.newsig = compsig.astype('int16')
         self.sonified_cube.cbuff = True
 

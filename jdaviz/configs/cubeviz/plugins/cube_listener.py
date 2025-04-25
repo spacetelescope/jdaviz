@@ -99,7 +99,7 @@ class CubeListenerData:
         self.newsig = np.zeros(self.siglen, dtype='int16')
 
         # ensure sigcube isn't too big before we initialise it
-        if self.cube[:,:,0].size * self.siglen * 2 * pow(1024, -3) > 2:
+        if self.cube[:, :, 0].size * self.siglen * 2 * pow(1024, -3) > 2:
             raise Exception("Cube projected to be > 2Gb!")
 
         self.sigcube = np.zeros((*self.cube.shape[:2], self.siglen), dtype='int16')
