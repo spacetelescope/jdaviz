@@ -12,19 +12,5 @@ settings:
       max_height: 600px
 toolbar:
   - g-coords-info
-tray:
-  - g-metadata-viewer
-  - g-plot-options
-  - g-subset-tools
-  - g-markers
-  - spectral-extraction
-  - g-gaussian-smooth
-  - g-model-fitting
-  - g-unit-conversion
-  - g-line-list
-  - specviz-line-analysis
-  - export
-  - about
-  - logger
 viewer_area:
   - container: col

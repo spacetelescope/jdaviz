@@ -120,6 +120,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixes changing alignment after creating additional image viewers. [#3553]
+
 Mosviz
 ^^^^^^
 
