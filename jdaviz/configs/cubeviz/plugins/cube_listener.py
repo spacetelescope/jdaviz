@@ -46,7 +46,7 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     # set range in spectral flux representing the maximum and minimum sound frequency power:
     # 0 (numeric): absolute 0 in flux units, such that any flux above 0 will sound.
     # '100' (string): 100th percentile (i.e. maximum value) in spectral flux.
-    lims = {'spectrum': (0, '100')}
+    lims = {'spectrum': (0, '%100')}
 
     # set up source
     sources = Events(data.keys())
