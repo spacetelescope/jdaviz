@@ -40,7 +40,7 @@ class _EmptyParam:
                                    self.unit if self.unit is not None else u.dimensionless_unscaled)
 
 
-@tray_registry('g-model-fitting', label="Model Fitting", category="data:analysis")
+@tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
                    NonFiniteUncertaintyMismatchMixin,

@@ -15,7 +15,7 @@ except ImportError:  # pragma: no cover
 __all__ = ['About']
 
 
-@tray_registry('about', label="About", category="app:info")
+@tray_registry('about', label="About")
 class About(PluginTemplateMixin):
     """Show information about Jdaviz."""
     template_file = __file__, "about.vue"

@@ -13,7 +13,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Markers']
 
 
-@tray_registry('g-markers', label="Markers", category='viewer:options')
+@tray_registry('g-markers', label="Markers")
 class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     """
     See the :ref:`Markers Plugin Documentation <markers-plugin>` for more details.

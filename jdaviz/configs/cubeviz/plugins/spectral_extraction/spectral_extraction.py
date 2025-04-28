@@ -31,7 +31,7 @@ __all__ = ['SpectralExtraction']
 
 
 @tray_registry(
-    'cubeviz-spectral-extraction', label="Spectral Extraction"
+    'cubeviz-spectral-extraction', label="Spectral Extraction", viewer_requirements='spectrum'
 )
 class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                          DatasetSelectMixin, AddResultsMixin):

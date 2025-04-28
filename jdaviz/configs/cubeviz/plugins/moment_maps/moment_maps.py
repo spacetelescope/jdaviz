@@ -29,7 +29,8 @@ moment_unit_options = {0: ["Surface Brightness"],
                        2: ["Velocity", "Velocity^N"]}
 
 
-@tray_registry('cubeviz-moment-maps', label="Moment Maps")
+@tray_registry('cubeviz-moment-maps', label="Moment Maps",
+               viewer_requirements=['spectrum', 'image'])
 class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
                 SpectralContinuumMixin, AddResultsMixin):
     """

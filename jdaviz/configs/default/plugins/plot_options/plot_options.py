@@ -105,7 +105,7 @@ def _round_step(step):
     return float(np.round(step, decimals)), decimals
 
 
-@tray_registry('g-plot-options', label="Plot Options", category='viewer:options')
+@tray_registry('g-plot-options', label="Plot Options")
 class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     """
     The Plot Options Plugin gives access to per-viewer and per-layer options and enables
