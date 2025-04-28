@@ -72,7 +72,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     @property
     def user_api(self):
         expose = ['auto_extract', 'ext_data_label']
-        if not isinstance(self.input, Spectrum1D):
+        if not isinstance(self.input, Spectrum):
             expose += ['extension', 'transpose']
         return ImporterUserApi(self, expose)
 
