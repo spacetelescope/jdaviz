@@ -4221,7 +4221,6 @@ class AddResults(BasePluginComponent):
                                    default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoTextField(plugin, label, label_default, label_auto, label_invalid_msg)
-        self.auto = self.auto_label.auto
         self.add_observe(label, self._on_label_changed)
 
     def __repr__(self):
