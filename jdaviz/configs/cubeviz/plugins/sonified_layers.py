@@ -5,8 +5,7 @@ from glue.viewers.image.layer_artist import ImageLayerArtist, BaseImageLayerArti
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 from glue.viewers.image.state import ImageLayerState
 
-__all__ = ['SonifiedLayerStateWidget', 'SonifiedSubsetLayerStateWidget',
-           'SonifiedDataLayerArtist', 'SonifiedDataSubsetLayerArtist']
+__all__ = ['SonifiedLayerStateWidget', 'SonifiedDataLayerArtist']
 
 
 class SonifiedLayerState(ImageLayerState):
@@ -41,27 +40,3 @@ class SonifiedLayerStateWidget(v.VuetifyTemplate):
 
     def __init__(self, layer, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-class SonifiedSubsetLayerState(ImageLayerState):
-    bitmap_visible = CallbackProperty(False, 'whether to show the image as a bitmap')
-    contour_visible = CallbackProperty(False, 'whether to show the image as contours')
-    volume = DDCProperty(50, docstring='The volume level of this layer')
-
-    def __init__(self, *args, **kwargs):
-
-        super(SonifiedSubsetLayerState, self).__init__(*args, **kwargs)
-
-
-class SonifiedSubsetLayerStateWidget(v.VuetifyTemplate):
-
-    def __init__(self, layer, *args, **kwargs):
-        super().__init__(layer, *args, **kwargs)
-
-
-class SonifiedDataSubsetLayerArtist(BaseImageLayerArtist):
-
-    _layer_state_cls = SonifiedSubsetLayerStateWidget
-
-    def __init__(self, view, *args, **kwargs):
-        super().__init__(view, *args, **kwargs)

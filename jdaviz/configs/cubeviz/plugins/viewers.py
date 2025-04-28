@@ -18,8 +18,6 @@ from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL, INT_MAX
 from jdaviz.configs.cubeviz.plugins.sonified_layers import (SonifiedDataLayerArtist,
                                                             SonifiedLayerStateWidget,
-                                                            SonifiedDataSubsetLayerArtist,
-                                                            SonifiedSubsetLayerStateWidget,
                                                             SonifiedLayerState)
 
 
@@ -84,7 +82,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self._cached_properties = ['combined_sonified_grid']
 
         self._layer_style_widget_cls[SonifiedDataLayerArtist] = SonifiedLayerStateWidget
-        self._layer_style_widget_cls[SonifiedDataSubsetLayerArtist] = SonifiedSubsetLayerStateWidget
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -136,10 +133,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             self.stream.stop()
 
     def recalculate_combined_sonified_grid(self, event=None):
-        # Keep track of the volume attribute for each layer. This is done each time the
-        # mouse enters or exists the viewer.
-        # TODO: update when volume attribute is adjusted rather when moving into/out of the
-        #  viewer
+        # Keep track of the volume attribute for each layer.
         self.layer_volume = {layer.layer.label: layer.volume for layer in self.state.layers if
                              isinstance(layer, SonifiedLayerState)}
         if 'combined_sonified_grid' in self.__dict__:
@@ -279,7 +273,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # Find layer, add volume check to dictionary and add callback to volume changing
         data_layer = [layer for layer in self.state.layers if layer.layer.label == data_name][0]
-        self.layer_volume[data_name] = data_layer.volume
         data_layer.add_callback('volume', self.recalculate_combined_sonified_grid)
 
         # Clear cache and recompute
