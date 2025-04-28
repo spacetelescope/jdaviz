@@ -693,9 +693,10 @@ class PluginTemplateMixin(TemplateMixin):
             Whether to immediately scroll to the plugin opened in the tray.
         """
         app_state = self.app.state
-        app_state.drawer_content = self._sidebar
+        sidebar = self._sidebar if self.app.config == 'deconfigged' else 'plugins'
+        app_state.drawer_content = sidebar
 
-        if self._sidebar == 'plugins':
+        if sidebar == 'plugins':
             index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
             if index not in app_state.tray_items_open:
                 app_state.tray_items_open = app_state.tray_items_open + [index]
