@@ -1,5 +1,4 @@
 import os
-import warnings
 
 import astropy.units as u
 import pytest

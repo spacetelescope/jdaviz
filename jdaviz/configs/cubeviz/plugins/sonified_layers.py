@@ -1,7 +1,7 @@
 from echo import CallbackProperty
 import ipyvuetify as v
 
-from glue.viewers.image.layer_artist import ImageLayerArtist, BaseImageLayerArtist
+from glue.viewers.image.layer_artist import ImageLayerArtist
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 from glue.viewers.image.state import ImageLayerState
 
