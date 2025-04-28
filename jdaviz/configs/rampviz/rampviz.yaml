@@ -27,6 +27,7 @@ tray:
   - cube-slice
   - export
   - about
+  - logger
 viewer_area:
   - container: col
     children:
