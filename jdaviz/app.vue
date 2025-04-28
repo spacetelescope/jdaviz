@@ -197,12 +197,12 @@
       <v-container class="fill-height pa-0" fluid>
         <splitpanes>
           <pane size="25" min-size="25" v-if="config === 'deconfigged' && state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 320px">
-            <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'loaders'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.add_subtab">
                 <v-tab>Data</v-tab>
                 <v-tab>Viewer</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.add_subtab">
+              <v-tabs-items v-model="state.add_subtab" style="overflow-y: auto">
                 <v-tab-item>
                     <j-loader-panel
                     :loader_items="state.loader_items"
@@ -257,12 +257,12 @@
               </v-expansion-panels>
               <v-divider></v-divider>
             </v-card>
-            <v-card v-if="state.drawer_content === 'info'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'info'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.info_subtab">
                 <v-tab>Metadata</v-tab>
                 <v-tab>Logger</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.info_subtab">
+              <v-tabs-items v-model="state.info_subtab" style="overflow-y: auto">
                 <v-tab-item>
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
@@ -277,12 +277,12 @@
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
             </v-card>
-            <v-card v-if="state.drawer_content === 'viewers'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'viewers'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.viewers_subtab">
                 <v-tab :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">Plot Options</v-tab>
                 <v-tab>Markers</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.viewers_subtab">
+              <v-tabs-items v-model="state.viewers_subtab" style="overflow-y: auto">
                 <v-tab-item>
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
