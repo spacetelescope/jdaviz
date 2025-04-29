@@ -91,7 +91,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
       (excluding the region containing the line). If 1, will use endpoints within line region
       only.
     * :meth:`get_results`
-    * :meth:`add_results_to_table`
     * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 
     """
@@ -99,6 +98,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
     template_file = __file__, "line_analysis.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
+    results_available = Bool(False).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
     results_centroid = Float().tag(sync=True)  # stored in AA units
@@ -176,7 +176,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
     def user_api(self):
         return PluginUserApi(self, expose=('dataset', 'spectral_subset',
                                            'continuum', 'continuum_width', 'get_results',
-                                           'add_results_to_table', 'export_table'))
+                                           'export_table'))
 
     @property
     def line_items(self):
@@ -242,16 +242,20 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         for pos, mark in self.continuum_marks.items():
             mark.visible = self.is_active
-        self._calculate_statistics(msg)
+
+        if self.is_active:
+            self._calculate_statistics(msg)
 
     def update_results(self, results=None):
         if results is None:
+            self.results_available = False
             self.results = [{'function': function, 'result': ''} for function in FUNCTIONS]
             self._update_continuum_marks()
         else:
             self.results = results
+            self.results_available = True
 
-    def get_results(self):
+    def get_results(self, add_to_table=True):
         """
         Get the results of the line analysis.
 
@@ -268,25 +272,23 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range}"
                              f" is outside data range of '{self.dataset.selected}' {spec_range}")
 
-        self._calculate_statistics()
+        self._calculate_statistics(store_results=True)
+
+        if add_to_table:
+            result_dict = {result_item['function']: result_item['result']
+                           for result_item in self.results}
+            result_dict.update({result_item['function'] + ':uncertainty': result_item['uncertainty']
+                                for result_item in self.results})
+            result_dict.update({result_item['function'] + ':unit': result_item['uncertainty']
+                                for result_item in self.results})
+            result_dict['data_label'] = self.dataset.selected
+            result_dict['subset_label'] = self.spectral_subset.selected
+            self.table.add_item(result_dict)
+
         return self.results
 
-    def add_results_to_table(self):
-        """
-        Add the results of the line analysis to the table.
-        """
-        result_dict = {result_item['function']: result_item['result']
-                       for result_item in self.results}
-        result_dict.update({result_item['function'] + ':uncertainty': result_item['uncertainty']
-                            for result_item in self.results})
-        result_dict.update({result_item['function'] + ':unit': result_item['uncertainty']
-                            for result_item in self.results})
-        result_dict['data_label'] = self.dataset.selected
-        result_dict['subset_label'] = self.spectral_subset.selected
-        self.table.add_item(result_dict)
-
-    def vue_add_results_to_table(self, *args):
-        self.add_results_to_table()
+    def vue_calculate_results(self, *args):
+        self.get_results(add_to_table=True)
 
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
@@ -307,9 +309,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
     @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")
-    @skip_if_no_updates_since_last_active()
     @with_spinner('results_computing')
-    def _calculate_statistics(self, msg={}):
+    def _calculate_statistics(self, msg={}, store_results=False):
         """
         Run the line analysis functions on the selected data/subset and
         display the results.
@@ -318,7 +319,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
             # during initial init, this can trigger before the component is initialized
             return
 
-        if self.disabled_msg != '':
+        if self.disabled_msg != '' or (not store_results and not self.is_active):
             self.update_results(None)
             return
 
@@ -334,6 +335,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                                                                    update_marks=True)
         if spectrum is None:
             self.update_results(None)
+            return
+
+        if not store_results:
             return
 
         def _uncertainty(result):
