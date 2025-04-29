@@ -4218,8 +4218,8 @@ class AddResults(BasePluginComponent):
 
     def __repr__(self):
         if getattr(self, 'auto_update_result', None) is not None:
-            return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}, auto_update_result={self.auto_update_result}>"  # noqa
-        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}>"  # noqa
+            return f"<AddResults label='{self.label}', viewer={self.viewer.selected}, auto_update_result={self.auto_update_result}>"  # noqa
+        return f"<AddResults label='{self.label}', viewer={self.viewer.selected}>"  # noqa
 
     @property
     def user_api(self):
