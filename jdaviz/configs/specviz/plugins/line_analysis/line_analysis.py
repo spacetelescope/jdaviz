@@ -25,7 +25,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
                                         SpectralContinuumMixin,
-                                        skip_if_no_updates_since_last_active,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
@@ -148,7 +147,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         stats = ['Line Flux', 'Equivalent Width', 'Gaussian Sigma Width',
                  'Gaussian FWHM', 'Centroid']
         headers = [h for stat in stats for h in [stat, f'{stat}:uncertainty', f'{stat}:unit']]
-        headers += ['data_label', 'subset_label']
+        headers += ['dataset', 'spectral_subset', 'continuum', 'continuum_width']
         self.table.headers_avail = headers
         self.table.headers_visible = [h for h in headers if ':' not in h]
 
@@ -281,8 +280,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                                 for result_item in self.results})
             result_dict.update({result_item['function'] + ':unit': result_item['uncertainty']
                                 for result_item in self.results})
-            result_dict['data_label'] = self.dataset.selected
-            result_dict['subset_label'] = self.spectral_subset.selected
+            result_dict['dataset'] = self.dataset.selected
+            result_dict['spectral_subset'] = self.spectral_subset.selected
+            result_dict['continuum'] = self.continuum.selected
+            if self.continuum.selected == 'Surrounding' and self.spectral_subset.selected != 'Entire Spectrum':  # noqa
+                result_dict['continuum_width'] = self.continuum_width
+            else:
+                result_dict['continuum_width'] = np.nan
             self.table.add_item(result_dict)
 
         return self.results
