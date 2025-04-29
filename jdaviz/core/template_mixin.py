@@ -4231,7 +4231,10 @@ class AddResults(BasePluginComponent):
         Access the ``auto`` property of the ``AutoTextField`` object.  If enabling, the ``label``
         will automatically be changed and kept in sync with the default label.
         """
+        # TODO: remove when long-term fix is implemented
         try:
+            # This line is causing a massive traceback in CI when run on python 3.11,
+            # temporarily wrap in try/except to get CI passing
             return self.auto_label.auto
         except AttributeError:
             return ""
