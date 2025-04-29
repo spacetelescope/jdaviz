@@ -328,6 +328,7 @@ class Application(VuetifyTemplate, HubListener):
         self._jdaviz_helper = None
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
+        self._default_data_cls = {}
         self.popout_button = PopoutButton(self)
         self.style_registry_instance = style_registry.get_style_registry()
 
@@ -1607,6 +1608,7 @@ class Application(VuetifyTemplate, HubListener):
         if data_label in self.data_collection.labels:
             warnings.warn(f"Overwriting existing data entry with label '{data_label}'")
 
+        self._default_data_cls[data_label] = data.__class__
         self.data_collection[data_label] = data
 
         # manage associated Data entries:

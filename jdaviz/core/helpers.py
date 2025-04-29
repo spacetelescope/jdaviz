@@ -567,7 +567,9 @@ class ConfigHelper(HubListener):
         data = self.app.data_collection[data_label]
 
         if not cls:
-            if 'Trace' in data.meta:
+            if data_label in self.app._default_data_cls:
+                cls = self.app._default_data_cls.get(data_label)
+            elif 'Trace' in data.meta:
                 cls = None
             elif data.ndim == 2 and self.app.config == "specviz2d":
                 cls = Spectrum1D
