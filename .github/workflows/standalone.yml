@@ -18,7 +18,6 @@ defaults:
 jobs:
   build_binary_not_osx:
     runs-on: ${{ matrix.os }}
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-latest]
@@ -95,7 +94,6 @@ jobs:
   # Build for OSX, but not sign
   build_binary_osx:
     runs-on: ${{ matrix.os }}
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [macos-14]
