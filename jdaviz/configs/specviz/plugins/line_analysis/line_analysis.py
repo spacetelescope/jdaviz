@@ -276,9 +276,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         if add_to_table:
             result_dict = {result_item['function']: result_item['result']
                            for result_item in self.results}
-            result_dict.update({result_item['function'] + ':uncertainty': result_item['uncertainty']
+            result_dict.update({result_item['function'] + ':uncertainty': result_item.get('uncertainty', '')  # noqa
                                 for result_item in self.results})
-            result_dict.update({result_item['function'] + ':unit': result_item['uncertainty']
+            result_dict.update({result_item['function'] + ':unit': result_item.get('unit', '')
                                 for result_item in self.results})
             result_dict['dataset'] = self.dataset.selected
             result_dict['spectral_subset'] = self.spectral_subset.selected
