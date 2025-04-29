@@ -128,7 +128,11 @@ class SnackbarQueue:
             # so they are not missed
             msg = self.queue[0]
             if msg.text == state.snackbar['text']:
-                _ = self.queue.popleft()
+                try:
+                    _ = self.queue.popleft()
+                except IndexError:
+                    # in case the queue has been cleared in the meantime
+                    pass
 
         # in case there are messages in the queue still,
         # display the next.
