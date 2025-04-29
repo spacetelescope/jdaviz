@@ -66,13 +66,14 @@
             </div>
         </div> <!-- overlay container -->
     </v-card-text>
-    <v-card-actions>
+    <v-card-actions style="padding-bottom: 60px">
         <v-spacer></v-spacer>
         <plugin-action-button
           :spinner="import_spinner"
           :disabled="!format_selected.length || import_disabled"
           :results_isolated_to_plugin="false"
           :api_hints_enabled="api_hints_enabled"
+
           @click="$emit('import-clicked')">
           {{ api_hints_enabled ?
             'ldr.importer()'
