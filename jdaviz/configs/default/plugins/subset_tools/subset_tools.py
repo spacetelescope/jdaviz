@@ -213,7 +213,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             axis display unit set in the Unit Conversion plugin.
 
         wrt_data : str  or None
-            Only applicable for spatial subsets, an error will be raised for spectral subsets.
+            Only applicable for spatial subsets, an error will be raised when ''region_type''
+            equals 'spectral'. Otherwise, spectral subsets will not be impacted when called.
             Controls return type of ``PixelRegion`` / ``SkyRegion``. To return a spatial
             subset in opposition with the current link type (e.g return ``PixelRegion``
             when WCS linked, ``SkyRegion`` when pixel linked), ``wrt_data`` can be set to
