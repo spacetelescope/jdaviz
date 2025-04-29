@@ -918,7 +918,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                                                   x.lower() for x in manual_options
                                                   if isinstance(x, (str, dict))])
 
-        self._update_items()
+        self.items = [self._to_item(opt) for opt in manual_options]
         # set default values for traitlets
         if default_text is not None:
             self.selected = default_text
@@ -943,10 +943,8 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
-            if self.is_multiselect and isinstance(self.selected, list):
-                # NOTE: selected is a list here so should not be wrapped with quotes
-                return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
-            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            # NOTE: selected is a list here so should not be wrapped with quotes
+            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
@@ -1110,7 +1108,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _apply_default_selection(self, skip_if_current_valid=True):
         if self.is_multiselect:
-            if skip_if_current_valid and (self.selected is None or len(self.selected) == 0):
+            if skip_if_current_valid and len(self.selected) == 0:
                 # current selection is empty and so should remain that way
                 return
             is_valid = [s in self.labels for s in self.selected]
@@ -1182,22 +1180,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
 
 class SelectFileExtensionComponent(SelectPluginComponent):
-    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
-        super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
-                         manual_options=manual_options, filters=filters)
-
     @property
     def selected_index(self):
         return self.selected_item.get('index', None)
 
     @property
-    def selected_name(self):
-        return self.selected_item.get('name', None)
-
-    @property
     def selected_hdu(self):
-        if self.is_multiselect:
-            return [self.manual_options[ind] for ind in self.selected_index]
         return self.manual_options[self.selected_index]
 
     @property
@@ -1221,7 +1209,7 @@ class SelectFileExtensionComponent(SelectPluginComponent):
 
         try:
             self._apply_default_selection()
-        except (ValueError, TypeError):
+        except ValueError:
             pass
 
 
@@ -1751,7 +1739,7 @@ class LayerSelect(SelectPluginComponent):
             self.viewer = msg.new_viewer_ref
 
     def _get_viewer(self, viewer):
-        # viewer will likely be the viewer name in most cases, but viewer id in the case
+        # newer will likely be the viewer name in most cases, but viewer id in the case
         # of additional viewers in imviz.
         try:
             return self.app.get_viewer(viewer)
@@ -4218,8 +4206,8 @@ class AddResults(BasePluginComponent):
 
     def __repr__(self):
         if getattr(self, 'auto_update_result', None) is not None:
-            return f"<AddResults label='{self.label}', viewer={self.viewer.selected}, auto_update_result={self.auto_update_result}>"  # noqa
-        return f"<AddResults label='{self.label}', viewer={self.viewer.selected}>"  # noqa
+            return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}, auto_update_result={self.auto_update_result}>"  # noqa
+        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}>"  # noqa
 
     @property
     def user_api(self):
@@ -4243,7 +4231,10 @@ class AddResults(BasePluginComponent):
         Access the ``auto`` property of the ``AutoTextField`` object.  If enabling, the ``label``
         will automatically be changed and kept in sync with the default label.
         """
-        return self.auto_label.auto
+        try:
+            return self.auto_label.auto
+        except AttributeError:
+            return ""
 
     @auto.setter
     def auto(self, auto):
