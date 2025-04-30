@@ -942,7 +942,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             # will be hidden in the UI
             return
 
-        if not self._viewer_is_image_viewer():
+        if not self._viewer_is_image_viewer() or not self._layer_is_image_layer():
             # don't update histogram if selected viewer is not an image viewer:
             return
 
@@ -1199,6 +1199,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             viewers = [viewers]
 
         return np.all([_is_image_viewer(viewer) for viewer in viewers])
+
+    def _layer_is_image_layer(self):
+        from glue_jupyter.bqplot.image.state import BqplotImageLayerState
+        return np.all([isinstance(lyr.state, BqplotImageLayerState) for lyr in self.layer.selected_obj])
 
     def image_segmentation_map_presets(self, *args, **kwargs):
         # if 'Random' colormap is used for visualizing image segmentation,
