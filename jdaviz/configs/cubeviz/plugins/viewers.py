@@ -16,9 +16,9 @@ from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL, INT_MAX
-from jdaviz.configs.cubeviz.plugins.sonified_layers import (SonifiedDataLayerArtist,
-                                                            SonifiedLayerStateWidget,
-                                                            SonifiedLayerState)
+from jdaviz.core.sonified_layers import (SonifiedDataLayerArtist,
+                                         SonifiedLayerStateWidget,
+                                         SonifiedLayerState)
 
 
 try:

@@ -26,7 +26,7 @@ from jdaviz.core.events import ChangeRefDataMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
-from jdaviz.configs.cubeviz.plugins.sonified_layers import SonifiedLayerState
+from jdaviz.core.sonified_layers import SonifiedLayerState
 # by importing from utils, glue_colormaps will include the custom Random colormap
 from jdaviz.utils import is_not_wcs_only, cmap_samples, glue_colormaps
 
