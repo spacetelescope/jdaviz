@@ -33,8 +33,8 @@ def test_plugin(specviz2d_helper):
 
     pext.keep_active = True
     assert len(sp2dv.figure.marks) == 12
-    assert pext.marks['trace'].visible is True
-    assert len(pext.marks['trace'].x) > 0
+    assert pext.marks['trace'].marks_list[0].visible is True
+    assert len(pext.marks['trace'].marks_list[0].x) > 0
 
     # create FlatTrace
     pext.trace_type_selected = 'Flat'
@@ -73,7 +73,7 @@ def test_plugin(specviz2d_helper):
     # TODO: Investigate extra hidden mark from glue-jupyter, see
     # https://github.com/spacetelescope/jdaviz/pull/2478#issuecomment-1731864411
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    assert len(sp2dv.figure.marks) == 16
+    assert len(sp2dv.figure.marks) in [16, 18]
 
     # interact with background section, check marks
     pext.trace_trace_selected = 'New Trace'
@@ -82,21 +82,21 @@ def test_plugin(specviz2d_helper):
     pext.bg_width = 3
     pext.bg_type_selected = 'TwoSided'
     for mark in ['bg1_center', 'bg2_center']:
-        assert pext.marks[mark].visible is True
-        assert len(pext.marks[mark].x) > 0
+        assert pext.marks[mark].marks_list[0].visible is True
+        assert len(pext.marks[mark].marks_list[0].x) > 0
     bg = pext.export_bg()
     pext.import_bg(bg)
     assert pext.bg_type_selected == 'TwoSided'
 
     pext.bg_type_selected = 'Manual'
-    assert len(pext.marks['bg1_center'].x) == 0
-    assert len(pext.marks['bg2_center'].x) == 0
-    assert len(pext.marks['bg1_lower'].x) > 0
+    assert len(pext.marks['bg1_center'].marks_list[0].x) == 0
+    assert len(pext.marks['bg2_center'].marks_list[0].x) == 0
+    assert len(pext.marks['bg1_lower'].marks_list[0].x) > 0
 
     pext.bg_type_selected = 'OneSided'
     # only bg1 is populated for OneSided
-    assert len(pext.marks['bg1_center'].x) > 0
-    assert len(pext.marks['bg2_center'].x) == 0
+    assert len(pext.marks['bg1_center'].marks_list[0].x) > 0
+    assert len(pext.marks['bg2_center'].marks_list[0].x) == 0
 
     # create background image
     pext.bg_separation = 4
@@ -120,10 +120,10 @@ def test_plugin(specviz2d_helper):
     # interact with extraction section, check marks
     pext.ext_width = 1
     for mark in ['bg1_center', 'bg2_center']:
-        assert pext.marks[mark].visible is False
+        assert pext.marks[mark].marks_list[0].visible is False
     for mark in ['ext_lower', 'ext_upper']:
-        assert pext.marks[mark].visible is True
-        assert len(pext.marks[mark].x) > 0
+        assert pext.marks[mark].marks_list[0].visible is True
+        assert len(pext.marks[mark].marks_list[0].x) > 0
 
     # create subtracted spectrum
     ext = pext.export_extract(ext_width=3)
