@@ -1410,7 +1410,13 @@ class Application(VuetifyTemplate, HubListener):
             # Plugins that access the unit at this point will need to
             # detect that they are set to unitless and attempt again later.
             return ''
-        elif self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
+
+        try:
+            uc = self.get_tray_item_from_name('g-unit-conversion')  # even if not relevant
+        except KeyError:
+            # UC plugin not available (should only be for: imviz, mosviz)
+            uc = None
+        if uc is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
             if hasattr(self._jdaviz_helper, '_default_spectrum_viewer_reference_name'):
                 viewer_name = self._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -1463,7 +1469,6 @@ class Application(VuetifyTemplate, HubListener):
                     return sv_y_unit / solid_angle_unit
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
-        uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
         if axis == 'spectral_y':
             return uc.spectral_y_unit
         try:
