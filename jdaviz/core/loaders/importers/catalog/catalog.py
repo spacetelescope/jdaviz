@@ -1,4 +1,4 @@
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Bool, Float, List, Unicode, observe
 from astropy.table import QTable
 
 from jdaviz.core.registries import loader_importer_registry
@@ -19,6 +19,11 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     col_dec_items = List().tag(sync=True)
     col_dec_selected = Unicode().tag(sync=True)
+
+    cone_search = Bool(False).tag(sync=True)
+    cone_search_ra = Float().tag(sync=True)
+    cone_search_dec = Float().tag(sync=True)
+    cone_search_radius = Float().tag(sync=True)
 
     col_other_items = List().tag(sync=True)
     col_other_selected = List().tag(sync=True)
@@ -63,7 +68,10 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        return ImporterUserApi(self, expose=['col_ra', 'col_dec', 'col_other', 'label'])
+        expose = ['col_ra', 'col_dec',
+                  'cone_search', 'cone_search_ra', 'cone_search_dec', 'cone_search_radius',
+                  'col_other', 'label']
+        return ImporterUserApi(self, expose=expose)
 
     @property
     def is_valid(self):
