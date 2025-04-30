@@ -122,6 +122,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect,
         self.table_selected._clear_callback = clear_selected_table_callback
         self.table_selected_widget = 'IPY_MODEL_'+self.table_selected.model_id
 
+        self._update_loader_items()
+
         self.docs_description = "Queries an area encompassed by the viewer using\
                                  a specified catalog and marks all the objects\
                                  found within the area."
