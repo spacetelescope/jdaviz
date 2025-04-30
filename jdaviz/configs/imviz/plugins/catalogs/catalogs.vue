@@ -17,13 +17,13 @@
     ></plugin-loaders-panel>
 
     <plugin-dataset-select
-      :items="dataset_items"
-      :selected.sync="dataset_selected"
+      :items="catalog_items"
+      :selected.sync="catalog_selected"
       :show_if_single_entry="true"
-      label="Data"
-      api_hint="plg.dataset ="
+      label="Catalog"
+      api_hint="plg.catalog ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Select the data set."
+      hint="Select the catalog data entry."
     />
 
     <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
