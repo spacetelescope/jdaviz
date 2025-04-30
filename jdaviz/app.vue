@@ -231,7 +231,7 @@
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
                   <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter) && (trayItem.sidebar === 'plugins' || config !== 'deconfigged')">
-                    <v-expansion-panel-header class="plugin-header" expand-icon=''>
+                    <v-expansion-panel-header class="plugin-header">
                       <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
                         <v-list-item-title>
                           <j-tooltip :tipid="trayItem.name">
