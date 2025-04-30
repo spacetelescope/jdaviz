@@ -93,7 +93,11 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
-        return self.input[self.output_cols]
+        qtable = self.input[self.output_cols]
+
+        from glue.core.data_factories import tabular_data, astropy_tabular_data
+        qtable.write('test_table.csv', overwrite=True)
+        return astropy_tabular_data('test_table.csv')
 
     @observe('col_ra_selected', 'col_dec_selected', 'col_other_selected')
     def _update_table_preview(self, event={}):
@@ -102,3 +106,4 @@ class CatalogImporter(BaseImporterToDataCollection):
         self.items = [{col: json_safe_table_item(col, row[col])
                        for col in output_cols}
                       for row in self.input[:10]]
+
