@@ -66,7 +66,7 @@
             </div>
         </div> <!-- overlay container -->
     </v-card-text>
-    <v-card-actions style="padding-bottom: 60px">
+    <v-card-actions>
         <v-spacer></v-spacer>
         <plugin-action-button
           :spinner="import_spinner"

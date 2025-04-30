@@ -203,7 +203,7 @@
                 <v-tab>Viewer</v-tab>
               </v-tabs>
               <v-tabs-items v-model="state.add_subtab" style="overflow-y: auto">
-                <v-tab-item>
+                <v-tab-item style="padding-bottom: 40px">
                     <j-loader-panel
                     :loader_items="state.loader_items"
                     :loader_selected.sync="state.loader_selected"
@@ -211,7 +211,7 @@
                     :api_hints_obj="api_hints_obj || config"
                   ></j-loader-panel>
                 </v-tab-item>
-                <v-tab-item>
+                <v-tab-item style="padding-bottom: 40px">
                   <p>Add Viewer Panel</p>
                 </v-tab-item>
               </v-tabs-items>
@@ -263,11 +263,11 @@
                 <v-tab>Logger</v-tab>
               </v-tabs>
               <v-tabs-items v-model="state.info_subtab" style="overflow-y: auto">
-                <v-tab-item>
+                <v-tab-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
                 </v-tab-item>
-                <v-tab-item>
+                <v-tab-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Logger')].widget"></jupyter-widget>
                 </v-tab-item>
@@ -283,11 +283,11 @@
                 <v-tab>Markers</v-tab>
               </v-tabs>
               <v-tabs-items v-model="state.viewers_subtab" style="overflow-y: auto">
-                <v-tab-item>
+                <v-tab-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
                 </v-tab-item>
-                <v-tab-item>
+                <v-tab-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
                 </v-tab-item>
