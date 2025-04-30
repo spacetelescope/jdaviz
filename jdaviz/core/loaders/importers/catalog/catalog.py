@@ -2,7 +2,7 @@ from traitlets import Bool, List, Unicode, observe
 from astropy.table import QTable
 
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporterToPlugin
+from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import AutoTextField, SelectPluginComponent, json_safe_table_item
 from jdaviz.core.user_api import ImporterUserApi
 
@@ -11,7 +11,7 @@ __all__ = ['CatalogImporter']
 
 
 @loader_importer_registry('Catalog')
-class CatalogImporter(BaseImporterToPlugin):
+class CatalogImporter(BaseImporterToDataCollection):
     template_file = __file__, "./catalog.vue"
 
     col_ra_items = List().tag(sync=True)
@@ -73,8 +73,10 @@ class CatalogImporter(BaseImporterToPlugin):
         return isinstance(self.input, QTable)
 
     @property
-    def default_plugin(self):
-        return 'Catalog Search'
+    def default_viewer_reference(self):
+        # returns the registry name of the default viewer
+        # only used if `show_in_viewer=True` and no existing viewers can accept the data
+        return 'table-viewer'
 
     @property
     def output_cols(self):
@@ -92,6 +94,3 @@ class CatalogImporter(BaseImporterToPlugin):
         self.items = [{col: json_safe_table_item(col, row[col])
                        for col in output_cols}
                       for row in self.input[:10]]
-
-    def __call__(self, subset_label=None):
-        self.app._jdaviz_helper.plugins['Catalog Search'].import_catalog(self.output)
