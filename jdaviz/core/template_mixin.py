@@ -4130,6 +4130,9 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_image_or_catalog(data):
+            return len(data.shape) in (1, 2) and not getattr(data.coords, 'is_spectral', False)
+
         def is_image_not_spectrum(data):
             return (is_image(data)
                     and not getattr(data.coords, 'is_spectral', True))
