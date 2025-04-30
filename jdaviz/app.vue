@@ -19,24 +19,24 @@
 
 
         <j-tooltip tipid="app-toolbar-plugins">
-          <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}">
+          <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}" :disabled="state.tray_items.filter(ti => {return (ti.is_relevant && ti.sidebar === 'plugins')}).length === 0">
             <v-icon>mdi-view-grid-outline</v-icon>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-info">
-          <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}">
+          <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
             <v-icon medium style="padding-top: 2px">mdi-format-list-bulleted</v-icon>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-subsets">
-          <v-btn icon @click="() => {if (state.drawer_content === 'subsets') {state.drawer_content = ''} else {state.drawer_content = 'subsets'}}" :class="{active : state.drawer_content === 'subsets'}">
+          <v-btn icon @click="() => {if (state.drawer_content === 'subsets') {state.drawer_content = ''} else {state.drawer_content = 'subsets'}}" :class="{active : state.drawer_content === 'subsets'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
             <v-icon>
               {{ state.subset_mode_create ? 'mdi-selection-drag' : 'mdi-selection' }}
             </v-icon>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-viewers">
-          <v-btn icon @click="() => {if (state.drawer_content === 'viewers') {state.drawer_content = ''} else {state.drawer_content = 'viewers'}}" :class="{active : state.drawer_content === 'viewers'}">
+          <v-btn icon @click="() => {if (state.drawer_content === 'viewers') {state.drawer_content = ''} else {state.drawer_content = 'viewers'}}" :class="{active : state.drawer_content === 'viewers'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
             <v-icon medium style="padding-top: 2px">mdi-chart-histogram</v-icon>
           </v-btn>
         </j-tooltip>
