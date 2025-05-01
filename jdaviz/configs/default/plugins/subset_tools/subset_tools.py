@@ -9,7 +9,8 @@ from functools import cached_property
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
-from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
+from glue.core.roi import (CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI,
+                           PolygonalROI)
 from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
                               MaskSubsetState)
 from glue.icons import icon_path
@@ -25,7 +26,8 @@ from photutils.aperture import (CircularAperture, SkyCircularAperture,
 from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
                      EllipsePixelRegion, EllipseSkyRegion,
                      RectanglePixelRegion, RectangleSkyRegion,
-                     CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
+                     CircleAnnulusPixelRegion, CircleAnnulusSkyRegion,
+                     PolygonPixelRegion, PolygonSkyRegion)
 
 from jdaviz.core.region_translators import regions2roi, aperture2regions
 from jdaviz.core.events import (SnackbarMessage, GlobalDisplayUnitChanged,
@@ -447,6 +449,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                               {"name": "Outer Radius (pixels)",
                                                "att": "outer_radius",
                                                "value": outer_r, "orig": outer_r}]
+                    elif isinstance(subset_state.roi, PolygonalROI):
+                        xc, yc = subset_state.roi.center()
+                        subset_definition += [{"name": "X Center (pixels)",
+                                               "att": "xc", "value": xc, "orig": xc},
+                                              {"name": "Y Center (pixels)",
+                                               "att": "yc", "value": yc, "orig": yc}]
+                        print(subset_state.roi)
 
                     else:  # pragma: no cover
                         raise NotImplementedError(f"Unable to translate {subset_state.roi.__class__.__name__}")  # noqa: E501
@@ -1163,7 +1172,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
                                         SkyRectangularAperture, SkyCircularAnnulus,
                                         CircleSkyRegion, EllipseSkyRegion,
-                                        RectangleSkyRegion, CircleAnnulusSkyRegion))
+                                        RectangleSkyRegion, CircleAnnulusSkyRegion,
+                                        PolygonSkyRegion))
                         and not has_wcs):
                     bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
                     continue
@@ -1171,7 +1181,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if (isinstance(region, (CircularAperture, EllipticalAperture,
                                         RectangularAperture, CircularAnnulus,
                                         CirclePixelRegion, EllipsePixelRegion,
-                                        RectanglePixelRegion, CircleAnnulusPixelRegion))
+                                        RectanglePixelRegion, CircleAnnulusPixelRegion,
+                                        PolygonPixelRegion))
                         and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
                     bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
                     continue
@@ -1188,7 +1199,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
                                         EllipsePixelRegion, EllipseSkyRegion,
                                         RectanglePixelRegion, RectangleSkyRegion,
-                                        CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
+                                        CircleAnnulusPixelRegion, CircleAnnulusSkyRegion,
+                                        PolygonPixelRegion))):
                     try:
                         state = regions2roi(region, wcs=data.coords)
                     except ValueError:
