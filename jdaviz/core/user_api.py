@@ -204,6 +204,27 @@ class ImporterUserApi(UserApiWrapper):
         return f'<{self._obj._registry_label} API>'
 
 
+class ViewerCreatorUserApi(UserApiWrapper):
+    """
+    This is an API wrapper around an internal new viewer creator.  For a full list of attributes/methods,
+    call dir(viewer_creator_object) and for help on any of those methods,
+    call ``help(viewer_creator_object.attribute)``.
+
+    For example::
+
+      help(viewer_creator_object.show)
+    """
+    def __init__(self, importer, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
+        expose = list(set(list(expose) + ['viewer_label', 'show', 'open_in_tray', 'close_in_tray']))
+        super().__init__(importer, expose, readonly, excl_from_dict, deprecated)
+
+    def __call__(self):
+        return self._obj()
+
+    def __repr__(self):
+        return f'<{self._obj._registry_label} API>'
+
+
 class ViewerUserApi(UserApiWrapper):
     """
     This is an API wrapper around a viewer.  For a full list of attributes/methods,

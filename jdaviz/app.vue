@@ -148,6 +148,21 @@
                       </v-list-item>
                     </v-row>
                   </div>
+                  <div v-for="vcItem in state.new_viewer_items" :key="vcItem.label">
+                    <v-row v-if="trayItemVisible(vcItem, state.global_search)">
+                      <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'new_viewers', label: vcItem.label})}">
+                        <v-list-item-title>
+                          New Viewer: {{ vcItem.label }}
+                        </v-list-item-title>
+                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">vc = {{  api_hints_obj || config }}.new_viewers['{{ vcItem.label }}']</span>
+                        </v-list-item-subtitle>
+                        <v-list-item-subtitle v-if="state.show_api_hints && state.global_search.length" v-for="api_method in trayItemMethodMatch(vcItem, state.global_search)" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint">vc.{{ api_method }}</span>
+                        </v-list-item-subtitle>
+                      </v-list-item>
+                    </v-row>
+                  </div>
                   <div v-for="dmItem in state.viewer_items" :key="dmItem.name">
                     <v-row v-if="trayItemVisible(dmItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'data_menus', label: dmItem.name})}">
@@ -204,7 +219,7 @@
               </v-tabs>
               <v-tabs-items v-model="state.add_subtab" style="overflow-y: auto">
                 <v-tab-item style="padding-bottom: 40px">
-                    <j-loader-panel
+                  <j-loader-panel
                     :loader_items="state.loader_items"
                     :loader_selected.sync="state.loader_selected"
                     :api_hints_enabled="state.show_api_hints"
@@ -212,7 +227,12 @@
                   ></j-loader-panel>
                 </v-tab-item>
                 <v-tab-item style="padding-bottom: 40px">
-                  <p>Add Viewer Panel</p>
+                  <j-new-viewer-panel
+                    :new_viewer_items="state.new_viewer_items"
+                    :new_viewer_selected.sync="state.new_viewer_selected"
+                    :api_hints_enabled="state.show_api_hints"
+                    :api_hints_obj="api_hints_obj || config"
+                  ></j-new-viewer-panel>
                 </v-tab-item>
               </v-tabs-items>
             </v-card>

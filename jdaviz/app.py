@@ -47,7 +47,8 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage)
-from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
+from jdaviz.core.registries import (tool_registry, tray_registry,
+                                    viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
@@ -135,7 +136,9 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
                      'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
                      'j-loader-panel': 'components/loader_panel.vue',
+                     'j-new-viewer-panel': 'components/new_viewer_panel.vue',
                      'j-loader': 'components/loader.vue',
+                     'j-viewer-creator': 'components/viewer_creator.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
@@ -268,7 +271,11 @@ class ApplicationState(State):
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
-        '', docstring="Index of the active loader tab shown in the tray.")
+        '', docstring="Active loader shown in the loaders panel.")
+    new_viewer_items = ListCallbackProperty(
+        docstring="List of new viewer items available to the application.")
+    new_viewer_selected = CallbackProperty(
+        '', docstring="Active new viewer shown in the new viewers panel.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -2962,7 +2969,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # Loaders
         def open():
-            self.state.drawer_content = 'loaders'
+            self.state.drawer_content = 'loaders'  # TODO: rename to "add"?
+            self.state.add_subtab = 0
 
         def close():
             self.state.loader_selected = ''
@@ -2991,6 +2999,8 @@ class Application(VuetifyTemplate, HubListener):
         # Tray plugins
         if self.config == 'deconfigged':
             self.update_tray_items_from_registry()
+            import jdaviz.core.viewer_creators  # noqa
+            self.update_new_viewers_from_registry()
         else:
             for name in config.get('tray', []):
                 tray_registry_member = tray_registry.members.get(name)
@@ -3055,6 +3065,64 @@ class Application(VuetifyTemplate, HubListener):
             'widget': "IPY_MODEL_" + tray_item_instance.model_id
         }
         return tray_item
+
+    def update_new_viewers_from_registry(self):
+        # TODO: implement jdaviz.new_viewers dictionary to instantiated items here
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_new_viewers_from_registry is only "
+                                      "implemented for the deconfigged app")
+
+        # need to rebuild in order, just pulling from existing dict if its already there
+        new_viewer_items = []
+        for name, vc_registry_member in viewer_creator_registry.members.items():
+
+            try:
+                raise KeyError()
+                # TODO: implement get_new_viewer_item_from_name to allow downstream injection
+                item = self.get_new_viewer_item_from_name(
+                            name, return_widget=False)
+            except KeyError:
+                try:
+                    item = self._create_new_viewer_item(vc_registry_member)
+                except Exception as e:
+                    self.hub.broadcast(SnackbarMessage(
+                        f"Failed to load viewer {name}: {e}",
+                        sender=self, color='error'))
+                    create_new = False
+                else:
+                    create_new = True
+            else:
+                create_new = False
+
+            if create_new:
+                new_viewer_items.append(item)
+
+        self.state.new_viewer_items = new_viewer_items
+
+    def _create_new_viewer_item(self, vc_registry_member):
+        def open():
+            self.state.drawer_content = 'loaders'  # TODO: rename to "add"?
+            self.state.add_subtab = 1
+
+        def close():
+            self.state.new_viewer_selected = ''
+
+        def set_active_viewer_creator(new_viewer_label):
+            self.state.new_viewer_selected = new_viewer_label
+
+        vc_instance = vc_registry_member(app=self,
+                                         open_callback=open,
+                                         close_callback=close,
+                                         set_active_callback=set_active_viewer_creator)
+        new_viewer_item = {
+            'label': vc_registry_member._registry_label,
+            'widget': "IPY_MODEL_" + vc_instance.model_id,
+            'api_methods': vc_instance.api_methods,
+        }
+        return new_viewer_item
+
+    def get_new_viewer_item_from_name(self, name, return_widget=True):
+        raise KeyError()
 
     def _reset_state(self):
         """ Resets the application state """

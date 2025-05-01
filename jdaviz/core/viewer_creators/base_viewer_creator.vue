@@ -1,0 +1,11 @@
+<template>
+  <j-viewer-creator
+    :popout_button="popout_button"
+    :viewer_label_value.sync="viewer_label_value"
+    :viewer_label_default="viewer_label_default"
+    :viewer_label_auto.sync="viewer_label_auto"
+    :viewer_label_invalid_msg="viewer_label_invalid_msg"
+    :api_hints_enabled="api_hints_enabled"
+    @create-clicked="create_clicked"
+  ></j-loader>
+</template>

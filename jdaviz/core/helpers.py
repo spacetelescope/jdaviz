@@ -136,6 +136,22 @@ class ConfigHelper(HubListener):
                    for item in self.app.state.loader_items}
         return loaders
 
+    @property
+    def new_viewers(self):
+        """
+        Access API objects for creating new viewers.
+
+        Returns
+        -------
+        new_viewers : dict
+            dict of viewer-creator objects
+        """
+        if not self.app.config == 'deconfigged':
+            raise NotImplementedError("new_viewers is only enabled in the deconfigged app")  # noqa
+        new_viewers = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+                       for item in self.app.state.new_viewer_items}
+        return new_viewers
+
     def _load(self, inp=None, loader=None, format=None, target=None, **kwargs):
         """
         Load data into the app.  A single valid loader/importer must be able to be
