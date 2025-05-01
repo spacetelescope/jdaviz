@@ -68,7 +68,11 @@ imviz = "jdaviz.configs.imviz"
 [project.optional-dependencies]
 all = [
     "opencv-python",
-    "pysiaf"
+    "pysiaf",
+    "strauss",
+    "qtpy",
+    "PySide6",
+    "roman_datamodels>=0.22.0"
 ]
 test = [
     "pytest",

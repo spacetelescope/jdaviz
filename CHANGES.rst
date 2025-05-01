@@ -104,6 +104,10 @@ Other Changes and Additions
 
 - Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
 
+- Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
+  dependencies installed with the ``[all]`` extra dependencies flag
+  (i.e., ``pip install jdaviz[all]``). [#3556]
+
 4.2.2 (unreleased)
 ==================
 
