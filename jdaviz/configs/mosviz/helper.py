@@ -415,7 +415,10 @@ class Mosviz(ConfigHelper, LineListMixin):
             raise NotImplementedError("Please set valid values for the Mosviz.load_data() method")
 
         if allow_link_table:
-            self.link_table_data(None)
+            try:
+                self.link_table_data(None)
+            except KeyError:
+                print("The table data was not linked")
 
         self._add_redshift_column()
 
