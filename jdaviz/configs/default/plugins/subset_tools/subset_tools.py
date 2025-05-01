@@ -264,8 +264,6 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         >>> type(plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')['Subset 1'])
         <class 'regions.shapes.circle.CirclePixelRegion'>
         """
-        if return_sky_region is not None:
-            raise ValueError('return_sky_region no longer used, use wrt_data instead')
 
         if region_type is not None:
             region_type = region_type.lower()
@@ -291,6 +289,17 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             reg_type = 'sky_region'
         else:
             reg_type = 'region'
+
+        # TODO: remove after deprecation period
+        # Temporarily allow return_sky_region to function as before if wrt_data
+        # is not set.
+        if return_sky_region is not None and wrt_data:
+            raise ValueError('return_sky_region no longer used, use wrt_data instead')
+        elif return_sky_region is not None:
+            wrt_data = self.app.data_collection[0].label
+            warnings.warn(f'return_sky_region no longer used, use wrt_data instead. '
+                          f'Defaulting to {wrt_data} for the wrt_data kwarg')
+            reg_type = 'sky_region' if return_sky_region else 'region'
 
         # first get ALL subsets of specified spatial/spectral type(s)
         subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
