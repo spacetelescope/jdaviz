@@ -420,7 +420,10 @@ class Mosviz(ConfigHelper, LineListMixin):
             except KeyError:
                 print("The table data was not linked")
 
-        self._add_redshift_column()
+        try:
+            self._add_redshift_column()
+        except ValueError:
+            print("No data found with label 'MOS Table'")
 
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
