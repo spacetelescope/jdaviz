@@ -30,7 +30,7 @@ rng = np.random.default_rng(seed=42)
 
 
 @tray_registry(
-    'ramp-extraction', label="Ramp Extraction", viewer_requirements='profile'
+    'ramp-extraction', label="Ramp Extraction"
 )
 class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                      DatasetSelectMixin, AddResultsMixin):

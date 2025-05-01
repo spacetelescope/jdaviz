@@ -254,6 +254,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                            handler=self._on_select_footprint_overlay)
         self._on_link_type_updated()
 
+    def _highlight_overlay(self, overlay_label, viewers=None):
+        """
+        Visually highlight one overlay by thickening its stroke.
+        """
+        for viewer in viewers:
+            for mark in self._get_marks(viewer):
+                mark.set_selected_style(is_selected=mark.overlay == overlay_label)
+
     def _on_select_footprint_overlay(self, data):
         click_x, click_y = data.x, data.y
         viewers = self.viewer.selected_obj if isinstance(self.viewer.selected_obj, list) else [
@@ -271,6 +279,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         closest_overlay_label, closest_point = find_closest_polygon_point(
             click_x, click_y, overlay_data)
         self.overlay_selected = closest_overlay_label
+        self._highlight_overlay(closest_overlay_label, viewers=self.viewer.selected_obj)
 
     @property
     def user_api(self):
@@ -530,6 +539,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 fp[key] = getattr(self, attr)
         self._ignore_traitlet_change = False
         self._preset_args_changed(overlay_selected=overlay_selected)
+        # Highlight when selection changes
+        self._highlight_overlay(self.overlay_selected, viewers=self.viewer.selected_obj)
 
     def _mark_visible(self, viewer_id, overlay=None):
         if not self.is_active:
@@ -576,6 +587,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 mark.visible = visible
                 mark.colors = [self.color]
                 mark.fill_opacities = [self.fill_opacity]
+                self._highlight_overlay(self.overlay_selected, viewers=[viewer])
                 self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
                     viewer_id=viewer.reference, sender=self))
 
@@ -740,3 +752,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 viewer.figure.marks = viewer.figure.marks + new_marks
             self.hub.broadcast(FootprintMarkVisibilityChangedMessage(
                 viewer_id=viewer.reference, sender=self))
+
+            if overlay_selected == self.overlay_selected:
+                self._highlight_overlay(self.overlay_selected, viewers=[viewer])

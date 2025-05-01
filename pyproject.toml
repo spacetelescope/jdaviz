@@ -43,6 +43,7 @@ dependencies = [
     "pyvo>=1.5.3",
     "s3fs>=2024.10.0"
 ]
+license-files = ["LICENSE.rst", "licenses/IPYFILECHOOSER_LICENSE.rst", "licenses/IMEXAM_LICENSE.txt", "licenses/GINGA_LICENSE.txt", "licenses/TEMPLATE_LICENCE.rst"]
 dynamic = [
     "version",
 ]
@@ -50,10 +51,6 @@ dynamic = [
 [project.readme]
 file = "README.rst"
 content-type = "text/x-rst"
-
-[project.license]
-file = "licenses"
-content-type = "text/plain"
 
 [project.urls]
 Homepage = "https://jdaviz.readthedocs.io/en/latest/"
@@ -103,9 +100,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 zip-safe = false
 include-package-data = true
-license-files = [
-    "LICENSE.rst",
-]
 
 [tool.setuptools.packages.find]
 namespaces = true

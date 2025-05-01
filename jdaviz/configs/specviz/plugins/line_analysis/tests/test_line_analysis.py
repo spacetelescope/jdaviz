@@ -506,7 +506,8 @@ def test_subset_changed(specviz_helper, spectrum1d):
     plugin.width = 3
 
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7500 * unit))
+                                                                        7500 * unit),
+                                                         edit_subset='Subset 1')
     specviz_helper.app.state.drawer_content = 'plugins'
 
     # Values have not yet been validated

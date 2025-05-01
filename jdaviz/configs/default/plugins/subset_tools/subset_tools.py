@@ -66,7 +66,7 @@ SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
 COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
-@tray_registry('g-subset-tools', label="Subset Tools")
+@tray_registry('g-subset-tools', label="Subset Tools", category="subset:manipulation")
 class SubsetTools(PluginTemplateMixin, LoadersMixin):
     """
     See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
@@ -960,7 +960,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
 
-    def import_region(self, region, combination_mode=None, max_num_regions=20,
+    def import_region(self, region, edit_subset=None, combination_mode=None, max_num_regions=20,
                       refdata_label=None, return_bad_regions=False, region_format=None):
         """
         Method for creating subsets from regions or region files.
@@ -978,10 +978,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             A string which represents a ``regions`` or ``SpectralRegion`` file.
             If given as a list, it can only contain spectral or non-spectral regions, not both.
 
+        edit_subset : str or `None`
+            Subset to have region applied to it using combination_mode
+
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
-            same length as regions. If `None`, then it will follow the default glue
-            functionality for subset creation.
+            same length as ``regions``. If `None`, then a new subset will be created.
+            Options are ['new', 'replace', 'or', 'and', 'xor', 'andnot']
+
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
@@ -1021,13 +1025,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 except Exception:  # nosec
                     raw_regs = SpectralRegion.read(region)
 
-                return self._load_regions(raw_regs, combination_mode, max_num_regions,
+                return self._load_regions(raw_regs, edit_subset, combination_mode, max_num_regions,
                                           refdata_label, return_bad_regions)
         else:
-            return self._load_regions(region, combination_mode, max_num_regions, refdata_label,
-                                      return_bad_regions)
+            return self._load_regions(region, edit_subset, combination_mode, max_num_regions,
+                                      refdata_label, return_bad_regions)
 
-    def _load_regions(self, regions, combination_mode=None, max_num_regions=None,
+    def _load_regions(self, regions, edit_subset=None, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
         """Load given region(s) into the viewer.
         WCS-to-pixel translation and mask creation, if needed, is relative
@@ -1056,12 +1060,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
               fully supports ``regions``)
             * specutils ``SpectralRegion`` object
 
+        edit_subset : str or `None`
+            Subset to have region applied to it using combination_mode
+
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
             same length as regions. Each element describes how the corresponding region
-            in regions will be applied. If `None`, then it will follow the default glue
-            functionality for subset creation. Options are ['new', 'replace', 'or', 'and',
-            'xor', 'andnot']
+            in regions will be applied. If `None`, then a new subset will be created.
+            Options are ['new', 'replace', 'or', 'and', 'xor', 'andnot']
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
@@ -1124,8 +1130,22 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 raise ValueError(f"{unknown_options} not one of {COMBO_OPTIONS}")
 
         previous_mode = self.app.session.edit_subset_mode.mode
+        previous_subset = self.app.session.edit_subset_mode.edit_subset
 
         with self.app._jdaviz_helper.batch_load():
+            # This method can edit a particular subset or create a new subset
+            # and apply the combination modes depending on this argument
+            if edit_subset and combination_mode is not None:
+                self.subset.selected = edit_subset
+            elif edit_subset and combination_mode is None:
+                # If combination_mode is not set, assume the user
+                # wants to update the subset in edit_subset
+                self.subset.selected = edit_subset
+                combination_mode = 'replace'
+            else:
+                # self.app.session.edit_subset_mode.edit_subset = None
+                self.subset.selected = self.subset.default_text
+
             for index, region in enumerate(regions):
                 # Set combination mode for how region will be applied to current subset
                 # or created as a new subset
@@ -1134,11 +1154,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 else:
                     combo_mode = combination_mode
 
-                if combo_mode == 'new':
-                    # Remove selection of subset so that new one will be created
-                    # No overwrite next iteration
-                    self.app.session.edit_subset_mode.edit_subset = None
-                    self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
+                # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
+                if combo_mode == 'new' or combo_mode is None:
+                    self.combination_mode.selected = 'new'
                 elif combo_mode:
                     self.combination_mode.selected = combo_mode
 
@@ -1236,7 +1254,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if max_num_regions is not None and n_loaded >= max_num_regions:
                     break
 
-        # Revert edit mode to before the import_region call
+        # Revert edit mode and subset to before the import_region call
+        self.app.session.edit_subset_mode.edit_subset = previous_subset
         self.app.session.edit_subset_mode.mode = previous_mode
 
         n_reg_in = len(regions)

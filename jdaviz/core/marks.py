@@ -714,7 +714,7 @@ class CatalogMark(PluginScatter):
 class FootprintOverlay(PluginLine):
     def __init__(self, viewer, overlay, **kwargs):
         self._overlay = overlay
-        kwargs.setdefault('stroke_width', 2)
+        kwargs.setdefault('stroke_width', 1)
         kwargs.setdefault('close_path', True)
         kwargs.setdefault('opacities', [0.8])
         kwargs.setdefault('fill', 'inside')
@@ -724,6 +724,12 @@ class FootprintOverlay(PluginLine):
     @property
     def overlay(self):
         return self._overlay
+
+    def set_selected_style(self, is_selected):
+        if not isinstance(is_selected, bool):  # pragma: no cover
+            raise TypeError("is_selected must be of type bool")
+
+        self.stroke_width = 4 if is_selected else 1
 
 
 class ApertureMark(PluginLine):

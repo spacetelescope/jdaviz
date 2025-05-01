@@ -22,7 +22,7 @@ Imviz
 - Added ability to load remote data from a S3 URI to Imviz. [#3500]
 
 - Footprints plugin now supports selecting the closest overlay
-  to a clicked point in the image viewer. [#3525, #3539]
+  to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
 
 - Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
 
@@ -53,6 +53,9 @@ Cubeviz
 
 - Radial profile and curve of growth in Aperture Photometry plugin are now consistent
   with ``photutils.profiles``. [#3510]
+
+- BEHAVIOR CHANGE: Change ``import_region`` method to default to creating a new subset when run.
+  Also allow editing a subset using the ``edit_subset`` argument. [#3523]
 
 Imviz
 ^^^^^
@@ -107,12 +110,17 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return
+  sky regions. [#3547]
+
 Cubeviz
 ^^^^^^^
 - Replace file and fix label in example notebook. [#3537]
 
 Imviz
 ^^^^^
+
+- Fixes changing alignment after creating additional image viewers. [#3553]
 
 Mosviz
 ^^^^^^

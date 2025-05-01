@@ -34,7 +34,7 @@ base_wcs_layer_label = 'Default orientation'
 align_by_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
-@tray_registry('imviz-orientation', label=orientation_plugin_label, viewer_requirements="image")
+@tray_registry('imviz-orientation', label=orientation_plugin_label)
 class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Orientation Plugin Documentation <imviz-orientation>` for more details.
