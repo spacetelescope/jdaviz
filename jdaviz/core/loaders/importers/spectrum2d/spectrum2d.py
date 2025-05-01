@@ -118,6 +118,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         wcs = WCS(header, hdulist)
         if data.shape[0] > data.shape[1]:
             data = data.T
+            self.app.hub.broadcast(SnackbarMessage(
+                f"Transposed input data to {data.shape}",
+                sender=self, color="warning"))
         if wcs.array_shape[0] > wcs.array_shape[1]:
             wcs = wcs.swapaxes(0, 1)
 
