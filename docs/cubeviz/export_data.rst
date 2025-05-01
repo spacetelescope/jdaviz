@@ -39,7 +39,7 @@ first to create a 1D spectrum and then refer to it by label in ``get_data``.
 
 .. code-block:: python
 
-    subset2_spec1d = cubeviz.get_data(data_labe"Spectrum (Subset 2, sum)")
+    subset2_spec1d = cubeviz.get_data(data_label="Spectrum (Subset 2, sum)")
 
 3D Data Cubes
 =============
