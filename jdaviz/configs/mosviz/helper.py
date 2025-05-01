@@ -438,7 +438,10 @@ class Mosviz(ConfigHelper, LineListMixin):
         ).figure.axes[1].label_offset = "-50"
 
         # Load the first object into the viewers automatically
-        self.app.get_viewer(self._default_table_viewer_reference_name).figure_widget.highlighted = 0
+        try:
+            self.app.get_viewer(self._default_table_viewer_reference_name).figure_widget.highlighted = 0
+        except ValueError:
+            print("No data found with label 'MOS Table'")
 
         # Notify the user that this all loaded successfully
         self.app.hub.broadcast(SnackbarMessage(
