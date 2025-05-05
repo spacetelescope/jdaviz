@@ -1,4 +1,4 @@
-from echo import delay_callback
+from echo import delay_callback, CallbackProperty
 
 import numpy as np
 
@@ -270,6 +270,13 @@ class JdavizViewerMixin(WithCache):
                 layer_state.as_steps = False
             # whenever as_steps changes, we need to redraw the uncertainties (if enabled)
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
+
+        if hasattr(layer_state, 'layer') and get_subset_type(layer_state.layer):
+            layer_state.layer.visible = CallbackProperty()
+            if (self.__class__.__name__ == 'CubevizImageView' and
+               get_subset_type(layer_state.layer) != 'spatial'):
+                layer_state.visible = False
+            layer_state.add_callback('layer', self._expected_subset_layer_default, validator=True)
 
     def _expected_subset_layer_default(self, layer_state):
         if self.__class__.__name__ == 'RampvizImageView':
