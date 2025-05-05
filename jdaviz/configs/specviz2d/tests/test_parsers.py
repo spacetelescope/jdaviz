@@ -47,6 +47,13 @@ def test_2d_parser_ext_hdulist(specviz2d_helper):
     assert dc_0.get_component('flux').shape == (29, 3416)
 
 
+@pytest.mark.remote_data
+def test_hlsp_goods_s2d(specviz2d_helper):
+    specviz2d_helper.load('mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits ', cache=True)  # noqa
+    dc_0 = specviz2d_helper.app.data_collection[0]
+    assert dc_0.get_component('flux').shape == (27, 674)
+
+
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(mos_spectrum2d, spectrum_2d_label='my_2d_spec')
     assert len(specviz2d_helper.app.data_collection) == 2
