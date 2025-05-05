@@ -102,6 +102,7 @@ module.exports = {
   }
   .tray-plugin .plugin-table-component {
     margin: 0px -12px 0px -12px;
+    overflow-x: hidden;
   }
 
 </style>

@@ -65,7 +65,7 @@ def _calculate_line_flux(viz_helper):
     line_analysis_plugin.keep_active = True
 
     # Retrieve Results
-    for result in line_analysis_plugin.results:
+    for result in line_analysis_plugin.get_results():
         if result['function'] == 'Line Flux':
             return result
 
