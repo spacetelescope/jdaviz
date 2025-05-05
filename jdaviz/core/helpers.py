@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from inspect import isclass
 
 import numpy as np
-from glue.core import HubListener
+from glue.core import ComponentID, HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
@@ -26,6 +26,7 @@ from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
+from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
@@ -55,6 +56,7 @@ class ConfigHelper(HubListener):
         Verbosity of the history logger in the application.
     """
     _default_configuration = 'default'
+    _component_ids = {}
 
     def __init__(self, app=None, verbosity='warning', history_verbosity='info'):
         if app is None:
@@ -115,6 +117,10 @@ class ConfigHelper(HubListener):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
     @property
+    def _coords_info(self):
+        return self.app.session.application._tools.get('g-coords-info')
+
+    @property
     def loaders(self):
         """
         Access API objects for data loaders in the import dialog.
@@ -124,11 +130,44 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not self.app.state.dev_loaders:
+        if not (self.app.state.dev_loaders or self.app.config in ('deconfigged', 'specviz', 'specviz2d')):  # noqa
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}
         return loaders
+
+    def _load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        """
+        Load data into the app.  A single valid loader/importer must be able to be
+        matched based on the input, otherwise an error will be raised suggesting
+        what further information to provide.  For an interactive approach,
+        see ``loaders``.
+
+        Parameters
+        ----------
+        inp : string or object or None
+            Input filename, url, data object, etc.
+        loader : string, optional
+            Only consider a specific loader/resolver
+        format : string, optional
+            Only consider a specific format
+        target : string, optional
+            Only consider a specific target
+        kwargs :
+            Additional kwargs are passed on to both the loader and importer, as applicable.
+            Any kwargs that do not match valid inputs are silently ignored.
+        """
+        resolver = find_matching_resolver(self.app, inp,
+                                          resolver=loader,
+                                          format=format,
+                                          target=target,
+                                          **kwargs)
+
+        importer = resolver.importer
+        for k, v in kwargs.items():
+            if hasattr(importer, k) and v is not None:
+                setattr(importer, k, v)
+        return importer()
 
     @property
     def data_labels(self):
@@ -183,6 +222,31 @@ class ConfigHelper(HubListener):
         """
         return {viewer._ref_or_id: viewer.user_api
                 for viewer in self.app._viewer_store.values()}
+
+    def _get_clone_viewer_reference(self, reference):
+        base_name = reference.split("[")[0]
+        name = base_name
+        ind = 0
+        while name in self.viewers.keys():
+            ind += 1
+            name = f"{base_name}[{ind}]"
+        return name
+
+    def _set_data_component(self, data, component_label, values):
+        if component_label in self._component_ids:
+            component_id = self._component_ids[component_label]
+        else:
+            existing_components = [component.label for component in data.components]
+            if component_label in existing_components:
+                component_id = data.components[existing_components.index(component_label)]
+            else:
+                component_id = ComponentID(component_label)
+                self._component_ids[component_label] = component_id
+
+        if component_id in data.components:
+            data.update_components({component_id: values})
+        else:
+            data.add_component(values, component_id)
 
     @property
     @deprecated(since="4.2", alternative="plugins['Model Fitting'].fitted_models")
@@ -329,6 +393,14 @@ class ConfigHelper(HubListener):
             self.app.layout.height = height
             self.app.state.settings['context']['notebook']['max_height'] = height
 
+        if self.app.config in ('specviz', 'specviz2d', 'lcviz') or self.app.state.dev_loaders:
+            if not len(self.viewers) and not len(self.app.state.drawer_content):
+                self.app.state.drawer_content = 'loaders'
+            else:
+                self.app.state.drawer_content = 'plugins'
+        else:
+            self.app.state.drawer_content = 'plugins'
+
         show_widget(self.app, loc=loc, title=title)
 
     def show_in_sidecar(self, anchor=None, title=None):  # pragma: no cover
@@ -370,7 +442,10 @@ class ConfigHelper(HubListener):
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
-                y_unit = self.app._get_display_unit('spectral_y')
+                if self.app.config == 'specviz' and self.app._get_display_unit('sb'):
+                    y_unit = self.app._get_display_unit('sb')
+                else:
+                    y_unit = self.app._get_display_unit('spectral_y')
 
                 # if there is no pixel scale factor, and the requested conversion
                 # is between flux/sb, then skip. this case is encountered when
@@ -495,8 +570,7 @@ class ConfigHelper(HubListener):
 
         if not spatial_subset and not mask_subset:
             if 'Trace' in data.meta:
-                if cls is not None:  # pragma: no cover
-                    raise ValueError("cls not supported for Trace object")
+                # ignore cls
                 data = data.get_object()
             else:
                 data = data.get_object(cls=cls, **object_kwargs)
@@ -596,6 +670,7 @@ class ImageConfigHelper(ConfigHelper):
         (e.g., "imviz-0" or "cubeviz-0")."""
         return self._default_viewer.user_api
 
+    @deprecated(since="4.2", alternative="subset_tools.import_region")
     def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,
                                **kwargs):
         """Load regions defined in the given file.
@@ -628,6 +703,7 @@ class ImageConfigHelper(ConfigHelper):
         raw_regs = Regions.read(region_file, format=region_format)
         return self.load_regions(raw_regs, max_num_regions=max_num_regions, **kwargs)
 
+    @deprecated(since="4.2", alternative="subset_tools.import_region")
     def load_regions(self, regions, max_num_regions=None, refdata_label=None,
                      return_bad_regions=False, **kwargs):
         """Load given region(s) into the viewer.
@@ -732,7 +808,7 @@ class ImageConfigHelper(ConfigHelper):
                                     CirclePixelRegion, EllipsePixelRegion,
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
                     and self.app._align_by == "wcs"):
-                bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
                 continue
 
             # photutils: Convert to regions shape first
@@ -863,19 +939,6 @@ class ImageConfigHelper(ConfigHelper):
 
         return regions
 
-    # See https://github.com/glue-viz/glue-jupyter/issues/253
-    def _apply_interactive_region(self, toolname, from_pix, to_pix):
-        """Mimic interactive region drawing.
-        This is for internal testing only.
-        """
-        self.app.session.edit_subset_mode._mode = NewMode
-        tool = self.default_viewer._obj.toolbar.tools[toolname]
-        tool.activate()
-        tool.interact.brushing = True
-        tool.interact.selected = [from_pix, to_pix]
-        tool.interact.brushing = False
-        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration
-
     # TODO: Make this public API?
     def _delete_region(self, subset_label):
         """Delete region given the Subset label."""
@@ -885,12 +948,6 @@ class ImageConfigHelper(ConfigHelper):
         i = all_subset_labels.index(subset_label)
         subset_grp = self.app.data_collection.subset_groups[i]
         self.app.data_collection.remove_subset_group(subset_grp)
-
-    # TODO: Make this public API?
-    def _delete_all_regions(self):
-        """Delete all regions."""
-        for subset_grp in self.app.data_collection.subset_groups:  # should be a copy
-            self.app.data_collection.remove_subset_group(subset_grp)
 
 
 def _next_subset_num(label_prefix, subset_groups):

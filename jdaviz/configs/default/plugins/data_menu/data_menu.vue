@@ -11,10 +11,10 @@
           v-model="data_menu_open">
           <template v-slot:activator="{ on, attrs }">
             <div :id="'layer-legend-'+ viewer_id" class="layer-legend">
-              <div 
+              <div
                 v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
                 :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
-              > 
+              >
                 <span style="float: right">
                   <j-layer-viewer-icon-stylized
                     :tooltip="data_menu_open ? 'close menu' : 'View data layers and subsets'"
@@ -59,13 +59,13 @@
             </div>
           </template>
           <v-list :id="'dm-content-' + viewer_id" style="width: 400px" class="overflow-y-auto">
-            <v-list-item v-if="api_hints_enabled" style="min-height: 12px"> 
-              <v-list-item-content> 
-                <span class="api-hint"> 
-                  <b>dm = {{ config }}.viewers['{{viewer_id}}'].data_menu</b>
-                </span> 
-              </v-list-item-content> 
-            </v-list-item> 
+            <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
+              <v-list-item-content>
+                <span class="api-hint">
+                  <b>dm = {{ api_hints_obj }}.viewers['{{viewer_id}}'].data_menu</b>
+                </span>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item class="dm-header">
               <v-list-item-icon>
                 <j-tooltip
@@ -86,7 +86,7 @@
               >
                 <j-tooltip
                   v-if="orientation_enabled"
-                  :tooltipcontent="orientation_align_by_wcs ? 'Open orientation plugin' : 'data is linked by pixel (app-wide).  To choose orientation, open the orientation plugin and link by WCS.'"
+                  :tooltipcontent="orientation_align_by_wcs ? 'Open orientation plugin' : 'data is aligned by pixel (app-wide).  To choose orientation, open the orientation plugin and link by WCS.'"
                   span_style="display: inline-block"
                   >
                   <span
@@ -95,7 +95,7 @@
                   >
                     <v-icon class="invert-if-dark" style="margin-right: 8px">mdi-compass-outline</v-icon>
                     <label v-if="!orientation_align_by_wcs" style="font-size: 12px; line-height: 20px; color: rgba(0, 0, 0, 0.6); position: absolute; top: -5px">Orientation</label>
-                    <span v-if="!orientation_align_by_wcs" class="invert-if-dark" style="position: absolute; margin-top: 12px">linked by pixel</span>
+                    <span v-if="!orientation_align_by_wcs" class="invert-if-dark" style="position: absolute; margin-top: 12px">aligned by pixel</span>
                   </span>
                 </j-tooltip>
                 <v-select
@@ -103,8 +103,8 @@
                   dense
                   :items="orientation_layer_items"
                   v-model="orientation_layer_selected"
-                  :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'" 
-                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : 'invert-if-dark'" 
+                  :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'"
+                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : 'invert-if-dark'"
                   item-text="label"
                   item-value="label"
                   :hide-details="true"
@@ -148,13 +148,13 @@
                 </data-menu-add>
               </v-list-item-action>
             </v-list-item>
-            <v-list-item 
-              v-if="api_hints_enabled" 
-            > 
-              <v-list-item-content> 
-                <span class="api-hint">dm.layer = {{ layer_selected }}</span> 
-              </v-list-item-content> 
-            </v-list-item> 
+            <v-list-item
+              v-if="api_hints_enabled"
+            >
+              <v-list-item-content>
+                <span class="api-hint">dm.layer = {{ layer_selected }}</span>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item-group
               v-model="dm_layer_selected"
               active-class="active-list-item"
@@ -163,10 +163,10 @@
               dense
             >
               <div>
-              <v-list-item 
-                v-for="item in layer_items" 
-                class="layer-select" 
-              > 
+              <v-list-item
+                v-for="item in layer_items"
+                class="layer-select"
+              >
                 <v-list-item-icon>
                   <j-layer-viewer-icon-stylized
                       :label="item.label"
@@ -195,7 +195,7 @@
                     <plugin-switch v-if="!item.is_sonified"
                       :value="item.visible"
                       @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                      @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}" 
+                      @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
                       @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
                       :api_hints_enabled="false"
                       :use_eye_icon="true"
@@ -205,12 +205,12 @@
               </v-list-item>
               </div>
             </v-list-item-group>
-            <hover-api-hint 
-              v-if="api_hints_enabled" 
-              :hover_api_hint.sync="hover_api_hint" 
-              :lock_hover_api_hint.sync="lock_hover_api_hint" 
+            <hover-api-hint
+              v-if="api_hints_enabled"
+              :hover_api_hint.sync="hover_api_hint"
+              :lock_hover_api_hint.sync="lock_hover_api_hint"
               :icons="icons"
-            /> 
+            />
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
               <v-list-item-content style="display: inline-block">
                 <data-menu-remove
@@ -219,7 +219,7 @@
                   :delete_viewer_tooltip="delete_viewer_tooltip"
                   :delete_app_enabled="delete_app_enabled"
                   :delete_app_tooltip="delete_app_tooltip"
-                  :api_hints_enabled="api_hints_enabled" 
+                  :api_hints_enabled="api_hints_enabled"
                   @remove-from-viewer="remove_from_viewer"
                   @remove-from-app="remove_from_app"
                 />
@@ -242,7 +242,7 @@
                   :subset_edit_modes="subset_edit_modes"
                   :subset_tools="subset_tools"
                   :subset_selected="layer_selected[0]"
-                  :api_hints_enabled="api_hints_enabled" 
+                  :api_hints_enabled="api_hints_enabled"
                   @view-info="view_info"
                   @modify-subset="(combination_mode, tool) => {modify_subset({combination_mode: combination_mode,
                                                                               subset_type: tool});
@@ -253,7 +253,7 @@
           </v-list>
         </v-menu>
       </div>
-      <div :id="'dm-target-' + viewer_id"></div> 
+      <div :id="'dm-target-' + viewer_id"></div>
     </div>
     <div v-if="loaded_n_data == 0 && dataset_items.length > 0" style="height: 100%">
       <v-list style="height: 100%">
@@ -321,9 +321,9 @@
     },
     methods: {
       onScroll(e) {
-        const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
-        const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
         if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
+          const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
+          const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
           const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
           menuContent.parentElement.style.top = top + "px";
 
@@ -361,7 +361,7 @@
   }
   .viewer-label:last-child {
     padding-bottom: 0px;
-    border-bottom-left-radius: 4px; 
+    border-bottom-left-radius: 4px;
   }
   .viewer-label:hover {
     background-color: #e5e5e5;

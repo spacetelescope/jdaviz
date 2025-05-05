@@ -1,10 +1,174 @@
-4.2 (unreleased)
+4.3 (unreleased)
+================
+
+New Features
+------------
+
+- The Plot Options plugin now highlights the tab for the active (top-most) data layer
+  in the selected viewer. [#3514]
+
+- Added an STC-S string region parser to the Footprints plugin. [#3479]
+
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531, #3555]
+
+- Added a results history table to the Line Analysis plugin.  Results are no longer updated in realtime with changes to inputs,
+  but rather when clicking the button or calling ``get_results``, at which point an entry is added to the results history table
+  by default. [#3557]
+
+Cubeviz
+^^^^^^^
+
+- Ability to ingest and export ``SkyRegion`` objects. [#3502]
+
+Imviz
+^^^^^
+
+- Added ability to load remote data from a S3 URI to Imviz. [#3500]
+
+- Footprints plugin now supports selecting the closest overlay
+  to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
+
+- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
+
+Specviz2d
+^^^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
+
+API Changes
+-----------
+
+- Allow ``get_regions`` and ``get_subsets`` to take a data label and have a subset apply to the wcs of that data.
+  By setting a value for ``wrt_data``, the user is requesting a region type that is the opposite of the current link
+  type, (i.e. ``SkyRegion`` when linked by pixel or ``PixelRegion`` when linked by wcs.) Also deprecate the
+  ``return_sky_region`` kwarg and leave a deprecation warning to use ``wrt_data`` instead. [#3527]
+
+Cubeviz
+^^^^^^^
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
+- BEHAVIOR CHANGE: Change ``import_region`` method to default to creating a new subset when run.
+  Also allow editing a subset using the ``edit_subset`` argument. [#3523]
+
+Imviz
+^^^^^
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
+- Catalog Search: When catalog is imported from file, its original column names are
+  preserved on export. [#3519]
+
+- User API for Catalog Search plugin (including ``catalog``,  ``max_sources``,``search``,
+  ``table``, and ``table_selected``) is now public. [#3529]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+- Catalog Search: Fixed a bug where the plugin modifies the input table if
+  ``import_catalog`` is used on a table instance (not from file). [#3519]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
+
+- Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
+  dependencies installed with the ``[all]`` extra dependencies flag
+  (i.e., ``pip install jdaviz[all]``). [#3556]
+
+4.2.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return
+  sky regions. [#3547]
+
+Cubeviz
+^^^^^^^
+- Replace file and fix label in example notebook. [#3537]
+
+Imviz
+^^^^^
+
+- Fixes changing alignment after creating additional image viewers. [#3553]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+- Fix bug where converting spectral units multiple times caused spectrum viewer limits
+  to stop resetting to correct x-limits. [#3518]
+
+Specviz2d
+^^^^^^^^^
+
+- Improved initial guess for trace for automatic extraction. May change results
+  for automatic extraction for data with nonfinite values. [#3512]
+
+- Replace file in example notebook. [#3537]
+
+4.2.1 (2025-03-24)
+==================
+
+Bug Fixes
+---------
+
+- Significantly improved performance for panning and zooming with large datasets. [#3513]
+
+4.2 (2025-03-17)
 ================
 
 New Features
 ------------
 
 - Added API and UI for renaming subsets to Subset Tools plugin. [#3356, #3392]
+
+- Added API for updating subsets to Subset Tools plugin. [#3484]
 
 - Viewer data-menus are now found in the legend on the right of the viewer. [#3281]
 
@@ -14,6 +178,8 @@ New Features
   items without clearing the table. [#3381]
 
 - Plugin API methods and attributes are now searchable from the plugin tray (and visible when API hints are enabled). [#3384]
+
+- Snackbar history logger has been moved from an overlay to a separate tab in the right sidebar tray. [#3466]
 
 Cubeviz
 ^^^^^^^
@@ -31,13 +197,7 @@ Imviz
 
 - Catalog Search now shows a table of selected entries and allows selecting/deselecting via a tool in the image viewer. [#3429]
 
-- Virtual Observatory plugin to query resources and download data products. [#2872]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
+- Virtual Observatory plugin to query resources and download data products. [#2872, #3470]
 
 Specviz2d
 ^^^^^^^^^
@@ -51,18 +211,29 @@ API Changes
   directly if you wish to test your copy of ``jdaviz``. [#3451]
 
 - ``**kwargs`` from ``viz.plugins['Subset Tools'].import_region(..., **kwargs)`` is removed, ``region_format=None``
-  is now explicitly supported. [#3453]
+  is now explicitly supported. The default value for ``max_num_regions`` option
+  is now 20 instead of ``None`` (load everything). [#3453, #3474]
 
 Cubeviz
 ^^^^^^^
+
+- ``cubeviz.load_regions()`` and ``cubeviz.load_regions_from_file()`` are deprecated.
+  Use ``cubeviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
+
+- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 Imviz
 ^^^^^
 
 - Orientation plugin: ``link_type`` and ``wcs_use_affine`` (previously deprecated) have now been removed. [#3385]
 
-Mosviz
-^^^^^^
+- ``imviz.load_regions()`` and ``imviz.load_regions_from_file()`` are deprecated.
+  Use ``imviz.plugins['Subset Tools'].import_region()`` instead. [#3474]
+
+- ``imviz.get_catalog_source_results()`` is deprecated.
+  Use ``imviz.plugins['Catalog Search'].export_table()`` instead. [#3497]
+
+- ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
 
 Specviz
 ^^^^^^^
@@ -77,22 +248,32 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Fix showing dataset dropdown in cubeviz's spectral extraction for flux-cube products from other plugins. [#3411]
+
+- SDSS line list now in vacuum, and SDSS IV in air. Previously, they were incorrectly categorized.
+  To keep categorization correct, SDSS IV list no longer carries wavelengths less than 2000 Angstrom. [#3458]
+
 - Fixed some broken flux conversions that were dropping the factor of solid angle. [#3457]
+
+- subset_tools.get_regions uses app.get_subsets under the hood, which fixes retrieving composite subsets when sky linked as
+  well as an errant snackbar message when a mix of spectral/spatial subsets are present. [#3476]
 
 Cubeviz
 ^^^^^^^
 
-- Fixed copious warnings from spaxel tool when data has INF. [#3368]
+- Fixed copious warnings from spectrum-at-spaxel tool when data has INF. [#3368]
 
-- Cubeviz-specific helper-level methods are deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
+- Hide spectral subset layer visibility in flux/uncertainty viewers when slice indicator
+  is within the spectral subset bounds. [#3437]
 
 Imviz
 ^^^^^
 
-- ``get_aperture_photometry_results`` helper-level method is deprecated and will be removed in the future in favor of plugin APIs as configs are centralized. [#3388]
+- Improve performance of re-rendering during orientation change. [#3452]
 
-Mosviz
-^^^^^^
+- Fix incorrect matching between RA/Dec and pixel coordinates in Catalog search results. [#3464]
+
+- Fixed "zoom to selected" in Catalog Search plugin when multiple sources are selected. [#3482]
 
 Specviz
 ^^^^^^^
@@ -102,6 +283,12 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fix subset linking/displaying between pixel/wavelength in Specviz2d viewers. [#2736]
+
+- Fixes missing API entry for spectral extraction's export_bg_spectrum.  [#3447]
+
+- Fixes default location of trace in spectral extraction when some columns are filled with all zeros or nans. [#3475]
+
 Other Changes and Additions
 ---------------------------
 
@@ -109,42 +296,6 @@ Other Changes and Additions
 
 - Refactored flux conversion to use a single function for all plugin/viewer flux/surface brightness
   conversions. [#3457]
-  
-
-4.1.2 (unreleased)
-==================
-
-Bug Fixes
----------
-
-- Fix showing dataset dropdown in cubeviz's spectral extraction for flux-cube products from other plugins. [#3411]
-
-- SDSS line list now in vacuum, and SDSS IV in air. Previously, they were incorrectly categorized.
-  To keep categorization correct, SDSS IV list no longer carries wavelengths less than 2000 Angstrom. [#3458]
-
-Cubeviz
-^^^^^^^
-
-- Hide spectral subset layer visibility in flux/uncertainty viewers when slice indicator 
-  is within the spectral subset bounds. [#3437]
-
-Imviz
-^^^^^
-
-- Improve performance of re-rendering during orientation change. [#3452]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-- Fix subset linking/displaying between pixel/wavelength in Specviz2d viewers. [#2736]
-
-- Fixes missing API entry for spectral extraction's export_bg_spectrum.  [#3447]
 
 4.1.1 (2025-01-31)
 ==================

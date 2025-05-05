@@ -32,7 +32,8 @@ else:
 __all__ = ['Export']
 
 
-@tray_registry('export', label="Export")
+@tray_registry('export', label="Export",
+               category='core', sidebar='save')
 class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
              DatasetMultiSelectMixin, PluginTableSelectMixin, PluginPlotSelectMixin,
              MultiselectMixin):
@@ -124,6 +125,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
                                 'from_plugin']
 
+        self.viewer.add_filter('is_not_empty')
+
         viewer_format_options = ['png', 'svg']
         if self.config == 'cubeviz':
             if not self.app.state.settings.get('server_is_remote'):
@@ -189,6 +192,19 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.serverside_enabled = False
+
+        self._set_relevant()
+
+    @observe('viewer_items', 'dataset_items', 'subset_items',
+             'plugin_table_items', 'plugin_plot_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not (len(self.viewer_items) or len(self.dataset_items) or len(self.subset_items)
+                or len(self.plugin_table_items) or len(self.plugin_plot_items)):
+            self.irrelevant_msg = 'Nothing to export'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def user_api(self):

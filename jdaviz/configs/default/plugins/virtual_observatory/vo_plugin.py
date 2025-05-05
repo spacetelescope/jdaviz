@@ -24,7 +24,6 @@ from jdaviz.core.template_mixin import (
     UnitSelectPluginComponent,
     with_spinner,
 )
-from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ["VoPlugin"]
 vo_plugin_label = "Virtual Observatory"
@@ -108,27 +107,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
-
-    @property
-    def user_api(self):
-        return PluginUserApi(
-            self,
-            expose=(
-                # Traitlets
-                "source",
-                "viewer",
-                "radius",
-                "radius_unit",
-                "waveband",
-                "coordframe",
-                "resource_filter_coverage",
-                "resource",
-                # Methods
-                "center_on_data",
-                "query_registry_resources",
-                "load_selected_data",
-            ),
-        )
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):

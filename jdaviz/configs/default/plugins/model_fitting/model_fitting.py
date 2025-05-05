@@ -40,7 +40,7 @@ class _EmptyParam:
                                    self.unit if self.unit is not None else u.dimensionless_unscaled)
 
 
-@tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
+@tray_registry('g-model-fitting', label="Model Fitting", category="data:analysis")
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
                    NonFiniteUncertaintyMismatchMixin,
@@ -167,6 +167,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+
+        self._set_relevant()
+
+    @observe('dataset_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not len(self.dataset_items):
+            self.irrelevant_msg = 'No valid datasets loaded'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -607,26 +618,29 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._check_model_equation_invalid()
 
     def _on_global_display_unit_changed(self, msg):
-        if msg.axis == 'spectral_y':
+        if msg.axis in ('spectral_y', 'sb', 'flux'):
             axis = 'y'
         elif msg.axis == 'spectral':
             axis = 'x'
         else:
             return
 
-        if axis == 'y' and self.cube_fit:
+        unit = msg.unit
+
+        if axis == 'y':
             # The units have to be in surface brightness for a cube fit.
             uc = self.app._jdaviz_helper.plugins['Unit Conversion']
-
-            if msg.unit != uc._obj.sb_unit_selected:
+            if self.cube_fit and unit != uc._obj.sb_unit_selected:
                 self._units[axis] = uc._obj.sb_unit_selected
                 self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                 return
+            elif msg.axis == 'flux' and uc._obj.has_sb:
+                unit = u.Unit(self.app._get_display_unit('sb'))
 
         # update internal tracking of current units
-        self._units[axis] = str(msg.unit)
+        self._units[axis] = str(unit)
 
-        self._check_model_component_compat([axis], [msg.unit])
+        self._check_model_component_compat([axis], [unit])
 
     def remove_model_component(self, model_component_label):
         """

@@ -16,6 +16,8 @@ export default {
       success: '#4CAF50',
       warning: '#FFC107',
       gray: '#F8F8F8',
+      active: '#C75109',
+      viewer_toolbar: '#205f76',
     };
     this.$vuetify.theme.themes.dark = {
       toolbar: "#153A4B",
@@ -30,6 +32,8 @@ export default {
       success: '#4CAF50',
       warning: '#FFC107',
       gray: '#141414',
+      active: '#C75109',
+      viewer_toolbar: '#205f76',
     };
   },
 }
@@ -138,6 +142,8 @@ div.output_wrapper {
 
 .cubeviz .lm_close_tab {
   /* do not allow closing any viewer tabs in cubeviz */
+  /* deconfigging: temporarily do not allow closing
+     tabs until viewer creator is migrated */
   display: none;
 }
 
@@ -240,6 +246,10 @@ a:active {
   filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1402%) hue-rotate(1deg) brightness(95%) contrast(94%);
 }
 
+.color-to-white {
+  filter: brightness(0) saturate(100%) invert(100%);
+}
+
 .v-overlay__content {
   position: unset !important;
 }
@@ -279,7 +289,7 @@ a:active {
 span.api-hint, span.api-hint-header {
   color: #007BA1 !important;
   font-family: monospace;
-  font-size: 12px;  
+  font-size: 12px;
   letter-spacing: -0.05em !important;
   text-transform: none !important;
 }

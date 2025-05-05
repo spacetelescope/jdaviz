@@ -3,8 +3,8 @@ import re
 import warnings
 from copy import deepcopy
 
-from astropy.utils import deprecated
 import numpy as np
+from astropy.utils import deprecated
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage
@@ -199,7 +199,7 @@ class Imviz(ImageConfigHelper):
                     if not is_wcs_only and linked_by_wcs and not has_wcs:
                         self.app.hub.broadcast(SnackbarMessage(
                             f"'{applied_label}' will be added to the data collection but not "
-                            f"the viewer '{show_in_viewer}', since data are linked by WCS, but "
+                            f"the viewer '{show_in_viewer}', since data are aligned by WCS, but "
                             f"'{applied_label}' has no WCS.",
                             color="warning", timeout=8000, sender=self)
                         )
@@ -313,6 +313,7 @@ class Imviz(ImageConfigHelper):
         """
         return self.plugins['Aperture Photometry'].export_table()
 
+    @deprecated(since="4.2", alternative="plugins['Catalog Search'].export_table()")
     def get_catalog_source_results(self):
         """Return table of sources given by querying from a catalog, if any.
         Results are calculated using :ref:`imviz-catalogs` plugin.

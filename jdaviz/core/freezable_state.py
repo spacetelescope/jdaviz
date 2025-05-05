@@ -9,7 +9,8 @@ from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCPro
 
 from jdaviz.utils import get_reference_image_data
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general)
+                                               flux_conversion_general,
+                                               spectral_axis_conversion)
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
@@ -55,6 +56,23 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
         with delay_callback(self, 'x_min', 'x_max'):
             self.x_min = x_min
             self.x_max = x_max
+
+    def _convert_units_x_limits(self, old_unit, new_unit):
+        # override glue's _convert_units_x_limits to account
+        # for spectral axis conversions that are not supported by glue.
+
+        if self.x_min is None or self.x_max is None:
+            return
+
+        if old_unit is None or new_unit is None:
+            self._reset_x_limits()
+            return
+
+        x_lims_new = spectral_axis_conversion([self.x_min, self.x_max],
+                                              old_unit, new_unit)
+
+        self.x_min = np.nanmin(x_lims_new)
+        self.x_max = np.nanmax(x_lims_new)
 
     def _convert_units_y_limits(self, old_unit, new_unit):
         # override glue's _convert_units_y_limits to account
@@ -201,8 +219,17 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
 
                 pixel_ids = layer.layer.pixel_component_ids
                 world_bottom_left = data.coords.pixel_to_world(0, 0)
-                world_top_right = data.coords.pixel_to_world(layer.layer.data[pixel_ids[1]].max(),
-                                                             layer.layer.data[pixel_ids[0]].max())
+
+                if getattr(data.coords, 'bounding_box', None) is not None:
+                    bounds = data.coords.pixel_bounds
+                    world_top_right = data.coords.pixel_to_world(
+                        bounds[0][1] - 1, bounds[1][1] - 1
+                    )
+                else:
+                    world_top_right = data.coords.pixel_to_world(
+                        layer.layer.data.shape[pixel_ids[1].axis] - 1,
+                        layer.layer.data.shape[pixel_ids[0].axis] - 1
+                    )
 
                 if return_as_world:
                     x_min = min(x_min, world_bottom_left.ra.value)
@@ -234,8 +261,8 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 pixel_id_x = [comp for comp in pixel_ids if comp.label.endswith('[x]')][0]
                 pixel_id_y = [comp for comp in pixel_ids if comp.label.endswith('[y]')][0]
 
-                x_max = max(x_max, layer.layer.data[pixel_id_x].max() + 0.5)
-                y_max = max(y_max, layer.layer.data[pixel_id_y].max() + 0.5)
+                x_max = max(x_max, layer.layer.data.shape[pixel_id_x.axis] - 0.5)
+                y_max = max(y_max, layer.layer.data.shape[pixel_id_y.axis] - 0.5)
 
         return x_min, x_max, y_min, y_max
 

@@ -67,6 +67,69 @@ class OffscreenLinesMarks(HubListener):
         self.right.text = [f'{oob_right} \u25b6' if oob_right > 0 else '']
 
 
+class PluginMarkCollection:
+    # This class allows for the creation of plugin preview marks across viewers
+    def __init__(self, mark_cls, shadow_cls=None, shadow_kwargs={}, **mark_kwargs):
+        self.mark_cls = mark_cls
+        self.shadow_cls = shadow_cls
+        self.shadow_kwargs = shadow_kwargs
+        self.mark_kwargs = mark_kwargs
+        self.shadow_marks = {}
+        self.marks = {}
+
+    @property
+    def marks_list(self):
+        return list(self.marks.values())
+
+    def marks_for_viewers(self, viewers):
+        for viewer in viewers:
+            if viewer not in self.marks:
+                # Create a new mark for the given viewer
+                mark = self.mark_cls(viewer=viewer, **self.mark_kwargs)
+                self.marks[viewer] = mark
+                if self.shadow_cls is not None:
+                    shadow_kwargs = {k: v.marks_for_viewers([viewer])[0]
+                                     if isinstance(v, PluginMarkCollection) else v
+                                     for k, v in self.shadow_kwargs.items()}
+                    shadow = self.shadow_cls(shadowing=mark, **shadow_kwargs)
+                    self.shadow_marks[viewer] = shadow
+                    viewer.figure.marks += [shadow]
+                viewer.figure.marks += [mark]
+                viewer.figure.send_state('marks')
+        return [self.marks[viewer] for viewer in viewers]
+
+    def clear_if_not_in_viewers(self, viewers):
+        for viewer, mark in self.marks.items():
+            if viewer not in viewers:
+                # Clear the mark if the viewer is not in the list
+                mark.clear()
+                mark.visible = False
+
+    def clear(self):
+        for mark in self.marks.values():
+            mark.clear()
+
+    def update_xy(self, x, y, viewers):
+        for mark in self.marks_for_viewers(viewers):
+            mark.update_xy(x, y)
+            mark.visible = True
+        self.clear_if_not_in_viewers(viewers)
+
+    def set_for_viewers(self, name, value, viewers):
+        for mark in self.marks_for_viewers(viewers):
+            setattr(mark, name, value)
+
+    def __setattr__(self, name, value):
+        if name in ('plugin', 'mark_cls', 'shadow_cls',
+                    'shadow_kwargs', 'mark_kwargs',
+                    'shadow_marks', 'marks'):
+            super().__setattr__(name, value)
+        else:
+            # pass on to all stored marks
+            for mark in self.marks.values():
+                setattr(mark, name, value)
+
+
 class PluginMark:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -113,8 +176,12 @@ class PluginMark:
     def set_x_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
-                return
-            unit = self.viewer.state.x_display_unit
+                if self.viewer.data() and hasattr(self.viewer.data()[0], 'spectral_axis'):
+                    unit = self.viewer.data()[0].spectral_axis.unit
+                else:
+                    return
+            else:
+                unit = self.viewer.state.x_display_unit
         unit = u.Unit(unit)
 
         if self.xunit is not None and not np.all([s == 0 for s in self.x.shape]):
@@ -126,8 +193,12 @@ class PluginMark:
     def set_y_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
-                return
-            unit = self.viewer.state.y_display_unit
+                if self.viewer.data() and hasattr(self.viewer.data()[0], 'flux'):
+                    unit = self.viewer.data()[0].flux.unit
+                else:
+                    return
+            else:
+                unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
 
         # spectrum y-values in viewer have already been converted, don't convert again
@@ -143,7 +214,7 @@ class PluginMark:
                     return
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
 
-                pixar_sr = spec.meta.get('PIXAR_SR', 1)
+                pixar_sr = spec.meta.get('PIXAR_SR', None)
                 cube_wave = self.x * self.xunit
                 equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
                 y = flux_conversion_general(self.y, self.yunit, unit,
@@ -155,7 +226,8 @@ class PluginMark:
     def _on_global_display_unit_changed(self, msg):
         if not self.auto_update_units:
             return
-        if self.viewer.__class__.__name__ in ['SpecvizProfileView',
+        if self.viewer.__class__.__name__ in ['Spectrum1DViewer',
+                                              'Spectrum2DViewer',
                                               'CubevizProfileView',
                                               'MosvizProfileView',
                                               'MosvizProfile2DView']:
@@ -642,7 +714,7 @@ class CatalogMark(PluginScatter):
 class FootprintOverlay(PluginLine):
     def __init__(self, viewer, overlay, **kwargs):
         self._overlay = overlay
-        kwargs.setdefault('stroke_width', 2)
+        kwargs.setdefault('stroke_width', 1)
         kwargs.setdefault('close_path', True)
         kwargs.setdefault('opacities', [0.8])
         kwargs.setdefault('fill', 'inside')
@@ -652,6 +724,12 @@ class FootprintOverlay(PluginLine):
     @property
     def overlay(self):
         return self._overlay
+
+    def set_selected_style(self, is_selected):
+        if not isinstance(is_selected, bool):  # pragma: no cover
+            raise TypeError("is_selected must be of type bool")
+
+        self.stroke_width = 4 if is_selected else 1
 
 
 class ApertureMark(PluginLine):

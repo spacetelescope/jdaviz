@@ -3,10 +3,12 @@ from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage', 'SubsetRenameMessage',
+           'ViewerVisibleLayersChangedMessage',
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
            'CatalogResultsChangedMessage', 'CatalogSelectClickEventMessage',
+           'FootprintSelectClickEventMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
            'AstrowidgetMarkersChangedMessage', 'MarkersPluginUpdate',
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
@@ -256,6 +258,22 @@ class RemoveDataFromViewerMessage(Message):
         return self._data_label
 
 
+class ViewerVisibleLayersChangedMessage(Message):
+    def __init__(self, viewer_reference, visible_layers, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._viewer_reference = viewer_reference
+        self._visible_layers = visible_layers
+
+    @property
+    def viewer_reference(self):
+        return self._viewer_reference
+
+    @property
+    def visible_layers(self):
+        return self._visible_layers
+
+
 class AddLineListMessage(Message):
     def __init__(self, table, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -296,11 +314,34 @@ class CatalogResultsChangedMessage(Message):
         super().__init__(*args, **kwargs)
 
 
+class FootprintMarkVisibilityChangedMessage(Message):
+    """Message to notify that footprint overlays have changed."""
+
+    def __init__(self, viewer_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._viewer_id = viewer_id
+
+    @property
+    def viewer_id(self):
+        return self._viewer_id
+
+
 class CatalogSelectClickEventMessage(Message):
     def __init__(self, x, y, *args, **kwargs):
         self.x = x
         self.y = y
         super().__init__(*args, **kwargs)
+
+
+class FootprintSelectClickEventMessage(Message):
+    """
+    Message emitted when a user clicks on a viewer to select an overlay.
+    """
+
+    def __init__(self, data, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.x = data["domain"]["x"]
+        self.y = data["domain"]["y"]
 
 
 class RedshiftMessage(Message):

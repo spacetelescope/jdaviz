@@ -31,7 +31,7 @@ telescope_names = {
 }
 
 
-@tray_registry('g-data-quality', label="Data Quality", viewer_requirements="image")
+@tray_registry('g-data-quality', label="Data Quality")
 class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Data Quality Plugin Documentation <imviz-data-quality>` for more details.

@@ -1,0 +1,16 @@
+settings:
+  configuration: deconfigged
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: true
+  dense_toolbar: false
+  server_is_remote: false
+  context:
+    notebook:
+      max_height: 600px
+toolbar:
+  - g-coords-info
+viewer_area:
+  - container: col

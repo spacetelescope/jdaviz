@@ -126,7 +126,7 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
     # check that mouseover shows dq values on bad pixels (flag == 0):
     # check that mouseover shows dq values on bad pixels (flag == 0):
     viewer = imviz_helper.default_viewer._obj
-    label_mouseover = imviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = imviz_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1366, 'y': 708}})
 
@@ -223,7 +223,7 @@ def test_data_quality_plugin_hst_acs(imviz_helper, tmp_path):
 @pytest.mark.remote_data
 def test_cubeviz_layer_visibility_bug(cubeviz_helper, tmp_path):
     # regression test for bug:
-    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_s3d.fits"
+    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-short_s3d.fits"
     download_path = str(tmp_path / Path(uri).name)
     Observations.download_file(uri, local_path=download_path)
 

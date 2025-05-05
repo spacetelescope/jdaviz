@@ -6,6 +6,14 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <plugin-viewer-select
+       :items="viewer_items"
+       :selected.sync="viewer_selected"
+       label="Viewer"
+       :show_if_single_entry="false"
+       hint="Select a viewer to show lines."
+    />
+
     <j-plugin-section-header>Identified Line</j-plugin-section-header>
     <v-row>
       <j-docs-link>Highlight a line and identify its name by using the line selection tool in the spectrum viewer.</j-docs-link>
@@ -91,7 +99,7 @@
         <span :class="[rs_enabled ? 'text--primary' : 'text--secondary']">km/s</span>
       </v-col>
     </v-row>
-  
+
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <v-row>
       <v-select
@@ -107,7 +115,7 @@
 
     <v-row justify="end">
       <j-tooltip tipid='plugin-line-lists-load'>
-        <plugin-action-button 
+        <plugin-action-button
           :results_isolated_to_plugin="true"
           @click="load_list">Load List</plugin-action-button>
       </j-tooltip>
@@ -121,9 +129,9 @@
           <v-expansion-panel-header v-slot="{ open }">
             <v-row no-gutters align="center" style="max-width: calc(100% - 26px)">
               <v-col cols=2>
-                <v-btn 
-                  v-if="item != 'Custom'" 
-                  @click.native.stop="remove_list(item)" 
+                <v-btn
+                  v-if="item != 'Custom'"
+                  @click.native.stop="remove_list(item)"
                   small="true"
                   icon
                 >
@@ -197,7 +205,7 @@
                       tile
                       :elevation=0
                       x-small
-                      dense 
+                      dense
                       color="turquoise"
                       dark
                       style="padding-left: 8px; padding-right: 6px;"
@@ -219,7 +227,7 @@
                       style="padding-left: 8px; padding-right: 6px;"
                       @click="hide_all_in_list(item)">
                       <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
-                      Erase All                     
+                      Erase All
                     </v-btn>
                   </j-tooltip>
                 </v-col>
@@ -232,7 +240,7 @@
                     @click="filter_range = !filter_range"
                     style="width: 30px; margin-top: 4px"
                     ><img :class="filter_range ? 'color-to-accent' : 'invert-if-dark'" :src="filter_range_icon"/>
-                    
+
                   </v-btn>
                 </j-tooltip>
 
@@ -248,21 +256,21 @@
               <v-row>
                 <span class='text--primary' style="overflow-wrap: anywhere; font-size: 10pt;">
                   <b>Medium: {{list_contents[item].medium}}</b>
-                </span>                    
+                </span>
               </v-row>
 
               <v-divider style="margin-bottom: 8px"></v-divider>
 
               <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
                 <div v-if="lineItemVisible(line, lines_filter, filter_range)">
-                  
+
                   <v-row class="row-no-vertical-padding-margin" style="margin: 0px">
                     <v-col cols=7  style="padding: 0">
                       <span class='text--primary' style="overflow-wrap: anywhere; font-size: 16pt; padding-top: 3px;">
                         <b>{{line.linename}}</b>
-                      </span>                    
+                      </span>
                     </v-col>
-                    
+
                     <v-col cols=2 align="right" style="padding: 0">
                       <j-tooltip tipid='plugin-line-lists-line-identify'>
                         <v-btn icon @click="set_identify([item, line, line_ind])">
@@ -321,7 +329,7 @@
             tile
             :elevation=0
             x-small
-            dense 
+            dense
             color="turquoise"
             dark
             style="padding-left: 8px; padding-right: 6px;"
@@ -343,8 +351,8 @@
             style="padding-left: 8px; padding-right: 6px;"
             @click="erase_all_lines">
             <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
-            Erase All                     
-          </v-btn>  
+            Erase All
+          </v-btn>
         </j-tooltip>
       </v-col>
 
@@ -356,7 +364,7 @@
 <script>
   module.exports = {
     methods: {
-      lineItemVisible(lineItem, lines_filter, filter_range) {       
+      lineItemVisible(lineItem, lines_filter, filter_range) {
         if (lines_filter === null || lines_filter.length == 0) {
           text_filter = true
         }
@@ -389,7 +397,7 @@
           this.throttledSliderCurr = _.throttle(
             (v) => { this.rs_slider = v; },
             this.rs_slider_throttle);
-          this.throttledSliderCurrWait = this.rs_slider_throttle        
+          this.throttledSliderCurrWait = this.rs_slider_throttle
         }
         return this.throttledSliderCurr(v)
       },

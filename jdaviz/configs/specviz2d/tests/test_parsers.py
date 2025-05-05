@@ -1,7 +1,6 @@
 import pytest
 import stdatamodels
 from astropy import units as u
-from astropy.io import fits
 from astropy.utils.data import download_file
 from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import XRangeROI
@@ -33,7 +32,7 @@ def test_2d_parser_jwst(specviz2d_helper):
 
     # Also check the coordinates info panel.
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})
     assert label_mouseover.as_text() == ('Pixel x=0350.0 y=0030.0 Value +3.22142e+04 MJy / sr',
@@ -41,24 +40,11 @@ def test_2d_parser_jwst(specviz2d_helper):
 
 
 @pytest.mark.remote_data
-def test_2d_parser_ext_transpose_file(specviz2d_helper):
+def test_2d_parser_ext_hdulist(specviz2d_helper):
     # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
-    fn = download_file('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
-
-    specviz2d_helper.load_data(spectrum_2d=fn, ext=2, transpose=True)
-
+    specviz2d_helper.load('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
     dc_0 = specviz2d_helper.app.data_collection[0]
-    assert dc_0.get_component('flux').shape == (3416, 29)
-
-
-@pytest.mark.remote_data
-def test_2d_parser_ext_transpose_hdulist(specviz2d_helper):
-    # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
-    fn = download_file('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
-    with fits.open(fn) as hdulist:
-        specviz2d_helper.load_data(spectrum_2d=hdulist, ext=2, transpose=True)
-    dc_0 = specviz2d_helper.app.data_collection[0]
-    assert dc_0.get_component('flux').shape == (3416, 29)
+    assert dc_0.get_component('flux').shape == (29, 3416)
 
 
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
@@ -70,13 +56,13 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert dc_0.get_component('flux').units == 'Jy'
 
     dc_1 = specviz2d_helper.app.data_collection[1]
-    assert dc_1.label == 'Spectrum 1D'
+    assert dc_1.label == 'my_2d_spec 1D'
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panels.
 
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = specviz2d_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer_2d,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00000.0 y=00000.0 Value +3.74540e-01 Jy',
@@ -138,13 +124,13 @@ def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d, spectrum_1d=spectrum1d)
     assert specviz2d_helper.app.data_collection.labels == ['Spectrum 2D', 'Spectrum 1D']
 
-    spec2d_viewer = specviz2d_helper.app.get_viewer("spectrum-2d-viewer")
+    spec2d_viewer = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     assert spec2d_viewer.figure.axes[0].label == "x: pixels"  # -0.5, 14.5
     spec2d_viewer.apply_roi(XRangeROI(10, 12))
 
     spec2d_viewer.session.edit_subset_mode._mode = NewMode
 
-    spec1d_viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
+    spec1d_viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
     assert spec1d_viewer.figure.axes[0].label == "Wavelength [Angstrom]"  # 6000, 8000
     spec1d_viewer.apply_roi(XRangeROI(7000, 7100))
 

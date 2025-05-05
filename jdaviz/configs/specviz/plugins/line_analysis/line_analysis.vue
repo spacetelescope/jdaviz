@@ -82,119 +82,134 @@
       </v-text-field>
     </v-row>
 
-    <j-plugin-section-header>Results</j-plugin-section-header>
-
-    <v-row>
-      <j-docs-link>
-        See the <j-external-link link='https://specutils.readthedocs.io/en/stable/analysis.html' linktext='specutils docs'></j-external-link> for more details on the available analysis functions.
-      </j-docs-link>
+    <v-row justify="end">
+      <j-tooltip tooltipcontent="calculate results and add to results table">
+        <plugin-action-button
+          :results_isolated_to_plugin="true"
+          :api_hints_enabled="api_hints_enabled"
+          :disabled="continuum_subset_selected===spectral_subset_selected"
+          @click="calculate_results">
+          {{ api_hints_enabled ?
+            'plg.get_results(add_to_table=True)'
+            :
+            'Calculate'
+          }}
+        </plugin-action-button>
+      </j-tooltip>
     </v-row>
 
-    <v-row v-if="api_hints_enabled">
-        <span class="api-hint">
-          plg.get_results()
-        </span>
+    <div v-if="results_available">
+      <j-plugin-section-header>Results</j-plugin-section-header>
+
+      <v-row>
+        <j-docs-link>
+          See the <j-external-link link='https://specutils.readthedocs.io/en/stable/analysis.html' linktext='specutils docs'></j-external-link> for more details on the available analysis functions.
+        </j-docs-link>
       </v-row>
 
-    <div style="display: grid"> <!-- overlay container -->
-      <div style="grid-area: 1/1">
-        <v-row>
-          <v-col cols=6><U>Function</U></v-col>
-          <v-col cols=6><U>Result</U></v-col>
-        </v-row>
-        <v-row
-          v-for="item in results"
-          :key="item.function">
-          <v-col cols=6>
-            {{  item.function  }}
-            <j-tooltip :tooltipcontent="'specutils '+item.function+' documentation'">
-              <a v-bind:href="'https://specutils.readthedocs.io/en/stable/api/specutils.analysis.'+item.function.toLowerCase().replaceAll(' ', '_')+'.html'"
-                target="__blank"
-                style="color: #A75000">
-                <v-icon x-small color="#A75000">mdi-open-in-new</v-icon>
-              </a>
-            </j-tooltip>
-          </v-col>
-          <v-col cols=6>
-            <span v-if="item.error_msg">{{ item.error_msg }}</span>
-            <j-number-uncertainty
-              v-else
-              :value="item.result"
-              :uncertainty="item.uncertainty"
-              :unit="item.unit"
-              :defaultDigs="8"
-            ></j-number-uncertainty>
-          </v-col>
-        </v-row>
-      </div>
-      <div v-if="results_computing"
-           class="text-center"
-           style="grid-area: 1/1;
-                  z-index:2;
-                  margin-left: -24px;
-                  margin-right: -24px;
-                  padding-top: 60px;
-                  background-color: rgb(0 0 0 / 20%)">
-        <v-progress-circular
-          indeterminate
-          color="spinner"
-          size="50"
-          width="6"
-        ></v-progress-circular>
-      </div>
+      <div style="display: grid"> <!-- overlay container -->
+        <div style="grid-area: 1/1">
+          <v-row>
+            <v-col cols=6><U>Function</U></v-col>
+            <v-col cols=6><U>Result</U></v-col>
+          </v-row>
+          <v-row
+            v-for="item in results"
+            :key="item.function">
+            <v-col cols=6>
+              {{  item.function  }}
+              <j-tooltip :tooltipcontent="'specutils '+item.function+' documentation'">
+                <a v-bind:href="'https://specutils.readthedocs.io/en/stable/api/specutils.analysis.'+item.function.toLowerCase().replaceAll(' ', '_')+'.html'"
+                  target="__blank"
+                  style="color: #A75000">
+                  <v-icon x-small color="#A75000">mdi-open-in-new</v-icon>
+                </a>
+              </j-tooltip>
+            </v-col>
+            <v-col cols=6>
+              <span v-if="item.error_msg">{{ item.error_msg }}</span>
+              <j-number-uncertainty
+                v-else
+                :value="item.result"
+                :uncertainty="item.uncertainty"
+                :unit="item.unit"
+                :defaultDigs="8"
+              ></j-number-uncertainty>
+            </v-col>
+          </v-row>
+        </div>
+        <div v-if="results_computing"
+            class="text-center"
+            style="grid-area: 1/1;
+                    z-index:2;
+                    margin-left: -24px;
+                    margin-right: -24px;
+                    padding-top: 60px;
+                    background-color: rgb(0 0 0 / 20%)">
+          <v-progress-circular
+            indeterminate
+            color="spinner"
+            size="50"
+            width="6"
+          ></v-progress-circular>
+        </div>
 
-      <div v-if="line_menu_items.length > 0">
-        <j-plugin-section-header>Redshift from Centroid</j-plugin-section-header>
-        <v-row>
-          <j-docs-link>Assign the centroid reported above to the observed wavelength of a given line and set the resulting redshift.  Lines must be loaded and plotted through the Line Lists plugin first.</j-docs-link>
-        </v-row>
-        <v-row class="row-no-outside-padding">
-          <v-col cols=2>
-            <j-tooltip tipid='plugin-line-analysis-sync-identify'>
-              <v-btn icon @click="() => sync_identify = !sync_identify" style="margin-top: 14px">
-                <img :class="sync_identify ? 'color-to-accent' : 'invert-if-dark'" :src="sync_identify ? sync_identify_icon_enabled : sync_identify_icon_disabled" width="20"/>
+        <j-plugin-section-header>Results History</j-plugin-section-header>
+        <jupyter-widget :widget="table_widget"></jupyter-widget>
+
+        <div v-if="line_menu_items.length > 0">
+          <j-plugin-section-header>Redshift from Centroid</j-plugin-section-header>
+          <v-row>
+            <j-docs-link>Assign the centroid reported above to the observed wavelength of a given line and set the resulting redshift.  Lines must be loaded and plotted through the Line Lists plugin first.</j-docs-link>
+          </v-row>
+          <v-row class="row-no-outside-padding">
+            <v-col cols=2>
+              <j-tooltip tipid='plugin-line-analysis-sync-identify'>
+                <v-btn icon @click="() => sync_identify = !sync_identify" style="margin-top: 14px">
+                  <img :class="sync_identify ? 'color-to-accent' : 'invert-if-dark'" :src="sync_identify ? sync_identify_icon_enabled : sync_identify_icon_disabled" width="20"/>
+                </v-btn>
+              </j-tooltip>
+            </v-col>
+            <v-col cols=10>
+              <v-select
+                :menu-props="{ left: true }"
+                attach
+                :items="line_menu_items"
+                item-text="title"
+                item-value="value"
+                v-model="selected_line"
+                label="Line"
+                hint="Select reference line."
+                persistent-hint
+              ></v-select>
+            </v-col>
+          </v-row>
+
+          <v-row v-if="selected_line">
+            <v-text-field
+              :value='selected_line_redshift'
+              class="mt-0 pt-0"
+              type="number"
+              label="Redshift"
+              hint="Redshift that will be applied by assigning centroid to the selected line."
+              persistent-hint
+              disabled
+            ></v-text-field>
+          </v-row>
+
+          <v-row justify="end">
+            <j-tooltip tipid='plugin-line-analysis-assign'>
+              <v-btn
+              color="accent"
+              style="padding-left: 8px; padding-right: 8px;"
+              text
+              :disabled="!selected_line"
+              @click="line_assign">
+                Assign
               </v-btn>
             </j-tooltip>
-          </v-col>
-          <v-col cols=10>
-            <v-select
-              :menu-props="{ left: true }"
-              attach
-              :items="line_menu_items"
-              item-text="title"
-              item-value="value"
-              v-model="selected_line"
-              label="Line"
-              hint="Select reference line."
-              persistent-hint
-            ></v-select>
-          </v-col>
-        </v-row>
-
-        <v-row v-if="selected_line">
-          <v-text-field
-            :value='selected_line_redshift'
-            class="mt-0 pt-0"
-            type="number"
-            label="Redshift"
-            hint="Redshift that will be applied by assigning centroid to the selected line."
-            persistent-hint
-            disabled
-          ></v-text-field>
-        </v-row>
-
-        <v-row justify="end">
-          <j-tooltip tipid='plugin-line-analysis-assign'>
-            <v-btn
-            color="accent"
-            style="padding-left: 8px; padding-right: 8px;"
-            text
-            :disabled="!selected_line"
-            @click="line_assign">
-              Assign
-            </v-btn>
-          </j-tooltip>
-        </v-row>
+          </v-row>
+        </div>
       </div>
     </div>
   </j-tray-plugin>

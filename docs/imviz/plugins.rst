@@ -134,6 +134,61 @@ parameters, shape, and orientation (if applicable) all update concurrently.
 
 Angle is counter-clockwise rotation around the center in degrees.
 
+From the API
+------------
+
+You can update the attributes of an existing subset via the Subset Tools plugin API. To
+see what attributes are available for a given subset, call the ``update_subset`` method
+with only the subset specified:
+
+.. code-block:: python
+
+  st = imviz.plugins['Subset Tools']
+  st.update_subset(subset_label='Subset 1')
+
+This will return a dictionary with the name (as displayed in the UI), attribute, and
+value for each editable attribute of each subregion of the specified subset. Note that
+passing ``subset_label`` in the ``update_subset`` call will also set the selected subset
+in the plugin UI to the specified subset, while not specifying ``subset_label`` will operate
+on the currently selected subset in the plugin. The attributes returned by the call above can
+be updated by passing their new values as keyword arguments, for example:
+
+.. code-block:: python
+
+  st.update_subset(subset_label='Subset 1', xmin=10, xmax = 20)
+
+In the case of a compound subset, the subregion to update must be specified as well:
+
+.. code-block:: python
+
+  st.update_subset(subset_label='Subset 1', subregion=0, xmin=10, xmax = 20)
+
+.. note::
+
+    This is a new behavior introduced in version 4.3.
+
+
+You can also create a new subset using the ``import_region`` method. This method takes a
+region and either creates a new subset with that region or appends it to another subset
+using the ``edit_subset`` and ``combination_mode`` arguments. for example:
+
+.. code-block:: python
+
+  st.import_region(CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5))
+
+will create a new subset but
+
+.. code-block:: python
+
+  st.import_region(CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5), edit_subset='Subset 1',
+   combination_mode='or')
+
+will append the region to the existing Subset 1 using the 'or' ``combination_mode``. Other options for
+``combination_mode`` include 'and', 'andnot', 'new', 'replace', and 'xor'. If you set a value for ``edit_subset`` but
+not ``combination_mode``, the assumption will be that the new region is replacing the existing subset named in
+``edit_subset``. This API method acts independently of the UI so all settings from before ``import_region`` was called
+will be restored afterward.
+
 .. _markers-plugin:
 
 Markers
@@ -316,16 +371,12 @@ an interactively selected region. A typical workflow is as follows:
    to not applying any scaling. This field is only used if data has a valid unit.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
-9. Select the desired radial profile plot type using the :guilabel:`Plot Type` dropdown menu:
+9. Select the desired radial profile plot type using the :guilabel:`Plot Type` dropdown menu
+   (see :ref:`photutils:profiles` for more details):
 
-  * Curve of Growth: :attr:`~photutils.aperture.ApertureStats.sum` (sum of flux in the aperture)
-    across radii from center out to the edge of the aperture. This is calculated in the same
-    way as the final aperture sum in the output table, which is explained farther down on
-    this page.
-  * Radial Profile: Binned average as a function of radius from the center of the region.
-  * Radial Profile (Raw): Raw image data points as a function of radius from the center of the region.
-    Caution: having too many data points may cause performance issues with this feature.
-    The exact limitations depend on your hardware.
+  * Curve of Growth
+  * Radial Profile
+  * Radial Profile (Raw)
 
 10. Toggle :guilabel:`Fit Gaussian` on to fit a `~astropy.modeling.functional_models.Gaussian1D`
     model to the radial profile data. This is disabled for curve-of-growth.
@@ -402,7 +453,7 @@ are not stored. To save the current result before submitting a new query, you ca
 
 .. code-block:: python
 
-    results = imviz.get_catalog_source_results()
+    results = imviz.plugins["Catalog Search"].export_table()
 
 .. note::
 
@@ -421,8 +472,8 @@ Footprints
 
 This plugin supports loading and overplotting instrument footprint overlays on the image viewers.
 Any number of overlays can be plotted simultaneously from any number of the available
-preset instruments (requires pysiaf to be installed) or by loading an Astropy regions object from
-a file.
+preset instruments (requires pysiaf to be installed), by loading an Astropy regions object from
+a file, or by passing an STC-S string.
 
 The top dropdown allows renaming, adding, and removing footprint overlays.  To modify the display
 and input parameters for a given overlay, select it in the dropdown, and modify the choices
@@ -433,7 +484,7 @@ position angle, offsets, etc).
 To import a file, choose "From File..." from the presets dropdown and select a valid file (must
 be able to be parsed by `regions.Regions.read`).
 
-To import a regions file or object from the API:
+To import a regions file, object, or STC-S string from the API:
 
 .. code-block:: python
 

@@ -13,7 +13,8 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Markers']
 
 
-@tray_registry('g-markers', label="Markers")
+@tray_registry('g-markers', label="Markers",
+               category='core', sidebar='viewers', subtab=1)
 class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     """
     See the :ref:`Markers Plugin Documentation <markers-plugin>` for more details.
@@ -65,7 +66,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'index', 'value', 'value:unit']
 
-        elif self.config == 'specviz2d':
+        elif self.config in ('specviz2d', 'deconfigged'):
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'value', 'value:unit', 'viewer']
@@ -147,6 +148,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         orig_world_x = np.asarray(self.table._qtable['world_ra'][in_viewer])
         orig_world_y = np.asarray(self.table._qtable['world_dec'][in_viewer])
+        pixel_unreliable = np.asarray(self.table._qtable['pixel:unreliable'][in_viewer])
 
         if self.app._align_by.lower() == 'wcs':
             # convert from the sky coordinates in the table to pixels via the WCS of the current
@@ -155,6 +157,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             try:
                 new_x, new_y = new_wcs.world_to_pixel_values(orig_world_x*u.deg,
                                                              orig_world_y*u.deg)
+                for coord in [new_x, new_y]:
+                    coord[pixel_unreliable] = np.nan
+
             except Exception:
                 # fail gracefully
                 new_x, new_y = [], []
@@ -180,7 +185,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         # check for entries that do not correspond to a layer or only have pixel coordinates
         pixel_only_inds = data_labels == ''
         if np.any(pixel_only_inds):
-            # TODO: should we rescale these since pixel coordinates when linked by WCS are always
+            # TODO: should we rescale these since pixel coordinates when aligned by WCS are always
             # on the range 0-1 because of the orientation layer?  Or hide the pixel option in the
             # cycler when WCS-linked?
             pixel_x = np.asarray(self.table._qtable['pixel_x'])
@@ -240,8 +245,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 row_info.setdefault(k, self._default_table_values.get(k, ''))
 
             try:
-                self.table.add_item({k: v for k, v in row_info.items()
-                                     if k in self.table.headers_avail})
+                # if the pixel values are unreliable, set their table values as nan
+                row_item_to_add = {k: float('nan') if row_info.get('pixel:unreliable', False) and
+                                   k.startswith('pixel_') else v
+                                   for k, v in row_info.items()
+                                   if k in self.table.headers_avail}
+                self.table.add_item(row_item_to_add)
             except ValueError as err:  # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
 

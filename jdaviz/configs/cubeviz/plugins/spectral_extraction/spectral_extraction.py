@@ -31,7 +31,7 @@ __all__ = ['SpectralExtraction']
 
 
 @tray_registry(
-    'cubeviz-spectral-extraction', label="Spectral Extraction", viewer_requirements='spectrum'
+    'cubeviz-spectral-extraction', label="Spectral Extraction"
 )
 class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                          DatasetSelectMixin, AddResultsMixin):
@@ -277,7 +277,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # create a new instance of the Spectral Extraction plugin (to not affect the instance in
         # the tray) and extract the entire cube with defaults.
         plg = self.new()
-        plg.dataset.selected = self.dataset.selected
+        plg.dataset.selected = self.dataset.selected if dataset is None else dataset
         if subset_lbl is not None:
             plg.aperture.selected = subset_lbl
         plg.aperture_method.selected = 'Center'

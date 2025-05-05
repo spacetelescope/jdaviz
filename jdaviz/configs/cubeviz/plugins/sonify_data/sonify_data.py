@@ -25,8 +25,7 @@ else:
     _has_strauss = True
 
 
-@tray_registry('cubeviz-sonify-data', label="Sonify Data",
-               viewer_requirements=['spectrum', 'image'])
+@tray_registry('cubeviz-sonify-data', label="Sonify Data")
 class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
                  AddResultsMixin):
     """
@@ -114,9 +113,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     @observe('spectral_subset_selected')
     def update_wavelength_range(self, event):
-        if not hasattr(self, 'spec_viewer'):
+        if not hasattr(self, 'spectral_subset'):
             return
-        display_unit = self.spec_viewer.state.x_display_unit
+        display_unit = self.spectrum_viewer.state.x_display_unit
         # is this spectral selection or the entire spectrum?
         if hasattr(self.spectral_subset.selected_obj, "subregions"):
             wlranges = self.spectral_subset.selected_obj.subregions

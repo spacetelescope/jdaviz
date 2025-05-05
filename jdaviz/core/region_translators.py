@@ -1,10 +1,9 @@
 """The ``region_translators`` module houses translations of
 :ref:`regions:shapes` to :ref:`photutils:photutils-aperture` apertures.
 """
-import photutils
+import re
 from astropy import units as u
-from astropy.coordinates import Angle
-from astropy.utils import minversion
+from astropy.coordinates import SkyCoord
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, CircularAnnulusROI
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
@@ -17,48 +16,10 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
                      RectanglePixelRegion, RectangleSkyRegion,
                      CircleAnnulusPixelRegion, CircleAnnulusSkyRegion,
                      EllipseAnnulusPixelRegion, EllipseAnnulusSkyRegion,
-                     RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion, PixCoord)
+                     RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion,
+                     PixCoord, PolygonSkyRegion)
 
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
-
-PHOTUTILS_LT_2_2 = not minversion(photutils, "2.1.1.dev60")  # no 2.2.dev tag
-
-
-def _get_region_from_spatial_subset(plugin_obj, subset_state):
-    """Convert the given ``glue`` ROI subset state to ``regions`` shape.
-
-    .. note:: This is for internal use only in Imviz plugins.
-
-    Parameters
-    ----------
-    plugin_obj : obj
-        Plugin instance that needs this translation.
-        The plugin is assumed to have a special setup that gives
-        it access to these attributes: ``app`` and ``app._align_by``.
-
-    subset_state : obj
-        ROI subset state to translate.
-
-    Returns
-    -------
-    reg : `regions.Region`
-        An equivalent ``regions`` shape. This can be a pixel or sky
-        region, so the plugin needs to be able to deal with both.
-
-    See Also
-    --------
-    regions2roi
-
-    """
-    from glue_astronomy.translators.regions import roi_subset_state_to_region
-
-    # Subset is defined against its parent. This is not necessarily
-    # the current viewer reference data, which can be changed.
-
-    # Mixed link types no longer allowed, so just check app setting.
-    align_by = plugin_obj.app._align_by
-
-    return roi_subset_state_to_region(subset_state, to_sky=(align_by == 'wcs'))
 
 
 def regions2roi(region_shape, wcs=None):
@@ -177,10 +138,7 @@ def regions2aperture(region_shape):
         aperture = SkyCircularAperture(region_shape.center, region_shape.radius)
 
     elif isinstance(region_shape, EllipsePixelRegion):
-        if PHOTUTILS_LT_2_2:
-            th = region_shape.angle.to_value(u.radian)
-        else:
-            th = region_shape.angle
+        th = region_shape.angle
         aperture = EllipticalAperture(
             region_shape.center.xy, region_shape.width * 0.5, region_shape.height * 0.5,
             theta=th)
@@ -191,10 +149,7 @@ def regions2aperture(region_shape):
             theta=(region_shape.angle - (90 * u.deg)))
 
     elif isinstance(region_shape, RectanglePixelRegion):
-        if PHOTUTILS_LT_2_2:
-            th = region_shape.angle.to_value(u.radian)
-        else:
-            th = region_shape.angle
+        th = region_shape.angle
         aperture = RectangularAperture(
             region_shape.center.xy, region_shape.width, region_shape.height,
             theta=th)
@@ -213,10 +168,7 @@ def regions2aperture(region_shape):
             region_shape.center, region_shape.inner_radius, region_shape.outer_radius)
 
     elif isinstance(region_shape, EllipseAnnulusPixelRegion):
-        if PHOTUTILS_LT_2_2:
-            th = region_shape.angle.to_value(u.radian)
-        else:
-            th = region_shape.angle
+        th = region_shape.angle
         aperture = EllipticalAnnulus(
             region_shape.center.xy, region_shape.inner_width * 0.5, region_shape.outer_width * 0.5,
             region_shape.outer_height * 0.5, b_in=region_shape.inner_height * 0.5,
@@ -229,10 +181,7 @@ def regions2aperture(region_shape):
             theta=(region_shape.angle - (90 * u.deg)))
 
     elif isinstance(region_shape, RectangleAnnulusPixelRegion):
-        if PHOTUTILS_LT_2_2:
-            th = region_shape.angle.to_value(u.radian)
-        else:
-            th = region_shape.angle
+        th = region_shape.angle
         aperture = RectangularAnnulus(
             region_shape.center.xy, region_shape.inner_width, region_shape.outer_width,
             region_shape.outer_height, h_in=region_shape.inner_height,
@@ -296,7 +245,7 @@ def aperture2regions(aperture):
     elif isinstance(aperture, EllipticalAperture):
         region_shape = EllipsePixelRegion(
             center=positions2pixcoord(aperture.positions), width=aperture.a * 2,
-            height=aperture.b * 2, angle=theta2angle(aperture.theta))
+            height=aperture.b * 2, angle=aperture.theta)
 
     elif isinstance(aperture, SkyEllipticalAperture):
         region_shape = EllipseSkyRegion(
@@ -306,7 +255,7 @@ def aperture2regions(aperture):
     elif isinstance(aperture, RectangularAperture):
         region_shape = RectanglePixelRegion(
             center=positions2pixcoord(aperture.positions), width=aperture.w, height=aperture.h,
-            angle=theta2angle(aperture.theta))
+            angle=aperture.theta)
 
     elif isinstance(aperture, SkyRectangularAperture):
         region_shape = RectangleSkyRegion(
@@ -326,7 +275,7 @@ def aperture2regions(aperture):
         region_shape = EllipseAnnulusPixelRegion(
             center=positions2pixcoord(aperture.positions), inner_width=aperture.a_in * 2,
             inner_height=aperture.b_in * 2, outer_width=aperture.a_out * 2,
-            outer_height=aperture.b_out * 2, angle=theta2angle(aperture.theta))
+            outer_height=aperture.b_out * 2, angle=aperture.theta)
 
     elif isinstance(aperture, SkyEllipticalAnnulus):
         region_shape = EllipseAnnulusSkyRegion(
@@ -339,7 +288,7 @@ def aperture2regions(aperture):
         region_shape = RectangleAnnulusPixelRegion(
             center=positions2pixcoord(aperture.positions), inner_width=aperture.w_in,
             inner_height=aperture.h_in, outer_width=aperture.w_out, outer_height=aperture.h_out,
-            angle=theta2angle(aperture.theta))
+            angle=aperture.theta)
 
     elif isinstance(aperture, SkyRectangularAnnulus):
         region_shape = RectangleAnnulusSkyRegion(
@@ -353,6 +302,208 @@ def aperture2regions(aperture):
     return region_shape
 
 
+def _create_polygon_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
+    """Create a `regions.PolygonSkyRegion` from given coordinates.
+
+    Parameters
+    ----------
+    coords : list
+        List of coordinates in the form of [ra1, dec1, ra2, dec2, ...].
+
+    frame : str, optional
+        Coordinate frame. Default is 'icrs'.
+
+    unit : `~astropy.units.Unit`, optional
+        Unit of the coordinates. Default is `~astropy.units.deg`.
+
+    Returns
+    -------
+    sky_region : `regions.PolygonSkyRegion`
+        A polygon sky region.
+
+    Examples
+    --------
+    Create a `regions.PolygonSkyRegion` from given coordinates:
+
+    >>> from jdaviz.core.region_translators import _create_polygon_skyregion_from_coords
+    >>> coords = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0]
+    >>> _create_polygon_skyregion_from_coords(coords)
+    <PolygonSkyRegion(vertices=<SkyCoord (ICRS): (ra, dec) in deg
+        [(10., 20.), (30., 40.), (50., 60.)]>)>
+
+    """
+    ra, dec = coords[::2], coords[1::2]
+    sky_coordinates = SkyCoord(ra, dec, frame=frame, unit=unit)
+    sky_region = PolygonSkyRegion(sky_coordinates)
+
+    return sky_region
+
+
+def _create_circle_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
+    """Create a `regions.CircleSkyRegion` from given coordinates.
+
+    Parameters
+    ----------
+    coords : list
+        List of coordinates in the form of [ra, dec, radius].
+
+    frame : str, optional
+        Coordinate frame. Default is 'icrs'.
+
+    unit : `~astropy.units.Unit`, optional
+        Unit of the coordinates. Default is `~astropy.units.deg`.
+
+    Returns
+    -------
+    sky_region : `regions.CircleSkyRegion`
+        A circle sky region.
+
+    Examples
+    --------
+    Create a `regions.CircleSkyRegion` from given coordinates:
+
+    >>> from jdaviz.core.region_translators import _create_circle_skyregion_from_coords
+    >>> coords = [10.0, 20.0, 5.0]
+    >>> _create_circle_skyregion_from_coords(coords)
+    <CircleSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg (10., 20.)>, radius=5.0 deg)>
+
+    """
+    sky_coordinates = SkyCoord(coords[0], coords[1], frame=frame, unit=unit)
+    sky_region = CircleSkyRegion(center=sky_coordinates, radius=coords[2] * unit)
+
+    return sky_region
+
+
+def _create_ellipse_skyregion_from_coords(coords, frame='icrs', unit=u.deg):
+    """Create a `regions.EllipseSkyRegion` from given coordinates.
+
+    Parameters
+    ----------
+    coords : list
+        List of coordinates in the form of [ra, dec, width, height, angle].
+
+    frame : str, optional
+        Coordinate frame. Default is 'icrs'.
+
+    unit : `~astropy.units.Unit`, optional
+        Unit of the coordinates. Default is `~astropy.units.deg`.
+
+    Returns
+    -------
+    sky_region : `regions.EllipseSkyRegion`
+        An ellipse sky region.
+
+    Examples
+    --------
+    Create a `regions.EllipseSkyRegion` from given coordinates:
+
+    >>> from jdaviz.core.region_translators import _create_ellipse_skyregion_from_coords
+    >>> coords = [10.0, 20.0, 5.0, 3.0, 45.0]
+    >>> _create_ellipse_skyregion_from_coords(coords)
+    <EllipseSkyRegion(center=<SkyCoord (ICRS): (ra, dec) in deg
+        (10., 20.)>, width=5.0 deg, height=3.0 deg, angle=45.0 deg)>
+
+    """
+    sky_coordinates = SkyCoord(coords[0], coords[1], frame=frame, unit=unit)
+    sky_region = EllipseSkyRegion(center=sky_coordinates, width=coords[2] * unit,
+                                  height=coords[3] * unit, angle=coords[4] * unit)
+
+    return sky_region
+
+
+SUPPORTED_STCS_SHAPE_VALUES = ('POLYGON', 'CIRCLE', 'ELLIPSE', )
+SUPPORTED_STCS_FRAME_VALUES = ('ICRS', 'J2000', 'FK5', )
+STCS_SHAPE_PATTERN = '|'.join(SUPPORTED_STCS_SHAPE_VALUES)
+STCS_FRAME_PATTERN = '|'.join(SUPPORTED_STCS_FRAME_VALUES)
+SUPPORTED_STCS_PATTERN = re.compile(
+    fr"^(?P<shape>({'|'.join(SUPPORTED_STCS_SHAPE_VALUES)}))"
+    fr"(?P<frame>(\s+({'|'.join(SUPPORTED_STCS_FRAME_VALUES)})))*"
+    r"(?P<coordinates>(\s+-?\d+\.\d+){2,}$)",
+    re.IGNORECASE)
+SKY_REGION_FROM_COORDS_FACTORY = {
+    'polygon': _create_polygon_skyregion_from_coords,
+    'circle': _create_circle_skyregion_from_coords,
+    'ellipse': _create_ellipse_skyregion_from_coords,
+}
+
+
+def is_stcs_string(stcs_string):
+    """Check if the given string is a valid STC-S string.
+
+    Parameters
+    ----------
+    stcs_string : str
+        A string to check.
+
+    Returns
+    -------
+    is_stcs : bool
+        `True` if the given string is a valid STC-S string, otherwise `False`.
+
+    Examples
+    --------
+    Check if a given string is a valid STC-S string:
+
+    >>> from jdaviz.core.region_translators import is_stcs_string
+    >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
+    >>> is_stcs_string(stcs_string)
+    True
+
+    """
+
+    try:
+        return bool(SUPPORTED_STCS_PATTERN.match(stcs_string))
+    except Exception:
+        return False
+
+
+def stcs_string2region(stcs_string):
+    """Convert a given STC-S string to ``regions`` shape.
+
+    Parameters
+    ----------
+    stcs_string : str
+        A valid STC-S string.
+
+    Returns
+    -------
+    sky_region : `regions.Region`
+        A supported ``regions`` shape.
+
+    Raises
+    ------
+    ValueError
+        Invalid inputs.
+
+    Examples
+    --------
+    Translate an STC-S region to `regions.PolygonSkyRegion`:
+
+    >>> from jdaviz.core.region_translators import stcs_string2region
+    >>> stcs_string = 'POLYGON ICRS 10.0 20.0 30.0 40.0 50.0 60.0'
+    >>> stcs_string2region(stcs_string)
+    <PolygonSkyRegion(vertices=<SkyCoord (ICRS): (ra, dec) in deg
+        [(10., 20.), (30., 40.), (50., 60.)]>)>
+
+    """
+
+    if not isinstance(stcs_string, str):
+        raise ValueError('STC-S string must be a string.')
+
+    _match = SUPPORTED_STCS_PATTERN.match(stcs_string)
+
+    # Check if the STC-S string is valid, otherwise raise an error
+    if not _match:
+        raise ValueError(f'Invalid STC-S string: {stcs_string}')
+
+    # Extract the shape, frame, and coordinates from the STC-S string
+    shape = _match.group('shape').strip().lower()
+    frame = _match.group('frame').strip().lower() if _match.group('frame') else 'icrs'
+    coordinates = list(map(float, _match.group('coordinates').strip().split()))
+
+    return SKY_REGION_FROM_COORDS_FACTORY[shape](coordinates, frame=frame)
+
+
 def positions2pixcoord(positions):
     """Convert ``photutils`` aperture positions to `~regions.PixCoord`
     that is acceptable by ``regions`` shape.
@@ -364,10 +515,3 @@ def positions2pixcoord(positions):
     else:
         pixcoord = PixCoord(x=positions[0], y=positions[1])
     return pixcoord
-
-
-def theta2angle(theta):
-    """Convert ``photutils`` theta to ``regions`` angle for pixel regions."""
-    if PHOTUTILS_LT_2_2:
-        return Angle(theta, u.radian)
-    return theta  # This whole function can be deleted when we remove PHOTUTILS_LT_2_2

@@ -363,7 +363,7 @@ def flux_conversion_general(values, original_unit, target_unit,
     if original_unit == target_unit:
         if not with_unit:
             return values
-        return values * original_unit
+        return values * u.Unit(original_unit)
 
     if isinstance(original_unit, str):
         original_unit = u.Unit(original_unit)

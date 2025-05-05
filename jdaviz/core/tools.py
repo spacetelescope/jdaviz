@@ -18,8 +18,8 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
-                                CatalogSelectClickEventMessage)
-from jdaviz.core.marks import SpectralLine
+                                CatalogSelectClickEventMessage, FootprintSelectClickEventMessage)
+from jdaviz.core.marks import SpectralLine, FootprintOverlay
 
 __all__ = []
 
@@ -155,7 +155,8 @@ class _MatchedZoomMixin:
                             setattr(viewer.state, k, value)
 
     def is_visible(self):
-        return len(self.viewer.jdaviz_app._viewer_store) > 1
+        return (len(self.viewer.jdaviz_app._viewer_store) > 1
+                and len(list(self._iter_matched_viewers())) > 0)
 
 
 @viewer_tool
@@ -341,6 +342,17 @@ class YRangeZoom(_BaseSelectZoom):
 
 
 @viewer_tool
+class ViewerClone(Tool):
+    icon = os.path.join(ICON_DIR, 'viewer_clone')
+    tool_id = 'jdaviz:viewer_clone'
+    action_text = 'Clone viewer'
+    tool_tip = 'Clone this viewer'
+
+    def activate(self):
+        self.viewer.clone_viewer()
+
+
+@viewer_tool
 class SelectLine(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'
@@ -408,6 +420,31 @@ class SelectCatalogMark(CheckableTool, HubListener):
     def is_visible(self):
         # NOTE: this assumes Catalogs._marker_name remains fixed at the default of 'catalog_results'
         return 'catalog_results' in [dci.label for dci in self.viewer.jdaviz_app.data_collection]
+
+
+@viewer_tool
+class SelectFootprintOverlay(CheckableTool, HubListener):
+    icon = os.path.join(ICON_DIR, 'footprint_select.svg')
+    tool_id = 'jdaviz:selectfootprint'
+    action_text = 'Select/identify overlay'
+    tool_tip = 'Select/identify overlay'
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event,
+                                       events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        msg = FootprintSelectClickEventMessage(data, sender=self)
+        self.viewer.session.hub.broadcast(msg)
+
+    def is_visible(self):
+        return any(
+            isinstance(m, FootprintOverlay) and m.visible
+            for m in self.viewer.figure.marks
+            )
 
 
 @viewer_tool

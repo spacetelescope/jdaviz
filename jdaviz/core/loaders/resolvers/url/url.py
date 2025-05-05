@@ -13,6 +13,7 @@ __all__ = ['URLResolver']
 @loader_resolver_registry('url')
 class URLResolver(BaseResolver):
     template_file = __file__, "url.vue"
+    default_input = 'url'
 
     url = Unicode("").tag(sync=True)
     cache = Bool(True).tag(sync=True)
@@ -26,7 +27,7 @@ class URLResolver(BaseResolver):
 
     @property
     def is_valid(self):
-        return urlparse(self.url).scheme in ['http', 'https']
+        return urlparse(self.url).scheme in ['http', 'https', 'mast', 'ftp']
 
     @observe('url', 'cache')
     def _on_url_changed(self, change):

@@ -9,14 +9,18 @@
         :format_selected.sync="format_selected"
         :importer_widget="importer_widget"
         :api_hints_enabled="api_hints_enabled"
-        @cancel-clicked="cancel_clicked"
         :import_spinner="import_spinner"
         @import-clicked="import_clicked"
+        :import_disabled="import_disabled"
     >
         <v-row>
-            Select a file with data you want to load into this instance of Jdaviz
-            and click "IMPORT".
+            Select a file with data you want to load into this instance of Jdaviz.
             Note that single clicks navigate into directories.
+        </v-row>
+        <v-row v-if="api_hints_enabled">
+            <span class="api-hint">
+                ldr.filepath = '{{ filepath }}'
+            </span>
         </v-row>
         <v-row>
           <g-file-import id="file-uploader"></g-file-import>

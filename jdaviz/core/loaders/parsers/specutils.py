@@ -14,7 +14,7 @@ class SpecutilsSpectrumParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('specviz', 'specviz2d'):
+        if self.app.config not in ('deconfigged', 'specviz', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
         try:
@@ -25,8 +25,6 @@ class SpecutilsSpectrumParser(BaseParser):
 
     @cached_property
     def output(self):
-        if isinstance(self.input, self.SpecutilsCls):
-            return self.input
         return self.SpecutilsCls.read(self.input)
 
 
@@ -36,7 +34,7 @@ class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
 
     @property
     def is_valid(self):
-        if self.app.config != 'specviz':
+        if self.app.config not in ('deconfigged', 'specviz'):
             # NOTE: temporary during deconfig process
             return False
         return super().is_valid and len(self.output) > 1

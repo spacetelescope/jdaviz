@@ -3,6 +3,7 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#catalog-search'"
     :uses_active_status="uses_active_status"
+    :api_hints_enabled.sync="api_hints_enabled"
     @plugin-ping="plugin_ping($event)"
     :keep_active_sync="keep_active"
     :popout_button="popout_button"
@@ -21,6 +22,8 @@
       :selected.sync="catalog_selected"
       label="Catalog"
       hint="Select a catalog to search."
+      api_hint="plg.catalog ="
+      :api_hints_enabled="api_hints_enabled"
       :from_file.sync="from_file"
       :from_file_message="from_file_message"
       dialog_title="Import Catalog"
@@ -59,6 +62,8 @@
         label="Max sources"
         hint="Maximum number of sources."
         persistent-hint
+        :label="api_hints_enabled ? 'plg.max_sources =' : 'Max Sources'"
+        :class="api_hints_enabled ? 'api-hint' : null"
       ></v-text-field>
     </v-row>
 
@@ -68,16 +73,26 @@
             :results_isolated_to_plugin="true"
             @click="do_search"
             :spinner="spinner"
+            :api_hints_enabled="api_hints_enabled"
           >
-            Search
+            {{ api_hints_enabled ?
+              'plg.search()'
+              :
+              'Search'
+            }}
           </plugin-action-button>
        </v-col>
        <v-col>
          <plugin-action-button
             :results_isolated_to_plugin="true"
             @click="zoom_in"
+            :api_hints_enabled="api_hints_enabled"
           >
-            Zoom to Selected
+            {{ api_hints_enabled ?
+              'plg.zoom_to_selected()'
+              :
+              'Zoom to Selected'
+            }}
           </plugin-action-button>
        </v-col>
     </v-row>

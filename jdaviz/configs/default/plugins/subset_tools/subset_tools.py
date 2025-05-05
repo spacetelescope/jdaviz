@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import numpy as np
 
@@ -10,7 +11,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
-                              MaskSubsetState, Subset)
+                              MaskSubsetState)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -36,7 +37,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
-from jdaviz.utils import MultiMaskSubsetState, data_has_valid_wcs
+from jdaviz.utils import MultiMaskSubsetState, _chain_regions, data_has_valid_wcs
 
 from jdaviz.configs.default.plugins.subset_tools import utils
 
@@ -65,7 +66,8 @@ SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
 COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
-@tray_registry('g-subset-tools', label="Subset Tools")
+@tray_registry('g-subset-tools', label="Subset Tools",
+               category='core', sidebar='subsets')
 class SubsetTools(PluginTemplateMixin, LoadersMixin):
     """
     See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
@@ -135,6 +137,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self._plugin_description = 'Select and interact with spatial subsets.'
         elif config == 'specviz':
             self._plugin_description = 'Select and interact with spectral subsets.'
+        else:
+            self._plugin_description = 'Select and interact with subsets.'
 
         self.components = {
             'g-subset-mode': SelectionModeMenu(session=self.session)
@@ -177,17 +181,19 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'recenter_dataset', 'recenter',
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
-                  'rename_selected', 'rename_subset']
-        if self.dev_loaders:
+                  'rename_selected', 'rename_subset',
+                  'update_subset']
+        if self.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d'):
             expose += ['loaders']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False):
+                    use_display_units=False, return_sky_region=None,
+                    wrt_data=None):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
-        respectivley.
+        respectively.
 
         Parameters
         ----------
@@ -195,7 +201,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             Specifies the type of subsets to retrieve. Options are ``spatial``
             to retrieve only spatial subsets, ``spectral`` to retrieve only
             spectral subsets or ``None`` (default) to retrieve both spatial
-            and spectral subsets, when relevent to the current configuration.
+            and spectral subsets, when relevant to the current configuration.
 
         list_of_subset_labels : list of str or None, optional
             If specified, only subsets matching these labels will be included.
@@ -207,78 +213,128 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             the native data unit. If True, subsets are returned in the spectral
             axis display unit set in the Unit Conversion plugin.
 
+        wrt_data : str  or None
+            Only applicable for spatial subsets, an error will be raised when ''region_type''
+            equals 'spectral'. Otherwise, spectral subsets will not be impacted when called.
+            Controls return type of ``PixelRegion`` / ``SkyRegion``. To return a spatial
+            subset in opposition with the current link type (e.g return ``PixelRegion``
+            when WCS linked, ``SkyRegion`` when pixel linked), ``wrt_data`` can be set to
+            the data label of the dataset whose WCS should be used for this transformation.
+            The default behavior (None) will return Pixel/Sky region based on app link type
+            (Sky for Cubeviz), using the WCS of the subset's parent dataset (i.e the data
+            layer the subset was created on).
+
         Returns
         -------
         regions : dict
             A dictionary mapping subset labels to their respective ``regions``
             objects (for spatial regions) or ``SpectralRegions`` objects
             (for spectral regions).
+
+        Examples
+        --------
+        >>> from jdaviz import Imviz, Cubeviz
+        >>> from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
+        >>> from astropy.nddata import NDData
+        >>> import numpy as np
+        >>> import astropy.units as u
+        >>> imviz = Imviz()
+        >>> imviz.link_data(align_by='pixels')
+        >>> data = NDData(np.ones((128, 128)) * u.nJy, wcs=getfixture('image_2d_wcs'))
+        >>> imviz.load_data(data)
+        >>> plg = imviz.plugins['Subset Tools']
+        >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
+        >>> type(plg.get_regions()['Subset 1'])
+        <class 'regions.shapes.circle.CirclePixelRegion'>
+        >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 1'])
+        <class 'regions.shapes.circle.CircleSkyRegion'>
+        >>> imviz.app.delete_subsets()
+        >>> imviz.link_data(align_by='wcs')
+        >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
+        >>> type(plg.get_regions()['Subset 2'])
+        <class 'regions.shapes.circle.CircleSkyRegion'>
+        >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 2'])
+        <class 'regions.shapes.circle.CirclePixelRegion'>
+
+        >>> cubeviz = Cubeviz()
+        >>> cubeviz.load_data(getfixture('spectrum1d_cube'))
+        >>> plg = cubeviz.plugins['Subset Tools']
+        >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=24.27156066879736, y=22.183517455582475), radius=4.7523674964904785))  # noqa E501
+        >>> type(plg.get_regions()['Subset 1'])
+        <class 'regions.shapes.circle.CircleSkyRegion'>
+        >>> type(plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')['Subset 1'])
+        <class 'regions.shapes.circle.CirclePixelRegion'>
         """
 
         if region_type is not None:
             region_type = region_type.lower()
             if region_type not in ['spectral', 'spatial']:
                 raise ValueError("`region_type` must be 'spectral', 'spatial', or None for any.")
+            elif region_type == 'spectral' and wrt_data:
+                raise ValueError('Unable to retrieve SkyRegion objects for spectral subsets')
             if ((self.config == 'imviz' and region_type == 'spectral') or
                (self.config == 'specviz' and region_type == 'spatial')):
-                raise ValueError(f"No {region_type} subests in {self.config}.")
+                raise ValueError(f"No {region_type} subsets in {self.config}.")
             region_type = [region_type]
 
-        else:  # determine which subset types should be returned by config, if type not specified
-            if self.config == 'imviz':
-                region_type = ['spatial']
-            elif self.config == 'specviz':
-                region_type = ['spectral']
-            else:
-                region_type = ['spatial', 'spectral']
+        else:  # determine subset return type(s) by config, if not specified
+            region_type = {'imviz': ['spatial'],
+                           'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
 
-        regions = {}
+        if isinstance(wrt_data, str) and wrt_data not in self.data_collection:
+            raise ValueError(f'{wrt_data} is not data in {self.data_collection}')
 
-        if 'spatial' in region_type:
-            from glue_astronomy.translators.regions import roi_subset_state_to_region
+        if ((self.app._align_by == 'wcs' and wrt_data is None) or
+                ((self.app._align_by == 'pixels' and self.config != 'cubeviz') and wrt_data) or
+                self.config == 'cubeviz' and wrt_data is None):
+            reg_type = 'sky_region'
+        else:
+            reg_type = 'region'
 
-            failed_regs = set()
-            to_sky = self.app._align_by == 'wcs'
+        # TODO: remove after deprecation period
+        # Temporarily allow return_sky_region to function as before if wrt_data
+        # is not set.
+        if return_sky_region is not None and wrt_data:
+            raise ValueError('return_sky_region no longer used, use wrt_data instead')
+        elif return_sky_region is not None:
+            wrt_data = self.app.data_collection[0].label
+            warnings.warn(f'return_sky_region no longer used, use wrt_data instead. '
+                          f'Defaulting to {wrt_data} for the wrt_data kwarg')
+            reg_type = 'sky_region' if return_sky_region else 'region'
 
-            # Subset is global, so we just use default viewer.
-            for lyr in self.app._jdaviz_helper.default_viewer._obj.layers:
-                if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
-                        or lyr.layer.ndim not in (2, 3)):
-                    continue
+        # first get ALL subsets of specified spatial/spectral type(s)
+        subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
+                                       spatial_only=region_type == ['spatial'],
+                                       include_sky_region=reg_type == 'sky_region',
+                                       use_display_units=use_display_units,
+                                       wrt_data=wrt_data)
 
-                subset_data = lyr.layer
-                subset_label = subset_data.label
+        labels = list_of_subset_labels or list(subsets.keys())
+        if isinstance(labels, str):
+            labels = [labels]
 
-                if isinstance(subset_data.subset_state, MaskSubsetState):
-                    # Ignore MaskSubsetState here
-                    continue
-
-                try:
-                    if self.app.config == "imviz" and to_sky:
-                        region = roi_subset_state_to_region(subset_data.subset_state,
-                                                            to_sky=to_sky)
-                    else:
-                        region = subset_data.data.get_selection_definition(
-                            subset_id=subset_label, format='astropy-regions')
-                except (NotImplementedError, ValueError):
-                    failed_regs.add(subset_label)
+        regions, failed_regs = {}, set()
+        for subset_label in labels:
+            try:
+                ss = subsets[subset_label]
+                if isinstance(ss, SpectralRegion):
+                    regions[subset_label] = ss
                 else:
-                    regions[subset_label] = region
+                    reg = _chain_regions([x[reg_type] for x in ss],
+                                         [x['glue_state'] for x in ss])
+                    if reg is None:
+                        failed_regs.add(subset_label)
+                    else:
+                        regions[subset_label] = reg
+            except ValueError:  # key doesnt exist, subset wasn't retrieved
+                failed_regs.add(subset_label)
 
-            if len(failed_regs) > 0:
-                self.app.hub.broadcast(SnackbarMessage(
-                    f"Regions skipped: {', '.join(sorted(failed_regs))}",
-                    color="warning", timeout=8000, sender=self.app))
-
-        if 'spectral' in region_type:
-            spec_regions = self.app.get_subsets(spectral_only=True,
-                                                use_display_units=use_display_units)
-            if spec_regions:
-                regions.update(spec_regions)
-
-        # filter by list_of_subset_labels
-        if list_of_subset_labels is not None:
-            regions = {key: regions[key] for key in list_of_subset_labels}
+        if len(failed_regs) > 0:
+            warn_msg = f"Regions skipped: {', '.join(sorted(failed_regs))}"
+            self.app.hub.broadcast(SnackbarMessage(warn_msg,
+                                   color="warning", timeout=8000,
+                                   sender=self.app))
+            warnings.warn(warn_msg, UserWarning)
 
         return regions
 
@@ -300,10 +356,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             # during initial init, this can trigger before the component is initialized
             return
         if self.session.edit_subset_mode.edit_subset == []:
+            self.app.state.subset_mode_create = True
             if self.subset_selected != self.subset.default_text:
                 self.subset_selected = self.subset.default_text
                 self.show_region_info = False
         else:
+            self.app.state.subset_mode_create = False
             new_label = self.session.edit_subset_mode.edit_subset[0].label
             if new_label != self.subset_selected:
                 if new_label not in [s['label'] for s in self.subset_items]:
@@ -482,6 +540,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                       "value": total_masked,
                                       "orig": total_masked}]
                 subset_type = "Mask"
+
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.
                 self.subset_definitions = self.subset_definitions + [subset_definition]
@@ -546,14 +605,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             if self.subset_selected != self.subset.default_text:
                 self._get_subset_definition(self.subset_selected)
 
-    def vue_update_subset(self, *args):
-
-        if self.multiselect:
-            self.hub.broadcast(SnackbarMessage("Cannot update subset "
-                                               "when multiselect is active", color='warning',
-                                               sender=self))
-            return
-
+    def _update_subset(self):
         status, reason = self._check_input()
         if not status:
             self.hub.broadcast(SnackbarMessage(reason, color='error', sender=self))
@@ -613,6 +665,82 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                         setattr(sub_states.roi, d_att["att"], d_val)
 
         self._push_update_to_ui()
+
+    def update_subset(self, subset_label=None, subregion=None, **kwargs):
+        '''
+        Method to update the attributes of an existing subset. The attributes of a subset
+        and their current values can be retrieved with the 'get_subset_definition` method.
+
+        Parameters
+        ----------
+
+        subset_label : str
+
+            The name of the subset to update. If this is not the currently selected subset in the
+            UI, it will be selected.
+
+        subregion : int, optional
+
+            The integer subregion index (in the subset_definitions dictionary) for which to modify
+            the specified attributes.
+
+        The attributes to update and their new values are passed as keyword arguments to this
+        function, for example:
+
+            plg = imviz.plugins['Subset Tools']
+            plg.update_subset('Subset 1', xmax = 9.522, xmin = 9.452)
+
+        If no values to update are specified, this function will return the current definition of
+        the specified subset. The "att" keys in the returned dictionaries are the attributes that
+        can be updated with this method.
+        '''
+        if subset_label is not None:
+            if subset_label not in self.subset.choices:
+                raise ValueError(f"{subset_label} is not an existing subset. "
+                                 f"Available choices are: {self.subset.choices}")
+
+            if subset_label != self.subset.selected:
+                self.subset.selected = subset_label
+
+        if not kwargs:
+            # If no updates were requested, we instead return the current definition
+            public_definition = {}
+            for i in range(len(self.subset_definitions)):
+                public_definition[f'subregion {i}'] = []
+                for d in self.subset_definitions[i]:
+                    if d['att'] == 'parent':
+                        continue
+                    public_definition[f'subregion {i}'].append({key:d[key] for key in d if key != "orig"})  # noqa
+
+            return public_definition
+
+        if len(self.subset_definitions) == 1:
+            subregion = 0
+        elif subregion is None:
+            raise ValueError("Specified subset has more than one subregion, please "
+                             "specify which integer subregion index to modify.")
+
+        for key, value in kwargs.items():
+            for i in range(len(self.subset_definitions[subregion])):
+                att_dict = self.subset_definitions[subregion][i]
+                if att_dict['att'] == key:
+                    att_dict['value'] = value
+                    self.subset_definitions[subregion][i] = att_dict
+                    break
+            else:
+                raise ValueError(f"{key} is not an attribute of the specified subset/subregion.")
+
+        self._update_subset()
+
+    def vue_update_subset(self, *args):
+
+        if self.multiselect:
+            self.hub.broadcast(SnackbarMessage("Cannot update subset "
+                                               "when multiselect is active", color='warning',
+                                               sender=self))
+            return
+
+        self._update_subset()
 
     def _push_update_to_ui(self, subset_name=None):
         """
@@ -692,11 +820,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         from astropy.wcs.utils import pixel_to_pixel
         from photutils.aperture import ApertureStats
-        from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
+        from jdaviz.core.region_translators import regions2aperture
 
         def _do_recentering(subset, subset_state):
             try:
-                reg = _get_region_from_spatial_subset(self, subset_state)
+                type = 'sky_region' if self.app.config == 'imviz' and self.app._align_by == 'wcs' else 'region'  # noqa: E501
+                reg = self.app.get_subsets(subset_name=subset,
+                                           include_sky_region=type == 'sky_region',
+                                           spatial_only=True)[0][type]
                 aperture = regions2aperture(reg)
                 data = self.recenter_dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
@@ -811,9 +942,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             x = float(x)
             y = float(y)
             sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
-                sbst_obj.move_to(x, y)
-            elif isinstance(sbst_obj, RectangularROI):
+            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI)):  # noqa
                 sbst_obj.move_to(x, y)
             else:  # pragma: no cover
                 raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')
@@ -894,7 +1023,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
 
-    def import_region(self, region, combination_mode=None, max_num_regions=None,
+    def import_region(self, region, edit_subset=None, combination_mode=None, max_num_regions=20,
                       refdata_label=None, return_bad_regions=False, region_format=None):
         """
         Method for creating subsets from regions or region files.
@@ -912,15 +1041,19 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             A string which represents a ``regions`` or ``SpectralRegion`` file.
             If given as a list, it can only contain spectral or non-spectral regions, not both.
 
+        edit_subset : str or `None`
+            Subset to have region applied to it using combination_mode
+
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
-            same length as regions. If `None`, then it will follow the default glue
-            functionality for subset creation.
+            same length as ``regions``. If `None`, then a new subset will be created.
+            Options are ['new', 'replace', 'or', 'and', 'xor', 'andnot']
+
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
-            Default is to load everything.  If you are providing a large file/list
-            input for ``region``, it is recommended
+            Default is 20.  If you want to load everything, set it to `None`.
+            Loading a large number of regions is not recommended due to performance impact.
 
         refdata_label : str or `None`
             **This is only applicable to non-spectral regions.**
@@ -955,13 +1088,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 except Exception:  # nosec
                     raw_regs = SpectralRegion.read(region)
 
-                return self._load_regions(raw_regs, combination_mode, max_num_regions,
+                return self._load_regions(raw_regs, edit_subset, combination_mode, max_num_regions,
                                           refdata_label, return_bad_regions)
         else:
-            return self._load_regions(region, combination_mode, max_num_regions, refdata_label,
-                                      return_bad_regions)
+            return self._load_regions(region, edit_subset, combination_mode, max_num_regions,
+                                      refdata_label, return_bad_regions)
 
-    def _load_regions(self, regions, combination_mode=None, max_num_regions=None,
+    def _load_regions(self, regions, edit_subset=None, combination_mode=None, max_num_regions=None,
                       refdata_label=None, return_bad_regions=False, **kwargs):
         """Load given region(s) into the viewer.
         WCS-to-pixel translation and mask creation, if needed, is relative
@@ -990,12 +1123,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
               fully supports ``regions``)
             * specutils ``SpectralRegion`` object
 
+        edit_subset : str or `None`
+            Subset to have region applied to it using combination_mode
+
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
             same length as regions. Each element describes how the corresponding region
-            in regions will be applied. If `None`, then it will follow the default glue
-            functionality for subset creation. Options are ['new', 'replace', 'or', 'and',
-            'xor', 'andnot']
+            in regions will be applied. If `None`, then a new subset will be created.
+            Options are ['new', 'replace', 'or', 'and', 'xor', 'andnot']
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
@@ -1047,7 +1182,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         else:
             data = self.app.data_collection[refdata_label]
 
-        has_wcs = data_has_valid_wcs(data, ndim=2)
+        has_wcs = data_has_valid_wcs(data, ndim=2) or data_has_valid_wcs(data, ndim=3)
 
         combo_mode_is_list = isinstance(combination_mode, list)
         if combo_mode_is_list and len(combination_mode) != (len(regions)):
@@ -1058,8 +1193,22 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 raise ValueError(f"{unknown_options} not one of {COMBO_OPTIONS}")
 
         previous_mode = self.app.session.edit_subset_mode.mode
+        previous_subset = self.app.session.edit_subset_mode.edit_subset
 
         with self.app._jdaviz_helper.batch_load():
+            # This method can edit a particular subset or create a new subset
+            # and apply the combination modes depending on this argument
+            if edit_subset and combination_mode is not None:
+                self.subset.selected = edit_subset
+            elif edit_subset and combination_mode is None:
+                # If combination_mode is not set, assume the user
+                # wants to update the subset in edit_subset
+                self.subset.selected = edit_subset
+                combination_mode = 'replace'
+            else:
+                # self.app.session.edit_subset_mode.edit_subset = None
+                self.subset.selected = self.subset.default_text
+
             for index, region in enumerate(regions):
                 # Set combination mode for how region will be applied to current subset
                 # or created as a new subset
@@ -1068,11 +1217,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 else:
                     combo_mode = combination_mode
 
-                if combo_mode == 'new':
-                    # Remove selection of subset so that new one will be created
-                    # No overwrite next iteration
-                    self.app.session.edit_subset_mode.edit_subset = None
-                    self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
+                # Combination_mode should be 'new' if combo_mode is not set or explicitly 'new'
+                if combo_mode == 'new' or combo_mode is None:
+                    self.combination_mode.selected = 'new'
                 elif combo_mode:
                     self.combination_mode.selected = combo_mode
 
@@ -1089,7 +1236,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                         CirclePixelRegion, EllipsePixelRegion,
                                         RectanglePixelRegion, CircleAnnulusPixelRegion))
                         and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
-                    bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                    bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
                     continue
 
                 # photutils: Convert to region shape first
@@ -1101,11 +1248,19 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
                 # region: Convert to ROI.
                 # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
-                if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
-                                       EllipsePixelRegion, EllipseSkyRegion,
-                                       RectanglePixelRegion, RectangleSkyRegion,
-                                       CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
-                    state = regions2roi(region, wcs=data.coords)
+                if (isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                        EllipsePixelRegion, EllipseSkyRegion,
+                                        RectanglePixelRegion, RectangleSkyRegion,
+                                        CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
+                    try:
+                        state = regions2roi(region, wcs=data.coords)
+                    except ValueError:
+                        if '_orig_spatial_wcs' not in data.meta:
+                            bad_regions.append((region,
+                                                f'Failed to load: _orig_spatial_wcs'
+                                                f' meta tag not in {data.label}'))
+                            continue
+                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'].celestial)
                     viewer.apply_roi(state)
 
                 elif isinstance(region, (CircularROI, CircularAnnulusROI,
@@ -1115,10 +1270,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 elif isinstance(region, SpectralRegion):
                     # Use viewer_name if provided in kwarg, otherwise use
                     # default spectrum viewer name
-                    viewer_name = (viewer_parameter or
-                                   self.app._jdaviz_helper._default_spectrum_viewer_reference_name)
-                    range_viewer = self.app.get_viewer(viewer_name)
-
+                    range_viewer = self.app.get_viewer(viewer_parameter) if viewer_parameter else self.spectrum_viewer  # noqa
                     s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
                                          att=range_viewer.state.x_att)
                     range_viewer.apply_subset_state(s)
@@ -1165,7 +1317,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if max_num_regions is not None and n_loaded >= max_num_regions:
                     break
 
-        # Revert edit mode to before the import_region call
+        # Revert edit mode and subset to before the import_region call
+        self.app.session.edit_subset_mode.edit_subset = previous_subset
         self.app.session.edit_subset_mode.mode = previous_mode
 
         n_reg_in = len(regions)

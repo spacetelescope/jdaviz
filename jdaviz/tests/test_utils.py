@@ -3,7 +3,8 @@ import os
 import pytest
 from astropy.wcs import FITSFixedWarning
 
-from jdaviz.utils import alpha_index, download_uri_to_path
+from jdaviz.utils import alpha_index, download_uri_to_path, get_cloud_fits
+from astropy.io import fits
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -48,17 +49,17 @@ def test_url_to_download_imviz_local_path_warning(imviz_helper):
 
 
 def test_uri_to_download_specviz_local_path_check():
-    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits"
+    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-short_x1d.fits"
     local_path = download_uri_to_path(uri, cache=False, dryrun=True)  # No download
 
-    # Wrong: '.\\JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits'
-    # Correct:  '.\\jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits'
-    assert local_path == os.path.join(os.curdir, "jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits")  # noqa: E501
+    # Wrong: '.\\JWST/product/jw02732-o004_t004_miri_ch1-short_x1d.fits'
+    # Correct:  '.\\jw02732-o004_t004_miri_ch1-short_x1d.fits'
+    assert local_path == os.path.join(os.curdir, "jw02732-o004_t004_miri_ch1-short_x1d.fits")  # noqa: E501
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper, tmp_path):
-    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits"
+    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-short_x1d.fits"
     local_path = str(tmp_path / uri.split('/')[-1])
     specviz_helper.load_data(uri, cache=True, local_path=local_path)
 
@@ -68,3 +69,24 @@ def test_uri_to_download_specviz2d(specviz2d_helper, tmp_path):
     uri = "mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits"
     local_path = str(tmp_path / uri.split('/')[-1])
     specviz2d_helper.load_data(uri, cache=True, local_path=local_path)
+
+
+@pytest.mark.remote_data
+def test_load_s3_fits(imviz_helper):
+    """Test loading a JWST FITS file from an S3 URI into Imviz."""
+    s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
+    imviz_helper.load_data(s3_uri)
+    assert len(imviz_helper.app.data_collection) > 0
+
+
+@pytest.mark.remote_data
+def test_get_cloud_fits_ext():
+    s3_uri = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
+    hdul = get_cloud_fits(s3_uri)
+    assert isinstance(hdul, fits.HDUList)
+
+    hdul = get_cloud_fits(s3_uri, ext="SCI")
+    assert isinstance(hdul, fits.HDUList)
+
+    hdul = get_cloud_fits(s3_uri, ext=["SCI"])
+    assert isinstance(hdul, fits.HDUList)
