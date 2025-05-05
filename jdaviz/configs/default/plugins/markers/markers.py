@@ -14,7 +14,7 @@ __all__ = ['Markers']
 
 
 @tray_registry('g-markers', label="Markers",
-               category='core', sidebar='viewers', subtab=1)
+               category='core', sidebar='info', subtab=1)
 class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     """
     See the :ref:`Markers Plugin Documentation <markers-plugin>` for more details.

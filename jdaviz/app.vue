@@ -23,11 +23,6 @@
             <v-icon>mdi-view-grid-outline</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip tipid="app-toolbar-info">
-          <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-format-list-bulleted</v-icon>
-          </v-btn>
-        </j-tooltip>
         <j-tooltip tipid="app-toolbar-subsets">
           <v-btn icon @click="() => {if (state.drawer_content === 'subsets') {state.drawer_content = ''} else {state.drawer_content = 'subsets'}}" :class="{active : state.drawer_content === 'subsets'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
             <v-icon>
@@ -35,13 +30,16 @@
             </v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip tipid="app-toolbar-viewers">
-          <v-btn icon @click="() => {if (state.drawer_content === 'viewers') {state.drawer_content = ''} else {state.drawer_content = 'viewers'}}" :class="{active : state.drawer_content === 'viewers'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-chart-histogram</v-icon>
+        <j-tooltip tipid="app-toolbar-info">
+          <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
+            <v-icon medium style="padding-top: 2px">mdi-information-outline</v-icon>
           </v-btn>
         </j-tooltip>
-
-
+        <j-tooltip tipid="app-toolbar-settings">
+          <v-btn icon @click="() => {if (state.drawer_content === 'settings') {state.drawer_content = ''} else {state.drawer_content = 'settings'}}" :class="{active : state.drawer_content === 'settings'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
+            <v-icon medium style="padding-top: 2px">mdi-cog</v-icon>
+          </v-btn>
+        </j-tooltip>
 
         <v-divider vertical style="margin: 0px 10px"></v-divider>
       </v-toolbar-items>
@@ -260,12 +258,17 @@
             <v-card v-if="state.drawer_content === 'info'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.info_subtab">
                 <v-tab>Metadata</v-tab>
+                <v-tab>Markers</v-tab>
                 <v-tab>Logger</v-tab>
               </v-tabs>
               <v-tabs-items v-model="state.info_subtab" style="overflow-y: auto">
                 <v-tab-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Metadata']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].widget"></jupyter-widget>
+                </v-tab-item>
+                <v-tab-item style="padding-bottom: 40px">
+                  <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
+                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Logger']</span>
@@ -277,19 +280,19 @@
               <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Subset Tools']</span>
               <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Subset Tools')].widget"></jupyter-widget>
             </v-card>
-            <v-card v-if="state.drawer_content === 'viewers'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
-              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.viewers_subtab">
+            <v-card v-if="state.drawer_content === 'settings'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
+              <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.settings_subtab">
                 <v-tab :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">Plot Options</v-tab>
-                <v-tab>Markers</v-tab>
+                <v-tab>Units</v-tab>
               </v-tabs>
-              <v-tabs-items v-model="state.viewers_subtab" style="overflow-y: auto">
+              <v-tabs-items v-model="state.settings_subtab" style="overflow-y: auto">
                 <v-tab-item style="padding-bottom: 40px">
                   <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Plot Options']</span>
                   <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].widget"></jupyter-widget>
                 </v-tab-item>
                 <v-tab-item style="padding-bottom: 40px">
-                  <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Markers']</span>
-                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Markers')].widget"></jupyter-widget>
+                  <span v-if="state.show_api_hints" class="api-hint" style="font-weight: bold">plg = {{  api_hints_obj || config }}.plugins['Unit Conversion']</span>
+                  <jupyter-widget :widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Unit Conversion')].widget"></jupyter-widget>
                 </v-tab-item>
               </v-tabs-items>
             </v-card>

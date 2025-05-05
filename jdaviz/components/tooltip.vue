@@ -27,10 +27,10 @@ const tooltips = {
   'app-toolbar-logger-configged': 'Toggle displaying logger in sidebar tray',  // non-deconfigged only
   'app-toolbar-plugins-configged': 'Toggle displaying plugins in sidebar tray',  // non-deconfigged only
   'app-toolbar-loaders': 'Add data or viewers',
-  'app-toolbar-viewers': 'Viewer options',
+  'app-toolbar-settings': 'Settings and options',
   'app-toolbar-save': 'Export data, viewers, tables',
   'app-toolbar-subsets': 'View and edit subsets',
-  'app-toolbar-info': 'Metadata and logger messages',
+  'app-toolbar-info': 'Metadata, mouseover markers, and logger',
   'app-toolbar-plugins': 'Data analysis plugins',
   'app-toolbar-popout': `Display in a new window<br /><br />
     <div style="width: 200px; border: 1px solid gray;" class="pa-2">

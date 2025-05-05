@@ -201,11 +201,11 @@ class ApplicationState(State):
     drawer_content = CallbackProperty(
         '', docstring="Content shown in the tray drawer.")
     add_subtab = CallbackProperty(
-        0, docstring="Index of the active add data tab shown in the tray.")
-    viewers_subtab = CallbackProperty(
-        0, docstring="Index of the active viewer tab shown in the viewer area.")
+        0, docstring="Index of the active subtab in the add sidebar.")
+    settings_subtab = CallbackProperty(
+        0, docstring="Index of the active subtab in the settings sidebar.")
     info_subtab = CallbackProperty(
-        0, docstring="Index of the active infotab shown in the viewer area.")
+        0, docstring="Index of the active subtab in the info sidebar.")
     jdaviz_version = CallbackProperty(
         __version__, docstring="Version of Jdaviz.")
     global_search = CallbackProperty(
