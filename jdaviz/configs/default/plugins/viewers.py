@@ -276,6 +276,8 @@ class JdavizViewerMixin(WithCache):
             if (self.__class__.__name__ == 'CubevizImageView' and
                get_subset_type(layer_state.layer) != 'spatial'):
                 layer_state.visible = False
+            else:
+                layer_state.visible = True
             layer_state.add_callback('layer', self._expected_subset_layer_default, validator=True)
 
     def _expected_subset_layer_default(self, layer_state):
