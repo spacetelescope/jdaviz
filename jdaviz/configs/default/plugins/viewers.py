@@ -271,16 +271,17 @@ class JdavizViewerMixin(WithCache):
             # whenever as_steps changes, we need to redraw the uncertainties (if enabled)
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
-        if hasattr(layer_state, 'layer') and get_subset_type(layer_state.layer):
-            if (self.__class__.__name__ == 'CubevizImageView' and
+        if (hasattr(layer_state, 'visible') and self.__class__.__name__ == 'CubevizImageView' and
                get_subset_type(layer_state.layer) != 'spatial'):
                 layer_state.layer.visible = CallbackProperty()
-                layer_state.visible = False
+                self._spectral_overlay(layer_state)
                 layer_state.add_callback('layer',
-                                         self._expected_subset_layer_default,
-                                         validator=True)
-            else:
-                layer_state.visible = True
+                                         self._spectral_overlay,
+                                         validator=True,
+                                         echo_old=True)
+
+    def _spectral_overlay(self, layer_state):
+        layer_state.visible = False
 
     def _expected_subset_layer_default(self, layer_state):
         if self.__class__.__name__ == 'RampvizImageView':
