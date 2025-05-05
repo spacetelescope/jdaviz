@@ -296,11 +296,26 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
     spatial_regions = plg.get_regions(region_type='spatial')
     assert spatial_regions['Subset 3']
 
+    cr = spatial_regions['Subset 2']
+    sr1 = CircleSkyRegion(center=SkyCoord(ra=204.999663 * u.deg,
+                                          dec=27.0003 * u.deg), radius=0.72 * u.arcsec)
+    assert isinstance(cr, CircleSkyRegion)
+    assert_allclose(cr.center.ra.deg, sr1.center.ra.deg)
+    assert_allclose(cr.center.dec.deg, sr1.center.dec.deg)
+    assert_allclose(cr.radius, sr1.radius)
+
+    sky_regs = plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')
+    cr2 = sky_regs['Subset 2']
+    assert isinstance(cr2, CirclePixelRegion)
+    assert cr2 == spatial_reg
+
     # test errors
-    with pytest.raises(ValueError, match='No spectral subests in imviz.'):
+    with pytest.raises(ValueError, match='No spectral subsets in imviz.'):
         imviz_helper.plugins['Subset Tools'].get_regions('spectral')
     with pytest.raises(ValueError, match="`region_type` must be 'spectral', 'spatial', or None for any."):  # noqa E501
         plg.get_regions(region_type='fail')
+    with pytest.raises(ValueError, match='Unable to retrieve SkyRegion objects for spectral subsets'):  # noqa E501
+        plg.get_regions(region_type='spectral', wrt_data='Unknown spectrum object[FLUX]')
 
 
 def test_get_regions_composite(imviz_helper):
@@ -381,13 +396,69 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     st.import_region(sr2, edit_subset='Subset 1', combination_mode='and')
 
     # composite subset should be a sky region, and combined to a compound region
-    regs = st.get_regions(return_sky_region=True)
+    regs = st.get_regions()
 
     cr = regs['Subset 1']
     assert isinstance(cr, CompoundSkyRegion)
     assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
     assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
     assert cr.operator == operator.and_
+
+    regs_wcs_with_pixel = st.get_regions(wrt_data='NDData[DATA]')
+    cr2 = regs_wcs_with_pixel['Subset 1']
+    assert isinstance(cr2, CompoundPixelRegion)
+    assert cr2.region1.center == PixCoord(x=48.468736969074506, y=89.44725743429322)
+    assert cr2.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
+
+
+def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data, 'test 1')
+    imviz_helper.load_data(data, 'test 2')
+
+    imviz_helper.plugins['Orientation'].align_by = 'Pixels'
+
+    st = imviz_helper.plugins['Subset Tools']
+
+    pr1 = CirclePixelRegion(center=PixCoord(x=48.468736969074506, y=89.44725743429322),
+                            radius=28.800006270630806)
+    pr2 = CirclePixelRegion(center=PixCoord(x=34.59642971526391, y=83.99791791929273),
+                            radius=25.200004582170216)
+    st.import_region(pr1, combination_mode='new')
+    st.import_region(pr2, edit_subset='Subset 1', combination_mode='and')
+
+    # composite subset should be a compound region, and returned as a sky region
+    regs = st.get_regions(wrt_data='test 1[DATA]')
+    sr1 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr2 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+    cr = regs['Subset 1']
+    assert isinstance(cr, CompoundSkyRegion)
+    assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
+    assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
+    assert cr.operator == operator.and_
+
+    regs2 = st.get_regions(wrt_data='test 2[DATA]')
+    sr3 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr4 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+
+    cr2 = regs2['Subset 1']
+    assert isinstance(cr2, CompoundSkyRegion)
+    assert_allclose(cr2.region1.center.ra.deg, sr3.center.ra.deg)
+    assert_allclose(cr2.region2.center.ra.deg, sr4.center.ra.deg)
+    assert cr2.operator == operator.and_
+
+    regs_wcs_with_pixel = st.get_regions()
+    cr3 = regs_wcs_with_pixel['Subset 1']
+    assert isinstance(cr3, CompoundPixelRegion)
+    assert cr3.region1.center == PixCoord(x=48.468736969074506, y=89.44725743429322)
+    assert cr3.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
+
+    with pytest.raises(ValueError, match='fake is not data in '):
+        st.get_regions(wrt_data='fake')
 
 
 def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):

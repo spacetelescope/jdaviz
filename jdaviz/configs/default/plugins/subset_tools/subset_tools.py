@@ -188,7 +188,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
-                    use_display_units=False, return_sky_region=None):
+                    use_display_units=False, return_sky_region=None,
+                    wrt_data=None):
         """
         Return spatial and/or spectral subsets of ``region_type`` (spatial or
         spectral, default both) as ``regions`` or ``SpectralRegions`` objects,
@@ -212,11 +213,16 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             the native data unit. If True, subsets are returned in the spectral
             axis display unit set in the Unit Conversion plugin.
 
-        return_sky_region : bool or None, optional
-            If None (default) or True, then the returned region will be ``SkyRegion`` if the
-            configuration is Imviz and the data is aligned by WCS, or if the configuration
-            is Cubeviz and the data has a WCS'. If set to False, a ``PixelRegion`` object will
-            be returned.
+        wrt_data : str  or None
+            Only applicable for spatial subsets, an error will be raised when ''region_type''
+            equals 'spectral'. Otherwise, spectral subsets will not be impacted when called.
+            Controls return type of ``PixelRegion`` / ``SkyRegion``. To return a spatial
+            subset in opposition with the current link type (e.g return ``PixelRegion``
+            when WCS linked, ``SkyRegion`` when pixel linked), ``wrt_data`` can be set to
+            the data label of the dataset whose WCS should be used for this transformation.
+            The default behavior (None) will return Pixel/Sky region based on app link type
+            (Sky for Cubeviz), using the WCS of the subset's parent dataset (i.e the data
+            layer the subset was created on).
 
         Returns
         -------
@@ -224,30 +230,84 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             A dictionary mapping subset labels to their respective ``regions``
             objects (for spatial regions) or ``SpectralRegions`` objects
             (for spectral regions).
+
+        Examples
+        --------
+        >>> from jdaviz import Imviz, Cubeviz
+        >>> from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
+        >>> from astropy.nddata import NDData
+        >>> import numpy as np
+        >>> import astropy.units as u
+        >>> imviz = Imviz()
+        >>> imviz.link_data(align_by='pixels')
+        >>> data = NDData(np.ones((128, 128)) * u.nJy, wcs=getfixture('image_2d_wcs'))
+        >>> imviz.load_data(data)
+        >>> plg = imviz.plugins['Subset Tools']
+        >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
+        >>> type(plg.get_regions()['Subset 1'])
+        <class 'regions.shapes.circle.CirclePixelRegion'>
+        >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 1'])
+        <class 'regions.shapes.circle.CircleSkyRegion'>
+        >>> imviz.app.delete_subsets()
+        >>> imviz.link_data(align_by='wcs')
+        >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
+        >>> type(plg.get_regions()['Subset 2'])
+        <class 'regions.shapes.circle.CircleSkyRegion'>
+        >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 2'])
+        <class 'regions.shapes.circle.CirclePixelRegion'>
+
+        >>> cubeviz = Cubeviz()
+        >>> cubeviz.load_data(getfixture('spectrum1d_cube'))
+        >>> plg = cubeviz.plugins['Subset Tools']
+        >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=24.27156066879736, y=22.183517455582475), radius=4.7523674964904785))  # noqa E501
+        >>> type(plg.get_regions()['Subset 1'])
+        <class 'regions.shapes.circle.CircleSkyRegion'>
+        >>> type(plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')['Subset 1'])
+        <class 'regions.shapes.circle.CirclePixelRegion'>
         """
 
         if region_type is not None:
             region_type = region_type.lower()
             if region_type not in ['spectral', 'spatial']:
                 raise ValueError("`region_type` must be 'spectral', 'spatial', or None for any.")
+            elif region_type == 'spectral' and wrt_data:
+                raise ValueError('Unable to retrieve SkyRegion objects for spectral subsets')
             if ((self.config == 'imviz' and region_type == 'spectral') or
                (self.config == 'specviz' and region_type == 'spatial')):
-                raise ValueError(f"No {region_type} subests in {self.config}.")
+                raise ValueError(f"No {region_type} subsets in {self.config}.")
             region_type = [region_type]
 
         else:  # determine subset return type(s) by config, if not specified
             region_type = {'imviz': ['spatial'],
                            'specviz': ['spectral']}.get(self.config, ['spatial', 'spectral'])
 
-        sky_region_check = ((self.app._align_by == 'wcs' or self.config == 'cubeviz') and
-                            return_sky_region is None or return_sky_region)
-        reg_type = 'sky_region' if sky_region_check else 'region'
+        if isinstance(wrt_data, str) and wrt_data not in self.data_collection:
+            raise ValueError(f'{wrt_data} is not data in {self.data_collection}')
+
+        if ((self.app._align_by == 'wcs' and wrt_data is None) or
+                ((self.app._align_by == 'pixels' and self.config != 'cubeviz') and wrt_data) or
+                self.config == 'cubeviz' and wrt_data is None):
+            reg_type = 'sky_region'
+        else:
+            reg_type = 'region'
+
+        # TODO: remove after deprecation period
+        # Temporarily allow return_sky_region to function as before if wrt_data
+        # is not set.
+        if return_sky_region is not None and wrt_data:
+            raise ValueError('return_sky_region no longer used, use wrt_data instead')
+        elif return_sky_region is not None:
+            wrt_data = self.app.data_collection[0].label
+            warnings.warn(f'return_sky_region no longer used, use wrt_data instead. '
+                          f'Defaulting to {wrt_data} for the wrt_data kwarg')
+            reg_type = 'sky_region' if return_sky_region else 'region'
 
         # first get ALL subsets of specified spatial/spectral type(s)
         subsets = self.app.get_subsets(spectral_only=region_type == ['spectral'],
                                        spatial_only=region_type == ['spatial'],
                                        include_sky_region=reg_type == 'sky_region',
-                                       use_display_units=use_display_units)
+                                       use_display_units=use_display_units,
+                                       wrt_data=wrt_data)
 
         labels = list_of_subset_labels or list(subsets.keys())
         if isinstance(labels, str):

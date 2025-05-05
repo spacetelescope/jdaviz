@@ -407,11 +407,23 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
                                 edit_subset='Subset 1',
                                 combination_mode='andnot')
     reg = imviz_helper.app.get_subsets("Subset 1", include_sky_region=True)
-    ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
-                                  width=6, height=12, angle=0.0 * u.deg)
-    assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
-                       'sky_region': ellipse1.to_sky(image_2d_wcs),
-                       'subset_state': reg[-1]['subset_state']}
+    ellipse1 = EllipsePixelRegion(center=PixCoord(x=3.0, y=3.0),
+                                  width=6.0, height=12.0,
+                                  angle=0.0 * u.deg)
+    assert reg[-1]['name'] == 'EllipticalROI'
+    assert reg[-1]['glue_state'] == 'AndNotState'
+    assert_quantity_allclose(reg[-1]['region'].center.x, ellipse1.center.x)
+    assert_quantity_allclose(reg[-1]['region'].center.y, ellipse1.center.y)
+    assert_quantity_allclose(reg[-1]['region'].width, ellipse1.width)
+    assert_quantity_allclose(reg[-1]['region'].height, ellipse1.height)
+    assert_quantity_allclose(reg[-1]['region'].angle, ellipse1.angle)
+
+    expected_sky = ellipse1.to_sky(image_2d_wcs)
+    assert_quantity_allclose(reg[-1]['sky_region'].center.ra, expected_sky.center.ra)
+    assert_quantity_allclose(reg[-1]['sky_region'].center.dec, expected_sky.center.dec)
+    assert_quantity_allclose(reg[-1]['sky_region'].width, expected_sky.width)
+    assert_quantity_allclose(reg[-1]['sky_region'].height, expected_sky.height)
+    assert_quantity_allclose(reg[-1]['sky_region'].angle, expected_sky.angle)
 
     subset_plugin.combination_mode.selected = 'or'
     subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=5, inner_radius=2.5, outer_radius=5),
