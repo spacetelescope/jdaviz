@@ -33,6 +33,7 @@ tray:
   - imviz-footprints
   - export
   - about
+  - logger
 viewer_area:
   - container: col
     children:

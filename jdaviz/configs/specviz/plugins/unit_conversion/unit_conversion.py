@@ -53,7 +53,8 @@ def _flux_to_sb_unit(flux_unit, angle_unit):
     return sb_unit
 
 
-@tray_registry('g-unit-conversion', label="Unit Conversion", category="viewer:options")
+@tray_registry('g-unit-conversion', label="Unit Conversion",
+               category="app:options")
 class UnitConversion(PluginTemplateMixin):
     """
     The Unit Conversion plugin handles global app-wide unit-conversion.
@@ -164,6 +165,19 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_y_type = SelectPluginComponent(self,
                                                      items='spectral_y_type_items',
                                                      selected='spectral_y_type_selected')
+
+        self._set_relevant()
+
+    @observe('spectral_unit_selected', 'flux_unit_selected',
+             'angle_unit_selected', 'time_unit_selected')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if (not self.spectral_unit_selected and not self.flux_unit_selected
+                and not self.angle_unit_selected and not self.time_unit_selected):
+            self.irrelevant_msg = 'No datasets with valid units loaded'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def user_api(self):

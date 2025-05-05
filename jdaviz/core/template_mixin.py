@@ -290,6 +290,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
     vdocs = Unicode("").tag(sync=True)
     api_hints_enabled = Bool(False).tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
+    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __new__(cls, *args, **kwargs):
         """
@@ -326,6 +327,26 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
 
         self.app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
         self._update_api_hints_enabled()
+
+        # set user-API methods
+        if hasattr(self, 'user_api'):
+            def get_api_text(name, obj):
+                if type(obj).__name__ == 'method':
+                    if hasattr(obj, "__wrapped__"):
+                        orig_sig = str(inspect.signature(obj.__wrapped__))
+                        if "(self)" in orig_sig:
+                            orig_sig = orig_sig.replace("(self)", "()")
+                        elif "(self, " in orig_sig:
+                            orig_sig = orig_sig.replace("(self, ", "(")
+                        return f"{name}{orig_sig}"
+                    return f"{name}{inspect.signature(obj)}"
+                return name
+
+            with warnings.catch_warnings():
+                # Some API might be going through deprecation, so ignore the warning.
+                warnings.filterwarnings("ignore", category=DeprecationWarning)
+                self.api_methods = sorted([get_api_text(name, obj)
+                                           for name, obj in inspect.getmembers(self.user_api)])
 
     @property
     def app(self):
@@ -502,6 +523,8 @@ class PluginTemplateMixin(TemplateMixin):
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     _plugin_name = None  # noqa overwritten by the registry - won't be populated by plugins instantiated directly
+    _sidebar = 'plugins'  # noqa overwritten by the registry
+    _subtab = None  # noqa overwritten by the registry
     disabled_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will show this message in place of plugin content
     irrelevant_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will exclude from the tray, and show this message in place of any content in other instances
     plugin_key = Unicode("").tag(sync=True)  # noqa set to non-empty to override value in vue file (when supported by vue file)
@@ -517,7 +540,6 @@ class PluginTemplateMixin(TemplateMixin):
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
-    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
@@ -563,24 +585,6 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
-
-        # set user-API methods
-        def get_api_text(name, obj):
-            if type(obj).__name__ == 'method':
-                if hasattr(obj, "__wrapped__"):
-                    orig_sig = str(inspect.signature(obj.__wrapped__))
-                    if "(self)" in orig_sig:
-                        orig_sig = orig_sig.replace("(self)", "()")
-                    elif "(self, " in orig_sig:
-                        orig_sig = orig_sig.replace("(self, ", "(")
-                    return f"{name}{orig_sig}"
-                return f"{name}{inspect.signature(obj)}"
-            return name
-        with warnings.catch_warnings():
-            # Some API might be going through deprecation, so ignore the warning.
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            self.api_methods = sorted([get_api_text(name, obj)
-                                       for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
         new = self.__class__(app=self.app)
@@ -689,10 +693,15 @@ class PluginTemplateMixin(TemplateMixin):
             Whether to immediately scroll to the plugin opened in the tray.
         """
         app_state = self.app.state
-        app_state.drawer_content = 'plugins'
-        index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
-        if index not in app_state.tray_items_open:
-            app_state.tray_items_open = app_state.tray_items_open + [index]
+        sidebar = self._sidebar if self.app.config == 'deconfigged' else 'plugins'
+        app_state.drawer_content = sidebar
+
+        if sidebar == 'plugins':
+            index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
+            if index not in app_state.tray_items_open:
+                app_state.tray_items_open = app_state.tray_items_open + [index]
+        elif self._subtab is not None:
+            setattr(app_state, '{}_subtab'.format(self._sidebar), self._subtab)
         if scroll_to:
             # sleep 0.5s to ensure plugin is intialized and user can see scrolling
             time.sleep(0.5)
@@ -4213,7 +4222,6 @@ class AddResults(BasePluginComponent):
                                    default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoTextField(plugin, label, label_default, label_auto, label_invalid_msg)
-        self.auto = self.auto_label.auto
         self.add_observe(label, self._on_label_changed)
 
     def __repr__(self):

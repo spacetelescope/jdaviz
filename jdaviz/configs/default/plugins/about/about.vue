@@ -1,9 +1,12 @@
 <template>
   <j-tray-plugin
     :description="docs_description"
-    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'"
-    :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
+
+    <v-row>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'" linktext="Jdaviz Documentation">
+      </j-docs-link>
+    </v-row>
 
     <v-row>
       <v-text-field class="v-messages v-messages__message text--secondary"
@@ -21,7 +24,6 @@
       <j-docs-link link="https://pypi.org/project/jdaviz/" linktext="Go to PyPI">
         Please update Jdaviz and restart your session.
       </j-docs-link>
-
     </v-row>
 
     <v-row>

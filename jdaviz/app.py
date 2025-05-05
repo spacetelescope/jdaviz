@@ -145,6 +145,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-subset-icon': 'components/subset_icon.vue',
                      'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
+                     'j-about-menu': 'components/about_menu.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
@@ -198,13 +199,25 @@ class ApplicationState(State):
     propagate to the traitlet in order to trigger a UI re-render.
     """
     drawer_content = CallbackProperty(
-        'plugins', docstring="Content shown in the tray drawer.")
+        '', docstring="Content shown in the tray drawer.")
+    add_subtab = CallbackProperty(
+        0, docstring="Index of the active add data tab shown in the tray.")
+    viewers_subtab = CallbackProperty(
+        0, docstring="Index of the active viewer tab shown in the viewer area.")
+    info_subtab = CallbackProperty(
+        0, docstring="Index of the active infotab shown in the viewer area.")
+    jdaviz_version = CallbackProperty(
+        __version__, docstring="Version of Jdaviz.")
+    global_search = CallbackProperty(
+        '', docstring="Global search string.")
+    global_search_menu = CallbackProperty(
+        False, docstring="Whether to show the global search menu.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
         False, docstring="Whether to show API hints.")
-    logger_overlay = CallbackProperty(
-        False, docstring="State of the logger history overlay.")
+    subset_mode_create = CallbackProperty(
+        False, docstring="Whether to create a new subset.")
 
     snackbar = DictCallbackProperty({
         'show': False,
@@ -215,8 +228,6 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     snackbar_queue = SnackbarQueue()
-
-    snackbar_history = ListCallbackProperty(docstring="Previously dismissed snackbar items")
 
     settings = DictCallbackProperty({
         'data': {
@@ -277,6 +288,8 @@ class ApplicationState(State):
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
+    viewer_items = ListCallbackProperty(
+        docstring="List (flat) of viewer objects")
 
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
@@ -301,6 +314,7 @@ class Application(VuetifyTemplate, HubListener):
     docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
+    force_open_about = Bool(False).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -596,7 +610,8 @@ class Application(VuetifyTemplate, HubListener):
             return 'info'
 
         msg_level = _verbosity_levels.index(_color_to_level(msg.color))
-        self.state.snackbar_queue.put(self.state, msg,
+        logger_plg = self._jdaviz_helper.plugins.get('Logger', None)
+        self.state.snackbar_queue.put(self.state, logger_plg, msg,
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)
 
@@ -1395,7 +1410,13 @@ class Application(VuetifyTemplate, HubListener):
             # Plugins that access the unit at this point will need to
             # detect that they are set to unitless and attempt again later.
             return ''
-        elif self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
+
+        try:
+            uc = self.get_tray_item_from_name('g-unit-conversion')  # even if not relevant
+        except KeyError:
+            # UC plugin not available (should only be for: imviz, mosviz)
+            uc = None
+        if uc is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
             if hasattr(self._jdaviz_helper, '_default_spectrum_viewer_reference_name'):
                 viewer_name = self._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -1448,7 +1469,6 @@ class Application(VuetifyTemplate, HubListener):
                     return sv_y_unit / solid_angle_unit
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
-        uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
         if axis == 'spectral_y':
             return uc.spectral_y_unit
         try:
@@ -2516,6 +2536,20 @@ class Application(VuetifyTemplate, HubListener):
         kwargs = event.get('kwargs', {})
         return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
+    def vue_search_item_clicked(self, event):
+        attr, label = event['attr'], event['label']
+        if attr == 'data_menus':
+            item = self._jdaviz_helper.viewers[label].data_menu
+        else:
+            item = getattr(self._jdaviz_helper, attr)[label]
+        if label == 'About':
+            item.show_popup()
+        elif attr == 'data_menus':
+            item.open_menu()
+        else:
+            kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
+            item.open_in_tray(**kw)
+
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
@@ -2722,6 +2756,7 @@ class Application(VuetifyTemplate, HubListener):
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
             'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            'api_methods': viewer._data_menu.api_methods if hasattr(viewer, '_data_menu') else [],
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
@@ -2807,6 +2842,8 @@ class Application(VuetifyTemplate, HubListener):
         new_stack_item = self._create_stack_item(
             container='gl-stack',
             viewers=[new_viewer_item])
+
+        self.state.viewer_items.append(new_viewer_item)
 
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
@@ -2944,7 +2981,8 @@ class Application(VuetifyTemplate, HubListener):
                 'name': name,
                 'label': name,
                 'requires_api_support': loader.requires_api_support,
-                'widget': "IPY_MODEL_" + loader.model_id
+                'widget': "IPY_MODEL_" + loader.model_id,
+                'api_methods': loader.api_methods,
             })
         # initialize selection (tab) to first entry
         if len(self.state.loader_items):
@@ -2971,13 +3009,9 @@ class Application(VuetifyTemplate, HubListener):
                                       "implemented for the deconfigged app")
         # need to rebuild in order, just pulling from existing dict if its already there
         tray_items = []
-        # NOTE: eventually the core plugins will likely be moved out of the tray
-        # in which case we can either remove the categories OR at least simplify
-        # this down into reduction, manipulation, analysis.
-        for category in ['data:info', 'viewer:options',
-                         'subset:manipulation',
-                         'data:reduction', 'data:manipulation', 'data:analysis',
-                         'app:export', 'app:info']:
+        for category in ['app:options', 'data:reduction',
+                         'data:manipulation', 'data:analysis',
+                         'core']:
             for tray_registry_member in tray_registry.members_in_category(category):
                 if not tray_registry_member.get('overwrite', False):
                     try:
@@ -3013,6 +3047,8 @@ class Application(VuetifyTemplate, HubListener):
         tray_item = {
             'name': tray_registry_member.get('name'),
             'label': tray_item_label,
+            'sidebar': tray_item_instance._sidebar,
+            'subtab': tray_item_instance._subtab,
             'tray_item_description': tray_item_description,
             'api_methods': tray_item_instance.api_methods,
             'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,

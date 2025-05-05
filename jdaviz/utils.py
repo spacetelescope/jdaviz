@@ -57,19 +57,19 @@ class SnackbarQueue:
         # to give time for the app to load.
         self.first = True
 
-    def put(self, state, msg, history=True, popup=True):
+    def put(self, state, logger_plg, msg, history=True, popup=True):
         if msg.color not in ['info', 'warning', 'error', 'success', None]:
             raise ValueError(f"color ({msg.color}) must be on of: info, warning, error, success")
 
-        if not msg.loading and history:
+        if not msg.loading and history and logger_plg is not None:
             now = time.localtime()
             timestamp = f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
             new_history = {'time': timestamp, 'text': msg.text, 'color': msg.color}
             # for now, we'll hardcode the max length of the stored history
-            if len(state.snackbar_history) >= 50:
-                state.snackbar_history = state.snackbar_history[1:] + [new_history]
+            if len(logger_plg.history) >= 50:
+                logger_plg.history = logger_plg.history[1:] + [new_history]
             else:
-                state.snackbar_history.append(new_history)
+                logger_plg.history = logger_plg.history + [new_history]
 
         if not (popup or msg.loading):
             if self.loading:
@@ -128,7 +128,11 @@ class SnackbarQueue:
             # so they are not missed
             msg = self.queue[0]
             if msg.text == state.snackbar['text']:
-                _ = self.queue.popleft()
+                try:
+                    _ = self.queue.popleft()
+                except IndexError:
+                    # in case the queue has been cleared in the meantime
+                    pass
 
         # in case there are messages in the queue still,
         # display the next.

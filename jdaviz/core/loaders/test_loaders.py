@@ -14,7 +14,7 @@ def test_loaders_registry(specviz_helper):
 def test_open_close(specviz_helper):
     specviz_helper.app.state.dev_loaders = True
 
-    assert specviz_helper.app.state.drawer_content == 'plugins'
+    assert specviz_helper.app.state.drawer_content == ''
 
     loader = specviz_helper.loaders['file']
     loader.open_in_tray()

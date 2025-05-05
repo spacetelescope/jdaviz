@@ -105,7 +105,7 @@ class TrayRegistry(UniqueDictRegistry):
     }
 
     def __call__(self, name=None, label=None, icon=None,
-                 category=None, overwrite=False):
+                 category=None, sidebar=None, subtab=None, overwrite=False):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -115,12 +115,14 @@ class TrayRegistry(UniqueDictRegistry):
                     f"registered components must inherit from "
                     f"`ipyvuetify.VuetifyTemplate`.")
 
-            self.add(name, cls, label, icon, category, overwrite)
+            self.add(name, cls, label, icon, category,
+                     sidebar, subtab, overwrite)
             return cls
         return decorator
 
     def add(self, name, cls, label=None, icon=None,
-            category=None, overwrite=False):
+            category=None, sidebar=None, subtab=None,
+            overwrite=False):
         """Add an item to the registry.
 
         Parameters
@@ -142,15 +144,14 @@ class TrayRegistry(UniqueDictRegistry):
             raise ValueError(f"Viewer with the name {name} already exists, "
                              f"please choose a different name or pass overwrite=True.")
         else:
-            # store the registry name/label so we can access them from the instantiated
-            # objects (when determining if a specific plugin is open, for example)
-            viewer_reference_name_kwargs = {}
-
             cls._registry_name = name
             cls._registry_label = label
-            self.members[name] = {'name': name, 'label': label, 'icon': icon, 'cls': cls,
-                                  'viewer_reference_name_kwargs': viewer_reference_name_kwargs,
-                                  'category': category, 'overwrite': name in self.members}
+            cls._sidebar = sidebar if sidebar is not None else 'plugins'
+            cls._subtab = subtab
+            self.members[name] = {'label': label, 'name': name,
+                                  'icon': icon, 'cls': cls,
+                                  'category': category, sidebar: sidebar,
+                                  'subtab': subtab}
 
     def members_in_category(self, category):
         members = [m for m in self.members.values() if m['category'] == category]
