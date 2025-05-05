@@ -9,7 +9,7 @@ New Features
 
 - Added an STC-S string region parser to the Footprints plugin. [#3479]
 
-- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531]
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531, #3555]
 
 - Added a results history table to the Line Analysis plugin.  Results are no longer updated in realtime with changes to inputs,
   but rather when clicking the button or calling ``get_results``, at which point an entry is added to the results history table
@@ -107,6 +107,10 @@ Other Changes and Additions
 ---------------------------
 
 - Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
+
+- Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
+  dependencies installed with the ``[all]`` extra dependencies flag
+  (i.e., ``pip install jdaviz[all]``). [#3556]
 
 4.2.2 (unreleased)
 ==================

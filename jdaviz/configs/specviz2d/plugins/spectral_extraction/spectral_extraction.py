@@ -521,18 +521,12 @@ class SpectralExtraction(PluginTemplateMixin):
             self.active_step = 'ext'
             return
 
-        display_marks = {'trace': ['trace', 'extract'],
-                         'bg': ['trace',
-                                'bg1_center', 'bg1_lower', 'bg1_upper',
-                                'bg2_center', 'bg2_lower', 'bg2_upper',
-                                'bg_spec', 'extract'],
-                         'ext': ['trace',
-                                 'ext_upper', 'ext_lower',
-                                 'extract']}
+        marks_info = self.marks_info(include_mark_obj=False)  # viewer + step info for each mark
+        viewers = {'1d': self.marks_viewers1d, '2d': self.marks_viewers2d}
         for step, mark in self.marks.items():
-            visible = step in display_marks.get(self.active_step, [])
-            mark.set_for_viewers('visible', visible, self.marks_viewers2d+self.marks_viewers1d)
-            mark.clear_if_not_in_viewers(self.marks_viewers2d+self.marks_viewers1d)
+            visible = self.active_step in marks_info[step]['steps']
+            mark.set_for_viewers('visible', visible, viewers[marks_info[step]['viewer']])
+            mark.clear_if_not_in_viewers(viewers[marks_info[step]['viewer']])
 
     @property
     def marks_viewers2d(self):
@@ -544,31 +538,41 @@ class SpectralExtraction(PluginTemplateMixin):
     def marks_viewers1d(self):
         return self.ext_add_results.results_viewers
 
+    def marks_info(self, include_mark_obj=True):
+        """
+        A dictionary containing each marker name, the viewer(s) (2d/1d spectral)
+        it belongs in, which step (bg, trace, extract) and plotting style kwargs.
+        """
+
+        markers = {'trace': {'viewer': '2d', 'steps': ['trace', 'bg', 'ext']},
+                   'extract': {'viewer': '1d', 'steps': ['trace', 'bg', 'ext']},
+                   'bg1_lower': {'viewer': '2d', 'steps': ['bg']},
+                   'bg1_upper': {'viewer': '2d', 'steps': ['bg']},
+                   'bg1_center': {'viewer': '2d', 'steps': ['bg'], 'kw': {'line_style': 'dotted'}},
+                   'bg2_lower': {'viewer': '2d', 'steps': ['bg']},
+                   'bg2_upper': {'viewer': '2d', 'steps': ['bg']},
+                   'bg2_center': {'viewer': '2d', 'steps': ['bg'], 'kw': {'line_style': 'dotted'}},
+                   'bg_spec': {'viewer': '1d', 'steps': ['bg'], 'kw': {'stroke_width': 1}},
+                   'ext_lower': {'viewer': '2d', 'steps': ['ext']},
+                   'ext_upper': {'viewer': '2d', 'steps': ['ext']}}
+
+        if include_mark_obj:  # add PluginMarkCollection
+            for key, d in markers.items():
+                kwargs = {'visible': self.is_active} | d.get('kw', {})
+                d['mark'] = PluginMarkCollection(PluginLine, **kwargs)
+
+        return markers
+
     @cached_property
     def marks(self):
         """
-        Access the marks created by this plugin in both the spectrum-viewer and spectrum-2d-viewer.
+        Access the marks created by this plugin in both the spectrum-viewer
+        and spectrum-2d-viewer.
         """
         if not self._tray_instance:
             return {}
 
-        # 2D viewers
-        marks = {'trace': PluginMarkCollection(PluginLine, visible=self.is_active),
-                 'ext_lower': PluginMarkCollection(PluginLine, visible=self.is_active),
-                 'ext_upper': PluginMarkCollection(PluginLine, visible=self.is_active),
-                 'bg1_center': PluginMarkCollection(PluginLine, visible=self.is_active,
-                                                    line_style='dotted'),
-                 'bg1_lower': PluginMarkCollection(PluginLine, visible=self.is_active),
-                 'bg1_upper': PluginMarkCollection(PluginLine, visible=self.is_active),
-                 'bg2_center': PluginMarkCollection(PluginLine, visible=self.is_active,
-                                                    line_style='dotted'),
-                 'bg2_lower': PluginMarkCollection(PluginLine, visible=self.is_active),
-                 'bg2_upper': PluginMarkCollection(PluginLine, visible=self.is_active)}
-
-        # 1D viewers
-        marks['extract'] = PluginMarkCollection(PluginLine, visible=self.is_active)
-        marks['bg_spec'] = PluginMarkCollection(PluginLine, visible=self.is_active, stroke_width=1)
-        return marks
+        return {k: v['mark'] for k, v in self.marks_info().items()}
 
     @observe('interactive_extract')
     @skip_if_no_updates_since_last_active()

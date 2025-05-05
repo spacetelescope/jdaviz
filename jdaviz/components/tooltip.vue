@@ -23,10 +23,15 @@
 const tooltips = {
   // app toolbar
   'app-help': 'Open docs in new tab',
-  'app-toolbar-logger': 'Toggle displaying logger in sidebar tray',
   'app-api-hints': 'Toggle API hints',
-  'app-toolbar-loaders': 'Toggle displaying loaders in sidebar tray',
-  'app-toolbar-plugins': 'Toggle displaying plugins in sidebar tray',
+  'app-toolbar-logger-configged': 'Toggle displaying logger in sidebar tray',  // non-deconfigged only
+  'app-toolbar-plugins-configged': 'Toggle displaying plugins in sidebar tray',  // non-deconfigged only
+  'app-toolbar-loaders': 'Add data or viewers',
+  'app-toolbar-viewers': 'Viewer options',
+  'app-toolbar-save': 'Export data, viewers, tables',
+  'app-toolbar-subsets': 'View and edit subsets',
+  'app-toolbar-info': 'Metadata and logger messages',
+  'app-toolbar-plugins': 'Data analysis plugins',
   'app-toolbar-popout': `Display in a new window<br /><br />
     <div style="width: 200px; border: 1px solid gray;" class="pa-2">
       <strong>Note:</strong>
@@ -39,13 +44,13 @@ const tooltips = {
       <strong>Note:</strong>
       some ad blockers or browser settings may block popup windows,
       causing this feature not to work.
-    </div>`, 
+    </div>`,
 
-  'g-data-tools': 
+  'g-data-tools':
     'Load data from file',
   'g-viewer-creator':
      'Create a new viewer',
-  'g-subset-tools': 
+  'g-subset-tools':
     'Select, create, and delete subsets',
   'g-subset-mode':
     'Operation performed by subset selection in viewer',
@@ -117,13 +122,13 @@ module.exports = {
     getTooltipHtml() {
       // use tooltipcontent if provided, default to tooltips dictionary
       // with passed tipid as the key
-      
+
       if (this.$props.tooltipcontent) {
         return this.$props.tooltipcontent;
       }
-      
-      // Enable the following line to help determine ids to add to dictionary 
-      // above.  This will show the tooltip id (in the tooltip) if no entry is 
+
+      // Enable the following line to help determine ids to add to dictionary
+      // above.  This will show the tooltip id (in the tooltip) if no entry is
       // in the tooltips dictionary above.
       //return tooltips[this.$props.tipid] || "tipid: "+this.$props.tipid;
       return tooltips[this.$props.tipid];
@@ -135,7 +140,7 @@ module.exports = {
       return this.$props.delay || "0";
     },
     getNudgeBottom() {
-      // useful for cases where some tooltips in a toolbar are wrapped around 
+      // useful for cases where some tooltips in a toolbar are wrapped around
       // buttons but others around just the icon.  Only applies to tooltip,
       // not doctip.
       return this.$props.nudgebottom || 0;

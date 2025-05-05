@@ -143,9 +143,13 @@ class PluginUserApi(UserApiWrapper):
     For example::
       help(plugin_object.show)
     """
-    def __init__(self, plugin, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
-        expose = list(set(list(expose) + ['open_in_tray', 'close_in_tray',
-                                          'show']))
+    def __init__(self, plugin, expose=[], readonly=[], excl_from_dict=[], deprecated=[],
+                 in_tray=True):
+        if in_tray:
+            default = ['open_in_tray', 'close_in_tray', 'show']
+        else:
+            default = ['show']
+        expose = list(set(list(expose) + default))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']
         self._deprecation_msg = None

@@ -27,6 +27,7 @@ tray:
   - specviz-line-analysis
   - export
   - about
+  - logger
 viewer_area:
   - container: col
     children:

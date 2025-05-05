@@ -73,6 +73,7 @@
           :disabled="!format_selected.length || import_disabled"
           :results_isolated_to_plugin="false"
           :api_hints_enabled="api_hints_enabled"
+
           @click="$emit('import-clicked')">
           {{ api_hints_enabled ?
             'ldr.importer()'

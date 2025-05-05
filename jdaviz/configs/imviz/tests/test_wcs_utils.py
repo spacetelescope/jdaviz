@@ -168,7 +168,7 @@ def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
 def test_compute_scale():
     # NOTE: compute_scale does not work with FITS WCS.
     image_gwcs = create_example_gwcs((10, 10))
-    fiducial = [197.8925, -1.36555556] * u.deg
+    fiducial = [197.8925, -1.36555556]
 
     pixscale = wcs_utils.compute_scale(image_gwcs, fiducial, None)
     assert_allclose(pixscale, 3.0555555555555554e-05)
