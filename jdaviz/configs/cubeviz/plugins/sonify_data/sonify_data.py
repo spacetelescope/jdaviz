@@ -4,7 +4,8 @@ import astropy.units as u
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
-                                        SpectralSubsetSelectMixin, with_spinner)
+                                        SpectralSubsetSelectMixin, with_spinner,
+                                        AddResultsMixin)
 from jdaviz.core.user_api import PluginUserApi
 
 
@@ -26,7 +27,8 @@ else:
 
 @tray_registry('cubeviz-sonify-data', label="Sonify Data",
                viewer_requirements=['spectrum', 'image'])
-class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
+                 AddResultsMixin):
     """
     See the :ref:`Sonify Data Plugin Documentation <cubeviz-sonify-data>` for more details.
 
@@ -75,6 +77,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         self.spec_viewer = self.app.get_viewer('spectrum-viewer')
         self.flux_viewer = self.app.get_viewer('flux-viewer')
 
+        self.results_label_default = 'Sonified data'
+
     @property
     def user_api(self):
         expose = []
@@ -89,7 +93,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
 
         # Apply spectral subset bounds
-        if self.spectral_subset_selected is not self.spectral_subset.default_text:
+        if self.spectral_subset_selected != self.spectral_subset.default_text:
             display_unit = self.spec_viewer.state.x_display_unit
             min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
             max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
@@ -101,7 +105,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
                                            self.pccut, self.audfrqmin,
-                                           self.audfrqmax, self.eln, self.use_pccut)
+                                           self.audfrqmax, self.eln, self.use_pccut,
+                                           self.results_label)
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active

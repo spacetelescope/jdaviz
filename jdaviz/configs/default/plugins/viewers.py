@@ -397,7 +397,8 @@ class JdavizViewerMixin(WithCache):
                           if (layer.visible and
                               layer_is_image_data(layer.layer) and
                               layer_is_not_dq(layer.layer) and
-                              (layer.bitmap_visible or layer.contour_visible))]
+                              ((hasattr(layer, 'bitmap_visible') and layer.bitmap_visible) or
+                               (hasattr(layer, 'contour_visible') and layer.contour_visible)))]
         if len(visible_layers) == 0:
             return None
 

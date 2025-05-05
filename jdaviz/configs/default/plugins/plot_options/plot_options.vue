@@ -284,7 +284,7 @@
           />
       </glue-state-sync-wrapper>
 
-      <glue-state-sync-wrapper v-if="volume_value" :sync="volume_sync"">
+      <glue-state-sync-wrapper v-if="volume_value>-1" :sync="volume_sync"">
         <plugin-slider
             label='Volume'
             api_hint="plg.volume = "

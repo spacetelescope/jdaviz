@@ -198,7 +198,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sonified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
-                          pccut, audfrqmin, audfrqmax, eln, use_pccut):
+                          pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label=None):
         spectrum = self.active_cube_layer.layer.get_object(statistic=None)
         wlens = spectrum.wavelength.to('m').value
         flux = spectrum.flux.value
@@ -249,7 +249,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # Create a new entry for the sonified layer in uuid_lookup. The value is a dictionary
         # containing (x_size * y_size) keys with values being arrays that represent sounds
-        data_name = str(uuid.uuid4())
+        data_name = str(uuid.uuid4()) if results_label is None else results_label
         self.uuid_lookup[data_name] = {(x, y): self.sonified_cube.sigcube[x, y, :]
                                        for x in range(0, x_size)
                                        for y in range(0, y_size)}

@@ -112,14 +112,23 @@
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
-
+      <plugin-add-results
+          :label.sync="results_label"
+          :label_default="results_label_default"
+          :label_auto.sync="results_label_auto"
+          :label_invalid_msg="results_label_invalid_msg"
+          :label_overwrite="results_label_overwrite"
+          label_hint="Label for the sonified data"
+          :add_to_viewer_items="add_to_viewer_items"
+          :add_to_viewer_selected.sync="add_to_viewer_selected"
+          action_label="Sonify data"
+          action_tooltip="Create sonified data and add to flux viewer"
+          :action_spinner="spinner"
+          action_api_hint='plg.vue_sonify_cube()'
+          :api_hints_enabled="api_hints_enabled"
+          @click:action="sonify_cube"
+      ></plugin-add-results>
     <v-row>
-      <plugin-action-button
-        :spinner="spinner"
-        @click="sonify_cube"
-      >
-        Sonify data
-      </plugin-action-button>
       <plugin-action-button v-if="!stream_active"
         @click="start_stop_stream"
       >
