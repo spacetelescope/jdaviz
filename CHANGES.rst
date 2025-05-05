@@ -48,6 +48,11 @@ Specviz2d
 API Changes
 -----------
 
+- Allow ``get_regions`` and ``get_subsets`` to take a data label and have a subset apply to the wcs of that data.
+  By setting a value for ``wrt_data``, the user is requesting a region type that is the opposite of the current link
+  type, (i.e. ``SkyRegion`` when linked by pixel or ``PixelRegion`` when linked by wcs.) Also deprecate the
+  ``return_sky_region`` kwarg and leave a deprecation warning to use ``wrt_data`` instead. [#3527]
+
 Cubeviz
 ^^^^^^^
 
