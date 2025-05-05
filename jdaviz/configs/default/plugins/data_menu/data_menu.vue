@@ -192,7 +192,7 @@
                   <j-tooltip 
                     :tooltipcontent="api_hints_enabled ? '' : 'Toggle visibility'" 
                   > 
-                    <plugin-switch
+                    <plugin-switch v-if="!item.is_sonified"
                       :value="item.visible"
                       @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
                       @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}" 
