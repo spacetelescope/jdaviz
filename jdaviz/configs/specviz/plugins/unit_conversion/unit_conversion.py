@@ -4,7 +4,7 @@ from functools import cached_property
 from astropy import units as u
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
-from specutils import Spectrum1D
+from specutils import Spectrum
 from traitlets import List, Unicode, observe, Bool
 from specreduce import tracing
 
@@ -231,7 +231,7 @@ class UnitConversion(PluginTemplateMixin):
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
             data_obj = msg.data.get_object()
 
-            if isinstance(data_obj, Spectrum1D) and isinstance(viewer, Spectrum1DViewer):
+            if isinstance(data_obj, Spectrum) and isinstance(viewer, Spectrum1DViewer):
                 self.spectral_unit._addl_unit_strings = viewer.state.__class__.x_display_unit.get_choices(viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
                     try:

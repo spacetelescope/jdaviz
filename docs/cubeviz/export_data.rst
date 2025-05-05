@@ -65,12 +65,12 @@ with the name of the data you want to extract):
 
     mydata = cubeviz.get_data(data_label="data_name")
 
-The data is returned as a 3D `specutils.Spectrum1D` object.
+The data is returned as a 3D `specutils.Spectrum` object.
 
-To write out a `specutils.Spectrum1D` cube from Cubeviz
+To write out a `specutils.Spectrum` cube from Cubeviz
 (e.g., a fitted cube from :ref:`model-fitting`),
 where the mask (if available) is as defined in
-`Spectrum1D masks <https://specutils.readthedocs.io/en/latest/spectrum1d.html#including-masks>`_:
+`Spectrum masks <https://specutils.readthedocs.io/en/latest/spectrum1d.html#including-masks>`_:
 
 .. code-block:: python
 
