@@ -5,55 +5,41 @@ Exporting Data from Cubeviz
 ***************************
 
 After data have been manipulated or analyzed, it is possible to export
-those data currently back into your Jupyter notebook.
+those data back into your Jupyter notebook.
 
 .. _cubeviz_export_regions:
 
-Spatial Regions
-===============
+Spatial and Spectral Regions
+============================
 
 .. seealso::
 
     :ref:`Export Spatial Regions <imviz_export>`
         Documentation on how to export spatial regions.
 
-Any cube (or extracted spectrum) can be extracted from cubeviz:
+To extract all the subsets created in the viewers, call the Subset Tools plugin:
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.get_data("Spectrum (Subset 1, sum)")
+    cubeviz.plugins['Subset Tools'].get_regions()
 
 
-To use a ``function`` other than sum, use the :ref:`Spectral Extraction <spectral-extraction>` plugin
-first to create a 1D spectrum and then refer to it by label in ``get_data``.
-
-To get all subsets from the spectrum viewer:
-
-.. code-block:: python
-
-    subset1_spec1d = cubeviz.specviz.app.get_subsets()
-
-To access the spatial regions themselves:
-
-.. code-block:: python
-
-    regions = cubeviz.get_interactive_regions()
-    regions
-
-1D Spectra and Spectral Regions
-===============================
+1D Spectra
+==========
 
 .. seealso::
 
     :ref:`Export Spectra <specviz-export-data>`
         Documentation on how to export data from the ``spectrum-viewer``.
 
-The following line of code can be used to extract 1D spectrum either automatically extracted
-or extracted manually through the :ref:`Spectral Extraction <spectral-extraction>` plugin:
+The following line of code can be used to extract 1D spectra that have been
+extracted either automatically or manually.
+To use a ``function`` other than sum, use the :ref:`Spectral Extraction <spectral-extraction>` plugin
+first to create a 1D spectrum and then refer to it by label in ``get_data``.
 
 .. code-block:: python
 
-    subset2_spec1d = cubeviz.get_data("Spectrum (Subset 2, sum)")
+    subset2_spec1d = cubeviz.get_data(data_label="Spectrum (Subset 2, sum)")
 
 3D Data Cubes
 =============
@@ -121,11 +107,11 @@ by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref
 Aperture Photometry
 ===================
 
-Cubeviz can export photometry output table like Imviz:
+Cubeviz can export photometry output table like Imviz through the Aperture Photometry plugin:
 
 .. code-block:: python
 
-    results = cubeviz.get_aperture_photometry_results()
+    results = cubeviz.plugins['Aperture Photometry'].export_table()
 
 .. seealso::
 
