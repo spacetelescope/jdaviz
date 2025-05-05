@@ -1,4 +1,3 @@
-from echo import CallbackProperty
 import ipyvuetify as v
 
 from glue.viewers.image.layer_artist import ImageLayerArtist
