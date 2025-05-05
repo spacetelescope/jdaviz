@@ -272,13 +272,15 @@ class JdavizViewerMixin(WithCache):
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
         if hasattr(layer_state, 'layer') and get_subset_type(layer_state.layer):
-            layer_state.layer.visible = CallbackProperty()
             if (self.__class__.__name__ == 'CubevizImageView' and
                get_subset_type(layer_state.layer) != 'spatial'):
+                layer_state.layer.visible = CallbackProperty()
                 layer_state.visible = False
+                layer_state.add_callback('layer',
+                                         self._expected_subset_layer_default,
+                                         validator=True)
             else:
                 layer_state.visible = True
-            layer_state.add_callback('layer', self._expected_subset_layer_default, validator=True)
 
     def _expected_subset_layer_default(self, layer_state):
         if self.__class__.__name__ == 'RampvizImageView':
