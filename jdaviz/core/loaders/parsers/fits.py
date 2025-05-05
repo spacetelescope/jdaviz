@@ -1,6 +1,5 @@
 from functools import cached_property
 from astropy.io import fits
-from specutils import Spectrum1D
 
 from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
@@ -9,7 +8,7 @@ from jdaviz.core.registries import loader_parser_registry
 __all__ = ['FITSParser']
 
 
-@loader_parser_registry('FITS')
+@loader_parser_registry('fits')
 class FITSParser(BaseParser):
 
     @property
@@ -23,14 +22,7 @@ class FITSParser(BaseParser):
         except Exception:
             return False
 
-        # do not use FITS if able to load with specutils
-        # TODO: implement a priority system and use that instead
-        try:
-            Spectrum1D.read(self.input)
-        except Exception:
-            return True
-        else:
-            return False
+        return True
 
     @cached_property
     def output(self):

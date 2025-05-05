@@ -1,7 +1,6 @@
 import pytest
 import stdatamodels
 from astropy import units as u
-from astropy.io import fits
 from astropy.utils.data import download_file
 from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import XRangeROI
@@ -40,26 +39,12 @@ def test_2d_parser_jwst(specviz2d_helper):
                                          'Wave 6.24985e+00 um', '')
 
 
-@pytest.mark.xfail(reason="Transpose not implemented for spectrum1d input")
 @pytest.mark.remote_data
-def test_2d_parser_ext_transpose_file(specviz2d_helper):
+def test_2d_parser_ext_hdulist(specviz2d_helper):
     # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
-    fn = download_file('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
-
-    specviz2d_helper.load_data(spectrum_2d=fn, ext=2, transpose=True)
-
+    specviz2d_helper.load('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
     dc_0 = specviz2d_helper.app.data_collection[0]
-    assert dc_0.get_component('flux').shape == (3416, 29)
-
-
-@pytest.mark.remote_data
-def test_2d_parser_ext_transpose_hdulist(specviz2d_helper):
-    # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
-    fn = download_file('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
-    with fits.open(fn) as hdulist:
-        specviz2d_helper.load_data(spectrum_2d=hdulist, ext=2, transpose=True)
-    dc_0 = specviz2d_helper.app.data_collection[0]
-    assert dc_0.get_component('flux').shape == (3416, 29)
+    assert dc_0.get_component('flux').shape == (29, 3416)
 
 
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
