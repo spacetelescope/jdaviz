@@ -3098,6 +3098,8 @@ class Application(VuetifyTemplate, HubListener):
                 new_viewer_items.append(item)
 
         self.state.new_viewer_items = new_viewer_items
+        if not len(self.state.new_viewer_selected):
+            self.state.new_viewer_selected = new_viewer_items[0]['label']
 
     def _create_new_viewer_item(self, vc_registry_member):
         def open():
