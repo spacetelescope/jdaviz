@@ -19,7 +19,7 @@
 
         <j-tooltip tipid="app-toolbar-plugins">
           <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}" :disabled="state.tray_items.filter(ti => {return (ti.is_relevant && ti.sidebar === 'plugins')}).length === 0">
-            <v-icon>mdi-view-grid-outline</v-icon>
+            <v-icon>mdi-tune-variant</v-icon>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-subsets">
