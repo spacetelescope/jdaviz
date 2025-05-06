@@ -113,7 +113,7 @@ Bug Fixes
 - Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return
   sky regions. [#3547]
 
-- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. [#3300]
+- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. [#3570]
 
 Cubeviz
 ^^^^^^^
