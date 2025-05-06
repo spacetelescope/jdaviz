@@ -17,7 +17,6 @@
 
         <v-divider vertical style="margin: 0px 10px"></v-divider>
 
-
         <j-tooltip tipid="app-toolbar-plugins">
           <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}" :disabled="state.tray_items.filter(ti => {return (ti.is_relevant && ti.sidebar === 'plugins')}).length === 0">
             <v-icon>mdi-view-grid-outline</v-icon>
@@ -90,27 +89,7 @@
       </v-toolbar-items>
 
       <v-toolbar-items v-if="config === 'deconfigged'">
-        <v-layout column style="height: 28px; padding-bottom: 12px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
-          <span style="display: inline-flex; align-items: center">
-            <v-spacer></v-spacer>
-
-            <j-about-menu
-              :jdaviz_version="state.jdaviz_version"
-              :api_hints_obj="api_hints_obj"
-              :api_hints_enabled="state.show_api_hints"
-              :about_widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"
-              :force_open_about.sync="force_open_about"
-            ></j-about-menu>
-
-            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints" span_style="margin-bottom: 4px">
-              <v-btn small icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
-                <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0; padding-top: 2px; padding-bottom: 2px"/>
-              </v-btn>
-            </j-tooltip>
-            <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-top: -3px; margin-left: -4px; margin-right: -6px">
-              <jupyter-widget :widget="popout_button" ></jupyter-widget>
-            </j-tooltip>
-          </span>
+        <v-layout column style="height: 28px; padding-bottom: 12px; margin-top: 2px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
           <span>
             <v-menu
               offset-y
@@ -120,11 +99,11 @@
                 <v-text-field
                     v-model='state.global_search'
                     append-icon='mdi-magnify'
-                    filled
+                    style="width: 200px; margin-right: 8px; margin-top: 2px"
                     dense
-                    style="width: 350px; margin-right: 4px"
                     clearable
                     hide-details
+                    single-line
                     v-bind="attrs"
                     v-on="on"
                 ></v-text-field>
@@ -183,8 +162,28 @@
               </v-card>
             </v-menu>
           </span>
-        </v-layout>
 
+          <span style="display: inline-flex; align-items: center">
+            <v-spacer></v-spacer>
+
+            <j-about-menu
+              :jdaviz_version="state.jdaviz_version"
+              :api_hints_obj="api_hints_obj"
+              :api_hints_enabled="state.show_api_hints"
+              :about_widget="state.tray_items[state.tray_items.map(ti => ti.label).indexOf('About')].widget"
+              :force_open_about.sync="force_open_about"
+            ></j-about-menu>
+
+            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints" span_style="margin-bottom: -12px">
+              <v-btn small icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
+                <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0; padding-top: 2px; padding-bottom: 2px"/>
+              </v-btn>
+            </j-tooltip>
+            <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-top: 6px; margin-bottom: -6px; margin-left: -4px; margin-right: -6px">
+              <jupyter-widget :widget="popout_button" ></jupyter-widget>
+            </j-tooltip>
+          </span>
+        </v-layout>
       </v-toolbar-items>
     </v-app-bar>
 
