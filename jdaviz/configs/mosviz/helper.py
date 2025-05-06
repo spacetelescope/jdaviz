@@ -441,7 +441,9 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         # Load the first object into the viewers automatically
         try:
-            self.app.get_viewer(self._default_table_viewer_reference_name).figure_widget.highlighted = 0
+            self.app.get_viewer(
+                self._default_table_viewer_reference_name
+            ).figure_widget.highlighted = 0
         except ValueError:
             self.app.hub.broadcast(SnackbarMessage(
                 "No data found with label 'MOS Table'", color="warning", sender=self))
