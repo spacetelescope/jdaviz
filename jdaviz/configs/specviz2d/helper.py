@@ -70,10 +70,6 @@ class Specviz2d(Specviz):
             Cache the downloaded file if the data are retrieved by a query
             to a URL or URI.
 
-        local_path : str, optional
-            Cache remote files to this path. This is only used if data is
-            requested from `astroquery.mast`.
-
         timeout : float, optional
             If downloading from a remote URI, set the timeout limit for
             remote requests in seconds (passed to
@@ -91,6 +87,14 @@ class Specviz2d(Specviz):
         if spectrum_1d_label is None:
             spectrum_1d_label = spectrum_2d_label.replace("2D", "1D")
 
+        load_kwargs = {}
+        if cache is not None:
+            load_kwargs['cache'] = cache
+        if timeout is not None:
+            load_kwargs['timeout'] = timeout
+        if local_path is not None:
+            raise ValueError("local_path is no longer supported")
+
         if spectrum_2d is not None:
             if spectrum_2d_label is not None:
                 spectrum_2d_label = self.app.return_unique_name(spectrum_2d_label)
@@ -99,19 +103,15 @@ class Specviz2d(Specviz):
                       ext_data_label=spectrum_1d_label,
                       auto_extract=spectrum_1d is None,
                       show_in_viewer=show_in_viewer,
-                      cache=cache,
-                      local_path=local_path,  # is this implemented by url-resolver?
-                      timeout=timeout,
-                      extension=ext)
+                      extension=ext,
+                      **load_kwargs)
         if spectrum_1d is not None:
             if spectrum_1d_label is not None:
                 spectrum_1d_label = self.app.return_unique_name(spectrum_1d_label)
             self.load(spectrum_1d, format='1D Spectrum',
                       data_label=spectrum_1d_label,
                       show_in_viewer=show_in_viewer,
-                      cache=cache,
-                      local_path=local_path,  # is this implemented by url-resolver?
-                      timeout=timeout)
+                      **load_kwargs)
 
     @deprecated(since="4.3", alternative="load")
     def load_trace(self, trace, data_label, show_in_viewer=True):
