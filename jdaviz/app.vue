@@ -90,7 +90,7 @@
 
       <v-toolbar-items v-if="config === 'deconfigged'">
         <v-layout column style="height: 28px; padding-bottom: 12px; margin-top: 2px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
-          <span>
+          <span style="align-items: right; display: inline-flex; margin-right: 2px">
             <v-menu
               offset-y
               style="max-width: 600px"
