@@ -91,7 +91,7 @@
 
       <v-toolbar-items v-if="config === 'deconfigged'">
         <v-layout column style="height: 28px; padding-bottom: 12px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
-          <span style="display: inline-flex; align-items: right">
+          <span style="display: inline-flex; align-items: center">
             <v-spacer></v-spacer>
 
             <j-about-menu
@@ -102,12 +102,12 @@
               :force_open_about.sync="force_open_about"
             ></j-about-menu>
 
-            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
-              <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
-                <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0"/>
+            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints" span_style="margin-bottom: 4px">
+              <v-btn small icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
+                <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0; padding-top: 2px; padding-bottom: 2px"/>
               </v-btn>
             </j-tooltip>
-            <j-tooltip tipid="app-toolbar-popout">
+            <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-top: -3px; margin-left: -4px; margin-right: -6px">
               <jupyter-widget :widget="popout_button" ></jupyter-widget>
             </j-tooltip>
           </span>
@@ -122,7 +122,7 @@
                     append-icon='mdi-magnify'
                     filled
                     dense
-                    style="width: 350px"
+                    style="width: 350px; margin-right: 4px"
                     clearable
                     hide-details
                     v-bind="attrs"
