@@ -1,5 +1,6 @@
 <template>
   <j-viewer-creator
+    :title="viewer_type"
     :popout_button="popout_button"
     :dataset_items="dataset_items"
     :dataset_selected.sync="dataset_selected"

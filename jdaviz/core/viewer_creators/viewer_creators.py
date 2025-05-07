@@ -9,6 +9,7 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
     _sidebar = 'loaders'
     _subtab = 1
 
+    viewer_type = Unicode().tag(sync=True)
     is_relevant = Bool(False).tag(sync=True)
 
     viewer_label_value = Unicode().tag(sync=True)
@@ -22,6 +23,7 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
         self.close_callback = kwargs.pop('close_callback', None)
         super().__init__(app, **kwargs)
         self.dataset.multiselect = True
+        self.viewer_type = self._registry_label
 
         self.viewer_label = AutoTextField(self, 'viewer_label_value',
                                           'viewer_label_default',

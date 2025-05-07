@@ -1,6 +1,7 @@
 <template>
     <v-card flat>
       <v-card-title class="headline" color="primary" primary-title style="display: block; width: 100%">
+        {{title}}
         <span style="float: right">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
