@@ -15,7 +15,7 @@
           v-on="on"
           color="white"
           @click="() => {popup_open = !popup_open}"
-          style="font-family: monospace; font-size: 10pt; text-transform: lowercase; margin-left: 4px; margin-right: 6px; margin-bottom: -12px; padding: 2px">
+          style="font-family: monospace; font-size: 10pt; text-transform: lowercase; margin-left: 4px; margin-right: 6px; padding: 2px">
         v{{ jdaviz_version }}
         </v-btn>
       </j-tooltip>

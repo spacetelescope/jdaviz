@@ -163,7 +163,7 @@
             </v-menu>
           </span>
 
-          <span style="display: inline-flex; align-items: center">
+          <span style="display: inline-flex; align-items: center; margin-top: 6px;">
             <v-spacer></v-spacer>
 
             <j-about-menu
@@ -174,12 +174,12 @@
               :force_open_about.sync="force_open_about"
             ></j-about-menu>
 
-            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints" span_style="margin-bottom: -12px">
+            <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
               <v-btn small icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
                 <img :src="state.icons['api']" width="24" class="color-to-white" style="opacity: 1.0; padding-top: 2px; padding-bottom: 2px"/>
               </v-btn>
             </j-tooltip>
-            <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-top: 6px; margin-bottom: -6px; margin-left: -4px; margin-right: -6px">
+            <j-tooltip tipid="app-toolbar-popout" span_style="scale: 0.8; margin-left: -4px; margin-right: -4px">
               <jupyter-widget :widget="popout_button" ></jupyter-widget>
             </j-tooltip>
           </span>
