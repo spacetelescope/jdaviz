@@ -39,7 +39,7 @@
       <v-card-actions>
           <v-spacer></v-spacer>
           <plugin-action-button
-            :disabled="viewer_label_value.length===0"
+            :disabled="viewer_label_value.length===0 || viewer_label_invalid_msg.length > 0"
             :results_isolated_to_plugin="false"
             :api_hints_enabled="api_hints_enabled"
 

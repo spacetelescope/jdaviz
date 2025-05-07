@@ -206,9 +206,9 @@ class ImporterUserApi(UserApiWrapper):
 
 class ViewerCreatorUserApi(UserApiWrapper):
     """
-    This is an API wrapper around an internal new viewer creator.  For a full list of attributes/methods,
-    call dir(viewer_creator_object) and for help on any of those methods,
-    call ``help(viewer_creator_object.attribute)``.
+    This is an API wrapper around an internal new viewer creator.  For a full list
+    of attributes/methods, call dir(viewer_creator_object) and for help on any of
+    those methods, call ``help(viewer_creator_object.attribute)``.
 
     For example::
 

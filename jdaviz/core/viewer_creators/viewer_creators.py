@@ -1,11 +1,12 @@
 from traitlets import Unicode, Bool, observe
 
 from jdaviz.core.events import NewViewerMessage
-from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField, DatasetMultiSelectMixin
+from jdaviz.core.template_mixin import (PluginTemplateMixin, AutoTextField,
+                                        DatasetMultiSelectMixin, ViewerSelectMixin)
 from jdaviz.core.user_api import ViewerCreatorUserApi
 
 
-class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
+class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSelectMixin):
     _sidebar = 'loaders'
     _subtab = 1
 
@@ -80,10 +81,25 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
         index = labels.index(self._registry_label)
         self.app.state.new_viewer_items[index]['is_relevant'] = self.is_relevant
 
+    @observe('viewer_label_value', 'viewer_items')
+    def _viewer_label_value_changed(self, *args):
+        # forbid using an existing viewer label
+        if self.viewer_label_value in self.viewer.choices:
+            self.viewer_label_invalid_msg = f"Viewer label '{self.viewer_label_value}' already in use."  # noqa
+        else:
+            self.viewer_label_invalid_msg = ''
+
+    @observe('viewer_items')
+    def _viewer_items_changed(self, *args):
+        if self.viewer_label_default in self.viewer.choices:
+            self.viewer_label_default = self.app.return_unique_name(self.viewer_label_default, 'viewer')  # noqa
+
     def __call__(self):
         """
         Create a viewer instance.
         """
+        if self.viewer_label_invalid_msg:
+            raise ValueError(self.viewer_label_invalid_msg)
         self.app._on_new_viewer(NewViewerMessage(self.viewer_class,
                                                  data=None,
                                                  sender=self.app),

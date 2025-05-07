@@ -148,7 +148,7 @@ class ConfigHelper(HubListener):
         """
         if not self.app.config == 'deconfigged':
             raise NotImplementedError("new_viewers is only enabled in the deconfigged app")  # noqa
-        new_viewers = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+        new_viewers = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api  # noqa
                        for item in self.app.state.new_viewer_items if item['is_relevant']}
         return new_viewers
 
