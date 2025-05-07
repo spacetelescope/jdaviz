@@ -17,6 +17,16 @@
 
         <v-divider vertical style="margin: 0px 10px"></v-divider>
 
+        <j-tooltip tipid="app-toolbar-settings">
+          <v-btn icon @click="() => {if (state.drawer_content === 'settings') {state.drawer_content = ''} else {state.drawer_content = 'settings'}}" :class="{active : state.drawer_content === 'settings'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
+            <v-icon medium style="padding-top: 2px">mdi-cog</v-icon>
+          </v-btn>
+        </j-tooltip>
+        <j-tooltip tipid="app-toolbar-info">
+          <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
+            <v-icon medium style="padding-top: 2px">mdi-information-outline</v-icon>
+          </v-btn>
+        </j-tooltip>
         <j-tooltip tipid="app-toolbar-plugins">
           <v-btn icon @click="() => {if (state.drawer_content === 'plugins') {state.drawer_content = ''} else {state.drawer_content = 'plugins'}}" :class="{active : state.drawer_content === 'plugins'}" :disabled="state.tray_items.filter(ti => {return (ti.is_relevant && ti.sidebar === 'plugins')}).length === 0">
             <v-icon>mdi-tune-variant</v-icon>
@@ -27,16 +37,6 @@
             <v-icon>
               {{ state.subset_mode_create ? 'mdi-selection-drag' : 'mdi-selection' }}
             </v-icon>
-          </v-btn>
-        </j-tooltip>
-        <j-tooltip tipid="app-toolbar-info">
-          <v-btn icon @click="() => {if (state.drawer_content === 'info') {state.drawer_content = ''} else {state.drawer_content = 'info'}}" :class="{active : state.drawer_content === 'info'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Metadata')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-information-outline</v-icon>
-          </v-btn>
-        </j-tooltip>
-        <j-tooltip tipid="app-toolbar-settings">
-          <v-btn icon @click="() => {if (state.drawer_content === 'settings') {state.drawer_content = ''} else {state.drawer_content = 'settings'}}" :class="{active : state.drawer_content === 'settings'}" :disabled="!state.tray_items[state.tray_items.map(ti => ti.label).indexOf('Plot Options')].is_relevant">
-            <v-icon medium style="padding-top: 2px">mdi-cog</v-icon>
           </v-btn>
         </j-tooltip>
 
