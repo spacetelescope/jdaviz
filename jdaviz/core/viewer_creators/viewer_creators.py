@@ -100,11 +100,10 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
         """
         if self.viewer_label_invalid_msg:
             raise ValueError(self.viewer_label_invalid_msg)
-        self.app._on_new_viewer(NewViewerMessage(self.viewer_class,
-                                                 data=None,
-                                                 sender=self.app),
-                                vid=self.viewer_label_value, name=self.viewer_label_value)
-        nv = self.app.get_viewer(self.viewer_label_value)
+        nv = self.app._on_new_viewer(NewViewerMessage(self.viewer_class,
+                                                      data=None,
+                                                      sender=self.app),
+                                     vid=self.viewer_label_value, name=self.viewer_label_value)
         dm = nv.data_menu
         for dataset in self.dataset.selected:
             dm.add_data(dataset)
