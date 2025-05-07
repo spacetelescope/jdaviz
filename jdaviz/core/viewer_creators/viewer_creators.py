@@ -1,11 +1,11 @@
 from traitlets import Unicode, Bool
 
 from jdaviz.core.events import NewViewerMessage
-from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
+from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField, DatasetMultiSelectMixin
 from jdaviz.core.user_api import ViewerCreatorUserApi
 
 
-class BaseViewerCreator(PluginTemplateMixin):
+class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
     _sidebar = 'loaders'
     _subtab = 1
 
@@ -19,6 +19,7 @@ class BaseViewerCreator(PluginTemplateMixin):
         self.open_callback = kwargs.pop('open_callback', None)
         self.close_callback = kwargs.pop('close_callback', None)
         super().__init__(app, **kwargs)
+        self.dataset.multiselect = True
 
         self.viewer_label = AutoTextField(self, 'viewer_label_value',
                                           'viewer_label_default',
@@ -65,6 +66,11 @@ class BaseViewerCreator(PluginTemplateMixin):
                                                  data=None,
                                                  sender=self.app),
                                 vid=self.viewer_label_value, name=self.viewer_label_value)
+        nv = self.app.get_viewer(self.viewer_label_value)
+        dm = nv.data_menu
+        for dataset in self.dataset.selected:
+            dm.add_data(dataset)
+        return nv.user_api
 
     def vue_create_clicked(self, *args):
         self.__call__()

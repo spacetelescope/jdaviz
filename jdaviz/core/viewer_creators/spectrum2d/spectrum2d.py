@@ -12,6 +12,7 @@ class Spectrum2DViewerCreator(BaseViewerCreator):
 
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
+        self.dataset.filters = ['is_2d_spectrum_or_trace']
         self.viewer_label_default = '2D Spectrum'
 
     @property

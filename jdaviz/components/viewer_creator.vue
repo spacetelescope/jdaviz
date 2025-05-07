@@ -10,19 +10,32 @@
           <slot/>
         </v-container>
 
-        <plugin-auto-label
-          :value.sync="viewer_label_value"
-          @update:value="$emit('update:viewer_label_value', $event)"
-          :default="viewer_label_default"
-          :auto.sync="viewer_label_auto"
-          @update:auto="$emit('update:viewer_label_auto', $event)"
-          :invalid_msg="viewer_label_invalid_msg"
-          label="Viewer Label"
-          api_hint="vc.viewer_label ="
-          :api_hints_enabled="api_hints_enabled"
-          hint="Label to assign to the new viewer."
-        ></plugin-auto-label>
+        <v-container>
+          <plugin-dataset-select
+            :items="dataset_items"
+            :selected.sync="dataset_selected"
+            @update:selected="$emit('update:dataset_selected', $event)"
+            :multiselect="dataset_multiselect"
+            :show_if_single_entry="true"
+            label="Load Data"
+            api_hint="vc.dataset ="
+            :api_hints_enabled="api_hints_enabled"
+            hint="Select data to load into new viewer."
+          ></plugin-dataset-select>
 
+          <plugin-auto-label
+            :value.sync="viewer_label_value"
+            @update:value="$emit('update:viewer_label_value', $event)"
+            :default="viewer_label_default"
+            :auto.sync="viewer_label_auto"
+            @update:auto="$emit('update:viewer_label_auto', $event)"
+            :invalid_msg="viewer_label_invalid_msg"
+            label="Viewer Label"
+            api_hint="vc.viewer_label ="
+            :api_hints_enabled="api_hints_enabled"
+            hint="Label to assign to the new viewer."
+          ></plugin-auto-label>
+        </v-container>
       </v-card-text>
       <v-card-actions>
           <v-spacer></v-spacer>
@@ -45,6 +58,7 @@
   <script>
   module.exports = {
     props: ['title', 'popout_button',
+            'dataset_items', 'dataset_selected', 'dataset_multiselect',
             'viewer_label_value', 'viewer_label_default', 'viewer_label_auto', 'viewer_label_invalid_msg',
             'api_hints_enabled'],
   }
