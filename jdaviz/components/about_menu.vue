@@ -37,7 +37,7 @@
       }
     },
     mounted() {
-      let element = document.getElementById('about-scroll-target') //.parentElement
+      let element = document.getElementById('about-scroll-target')
       if (element === null) {
         return
       }
@@ -50,7 +50,7 @@
       this.jupyterLabCell = this.$el.closest(".jp-Notebook-cell");
     },
     beforeDestroy() {
-      let element = document.getElementById('about-scroll-target') //.parentElement
+      let element = document.getElementById('about-scroll-target')
       if (element === null) {
         return
       }
@@ -66,6 +66,9 @@
         if (this.popup_open && document.getElementById('about-scroll-target')) {
           const top = document.getElementById('about-scroll-target').getBoundingClientRect().y + document.body.parentElement.scrollTop;
           const menuContent = document.getElementById('about-scroll-content');
+          if (menuContent === null || menuContent.parentElement === null) {
+            return;
+          }
           menuContent.parentElement.style.top = top + "px";
 
           /* since Jupyter Lab 4.2 cells outside the view port get a height of 0, causing the menu to be visible when

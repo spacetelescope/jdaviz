@@ -325,6 +325,9 @@
           const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
           const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
           const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
+          if (menuContent === null || menuContent.parentElement === null) {
+            return;
+          }
           menuContent.parentElement.style.top = top + "px";
 
           /* since Jupyter Lab 4.2 cells outside the view port get a height of 0, causing the menu to be visible when
