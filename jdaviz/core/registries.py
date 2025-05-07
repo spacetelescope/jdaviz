@@ -53,7 +53,7 @@ class UniqueDictRegistry(DictRegistry):
             Whether to overwrite an existing entry with the same ``label``.
         """
         if name in self.members and not overwrite:
-            raise ValueError(f"Viewer with the name {name} already exists, "
+            raise ValueError(f"Registry item with the name {name} already exists, "
                              f"please choose a different name or pass overwrite=True.")
         else:
             self.members[name] = cls
@@ -152,7 +152,7 @@ class TrayRegistry(UniqueDictRegistry):
             Whether to overwrite an existing entry with the same ``label``.
         """
         if name in self.members and not overwrite:
-            raise ValueError(f"Viewer with the name {name} already exists, "
+            raise ValueError(f"Tray item with the name {name} already exists, "
                              f"please choose a different name or pass overwrite=True.")
         else:
             cls._registry_name = name
