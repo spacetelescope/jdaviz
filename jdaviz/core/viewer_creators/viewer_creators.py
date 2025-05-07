@@ -64,6 +64,9 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
 
     @observe('dataset_items')
     def _dataset_items_changed(self, *args):
+        self._set_is_relevant()
+
+    def _set_is_relevant(self):
         if len(self.dataset_items):
             self.is_relevant = True
         else:

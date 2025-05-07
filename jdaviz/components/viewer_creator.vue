@@ -8,10 +8,8 @@
       </v-card-title>
       <v-card-text>
         <v-container>
-          <slot/>
-        </v-container>
+          <slot></slot>
 
-        <v-container>
           <plugin-dataset-select
             :items="dataset_items"
             :selected.sync="dataset_selected"

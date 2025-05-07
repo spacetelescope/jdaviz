@@ -3077,7 +3077,6 @@ class Application(VuetifyTemplate, HubListener):
         # need to rebuild in order, just pulling from existing dict if its already there
         new_viewer_items = []
         for name, vc_registry_member in viewer_creator_registry.members.items():
-
             try:
                 item = self.get_new_viewer_item_from_name(
                             name, return_widget=False)
@@ -3088,14 +3087,9 @@ class Application(VuetifyTemplate, HubListener):
                     self.hub.broadcast(SnackbarMessage(
                         f"Failed to load viewer {name}: {e}",
                         sender=self, color='error'))
-                    create_new = False
-                else:
-                    create_new = True
-            else:
-                create_new = False
+                    continue
 
-            if create_new:
-                new_viewer_items.append(item)
+            new_viewer_items.append(item)
 
         self.state.new_viewer_items = new_viewer_items
         relevant_items = [nvi for nvi in new_viewer_items if nvi['is_relevant']]
