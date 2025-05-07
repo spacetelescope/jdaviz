@@ -70,6 +70,10 @@ class Specviz2d(Specviz):
             Cache the downloaded file if the data are retrieved by a query
             to a URL or URI.
 
+        local_path : str, optional
+            Cache remote files to this path. This is only used if data is
+            requested from `astroquery.mast`.
+
         timeout : float, optional
             If downloading from a remote URI, set the timeout limit for
             remote requests in seconds (passed to
@@ -93,7 +97,7 @@ class Specviz2d(Specviz):
         if timeout is not None:
             load_kwargs['timeout'] = timeout
         if local_path is not None:
-            raise ValueError("local_path is no longer supported")
+            load_kwargs['local_path'] = local_path
 
         if spectrum_2d is not None:
             if spectrum_2d_label is not None:
