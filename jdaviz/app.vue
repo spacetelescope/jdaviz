@@ -89,7 +89,7 @@
       </v-toolbar-items>
 
       <v-toolbar-items v-if="config === 'deconfigged'">
-        <v-layout column style="height: 28px; padding-bottom: 12px; margin-top: 2px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
+        <v-layout column  class="app-bar-right" style="height: 28px; padding-bottom: 12px; margin-top: 2px" v-if="state.show_toolbar_buttons || state.global_search_menu || state.about_popup">
           <span style="align-items: right; display: inline-flex; margin-right: 2px">
             <v-menu
               offset-y
@@ -163,7 +163,7 @@
             </v-menu>
           </span>
 
-          <span style="display: inline-flex; align-items: center; margin-top: 4px;" class="app-bar-right">
+          <span style="display: inline-flex; align-items: center; margin-top: 4px;">
             <v-spacer></v-spacer>
 
             <j-about-menu
@@ -480,8 +480,7 @@ export default {
 .plugin-title.v-list-item:after {
   display: none !important;
 }
-
 .app-bar-right .v-input__append-inner {
-  padding-bottom: 6px;
+  padding-bottom: 6px !important;
 }
 </style>
