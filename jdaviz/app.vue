@@ -163,7 +163,7 @@
             </v-menu>
           </span>
 
-          <span style="display: inline-flex; align-items: center; margin-top: 6px;">
+          <span style="display: inline-flex; align-items: center; margin-top: 4px;" class="app-bar-right">
             <v-spacer></v-spacer>
 
             <j-about-menu
@@ -479,5 +479,9 @@ export default {
 }
 .plugin-title.v-list-item:after {
   display: none !important;
+}
+
+.app-bar-right .v-input__append-inner {
+  padding-bottom: 6px;
 }
 </style>
