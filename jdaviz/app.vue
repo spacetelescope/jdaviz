@@ -149,7 +149,7 @@
                     </v-row>
                   </div>
                   <div v-for="vcItem in state.new_viewer_items" :key="vcItem.label">
-                    <v-row v-if="trayItemVisible(vcItem, state.global_search)">
+                    <v-row v-if="vcItem.is_relevant && trayItemVisible(vcItem, state.global_search)">
                       <v-list-item style="display: grid; min-height: 6px; cursor: pointer" @click="(e) => {search_item_clicked({attr: 'new_viewers', label: vcItem.label})}">
                         <v-list-item-title>
                           New Viewer: {{ vcItem.label }}
