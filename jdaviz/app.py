@@ -3077,8 +3077,6 @@ class Application(VuetifyTemplate, HubListener):
         for name, vc_registry_member in viewer_creator_registry.members.items():
 
             try:
-                raise KeyError()
-                # TODO: implement get_new_viewer_item_from_name to allow downstream injection
                 item = self.get_new_viewer_item_from_name(
                             name, return_widget=False)
             except KeyError:
@@ -3124,7 +3122,8 @@ class Application(VuetifyTemplate, HubListener):
         return new_viewer_item
 
     def get_new_viewer_item_from_name(self, name, return_widget=True):
-        raise KeyError()
+        return self._get_state_item_from_name(self.state.new_viewer_items,
+                                              name, return_widget)
 
     def _reset_state(self):
         """ Resets the application state """
@@ -3158,6 +3157,24 @@ class Application(VuetifyTemplate, HubListener):
         cfg = get_configuration(path=path, section=section, config=config)
         return cfg
 
+    def _get_state_item_from_name(self, state_list, name, return_widget=True):
+        from ipywidgets.widgets import widget_serialization
+
+        ret_item = None
+        for item in state_list:
+            if item['name'] == name or item['label'] == name:
+                ipy_model_id = item['widget']
+                if return_widget:
+                    ret_item = widget_serialization['from_json'](ipy_model_id, None)
+                else:
+                    ret_item = item
+                break
+
+        if ret_item is None:
+            raise KeyError(f'{name} not found')
+
+        return ret_item
+
     def get_tray_item_from_name(self, name, return_widget=True):
         """Return the instance of a tray item for a given name.
         This is useful for direct programmatic access to Jdaviz plugins
@@ -3179,22 +3196,7 @@ class Application(VuetifyTemplate, HubListener):
         KeyError
             Name not found.
         """
-        from ipywidgets.widgets import widget_serialization
-
-        tray_item = None
-        for item in self.state.tray_items:
-            if item['name'] == name or item['label'] == name:
-                ipy_model_id = item['widget']
-                if return_widget:
-                    tray_item = widget_serialization['from_json'](ipy_model_id, None)
-                else:
-                    tray_item = item
-                break
-
-        if tray_item is None:
-            raise KeyError(f'{name} not found in app.state.tray_items')
-
-        return tray_item
+        return self._get_state_item_from_name(self.state.tray_items, name, return_widget)
 
     def _init_data_associations(self):
         # assume all Data are parents:
