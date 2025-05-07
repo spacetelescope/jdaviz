@@ -3,7 +3,7 @@
     <v-select
       :menu-props="{ left: true }"
       attach
-      :items="new_viewer_items"
+      :items="new_viewer_items_filtered"
       v-model="new_viewer_selected"
       @change="$emit('update:new_viewer_selected', $event)"
       label="Viewer Type"
@@ -15,11 +15,11 @@
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 
-    <span v-if="new_viewer_selected.length && api_hints_enabled" class="api-hint" style="font-weight: bold; padding-left: 6px">
+    <span v-if="new_viewer_selected.length > 0 && api_hints_enabled" class="api-hint" style="font-weight: bold; padding-left: 6px">
       vc = {{ api_hints_obj }}.new_viewers['{{ new_viewer_selected }}']
     </span>
 
-    <jupyter-widget v-if="new_viewer_selected.length" :widget="new_viewer_items.find((new_viewer) => new_viewer.label === new_viewer_selected).widget"></jupyter-widget>
+    <jupyter-widget v-if="new_viewer_selected.length > 0" :widget="new_viewer_items.find((new_viewer) => new_viewer.label === new_viewer_selected).widget"></jupyter-widget>
 
   </div>
 </template>
@@ -27,6 +27,11 @@
 <script>
 module.exports = {
   props: ['new_viewer_items', 'new_viewer_selected', 'api_hints_enabled', 'api_hints_obj'],
+  computed: {
+    new_viewer_items_filtered() {
+      return this.new_viewer_items.filter(item => item.is_relevant);
+    },
+  },
 }
 </script>
 

@@ -3098,8 +3098,9 @@ class Application(VuetifyTemplate, HubListener):
                 new_viewer_items.append(item)
 
         self.state.new_viewer_items = new_viewer_items
-        if not len(self.state.new_viewer_selected):
-            self.state.new_viewer_selected = new_viewer_items[0]['label']
+        relevant_items = [nvi for nvi in new_viewer_items if nvi['is_relevant']]
+        if not len(self.state.new_viewer_selected) and len(relevant_items):
+            self.state.new_viewer_selected = relevant_items[0]['label']
 
     def _create_new_viewer_item(self, vc_registry_member):
         def open():
@@ -3120,6 +3121,7 @@ class Application(VuetifyTemplate, HubListener):
             'label': vc_registry_member._registry_label,
             'widget': "IPY_MODEL_" + vc_instance.model_id,
             'api_methods': vc_instance.api_methods,
+            'is_relevant': vc_instance.is_relevant,
         }
         return new_viewer_item
 
@@ -3164,7 +3166,7 @@ class Application(VuetifyTemplate, HubListener):
 
         ret_item = None
         for item in state_list:
-            if item['name'] == name or item['label'] == name:
+            if item.get('name') == name or item.get('label') == name:
                 ipy_model_id = item['widget']
                 if return_widget:
                     ret_item = widget_serialization['from_json'](ipy_model_id, None)

@@ -1,4 +1,4 @@
-from traitlets import Unicode, Bool
+from traitlets import Unicode, Bool, observe
 
 from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField, DatasetMultiSelectMixin
@@ -8,6 +8,8 @@ from jdaviz.core.user_api import ViewerCreatorUserApi
 class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
     _sidebar = 'loaders'
     _subtab = 1
+
+    is_relevant = Bool(False).tag(sync=True)
 
     viewer_label_value = Unicode().tag(sync=True)
     viewer_label_default = Unicode().tag(sync=True)
@@ -57,6 +59,21 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin):
         self.set_active_callback(self._registry_label)
         if self.open_callback is not None:
             self.open_callback()
+
+    @observe('dataset_items')
+    def _dataset_items_changed(self, *args):
+        if len(self.dataset_items):
+            self.is_relevant = True
+        else:
+            self.is_relevant = False
+
+    @observe('is_relevant')
+    def _is_relevant_changed(self, *args):
+        labels = [ti['label'] for ti in self.app.state.new_viewer_items]
+        if self._registry_label not in labels:
+            return
+        index = labels.index(self._registry_label)
+        self.app.state.new_viewer_items[index]['is_relevant'] = self.is_relevant
 
     def __call__(self):
         """
