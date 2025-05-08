@@ -128,6 +128,8 @@ Bug Fixes
 
 - Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. [#3570]
 
+- Fixed viewer layer to persist when changing jupyter/browser tabs. [#3551]
+
 Cubeviz
 ^^^^^^^
 - Replace file and fix label in example notebook. [#3537]
