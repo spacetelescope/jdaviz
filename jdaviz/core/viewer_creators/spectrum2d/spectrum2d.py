@@ -6,7 +6,7 @@ from jdaviz.core.registries import viewer_creator_registry
 __all__ = ['Spectrum2DViewerCreator']
 
 
-@viewer_creator_registry('2D Spectrum')
+@viewer_creator_registry('2D Spectrum', overwrite=True)
 class Spectrum2DViewerCreator(BaseViewerCreator):
     template_file = __file__, "../base_viewer_creator.vue"
 

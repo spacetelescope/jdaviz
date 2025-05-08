@@ -91,10 +91,10 @@ class ViewerRegistry(UniqueDictRegistry):
 
 
 class ViewerCreatorRegistry(UniqueDictRegistry):
-    def __call__(self, name=None):
+    def __call__(self, name=None, overwrite=False):
         def decorator(cls):
             cls._registry_label = name
-            self.add(name, cls)
+            self.add(name, cls, overwrite=overwrite)
             return cls
         return decorator
 
