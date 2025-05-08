@@ -46,6 +46,12 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection()
             return
 
+        all_resolvers = []
+        self._dbg_parsers = {}
+        self._dbg_importers = {}
+        self._invalid_importers = {}
+        self._importers = {}
+
         # check for valid parser > importer combinations given the current filters
         # and resolver inputs
         try:
@@ -53,16 +59,12 @@ class FormatSelect(SelectPluginComponent):
             # but is actually the resolver.  This calls the implemented __call__ method
             # on the parent resolver.
             parser_input = self.plugin()
-        except Exception:
+        except Exception as e:
             self.items = []
+            self._invalid_importers = f'resolver exception: {e}'
             self._apply_default_selection()
             return
 
-        all_resolvers = []
-        self._dbg_parsers = {}
-        self._dbg_importers = {}
-        self._invalid_importers = {}
-        self._importers = {}
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
