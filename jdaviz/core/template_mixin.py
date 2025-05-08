@@ -178,7 +178,7 @@ class ViewerPropertiesMixin:
 
         Parameters
         ----------
-        filter_or_cls : callable ro class
+        filter_or_cls : callable or class
             A callable that takes a viewer and returns True if the viewer
             matches the filter, False otherwise.  If a class, will check
             if isinstance.
