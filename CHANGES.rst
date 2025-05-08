@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fixed viewer layer to persist when changing jupyter/browser tabs. [#3551]
+
 Cubeviz
 ^^^^^^^
 - Replace file and fix label in example notebook. [#3537]

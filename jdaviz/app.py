@@ -300,6 +300,7 @@ class Application(VuetifyTemplate, HubListener):
     docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
+    golden_layout_state = Dict(default_value=None, allow_none=True).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
