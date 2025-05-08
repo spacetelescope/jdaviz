@@ -135,6 +135,9 @@ Imviz
 
 - Fixes changing alignment after creating additional image viewers. [#3553]
 
+- Fix bug where markers from catalog plugin were unable to be added to viewer after orientation
+ change, specifically for case when GWCS data uses Lon/Lat. [#3576]
+
 Mosviz
 ^^^^^^
 
