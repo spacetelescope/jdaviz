@@ -52,6 +52,11 @@ Specviz2d
 API Changes
 -----------
 
+- Allow ``get_regions`` and ``get_subsets`` to take a data label and have a subset apply to the wcs of that data.
+  By setting a value for ``wrt_data``, the user is requesting a region type that is the opposite of the current link
+  type, (i.e. ``SkyRegion`` when linked by pixel or ``PixelRegion`` when linked by wcs.) Also deprecate the
+  ``return_sky_region`` kwarg and leave a deprecation warning to use ``wrt_data`` instead. [#3527]
+
 Cubeviz
 ^^^^^^^
 
@@ -120,6 +125,8 @@ Bug Fixes
 
 - Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return
   sky regions. [#3547]
+
+- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. [#3570]
 
 Cubeviz
 ^^^^^^^

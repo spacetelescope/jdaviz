@@ -3752,6 +3752,7 @@ class DatasetSelect(SelectPluginComponent):
       />
 
     """
+    get_data_cls = None
 
     def __init__(self, plugin, items, selected,
                  multiselect=None,
@@ -3838,7 +3839,8 @@ class DatasetSelect(SelectPluginComponent):
             if self.selected not in self.labels:
                 # _apply_default_selection will override shortly anyways
                 return None
-            match = self.app._jdaviz_helper.get_data(data_label=self.selected)
+            match = self.app._jdaviz_helper.get_data(data_label=self.selected,
+                                                     cls=self.get_data_cls)
             if match is not None:
                 return match
         # handle the case of empty Application with no viewer, we'll just pull directly

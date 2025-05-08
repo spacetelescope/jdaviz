@@ -26,6 +26,8 @@ class FormatSelect(SelectPluginComponent):
         What mode to use when making the default selection.  Valid options: first, default_text,
         empty.
     """
+    debug = Bool(False).tag(sync=True)
+
     def __init__(self, plugin, items, selected, default_mode='first'):
         self._invalid_importers = {}
         self._importers = {}
@@ -37,7 +39,7 @@ class FormatSelect(SelectPluginComponent):
     def _is_valid_item(self, item):
         return super()._is_valid_item(item, locals())
 
-    @observe('filters')
+    @observe('filters', 'debug')
     def _update_items(self, msg={}):
         if not self.plugin.is_valid:
             self.items = []
@@ -57,12 +59,16 @@ class FormatSelect(SelectPluginComponent):
             return
 
         all_resolvers = []
+        self._dbg_parsers = {}
+        self._dbg_importers = {}
         self._invalid_importers = {}
         self._importers = {}
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin.app, parser_input)
+                if self.debug:
+                    self._dbg_parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
                         importer_input = this_parser()
@@ -85,6 +91,8 @@ class FormatSelect(SelectPluginComponent):
                     except Exception as e:  # nosec
                         self._invalid_importers[label] = f'importer exception: {e}'
                         continue
+                    if self.debug:
+                        self._dbg_importers[label] = this_importer
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
