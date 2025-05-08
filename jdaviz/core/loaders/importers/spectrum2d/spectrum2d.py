@@ -30,7 +30,9 @@ def hdu_is_valid(hdu):
         True if the HDU is a valid light curve HDU, False otherwise.
     """
     return (len(getattr(hdu, 'shape', [])) == 2
-            and ('DISPAXIS' in hdu.header or hdu.header.get('CTYPE1', '') == 'WAVE'))
+            and ('DISPAXIS' in hdu.header
+                 or hdu.header.get('CTYPE1', '') == 'WAVE'
+                 or hdu.header.get('EXTNAME', '') == 'FLUX'))
 
 
 @loader_importer_registry('2D Spectrum')

@@ -27,12 +27,12 @@ class URLResolver(BaseResolver):
 
     @property
     def is_valid(self):
-        return urlparse(self.url).scheme in ['http', 'https', 'mast', 'ftp']
+        return urlparse(self.url.strip()).scheme in ['http', 'https', 'mast', 'ftp']
 
     @observe('url', 'cache')
     def _on_url_changed(self, change):
         self._update_format_items()
 
     def __call__(self, local_path=None, timeout=60):
-        return download_uri_to_path(self.url, cache=self.cache,
+        return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=local_path, timeout=timeout)
