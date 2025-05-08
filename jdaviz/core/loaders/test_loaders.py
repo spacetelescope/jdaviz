@@ -118,6 +118,7 @@ def test_resolver_url(deconfigged_helper):
     with pytest.raises(ValueError, match="Failed query for URI"):
         deconfigged_helper.load('mast:invalid')
 
+
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     s = SpectralRegion(5*u.um, 6*u.um)
     local_path = str(tmp_path / 'spectral_region.ecsv')
