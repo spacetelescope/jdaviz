@@ -368,7 +368,7 @@ def _generate_mos_spectrum2d():
         'CRVAL1': 0.0, 'CRVAL2': 5.0,
         'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
     np.random.seed(42)
-    data = np.random.sample((1024, 15)) * u.Jy
+    data = np.random.sample((15, 1024)) * u.Jy
     return data, header
 
 
