@@ -336,7 +336,6 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
 
 
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_markers_gwcs_lonlat(imviz_helper):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
@@ -366,4 +365,5 @@ def test_markers_gwcs_lonlat(imviz_helper):
     catalogs_plugin.max_sources = 10
 
     # will fail if RA/Dec components expected in image.state.reference_data
-    catalogs_plugin.search(error_on_fail=True)
+    with pytest.warns(ResourceWarning):
+        catalogs_plugin.search(error_on_fail=True)
