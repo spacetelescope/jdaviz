@@ -32,7 +32,7 @@ class URLResolver(BaseResolver):
 
     @property
     def is_valid(self):
-        return urlparse(self.url).scheme in ['http', 'https', 'mast', 'ftp']
+        return urlparse(self.url.strip()).scheme in ['http', 'https', 'mast', 'ftp']
 
     @observe('url', 'cache', 'timeout')
     def _on_url_changed(self, change):
