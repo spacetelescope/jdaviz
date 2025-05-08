@@ -499,9 +499,13 @@ class AstrowidgetsImageViewerMixin:
             if (image.find_component_id('Lat') and image.find_component_id('Lon')):
                 ra_str = 'Lon'
                 dec_str = 'Lat'
-            else:
+            elif (image.find_component_id('Right Ascension')
+                  and image.find_component_id('Declination')):
                 ra_str = 'Right Ascension'
                 dec_str = 'Declination'
+            else:
+                raise ValueError("Image must contain either ('Lat', 'Lon') or "
+                                 "('Right Ascension', 'Declination') components.")
             with jglue.data_collection.delay_link_manager_update():
                 jglue.data_collection[marker_name] = t_glue
                 jglue.add_link(t_glue, 'ra', image, ra_str)
