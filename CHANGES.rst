@@ -306,6 +306,8 @@ New Features
 
 - Allow custom resolutions when exporting viewers to png or mp4. [#3478]
 
+- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
+
 Cubeviz
 ^^^^^^^
 
