@@ -7,7 +7,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
-from glue.core.edit_subset_mode import ReplaceMode, OrMode, NewMode
+from glue.core.edit_subset_mode import ReplaceMode, NewMode
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from numpy.testing import assert_allclose
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion,
@@ -112,6 +112,8 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     plugin = imviz_helper.plugins['Subset Tools']._obj
     assert not plugin.display_sky_coordinates
 
+    plugin.subset.selected = 'Subset 1'
+
     # get initial subset definitions from ROI applied
     subset_defs = plugin.subset_definitions
 
@@ -154,6 +156,8 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     new_pix_region = original_sky_region.to_pixel(img_wcs)
     new_roi = regions2roi(new_pix_region)
     imviz_helper.plugins['Subset Tools'].import_region(new_roi)
+
+    plugin.subset.selected = 'Subset 2'
 
     # get subset definitions again, which should now be in sky coordinates
     subset_defs = plugin.subset_definitions
@@ -219,8 +223,8 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == 1
 
-    plg.combination_mode = 'or'
-    plg.import_region(SpectralRegion(7 * u.um, 8 * u.um))
+    plg.import_region(SpectralRegion(7 * u.um, 8 * u.um), edit_subset='Subset 1',
+                      combination_mode='or')
 
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets['Subset 1']) == 2
@@ -229,7 +233,7 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
                SpectralRegion(5.8 * u.um, 5.9 * u.um))
     plg.import_region(subset2, combination_mode=['new', 'andnot'])
 
-    assert cubeviz_helper.app.session.edit_subset_mode.mode == OrMode
+    assert cubeviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
 
     with pytest.raises(ValueError, match='\'test\' not one of'):
         plg.combination_mode = 'test'
@@ -292,11 +296,26 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
     spatial_regions = plg.get_regions(region_type='spatial')
     assert spatial_regions['Subset 3']
 
+    cr = spatial_regions['Subset 2']
+    sr1 = CircleSkyRegion(center=SkyCoord(ra=204.999663 * u.deg,
+                                          dec=27.0003 * u.deg), radius=0.72 * u.arcsec)
+    assert isinstance(cr, CircleSkyRegion)
+    assert_allclose(cr.center.ra.deg, sr1.center.ra.deg)
+    assert_allclose(cr.center.dec.deg, sr1.center.dec.deg)
+    assert_allclose(cr.radius, sr1.radius)
+
+    sky_regs = plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')
+    cr2 = sky_regs['Subset 2']
+    assert isinstance(cr2, CirclePixelRegion)
+    assert cr2 == spatial_reg
+
     # test errors
-    with pytest.raises(ValueError, match='No spectral subests in imviz.'):
+    with pytest.raises(ValueError, match='No spectral subsets in imviz.'):
         imviz_helper.plugins['Subset Tools'].get_regions('spectral')
     with pytest.raises(ValueError, match="`region_type` must be 'spectral', 'spatial', or None for any."):  # noqa E501
         plg.get_regions(region_type='fail')
+    with pytest.raises(ValueError, match='Unable to retrieve SkyRegion objects for spectral subsets'):  # noqa E501
+        plg.get_regions(region_type='spectral', wrt_data='Unknown spectrum object[FLUX]')
 
 
 def test_get_regions_composite(imviz_helper):
@@ -373,17 +392,73 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
                           dec=-20.808486*u.deg), radius=0.008*u.deg)
     sr2 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
                           radius=0.007*u.deg)
-    st.import_region(sr1, combination_mode='new')
-    st.import_region(sr2, combination_mode='and')
+    st.import_region(sr1)
+    st.import_region(sr2, edit_subset='Subset 1', combination_mode='and')
 
     # composite subset should be a sky region, and combined to a compound region
-    regs = st.get_regions(return_sky_region=True)
+    regs = st.get_regions()
 
     cr = regs['Subset 1']
     assert isinstance(cr, CompoundSkyRegion)
     assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
     assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
     assert cr.operator == operator.and_
+
+    regs_wcs_with_pixel = st.get_regions(wrt_data='NDData[DATA]')
+    cr2 = regs_wcs_with_pixel['Subset 1']
+    assert isinstance(cr2, CompoundPixelRegion)
+    assert cr2.region1.center == PixCoord(x=48.468736969074506, y=89.44725743429322)
+    assert cr2.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
+
+
+def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data, 'test 1')
+    imviz_helper.load_data(data, 'test 2')
+
+    imviz_helper.plugins['Orientation'].align_by = 'Pixels'
+
+    st = imviz_helper.plugins['Subset Tools']
+
+    pr1 = CirclePixelRegion(center=PixCoord(x=48.468736969074506, y=89.44725743429322),
+                            radius=28.800006270630806)
+    pr2 = CirclePixelRegion(center=PixCoord(x=34.59642971526391, y=83.99791791929273),
+                            radius=25.200004582170216)
+    st.import_region(pr1, combination_mode='new')
+    st.import_region(pr2, edit_subset='Subset 1', combination_mode='and')
+
+    # composite subset should be a compound region, and returned as a sky region
+    regs = st.get_regions(wrt_data='test 1[DATA]')
+    sr1 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr2 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+    cr = regs['Subset 1']
+    assert isinstance(cr, CompoundSkyRegion)
+    assert_allclose(cr.region1.center.ra.deg, sr1.center.ra.deg)
+    assert_allclose(cr.region2.center.ra.deg, sr2.center.ra.deg)
+    assert cr.operator == operator.and_
+
+    regs2 = st.get_regions(wrt_data='test 2[DATA]')
+    sr3 = CircleSkyRegion(center=SkyCoord(ra=337.5058778*u.deg,
+                          dec=-20.808486*u.deg), radius=0.008*u.deg)
+    sr4 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
+                          radius=0.007*u.deg)
+
+    cr2 = regs2['Subset 1']
+    assert isinstance(cr2, CompoundSkyRegion)
+    assert_allclose(cr2.region1.center.ra.deg, sr3.center.ra.deg)
+    assert_allclose(cr2.region2.center.ra.deg, sr4.center.ra.deg)
+    assert cr2.operator == operator.and_
+
+    regs_wcs_with_pixel = st.get_regions()
+    cr3 = regs_wcs_with_pixel['Subset 1']
+    assert isinstance(cr3, CompoundPixelRegion)
+    assert cr3.region1.center == PixCoord(x=48.468736969074506, y=89.44725743429322)
+    assert cr3.region2.center == PixCoord(x=34.59642971526391, y=83.99791791929273)
+
+    with pytest.raises(ValueError, match='fake is not data in '):
+        st.get_regions(wrt_data='fake')
 
 
 def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
@@ -433,10 +508,10 @@ def test_check_valid_subset_label(imviz_helper):
 
     # apply three subsets, with their default names of `Subset 1`, `Subset 2`, and `Subset 3`
     st.import_region(CircularROI(20, 20, 10))
-    st.subset = "Create New"
     st.import_region(CircularROI(25, 25, 10))
-    st.subset = "Create New"
     st.import_region(CircularROI(30, 30, 10))
+
+    st.subset.selected = "Subset 3"
 
     # we should not be able to rename or add a subset named 'Subset 1'.
     # Make sure this warns and returns accordingly.
@@ -453,15 +528,16 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
     plg = cubeviz_helper.plugins['Subset Tools']
 
     spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
-    plg.import_region(spatial_reg, combination_mode='new')
+    plg.import_region(spatial_reg)
     spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
-    plg.import_region(spatial_reg, combination_mode='new')
+    plg.import_region(spatial_reg)
 
     plg.rename_subset("Subset 1", "Test Rename")
 
     assert plg.subset.choices == ['Create New', 'Test Rename', 'Subset 2']
     assert cubeviz_helper.app.data_collection[-1].label == "Spectrum (Test Rename, sum)"
 
+    plg.subset = "Subset 2"
     plg.rename_selected("Second Test")
     assert plg.subset.choices == ['Create New', 'Test Rename', 'Second Test']
 
@@ -474,9 +550,9 @@ def test_update_subset(cubeviz_helper, spectrum1d_cube):
     plg = cubeviz_helper.plugins['Subset Tools']
 
     spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
-    plg.import_region(spatial_reg, combination_mode='new')
+    plg.import_region(spatial_reg)
     spatial_reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=1)
-    plg.import_region(spatial_reg, combination_mode='and')
+    plg.import_region(spatial_reg, edit_subset='Subset 1', combination_mode='and')
 
     subset_def = plg.update_subset('Subset 1')
     assert isinstance(subset_def, dict)

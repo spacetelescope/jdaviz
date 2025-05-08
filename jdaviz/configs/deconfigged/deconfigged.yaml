@@ -11,21 +11,6 @@ settings:
     notebook:
       max_height: 600px
 toolbar:
-  - g-data-tools
-  - g-subset-tools
   - g-coords-info
-tray:
-  - g-metadata-viewer
-  - g-plot-options
-  - g-subset-tools
-  - g-markers
-  - spectral-extraction
-  - g-gaussian-smooth
-  - g-model-fitting
-  - g-unit-conversion
-  - g-line-list
-  - specviz-line-analysis
-  - export
-  - about
 viewer_area:
   - container: col

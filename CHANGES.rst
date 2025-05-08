@@ -9,7 +9,11 @@ New Features
 
 - Added an STC-S string region parser to the Footprints plugin. [#3479]
 
-- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531]
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531, #3555]
+
+- Added a results history table to the Line Analysis plugin.  Results are no longer updated in realtime with changes to inputs,
+  but rather when clicking the button or calling ``get_results``, at which point an entry is added to the results history table
+  by default. [#3557]
 
 Cubeviz
 ^^^^^^^
@@ -22,7 +26,7 @@ Imviz
 - Added ability to load remote data from a S3 URI to Imviz. [#3500]
 
 - Footprints plugin now supports selecting the closest overlay
-  to a clicked point in the image viewer. [#3525, #3539, #3546]
+  to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
 
 - Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
 
@@ -48,11 +52,19 @@ Specviz2d
 API Changes
 -----------
 
+- Allow ``get_regions`` and ``get_subsets`` to take a data label and have a subset apply to the wcs of that data.
+  By setting a value for ``wrt_data``, the user is requesting a region type that is the opposite of the current link
+  type, (i.e. ``SkyRegion`` when linked by pixel or ``PixelRegion`` when linked by wcs.) Also deprecate the
+  ``return_sky_region`` kwarg and leave a deprecation warning to use ``wrt_data`` instead. [#3527]
+
 Cubeviz
 ^^^^^^^
 
 - Radial profile and curve of growth in Aperture Photometry plugin are now consistent
   with ``photutils.profiles``. [#3510]
+
+- BEHAVIOR CHANGE: Change ``import_region`` method to default to creating a new subset when run.
+  Also allow editing a subset using the ``edit_subset`` argument. [#3523]
 
 Imviz
 ^^^^^
@@ -101,6 +113,10 @@ Other Changes and Additions
 
 - Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
 
+- Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
+  dependencies installed with the ``[all]`` extra dependencies flag
+  (i.e., ``pip install jdaviz[all]``). [#3556]
+
 4.2.2 (unreleased)
 ==================
 
@@ -110,12 +126,16 @@ Bug Fixes
 - Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return
   sky regions. [#3547]
 
+- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. [#3570]
+
 Cubeviz
 ^^^^^^^
 - Replace file and fix label in example notebook. [#3537]
 
 Imviz
 ^^^^^
+
+- Fixes changing alignment after creating additional image viewers. [#3553]
 
 Mosviz
 ^^^^^^

@@ -16,6 +16,12 @@ vid_map = {'spectrum-1d-viewer': '1D Spectrum',
 
 
 class BaseImporter(PluginTemplateMixin):
+    # preference order of parsers, by registry name.  If empty, the first found match will
+    # be used by default.  If not empty, the first match in the list will be used (including
+    # over any parsers not included in the list).  If not empty but no valid parsers are in
+    # the list, the first remaining match will be used.
+    parser_preference = []
+
     def __init__(self, app, resolver, input, **kwargs):
         self._input = input
         self._resolver = resolver

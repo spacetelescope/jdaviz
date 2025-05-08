@@ -145,6 +145,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-subset-icon': 'components/subset_icon.vue',
                      'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
+                     'j-about-menu': 'components/about_menu.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
@@ -198,13 +199,25 @@ class ApplicationState(State):
     propagate to the traitlet in order to trigger a UI re-render.
     """
     drawer_content = CallbackProperty(
-        'plugins', docstring="Content shown in the tray drawer.")
+        '', docstring="Content shown in the tray drawer.")
+    add_subtab = CallbackProperty(
+        0, docstring="Index of the active add data tab shown in the tray.")
+    viewers_subtab = CallbackProperty(
+        0, docstring="Index of the active viewer tab shown in the viewer area.")
+    info_subtab = CallbackProperty(
+        0, docstring="Index of the active infotab shown in the viewer area.")
+    jdaviz_version = CallbackProperty(
+        __version__, docstring="Version of Jdaviz.")
+    global_search = CallbackProperty(
+        '', docstring="Global search string.")
+    global_search_menu = CallbackProperty(
+        False, docstring="Whether to show the global search menu.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
         False, docstring="Whether to show API hints.")
-    logger_overlay = CallbackProperty(
-        False, docstring="State of the logger history overlay.")
+    subset_mode_create = CallbackProperty(
+        False, docstring="Whether to create a new subset.")
 
     snackbar = DictCallbackProperty({
         'show': False,
@@ -215,8 +228,6 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     snackbar_queue = SnackbarQueue()
-
-    snackbar_history = ListCallbackProperty(docstring="Previously dismissed snackbar items")
 
     settings = DictCallbackProperty({
         'data': {
@@ -277,6 +288,8 @@ class ApplicationState(State):
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
+    viewer_items = ListCallbackProperty(
+        docstring="List (flat) of viewer objects")
 
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
@@ -302,6 +315,7 @@ class Application(VuetifyTemplate, HubListener):
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
     golden_layout_state = Dict(default_value=None, allow_none=True).tag(sync=True)
+    force_open_about = Bool(False).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -597,7 +611,8 @@ class Application(VuetifyTemplate, HubListener):
             return 'info'
 
         msg_level = _verbosity_levels.index(_color_to_level(msg.color))
-        self.state.snackbar_queue.put(self.state, msg,
+        logger_plg = self._jdaviz_helper.plugins.get('Logger', None)
+        self.state.snackbar_queue.put(self.state, logger_plg, msg,
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)
 
@@ -699,6 +714,8 @@ class Application(VuetifyTemplate, HubListener):
         refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
         if new_refdata_label not in refdata_choices:
             viewer.state.ref_data_helper.append_data(new_refdata)
+        if new_refdata_label not in [lyr.layer.label for lyr in viewer.layers]:
+            viewer.add_data(new_refdata)
         viewer.state.ref_data_helper.refresh()
 
         # set the new reference data in the viewer:
@@ -945,21 +962,25 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_store.get(vid)
 
-    def _get_wcs_from_subset(self, subset_state):
+    def _get_wcs_from_subset(self, subset_state, data=None):
         """ Usually WCS is subset.parent.coords, except special cubeviz case."""
+        parent_data = subset_state.attributes[0].parent if not data else self.data_collection[data]
 
+        # 3D WCS is not yet supported so this workaround allows SkyRegions to
+        # be returned for data in cubeviz
         if self.config == 'cubeviz':
-            parent_data = subset_state.attributes[0].parent
             wcs = parent_data.meta.get("_orig_spatial_wcs", None)
         else:
-            wcs = subset_state.xatt.parent.coords
-
+            if not hasattr(parent_data, 'coords'):
+                raise AttributeError(f'{parent_data} does not have anything set for'
+                                     f'the coords attribute, unable to extract WCS')
+            wcs = parent_data.coords
         return wcs
 
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,
                     simplify_spectral=True, use_display_units=False,
-                    include_sky_region=False):
+                    include_sky_region=False, wrt_data=None):
         """
         Returns all branches of glue subset tree in the form that subset plugin
         can recognize.
@@ -986,6 +1007,9 @@ class Application(VuetifyTemplate, HubListener):
             parent data, return a sky region in addition to pixel region. If
             subset is composite, a sky region for each constituent subset will
             be returned.
+        wrt_data : str or None
+            Name of data to use for applying WCS to subset when returning as
+            a sky region object.
 
         Returns
         -------
@@ -1019,11 +1043,13 @@ class Application(VuetifyTemplate, HubListener):
                 # objects that must be traversed
                 subset_region = self.get_sub_regions(subset.subset_state,
                                                      simplify_spectral, use_display_units,
-                                                     get_sky_regions=include_sky_region)
+                                                     get_sky_regions=include_sky_region,
+                                                     wrt_data=wrt_data)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
                 subset_region = self._get_roi_subset_definition(subset.subset_state,
-                                                                to_sky=include_sky_region)
+                                                                to_sky=include_sky_region,
+                                                                wrt_data=wrt_data)
 
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
@@ -1152,20 +1178,28 @@ class Application(VuetifyTemplate, HubListener):
                  "sky_region": None,
                  "subset_state": subset_state}]
 
-    def _get_roi_subset_definition(self, subset_state, to_sky=False):
-
-        # pixel region
-        roi_as_region = roi_subset_state_to_region(subset_state)
-
+    def _get_roi_subset_definition(self, subset_state, to_sky=False, wrt_data=None):
         wcs = None
-        if to_sky:
-            wcs = self._get_wcs_from_subset(subset_state)
+        # If SkyRegion is explicitly requested or the user has specified something for
+        # wrt_data, this will be true
+        if to_sky or wrt_data is not None:
+            wcs = self._get_wcs_from_subset(subset_state, data=wrt_data)
 
         # if no spatial wcs on subset, we have to skip computing sky region for this subset
         # but want to do so without raising an error (since many subsets could be requested)
         roi_as_sky_region = None
         if wcs is not None:
-            roi_as_sky_region = roi_as_region.to_sky(wcs)
+            if self.config == 'cubeviz':
+                # the value for wcs returned above will be in 2D dimensions, which is needed
+                # for this translation to work
+                roi_as_sky_region = roi_subset_state_to_region(subset_state).to_sky(wcs)
+            else:
+                roi_as_sky_region = roi_subset_state_to_region(subset_state, to_sky=True)
+
+            roi_as_region = roi_as_sky_region.to_pixel(wcs)
+        else:
+            # pixel region
+            roi_as_region = roi_subset_state_to_region(subset_state)
 
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
@@ -1174,16 +1208,19 @@ class Application(VuetifyTemplate, HubListener):
                  "subset_state": subset_state}]
 
     def get_sub_regions(self, subset_state, simplify_spectral=True,
-                        use_display_units=False, get_sky_regions=False):
+                        use_display_units=False, get_sky_regions=False,
+                        wrt_data=None):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
                 one = self.get_sub_regions(subset_state.state1,
                                            simplify_spectral, use_display_units,
-                                           get_sky_regions=get_sky_regions)
+                                           get_sky_regions=get_sky_regions,
+                                           wrt_data=wrt_data)
                 two = self.get_sub_regions(subset_state.state2,
                                            simplify_spectral, use_display_units,
-                                           get_sky_regions=get_sky_regions)
+                                           get_sky_regions=get_sky_regions,
+                                           wrt_data=wrt_data)
                 if simplify_spectral and isinstance(two, SpectralRegion):
                     merge_func = self._merge_overlapping_spectral_regions_worker
                 else:
@@ -1338,12 +1375,14 @@ class Application(VuetifyTemplate, HubListener):
                 return self.get_sub_regions(subset_state.state1,
                                             simplify_spectral,
                                             use_display_units,
-                                            get_sky_regions=get_sky_regions)
+                                            get_sky_regions=get_sky_regions,
+                                            wrt_data=wrt_data)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI, Range, or MultiMask.
             if isinstance(subset_state, RoiSubsetState):
-                return self._get_roi_subset_definition(subset_state, to_sky=get_sky_regions)
+                return self._get_roi_subset_definition(subset_state, to_sky=get_sky_regions,
+                                                       wrt_data=wrt_data)
 
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state,
@@ -1394,7 +1433,13 @@ class Application(VuetifyTemplate, HubListener):
             # Plugins that access the unit at this point will need to
             # detect that they are set to unitless and attempt again later.
             return ''
-        elif self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
+
+        try:
+            uc = self.get_tray_item_from_name('g-unit-conversion')  # even if not relevant
+        except KeyError:
+            # UC plugin not available (should only be for: imviz, mosviz)
+            uc = None
+        if uc is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
             if hasattr(self._jdaviz_helper, '_default_spectrum_viewer_reference_name'):
                 viewer_name = self._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -1447,7 +1492,6 @@ class Application(VuetifyTemplate, HubListener):
                     return sv_y_unit / solid_angle_unit
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
-        uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
         if axis == 'spectral_y':
             return uc.spectral_y_unit
         try:
@@ -1671,8 +1715,10 @@ class Application(VuetifyTemplate, HubListener):
             exist_labels = self.data_collection.labels
         elif typ == 'viewer':
             exist_labels = list(self._viewer_store.keys())
+        elif isinstance(typ, list):
+            exist_labels = typ
         else:
-            raise ValueError("typ must be either 'data' or 'viewer'")
+            raise ValueError("typ must be either 'data', 'viewer', or a list of strings")
         if label is None:
             label = "Unknown"
 
@@ -2513,6 +2559,20 @@ class Application(VuetifyTemplate, HubListener):
         kwargs = event.get('kwargs', {})
         return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
+    def vue_search_item_clicked(self, event):
+        attr, label = event['attr'], event['label']
+        if attr == 'data_menus':
+            item = self._jdaviz_helper.viewers[label].data_menu
+        else:
+            item = getattr(self._jdaviz_helper, attr)[label]
+        if label == 'About':
+            item.show_popup()
+        elif attr == 'data_menus':
+            item.open_menu()
+        else:
+            kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
+            item.open_in_tray(**kw)
+
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
@@ -2719,6 +2779,7 @@ class Application(VuetifyTemplate, HubListener):
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
             'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            'api_methods': viewer._data_menu.api_methods if hasattr(viewer, '_data_menu') else [],
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
@@ -2804,6 +2865,8 @@ class Application(VuetifyTemplate, HubListener):
         new_stack_item = self._create_stack_item(
             container='gl-stack',
             viewers=[new_viewer_item])
+
+        self.state.viewer_items.append(new_viewer_item)
 
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
@@ -2941,34 +3004,80 @@ class Application(VuetifyTemplate, HubListener):
                 'name': name,
                 'label': name,
                 'requires_api_support': loader.requires_api_support,
-                'widget': "IPY_MODEL_" + loader.model_id
+                'widget': "IPY_MODEL_" + loader.model_id,
+                'api_methods': loader.api_methods,
             })
         # initialize selection (tab) to first entry
         if len(self.state.loader_items):
             self.state.loader_selected = self.state.loader_items[0]['name']
 
         # Tray plugins
-        for name in config.get('tray', []):
+        if self.config == 'deconfigged':
+            self.update_tray_items_from_registry()
+        else:
+            for name in config.get('tray', []):
+                tray_registry_member = tray_registry.members.get(name)
+                self.state.tray_items.append(self._create_tray_item(tray_registry_member))
 
-            tray = tray_registry.members.get(name)
+    def update_loaders_from_registry(self):
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_loaders_from_registry is only "
+                                      "implemented for the deconfigged app")
+        for loader in self._jdaviz_helper.loaders.values():
+            loader.format._update_items()
 
-            tray_item_instance = tray.get('cls')(app=self, tray_instance=True)
+    def update_tray_items_from_registry(self):
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_tray_items_from_registry is only "
+                                      "implemented for the deconfigged app")
+        # need to rebuild in order, just pulling from existing dict if its already there
+        tray_items = []
+        for category in ['app:options', 'data:reduction',
+                         'data:manipulation', 'data:analysis',
+                         'core']:
+            for tray_registry_member in tray_registry.members_in_category(category):
+                if not tray_registry_member.get('overwrite', False):
+                    try:
+                        tray_item = self.get_tray_item_from_name(
+                            tray_registry_member.get('name'), return_widget=False)
+                    except KeyError:
+                        create_new = True
+                    else:
+                        create_new = False
+                else:
+                    create_new = True
 
-            # store a copy of the tray name in the instance so it can be accessed by the
-            # plugin itself
-            tray_item_label = tray.get('label')
+                if create_new:
+                    try:
+                        tray_item = self._create_tray_item(tray_registry_member)
+                    except Exception as e:
+                        self.hub.broadcast(SnackbarMessage(
+                            f"Failed to load plugin {tray_registry_member.get('name')}: {e}",
+                            sender=self, color='error'))
+                tray_items.append(tray_item)
 
-            tray_item_description = tray_item_instance.plugin_description
+        self.state.tray_items = tray_items
 
-            # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
-            self.state.tray_items.append({
-                'name': name,
-                'label': tray_item_label,
-                'tray_item_description': tray_item_description,
-                'api_methods': tray_item_instance.api_methods,
-                'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
-                'widget': "IPY_MODEL_" + tray_item_instance.model_id
-            })
+    def _create_tray_item(self, tray_registry_member):
+        tray_item_instance = tray_registry_member.get('cls')(app=self, tray_instance=True)
+
+        # store a copy of the tray name in the instance so it can be accessed by the
+        # plugin itself
+        tray_item_label = tray_registry_member.get('label')
+
+        tray_item_description = tray_item_instance.plugin_description
+        # NOTE: is_relevant is later updated by observing irrelvant_msg traitlet
+        tray_item = {
+            'name': tray_registry_member.get('name'),
+            'label': tray_item_label,
+            'sidebar': tray_item_instance._sidebar,
+            'subtab': tray_item_instance._subtab,
+            'tray_item_description': tray_item_description,
+            'api_methods': tray_item_instance.api_methods,
+            'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
+            'widget': "IPY_MODEL_" + tray_item_instance.model_id
+        }
+        return tray_item
 
     def _reset_state(self):
         """ Resets the application state """
@@ -3002,7 +3111,7 @@ class Application(VuetifyTemplate, HubListener):
         cfg = get_configuration(path=path, section=section, config=config)
         return cfg
 
-    def get_tray_item_from_name(self, name):
+    def get_tray_item_from_name(self, name, return_widget=True):
         """Return the instance of a tray item for a given name.
         This is useful for direct programmatic access to Jdaviz plugins
         registered under tray items.
@@ -3029,7 +3138,10 @@ class Application(VuetifyTemplate, HubListener):
         for item in self.state.tray_items:
             if item['name'] == name or item['label'] == name:
                 ipy_model_id = item['widget']
-                tray_item = widget_serialization['from_json'](ipy_model_id, None)
+                if return_widget:
+                    tray_item = widget_serialization['from_json'](ipy_model_id, None)
+                else:
+                    tray_item = item
                 break
 
         if tray_item is None:

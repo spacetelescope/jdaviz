@@ -40,7 +40,7 @@ class _EmptyParam:
                                    self.unit if self.unit is not None else u.dimensionless_unscaled)
 
 
-@tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
+@tray_registry('g-model-fitting', label="Model Fitting", category="data:analysis")
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
                    NonFiniteUncertaintyMismatchMixin,
@@ -629,8 +629,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if axis == 'y':
             # The units have to be in surface brightness for a cube fit.
-            uc = self.app._jdaviz_helper.plugins['Unit Conversion']
-            if self.cube_fit and unit != uc._obj.sb_unit_selected:
+            uc = self.app._jdaviz_helper.plugins.get('Unit Conversion', None)
+            if uc is None:
+                pass
+            elif self.cube_fit and unit != uc._obj.sb_unit_selected:
                 self._units[axis] = uc._obj.sb_unit_selected
                 self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                 return

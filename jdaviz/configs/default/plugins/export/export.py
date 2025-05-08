@@ -32,7 +32,8 @@ else:
 __all__ = ['Export']
 
 
-@tray_registry('export', label="Export")
+@tray_registry('export', label="Export",
+               category='core', sidebar='save')
 class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
              DatasetMultiSelectMixin, PluginTableSelectMixin, PluginPlotSelectMixin,
              MultiselectMixin):

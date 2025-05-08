@@ -18,7 +18,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Collapse']
 
 
-@tray_registry('g-collapse', label="Collapse", viewer_requirements='spectrum')
+@tray_registry('g-collapse', label="Collapse")
 class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Collapse Plugin Documentation <collapse>` for more details.

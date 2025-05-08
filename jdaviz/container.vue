@@ -6,6 +6,7 @@
       :key="index"
       :data_items="data_items"
       :app_settings="app_settings"
+      :config="config"
       :icons="icons"
       :viewer_icons="viewer_icons"
       :layer_icons="layer_icons"
@@ -25,10 +26,10 @@
     >
         <div>
           <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
-            <j-tooltip tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
+            <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
               <v-btn
-                text 
-                elevation="3" 
+                text
+                elevation="3"
                 color="white"
                 tile
                 icon
@@ -77,7 +78,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "data_items", "closefn", "app_settings", "icons", "viewer_icons", "layer_icons"],
+  props: ["stack", "data_items", "closefn", "app_settings", "config", "icons", "viewer_icons", "layer_icons"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

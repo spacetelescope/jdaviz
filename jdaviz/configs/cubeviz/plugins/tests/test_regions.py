@@ -59,19 +59,18 @@ class TestLoadRegions(BaseRegionHandler):
         self.cubeviz.plugins['Subset Tools'].import_region([
             EllipsePixelRegion(center=PixCoord(x=4.5, y=4.0), width=9.0, height=8.0),
             SpectralRegion(4.892 * unit, 4.896 * unit)
-        ], combination_mode="new")
-        self.cubeviz.app.session.edit_subset_mode.edit_subset = None
+        ])
 
         # Get spatial regions only.
-        st = self.cubeviz.plugins['Subset Tools']._obj
+        st = self.cubeviz.plugins['Subset Tools']
 
         assert isinstance(st.get_regions(region_type='spatial')['Subset 1'],
                           EllipseSkyRegion)
-        assert isinstance(st.get_regions(region_type='spatial',
-                                         return_sky_region=True)['Subset 1'],
+        assert isinstance(st.get_regions(region_type='spatial')['Subset 1'],
                           EllipseSkyRegion)
 
-        spatial_subsets_as_regions = st.get_regions(region_type='spatial', return_sky_region=False)
+        spatial_subsets_as_regions = st.get_regions(region_type='spatial',
+                                                    wrt_data='has_microns[FLUX]')
         assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions

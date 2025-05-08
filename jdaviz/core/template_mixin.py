@@ -290,6 +290,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
     vdocs = Unicode("").tag(sync=True)
     api_hints_enabled = Bool(False).tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
+    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __new__(cls, *args, **kwargs):
         """
@@ -326,6 +327,26 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
 
         self.app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
         self._update_api_hints_enabled()
+
+        # set user-API methods
+        if hasattr(self, 'user_api'):
+            def get_api_text(name, obj):
+                if type(obj).__name__ == 'method':
+                    if hasattr(obj, "__wrapped__"):
+                        orig_sig = str(inspect.signature(obj.__wrapped__))
+                        if "(self)" in orig_sig:
+                            orig_sig = orig_sig.replace("(self)", "()")
+                        elif "(self, " in orig_sig:
+                            orig_sig = orig_sig.replace("(self, ", "(")
+                        return f"{name}{orig_sig}"
+                    return f"{name}{inspect.signature(obj)}"
+                return name
+
+            with warnings.catch_warnings():
+                # Some API might be going through deprecation, so ignore the warning.
+                warnings.filterwarnings("ignore", category=DeprecationWarning)
+                self.api_methods = sorted([get_api_text(name, obj)
+                                           for name, obj in inspect.getmembers(self.user_api)])
 
     @property
     def app(self):
@@ -502,6 +523,8 @@ class PluginTemplateMixin(TemplateMixin):
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     _plugin_name = None  # noqa overwritten by the registry - won't be populated by plugins instantiated directly
+    _sidebar = 'plugins'  # noqa overwritten by the registry
+    _subtab = None  # noqa overwritten by the registry
     disabled_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will show this message in place of plugin content
     irrelevant_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will exclude from the tray, and show this message in place of any content in other instances
     plugin_key = Unicode("").tag(sync=True)  # noqa set to non-empty to override value in vue file (when supported by vue file)
@@ -517,7 +540,6 @@ class PluginTemplateMixin(TemplateMixin):
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
-    api_methods = List([]).tag(sync=True)  # noqa list of methods exposed to the user API, searchable
 
     def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
@@ -563,24 +585,6 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
-
-        # set user-API methods
-        def get_api_text(name, obj):
-            if type(obj).__name__ == 'method':
-                if hasattr(obj, "__wrapped__"):
-                    orig_sig = str(inspect.signature(obj.__wrapped__))
-                    if "(self)" in orig_sig:
-                        orig_sig = orig_sig.replace("(self)", "()")
-                    elif "(self, " in orig_sig:
-                        orig_sig = orig_sig.replace("(self, ", "(")
-                    return f"{name}{orig_sig}"
-                return f"{name}{inspect.signature(obj)}"
-            return name
-        with warnings.catch_warnings():
-            # Some API might be going through deprecation, so ignore the warning.
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            self.api_methods = sorted([get_api_text(name, obj)
-                                       for name, obj in inspect.getmembers(self.user_api)])
 
     def new(self):
         new = self.__class__(app=self.app)
@@ -689,10 +693,15 @@ class PluginTemplateMixin(TemplateMixin):
             Whether to immediately scroll to the plugin opened in the tray.
         """
         app_state = self.app.state
-        app_state.drawer_content = 'plugins'
-        index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
-        if index not in app_state.tray_items_open:
-            app_state.tray_items_open = app_state.tray_items_open + [index]
+        sidebar = self._sidebar if self.app.config == 'deconfigged' else 'plugins'
+        app_state.drawer_content = sidebar
+
+        if sidebar == 'plugins':
+            index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
+            if index not in app_state.tray_items_open:
+                app_state.tray_items_open = app_state.tray_items_open + [index]
+        elif self._subtab is not None:
+            setattr(app_state, '{}_subtab'.format(self._sidebar), self._subtab)
         if scroll_to:
             # sleep 0.5s to ensure plugin is intialized and user can see scrolling
             time.sleep(0.5)
@@ -918,7 +927,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                                                   x.lower() for x in manual_options
                                                   if isinstance(x, (str, dict))])
 
-        self.items = [self._to_item(opt) for opt in manual_options]
+        self._update_items()
         # set default values for traitlets
         if default_text is not None:
             self.selected = default_text
@@ -943,8 +952,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
-            # NOTE: selected is a list here so should not be wrapped with quotes
-            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            if self.is_multiselect and isinstance(self.selected, list):
+                # NOTE: selected is a list here so should not be wrapped with quotes
+                return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
@@ -1108,7 +1119,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _apply_default_selection(self, skip_if_current_valid=True):
         if self.is_multiselect:
-            if skip_if_current_valid and len(self.selected) == 0:
+            if skip_if_current_valid and (self.selected is None or len(self.selected) == 0):
                 # current selection is empty and so should remain that way
                 return
             is_valid = [s in self.labels for s in self.selected]
@@ -1180,12 +1191,22 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
 
 class SelectFileExtensionComponent(SelectPluginComponent):
+    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
+        super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
+                         manual_options=manual_options, filters=filters)
+
     @property
     def selected_index(self):
         return self.selected_item.get('index', None)
 
     @property
+    def selected_name(self):
+        return self.selected_item.get('name', None)
+
+    @property
     def selected_hdu(self):
+        if self.is_multiselect:
+            return [self.manual_options[ind] for ind in self.selected_index]
         return self.manual_options[self.selected_index]
 
     @property
@@ -1209,7 +1230,7 @@ class SelectFileExtensionComponent(SelectPluginComponent):
 
         try:
             self._apply_default_selection()
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
 
@@ -1739,7 +1760,7 @@ class LayerSelect(SelectPluginComponent):
             self.viewer = msg.new_viewer_ref
 
     def _get_viewer(self, viewer):
-        # newer will likely be the viewer name in most cases, but viewer id in the case
+        # viewer will likely be the viewer name in most cases, but viewer id in the case
         # of additional viewers in imviz.
         try:
             return self.app.get_viewer(viewer)
@@ -3698,6 +3719,7 @@ class DatasetSelect(SelectPluginComponent):
       />
 
     """
+    get_data_cls = None
 
     def __init__(self, plugin, items, selected,
                  multiselect=None,
@@ -3784,7 +3806,8 @@ class DatasetSelect(SelectPluginComponent):
             if self.selected not in self.labels:
                 # _apply_default_selection will override shortly anyways
                 return None
-            match = self.app._jdaviz_helper.get_data(data_label=self.selected)
+            match = self.app._jdaviz_helper.get_data(data_label=self.selected,
+                                                     cls=self.get_data_cls)
             if match is not None:
                 return match
         # handle the case of empty Application with no viewer, we'll just pull directly
@@ -4201,7 +4224,6 @@ class AddResults(BasePluginComponent):
                                    default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoTextField(plugin, label, label_default, label_auto, label_invalid_msg)
-        self.auto = self.auto_label.auto
         self.add_observe(label, self._on_label_changed)
 
     def __repr__(self):
