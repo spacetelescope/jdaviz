@@ -318,6 +318,10 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
     invalid_resolvers = {}
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():
+        if resolver_name == 'file drop':
+            # no API input, so let's avoid always returning the confusing
+            # message that default_input is undefined
+            continue
         if resolver is not None and resolver != resolver_name:
             invalid_resolvers[resolver_name] = f'not {resolver}'
             continue
