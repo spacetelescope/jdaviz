@@ -635,7 +635,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
                   'select_all', 'subset_visible', 'reset_viewer_bounds']
         if self.config == "cubeviz":
-            expose += ['uncertainty_visible']
+            expose += ['uncertainty_visible', 'volume_level']
         if self.config != "imviz":
             expose += ['x_min', 'x_max', 'y_min', 'y_max',
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',

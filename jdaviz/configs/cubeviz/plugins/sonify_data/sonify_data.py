@@ -81,6 +81,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         return PluginUserApi(self, expose)
 
     def sonify_cube(self, *args):
+        """
+        Create a sonified grid in the flux viewer so that sound plays when mousing over the viewer.
+        You can select the device index for audio output and also use a spectral subset to set a
+        range for sonification.
+        """
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
 
