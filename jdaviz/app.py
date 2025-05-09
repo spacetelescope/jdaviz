@@ -68,6 +68,10 @@ GoldenLayout()
 
 enable_spaxel_unit()
 
+# This shows up repeatedly when doing many operations, I think it's reasonable to disable it
+warnings.filterwarnings('ignore', message="The unit 'Angstrom' has been deprecated"
+                        "in the VOUnit standard")
+
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
 EXT_TYPES = dict(flux=['flux', 'sci'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
