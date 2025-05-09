@@ -131,12 +131,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         except Exception:
             data_unit = u.count
 
-        # FITS WCS is invalid, so ignore it.
-        if wcs.spectral.naxis == 0:
-            kw = {}
-        else:
-            kw = {'wcs': wcs}
-
+        kw = {'wcs': wcs}
         return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
 
     def __call__(self):
