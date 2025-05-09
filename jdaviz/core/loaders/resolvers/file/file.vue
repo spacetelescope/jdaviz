@@ -22,8 +22,6 @@
                 ldr.filepath = '{{ filepath }}'
             </span>
         </v-row>
-        <v-row>
-          <g-file-import id="file-uploader"></g-file-import>
-        </v-row>
+        <jupyter-widget :widget="file_chooser_widget"></jupyter-widget>
     </j-loader>
 </template>
