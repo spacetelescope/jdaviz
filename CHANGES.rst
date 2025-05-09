@@ -4,7 +4,11 @@
 Bug Fixes
 ---------
 
-- Fixed viewer layer to persist when changing jupyter/browser tabs. [#3551]
+- Fixed viewer layout to persist when changing jupyter/browser tabs. [#3551]
+
+- Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return sky regions. [#3547]
+
+- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. 
 
 Cubeviz
 ^^^^^^^
