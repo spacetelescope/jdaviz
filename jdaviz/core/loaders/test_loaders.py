@@ -84,9 +84,13 @@ def test_fits_spectrum2d(deconfigged_helper):
                             format='2D Spectrum')
 
     # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
-    sp = deconfigged_helper.get_data()
-    assert isinstance(sp, Spectrum1D)
-    assert str(sp.spectral_axis.unit) == 'um'
+    sp2d = deconfigged_helper.get_data('2D Spectrum')
+    assert isinstance(sp2d, Spectrum1D)
+    assert str(sp2d.spectral_axis.unit) == 'um'
+
+    sp1d = deconfigged_helper.get_data('1D Spectrum')
+    assert isinstance(sp1d, Spectrum1D)
+    assert str(sp1d.spectral_axis.unit) == 'um'
 
 
 @pytest.mark.remote_data
