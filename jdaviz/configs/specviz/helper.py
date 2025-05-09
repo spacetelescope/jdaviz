@@ -83,6 +83,14 @@ class Specviz(ConfigHelper, LineListMixin):
         if load_as_list and concat_by_file:
             raise ValueError("Cannot set both load_as_list and concat_by_file")
 
+        load_kwargs = {}
+        if cache is not None:
+            load_kwargs['cache'] = cache
+        if timeout is not None:
+            load_kwargs['timeout'] = timeout
+        if local_path is not None:
+            load_kwargs['local_path'] = local_path
+
         if isinstance(data, (SpectrumList, SpectrumCollection)) and isinstance(data_label, list):
             if len(data_label) != len(data):
                 raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
@@ -92,7 +100,7 @@ class Specviz(ConfigHelper, LineListMixin):
             for spec, label in zip(data, data_label):
                 self.load_data(spec, data_label=label,
                                show_in_viewer=show_in_viewer,
-                               cache=cache, local_path=local_path, timeout=timeout)
+                               **load_kwargs)
             return
 
         if load_as_list:
@@ -109,7 +117,7 @@ class Specviz(ConfigHelper, LineListMixin):
         self.load(data, format=format,
                   data_label=data_label,
                   show_in_viewer=show_in_viewer,
-                  cache=cache, local_path=local_path, timeout=timeout)
+                  **load_kwargs)
 
     @property
     def _spectrum_viewer(self):

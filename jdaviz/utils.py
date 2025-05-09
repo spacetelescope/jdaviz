@@ -659,6 +659,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         # avoiding creating local paths in a tmp dir when in standalone:
         local_path = os.path.join(os.environ["JDAVIZ_START_DIR"], local_path)
 
+    timeout = int(timeout) if timeout is not None else timeout
     parsed_uri = urlparse(possible_uri)
 
     cache_none_msg = (
