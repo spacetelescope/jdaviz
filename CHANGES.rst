@@ -128,7 +128,9 @@ Bug Fixes
 
 - Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. [#3570]
 
-- Fixed viewer layer to persist when changing jupyter/browser tabs. [#3551]
+- Fixed viewer layout to persist when changing jupyter/browser tabs. [#3551]
+
+- Improved error messaging when passing invalid URL to ``load``. [#3580]
 
 Cubeviz
 ^^^^^^^
