@@ -22,7 +22,7 @@ def test_get_tray_item_from_name():
     plg = app.get_tray_item_from_name('g-gaussian-smooth')
     assert isinstance(plg, GaussianSmooth)
 
-    with pytest.raises(KeyError, match='not found in app'):
+    with pytest.raises(KeyError, match='imviz-compass not found'):
         app.get_tray_item_from_name('imviz-compass')
 
 

@@ -1,0 +1,15 @@
+<template>
+  <j-viewer-creator
+    :title="viewer_type"
+    :popout_button="popout_button"
+    :dataset_items="dataset_items"
+    :dataset_selected.sync="dataset_selected"
+    :dataset_multiselect="true"
+    :viewer_label_value.sync="viewer_label_value"
+    :viewer_label_default="viewer_label_default"
+    :viewer_label_auto.sync="viewer_label_auto"
+    :viewer_label_invalid_msg="viewer_label_invalid_msg"
+    :api_hints_enabled="api_hints_enabled"
+    @create-clicked="create_clicked"
+  ></j-viewer-creator>
+</template>

@@ -211,7 +211,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def _on_refdata_change(self, msg=None):
         if msg is not None and msg.viewer_id != self.viewer_id:
             return
-        if self._viewer.state.reference_data is None:
+        if getattr(self._viewer.state, 'reference_data', None) is None:
             return
         self.orientation_align_by_wcs = self._viewer.state.reference_data.meta.get('_WCS_ONLY', False)  # noqa
         if self.orientation_align_by_wcs:
