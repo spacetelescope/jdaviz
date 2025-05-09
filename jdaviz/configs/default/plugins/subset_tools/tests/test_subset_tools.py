@@ -6,6 +6,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
+from astropy.tests.helper import assert_quantity_allclose
 from glue.core.edit_subset_mode import ReplaceMode, OrMode, NewMode
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from numpy.testing import assert_allclose
@@ -369,11 +370,10 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     assert cr.operator == operator.and_
 
 
-@pytest.mark.skip(reason="Unskip after JDAT-5186.")
 def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
     """
-    Test to ensure bug fixed by JDAT-5186 is fixed, where get_subsets
-    for compoisute subset applied with 'remove' when WCS linked was not
+    Test to ensure bug is fixed, where get_subsets
+    for composite subset applied with 'remove' when WCS linked was not
     correctly retrieving the second subset.
     """
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
@@ -387,21 +387,24 @@ def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
                           dec=-20.808486*u.deg), radius=0.008*u.deg)
     sr2 = CircleSkyRegion(center=SkyCoord(ra=337.51*u.deg, dec=-20.81*u.deg),
                           radius=0.007*u.deg)
-    st.import_region(sr1, combination_mode='new')
-    st.import_region(sr2, combination_mode='andnot')
+    regions = [sr1, sr2]
+    st.import_region(regions, combination_mode=['new', 'andnot'])
 
-    # app.get_subsets
+    # app.get_subsets, composite region should be returned as 2 sky regions
     ss = imviz_helper.app.get_subsets(include_sky_region=True)
-
-    # composite region should be returned as 2 sky regions
-    assert isinstance(ss['Subset 1'][0]['sky_region'], CircleSkyRegion)
-    assert isinstance(ss['Subset 1'][1]['sky_region'], CircleSkyRegion)
+    for expected_region, actual in zip(regions, ss['Subset 1']):
+        sky_region = actual['sky_region']
+        assert_quantity_allclose(sky_region.center.ra, expected_region.center.ra)
+        assert_quantity_allclose(sky_region.center.dec, expected_region.center.dec)
+        assert_quantity_allclose(sky_region.radius, expected_region.radius)
 
     # now make sure Subset Tools get_regions agrees and both sky regions
     # are returned for Subset 1
     regs = st.get_regions()
-    assert isinstance(regs['Subset 1'][0], CircleSkyRegion)
-    assert isinstance(regs['Subset 1'][1], CircleSkyRegion)
+    for expected_region, actual in zip(regions, regs['Subset 1']):
+        assert_quantity_allclose(actual[0].center.ra, expected_region.center.ra)
+        assert_quantity_allclose(actual[0].center.dec, expected_region.center.dec)
+        assert_quantity_allclose(actual[0].radius, expected_region.radius)
 
 
 def test_check_valid_subset_label(imviz_helper):

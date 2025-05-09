@@ -968,7 +968,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         combination_mode : list, str, or `None`
             The way that regions are created or combined. If a list, then it must be the
             same length as regions. If `None`, then it will follow the default glue
-            functionality for subset creation.
+            functionality for subset creation. Options are ['new', 'replace', 'or', 'and',
+            'xor', 'andnot']
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.

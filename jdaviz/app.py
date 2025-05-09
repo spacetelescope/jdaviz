@@ -1337,7 +1337,9 @@ class Application(VuetifyTemplate, HubListener):
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
                 return self.get_sub_regions(subset_state.state1,
-                                            simplify_spectral, use_display_units)
+                                            simplify_spectral,
+                                            use_display_units,
+                                            get_sky_regions=get_sky_regions)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI, Range, or MultiMask.
