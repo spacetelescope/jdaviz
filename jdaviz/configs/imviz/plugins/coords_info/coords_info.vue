@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @mouseover="show_dataset_selected = true" @mouseleave="show_dataset_selected = false" style="min-width: 300px">
     <div v-if="icon" style="position: absolute; height: 100%">
       <v-toolbar-items>
         <v-btn icon tile>
@@ -32,10 +32,20 @@
             <j-layer-viewer-icon :icon="dataset_icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
           </v-btn>
         </j-tooltip>
-        <span style="padding-top: 22px">
+        <span v-if="show_dataset_selected" style="padding-top: 22px">
           {{dataset_selected}}
         </span>
       </v-toolbar-items>
     </div>
 </div>
 </template>
+
+<script>
+  module.exports = {
+    data: function () {
+      return {
+        show_dataset_selected: false,
+      }
+    },
+  }
+</script>

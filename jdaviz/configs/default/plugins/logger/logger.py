@@ -13,7 +13,7 @@ __all__ = ['Logger']
 
 
 @tray_registry('logger', label="Logger",
-               category='core', sidebar='info', subtab=1)
+               category='core', sidebar='info', subtab=2)
 class Logger(PluginTemplateMixin):
     """Show snackbar messages in a logger UI."""
     template_file = __file__, "logger.vue"
