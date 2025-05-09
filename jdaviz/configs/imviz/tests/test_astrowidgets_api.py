@@ -351,3 +351,18 @@ def test_markers_gwcs_lonlat(imviz_helper):
     calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
     imviz_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
     assert imviz_helper.app.data_collection[1].label == 'my_sky'
+
+    viewer = imviz_helper.app.get_viewer('imviz-0')
+    viewer.reset_markers()
+
+    # change orientation and ensure catalogs can be plotted using new orientation
+    # data collection entry
+    orientation = imviz_helper.plugins['Orientation']
+    orientation.align_by = "WCS"
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin.catalog.selected = 'Gaia'
+    catalogs_plugin.max_sources = 10
+
+    with pytest.warns(ResourceWarning):
+        catalogs_plugin.search(error_on_fail=True)
