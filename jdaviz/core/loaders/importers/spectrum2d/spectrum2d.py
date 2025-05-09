@@ -131,8 +131,11 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         except Exception:
             data_unit = u.count
 
-        kw = {'wcs': wcs}
-        return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
+        try:
+            return Spectrum1D(flux=data * data_unit, meta=metadata, wcs=wcs)
+        except ValueError:
+            # if the WCS is not valid, still parse but without WCS
+            return Spectrum1D(flux=data * data_unit, meta=metadata)
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
