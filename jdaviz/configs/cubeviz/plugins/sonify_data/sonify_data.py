@@ -77,7 +77,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     @property
     def user_api(self):
-        expose = []
+        expose = ['sonify_cube']
         return PluginUserApi(self, expose)
 
     def sonify_cube(self, *args):
