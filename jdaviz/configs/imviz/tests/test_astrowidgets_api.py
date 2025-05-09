@@ -364,6 +364,5 @@ def test_markers_gwcs_lonlat(imviz_helper):
     catalogs_plugin.catalog.selected = 'Gaia'
     catalogs_plugin.max_sources = 10
 
-    # will fail if RA/Dec components expected in image.state.reference_data
     with pytest.warns(ResourceWarning):
         catalogs_plugin.search(error_on_fail=True)
