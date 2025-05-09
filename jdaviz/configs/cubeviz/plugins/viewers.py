@@ -1,4 +1,3 @@
-import uuid
 from functools import cached_property
 
 from glue.core import BaseData
@@ -263,7 +262,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                    'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                    'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
 
-        # Create add data with name results_label to data collection and then add it to the flux viewer
+        # Create add data with name results_label to data collection and then add it to the
+        # flux viewer
         test = CCDData(a * u.Unit('m'), wcs=wcs)
         self.jdaviz_app.data_collection[results_label] = test
         self.jdaviz_app.data_collection[results_label].meta['Sonified'] = True
