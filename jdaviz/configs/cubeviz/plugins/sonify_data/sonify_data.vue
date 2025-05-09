@@ -124,7 +124,7 @@
           action_label="Sonify data"
           action_tooltip="Create sonified data and add to flux viewer"
           :action_spinner="spinner"
-          action_api_hint='plg.vue_sonify_cube()'
+          action_api_hint='plg.sonify_cube()'
           :api_hints_enabled="api_hints_enabled"
           @click:action="sonify_cube"
       ></plugin-add-results>

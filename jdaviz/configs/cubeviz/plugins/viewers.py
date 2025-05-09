@@ -198,7 +198,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sonified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
-                          pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label=None):
+                          pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label):
         spectrum = self.active_cube_layer.layer.get_object(statistic=None)
         wlens = spectrum.wavelength.to('m').value
         flux = spectrum.flux.value
@@ -249,10 +249,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # Create a new entry for the sonified layer in uuid_lookup. The value is a dictionary
         # containing (x_size * y_size) keys with values being arrays that represent sounds
-        data_name = str(uuid.uuid4()) if results_label is None else results_label
-        self.uuid_lookup[data_name] = {(x, y): self.sonified_cube.sigcube[x, y, :]
-                                       for x in range(0, x_size)
-                                       for y in range(0, y_size)}
+        self.uuid_lookup[results_label] = {(x, y): self.sonified_cube.sigcube[x, y, :]
+                                           for x in range(0, x_size)
+                                           for y in range(0, y_size)}
 
         # Create a 2D array with coordinates starting at (0, 0) and going until (x_size, y_size)
         a = np.arange(1, x_size * y_size + 1).reshape((x_size, y_size))
@@ -264,15 +263,15 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                    'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                    'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
 
-        # Create add data with name data_name to data collection and then add it to the flux viewer
+        # Create add data with name results_label to data collection and then add it to the flux viewer
         test = CCDData(a * u.Unit('m'), wcs=wcs)
-        self.jdaviz_app.data_collection[data_name] = test
-        self.jdaviz_app.data_collection[data_name].meta['Sonified'] = True
+        self.jdaviz_app.data_collection[results_label] = test
+        self.jdaviz_app.data_collection[results_label].meta['Sonified'] = True
 
-        self.jdaviz_app.add_data_to_viewer('flux-viewer', data_name)
+        self.jdaviz_app.add_data_to_viewer('flux-viewer', results_label)
 
         # Find layer, add volume check to dictionary and add callback to volume changing
-        data_layer = [layer for layer in self.state.layers if layer.layer.label == data_name][0]
+        data_layer = [layer for layer in self.state.layers if layer.layer.label == results_label][0]
         data_layer.add_callback('volume', self.recalculate_combined_sonified_grid)
 
         # Clear cache and recompute

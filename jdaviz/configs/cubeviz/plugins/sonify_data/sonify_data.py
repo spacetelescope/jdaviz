@@ -61,10 +61,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # TODO: Remove hardcoded range and flux viewer
-        self.spec_viewer = self.app.get_viewer('spectrum-viewer')
-        self.sonified_viewer = self.app.get_viewer('flux-viewer')
-
         self._plugin_description = 'Sonify a data cube'
         self.docs_description = 'Sonify a data cube using the Strauss package.'
         if not self.has_strauss or sd.default.device[1] < 0:
@@ -84,8 +80,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         expose = []
         return PluginUserApi(self, expose)
 
-    @with_spinner()
-    def vue_sonify_cube(self, *args):
+    def sonify_cube(self, *args):
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
 
@@ -94,23 +89,27 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         # Apply spectral subset bounds
         if self.spectral_subset_selected != self.spectral_subset.default_text:
-            display_unit = self.spec_viewer.state.x_display_unit
+            display_unit = self.spectrum_viewer.state.x_display_unit
             min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
             max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
-            self.sonified_viewer.update_listener_wls((min_wavelength, max_wavelength), display_unit)
+            self.flux_viewer.update_listener_wls((min_wavelength, max_wavelength), display_unit)
 
         # Ensure the current spectral region bounds are up-to-date at render time
         self.update_wavelength_range(None)
         # generate the sonified cube
-        self.sonified_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
-                                               selected_device_index, self.assidx, self.ssvidx,
-                                               self.pccut, self.audfrqmin,
-                                               self.audfrqmax, self.eln, self.use_pccut,
-                                               self.results_label)
+        self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
+                                           selected_device_index, self.assidx, self.ssvidx,
+                                           self.pccut, self.audfrqmin,
+                                           self.audfrqmax, self.eln, self.use_pccut,
+                                           self.results_label)
+
+    @with_spinner()
+    def vue_sonify_cube(self, *args):
+        self.sonify_cube(*args)
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
-        self.sonified_viewer.stream_active = not self.sonified_viewer.stream_active
+        self.flux_viewer.stream_active = not self.flux_viewer.stream_active
 
     @observe('spectral_subset_selected')
     def update_wavelength_range(self, event):
@@ -122,17 +121,17 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             wlranges = self.spectral_subset.selected_obj.subregions
         else:
             wlranges = None
-        self.sonified_viewer.update_listener_wls(wlranges, display_unit)
+        self.flux_viewer.update_listener_wls(wlranges, display_unit)
 
     @observe('volume')
     def update_volume_level(self, event):
-        self.sonified_viewer.update_volume_level(event['new'])
+        self.flux_viewer.update_volume_level(event['new'])
 
     @observe('sound_devices_selected')
     def update_sound_device(self, event):
         if event['new'] != event['old']:
             didx = dict(zip(*self.build_device_lists()))[event['new']]
-            self.sonified_viewer.update_sound_device(didx)
+            self.flux_viewer.update_sound_device(didx)
 
     def refresh_device_list(self):
         devices, indexes = self.build_device_lists()
