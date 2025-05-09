@@ -1,8 +1,9 @@
 import os
 from traitlets import Any, Unicode, observe
 from ipywidgets import widget_serialization
-from solara import FileBrowser
+from solara import FileBrowser, reactive
 import reacton
+from pathlib import Path
 
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
@@ -21,9 +22,10 @@ class FileResolver(BaseResolver):
     filepath = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
-
-        self.file_chooser_widget_el = FileBrowser(directory=start_path,
+        # NOTE: file_chooser_dir must always be an absolute path or else its impossible to
+        # navigate higher in the directory tree
+        self.file_chooser_dir = reactive(Path(os.path.abspath(os.environ.get('JDAVIZ_START_DIR', os.path.curdir))))  # noqa
+        self.file_chooser_widget_el = FileBrowser(directory=self.file_chooser_dir,
                                                   on_path_select=self._on_file_chooser_path_changed,
                                                   can_select=True)
         self.file_chooser_widget, rc = reacton.render(self.file_chooser_widget_el)
@@ -34,16 +36,13 @@ class FileResolver(BaseResolver):
         return LoaderUserApi(self, expose=['filepath'])
 
     def _on_file_chooser_path_changed(self, path):
-        self.filepath = str(path)
+        self.filepath = os.path.join(self.file_chooser_dir.value, str(path))
 
     @observe('filepath')
     def _on_filepath_changed(self, change):
         # when the filepath traitlet is changed, need to update the file_chooser_widget to match the corresponding path
-#        if self._file_upload.file_path != change['new']:
-#            path, file = os.path.split(change['new'])
-#            if path == '':
-#                path = './'
-#            self._file_upload._set_form_values(path, file)
+        directory = Path(os.path.abspath(self.filepath)).parent
+        self.file_chooser_dir.value = directory
         self._update_format_items()
 
     @property
