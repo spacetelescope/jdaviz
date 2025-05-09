@@ -79,6 +79,17 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
 
 
 @pytest.mark.remote_data
+def test_fits_spectrum2d(deconfigged_helper):
+    deconfigged_helper.load('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits',  # noqa
+                            format='2D Spectrum')
+
+    # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
+    sp = deconfigged_helper.get_data()
+    assert isinstance(sp, Spectrum1D)
+    assert str(sp.spectral_axis.unit) == 'um'
+
+
+@pytest.mark.remote_data
 def test_resolver_url(deconfigged_helper):
     loader = deconfigged_helper.loaders['url']
 
