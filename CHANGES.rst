@@ -9,7 +9,7 @@ New Features
 
 - Added an STC-S string region parser to the Footprints plugin. [#3479]
 
-- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531, #3555]
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531, #3555, #3577]
 
 - Added a results history table to the Line Analysis plugin.  Results are no longer updated in realtime with changes to inputs,
   but rather when clicking the button or calling ``get_results``, at which point an entry is added to the results history table

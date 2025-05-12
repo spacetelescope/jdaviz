@@ -1,6 +1,7 @@
 <template>
     <j-loader
         title="File Drop"
+        :popout_button="popout_button"
         :target_items="target_items"
         :target_selected.sync="target_selected"
         :format_items_spinner="format_items_spinner"
