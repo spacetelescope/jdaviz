@@ -118,6 +118,9 @@ def test_resolver_url(specviz_helper):
 
     assert len(specviz_helper.app.data_collection) == 1
 
+    with pytest.raises(ValueError, match="Failed query for URI"):
+        specviz_helper.load_data('mast:invalid', cache=False)
+
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     s = SpectralRegion(5*u.um, 6*u.um)

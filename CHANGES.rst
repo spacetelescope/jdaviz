@@ -10,6 +10,7 @@ Bug Fixes
 
 - Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. 
 
+- Improved error messaging when passing invalid URL to ``load``. [#3580]
 
 Cubeviz
 ^^^^^^^
