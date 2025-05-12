@@ -1,3 +1,24 @@
+4.2.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
 4.3 (unreleased)
 ================
 
@@ -169,35 +190,6 @@ Specviz2d
 - Replace file in example notebook. [#3537]
 
 - Fix bug preventing deletion of 2D spectrum data. [#3541]
-
-4.2.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-4.2.1 (2025-03-24)
-==================
-
-Bug Fixes
----------
-
-- Significantly improved performance for panning and zooming with large datasets. [#3513]
 
 4.2 (2025-03-17)
 ================
