@@ -115,6 +115,9 @@ def test_resolver_url(deconfigged_helper):
     assert len(deconfigged_helper.app.data_collection) == 2
     assert len(deconfigged_helper.viewers) == 2
 
+    with pytest.raises(ValueError, match="Failed query for URI"):
+        deconfigged_helper.load('mast:invalid')
+
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     s = SpectralRegion(5*u.um, 6*u.um)
