@@ -117,26 +117,6 @@ Other Changes and Additions
   dependencies installed with the ``[all]`` extra dependencies flag
   (i.e., ``pip install jdaviz[all]``). [#3556]
 
-4.2.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 4.2.1 (2025-03-24)
 ==================
@@ -189,6 +169,27 @@ Specviz2d
 - Replace file in example notebook. [#3537]
 
 - Fix bug preventing deletion of 2D spectrum data. [#3541]
+
+4.2.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
 
 4.2.1 (2025-03-24)
 ==================
