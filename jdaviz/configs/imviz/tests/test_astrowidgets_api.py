@@ -358,8 +358,8 @@ def test_markers_gwcs_lonlat(imviz_helper):
     orientation.align_by = "WCS"
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
-    catalogs_plugin.catalog.selected = 'Gaia'
-    catalogs_plugin.max_sources = 10
+    catalogs_plugin._obj.catalog.selected = 'Gaia'
+    catalogs_plugin._obj.max_sources = 10
 
     with pytest.warns(ResourceWarning):
-        catalogs_plugin.search(error_on_fail=True)
+        catalogs_plugin._obj.search(error_on_fail=True)
