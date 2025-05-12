@@ -569,7 +569,7 @@ class _BaseSidebarShortcut(Tool):
 class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
     plugin_name = 'g-plot-options'
 
-    icon = os.path.join(ICON_DIR, 'tune.svg')
+    icon = os.path.join(ICON_DIR, 'cog.svg')
     tool_id = 'jdaviz:sidebar_plot'
     action_text = 'Plot Options'
     tool_tip = 'Open plot options plugin in sidebar'

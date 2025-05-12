@@ -14,10 +14,11 @@
         dense
         @click="(e) => {e.stopImmediatePropagation()}"
         v-for="hist in history.slice().reverse()"
-        style="margin: 6px 0px 0px 0px"
+        style="margin: 6px 0px 0px 0px; max-width: 100%; overflow: hidden"
     >
       <v-alert
         dense
+        style="width: 100%; overflow: scroll; white-space: wrap; word-wrap: break-word;"
         :type="hist.color">
           [{{hist.time}}]: {{hist.text}}
       </v-alert>

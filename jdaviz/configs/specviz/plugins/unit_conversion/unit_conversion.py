@@ -54,7 +54,7 @@ def _flux_to_sb_unit(flux_unit, angle_unit):
 
 
 @tray_registry('g-unit-conversion', label="Unit Conversion",
-               category="app:options")
+               category="core", sidebar="settings", subtab=1)
 class UnitConversion(PluginTemplateMixin):
     """
     The Unit Conversion plugin handles global app-wide unit-conversion.
