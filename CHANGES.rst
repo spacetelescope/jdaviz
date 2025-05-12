@@ -117,18 +117,46 @@ Other Changes and Additions
   dependencies installed with the ``[all]`` extra dependencies flag
   (i.e., ``pip install jdaviz[all]``). [#3556]
 
-4.2.2 (unreleased)
+4.2.3 (unreleased)
 ==================
 
 Bug Fixes
 ---------
 
-- Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return
-  sky regions. [#3547]
+Cubeviz
+^^^^^^^
 
-- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. [#3570]
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.2.1 (2025-03-24)
+==================
+
+Bug Fixes
+---------
+
+- Significantly improved performance for panning and zooming with large datasets. [#3513]
+
+4.2.2 (2025-05-12)
+==================
+
+Bug Fixes
+---------
 
 - Fixed viewer layout to persist when changing jupyter/browser tabs. [#3551]
+
+- Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return sky regions. [#3547]
+
+- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. 
 
 - Improved error messaging when passing invalid URL to ``load``. [#3580]
 
@@ -155,11 +183,12 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
-
 - Improved initial guess for trace for automatic extraction. May change results
   for automatic extraction for data with nonfinite values. [#3512]
 
 - Replace file in example notebook. [#3537]
+
+- Fix bug preventing deletion of 2D spectrum data. [#3541]
 
 4.2.1 (2025-03-24)
 ==================
