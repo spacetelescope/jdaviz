@@ -43,12 +43,19 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection()
             return
 
+        all_resolvers = []
+        self._dbg_parsers = {}
+        self._dbg_importers = {}
+        self._invalid_importers = {}
+        self._importers = {}
+
         # check for valid parser > importer combinations given the current filters
         # and resolver inputs
         try:
             parser_input = self.plugin()
-        except Exception:
+        except Exception as e:
             self.items = []
+            self._invalid_importers = f'resolver exception: {e}'
             self._apply_default_selection()
             return
 
@@ -263,6 +270,10 @@ class BaseResolver(PluginTemplateMixin):
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():
+        if resolver_name == 'file drop':
+            # no API input, so let's avoid always returning the confusing
+            # message that default_input is undefined
+            continue
         if resolver is not None and resolver != resolver_name:
             continue
         try:
