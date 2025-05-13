@@ -6,10 +6,11 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
-from glue.core.roi import CircularROI
+from glue.core.roi import CircularROI, EllipticalROI
 from regions import Regions, CircleSkyRegion
 from specutils import Spectrum1D, SpectralRegion
 from pathlib import Path
+from astropy.wcs import WCS
 
 
 @pytest.mark.usefixtures('_jail')
@@ -217,6 +218,45 @@ class TestExportSubsets:
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
         assert os.path.isfile('test_spectral_region.ecsv')
+
+    def test_export_stcs_circle_ellipse(self, imviz_helper):
+        wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+                   'CRPIX1': 1, 'CRVAL1': 9.423508457380343,
+                   'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+                   'CRPIX2': 1, 'CRVAL2': -33.71313112382379})
+        arr = np.arange(40000).reshape(200, 200)
+        ndd = NDData(arr, wcs=wcs)
+        imviz_helper.load_data(ndd)
+        imviz_helper.link_data(align_by='wcs')
+
+        subset_plugin = imviz_helper.plugins['Subset Tools']
+        export_plugin = imviz_helper.plugins['Export']._obj
+
+        subset_plugin.import_region(CircularROI(xc=40, yc=50, radius=10))
+        export_plugin.subset.selected = 'Subset 1'
+        export_plugin.subset_format.selected = 'stcs'
+        export_plugin.filename_value = 'Subset_1.stcs'
+        export_plugin.export()
+        with open('Subset_1.stcs') as f:
+            contents = f.read()
+        assert contents.startswith('CIRCLE')
+        assert '9.157221' in contents
+        assert '-33.435070' in contents
+        assert '0.055554' in contents
+
+        subset_plugin.import_region(EllipticalROI(xc=45, yc=55, radius_x=8, radius_y=4, theta=0.2))
+        export_plugin.subset.selected = 'Subset 2'
+        export_plugin.subset_format.selected = 'stcs'
+        export_plugin.filename_value = 'Subset_2.stcs'
+        export_plugin.export(overwrite=True)
+        with open('Subset_2.stcs') as f:
+            contents = f.read()
+        assert contents.startswith('ELLIPSE')
+        assert '9.124032' in contents
+        assert '-33.40721' in contents
+        assert '0.088886' in contents
+        assert '0.044443' in contents
+        assert '11.625269' in contents
 
 
 @pytest.mark.usefixtures('_jail')

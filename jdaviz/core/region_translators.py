@@ -504,6 +504,43 @@ def stcs_string2region(stcs_string):
     return SKY_REGION_FROM_COORDS_FACTORY[shape](coordinates, frame=frame)
 
 
+def region2stcs_string(region):
+    """Convert a `regions.Region` object to an STC-S string.
+
+    Currently supports only `CircleSkyRegion` and `EllipseSkyRegion`.
+
+    Parameters
+    ----------
+    region : `regions.Region`
+
+    Returns
+    -------
+    stcs_str : str
+        STC-S string representing the region, using the format:
+        - `CIRCLE <FRAME> <RA> <DEC> <RADIUS>`
+        - `ELLIPSE <FRAME> <RA> <DEC> <WIDTH> <HEIGHT> <ANGLE>`
+    """
+    if isinstance(region, CircleSkyRegion):
+        shape = "CIRCLE"
+        coords = [region.center.ra.deg, region.center.dec.deg, region.radius.to_value(u.deg)]
+    elif isinstance(region, EllipseSkyRegion):
+        shape = "ELLIPSE"
+        coords = [region.center.ra.deg, region.center.dec.deg,
+                  region.width.to_value(u.deg),
+                  region.height.to_value(u.deg),
+                  region.angle.to_value(u.deg)]
+    else:
+        raise NotImplementedError(f"{type(region).__name__} is not supported for STC-S export")
+
+    frame = region.center.frame.name.upper()
+    if frame not in SUPPORTED_STCS_FRAME_VALUES:
+        frame = "ICRS"
+
+    coord_parts = [f"{x:.6f}" for x in coords]
+
+    return f"{shape} {frame} {' '.join(coord_parts)}"
+
+
 def positions2pixcoord(positions):
     """Convert ``photutils`` aperture positions to `~regions.PixCoord`
     that is acceptable by ``regions`` shape.
