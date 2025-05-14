@@ -66,7 +66,7 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
+                           match=re.escape("'x' not one of ['fits', 'reg', 'ecsv', 'stcs'], reverting selection to 'reg'")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
     def test_not_implemented(self, cubeviz_helper, spectral_cube_wcs):
@@ -181,7 +181,7 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
+                           match=re.escape("'x' not one of ['fits', 'reg', 'ecsv', 'stcs'], reverting selection to 'reg'")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
         # Test that selecting disabled option raises an error
