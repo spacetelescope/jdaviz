@@ -5,7 +5,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
-from astropy.wcs.wcs import WCS, WCSHDO_SIP
+from astropy.wcs import WCS
 from astropy.utils.exceptions import AstropyWarning
 from astropy.utils.data import cache_contents
 
@@ -40,9 +40,13 @@ def _try_gwcs_to_fits_sip(gwcs):
     is raised and the GWCS is used, as is.
     """
     try:
-        #     with warnings.catch_warnings():
-        #         warnings.simplefilter('ignore', AstropyWarning)
-        result = WCS(gwcs.to_fits_sip(), relax=WCSHDO_SIP)
+        # we catch an astropy warning here for non-standard FITS
+        # keywords arising from the FITS SIP approximation. These
+        # warnings don't affect the result, and there's a pending
+        # glue PR with a fix: https://github.com/glue-viz/glue/pull/2540
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', AstropyWarning)
+            result = WCS(gwcs.to_fits_sip())
 
     except ValueError as err:
         warnings.warn(
@@ -176,7 +180,6 @@ def parse_data(app, file_obj, ext=None, data_label=None,
                                                                         combination_mode='new')
 
         else:  # Assume FITS
-            print(f'parse_data - {gwcs_to_fits_sip=}')
 
             with fits.open(file_obj) as pf:
                 available_extensions = [hdu.name for hdu in pf]
@@ -236,7 +239,6 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None, try_gwcs_to_fit
             data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
 
         else:  # Load first image extension found
-            print('else')
             found = False
             for hdu in file_obj:
                 if _validate_fits_image2d(hdu, raise_error=False):
@@ -283,7 +285,6 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None, try_gwcs_to_fit
 
 
 def _parse_image(app, file_obj, data_label, ext=None, parent=None, try_gwcs_to_fits_sip=False):
-    print(f'_parse_image - {try_gwcs_to_fits_sip=}')
     if app is None:
         raise ValueError("app is None, cannot proceed")
     if data_label is None:
@@ -323,7 +324,7 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None, try_gwcs_to_f
             parent_data_label = sci_ext
         else:
             parent_data_label = None
-        print(f"_parse_image {data.coords=}")
+
         app.add_data(data, data_label, parent=parent_data_label)
 
     # Do not link image data here. We do it at the end in Imviz.load_data()
@@ -414,7 +415,6 @@ def _jwst_to_glue_data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
     data, new_data_label = _jwst2data(
         file_obj, ext, data_label, try_gwcs_to_fits_sip=try_gwcs_to_fits_sip
     )
-    print(f"_jwst_to_glue_data - {data.coords}")
 
     yield data, new_data_label
 
@@ -425,8 +425,7 @@ def _jwst2data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
     data = Data(label=new_data_label)
     unit_attr = f'bunit_{ext}'
 
-    # try:
-    if True:
+    try:
         # This is very specific to JWST pipeline image output.
         with asdf_in_fits.open(file_obj) as af:
             dm = af.tree
@@ -442,7 +441,6 @@ def _jwst2data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
             if 'wcs' in dm_meta:
                 gwcs = dm_meta['wcs']
 
-                print(f'_jwst2data: {try_gwcs_to_fits_sip=}')
                 if try_gwcs_to_fits_sip:
                     data.coords = _try_gwcs_to_fits_sip(gwcs)
                 else:
@@ -451,20 +449,19 @@ def _jwst2data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
             component = Component.autotyped(imdata, units=bunit)
 
             # Might have bad GWCS. If so, we exclude it.
-            data.add_component(component=component, label=comp_label)
-            # try:
-            # except Exception:  # pragma: no cover
-            #     data.coords = None
-            #     data.add_component(component=component, label=comp_label)
+            try:
+                data.add_component(component=component, label=comp_label)
+            except Exception:  # pragma: no cover
+                data.coords = None
+                data.add_component(component=component, label=comp_label)
 
     # TODO: Do not need this when jwst.datamodels finally its own package.
     # This might happen for grism image; fall back to FITS loader without WCS.
-    # except Exception:
-    #     print("in exception")
-    #     if ext == 'data':
-    #         ext = 'sci'
-    #     hdu = file_obj[ext]
-    #     return _hdu2data(hdu, data_label, file_obj, include_wcs=False)
+    except Exception:
+        if ext == 'data':
+            ext = 'sci'
+        hdu = file_obj[ext]
+        return _hdu2data(hdu, data_label, file_obj, include_wcs=False)
 
     return data, new_data_label
 
@@ -518,7 +515,6 @@ def _hdu_to_glue_data(hdu, data_label, hdulist=None):
 
 
 def _hdus_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
-    print(f'_hdus_to_glue_data - {try_gwcs_to_fits_sip=}')
 
     for hdu in file_obj:
         if ext is None or ext == '*' or hdu.name in ext:

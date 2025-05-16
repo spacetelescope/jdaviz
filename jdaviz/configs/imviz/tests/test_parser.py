@@ -7,7 +7,6 @@ from astropy.nddata import NDData, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
-from astropy.wcs.wcs import WCSBase
 
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
@@ -530,7 +529,7 @@ class TestParseImage:
     @pytest.mark.remote_data
     @pytest.mark.parametrize(
         ('gwcs_to_fits_sip', 'expected_cls'),
-        ((True, WCSBase),
+        ((True, WCS),
          (False, GWCS))
     )
     def test_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
