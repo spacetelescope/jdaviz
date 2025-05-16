@@ -109,6 +109,13 @@ class Imviz(ImageConfigHelper):
         show_in_viewer : str or bool
             If `True`, show the data in default viewer.  If a string, show in that viewer.
 
+        gwcs_to_fits_sip : bool, optional
+            Try to convert GWCS coordinates into an approximate FITS SIP solution. Typical
+            precision loss due to this approximation is of order 0.1 pixels. This may
+            improve image rendering performance for images with expensive GWCS
+            transformations. If this keyword argument isn't specified, the choice
+            will be taken from the Orientation plugin's ``gwcs_to_fits_sip`` traitlet.
+
         kwargs : dict
             Extra keywords to be passed into app-level parser.
             The only one you might call directly here is ``ext`` (any FITS
@@ -125,6 +132,9 @@ class Imviz(ImageConfigHelper):
 
         """
         prev_data_labels = self.app.data_collection.labels
+
+        if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
+            kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
 
         if isinstance(data, str):
             filelist = data.split(',')
