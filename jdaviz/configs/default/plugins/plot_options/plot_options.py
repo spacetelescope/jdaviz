@@ -27,6 +27,7 @@ from jdaviz.core.events import ChangeRefDataMessage, ViewerAddedMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.sonified_layers import SonifiedLayerState
 # by importing from utils, glue_colormaps will include the custom Random colormap
 from jdaviz.utils import is_not_wcs_only, cmap_samples, glue_colormaps
 
@@ -375,6 +376,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
     stretch_hist_spinner = Bool(False).tag(sync=True)
 
+    volume_value = IntHandleEmpty(50).tag(sync=True)
+    volume_sync = Dict().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -423,6 +427,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         def is_not_subset(state):
             return not is_spatial_subset(state)
+
+        def is_sonified(state):
+            return isinstance(state, SonifiedLayerState)
 
         def line_visible(state):
             # exclude for scatter layers where the marker is shown instead of the line
@@ -587,6 +594,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                           'contour_custom_levels_value', 'contour_custom_levels_sync',   # noqa
                                                           spinner='contour_spinner')
 
+        self.volume_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'volume',
+                                                 'volume_value', 'volume_sync',
+                                                 state_filter=is_sonified)
+
         # Axes options:
         # axes_visible hidden for imviz in plot_options.vue
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
@@ -624,7 +635,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
                   'select_all', 'subset_visible', 'reset_viewer_bounds']
         if self.config == "cubeviz":
-            expose += ['uncertainty_visible']
+            expose += ['uncertainty_visible', 'volume_level']
         if self.config != "imviz":
             expose += ['x_min', 'x_max', 'y_min', 'y_max',
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
