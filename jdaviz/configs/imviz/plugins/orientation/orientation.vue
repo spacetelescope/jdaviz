@@ -98,7 +98,7 @@
             label="Approximate GWCS with FITS SIP"
             api_hint="plg.gwcs_to_fits_sip = "
             :api_hints_enabled="api_hints_enabled"
-            hint="When loading, try to convert GWCS into FITS SIP for better performance (typical precision <0.1 pixels)."
+            hint="On future data loads, try to convert GWCS into FITS SIP for better performance (typical precision <0.1 pixels)."
           />
         </v-row>
 
