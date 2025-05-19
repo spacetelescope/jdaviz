@@ -3,10 +3,10 @@ import warnings
 import asdf
 import numpy as np
 from astropy import units as u
+from astropy.utils.exceptions import AstropyWarning
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
-from astropy.utils.exceptions import AstropyWarning
 from astropy.utils.data import cache_contents
 
 from glue.core.data import Component, Data
@@ -40,13 +40,7 @@ def _try_gwcs_to_fits_sip(gwcs):
     is raised and the GWCS is used, as is.
     """
     try:
-        # we catch an astropy warning here for non-standard FITS
-        # keywords arising from the FITS SIP approximation. These
-        # warnings don't affect the result, and there's a pending
-        # glue PR with a fix: https://github.com/glue-viz/glue/pull/2540
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', AstropyWarning)
-            result = WCS(gwcs.to_fits_sip())
+        result = WCS(gwcs.to_fits_sip(), relax=True)
 
     except ValueError as err:
         warnings.warn(
@@ -450,7 +444,14 @@ def _jwst2data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
 
             # Might have bad GWCS. If so, we exclude it.
             try:
-                data.add_component(component=component, label=comp_label)
+                # we catch an astropy warning here for non-standard FITS
+                # keywords arising from the FITS SIP approximation. These
+                # warnings don't affect the result, and there's a pending
+                # glue PR with a fix: https://github.com/glue-viz/glue/pull/2540
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=AstropyWarning)
+                    data.add_component(component=component, label=comp_label)
+
             except Exception:  # pragma: no cover
                 data.coords = None
                 data.add_component(component=component, label=comp_label)
