@@ -530,20 +530,19 @@ class TestParseImage:
     @pytest.mark.parametrize(
         ('gwcs_to_fits_sip', 'expected_cls'),
         ((True, WCS),
-         (False, GWCS))
+         (False, GWCS),)
     )
     def test_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
         imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, gwcs_to_fits_sip=gwcs_to_fits_sip)
 
         data = imviz_helper.app.data_collection[0]
-        print(f"{data.coords=}")
         assert isinstance(data.coords, expected_cls)
 
     @pytest.mark.remote_data
     @pytest.mark.parametrize(
         ('gwcs_to_fits_sip', 'expected_cls'),
         ((True, WCS),
-         (False, GWCS))
+         (False, GWCS),)
     )
     def test_orientation_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
         imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = gwcs_to_fits_sip
