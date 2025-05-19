@@ -7,6 +7,7 @@ from astropy.nddata import NDData, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
+
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import CirclePixelRegion, EllipsePixelRegion, PixCoord, RectanglePixelRegion
@@ -236,6 +237,10 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):
+        # use non-default GWCS rather than FITS SIP (not the default),
+        # to test the GWCS compatibility:
+        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = False
+
         # Default behavior: Science image
         with pytest.warns(UserWarning, match='You may be querying for a remote file'):
             # if you don't pass a `cache` value, a warning should be raised:
@@ -520,6 +525,31 @@ class TestParseImage:
         # Invalid FITS extension
         with pytest.raises(KeyError, match='not found'):
             parse_data(imviz_helper.app, filename, ext='DOES_NOT_EXIST', data_label='foo')
+
+    @pytest.mark.remote_data
+    @pytest.mark.parametrize(
+        ('gwcs_to_fits_sip', 'expected_cls'),
+        ((True, WCS),
+         (False, GWCS),)
+    )
+    def test_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, gwcs_to_fits_sip=gwcs_to_fits_sip)
+
+        data = imviz_helper.app.data_collection[0]
+        assert isinstance(data.coords, expected_cls)
+
+    @pytest.mark.remote_data
+    @pytest.mark.parametrize(
+        ('gwcs_to_fits_sip', 'expected_cls'),
+        ((True, WCS),
+         (False, GWCS),)
+    )
+    def test_orientation_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
+        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = gwcs_to_fits_sip
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True)
+
+        data = imviz_helper.app.data_collection[0]
+        assert isinstance(data.coords, expected_cls)
 
 
 def test_load_valid_not_valid(imviz_helper):

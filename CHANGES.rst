@@ -28,7 +28,7 @@ Imviz
 - Footprints plugin now supports selecting the closest overlay
   to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
 
-- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
+- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS. [#3483, #3535, #3540]
 
 Mosviz
 ^^^^^^
