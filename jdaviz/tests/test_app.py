@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
-from specutils import Spectrum1D
+from specutils import Spectrum
 from jdaviz import Specviz
 from jdaviz.app import Application
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
@@ -210,7 +210,7 @@ def test_to_unit(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     # this can be removed once spectra pass through spectral extraction
@@ -230,7 +230,7 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy / u.sr
     target_units = u.MJy
 
-    spec = data.get_object(cls=Spectrum1D)
+    spec = data.get_object(cls=Spectrum)
     viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
     value = flux_conversion_general(values, original_units,
                                     target_units, viewer_equivs,
