@@ -210,10 +210,11 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                               initial_model,
                               param_set=spaxels,
                               window=window,
-                              mask=spectrum.mask)
+                              mask=spectrum.mask,
+                              spectral_axis_index=spectrum.spectral_axis_index)
         collect_result(worker())
 
-    # Build output 3D spectrum
+    # Build output 3D spectrum. Don't need spectral_axis_index because we use the WCS
     funit = spectrum.flux.unit
     output_spectrum = Spectrum(wcs=spectrum.wcs,
                                flux=output_flux_cube * funit,
