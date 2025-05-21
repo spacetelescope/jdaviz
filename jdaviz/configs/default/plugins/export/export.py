@@ -16,6 +16,7 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.region_translators import region2stcs_string
 
 from specutils import Spectrum1D
 from astropy import units as u
@@ -150,7 +151,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         subset_format_options = [{'label': 'fits', 'value': 'fits', 'disabled': False},
                                  {'label': 'reg', 'value': 'reg', 'disabled': False},
-                                 {'label': 'ecsv', 'value': 'ecsv', 'disabled': True}]
+                                 {'label': 'ecsv', 'value': 'ecsv', 'disabled': True},
+                                 {'label': 'stcs', 'value': 'stcs', 'disabled': False}]
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
@@ -530,11 +532,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-
             if self.subset_format.selected in ('fits', 'reg'):
                 self.save_subset_as_region(selected_subset_label, filename)
             elif self.subset_format.selected == 'ecsv':
                 self.save_subset_as_table(filename)
+            elif self.subset_format.selected == 'stcs':
+                self.save_subset_as_stcs(filename)
 
         elif len(self.dataset.selected):
             filetype = self.dataset_format.selected
@@ -743,6 +746,34 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         ).start()
 
         return filename
+
+    def save_subset_as_stcs(self, filename):
+        """
+        Save a subset region to a text file in STC-S format.
+
+        Currently implemented for Circle and Ellipse sky regions only.
+
+        Parameters
+        ----------
+        filename : str
+            Write the STC-S region to a text file with this name.
+
+        Raises
+        ------
+        RuntimeError
+            If data is not aligned by WCS, which is required for STC-S export.
+        """
+        align_by = getattr(self.app, '_align_by', None)
+        if align_by != 'wcs':
+            raise RuntimeError("Please link datasets by WCS first using the Orientation plugin.")
+
+        region = self.app.get_subsets(subset_name=self.subset.selected,
+                                      include_sky_region=True)[0]['sky_region']
+
+        stcs_str = region2stcs_string(region)
+
+        with open(filename, 'w') as f:
+            f.write(stcs_str)
 
     def save_subset_as_region(self, selected_subset_label, filename):
         """
