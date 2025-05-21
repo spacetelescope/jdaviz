@@ -520,17 +520,10 @@ def region2stcs_string(region):
         - `CIRCLE <FRAME> <RA> <DEC> <RADIUS>`
         - `ELLIPSE <FRAME> <RA> <DEC> <WIDTH> <HEIGHT> <ANGLE>`
     """
-    if isinstance(region, CircleSkyRegion):
-        shape = "CIRCLE"
-        coords = [region.center.ra.deg, region.center.dec.deg, region.radius.to_value(u.deg)]
-    elif isinstance(region, EllipseSkyRegion):
-        shape = "ELLIPSE"
-        coords = [region.center.ra.deg, region.center.dec.deg,
-                  region.width.to_value(u.deg),
-                  region.height.to_value(u.deg),
-                  region.angle.to_value(u.deg)]
-    else:
-        raise NotImplementedError(f"{type(region).__name__} is not supported for STC-S export")
+    try:
+        shape, coords = SHAPE_COORDS_FROM_SKY_REGION_FACTORY[region.__class__](region)
+    except KeyError:
+        raise NotImplementedError(f"{region.__class__.__name__} is not supported for STC-S export")
 
     frame = region.center.frame.name.upper()
     if frame not in SUPPORTED_STCS_FRAME_VALUES:
@@ -540,6 +533,34 @@ def region2stcs_string(region):
     coord_parts = [f"{x:.6f}" for x in coords]
 
     return f"{shape} {frame} {' '.join(coord_parts)}"
+
+
+def _shape_coords_from_circle_sky_region(region):
+    return (
+        "CIRCLE", [
+            region.center.ra.deg,
+            region.center.dec.deg,
+            region.radius.to_value(u.deg),
+        ],
+    )
+
+
+def _shape_coords_from_ellipse_sky_region(region):
+    return (
+        "ELLIPSE", [
+            region.center.ra.deg,
+            region.center.dec.deg,
+            region.width.to_value(u.deg),
+            region.height.to_value(u.deg),
+            region.angle.to_value(u.deg),
+        ],
+    )
+
+
+SHAPE_COORDS_FROM_SKY_REGION_FACTORY = {
+    CircleSkyRegion: _shape_coords_from_circle_sky_region,
+    EllipseSkyRegion: _shape_coords_from_ellipse_sky_region,
+}
 
 
 def positions2pixcoord(positions):
