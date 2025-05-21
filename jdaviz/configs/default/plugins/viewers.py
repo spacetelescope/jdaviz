@@ -297,7 +297,7 @@ class JdavizViewerMixin(WithCache):
         elif (self.__class__.__name__ == 'CubevizImageView' and
               get_subset_type(layer_state.layer) != 'spatial'):
             # set visibility of spectral subsets to false in Cubeviz image-viewers
-            layer_state.visible = False
+            return
         else:
             layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
 
