@@ -512,6 +512,7 @@ def region2stcs_string(region):
     Parameters
     ----------
     region : `regions.Region`
+        Sky region to convert to STC-S format.
 
     Returns
     -------

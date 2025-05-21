@@ -751,9 +751,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         """
         Save a subset region to a text file in STC-S format.
 
+        Currently implemented for Circle and Ellipse sky regions only.
+
         Parameters
         ----------
         filename : str
+            Write the STC-S region to a text file with this name.
 
         Raises
         ------
