@@ -238,11 +238,12 @@ class TestExportSubsets:
         export_plugin.filename_value = 'Subset_1.stcs'
         export_plugin.export()
         with open('Subset_1.stcs') as f:
-            contents = f.read()
-        assert contents.startswith('CIRCLE')
-        assert '9.157221' in contents
-        assert '-33.435070' in contents
-        assert '0.055554' in contents
+            contents = f.read().split()
+        assert contents[0] == 'CIRCLE'
+        assert contents[1] == 'ICRS'
+        assert contents[2] == '9.157221'
+        assert contents[3] == '-33.435070'
+        assert contents[4] == '0.055554'
 
         subset_plugin.import_region(EllipticalROI(xc=45, yc=55, radius_x=8, radius_y=4, theta=0.2))
         export_plugin.subset.selected = 'Subset 2'
@@ -250,13 +251,14 @@ class TestExportSubsets:
         export_plugin.filename_value = 'Subset_2.stcs'
         export_plugin.export(overwrite=True)
         with open('Subset_2.stcs') as f:
-            contents = f.read()
-        assert contents.startswith('ELLIPSE')
-        assert '9.124032' in contents
-        assert '-33.40721' in contents
-        assert '0.088886' in contents
-        assert '0.044443' in contents
-        assert '11.625269' in contents
+            contents = f.read().split()
+        assert contents[0] == 'ELLIPSE'
+        assert contents[1] == 'ICRS'
+        assert contents[2] == '9.124032'
+        assert contents[3] == '-33.407217'
+        assert contents[4] == '0.088886'
+        assert contents[5] == '0.044443'
+        assert contents[6] == '11.625269'
 
 
 @pytest.mark.usefixtures('_jail')
