@@ -534,7 +534,8 @@ def region2stcs_string(region):
 
     frame = region.center.frame.name.upper()
     if frame not in SUPPORTED_STCS_FRAME_VALUES:
-        raise ValueError(f"Frame '{frame}' is not supported for STC-S export. Supported: {SUPPORTED_STCS_FRAME_VALUES}")  # noqa E501
+        raise ValueError(f"Frame '{frame}' is not supported for STC-S export."
+                         f"Supported: {SUPPORTED_STCS_FRAME_VALUES}")
 
     coord_parts = [f"{x:.6f}" for x in coords]
 
