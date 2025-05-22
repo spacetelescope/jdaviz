@@ -123,6 +123,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Improve the "no matching importers" message for filtered inputs and suppress
+  it until a target is selected. [#3593]
+
 Cubeviz
 ^^^^^^^
 
