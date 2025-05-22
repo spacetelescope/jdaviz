@@ -286,7 +286,7 @@ class BaseResolver(PluginTemplateMixin):
             self.importer_widget = ''
 
             if (hasattr(self.format._invalid_importers, 'keys') and
-               self.format._invalid_importers.keys()):
+               self.format._invalid_importers.keys()) and self.target_selected:
                 keys = ', '.join(self.format._invalid_importers.keys())
                 self.valid_import_formats = keys
         else:
