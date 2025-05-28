@@ -504,6 +504,66 @@ def stcs_string2region(stcs_string):
     return SKY_REGION_FROM_COORDS_FACTORY[shape](coordinates, frame=frame)
 
 
+def region2stcs_string(region):
+    """Convert a `regions.Region` object to an STC-S string.
+
+    Currently supports only `CircleSkyRegion` and `EllipseSkyRegion`.
+
+    Parameters
+    ----------
+    region : `regions.Region`
+        Sky region to convert to STC-S format.
+
+    Returns
+    -------
+    stcs_str : str
+        STC-S string representing the region, using the format:
+        - `CIRCLE <FRAME> <RA> <DEC> <RADIUS>`
+        - `ELLIPSE <FRAME> <RA> <DEC> <WIDTH> <HEIGHT> <ANGLE>`
+    """
+    try:
+        shape, coords = SHAPE_COORDS_FROM_SKY_REGION_FACTORY[region.__class__](region)
+    except KeyError:
+        raise NotImplementedError(f"{region.__class__.__name__} is not supported for STC-S export")
+
+    frame = region.center.frame.name.upper()
+    if frame not in SUPPORTED_STCS_FRAME_VALUES:
+        raise ValueError(f"Frame '{frame}' is not supported for STC-S export."
+                         f"Supported: {SUPPORTED_STCS_FRAME_VALUES}")
+
+    coord_parts = [f"{x:.6f}" for x in coords]
+
+    return f"{shape} {frame} {' '.join(coord_parts)}"
+
+
+def _shape_coords_from_circle_sky_region(region):
+    return (
+        "CIRCLE", [
+            region.center.ra.deg,
+            region.center.dec.deg,
+            region.radius.to_value(u.deg),
+        ],
+    )
+
+
+def _shape_coords_from_ellipse_sky_region(region):
+    return (
+        "ELLIPSE", [
+            region.center.ra.deg,
+            region.center.dec.deg,
+            region.width.to_value(u.deg),
+            region.height.to_value(u.deg),
+            region.angle.to_value(u.deg),
+        ],
+    )
+
+
+SHAPE_COORDS_FROM_SKY_REGION_FACTORY = {
+    CircleSkyRegion: _shape_coords_from_circle_sky_region,
+    EllipseSkyRegion: _shape_coords_from_ellipse_sky_region,
+}
+
+
 def positions2pixcoord(positions):
     """Convert ``photutils`` aperture positions to `~regions.PixCoord`
     that is acceptable by ``regions`` shape.

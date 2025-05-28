@@ -29,6 +29,9 @@ Imviz
   to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
 
 - Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
+  
+- The Export plugin now supports saving spatial subsets as STC-S strings, including CircleSkyRegion and EllipseSkyRegion,
+  which are exported as ``CIRCLE`` and ``ELLIPSE`` STC-S shapes, respectively. [#3591]
 
 Mosviz
 ^^^^^^
