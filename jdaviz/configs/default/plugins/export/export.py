@@ -161,7 +161,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
                                                    manual_options=subset_format_options,
-                                                   filters=[self._is_stcs_region_supported],
+                                                   filters=[self._is_valid_item],
                                                    apply_filters_to_manual_options=True)
 
         dataset_format_options = ['fits']
@@ -203,13 +203,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         self._set_relevant()
 
-    def _is_stcs_region_supported(self, item):
-        label = item.get('label', '')
-        # Only apply region shape filtering for STC-S format.
-        # All other formats should always be enabled.
-        if label != 'stcs':
-            return True
+    def _is_valid_item(self, item):
+        return self._is_not_stcs(item) or self._is_stcs_region_supported(item)
 
+    def _is_not_stcs(self, item):
+        return item.get('label', '') != 'stcs'
+
+    def _is_stcs_region_supported(self, item):
         region = getattr(self.subset, 'selected_spatial_region', None)
         return isinstance(region, (CircleSkyRegion, EllipseSkyRegion))
 
