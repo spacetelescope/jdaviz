@@ -26,7 +26,7 @@
 
                   <v-row v-if="format_items.length == 0 && valid_import_formats">
                       <v-alert type="warning" style="margin-left: -12px; margin-right: -12px; width: 100%">
-                          Unable to import data: no compatible importer found. Supported input types include: {{ valid_import_formats }}.
+                          No compatible importer found. Supported input types include: {{ valid_import_formats }}.
                       </v-alert>
                   </v-row>
                   <v-row v-if="format_items.length === 1" style="margin-top: 16px">

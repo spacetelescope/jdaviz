@@ -287,8 +287,26 @@ class BaseResolver(PluginTemplateMixin):
 
             if (hasattr(self.format._invalid_importers, 'keys') and
                self.format._invalid_importers.keys()) and self.target_selected:
-                keys = ', '.join(self.format._invalid_importers.keys())
-                self.valid_import_formats = keys
+                # if no valid importer for format_selected, provide supported sources/formats
+                # to user in a warning message
+                format_sources_map = {}
+                direct_formats = []
+                for key in self.format._invalid_importers.keys():
+                    if ' > ' in key:
+                        pfx, sfx = key.split(' > ', 1)
+                        format_sources_map.setdefault(sfx, set()).add(pfx)
+                    else:
+                        direct_formats.append(key)
+
+                grouped_formats = {}
+                for format_name, source in format_sources_map.items():
+                    sources = ' and '.join(sorted(source))
+                    grouped_formats.setdefault(sources, []).append(format_name)
+
+                self.valid_import_formats = ''.join(
+                    [f"({s})" for s in direct_formats] +
+                    [f", {sources}: ({', '.join(sorted(formats))})" for sources, formats in grouped_formats.items()]  # noqa
+                    )
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
 
