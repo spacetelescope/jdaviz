@@ -205,6 +205,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def _stcs_region_filter(self, item):
         label = item.get('label', '')
+        # Only apply region shape filtering for STC-S format.
+        # All other formats should always be enabled.
         if label != 'stcs':
             return True
 
