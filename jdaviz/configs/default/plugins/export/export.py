@@ -161,7 +161,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
                                                    manual_options=subset_format_options,
-                                                   filters=[self._stcs_region_filter],
+                                                   filters=[self._is_stcs_region_supported],
                                                    apply_filters_to_manual_options=True)
 
         dataset_format_options = ['fits']
@@ -203,7 +203,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         self._set_relevant()
 
-    def _stcs_region_filter(self, item):
+    def _is_stcs_region_supported(self, item):
         label = item.get('label', '')
         # Only apply region shape filtering for STC-S format.
         # All other formats should always be enabled.
