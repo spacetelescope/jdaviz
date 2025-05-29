@@ -1,5 +1,5 @@
 from astropy.utils.decorators import deprecated
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.configs.specviz import Specviz
 
@@ -40,12 +40,12 @@ class Specviz2d(Specviz):
         ----------
         spectrum_2d: str
             A spectrum as translatable container objects (e.g.,
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        spectrum_1d: str or Spectrum1D
+        spectrum_1d: str or Spectrum
             A spectrum as translatable container objects (e.g.,
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
         spectrum_1d_label : str
@@ -135,7 +135,7 @@ class Specviz2d(Specviz):
                   show_in_viewer=show_in_viewer)
 
     def get_data(self, data_label=None, spectral_subset=None,
-                 cls=Spectrum1D, use_display_units=False):
+                 cls=Spectrum, use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         spectral_subset.
@@ -146,7 +146,7 @@ class Specviz2d(Specviz):
             Provide a label to retrieve a specific data set from data_collection.
         spectral_subset : str, optional
             Spectral subset applied to data.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+        cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
         use_display_units : bool, optional
             Specify whether the returned data is in native units or the current display units.

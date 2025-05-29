@@ -5,14 +5,14 @@ Creating Jdaviz-readable Products
 
 Spectroscopic data products (1D, 2D, and 3D) can be loaded
 in the different ``jdaviz`` configurations using
-essentially two methods, i.e., loading :class:`~specutils.Spectrum1D` objects or
+essentially two methods, i.e., loading :class:`~specutils.Spectrum` objects or
 from FITS files. Here, we list a few ways in which data can be packaged to be easily loaded
 into a ``jdaviz`` configuration.
 
 Data in a database
 ------------------
 
-If the data are stored in a database, we recommend storing a :class:`~specutils.Spectrum1D` object
+If the data are stored in a database, we recommend storing a :class:`~specutils.Spectrum` object
 per entry. This would allow the user to query the data and visualize it in
 ``jdaviz`` with few lines of code; also see :ref:`create_product_spectrum1d_obj`.
 
@@ -34,8 +34,8 @@ Available loaders can be listed with the following commands:
 
 .. code-block:: python
 
-    from specutils import Spectrum1D
-    Spectrum1D.read.list_formats()
+    from specutils import Spectrum
+    Spectrum.read.list_formats()
 
 The majority are fairly specific to missions and instruments. Four formats
 are more generic and adaptable: ``ASCII``, ``ECSV``, ``tabular-fits``, and
@@ -55,14 +55,14 @@ is available. We are working on the necessary documentation to prompt
 
 .. _create_product_spectrum1d_obj:
 
-Providing scripts to load the data as Spectrum1D objects
+Providing scripts to load the data as Spectrum objects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If none of the above is an acceptable option, the user can create the data
 products with their custom format and provide scripts or Jupyter Notebooks
-that show how to read the products and create :class:`~specutils.Spectrum1D` objects
+that show how to read the products and create :class:`~specutils.Spectrum` objects
 that can be read into ``jdaviz``. More about
-how to create :class:`~specutils.Spectrum1D` objects for the 1D, 2D, and 3D cases can be
+how to create :class:`~specutils.Spectrum` objects for the 1D, 2D, and 3D cases can be
 found in the corresponding "Importing data" sections of the various configurations:
 
 * :ref:`specviz-import-data`

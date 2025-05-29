@@ -5,7 +5,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
-from specutils import Spectrum1D, SpectrumList, SpectrumCollection, SpectralRegion
+from specutils import Spectrum, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
 
 from jdaviz.app import Application
@@ -33,7 +33,7 @@ class TestSpecvizHelper:
 
         data = self.spec_app.get_data()
 
-        assert isinstance(data, Spectrum1D)
+        assert isinstance(data, Spectrum)
 
     def test_load_hdulist(self):
         # Create a fake fits file with a 1D spectrum for testing.
@@ -52,8 +52,8 @@ class TestSpecvizHelper:
         self.label = "Test 1D Spectrum"
         self.spec_app.load_data(fake_hdulist)
         data = self.spec_app.get_data(data_label=self.label)
-        # HDUList should load as Spectrum1D
-        assert isinstance(data, Spectrum1D)
+        # HDUList should load as Spectrum
+        assert isinstance(data, Spectrum)
 
     def test_load_spectrum_list_no_labels(self):
         # now load three more spectra from a SpectrumList, without labels
@@ -414,16 +414,16 @@ def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
 
 def test_load_2d_flux(specviz_helper):
     # Test loading a spectrum with a 2D flux, which should be split into separate
-    # 1D Spectrum1D objects to load in Specviz.
-    spec = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
-                      flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
+    # 1D Spectrum objects to load in Specviz.
+    spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
+                    flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
     specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
     assert specviz_helper.app.data_collection[0].label == "test_0"
 
-    spec2 = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
-                       flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
+    spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
+                     flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
@@ -479,11 +479,11 @@ def test_spectra_partial_overlap(specviz_helper):
 
     wave_1 = np.linspace(6000, 7000, 10) * u.AA
     flux_1 = ([1200] * wave_1.size) * u.nJy
-    sp_1 = Spectrum1D(flux=flux_1, spectral_axis=wave_1)
+    sp_1 = Spectrum(flux=flux_1, spectral_axis=wave_1)
 
     wave_2 = wave_1 + (800 * u.AA)
     flux_2 = ([60] * wave_2.size) * u.nJy
-    sp_2 = Spectrum1D(flux=flux_2, spectral_axis=wave_2)
+    sp_2 = Spectrum(flux=flux_2, spectral_axis=wave_2)
 
     specviz_helper.load_data(sp_1, data_label='left')
     specviz_helper.load_data(sp_2, data_label='right')
@@ -502,10 +502,10 @@ def test_spectra_partial_overlap(specviz_helper):
 def test_spectra_incompatible_flux(specviz_helper):
     """https://github.com/spacetelescope/jdaviz/issues/2459"""
     wav = [1.1, 1.2, 1.3] * u.um
-    sp1 = Spectrum1D(flux=[1, 1.1, 1] * (u.MJy / u.sr), spectral_axis=wav)
-    sp2 = Spectrum1D(flux=[1, 1, 1.1] * (u.MJy), spectral_axis=wav)
+    sp1 = Spectrum(flux=[1, 1.1, 1] * (u.MJy / u.sr), spectral_axis=wav)
+    sp2 = Spectrum(flux=[1, 1, 1.1] * (u.MJy), spectral_axis=wav)
     flux3 = ([1, 1.1, 1] * u.MJy).to(u.erg / u.s / u.cm / u.cm / u.AA, u.spectral_density(wav))
-    sp3 = Spectrum1D(flux=flux3, spectral_axis=wav)
+    sp3 = Spectrum(flux=flux3, spectral_axis=wav)
 
     specviz_helper.load_data(sp2, data_label="2")  # OK
     specviz_helper.load_data(sp1, data_label="1")  # Not OK

@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.nddata import NDData
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 
 def test_boxzoom(cubeviz_helper, image_cube_hdu_obj_microns):
@@ -167,7 +167,7 @@ def test_unit_conversion_limits_update(specviz2d_helper, mos_spectrum2d):
 
 def test_match_limits_without_wave_component(specviz2d_helper):
     data = np.zeros((5, 10))
-    spec2d = Spectrum1D(flux=data*u.MJy)
+    spec2d = Spectrum(flux=data*u.MJy, spectral_axis_index=1)
     specviz2d_helper.load_data(spec2d)
 
     spec_viewer = specviz2d_helper.app.get_viewer(
