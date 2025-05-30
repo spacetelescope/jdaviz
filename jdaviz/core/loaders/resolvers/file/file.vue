@@ -12,6 +12,7 @@
         :import_spinner="import_spinner"
         @import-clicked="import_clicked"
         :import_disabled="import_disabled"
+        :valid_import_formats="valid_import_formats"
     >
         <v-row>
             Select a file with data you want to load into this instance of Jdaviz.

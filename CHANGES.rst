@@ -129,6 +129,9 @@ Bug Fixes
 - Exporting as SVG now behaves the same as exporting PNG and respects
   specified output directory. [#3592]
 
+- Improve the "no matching importers" message for filtered inputs and suppress
+  it until a target is selected. [#3593]
+
 Cubeviz
 ^^^^^^^
 
