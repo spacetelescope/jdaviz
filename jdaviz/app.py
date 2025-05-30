@@ -47,7 +47,8 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage)
-from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
+from jdaviz.core.registries import (tool_registry, tray_registry,
+                                    viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
@@ -139,7 +140,9 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
                      'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
                      'j-loader-panel': 'components/loader_panel.vue',
+                     'j-new-viewer-panel': 'components/new_viewer_panel.vue',
                      'j-loader': 'components/loader.vue',
+                     'j-viewer-creator': 'components/viewer_creator.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
@@ -272,7 +275,11 @@ class ApplicationState(State):
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
-        '', docstring="Index of the active loader tab shown in the tray.")
+        '', docstring="Active loader shown in the loaders panel.")
+    new_viewer_items = ListCallbackProperty(
+        docstring="List of new viewer items available to the application.")
+    new_viewer_selected = CallbackProperty(
+        '', docstring="Active new viewer shown in the new viewers panel.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -326,6 +333,7 @@ class Application(VuetifyTemplate, HubListener):
         self._jdaviz_helper = None
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
+        self._default_data_cls = {}
         self.popout_button = PopoutButton(self)
         self.style_registry_instance = style_registry.get_style_registry()
 
@@ -1627,6 +1635,7 @@ class Application(VuetifyTemplate, HubListener):
         if data_label in self.data_collection.labels:
             warnings.warn(f"Overwriting existing data entry with label '{data_label}'")
 
+        self._default_data_cls[data_label] = data.__class__
         self.data_collection[data_label] = data
 
         # manage associated Data entries:
@@ -2989,7 +2998,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # Loaders
         def open():
-            self.state.drawer_content = 'loaders'
+            self.state.drawer_content = 'loaders'  # TODO: rename to "add"?
+            self.state.add_subtab = 0
 
         def close():
             self.state.loader_selected = ''
@@ -3018,6 +3028,8 @@ class Application(VuetifyTemplate, HubListener):
         # Tray plugins
         if self.config == 'deconfigged':
             self.update_tray_items_from_registry()
+            import jdaviz.core.viewer_creators  # noqa
+            self.update_new_viewers_from_registry()
         else:
             for name in config.get('tray', []):
                 tray_registry_member = tray_registry.members.get(name)
@@ -3083,6 +3095,61 @@ class Application(VuetifyTemplate, HubListener):
         }
         return tray_item
 
+    def update_new_viewers_from_registry(self):
+        # TODO: implement jdaviz.new_viewers dictionary to instantiated items here
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_new_viewers_from_registry is only "
+                                      "implemented for the deconfigged app")
+
+        # need to rebuild in order, just pulling from existing dict if its already there
+        new_viewer_items = []
+        for name, vc_registry_member in viewer_creator_registry.members.items():
+            try:
+                item = self.get_new_viewer_item_from_name(
+                            name, return_widget=False)
+            except KeyError:
+                try:
+                    item = self._create_new_viewer_item(vc_registry_member)
+                except Exception as e:
+                    self.hub.broadcast(SnackbarMessage(
+                        f"Failed to load viewer {name}: {e}",
+                        sender=self, color='error'))
+                    continue
+
+            new_viewer_items.append(item)
+
+        self.state.new_viewer_items = new_viewer_items
+        relevant_items = [nvi for nvi in new_viewer_items if nvi['is_relevant']]
+        if not len(self.state.new_viewer_selected) and len(relevant_items):
+            self.state.new_viewer_selected = relevant_items[0]['label']
+
+    def _create_new_viewer_item(self, vc_registry_member):
+        def open():
+            self.state.drawer_content = 'loaders'  # TODO: rename to "add"?
+            self.state.add_subtab = 1
+
+        def close():
+            self.state.new_viewer_selected = ''
+
+        def set_active_viewer_creator(new_viewer_label):
+            self.state.new_viewer_selected = new_viewer_label
+
+        vc_instance = vc_registry_member(app=self,
+                                         open_callback=open,
+                                         close_callback=close,
+                                         set_active_callback=set_active_viewer_creator)
+        new_viewer_item = {
+            'label': vc_registry_member._registry_label,
+            'widget': "IPY_MODEL_" + vc_instance.model_id,
+            'api_methods': vc_instance.api_methods,
+            'is_relevant': vc_instance.is_relevant,
+        }
+        return new_viewer_item
+
+    def get_new_viewer_item_from_name(self, name, return_widget=True):
+        return self._get_state_item_from_name(self.state.new_viewer_items,
+                                              name, return_widget)
+
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
@@ -3115,6 +3182,24 @@ class Application(VuetifyTemplate, HubListener):
         cfg = get_configuration(path=path, section=section, config=config)
         return cfg
 
+    def _get_state_item_from_name(self, state_list, name, return_widget=True):
+        from ipywidgets.widgets import widget_serialization
+
+        ret_item = None
+        for item in state_list:
+            if item.get('name') == name or item.get('label') == name:
+                ipy_model_id = item['widget']
+                if return_widget:
+                    ret_item = widget_serialization['from_json'](ipy_model_id, None)
+                else:
+                    ret_item = item
+                break
+
+        if ret_item is None:
+            raise KeyError(f'{name} not found')
+
+        return ret_item
+
     def get_tray_item_from_name(self, name, return_widget=True):
         """Return the instance of a tray item for a given name.
         This is useful for direct programmatic access to Jdaviz plugins
@@ -3136,22 +3221,7 @@ class Application(VuetifyTemplate, HubListener):
         KeyError
             Name not found.
         """
-        from ipywidgets.widgets import widget_serialization
-
-        tray_item = None
-        for item in self.state.tray_items:
-            if item['name'] == name or item['label'] == name:
-                ipy_model_id = item['widget']
-                if return_widget:
-                    tray_item = widget_serialization['from_json'](ipy_model_id, None)
-                else:
-                    tray_item = item
-                break
-
-        if tray_item is None:
-            raise KeyError(f'{name} not found in app.state.tray_items')
-
-        return tray_item
+        return self._get_state_item_from_name(self.state.tray_items, name, return_widget)
 
     def _init_data_associations(self):
         # assume all Data are parents:
