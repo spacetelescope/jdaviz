@@ -21,6 +21,7 @@ from jdaviz.core.region_translators import region2stcs_string
 from specutils import Spectrum1D
 from astropy import units as u
 from astropy.nddata import CCDData
+from regions import CircleSkyRegion, EllipseSkyRegion
 
 try:
     import cv2
@@ -151,12 +152,17 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         subset_format_options = [{'label': 'fits', 'value': 'fits', 'disabled': False},
                                  {'label': 'reg', 'value': 'reg', 'disabled': False},
-                                 {'label': 'ecsv', 'value': 'ecsv', 'disabled': True},
-                                 {'label': 'stcs', 'value': 'stcs', 'disabled': False}]
+                                 {'label': 'ecsv', 'value': 'ecsv', 'disabled': True}]
+
+        if self.config == 'imviz':
+            subset_format_options.append({'label': 'stcs', 'value': 'stcs', 'disabled': False})
+
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
-                                                   manual_options=subset_format_options)
+                                                   manual_options=subset_format_options,
+                                                   filters=[self._is_valid_item],
+                                                   apply_filters_to_manual_options=True)
 
         dataset_format_options = ['fits']
         self.dataset_format = SelectPluginComponent(self,
@@ -196,6 +202,21 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.serverside_enabled = False
 
         self._set_relevant()
+
+    def _is_valid_item(self, item):
+        return self._is_not_stcs(item) or self._is_stcs_region_supported(item)
+
+    def _is_not_stcs(self, item):
+        return item.get('label', '') != 'stcs'
+
+    def _is_stcs_region_supported(self, item):
+        region = getattr(self.subset, 'selected_spatial_region', None)
+        return isinstance(region, (CircleSkyRegion, EllipseSkyRegion))
+
+    @observe('subset_selected')
+    def _on_subset_selected(self, event):
+        if hasattr(self, 'subset_format'):
+            self.subset_format._update_items()
 
     @observe('viewer_items', 'dataset_items', 'subset_items',
              'plugin_table_items', 'plugin_plot_items')
