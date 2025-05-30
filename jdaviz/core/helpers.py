@@ -553,6 +553,8 @@ class ConfigHelper(HubListener):
         if not cls:
             if 'Trace' in data.meta:
                 cls = None
+            elif hasattr(data, '_native_data_cls'):
+                cls = data._native_data_cls
             elif data.ndim == 2 and self.app.config == "specviz2d":
                 cls = Spectrum1D
             elif data.ndim == 2:

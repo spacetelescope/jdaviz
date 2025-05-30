@@ -162,6 +162,9 @@ class BaseImporterToDataCollection(BaseImporter):
         self.app.add_data(data, data_label=data_label)
         if show_in_viewer:
             self.load_into_viewer(data_label)
+        # store the original input class so that get_data can default to the
+        # same class as the input
+        self.app.data_collection[data_label]._native_data_cls = data.__class__
 
     def __call__(self):
         if self.data_label_invalid_msg:
