@@ -4,6 +4,9 @@
 Bug Fixes
 ---------
 
+- Exporting as SVG now behaves the same as exporting PNG and respects
+  specified output directory. [#3592]
+
 Cubeviz
 ^^^^^^^
 
@@ -29,7 +32,7 @@ Bug Fixes
 
 - Fixed bug where subsets applied with remove / andNot mode when wcs linked were not able to return sky regions. [#3547]
 
-- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory. 
+- Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory.
 
 - Improved error messaging when passing invalid URL to ``load``. [#3580]
 
