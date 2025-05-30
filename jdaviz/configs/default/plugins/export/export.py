@@ -561,31 +561,32 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.overwrite_warn = False
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
-        if filetype == "png":
 
-            if filename is None:
-                filename = self.filename_default
+        if filename is None:
+            filename = self.filename_default
 
-            def on_img_received(data):
-                try:
-                    with filename.open(mode='bw') as f:
-                        f.write(data)
-                except Exception as e:
-                    self.hub.broadcast(SnackbarMessage(
-                        f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
-                        sender=self, color="error"))
-                finally:
-                    self.hub.broadcast(SnackbarMessage(
-                        f"{self.viewer.selected} exported to {str(filename)}",
-                        sender=self, color="success"))
+        def on_img_received(data):
+            try:
+                with filename.open(mode='bw') as f:
+                    f.write(data)
+            except Exception as e:
+                self.hub.broadcast(SnackbarMessage(
+                    f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
+                    sender=self, color="error"))
+            finally:
+                self.hub.broadcast(SnackbarMessage(
+                    f"{self.viewer.selected} exported to {str(filename)}",
+                    sender=self, color="success"))
 
-            if viewer.figure._upload_png_callback is not None:
-                raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
+        if filetype == 'png' and viewer.figure._upload_png_callback is not None:
+            raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
+        if filetype == 'svg' and viewer.figure._upload_svg_callback is not None:
+            raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
 
+        if filetype == 'png':
             viewer.figure.get_png_data(on_img_received)
-
-        elif filetype == "svg":
-            viewer.figure.save_svg(str(filename) if filename is not None else None)
+        elif filetype == 'svg':
+            viewer.figure.get_svg_data(on_img_received)
 
     @with_spinner('movie_recording')
     def _save_movie(self, viewer, i_start, i_end, fps, filename, rm_temp_files):
