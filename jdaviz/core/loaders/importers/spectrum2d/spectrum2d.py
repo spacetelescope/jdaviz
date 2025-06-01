@@ -131,11 +131,10 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         except Exception:
             data_unit = u.count
 
-        try:
-            return Spectrum1D(flux=data * data_unit, meta=metadata, wcs=wcs)
-        except ValueError:
-            # if the WCS is not valid, still parse but without WCS
-            return Spectrum1D(flux=data * data_unit, meta=metadata)
+        # NOTE: in some cases this will fail if there is no found spectral axis
+        # in the WCS, in which case the importer will attempt to use the specutils
+        # parser instead.
+        return Spectrum1D(flux=data * data_unit, meta=metadata, wcs=wcs)
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
