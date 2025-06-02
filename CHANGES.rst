@@ -4,6 +4,9 @@
 Bug Fixes
 ---------
 
+- Improve the "no matching importers" message and suppress it 
+  until a target is selected. [#3593]
+
 Cubeviz
 ^^^^^^^
 
