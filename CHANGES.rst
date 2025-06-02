@@ -138,6 +138,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Improved warnings when loading Roman observations without `roman_datamodels` [#3598]
+
 Mosviz
 ^^^^^^
 

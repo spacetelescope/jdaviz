@@ -142,11 +142,18 @@ def parse_data(app, file_obj, ext=None, data_label=None,
             _parse_image(app, pf, data_label, ext=ext, parent=parent)
 
         elif file_obj_lower.endswith('.asdf'):
-            try:
-                if HAS_ROMAN_DATAMODELS:
-                    with rdd.open(file_obj) as pf:
-                        _parse_image(app, pf, data_label, ext=ext, parent=parent)
-            except TypeError:
+            if HAS_ROMAN_DATAMODELS:
+                with rdd.open(file_obj) as pf:
+                    _parse_image(app, pf, data_label, ext=ext, parent=parent)
+            else:
+                warnings.warn(
+                    f"{file_obj} should be opened with the `roman_datamodels` package, "
+                    "which is not installed in this environment. To install optional "
+                    "jdaviz dependencies for Roman, you can run:  \n\n"
+                    "pip install -U jdaviz[roman]\n\n"
+                    "This file will be loaded with the `asdf` package instead.\n\n",
+                    UserWarning
+                )
                 # if roman_datamodels cannot parse the file, load it with asdf:
                 with asdf.open(file_obj) as af:
                     _parse_image(app, af, data_label, ext=ext, parent=parent)
