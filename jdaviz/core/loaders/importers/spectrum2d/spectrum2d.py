@@ -134,10 +134,10 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         try:
             return Spectrum1D(flux=data * data_unit, meta=metadata, wcs=wcs)
         except ValueError:
-            # In some cases this will fail if there is no found spectral axis
-            # in the WCS, in that case, if the specutils parser would be successful,
-            # allows this to fail so that is used instead.  If that would also fail,
-            # then fallback on using no WCS
+            # In some cases, the above call to Spectrum1D will fail if no
+            # spectral axis is found in the WCS. Even without a spectral axis,
+            # the Spectrum1D.read parser may work, so we try that next.
+            # If that also fails, then drop the WCS.
             try:
                 Spectrum1D.read(self._resolver())
             except Exception:
