@@ -132,6 +132,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Use validator on spectral subset layer visibility in flux/uncertainty viewers when slice indicator
+  is within the spectral subset bounds. [#3571]
+
 Imviz
 ^^^^^
 
