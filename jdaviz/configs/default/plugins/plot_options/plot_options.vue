@@ -291,7 +291,7 @@
               label="Enabled"
               api_hint='plg.sonification_enable = '
               :api_hints_enabled="api_hints_enabled"
-              :use_eye_icon="false"
+              :use_icon="'speaker'"
             />
         <plugin-slider v-if="sonification_enable_value"
             label='Volume'
@@ -313,7 +313,7 @@
           label="Show Line"
           api_hint='plg.line_visible = '
           :api_hints_enabled="api_hints_enabled"
-          :use_eye_icon="true"
+          :use_icon="'eye'"
         />
       </glue-state-sync-wrapper>
 
@@ -519,7 +519,7 @@
           label="Show Image"
           api_hint='plg.image_visible = '
           :api_hints_enabled="api_hints_enabled"
-          :use_eye_icon="true"
+          :use_icon="'eye'"
         />
       </glue-state-sync-wrapper>
 

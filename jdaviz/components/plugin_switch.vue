@@ -28,7 +28,7 @@
 
 <script>
   module.exports = {
-    props: ['value', 'label', 'hint', 'api_hint', 'api_hints_enabled', 'use_eye_icon', 'use_speaker_icon', 'use_icon'],
+    props: ['value', 'label', 'hint', 'api_hint', 'api_hints_enabled', 'use_icon'],
     methods: {
       boolToString(b) {
         if (b) {
