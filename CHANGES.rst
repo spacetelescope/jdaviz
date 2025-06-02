@@ -15,6 +15,8 @@ New Features
   but rather when clicking the button or calling ``get_results``, at which point an entry is added to the results history table
   by default. [#3557]
 
+- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
+
 Cubeviz
 ^^^^^^^
 
