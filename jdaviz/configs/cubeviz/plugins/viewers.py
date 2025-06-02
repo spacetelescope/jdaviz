@@ -68,15 +68,15 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.sonification_wl_ranges = None
         self.sonification_wl_unit = None
         self.volume_level = None
-        self.stream_active = True
 
         self.data_menu._obj.dataset.add_filter('is_cube_or_image')
 
         # Dictionary that contains keys with UUIDs for each
         # sonified data layer. The value of each key is another dictionary containing
         # coordinates as keys and arrays representing sounds as the value.
-        self.uuid_lookup = {}
+        self.data_lookup = {}
         self.layer_volume = {}
+        self.sonified_layers_enabled = []
         self.same_pix = None
         self._cached_properties = ['combined_sonified_grid']
 
@@ -124,25 +124,52 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 isinstance(layer_state.layer, BaseData)]
 
     def start_stream(self):
-        if self.stream and not self.stream.closed and self.stream_active:
+        if self.stream and not self.stream.closed:
             self.stream.start()
 
     def stop_stream(self):
-        if self.stream and not self.stream.closed and self.stream_active:
+        if self.stream and not self.stream.closed:
             self.stream.stop()
 
     def recalculate_combined_sonified_grid(self, event=None):
+        self.layer_volume = {}
+        self.sonified_layers_enabled = []
         # Keep track of the volume attribute for each layer.
-        self.layer_volume = {layer.layer.label: layer.volume for layer in self.state.layers if
-                             isinstance(layer, SonifiedLayerState)}
+        for layer in self.state.layers:
+            if not isinstance(layer, SonifiedLayerState):
+                continue
+
+            # Find layer, add volume check to dictionary and add callback to volume changing and
+            # sonification_enabled changing
+            self.layer_volume[layer.layer.label] = layer.volume
+            self.sonified_layers_enabled += [layer.layer.label] if getattr(layer, 'sonification_enabled', False) else []
+
+            # TODO: is there a better way to ensure that only unique callbacks are added?
+            layer.remove_callback('volume', self.recalculate_combined_sonified_grid)
+            layer.remove_callback('sonification_enabled', self.recalculate_combined_sonified_grid)
+
+            layer.add_callback('volume', self.recalculate_combined_sonified_grid)
+            layer.add_callback('sonification_enabled', self.recalculate_combined_sonified_grid)
+
+        # Need to force an update of the layer icons since
+        # sonification_enabled is a state attribute, not
+        # layer artist attribute
+        self.jdaviz_app.state.layer_icons.notify_all()
+
         if 'combined_sonified_grid' in self.__dict__:
             del self.__dict__['combined_sonified_grid']
         self.combined_sonified_grid
 
     @cached_property
     def combined_sonified_grid(self):
+        if not self.sonified_layers_enabled:
+            self.stop_stream()
+            return {}
+
         compiled_coords = {}
-        for k, v in self.uuid_lookup.items():
+        for k, v in self.data_lookup.items():
+            if k not in self.sonified_layers_enabled:
+                continue
             # Each (x, y) coordinate corresponds to a different sound for each layer.
             # These sounds can be combined together and played by setting cbuff to True.
             # TODO: is there a better way to combine sounds or normalize them?
@@ -158,8 +185,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def update_sonified_cube_with_coord(self, coord, vollim='buff'):
         # Set newsig to the combined sound array at coord
-        if (int(coord[0]), int(coord[1])) not in self.combined_sonified_grid:
+        if (not self.sonified_layers_enabled or
+                (int(coord[0]), int(coord[1])) not in self.combined_sonified_grid):
             return
+
+        # use cached version of combined sonified grid
         compsig = self.combined_sonified_grid[int(coord[0]), int(coord[1])]
 
         # Adjust volume to remove clipping
@@ -246,9 +276,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         x_size = self.sonified_cube.sigcube.shape[0]
         y_size = self.sonified_cube.sigcube.shape[1]
 
-        # Create a new entry for the sonified layer in uuid_lookup. The value is a dictionary
+        # Create a new entry for the sonified layer in data_lookup. The value is a dictionary
         # containing (x_size * y_size) keys with values being arrays that represent sounds
-        self.uuid_lookup[results_label] = {(x, y): self.sonified_cube.sigcube[x, y, :]
+        self.data_lookup[results_label] = {(x, y): self.sonified_cube.sigcube[x, y, :]
                                            for x in range(0, x_size)
                                            for y in range(0, y_size)}
 
@@ -270,15 +300,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self.jdaviz_app.add_data_to_viewer('flux-viewer', results_label)
 
-        # Find layer, add volume check to dictionary and add callback to volume changing
-        data_layer = [layer for layer in self.state.layers if layer.layer.label == results_label][0]
-        data_layer.add_callback('volume', self.recalculate_combined_sonified_grid)
-
         # Clear cache and recompute
         self.recalculate_combined_sonified_grid()
 
     def _viewer_mouse_event(self, data):
-        if data['event'] in ('mouseleave', 'mouseenter'):
+        if data['event'] in ('mouseleave', 'mouseenter') or not self.sonified_layers_enabled:
             self.stop_stream()
             return
         if len(self.jdaviz_app.data_collection) < 1:

@@ -8,6 +8,7 @@ from jdaviz.core.template_mixin import (TemplateMixin, LayerSelect,
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
                                 ChangeRefDataMessage, ViewerRenamedMessage)
+from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
 
@@ -173,6 +174,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def existing_subset_labels(self):
         return [sg.label for sg in self.app.data_collection.subset_groups]
+
+    @property
+    def existing_sonified_labels(self):
+        return [sd.layer.label for sd in self._viewer.state.layers
+                if isinstance(sd, SonifiedLayerState)]
 
     @property
     def data_labels_loaded(self):
@@ -359,7 +365,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             # forbid deleting non-plugin generated data
             selected_items = self.layer.selected_item
             for i, layer in enumerate(self.layer.selected):
-                if (layer not in self.existing_subset_labels
+                if isinstance(self.layer.selected_obj[0][0], SonifiedDataLayerArtist):
+                    self.delete_app_enabled = False
+                    self.delete_app_tooltip = f"Cannot delete sonified data from app"
+                    break
+                elif (layer not in self.existing_subset_labels
                         and selected_items['from_plugin'][i] is None):
                     self.delete_app_enabled = False
                     self.delete_app_tooltip = f"Cannot delete imported data from {self.app.config}"
@@ -400,7 +410,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         """
         for layer in self._viewer.layers:
             if layer.layer.label == layer_label:
-                layer.visible = visible
+                if isinstance(layer, SonifiedDataLayerArtist):
+                    layer.sonified = visible
+                else:
+                    layer.visible = visible
             elif hasattr(layer.layer, 'data') and layer.layer.data.label == layer_label:
                 layer.visible = layer.layer.label in self.visible_layers
             if not visible and self.app._get_assoc_data_parent(layer.layer.label) == layer_label:

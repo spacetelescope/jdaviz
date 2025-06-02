@@ -58,6 +58,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     sound_devices_items = List().tag(sync=True)
     sound_devices_selected = Unicode('').tag(sync=True)
 
+    add_to_viewer_enabled = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -74,6 +76,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.refresh_device_list()
 
         self.results_label_default = 'Sonified data'
+        self.add_to_viewer_selected = 'flux-viewer'
 
     @property
     def user_api(self):
