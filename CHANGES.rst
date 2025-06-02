@@ -70,6 +70,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Improved warnings when loading Roman observations without `roman_datamodels` [#3598]
+
+
 Mosviz
 ^^^^^^
 
@@ -274,8 +277,6 @@ Cubeviz
 
 - Use validator on spectral subset layer visibility in flux/uncertainty viewers when slice indicator
   is within the spectral subset bounds. [#3571]
-
-- Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
 
 Other changes and Additions
 ---------------------------
