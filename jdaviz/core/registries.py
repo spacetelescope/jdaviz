@@ -5,9 +5,11 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
-__all__ = ['convert', 'UniqueDictRegistry', 'ViewerRegistry', 'TrayRegistry',
+__all__ = ['convert', 'UniqueDictRegistry', 'ViewerRegistry',
+           'ViewerCreatorRegistry', 'TrayRegistry',
            'ToolRegistry', 'MenuRegistry', 'DataParserRegistry',
-           'viewer_registry', 'tray_registry', 'tool_registry', 'menu_registry',
+           'viewer_registry', 'viewer_creator_registry',
+           'tray_registry', 'tool_registry', 'menu_registry',
            'data_parser_registry',
            'loader_resolver_registry', 'loader_parser_registry', 'loader_importer_registry']
 
@@ -51,7 +53,7 @@ class UniqueDictRegistry(DictRegistry):
             Whether to overwrite an existing entry with the same ``label``.
         """
         if name in self.members and not overwrite:
-            raise ValueError(f"Viewer with the name {name} already exists, "
+            raise ValueError(f"Registry item with the name {name} already exists, "
                              f"please choose a different name or pass overwrite=True.")
         else:
             self.members[name] = cls
@@ -86,6 +88,15 @@ class ViewerRegistry(UniqueDictRegistry):
                              f"please choose a different name or pass overwrite=True.")
         else:
             self.members[name] = {'label': label, 'cls': cls}
+
+
+class ViewerCreatorRegistry(UniqueDictRegistry):
+    def __call__(self, name=None, overwrite=False):
+        def decorator(cls):
+            cls._registry_label = name
+            self.add(name, cls, overwrite=overwrite)
+            return cls
+        return decorator
 
 
 class TrayRegistry(UniqueDictRegistry):
@@ -141,7 +152,7 @@ class TrayRegistry(UniqueDictRegistry):
             Whether to overwrite an existing entry with the same ``label``.
         """
         if name in self.members and not overwrite:
-            raise ValueError(f"Viewer with the name {name} already exists, "
+            raise ValueError(f"Tray item with the name {name} already exists, "
                              f"please choose a different name or pass overwrite=True.")
         else:
             cls._registry_name = name
@@ -223,6 +234,7 @@ class LoaderStepRegistry(UniqueDictRegistry):
 
 
 viewer_registry = ViewerRegistry()
+viewer_creator_registry = ViewerCreatorRegistry()
 tray_registry = TrayRegistry()
 tool_registry = ToolRegistry()
 menu_registry = MenuRegistry()

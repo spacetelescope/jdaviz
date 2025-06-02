@@ -172,6 +172,39 @@ def _is_image_viewer(viewer):
 
 class ViewerPropertiesMixin:
     # assumes that self.app is defined by the class
+    def get_matching_viewers(self, filter_or_cls, raise_if_none=False):
+        """
+        Get all viewers matching a filter
+
+        Parameters
+        ----------
+        filter_or_cls : callable or class
+            A callable that takes a viewer and returns True if the viewer
+            matches the filter, False otherwise.  If a class, will check
+            if isinstance.
+
+        Returns
+        -------
+        list
+            A list of viewer instances of the specified class type.
+        """
+        # mixin can be used on the Application object itself or on anything
+        # that defines self.app to point to the Application object
+        app = getattr(self, 'app', self)
+
+        def is_match(viewer):
+            if inspect.isclass(filter_or_cls):
+                return isinstance(viewer, filter_or_cls)
+            else:
+                return filter_or_cls(viewer)
+
+        vs = [viewer for viewer in app._viewer_store.values()
+              if is_match(viewer)]
+
+        if raise_if_none and not len(vs):
+            raise ValueError(f"No viewers matching {filter_or_cls.__name__} found.")
+        return vs
+
     @property
     def spectrum_viewer(self):
         viewer_reference = self.app._get_first_viewer_reference_name(

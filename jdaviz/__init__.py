@@ -24,6 +24,7 @@ _expose = ['show', 'load', 'batch_load',
            'plugins',
            'loaders',
            'viewers',
+           'new_viewers',
            'get_data']
 _incl = ['App', 'enable_hot_reloading', '__version__']
 _temporary_incl = ['open', 'Cubeviz', 'Imviz', 'Mosviz', 'Rampviz', 'Specviz', 'Specviz2d']

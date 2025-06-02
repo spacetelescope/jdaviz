@@ -136,6 +136,22 @@ class ConfigHelper(HubListener):
                    for item in self.app.state.loader_items}
         return loaders
 
+    @property
+    def new_viewers(self):
+        """
+        Access API objects for creating new viewers.
+
+        Returns
+        -------
+        new_viewers : dict
+            dict of viewer-creator objects
+        """
+        if not self.app.config == 'deconfigged':
+            raise NotImplementedError("new_viewers is only enabled in the deconfigged app")  # noqa
+        new_viewers = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api  # noqa
+                       for item in self.app.state.new_viewer_items if item['is_relevant']}
+        return new_viewers
+
     def _load(self, inp=None, loader=None, format=None, target=None, **kwargs):
         """
         Load data into the app.  A single valid loader/importer must be able to be
@@ -551,7 +567,9 @@ class ConfigHelper(HubListener):
         data = self.app.data_collection[data_label]
 
         if not cls:
-            if 'Trace' in data.meta:
+            if self.app.config == 'deconfigged' and data_label in self.app._default_data_cls:
+                cls = self.app._default_data_cls.get(data_label)
+            elif 'Trace' in data.meta:
                 cls = None
             elif data.ndim == 2 and self.app.config == "specviz2d":
                 cls = Spectrum1D
