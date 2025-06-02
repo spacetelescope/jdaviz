@@ -367,7 +367,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             for i, layer in enumerate(self.layer.selected):
                 if isinstance(self.layer.selected_obj[0][0], SonifiedDataLayerArtist):
                     self.delete_app_enabled = False
-                    self.delete_app_tooltip = f"Cannot delete sonified data from app"
+                    self.delete_app_tooltip = "Cannot delete sonified data from app"
                     break
                 elif (layer not in self.existing_subset_labels
                         and selected_items['from_plugin'][i] is None):

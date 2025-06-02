@@ -142,7 +142,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             # Find layer, add volume check to dictionary and add callback to volume changing and
             # sonification_enabled changing
             self.layer_volume[layer.layer.label] = layer.volume
-            self.sonified_layers_enabled += [layer.layer.label] if getattr(layer, 'sonification_enabled', False) else []
+            self.sonified_layers_enabled += ([layer.layer.label] if
+                                             getattr(layer, 'sonification_enabled', False) else [])
 
             # TODO: is there a better way to ensure that only unique callbacks are added?
             layer.remove_callback('volume', self.recalculate_combined_sonified_grid)
