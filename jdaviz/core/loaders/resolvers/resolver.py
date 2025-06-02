@@ -197,6 +197,7 @@ class BaseResolver(PluginTemplateMixin):
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
+    valid_import_formats = Unicode().tag(sync=True)
 
     target_items = List().tag(sync=True)
     target_selected = Unicode().tag(sync=True)
@@ -281,8 +282,15 @@ class BaseResolver(PluginTemplateMixin):
     def _on_format_selected_changed(self, change={}):
         if self.format_selected == '':
             self.importer_widget = ''
+
+            if (hasattr(self.format._invalid_importers, 'keys') and
+               self.format._invalid_importers.keys()) and self.target_selected:
+                # if no valid importer for format_selected, provide supported sources/formats
+                # to user in a warning message
+                self.valid_import_formats = ", ".join(loader_importer_registry.members.keys())
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
+            self.valid_import_formats = ''
 
     def close_in_tray(self, close_sidebar=False):
         """
