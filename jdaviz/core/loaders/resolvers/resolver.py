@@ -280,8 +280,6 @@ class BaseResolver(PluginTemplateMixin):
 
     @observe('format_selected')
     def _on_format_selected_changed(self, change={}):
-        self.valid_import_formats = ''
-
         if self.format_selected == '':
             self.importer_widget = ''
 
@@ -292,6 +290,7 @@ class BaseResolver(PluginTemplateMixin):
                 self.valid_import_formats = ", ".join(loader_importer_registry.members.keys())
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
+            self.valid_import_formats = ''
 
     def close_in_tray(self, close_sidebar=False):
         """
