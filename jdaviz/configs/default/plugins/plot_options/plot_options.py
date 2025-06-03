@@ -186,7 +186,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
     * ``volume_level`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. Set the volume for the selected sonified layer.
-    * ``sonification_enabled`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+    * ``sonified_audible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. Set if the selected sonified layer will output audio.
     """
     template_file = __file__, "plot_options.vue"
@@ -383,8 +383,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     volume_value = IntHandleEmpty(50).tag(sync=True)
     volume_sync = Dict().tag(sync=True)
 
-    sonification_enabled_value = Bool(False).tag(sync=True)
-    sonification_enabled_sync = Dict().tag(sync=True)
+    sonified_audible_value = Bool(False).tag(sync=True)
+    sonified_audible_sync = Dict().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -605,11 +605,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                  'volume_value', 'volume_sync',
                                                  state_filter=is_sonified)
 
-        self.sonification_enabled = PlotOptionsSyncState(self, self.viewer, self.layer,
-                                                         'sonification_enabled',
-                                                         'sonification_enabled_value',
-                                                         'sonification_enabled_sync',
-                                                         state_filter=is_sonified)
+        self.sonified_audible = PlotOptionsSyncState(self, self.viewer, self.layer, 'audible',
+                                                     'sonified_audible_value',
+                                                     'sonified_audible_sync',
+                                                     state_filter=is_sonified)
 
         # Axes options:
         # axes_visible hidden for imviz in plot_options.vue
@@ -648,7 +647,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
                   'select_all', 'subset_visible', 'reset_viewer_bounds']
         if self.config == "cubeviz":
-            expose += ['uncertainty_visible', 'volume_level', 'sonification_enabled']
+            expose += ['uncertainty_visible', 'volume_level', 'sonified_audible']
         if self.config != "imviz":
             expose += ['x_min', 'x_max', 'y_min', 'y_max',
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',

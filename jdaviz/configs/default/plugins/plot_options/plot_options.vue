@@ -287,13 +287,13 @@
 
       <glue-state-sync-wrapper v-if="volume_value>-1" :sync="volume_sync"">
           <plugin-switch
-              :value.sync="sonification_enable_value"
-              label="Enabled"
-              api_hint='plg.sonification_enable = '
+              :value.sync="sonified_audible_value"
+              label="Audible"
+              api_hint='plg.sonified_audible = '
               :api_hints_enabled="api_hints_enabled"
               :use_icon="'speaker'"
             />
-        <plugin-slider v-if="sonification_enable_value"
+        <plugin-slider v-if="sonified_audible_value"
             label='Volume'
             api_hint="plg.volume = "
             :api_hints_enabled="api_hints_enabled"

@@ -193,7 +193,7 @@
                     :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
                   > 
                     <plugin-switch
-                      :value="item.is_sonified ? item.sonification_enabled : item.visible"
+                      :value="item.is_sonified ? item.audible : item.visible"
                       @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
                       @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
                       @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"

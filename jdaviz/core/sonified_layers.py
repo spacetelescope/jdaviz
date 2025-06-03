@@ -11,7 +11,7 @@ __all__ = ['SonifiedLayerStateWidget', 'SonifiedDataLayerArtist']
 
 class SonifiedLayerState(ImageLayerState):
     volume = DDCProperty(100, docstring='The volume level of this layer')
-    sonification_enabled = CallbackProperty(True, 'whether audio will be allowed to play')
+    audible = CallbackProperty(True, 'whether audio will be allowed to play')
 
     def __init__(self, *args, **kwargs):
 
@@ -20,7 +20,7 @@ class SonifiedLayerState(ImageLayerState):
         self.previous_volume = self.volume
 
     def _update_volume(self, ignore=None):
-        if not self.sonification_enabled:
+        if not self.audible:
             self.previous_volume = self.volume
             self.volume = 0
         else:
@@ -36,14 +36,14 @@ class SonifiedDataLayerArtist(ImageLayerArtist):
         self.view = view
 
     @property
-    def sonified(self):
-        return self.state.sonification_enabled
+    def audible(self):
+        return self.state.audible
 
-    @sonified.setter
-    def sonified(self, value=None):
+    @audible.setter
+    def audible(self, value=None):
         if value is None:
             return
-        self.state.sonification_enabled = value
+        self.state.audible = value
 
     def enable(self):
         if self.enabled:
@@ -57,7 +57,7 @@ class SonifiedDataLayerArtist(ImageLayerArtist):
 
     def remove(self):
         super().remove()
-        self.sonified = False
+        self.audible = False
 
 
 class SonifiedLayerStateWidget(v.VuetifyTemplate):
