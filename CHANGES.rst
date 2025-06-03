@@ -17,6 +17,8 @@ New Features
 
 - User API access to ``simplify_subset()`` method in the Subset Tools plugin. [#3601]
 
+- Hitting the "Enter" key while changing a value in the Subset Tools plugin will make a call to accept the changes (equivalent to clicking the "Update" button). [#3600]
+
 Cubeviz
 ^^^^^^^
 
@@ -34,8 +36,6 @@ Imviz
 
 - The Export plugin now supports saving spatial subsets as STC-S strings, including CircleSkyRegion and EllipseSkyRegion,
   which are exported as ``CIRCLE`` and ``ELLIPSE`` STC-S shapes, respectively. [#3591, #3595]
-
-- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS. [#3483, #3535, #3540]
 
 Mosviz
 ^^^^^^
