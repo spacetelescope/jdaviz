@@ -91,6 +91,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     * :meth:`get_regions`
     * :meth:`rename_selected`
     * :meth:`rename_subset`
+    * :meth:`update_subset`
+    * :meth:`simplify_subset`
     """
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
@@ -182,7 +184,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset',
-                  'update_subset']
+                  'update_subset', 'simplify_subset']
         if self.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d'):
             expose += ['loaders']
         return PluginUserApi(self, expose)
@@ -583,20 +585,37 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         sg.subset_state = MultiMaskSubsetState(masks)
 
-    def vue_simplify_subset(self, *args):
+    def _simplify_subset(self, raise_error=True):
         if self.multiselect:
-            self.hub.broadcast(SnackbarMessage("Cannot simplify spectral subset "
-                                               "when multiselect is active", color='warning',
-                                               sender=self))
-            return
+            msg = "Cannot simplify spectral subset when multiselect is active"
+            if raise_error:
+                raise ValueError(msg)
+            else:
+                self.hub.broadcast(SnackbarMessage(msg, color='warning',
+                                                   sender=self))
+                return
         if len(self.subset_states) < 2:
-            self.hub.broadcast(SnackbarMessage("Cannot simplify spectral subset "
-                                               "of length less than 2", color='warning',
-                                               sender=self))
-            return
+            msg = "Cannot simplify spectral subset of length less than 2"
+            if raise_error:
+                raise ValueError(msg)
+            else:
+                self.hub.broadcast(SnackbarMessage(msg, color='warning',
+                                                   sender=self))
+                return
         att = self.subset_states[0].att
         self.app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
                                           overwrite=True)
+
+    def simplify_subset(self):
+        """
+        Simplify the selected spectral subset by combining all subregions into
+        a single spectral region. This is only available for spectral subsets
+        with more than one subregion.
+        """
+        self._simplify_subset(raise_error=True)
+
+    def vue_simplify_subset(self, *args):
+        self._simplify_subset(raise_error=False)
 
     def _on_display_unit_changed(self, msg):
         # We only care about the spectral units, since flux units don't affect spectral subsets
