@@ -131,13 +131,21 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         except Exception:
             data_unit = u.count
 
-        # FITS WCS is invalid, so ignore it.
-        if wcs.spectral.naxis == 0:
-            kw = {}
-        else:
-            kw = {'wcs': wcs}
-
-        return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
+        try:
+            return Spectrum1D(flux=data * data_unit, meta=metadata, wcs=wcs)
+        except ValueError:
+            # In some cases, the above call to Spectrum1D will fail if no
+            # spectral axis is found in the WCS. Even without a spectral axis,
+            # the Spectrum1D.read parser may work, so we try that next.
+            # If that also fails, then drop the WCS.
+            try:
+                Spectrum1D.read(self._resolver())
+            except Exception:
+                # specutils.Spectrum > Spectrum2D would fail, so use no WCS
+                return Spectrum1D(flux=data * data_unit, meta=metadata)
+            else:
+                # raising an error here will allow using specutils.Spectrum > Spectrum2D
+                raise
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
