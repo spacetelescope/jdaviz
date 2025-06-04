@@ -24,9 +24,9 @@
                     />
                   </v-row>  
 
-                  <v-row v-if="format_items.length == 0">
+                  <v-row v-if="format_items.length == 0 && valid_import_formats">
                       <v-alert type="warning" style="margin-left: -12px; margin-right: -12px; width: 100%">
-                          No matching importers found for input.
+                          No compatible importer found. Supported input types include: {{ valid_import_formats }}.
                       </v-alert>
                   </v-row>
                   <v-row v-if="format_items.length === 1" style="margin-top: 16px">
@@ -90,6 +90,6 @@ module.exports = {
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',
           'importer_widget', 'import_spinner',
-          'api_hints_enabled'],
+          'api_hints_enabled', 'valid_import_formats'],
 }
 </script>
