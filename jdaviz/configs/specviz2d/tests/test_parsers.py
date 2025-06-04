@@ -22,9 +22,10 @@ Observations._caom_filtered = Observations._caom_filtered + service_patch
 Observations._caom_products = Observations._caom_products + service_patch
 
 discovery_portal.PortalAPI.MAST_REQUEST_URL = test_server + "/api/v0/invoke"
-discovery_portal.PortalAPI.COLUMNS_CONFIG_URL = test_server + "/portal/Mashup/Mashup.asmx/columnsconfig"
+discovery_portal.PortalAPI.COLUMNS_CONFIG_URL = test_server + "/portal/Mashup/Mashup.asmx/columnsconfig"  # noqa
 discovery_portal.PortalAPI.MAST_DOWNLOAD_URL = test_server + "/api/v0.1/Download/file"
 discovery_portal.PortalAPI.MAST_BUNDLE_URL = test_server + "/api/v0.1/Download/bundle"
+
 
 @pytest.mark.remote_data
 def test_2d_parser_jwst(specviz2d_helper):
