@@ -98,7 +98,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'SPATIAL_DEFAULT_TEXT']
 
 SPATIAL_DEFAULT_TEXT = "Entire Cube"
-GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att')
+GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att', 'x_att', 'y_att')
 
 # this histogram viewer (along with other viewers) are not in the glue viewer-registry by default
 # but may be added in the future.  If it is not in the registry, we'll add it now.
@@ -4913,6 +4913,9 @@ class PlotOptionsSyncState(BasePluginComponent):
             return getattr(state, glue_name) and getattr(state, 'visible')
         if glue_name in ('c_min', 'c_max'):
             return float(getattr(state, glue_name))
+        if glue_name in ('x_att', 'y_att', 'z_att'):
+            # return the name of the attribute, not the object
+            return str(getattr(state, glue_name))
 
         return getattr(state, glue_name)
 
@@ -4981,7 +4984,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                 ) or (
                     # update choices in `sync` if glue state choices are updated
                     # during glue Component add/rename/delete:
-                    glue_name == 'cmap_att'
+                    glue_name in ('cmap_att', 'x_att', 'y_att')
                 ):
                     # then we can access and populate/update the choices.
                     self.sync = {**self.sync, 'choices': self._get_glue_choices(state)}

@@ -201,6 +201,13 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     layer_items = List().tag(sync=True)
     layer_selected = Any().tag(sync=True)  # Any needed for multiselect
 
+    xatt_value = Unicode().tag(sync=True)
+    xatt_sync = Dict().tag(sync=True)
+
+    yatt_value = Unicode().tag(sync=True)
+    yatt_sync = Dict().tag(sync=True)
+
+
     # profile/line viewer/layer options:
     line_visible_value = Bool().tag(sync=True)
     line_visible_sync = Dict().tag(sync=True)
@@ -465,6 +472,14 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.uncertainty_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',  # noqa
                                                         'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
 
+        self.xatt = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_att',
+                                         'xatt_value', 'xatt_sync',
+                                         state_filter=is_scatter)
+
+        self.yatt = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_att',
+                                         'yatt_value', 'yatt_sync',
+                                         state_filter=is_scatter)
+
         # Viewer bounds
         self.x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_min',
                                           'x_min_value', 'x_min_sync',
@@ -655,6 +670,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
                        'stretch_curve_visible', 'apply_RGB_presets']
+        if self.config == 'deconfigged':
+            expose += ['xatt', 'yatt']
         if self.config in ('imviz', 'deconfigged'):
             expose += ['marker_visible', 'marker_fill', 'marker_opacity',
                        'marker_size', 'marker_size_scale',
