@@ -174,9 +174,14 @@
           <plugin-action-button
             :disabled="!can_simplify"
             :results_isolated_to_plugin="false"
+            :api_hints_enabled="api_hints_enabled"
             @click="simplify_subset"
           >
-            Simplify
+            {{ api_hints_enabled ?
+              'plg.simplify_subset()'
+              :
+              'Simplify'
+            }}
           </plugin-action-button>
         </j-tooltip>
         <plugin-action-button
