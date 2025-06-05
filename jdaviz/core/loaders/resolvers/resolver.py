@@ -286,9 +286,9 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             continue
         try:
             this_resolver = Resolver.from_input(app, inp, **kwargs)
-        except Exception:
-            this_resolver = None
-        if this_resolver is None:
+        except Exception as e:  # nosec
+            if resolver_name == 'url' and 'timeout' in str(e):
+                raise e
             continue
         try:
             is_valid = this_resolver.is_valid

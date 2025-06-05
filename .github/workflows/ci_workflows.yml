@@ -95,6 +95,9 @@ jobs:
         python-version: ${{ matrix.python }}
     - name: Install base dependencies
       run: python -m pip install --upgrade pip tox
+    - name: Get IP address for MAST debugging
+      if: "contains(matrix.toxposargs, '--remote-data')"
+      run: curl https://api.ipify.org
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
     - name: Upload coverage to artifacts
