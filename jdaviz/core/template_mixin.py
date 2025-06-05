@@ -4925,7 +4925,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             return [{'text': cmap[0], 'value': cmap[1].name} for cmap in colormaps.members]
         if glue_name in GLUE_STATES_WITH_HELPERS:
             helper = getattr(state, f'{glue_name}_helper')
-            return [{'text': str(choice), 'value': str(choice)} for choice in helper.choices]
+            return [{'text': str(choice), 'value': str(choice)} for choice in helper.choices if str(choice) not in ('Main components', 'Coordinate components')]
         if glue_name == 'color_mode':
             return [{'text': 'Colormap',
                      'value': 'Colormaps',
