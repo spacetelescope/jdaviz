@@ -551,7 +551,7 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
     assert subset_plugin.subset_types == ['Range', 'Range', 'Range', 'Range']
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'OrState', 'AndState']
 
-    subset_plugin.vue_simplify_subset()
+    subset_plugin.simplify_subset()
     assert subset_plugin.glue_state_types == ["RangeSubsetState", "OrState"]
 
     for layer in viewer.state.layers:
@@ -706,7 +706,7 @@ def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
     subset_plugin.subset.selected = 'Subset 1'
 
     assert subset_plugin.can_simplify
-    subset_plugin.vue_simplify_subset()
+    subset_plugin.simplify_subset()
 
     reg = specviz_helper.app.get_subsets("Subset 1")
     assert reg.lower.value == 6400 and reg.upper.value == 7400
@@ -726,7 +726,7 @@ def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
     subset_plugin.subset.selected = 'Subset 1'
 
     assert subset_plugin.can_simplify
-    subset_plugin.vue_simplify_subset()
+    subset_plugin.simplify_subset()
 
     reg = specviz_helper.app.get_subsets("Subset 1")
     assert reg[0].lower.value == 6400 and reg[0].upper.value == 7400
@@ -747,7 +747,7 @@ def test_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     subset_plugin.subset.selected = 'Subset 1'
 
     assert subset_plugin.can_simplify
-    subset_plugin.vue_simplify_subset()
+    subset_plugin.simplify_subset()
 
     reg = specviz2d_helper.app.get_subsets("Subset 1")
     assert reg.lower.value == 6400 and reg.upper.value == 7400
@@ -769,7 +769,7 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     subset_plugin.subset.selected = 'Subset 1'
 
     assert subset_plugin.can_simplify
-    subset_plugin.vue_simplify_subset()
+    subset_plugin.simplify_subset()
 
     reg = specviz2d_helper.app.get_subsets("Subset 1")
     assert reg[0].lower.value == 6400 and reg[0].upper.value == 7400
