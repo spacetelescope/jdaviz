@@ -98,6 +98,9 @@ jobs:
     - name: Install extra dependencies for strauss
       if: "contains(matrix.toxenv, 'alldeps')"
       run: sudo apt-get install libportaudio2
+    - name: Get IP address for MAST debugging
+      if: "contains(matrix.toxposargs, '--remote-data')"
+      run: curl https://api.ipify.org
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
     - name: Upload coverage to artifacts
