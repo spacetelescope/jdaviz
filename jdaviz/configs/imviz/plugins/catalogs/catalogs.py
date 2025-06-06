@@ -3,6 +3,7 @@ from copy import deepcopy
 import numpy as np
 from astropy import units as u
 from astropy.table import QTable, Table as AstropyTable
+from astropy.table import vstack
 from astropy.coordinates import SkyCoord
 from echo import delay_callback
 from traitlets import List, Unicode, Bool, Int, observe
@@ -50,6 +51,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
     max_sources = IntHandleEmpty(1000).tag(sync=True)
+
+    num_catalogs = IntHandleEmpty(1).tag(sync=True)
+    catalogs_selected = List([]).tag(sync=True)
 
     # setting the default table headers and values
     _default_table_values = {
@@ -166,6 +170,88 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.table.selected_rows += [item]
         self._table_selection_changed()
 
+
+    def _query_gaia(self, skycoord_center=None, zoom_radius=None):
+        from astroquery.gaia import Gaia
+        Gaia.ROW_LIMIT = self.max_sources
+        sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
+                                    columns=('source_id', 'ra', 'dec')
+                                    )
+        if "SOURCE_ID" in sources.colnames:  # Case could flip non-deterministically
+            src_id_colname = "SOURCE_ID"
+        else:
+            src_id_colname = "source_id"
+        if len(sources) == self.max_sources:
+            max_sources_used = True
+        if hasattr(self.app,'_catalog_source_table'):
+            self.app._catalog_source_table = vstack([self.app._catalog_source_table, sources])
+            print('GAIA length of total table : ', len(self.app._catalog_source_table))
+            print(('GAIA length of added sources : ', len(sources)))
+            print('total table: ', self.app._catalog_source_table)
+            print('sources added : ', sources)
+            print('~~~~~~~~~~~~~')
+            
+        else:
+            self.app._catalog_source_table = sources
+            print('GAIA length of total table : ', len(self.app._catalog_source_table))
+            print(('GAIA length of added sources : ', len(sources)))
+            print('total table: ', self.app._catalog_source_table)
+            print('sources added : ', sources)
+            print('~~~~~~~~~~~~~')
+
+        return src_id_colname
+
+
+    def _query_sdss(self, skycoord_center=None, zoom_radius=None):
+        from astroquery.sdss import SDSS
+        r_max = 3 * u.arcmin
+        src_id_colname = "objid"
+        # queries the region (based on the provided center point and radius)
+        # finds all the sources in that region
+        try:
+            if zoom_radius > r_max:  # SDSS now has radius max limit
+                self.hub.broadcast(SnackbarMessage(
+                    f"Radius for {self.catalog_selected} has max radius of {r_max} but got "
+                    f"{zoom_radius.to(u.arcmin)}, using {r_max}.",
+                    color='warning', sender=self))
+                zoom_radius = r_max
+            query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
+                                                    data_release=17)
+            if len(query_region_result) > self.max_sources:
+                query_region_result = query_region_result[:self.max_sources]
+                max_sources_used = True
+        except Exception as e:  # nosec
+            errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
+                      f"r={zoom_radius}: {repr(e)}")
+            if error_on_fail:
+                raise Exception(errmsg) from e
+            self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self))
+            query_region_result = None
+        if query_region_result is None:
+            self.results_available = True
+            self.number_of_results = 0
+            self.app._catalog_source_table = None
+            viewer.remove_markers(marker_name=self._marker_name)
+            return
+        # TODO: Filter this table the same way as the actual displayed markers.
+        # attach the table to the app for Python extraction
+        if hasattr(self.app,'_catalog_source_table'):
+            self.app._catalog_source_table = vstack([self.app._catalog_source_table, query_region_result])
+            print('SDSS length of total table : ', len(self.app._catalog_source_table))
+            print(('SDSS length of query results : ', len(query_region_result)))
+            print('total table: ', self.app._catalog_source_table)
+            print('sources added : ', sources)
+            print('~~~~~~~~~~~~~')
+        else:
+            self.app._catalog_source_table = query_region_result
+            print('SDSS length of total table : ', len(self.app._catalog_source_table))
+            print(('SDSS length of added query results  : ', len(query_region_result)))
+            print('total table: ', self.app._catalog_source_table)
+            print('sources added : ', query_region_result)
+            print('~~~~~~~~~~~~~')
+
+        return src_id_colname
+
     @with_spinner()
     def search(self, error_on_fail=False):
         """Search the catalog, display markers on the viewer, and return results if available.
@@ -182,6 +268,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             Sky coordinates (or None if no results available).
 
         """
+
+
+        print('num catalogs : ', self.num_catalogs)
+        print('catalogs selected : ', self.catalogs_selected)
+        #if self.num_catalogs == 2:
+        #    self.catalogs_selected = ['SDSS', 'Gaia']
         # calling clear in the case the user forgot after searching
         self.clear_table()
 
@@ -216,58 +308,25 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         max_sources_used = False
 
         # conducts search based on SDSS
-        if self.catalog_selected == "SDSS":
-            from astroquery.sdss import SDSS
-            r_max = 3 * u.arcmin
-            src_id_colname = "objid"
 
-            # queries the region (based on the provided center point and radius)
-            # finds all the sources in that region
-            try:
-                if zoom_radius > r_max:  # SDSS now has radius max limit
-                    self.hub.broadcast(SnackbarMessage(
-                        f"Radius for {self.catalog_selected} has max radius of {r_max} but got "
-                        f"{zoom_radius.to(u.arcmin)}, using {r_max}.",
-                        color='warning', sender=self))
-                    zoom_radius = r_max
-                query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
-                                                        data_release=17)
-                if len(query_region_result) > self.max_sources:
-                    query_region_result = query_region_result[:self.max_sources]
-                    max_sources_used = True
-            except Exception as e:  # nosec
-                errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
-                          f"r={zoom_radius}: {repr(e)}")
-                if error_on_fail:
-                    raise Exception(errmsg) from e
-                self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self))
-                query_region_result = None
+        src_id_colname = []
 
-            if query_region_result is None:
-                self.results_available = True
-                self.number_of_results = 0
-                self.app._catalog_source_table = None
-                viewer.remove_markers(marker_name=self._marker_name)
-                return
+        if self.num_catalogs > 1:
+            for catalog in self.catalogs_selected:
+                if catalog == "SDSS":
+                    src_id_colname += self._query_sdss(skycoord_center=skycoord_center, zoom_radius=zoom_radius)
+                elif catalog == "Gaia":
+                    src_id_colname += self._query_gaia(skycoord_center=skycoord_center, zoom_radius=zoom_radius)
 
+        elif self.catalog_selected == "SDSS":
+            src_id_colname = self._query_sdss(skycoord_center=skycoord_center, zoom_radius=zoom_radius)
             # TODO: Filter this table the same way as the actual displayed markers.
             # attach the table to the app for Python extraction
-            self.app._catalog_source_table = query_region_result
+            #self.app._catalog_source_table = query_region_result
 
         elif self.catalog_selected == 'Gaia':
-            from astroquery.gaia import Gaia
-
-            Gaia.ROW_LIMIT = self.max_sources
-            sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
-                                        columns=('source_id', 'ra', 'dec')
-                                        )
-            if "SOURCE_ID" in sources.colnames:  # Case could flip non-deterministically
-                src_id_colname = "SOURCE_ID"
-            else:
-                src_id_colname = "source_id"
-            if len(sources) == self.max_sources:
-                max_sources_used = True
-            self.app._catalog_source_table = sources
+            src_id_colname = self._query_gaia(skycoord_center=skycoord_center, zoom_radius=zoom_radius)
+            #self._query_gaia(skycoord_center=skycoord_center, zoom_radius=zoom_radius)
 
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
@@ -302,7 +361,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.hub.broadcast(snackbar_message)
 
         # Convert to pixel coordinates and filter results to be within viewer bounds
-        if self.catalog_selected in ["SDSS", "Gaia"]:
+        if self.catalog_selected in ["SDSS", "Gaia"] or self.num_catalogs > 1:
             skycoords = SkyCoord(self.app._catalog_source_table['ra'],
                                  self.app._catalog_source_table['dec'],
                                  unit='deg')
@@ -322,7 +381,25 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.app._catalog_source_table = self.app._catalog_source_table[~mask]
         skycoords = skycoords[~mask]
 
-        if self.catalog_selected in ["SDSS", "Gaia"]:
+        if self.num_catalogs > 1:
+            print('len in last if :', len(self.app._catalog_source_table))
+            for row in self.app._catalog_source_table:
+                x_coordinates.append(row['x_coord'])
+                y_coordinates.append(row['y_coord'])
+
+                row_id = "_".join(str(row[col]) for col in src_id_colname if col in row.colnames)
+
+                row_info = {
+                    'Right Ascension (degrees)': row['ra'],
+                    'Declination (degrees)': row['dec'],
+                    'Object ID': row_id,
+                    'id': len(self.table),
+                    'x_coord': row['x_coord'],
+                    'y_coord': row['y_coord']
+                }
+                self.table.add_item(row_info)
+
+        elif self.catalog_selected in ["SDSS", "Gaia"]:
             for row in self.app._catalog_source_table:
                 x_coordinates.append(row['x_coord'])
                 y_coordinates.append(row['y_coord'])
@@ -359,8 +436,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
                 self.table.add_item(row_info)
 
+        print('len x coords :', len(x_coordinates))
+
         filtered_skycoords = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
                                                                                y_coordinates)
+        print('len filtered skycoords : ',len(filtered_skycoords))
 
         # QTable stores all the filtered sky coordinate points to be marked
         catalog_results = QTable({'coord': filtered_skycoords})
