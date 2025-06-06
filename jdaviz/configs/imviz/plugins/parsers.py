@@ -3,6 +3,7 @@ import warnings
 import asdf
 import numpy as np
 from astropy import units as u
+from astropy.utils.exceptions import AstropyWarning
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
@@ -39,7 +40,8 @@ def _try_gwcs_to_fits_sip(gwcs):
     is raised and the GWCS is used, as is.
     """
     try:
-        result = WCS(gwcs.to_fits_sip())
+        result = WCS(gwcs.to_fits_sip(), relax=True)
+
     except ValueError as err:
         warnings.warn(
             "The GWCS coordinates could not be simplified to "
@@ -67,7 +69,8 @@ def prep_data_layer_as_dq(data):
 
 @data_parser_registry("imviz-data-parser")
 def parse_data(app, file_obj, ext=None, data_label=None,
-               parent=None, cache=None, local_path=None, timeout=None):
+               parent=None, cache=None, local_path=None, timeout=None,
+               gwcs_to_fits_sip=False):
     """Parse a data file into Imviz.
 
     Parameters
@@ -100,13 +103,21 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
-    """
 
+    gwcs_to_fits_sip : bool, optional
+        Try to convert GWCS coordinates into an approximate FITS SIP solution. Typical
+        precision loss due to this approximation is of order 0.1 pixels. This may
+        improve image rendering performance for images with expensive GWCS
+        transformations.
+    """
     if isinstance(file_obj, str):
         file_obj = get_cloud_fits(
             file_obj, ext=ext, cache=cache, local_path=local_path, timeout=timeout)
         if not isinstance(file_obj, str):
-            _parse_image(app, file_obj, data_label, ext=ext, parent=parent)
+            _parse_image(
+                app, file_obj, data_label, ext=ext, parent=parent,
+                try_gwcs_to_fits_sip=gwcs_to_fits_sip
+            )
             return
 
         if data_label is None:
@@ -145,11 +156,17 @@ def parse_data(app, file_obj, ext=None, data_label=None,
             try:
                 if HAS_ROMAN_DATAMODELS:
                     with rdd.open(file_obj) as pf:
-                        _parse_image(app, pf, data_label, ext=ext, parent=parent)
+                        _parse_image(
+                            app, pf, data_label, ext=ext, parent=parent,
+                            try_gwcs_to_fits_sip=gwcs_to_fits_sip
+                        )
             except TypeError:
                 # if roman_datamodels cannot parse the file, load it with asdf:
                 with asdf.open(file_obj) as af:
-                    _parse_image(app, af, data_label, ext=ext, parent=parent)
+                    _parse_image(
+                        app, af, data_label, ext=ext, parent=parent,
+                        try_gwcs_to_fits_sip=gwcs_to_fits_sip
+                    )
 
         elif file_obj_lower.endswith('.reg'):
             # This will load DS9 regions as Subset but only if there is already data.
@@ -157,6 +174,7 @@ def parse_data(app, file_obj, ext=None, data_label=None,
                                                                         combination_mode='new')
 
         else:  # Assume FITS
+
             with fits.open(file_obj) as pf:
                 available_extensions = [hdu.name for hdu in pf]
 
@@ -171,12 +189,18 @@ def parse_data(app, file_obj, ext=None, data_label=None,
                                             if label.endswith('[DATA]')][-1]
                     parent = latest_sci_extension
 
-                _parse_image(app, pf, data_label, ext=ext, parent=parent)
+                _parse_image(
+                    app, pf, data_label, ext=ext, parent=parent,
+                    try_gwcs_to_fits_sip=gwcs_to_fits_sip
+                )
     else:
-        _parse_image(app, file_obj, data_label, ext=ext, parent=parent)
+        _parse_image(
+            app, file_obj, data_label, ext=ext, parent=parent,
+            try_gwcs_to_fits_sip=gwcs_to_fits_sip
+        )
 
 
-def get_image_data_iterator(app, file_obj, data_label, ext=None):
+def get_image_data_iterator(app, file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
     """This function is for internal use, so other viz can also extract image data
     like Imviz does.
     """
@@ -184,11 +208,17 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
             # Load multiple extensions
             if ext == '*' or isinstance(ext, (tuple, list)):
-                data_iter = _jwst_all_to_glue_data(file_obj, data_label, load_extensions=ext)
+                data_iter = _jwst_all_to_glue_data(
+                    file_obj, data_label, load_extensions=ext,
+                    try_gwcs_to_fits_sip=try_gwcs_to_fits_sip
+                )
 
             # Load only specified extension
             else:
-                data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
+                data_iter = _jwst_to_glue_data(
+                    file_obj, ext, data_label,
+                    try_gwcs_to_fits_sip=try_gwcs_to_fits_sip
+                )
 
                 # if more than one viewable extension is found in the file,
                 # issue info message.
@@ -238,7 +268,9 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
 
     # load ASDF files that may not validate as Roman datamodels:
     elif isinstance(file_obj, asdf.AsdfFile):
-        data_iter = _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=ext)
+        data_iter = _roman_asdf_2d_to_glue_data(
+            file_obj, data_label, ext=ext, try_gwcs_to_fits_sip=try_gwcs_to_fits_sip
+        )
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
@@ -246,12 +278,15 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     return data_iter
 
 
-def _parse_image(app, file_obj, data_label, ext=None, parent=None):
+def _parse_image(app, file_obj, data_label, ext=None, parent=None, try_gwcs_to_fits_sip=False):
     if app is None:
         raise ValueError("app is None, cannot proceed")
     if data_label is None:
         data_label = app.return_data_label(file_obj, ext, alt_name="image_data")
-    data_iter = get_image_data_iterator(app, file_obj, data_label, ext=ext)
+    data_iter = get_image_data_iterator(
+        app, file_obj, data_label, ext=ext,
+        try_gwcs_to_fits_sip=try_gwcs_to_fits_sip
+    )
 
     # Save the SCI extension to this list:
     sci_ext = None
@@ -337,7 +372,7 @@ def _validate_bunit(bunit, raise_error=True):
 
 # ---- Functions that handle input from JWST FITS files -----
 
-def _jwst_all_to_glue_data(file_obj, data_label, load_extensions='*'):
+def _jwst_all_to_glue_data(file_obj, data_label, load_extensions='*', try_gwcs_to_fits_sip=False):
     for hdu in file_obj:
         if (
             _validate_fits_image2d(hdu, raise_error=False) and
@@ -348,12 +383,14 @@ def _jwst_all_to_glue_data(file_obj, data_label, load_extensions='*'):
             if ext == 'sci':
                 ext = 'data'
 
-            data, new_data_label = _jwst2data(file_obj, ext, data_label)
+            data, new_data_label = _jwst2data(
+                file_obj, ext, data_label, try_gwcs_to_fits_sip=try_gwcs_to_fits_sip
+            )
 
             yield data, new_data_label
 
 
-def _jwst_to_glue_data(file_obj, ext, data_label):
+def _jwst_to_glue_data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
     # Translate FITS extension into JWST ASDF convention.
     if ext is None:
         ext = 'data'
@@ -369,12 +406,14 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
             fits_ext = ext
 
     _validate_fits_image2d(file_obj[fits_ext])
-    data, new_data_label = _jwst2data(file_obj, ext, data_label)
+    data, new_data_label = _jwst2data(
+        file_obj, ext, data_label, try_gwcs_to_fits_sip=try_gwcs_to_fits_sip
+    )
 
     yield data, new_data_label
 
 
-def _jwst2data(file_obj, ext, data_label):
+def _jwst2data(file_obj, ext, data_label, try_gwcs_to_fits_sip=False):
     comp_label = ext.upper()
     new_data_label = f'{data_label}[{comp_label}]'
     data = Data(label=new_data_label)
@@ -394,14 +433,25 @@ def _jwst2data(file_obj, ext, data_label):
 
             # This is instance of gwcs.WCS, not astropy.wcs.WCS
             if 'wcs' in dm_meta:
-                data.coords = dm_meta['wcs']
+                gwcs = dm_meta['wcs']
 
+                if try_gwcs_to_fits_sip:
+                    data.coords = _try_gwcs_to_fits_sip(gwcs)
+                else:
+                    data.coords = gwcs
             imdata = dm[ext]
             component = Component.autotyped(imdata, units=bunit)
 
             # Might have bad GWCS. If so, we exclude it.
             try:
-                data.add_component(component=component, label=comp_label)
+                # we catch an astropy warning here for non-standard FITS
+                # keywords arising from the FITS SIP approximation. These
+                # warnings don't affect the result, and there's a pending
+                # glue PR with a fix: https://github.com/glue-viz/glue/pull/2540
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=AstropyWarning)
+                    data.add_component(component=component, label=comp_label)
+
             except Exception:  # pragma: no cover
                 data.coords = None
                 data.add_component(component=component, label=comp_label)
@@ -465,7 +515,8 @@ def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     yield data, data_label
 
 
-def _hdus_to_glue_data(file_obj, data_label, ext=None):
+def _hdus_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
+
     for hdu in file_obj:
         if ext is None or ext == '*' or hdu.name in ext:
             if _validate_fits_image2d(hdu, raise_error=False):

@@ -15,6 +15,8 @@ New Features
   but rather when clicking the button or calling ``get_results``, at which point an entry is added to the results history table
   by default. [#3557]
 
+- User API access to ``simplify_subset()`` method in the Subset Tools plugin. [#3601]
+
 Cubeviz
 ^^^^^^^
 
@@ -29,9 +31,11 @@ Imviz
   to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
 
 - Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
-  
+
 - The Export plugin now supports saving spatial subsets as STC-S strings, including CircleSkyRegion and EllipseSkyRegion,
   which are exported as ``CIRCLE`` and ``ELLIPSE`` STC-S shapes, respectively. [#3591, #3595]
+
+- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS. [#3483, #3535, #3540]
 
 Mosviz
 ^^^^^^
@@ -129,7 +133,7 @@ Bug Fixes
 - Exporting as SVG now behaves the same as exporting PNG and respects
   specified output directory. [#3592]
 
-- Improve the "no matching importers" message and suppress it 
+- Improve the "no matching importers" message and suppress it
   until a target is selected. [#3593]
 
 Cubeviz
