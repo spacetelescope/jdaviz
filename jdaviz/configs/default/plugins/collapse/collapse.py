@@ -142,4 +142,12 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         return collapsed_spec
 
     def vue_collapse(self, *args, **kwargs):
-        self.collapse(add_data=True)
+        try:
+            self.collapse(add_data=True)
+
+        except Exception as e:
+            snackbar_fail_message = SnackbarMessage(
+                f"Data set '{self.dataset_selected}' could not collapse successfully: {repr(e)}",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_fail_message)
