@@ -59,6 +59,7 @@ from jdaviz.core.region_translators import regions2roi, regions2aperture
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.core.registries import tray_registry
+from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only,
@@ -1833,6 +1834,8 @@ class LayerSelect(SelectPluginComponent):
 
     def _layer_to_dict(self, layer_label):
         is_subset = None
+        is_sonified = None
+        audible = None
         subset_type = None
         zorder = None
         from_plugin = None
@@ -1850,6 +1853,9 @@ class LayerSelect(SelectPluginComponent):
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
                         if is_subset:
                             subset_type = get_subset_type(layer.layer)
+                    if is_sonified is None:
+                        is_sonified = isinstance(layer, SonifiedDataLayerArtist)
+                        audible = getattr(layer.state, 'audible', False)
                     if zorder is None:
                         zorder = layer.state.zorder
                     if from_plugin is None:
@@ -1869,6 +1875,8 @@ class LayerSelect(SelectPluginComponent):
 
         return {"label": layer_label,
                 "is_subset": is_subset,
+                "is_sonified": is_sonified,
+                "audible": audible,
                 "subset_type": subset_type,
                 "zorder": zorder,
                 "from_plugin": from_plugin,

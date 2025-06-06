@@ -15,6 +15,7 @@
       item-text="label"
       item-value="label"
       persistent-hint
+      :disabled="!enabled"
     >
       <template slot="selection" slot-scope="data">
         <div class="single-line" style="width: 100%">
@@ -67,7 +68,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled']
+          'api_hint', 'api_hints_enabled', 'enabled']
 }
 </script>
 

@@ -35,7 +35,7 @@ from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
                                                all_flux_unit_conversion_equivs)
 from jdaviz.utils import (ColorCycler, get_subset_type, _wcs_only_label,
-                          layer_is_image_data, layer_is_not_dq)
+                          layer_is_image_data, layer_is_not_dq, layer_is_3d)
 
 uncertainty_str_to_cls_mapping = {
     "std": StdDevUncertainty,
@@ -446,6 +446,21 @@ class JdavizViewerMixin(WithCache):
         visible_layers = [layer for layer in self.state.layers
                           if (layer.visible and
                               layer_is_image_data(layer.layer) and
+                              layer_is_not_dq(layer.layer) and
+                              (getattr(layer, 'bitmap_visible', False) or
+                               getattr(layer, 'contour_visible', False)))]
+        if len(visible_layers) == 0:
+            return None
+
+        return visible_layers[-1]
+
+    @property
+    def active_cube_layer(self):
+        """Active cube layer in the viewer, if available."""
+        # Find visible layers
+        visible_layers = [layer for layer in self.state.layers
+                          if (layer.visible and
+                              layer_is_3d(layer.layer) and
                               layer_is_not_dq(layer.layer) and
                               (layer.bitmap_visible or layer.contour_visible))]
         if len(visible_layers) == 0:
