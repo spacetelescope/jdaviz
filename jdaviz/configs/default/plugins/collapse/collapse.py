@@ -1,5 +1,4 @@
 import warnings
-import traceback
 
 from astropy.nddata import CCDData
 from glue.core import Data
