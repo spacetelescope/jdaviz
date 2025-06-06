@@ -10,6 +10,8 @@ Bug Fixes
 - Improve the "no matching importers" message and suppress it 
   until a target is selected. [#3593]
 
+- Pinned specutils<2.0 until our compatibility fix is merged. [#3605]
+
 Cubeviz
 ^^^^^^^
 
