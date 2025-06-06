@@ -41,23 +41,19 @@ def test_collapse_exception_handling(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
 
     coll = cubeviz_helper.plugins['Collapse']._obj
-    dc = cubeviz_helper.app.data_collection
-
-    coll.selected_data_item = 'Unknown spectrum object[FLUX]'
-    coll.dataset_selected = 'Unknown spectrum object[FLUX]'
 
     # Inject bad function selection for use by spectrum1D.collapse
     # NOTE: Empty strings are allowed per the validating method _selected_changed
     # in SelectPluginComponent... but spectrum1D.collapse does not accept them
-    coll.function_selected = ""
+    coll.function.selected = ""
     with pytest.raises(Exception):
         coll.collapse()
 
-    # And following the example of the previous test, we check
+    # And following the example from test_linking_after_collapse, we check
     # that the collapse did not in fact proceed
     assert coll.results_label_overwrite is False
 
-    # Now because we've caught the exception when called via vue, 
+    # Now because we've caught the exception when called via vue,
     # there should be no exception raised
     coll.vue_collapse()
 
