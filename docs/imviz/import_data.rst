@@ -95,7 +95,7 @@ Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Imviz helper class API. Using this API, users can
 load data into the application through code with the
 :meth:`~jdaviz.configs.imviz.helper.Imviz.load_data`
-method, which takes as input either the name of a local file or an
+method, which takes as input either the name of a local file, 2D NumPy array, or an
 :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
 or :class:`~astropy.io.fits.ImageHDU` object.
 
@@ -229,14 +229,14 @@ Loading markers can be done with the following commands:
 
     viewer = imviz.default_viewer
     viewer.marker = {'color': 'green', 'alpha': 0.8, 'markersize': 10, 'fill': False}
-    my_markers = Table.read('my_catalog.ecsv')
+    my_catalog = Table.read('my_catalog.ecsv')
     coord_i2d = Table({'coord': [SkyCoord(ra=my_catalog['sky_centroid'].ra.degree,
                                           dec=my_catalog['sky_centroid'].dec.degree,
                                           unit="deg")]})
     viewer.add_markers(coord_i2d, use_skycoord=True, marker_name='my_markers')
 
 If you have a large catalog, you might want to filter your table to the
-marks of interest before adding them to Imviz, in order to avoid performance
+marks of interest before adding them to Imviz in order to avoid performance
 issues associated with adding large numbers of markers. For instance, if your
 image has FITS WCS, you could use `astropy.wcs.WCS.footprint_contains` if you
 only want the marks within a footprint. Alternately, you could filter by
@@ -262,7 +262,7 @@ can load the regions into Imviz as follows:
 
 Unsupported regions will be skipped and trigger a warning. Those that
 failed to load, if any, can be returned as a list of tuples of the
-form ``(region, reason)``:
+form ``(region, reason)`` by specifying ``return_bad_regions=True``:
 
 .. code-block:: python
 
