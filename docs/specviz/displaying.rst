@@ -177,7 +177,7 @@ Clicking on that selector, you can add more regions by selecting the "create new
 
 From the API
 ------------
-You can define a spectral region programmatically, by using the glue XRangeROI method
+You can define a spectral region programmatically, by using the ``glue`` XRangeROI method
 and specifying the bounds of the spectral region (xmin, xmax).
 
 .. code-block:: python
