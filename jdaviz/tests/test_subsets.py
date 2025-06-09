@@ -465,7 +465,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     subset_plugin = imviz_helper.plugins['Subset Tools']
     subset_plugin.subset = "Subset 1"
-    subset_plugin.recenter_dataset = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
+    subset_plugin.recenter_dataset = "gauss100_fits_wcs_block_reduced[PRIMARY]"
 
     # Do it a few times to converge.
     for _ in range(5):
