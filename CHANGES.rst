@@ -17,6 +17,8 @@ New Features
 
 - User API access to ``simplify_subset()`` method in the Subset Tools plugin. [#3601]
 
+- Hitting the "Enter" key while changing a value in the Subset Tools plugin will make a call to accept the changes (equivalent to clicking the "Update" button). [#3600]
+
 Cubeviz
 ^^^^^^^
 
