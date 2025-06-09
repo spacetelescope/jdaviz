@@ -75,9 +75,9 @@ def test_data_menu_add_remove_data(imviz_helper):
         imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}', show_in_viewer=False)
 
     dm = imviz_helper.viewers['imviz-0']._obj.data_menu
-    assert len(dm._obj.layer_items) == 0
-    assert len(dm.layer.choices) == 0
-    assert len(dm._obj.dataset.choices) == 3
+    assert len(dm._obj.layer_items) == 3
+    assert len(dm.layer.choices) == 3
+    assert len(dm._obj.dataset.choices) == 0
 
     dm.add_data('image_0')
     assert dm.layer.choices == ['image_0']
