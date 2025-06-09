@@ -25,7 +25,7 @@
       api_hint="plg.dataset ="
       :api_hints_enabled="api_hints_enabled"
       hint="Select the data set."
-      :enabled="false"
+      :disabled="true"
     />
     <plugin-subset-select
       :items="spectral_subset_items"
@@ -152,7 +152,7 @@
           action_tooltip="Create sonified data and add to flux viewer"
           :action_spinner="spinner"
           action_api_hint='plg.sonify_cube()'
-          :api_hints_enabled="api_hints_enabled"
+          :disabled="true"
           @click:action="sonify_cube"
       ></plugin-add-results>
  </j-tray-plugin>
