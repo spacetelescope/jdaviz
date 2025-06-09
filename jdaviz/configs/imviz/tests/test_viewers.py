@@ -143,7 +143,7 @@ class TestDeleteData(BaseImviz_WCS_NoWCS):
 
     def test_plot_options_after_destroy(self):
         self.imviz.create_image_viewer(viewer_name="imviz-1")
-        self.imviz.app.add_data_to_viewer('imviz-1', 'no_wcs[SCI,1]')
+        self.imviz.app.add_data_to_viewer('imviz-1', 'no_wcs[SCI]')
 
         po = self.imviz.plugins['Plot Options']
         po.open_in_tray()

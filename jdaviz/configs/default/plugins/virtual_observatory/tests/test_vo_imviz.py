@@ -20,8 +20,8 @@ class fake_siaresult:
 # TODO: Update all _obj calls to formal API calls once Plugin API is available
 class TestVOImvizLocal(BaseImviz_WCS_WCS):
     _data_center_coords = {
-        "has_wcs_1[SCI,1]": {"ra": 337.51894336761296, "dec": -20.832083054811765},
-        "has_wcs_2[SCI,1]": {"ra": 337.51924057481, "dec": -20.83208305686149},
+        "has_wcs_1[SCI]": {"ra": 337.51894336761296, "dec": -20.832083054811765},
+        "has_wcs_2[SCI]": {"ra": 337.51924057481, "dec": -20.83208305686149},
     }
 
     def test_autocenter_coords(self):
@@ -34,7 +34,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         """
         # Create a second viewer and remove second dataset from first viewer to avoid ambiguity
         self.imviz.create_image_viewer()
-        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
+        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI]")
 
         # Check default viewer is "Manual"
         vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
@@ -45,10 +45,10 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         vo_plugin.viewer.selected = "imviz-0"
         ra_str, dec_str = vo_plugin.source.split()
         np.testing.assert_allclose(
-            float(ra_str), self._data_center_coords["has_wcs_1[SCI,1]"]["ra"]
+            float(ra_str), self._data_center_coords["has_wcs_1[SCI]"]["ra"]
         )
         np.testing.assert_allclose(
-            float(dec_str), self._data_center_coords["has_wcs_1[SCI,1]"]["dec"]
+            float(dec_str), self._data_center_coords["has_wcs_1[SCI]"]["dec"]
         )
 
         # Switch to second viewer without data and verify autocoord gracefully clears source field
@@ -56,13 +56,13 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         assert vo_plugin.source == ""
 
         # Now load second data into second viewer and verify coordinates
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI]")
         ra_str, dec_str = vo_plugin.source.split()
         np.testing.assert_allclose(
-            float(ra_str), self._data_center_coords["has_wcs_2[SCI,1]"]["ra"]
+            float(ra_str), self._data_center_coords["has_wcs_2[SCI]"]["ra"]
         )
         np.testing.assert_allclose(
-            float(dec_str), self._data_center_coords["has_wcs_2[SCI,1]"]["dec"]
+            float(dec_str), self._data_center_coords["has_wcs_2[SCI]"]["dec"]
         )
 
     def test_populate_table_default_headers(self):

@@ -75,9 +75,9 @@ def test_data_menu_add_remove_data(imviz_helper):
         imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}', show_in_viewer=False)
 
     dm = imviz_helper.viewers['imviz-0']._obj.data_menu
-    assert len(dm._obj.layer_items) == 0
-    assert len(dm.layer.choices) == 0
-    assert len(dm._obj.dataset.choices) == 3
+    assert len(dm._obj.layer_items) == 3
+    assert len(dm.layer.choices) == 3
+    assert len(dm._obj.dataset.choices) == 0
 
     dm.add_data('image_0')
     assert dm.layer.choices == ['image_0']
@@ -157,20 +157,20 @@ def test_data_menu_dq_layers(imviz_helper):
     imviz_helper.load_data(data, data_label="image", ext=('SCI', 'DQ'), show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.data_menu
-    assert dm.layer.choices == ['image[DQ,1]', 'image[SCI,1]']
+    assert dm.layer.choices == ['image[DQ]', 'image[SCI]']
     assert len(dm._obj.visible_layers) == 2
 
     # turning off image (parent) data-layer should also turn off DQ
-    dm.set_layer_visibility('image[SCI,1]', False)
+    dm.set_layer_visibility('image[SCI]', False)
     assert len(dm._obj.visible_layers) == 0
 
     # turning on image (parent) should leave DQ off
-    dm.set_layer_visibility('image[SCI,1]', True)
+    dm.set_layer_visibility('image[SCI]', True)
     assert len(dm._obj.visible_layers) == 1
 
     # turning on DQ (child, when parent off) should show parent
-    dm.set_layer_visibility('image[SCI,1]', False)
-    dm.set_layer_visibility('image[DQ,1]', True)
+    dm.set_layer_visibility('image[SCI]', False)
+    dm.set_layer_visibility('image[DQ]', True)
     assert len(dm._obj.visible_layers) == 2
 
 

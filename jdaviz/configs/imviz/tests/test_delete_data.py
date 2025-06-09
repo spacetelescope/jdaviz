@@ -14,7 +14,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         for subset in self.imviz.app.data_collection.subset_groups:
             self.imviz.app._reparent_subsets(
                 subset.subset_state.xatt.parent.label,
-                "has_wcs_1[SCI,1]"
+                "has_wcs_1[SCI]"
             )
 
     def test_delete_with_subset_wcs(self):
@@ -44,23 +44,23 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         for subset in self.imviz.app.data_collection.subset_groups:
             self.imviz.app._reparent_subsets(
                 subset.subset_state.xatt.parent.label,
-                "has_wcs_1[SCI,1]"
+                "has_wcs_1[SCI]"
             )
 
         subset1 = self.imviz.app.data_collection.subset_groups[0]
         subset2 = self.imviz.app.data_collection.subset_groups[1]
-        assert subset1.subset_state.xatt.parent.label == "has_wcs_1[SCI,1]"
+        assert subset1.subset_state.xatt.parent.label == "has_wcs_1[SCI]"
         assert_allclose(subset1.subset_state.center(), (2, 2))
 
-        assert subset2.subset_state.xatt.parent.label == "has_wcs_1[SCI,1]"
+        assert subset2.subset_state.xatt.parent.label == "has_wcs_1[SCI]"
         assert_allclose(subset2.subset_state.roi.xmin, 0, atol=1e-6)
         assert_allclose(subset2.subset_state.roi.ymin, 0, atol=1e-6)
         assert_allclose(subset2.subset_state.roi.xmax, 2)
         assert_allclose(subset2.subset_state.roi.ymax, 2)
 
         # We have to remove the data from the viewer before deleting the data from the app.
-        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI,1]")
-        self.imviz.app.data_item_remove("has_wcs_1[SCI,1]")
+        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI]")
+        self.imviz.app.data_item_remove("has_wcs_1[SCI]")
 
         # Make sure we re-linked images 2 and 3 (plus WCS-only reference data layer)
         assert len(self.imviz.app.data_collection.external_links) == 2

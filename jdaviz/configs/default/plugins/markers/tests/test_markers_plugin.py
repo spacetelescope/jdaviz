@@ -307,8 +307,8 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
 
         # cycle through dataset options (used for both coords info and markers)
         assert label_mouseover.dataset.choices == ['auto', 'none',
-                                                   'has_wcs[SCI,1]',
-                                                   'no_wcs[SCI,1]']
+                                                   'has_wcs[SCI]',
+                                                   'no_wcs[SCI]']
         assert label_mouseover.dataset.selected == 'auto'
 
         # auto (top, no WCS) layer
@@ -321,7 +321,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                              'axes_x:unit': 'pix',
                                              'axes_y': 5,
                                              'axes_y:unit': 'pix',
-                                             'data_label': 'no_wcs[SCI,1]',
+                                             'data_label': 'no_wcs[SCI]',
                                              'pixel_x': 5.0,
                                              'pixel_y': 5.0,
                                              'pixel:unreliable': False,
@@ -356,7 +356,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         assert len(_get_markers_from_viewer(self.viewer).x) == 2
 
         # non-default layer (with WCS)
-        label_mouseover.dataset.selected = 'has_wcs[SCI,1]'
+        label_mouseover.dataset.selected = 'has_wcs[SCI]'
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove',
                                              'domain': {'x': 5, 'y': 5}})
@@ -368,7 +368,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                                           'axes_x:unit': 'pix',
                                                           'axes_y': 5,
                                                           'axes_y:unit': 'pix',
-                                                          'data_label': 'has_wcs[SCI,1]',
+                                                          'data_label': 'has_wcs[SCI]',
                                                           'world_ra': 337.5187947653852,
                                                           'world_dec': -20.831944164705973,
                                                           'world:unreliable': False,
@@ -390,31 +390,31 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         mp._obj.plugin_opened = True
 
         nv = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs[SCI,1]')
+        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs[SCI]')
 
         assert label_mouseover.dataset.choices == ['auto', 'none',
-                                                   'has_wcs[SCI,1]',
-                                                   'no_wcs[SCI,1]']
+                                                   'has_wcs[SCI]',
+                                                   'no_wcs[SCI]']
         assert label_mouseover.dataset.selected == 'auto'
 
-        # top-layer in default viewer is no_wcs[SCI,1]
+        # top-layer in default viewer is no_wcs[SCI]
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove',
                                              'domain': {'x': 5, 'y': 5}})
-        assert label_mouseover.as_dict()['data_label'] == 'no_wcs[SCI,1]'
+        assert label_mouseover.as_dict()['data_label'] == 'no_wcs[SCI]'
 
-        # top-layer in new viewer is has_wcs[SCI,1]
+        # top-layer in new viewer is has_wcs[SCI]
         label_mouseover._viewer_mouse_event(nv,
                                             {'event': 'mousemove',
                                              'domain': {'x': 5, 'y': 5}})
-        assert label_mouseover.as_dict()['data_label'] == 'has_wcs[SCI,1]'
+        assert label_mouseover.as_dict()['data_label'] == 'has_wcs[SCI]'
 
         # choosing a dataset that is in one viewer but not the other
-        label_mouseover.dataset.selected = 'no_wcs[SCI,1]'
+        label_mouseover.dataset.selected = 'no_wcs[SCI]'
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove',
                                              'domain': {'x': 5, 'y': 5}})
-        assert label_mouseover.as_dict()['data_label'] == 'no_wcs[SCI,1]'
+        assert label_mouseover.as_dict()['data_label'] == 'no_wcs[SCI]'
 
         label_mouseover._viewer_mouse_event(nv,
                                             {'event': 'mousemove',
