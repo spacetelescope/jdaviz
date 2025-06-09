@@ -232,7 +232,7 @@
       no layers selected
     </div>
     <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; margin-right: -24px; padding-right: 24px; border-bottom: 2px solid #00617E">
-      <j-plugin-section-header v-if="layer_selected.length">Layer Visibility</j-plugin-section-header>
+      <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states || sonified_audible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
         <plugin-switch
           :value.sync="marker_visible_value"
@@ -285,7 +285,7 @@
           />
       </glue-state-sync-wrapper>
 
-      <glue-state-sync-wrapper v-if="volume_value>-1" :sync="volume_sync"">
+      <glue-state-sync-wrapper v-if="sonified_audible_sync.in_subscribed_states" :sync="volume_sync"">
           <plugin-switch
               :value.sync="sonified_audible_value"
               label="Audible"
@@ -293,6 +293,9 @@
               :api_hints_enabled="api_hints_enabled"
               :use_icon="'speaker'"
             />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="sonified_audible_sync.in_subscribed_states" :sync="volume_sync"">
         <plugin-slider v-if="sonified_audible_value"
             label='Volume'
             api_hint="plg.volume = "
@@ -313,7 +316,7 @@
           label="Show Line"
           api_hint='plg.line_visible = '
           :api_hints_enabled="api_hints_enabled"
-          :use_icon="'eye'"
+          use_icon="eye"
         />
       </glue-state-sync-wrapper>
 
@@ -519,7 +522,7 @@
           label="Show Image"
           api_hint='plg.image_visible = '
           :api_hints_enabled="api_hints_enabled"
-          :use_icon="'eye'"
+          use_icon="eye"
         />
       </glue-state-sync-wrapper>
 

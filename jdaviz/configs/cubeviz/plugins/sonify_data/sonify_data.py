@@ -83,7 +83,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         expose = ['sonify_cube']
         return PluginUserApi(self, expose)
 
-    def sonify_cube(self, *args):
+    def sonify_cube(self):
         """
         Create a sonified grid in the flux viewer so that sound plays when mousing over the viewer.
         You can select the device index for audio output and also use a spectral subset to set a
@@ -113,7 +113,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
-        self.sonify_cube(*args)
+        self.sonify_cube()
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
