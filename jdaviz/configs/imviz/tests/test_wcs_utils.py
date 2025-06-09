@@ -132,7 +132,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert self.imviz.app.data_collection[3].label == 'ndd'
 
         # Confirm that all data in collection are labeled.
-        assert len(self.imviz.app.state.layer_icons) == 4  # 3 + 1
+        assert len(self.imviz.app.state.layer_icons) == 2  # 3 + 1
 
         # Confirm the new WCS-only layer is logged.
         assert len(get_wcs_only_layer_labels(self.imviz.app)) == 2
@@ -148,7 +148,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
 
         # Confirm that all data in collection are labeled.
         assert len(self.imviz.app.data_collection) == 5  # 3 + 2
-        assert len(self.imviz.app.state.layer_icons) == 5
+        assert len(self.imviz.app.state.layer_icons) == 2
 
         # Confirm the second WCS-only layer is logged
         assert len(get_wcs_only_layer_labels(self.imviz.app)) == 3

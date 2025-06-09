@@ -248,14 +248,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
         >>> type(plg.get_regions()['Subset 1'])
         <class 'regions.shapes.circle.CirclePixelRegion'>
-        >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 1'])
+        >>> type(plg.get_regions(wrt_data='Image[DATA]')['Subset 1'])
         <class 'regions.shapes.circle.CircleSkyRegion'>
         >>> imviz.app.delete_subsets()
         >>> imviz.link_data(align_by='wcs')
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
         >>> type(plg.get_regions()['Subset 2'])
         <class 'regions.shapes.circle.CircleSkyRegion'>
-        >>> type(plg.get_regions(wrt_data='NDData[DATA]')['Subset 2'])
+        >>> type(plg.get_regions(wrt_data='Image[DATA]')['Subset 2'])
         <class 'regions.shapes.circle.CirclePixelRegion'>
 
         >>> cubeviz = Cubeviz()
