@@ -12,7 +12,8 @@ __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin
 
 
 vid_map = {'spectrum-1d-viewer': '1D Spectrum',
-           'spectrum-2d-viewer': '2D Spectrum'}
+           'spectrum-2d-viewer': '2D Spectrum',
+           'imviz-image-viewer': 'Image'}
 
 
 class BaseImporter(PluginTemplateMixin):
