@@ -201,7 +201,7 @@ to make subsets visible or invisible, to change their color, and to change their
 Single-Pixel Selection
 ----------------------
 
-This tool is no longer available as of Jdaviz v3.9; use :ref:`markers-plugin` plugin instead.
+This tool is no longer available as of Jdaviz v3.9; use the :ref:`markers-plugin` plugin instead.
 
 Blinking
 ========
@@ -364,15 +364,17 @@ bias values by sliding it left.
 Stretch
 -------
 
-The Stretch Function allows you to change the equation that is used to convert data values between
+The Stretch Function (see `Image stretching and normalization
+ <https://docs.astropy.org/en/stable/visualization/normalization.html>`_)
+allows you to change the equation that is used to convert data values between
 :guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the
-image. The Percentile can be used to set the :guilabel:`min` and :guilabel:`max`
+image. The "Stretch Percentile Preset" can be used to set the :guilabel:`min` and :guilabel:`max`
 values based on percentiles of the data.
 An interactive histogram is available. It shows vertical lines representing
 the ``stretch_vmin`` and ``stretch_vmax`` values, and a colorbar on top.
 The stretch "curve" is plotted on the histogram to represent
 how pixel values are mapped to the colorbar and can be toggled on and off in the plugin.
-The collapsed menu "More stretch options"
+The collapsed menu "More Stretch Options"
 includes a toggle to limit the histogram to the current zoom limits (which is not on by default)
 and fields to set :guilabel:`min` and :guilabel:`max` manually.
 
