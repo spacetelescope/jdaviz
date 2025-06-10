@@ -24,6 +24,7 @@ tray:
   - g-gaussian-smooth
   - g-model-fitting
   - g-line-list
+  - cross-dispersion-profile
   - specviz-line-analysis
   - export
   - about

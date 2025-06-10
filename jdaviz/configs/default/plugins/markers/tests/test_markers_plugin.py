@@ -243,7 +243,7 @@ def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
     assert last_row['value:unit'] == new_cube_unit_str
 
 
-def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
+def test_markers_specviz2d_unit_conversion(specviz2d_helper):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
     spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
