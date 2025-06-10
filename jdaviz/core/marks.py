@@ -766,3 +766,20 @@ class HistogramMark(Lines):
         line_style = "solid"
         super().__init__(x=min_max_value, y=y, scales=scales, colors=colors, line_style=line_style,
                          **kwargs)
+
+class DistanceMark(PluginMark, Lines, HubListener):
+    def __init__(self, viewer, x0, y0, x1, y1):
+        self.viewer = viewer
+        super().__init__(
+            scales=viewer.scales,
+            x=[x0, x1],
+            y=[y0, y1],
+            colors=['red'],
+            stroke_width=2,
+            visible=True,
+            display_legend=False
+        )
+
+    def update_points(self, x0, y0, x1, y1):
+        self.x = [x0, x1]
+        self.y = [y0, y1]
