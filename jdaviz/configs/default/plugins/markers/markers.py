@@ -1,35 +1,19 @@
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from traitlets import Bool, observe, Unicode
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
                                 AddDataMessage, RemoveDataMessage,
                                 MarkersPluginUpdate)
-from jdaviz.core.marks import MarkersMark
+from jdaviz.core.marks import MarkersMark, DistanceMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
 from jdaviz.core.user_api import PluginUserApi
-from bqplot import Lines
+
 
 __all__ = ['Markers']
 
 
-
-class DistanceMark(Lines):
-    def __init__(self, x0, y0, x1, y1, scales):
-        super().__init__(
-            x=[x0, x1],
-            y=[y0, y1],
-            scales=scales,
-            colors=['red'],
-            stroke_width=2,
-            visible=True,
-            display_legend=False
-        )
-    def update_points(self, x0, y0, x1, y1):
-        self.x = [x0, x1]
-        self.y = [y0, y1]
-        
-        
 @tray_registry('g-markers', label="Markers",
                category='core', sidebar='info', subtab=1)
 class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
@@ -125,11 +109,11 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                            handler=lambda msg: self._recompute_mark_positions(msg.viewer))
                            
         self.docs_description = "Press 'm' with the cursor over a viewer to log\
-                                the mouseover information. To change the\
-                                selected layer, click the layer cycler in the\
-                                mouseover information section of the app-level\
-                                toolbar."
-                                
+                               the mouseover information. To change the\
+                               selected layer, click the layer cycler in the\
+                               mouseover information section of the app-level\
+                               toolbar."
+                               
         # description displayed under plugin title in tray
         self._plugin_description = 'Create markers on viewers.'
         
@@ -191,7 +175,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 wcs = self.app.data_collection[data_label].coords
                 try:
                     new_x[these], new_y[these] = wcs.world_to_pixel_values(orig_world_x[these]*u.deg,  # noqa
-                                                                           orig_world_y[these]*u.deg)  # noqa
+                                                                         orig_world_y[these]*u.deg)  # noqa
                 except Exception:
                     # fail gracefully
                     new_x, new_y = [], []
@@ -250,6 +234,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             else:
                 viewer.remove_event_callback(callback)
                 
+                
     # this is where items are being added to the table
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':
@@ -289,23 +274,36 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             if len(table) < 2:
                 self.distance_display = "Need at least 2 markers"
                 return
-            x0, y0 = table['pixel_x'][-2], table['pixel_y'][-2]
-            x1, y1 = table['pixel_x'][-1], table['pixel_y'][-1]
-            dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
-            self.distance_display = f" {dist:.2f} px"
+
+            
+            # Check the alignment mode and use the appropriate coordinates
+            if self.app._align_by.lower() == 'wcs':
+                # Use world coordinates (RA/Dec) for drawing and distance calculation
+                x0, y0 = table['world_ra'][-2], table['world_dec'][-2]
+                x1, y1 = table['world_ra'][-1], table['world_dec'][-1]
+                
+                # Calculate the on-sky separation
+                c0 = SkyCoord(x0, y0, unit='deg', frame='icrs')
+                c1 = SkyCoord(x1, y1, unit='deg', frame='icrs')
+                dist = c0.separation(c1)
+                
+                # Display distance in a reasonable unit, like arcseconds
+                self.distance_display = f" {dist.to_string(unit=u.arcsec, precision=2)}"
+
+            else:  # Default to pixel alignment
+                x0, y0 = table['pixel_x'][-2], table['pixel_y'][-2]
+                x1, y1 = table['pixel_x'][-1], table['pixel_y'][-1]
+                dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
+                self.distance_display = f" {dist:.2f} px"
+
             viewer_id = viewer.reference or viewer.reference_id
             if not hasattr(self, '_distance_lines'):
                 self._distance_lines = {}
-            line_scales = None
-            for mark in viewer.figure.marks:
-                if hasattr(mark, 'scales') and 'x' in mark.scales and 'y' in mark.scales:
-                    line_scales = {'x': mark.scales['x'], 'y': mark.scales['y']}
-                    break
-            if line_scales is None:
-                raise ValueError("Linescales is None")
-                return
+
             if viewer_id not in self._distance_lines:
-                line = DistanceMark(x0, y0, x1, y1, line_scales)
+                # The DistanceMark class will now correctly plot either pixel or world coordinates
+                # because it uses the viewer's own scales, which are already set correctly.
+                line = DistanceMark(viewer, x0, y0, x1, y1)
                 self._distance_lines[viewer_id] = line
                 viewer.figure.marks = tuple(list(viewer.figure.marks) + [line])
             else:
