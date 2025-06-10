@@ -97,9 +97,10 @@ in the "Filter by bits" dropdown, or from the API we could:
 Subset Tools
 ============
 
-This plugin allows you to select an existing subset to modify, or to select
-:guilabel:`Create new` to create a new subset by selecting and using the region selector
-in the spectrum viewer toolbar. You can also choose the operation that will be
+This plugin allows you to create new subsets or modify existing subsets.
+
+To create a new subset, select :guilabel:`Create new`, and use the region
+selector in the spectrum viewer toolbar. You can also choose the operation that will be
 applied by the selector tool. Note that these are synched with the subset tools
 in the app-level toolbar. It might not show some static regions loaded
 via the API unless an interactive region is drawn after.
@@ -202,7 +203,7 @@ displayed in the app toolbar into the table.  The markers remain at that fixed p
 the viewer they were created (regardless of changes to the underlying data or linking) and are only
 visible when the plugin is opened.
 
-In Imviz, the table also exposed columns labeled "pixel:unreliable", "world:unreliable", and
+In Imviz, the table also exposes columns labeled "pixel:unreliable", "world:unreliable", and
 "value:unreliable".  These will be logged as ``True`` in cases where the information is outside
 the bounds of the reference image's WCS (noted in the mouseover display by the information showing
 as grayed).
@@ -247,6 +248,9 @@ any data without WCS can no longer be shown in WCS linking mode.
 For the best experience, it is recommended that you decide what kind of
 link you want and set it at the beginning of your Imviz session,
 rather than later.
+
+[TODO: We should introduce glue linking earlier since we discuss
+it in some of the above paragraphs.]: #
 
 For more details on linking, see :ref:`dev_glue_linking`.
 
