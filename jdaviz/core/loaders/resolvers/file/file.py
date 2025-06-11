@@ -25,7 +25,9 @@ class FileResolver(BaseResolver):
         # NOTE: file_chooser_dir must always be an absolute path or else its impossible to
         # navigate higher in the directory tree
         self.file_chooser_dir = reactive(Path(os.path.abspath(os.environ.get('JDAVIZ_START_DIR', os.path.curdir))))  # noqa
+        self.filepath_reactive = reactive(self.filepath)
         self.file_chooser_widget_el = FileBrowser(directory=self.file_chooser_dir,
+                                                  selected=self.filepath_reactive,
                                                   on_path_select=self._on_file_chooser_path_changed,
                                                   can_select=True)
         self.file_chooser_widget, rc = reacton.render(self.file_chooser_widget_el)
@@ -36,13 +38,12 @@ class FileResolver(BaseResolver):
         return LoaderUserApi(self, expose=['filepath'])
 
     def _on_file_chooser_path_changed(self, path):
-        self.filepath = os.path.join(self.file_chooser_dir.value, str(path))
+        self.filepath = str(self.filepath_reactive.value)
 
     @observe('filepath')
     def _on_filepath_changed(self, change):
         # when the filepath traitlet is changed, need to update the file_chooser_widget to match the corresponding path
-        directory = Path(os.path.abspath(self.filepath)).parent
-        self.file_chooser_dir.value = directory
+        self.filepath_reactive.value = Path(self.filepath)
         self._update_format_items()
 
     @property
