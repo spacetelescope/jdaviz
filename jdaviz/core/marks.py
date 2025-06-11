@@ -768,8 +768,13 @@ class HistogramMark(Lines):
                          **kwargs)
 
 class DistanceMark(PluginMark, Lines, HubListener):
+    """
+    A bqplot Lines mark for showing a distance interactively in a viewer.
+    This mark is intended for spatial data (pixels or world coordinates)
+    """
     def __init__(self, viewer, x0, y0, x1, y1):
         self.viewer = viewer
+
         super().__init__(
             scales=viewer.scales,
             x=[x0, x1],
@@ -779,7 +784,17 @@ class DistanceMark(PluginMark, Lines, HubListener):
             visible=True,
             display_legend=False
         )
+        self.auto_update_units = False
+
+    def set_x_unit(self, unit=None):
+        pass
+
+    def set_y_unit(self, unit=None):
+        pass
 
     def update_points(self, x0, y0, x1, y1):
+        """Updates the endpoints of the line."""
         self.x = [x0, x1]
         self.y = [y0, y1]
+
+

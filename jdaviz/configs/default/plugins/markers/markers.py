@@ -2,6 +2,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from traitlets import Bool, observe, Unicode
+
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
                                 AddDataMessage, RemoveDataMessage,
                                 MarkersPluginUpdate)
@@ -9,7 +10,6 @@ from jdaviz.core.marks import MarkersMark, DistanceMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
 from jdaviz.core.user_api import PluginUserApi
-
 
 __all__ = ['Markers']
 
@@ -19,10 +19,8 @@ __all__ = ['Markers']
 class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     """
     See the :ref:`Markers Plugin Documentation <markers-plugin>` for more details.
-
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
-
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
@@ -32,7 +30,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     distance_display = Unicode("").tag(sync=True)
     template_file = __file__, "markers.vue"
     uses_active_status = Bool(True).tag(sync=True)
-    
+
     _default_table_values = {
         'spectral_axis': np.nan,
         'spectral_axis:unit': '',
@@ -48,22 +46,23 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         'value:unreliable': None,
         'index': np.nan
     }
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('clear_table', 'export_table',))
-        
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.config == 'cubeviz':
             headers = ['spectral_axis', 'spectral_axis:unit', 'slice',
                        'pixel_x', 'pixel_y', 'world_ra', 'world_dec',
                        'value', 'value:unit', 'viewer']
-                       
+
         elif self.config == 'imviz':
             headers = ['pixel_x', 'pixel_y', 'pixel:unreliable',
                        'world_ra', 'world_dec', 'world:unreliable',
                        'value', 'value:unit', 'value:unreliable', 'viewer']
-                       
+
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'index', 'value', 'value:unit']
@@ -71,68 +70,77 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'value', 'value:unit', 'viewer']
-                       
+
         elif self.config == 'mosviz':
             headers = ['spectral_axis', 'spectral_axis:unit', 'pixel_x', 'pixel_y',
                        'world_ra', 'world_dec', 'index', 'value', 'value:unit', 'viewer']
-                       
+
         else:
             # allow downstream configs to override headers
             headers = kwargs.get('headers', [])
-            
+
         headers += ['data_label']
-        
+
         self.table.headers_avail = headers
         self.table.headers_visible = headers
         self.table._default_values_by_colname = self._default_table_values
-        
+
+        self._distance_lines = {}
+
         def clear_table_callback():
             for mark in self.marks.values():
                 mark.clear()
-                
+
+            # Also clear any distance lines from all viewers
+            for viewer_id, line in self._distance_lines.items():
+                viewer = self.app.get_viewer_by_id(viewer_id)
+                viewer.figure.marks = tuple(m for m in viewer.figure.marks if m is not line)
+            self._distance_lines.clear()
+            self.distance_display = ""
+
             self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))
-            
+
         self.table._clear_callback = clear_table_callback
-        
+
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
-        
+
         # account for image rotation due to a change in reference data
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=lambda msg: self._recompute_mark_positions(msg.viewer))
-                           
-        #enable/disable mark based on whether parent data entry is in viewer
+
+        # enable/disable mark based on whether parent data entry is in viewer
         self.hub.subscribe(self, AddDataMessage,
                            handler=lambda msg: self._recompute_mark_positions(msg.viewer))
-                           
+
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda msg: self._recompute_mark_positions(msg.viewer))
-                           
+
         self.docs_description = "Press 'm' with the cursor over a viewer to log\
-                               the mouseover information. To change the\
-                               selected layer, click the layer cycler in the\
-                               mouseover information section of the app-level\
-                               toolbar."
-                               
+                                 the mouseover information. To change the\
+                                 selected layer, click the layer cycler in the\
+                                 mouseover information section of the app-level\
+                                 toolbar."
+
         # description displayed under plugin title in tray
         self._plugin_description = 'Create markers on viewers.'
-        
+
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
             return
-            
+
         callback = self._viewer_callback(viewer, self._on_viewer_key_event)
         viewer.add_event_callback(callback, events=['keydown'])
-        
+
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
-        
+
     def _recompute_mark_positions(self, viewer):
         if self.table is None or self.table._qtable is None:
             return
         if 'world_ra' not in self.table.headers_avail:
             return
-            
+
         viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
         viewer_loaded_data = [lyr.layer.label for lyr in viewer.layers]
         data_labels = self.table._qtable['data_label']
@@ -141,16 +149,18 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         # by just skipping this first viewer_label == viewer_id check
         in_viewer = [viewer_label == viewer_id and data_label in viewer_loaded_data
                      for viewer_label, data_label in zip(viewer_labels, data_labels)]
-                     
+
         viewer_mark = self._get_mark(viewer)
         if not np.any(in_viewer):
             viewer_mark.x, viewer_mark.y = [], []
+            if viewer_id in self._distance_lines:
+                self._distance_lines[viewer_id].visible = False
             return
-            
+
         orig_world_x = np.asarray(self.table._qtable['world_ra'][in_viewer])
         orig_world_y = np.asarray(self.table._qtable['world_dec'][in_viewer])
         pixel_unreliable = np.asarray(self.table._qtable['pixel:unreliable'][in_viewer])
-        
+
         if self.app._align_by.lower() == 'wcs':
             # convert from the sky coordinates in the table to pixels via the WCS of the current
             # reference data
@@ -160,7 +170,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                                                              orig_world_y*u.deg)
                 for coord in [new_x, new_y]:
                     coord[pixel_unreliable] = np.nan
-                    
+
             except Exception:
                 # fail gracefully
                 new_x, new_y = [], []
@@ -192,9 +202,29 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             pixel_y = np.asarray(self.table._qtable['pixel_y'])
             new_x = np.append(new_x, pixel_x[pixel_only_inds])
             new_y = np.append(new_y, pixel_y[pixel_only_inds])
-            
+
         viewer_mark.x, viewer_mark.y = new_x, new_y
-        
+
+        # Also recompute the distance line, if it exists for this viewer
+        if viewer_id in self._distance_lines:
+            table = self.table._qtable
+            if len(table) < 2:
+                self._distance_lines[viewer_id].visible = False
+            else:
+                w_x0, w_y0 = table['world_ra'][-2], table['world_dec'][-2]
+                w_x1, w_y1 = table['world_ra'][-1], table['world_dec'][-1]
+                if np.any(np.isnan([w_x0, w_y0, w_x1, w_y1])):
+                    self._distance_lines[viewer_id].visible = False
+                else:
+                    try:
+                        current_wcs = viewer.state.reference_data.coords
+                        p_x0, p_y0 = current_wcs.world_to_pixel_values(w_x0 * u.deg, w_y0 * u.deg)
+                        p_x1, p_y1 = current_wcs.world_to_pixel_values(w_x1 * u.deg, w_y1 * u.deg)
+                        self._distance_lines[viewer_id].update_points(p_x0, p_y0, p_x1, p_y1)
+                        self._distance_lines[viewer_id].visible = True
+                    except Exception:
+                        self._distance_lines[viewer_id].visible = False
+
     def _get_mark(self, viewer):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, MarkersMark)]
         if len(matches):
@@ -202,110 +232,118 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         mark = MarkersMark(viewer)
         viewer.figure.marks = viewer.figure.marks + [mark]
         return mark
-        
+
     @property
     def marks(self):
         return {viewer_id: self._get_mark(viewer)
                 for viewer_id, viewer in self.app._viewer_store.items()
                 if hasattr(viewer, 'figure')}
-                
+
     @property
     def coords_info(self):
         return self.app.session.application._tools['g-coords-info']
-    
+
     @observe('is_active')
     def _on_is_active_changed(self, *args):
         if self.disabled_msg:
             return
-        
+
         # toggle visibility of markers
         for mark in self.marks.values():
             mark.visible = self.is_active
-            
+        
+        # Also toggle visibility of any distance lines
+        for line in self._distance_lines.values():
+            line.visible = self.is_active
+
         # subscribe/unsubscribe to keypress events across all viewers
         for viewer in self.app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
                 # table viewer, etc
                 continue
             callback = self._viewer_callback(viewer, self._on_viewer_key_event)
-            
+
             if self.is_active:
                 viewer.add_event_callback(callback, events=['keydown'])
             else:
                 viewer.remove_event_callback(callback)
-                
-                
+
+
     # this is where items are being added to the table
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':
             row_info = self.coords_info.as_dict()
             if 'viewer' in self.table.headers_avail:
                 row_info['viewer'] = viewer.reference if viewer.reference is not None else viewer.reference_id  # noqa
-                
+
             for k in self.table.headers_avail:
                 row_info.setdefault(k, self._default_table_values.get(k, ''))
-                
+
             try:
                 # if the pixel values are unreliable, set their table values as nan
                 row_item_to_add = {k: float('nan') if row_info.get('pixel:unreliable', False) and
-                                   k.startswith('pixel_') else v
-                                   for k, v in row_info.items()
-                                   if k in self.table.headers_avail}
+                                 k.startswith('pixel_') else v
+                                 for k, v in row_info.items()
+                                 if k in self.table.headers_avail}
                 self.table.add_item(row_item_to_add)
             except ValueError as err:  # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
-                
+
             x, y = row_info['axes_x'], row_info['axes_y']
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
-            
+
             self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
-            
+
         elif data['event'] == 'keydown' and data['key'] == 'r':
             self.table.clear_table()
-            self._get_mark(viewer).clear()
-            self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))
-            viewer_id = viewer.reference or viewer.reference_id
-            if hasattr(self, '_distance_lines') and viewer_id in self._distance_lines:
-                line = self._distance_lines.pop(viewer_id)
-                viewer.figure.marks = tuple(m for m in viewer.figure.marks if m is not line)
-        
+            # clearing the table will also clear the marks via the callback
+
         elif data['event'] == 'keydown' and data['key'] == 'd':
             table = self.table._qtable
             if len(table) < 2:
                 self.distance_display = "Need at least 2 markers"
                 return
 
-            
-            # Check the alignment mode and use the appropriate coordinates
-            if self.app._align_by.lower() == 'wcs':
-                # Use world coordinates (RA/Dec) for drawing and distance calculation
-                x0, y0 = table['world_ra'][-2], table['world_dec'][-2]
-                x1, y1 = table['world_ra'][-1], table['world_dec'][-1]
-                
+            # Separate distance calculation (for display) from plotting coordinates
+            x0_w, y0_w = table['world_ra'][-2], table['world_dec'][-2]
+            x1_w, y1_w = table['world_ra'][-1], table['world_dec'][-1]
+
+            if not np.any(np.isnan([x0_w, y0_w, x1_w, y1_w])):
                 # Calculate the on-sky separation
-                c0 = SkyCoord(x0, y0, unit='deg', frame='icrs')
-                c1 = SkyCoord(x1, y1, unit='deg', frame='icrs')
+                c0 = SkyCoord(x0_w, y0_w, unit='deg', frame='icrs')
+                c1 = SkyCoord(x1_w, y1_w, unit='deg', frame='icrs')
                 dist = c0.separation(c1)
-                
                 # Display distance in a reasonable unit, like arcseconds
                 self.distance_display = f" {dist.to_string(unit=u.arcsec, precision=2)}"
-
-            else:  # Default to pixel alignment
-                x0, y0 = table['pixel_x'][-2], table['pixel_y'][-2]
-                x1, y1 = table['pixel_x'][-1], table['pixel_y'][-1]
-                dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
+            else:
+                # Fallback to pixel distance if no valid world coords
+                x0_p, y0_p = table['pixel_x'][-2], table['pixel_y'][-2]
+                x1_p, y1_p = table['pixel_x'][-1], table['pixel_y'][-1]
+                dist = np.sqrt((x1_p - x0_p) ** 2 + (y1_p - y0_p) ** 2)
                 self.distance_display = f" {dist:.2f} px"
 
-            viewer_id = viewer.reference or viewer.reference_id
-            if not hasattr(self, '_distance_lines'):
-                self._distance_lines = {}
+            # For plotting, we always need the coordinates in the viewer's pixel space.
+            # This logic is now handled by _recompute_mark_positions,
+            # but we need to create the line correctly the first time.
+            if self.app._align_by.lower() == 'wcs':
+                try:
+                    wcs = viewer.state.reference_data.coords
+                    plot_x0, plot_y0 = wcs.world_to_pixel_values(x0_w * u.deg, y0_w * u.deg)
+                    plot_x1, plot_y1 = wcs.world_to_pixel_values(x1_w * u.deg, y1_w * u.deg)
+                except Exception:
+                    # If WCS fails, dont draw
+                    return
+            else:  # pixel-aligned
+                plot_x0, plot_y0 = table['pixel_x'][-2], table['pixel_y'][-2]
+                plot_x1, plot_y1 = table['pixel_x'][-1], table['pixel_y'][-1]
 
+            viewer_id = viewer.reference or viewer.reference_id
             if viewer_id not in self._distance_lines:
-                # The DistanceMark class will now correctly plot either pixel or world coordinates
-                # because it uses the viewer's own scales, which are already set correctly.
-                line = DistanceMark(viewer, x0, y0, x1, y1)
+                # Pass pixel coordinates to the DistanceMark for plotting.
+                line = DistanceMark(viewer, plot_x0, plot_y0, plot_x1, plot_y1)
                 self._distance_lines[viewer_id] = line
                 viewer.figure.marks = tuple(list(viewer.figure.marks) + [line])
             else:
-                self._distance_lines[viewer_id].update_points(x0, y0, x1, y1)
+                self._distance_lines[viewer_id].update_points(plot_x0, plot_y0, plot_x1, plot_y1)
+                self._distance_lines[viewer_id].visible = True
 
