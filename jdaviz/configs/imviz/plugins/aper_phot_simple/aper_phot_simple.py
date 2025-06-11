@@ -157,14 +157,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        # TODO: expose public API once finalized
-        # expose=('multiselect', 'dataset', 'aperture',
-        #                                   'background', 'background_value',
-        #                                   'pixel_area', 'counts_factor', 'flux_scaling',
-        #                                   'calculate_photometry',
-        #                                   'unpack_batch_options', 'calculate_batch_photometry')
+        expose = ('multiselect', 'dataset', 'aperture', 'background',
+                  'background_value', 'pixel_area', 'counts_factor', 'flux_scaling',
+                  'calculate_photometry', 'unpack_batch_options',
+                  'calculate_batch_photometry', 'table', 'clear_table',
+                  'export_table', 'fitted_models', 'current_plot_type',
+                  'fit_radial_profile', 'plot')
 
-        return PluginUserApi(self, expose=('export_table', 'fitted_models'))
+        return PluginUserApi(self, expose=expose)
 
     @property
     def fitted_models(self):
