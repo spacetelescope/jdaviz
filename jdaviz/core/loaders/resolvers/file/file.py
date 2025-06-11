@@ -45,7 +45,8 @@ class FileResolver(BaseResolver):
 
     @observe('filepath')
     def _on_filepath_changed(self, change):
-        # when the filepath traitlet is changed, need to update the file_chooser_widget to match the corresponding path
+        # when the filepath traitlet is changed, need to update the
+        # file_chooser_widget to match the corresponding path
         if self.filepath == '':
             return
         self.filepath_reactive.value = Path(self.filepath)
