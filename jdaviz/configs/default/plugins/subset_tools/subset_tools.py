@@ -1046,7 +1046,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self._sync_available_from_state()
 
     def import_region(self, region, edit_subset=None, combination_mode=None, max_num_regions=20,
-                      refdata_label=None, return_bad_regions=False, region_format=None):
+                      refdata_label=None, return_bad_regions=False, region_format=None,
+                      subset_label=None):
         """
         Method for creating subsets from regions or region files.
 
@@ -1093,6 +1094,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             Passed to ``Regions.read(format=region_format)``.  Only applicable if ``region``
             is a string pointing to a valid file that ``Regions`` can read.
 
+        subset_label : list, str, or `None`
+            Label to apply to the resulting subset(s), replacing the default "Subset [N]"
+            naming scheme. If multiple regions are input, this should be a list of strings
+            with length matching the number of resulting subsets.
+
         Returns
         -------
         bad_regions : list of (obj, str) or `None`
@@ -1111,13 +1117,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     raw_regs = SpectralRegion.read(region)
 
                 return self._load_regions(raw_regs, edit_subset, combination_mode, max_num_regions,
-                                          refdata_label, return_bad_regions)
+                                          refdata_label, return_bad_regions,
+                                          subset_label=subset_label)
         else:
             return self._load_regions(region, edit_subset, combination_mode, max_num_regions,
-                                      refdata_label, return_bad_regions)
+                                      refdata_label, return_bad_regions, subset_label=subset_label)
 
     def _load_regions(self, regions, edit_subset=None, combination_mode=None, max_num_regions=None,
-                      refdata_label=None, return_bad_regions=False, **kwargs):
+                      refdata_label=None, return_bad_regions=False, subset_label=None, **kwargs):
         """Load given region(s) into the viewer.
         WCS-to-pixel translation and mask creation, if needed, is relative
         to the image defined by ``refdata_label``. Meanwhile, the rest of
@@ -1169,6 +1176,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             If `True`, return the regions that failed to load (see ``bad_regions``);
             This is useful for debugging. If `False`, do not return anything (`None`).
 
+        subset_label : list, str, or `None`
+            Label to apply to the resulting subset(s), replacing the default "Subset [N]"
+            naming scheme. If multiple regions are input, this should be a list of strings
+            with length matching the number of resulting subsets.
+
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
             **This is ignored if the region can be made interactive.**
@@ -1187,6 +1199,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
             regions = [regions]
+            if isinstance(subset_label, str):
+                subset_label = [subset_label]
 
         n_loaded = 0
         bad_regions = []
@@ -1231,6 +1245,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 # self.app.session.edit_subset_mode.edit_subset = None
                 self.subset.selected = self.subset.default_text
 
+            label_index = 0
             for index, region in enumerate(regions):
                 # Set combination mode for how region will be applied to current subset
                 # or created as a new subset
@@ -1338,6 +1353,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 n_loaded += 1
                 if max_num_regions is not None and n_loaded >= max_num_regions:
                     break
+
+                if self.combination_mode.selected == 'new' and subset_label is not None:
+                    self.app.data_collection.subset_groups[-1].label = subset_label[label_index]
+                    label_index += 1
 
         # Revert edit mode and subset to before the import_region call
         self.app.session.edit_subset_mode.edit_subset = previous_subset
