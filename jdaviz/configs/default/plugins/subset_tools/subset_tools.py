@@ -163,6 +163,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                    multiselect='multiselect',
                                    default_text="Create New")
         self.subset_states = []
+        self.selected_subset_group = None
         self.spectral_display_unit = None
 
         align_by = getattr(self.app, '_align_by', None)
@@ -999,11 +1000,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 self.subset_definitions[index][i]['value'] = new_value
                 break
 
-    @cached_property
-    def selected_subset_group(self):
+    @observe('subset_selected')
+    def set_selected_subset_group(self, _):
         for subset_group in self.app.data_collection.subset_groups:
             if subset_group.label == self.subset.selected:
-                return subset_group
+                self.selected_subset_group = subset_group
+                break
 
     def rename_subset(self, old_label, new_label):
         """
@@ -1199,8 +1201,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
             regions = [regions]
-            if isinstance(subset_label, str):
-                subset_label = [subset_label]
+        if isinstance(subset_label, str):
+            subset_label = [subset_label]
 
         n_loaded = 0
         bad_regions = []
@@ -1273,7 +1275,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                         CirclePixelRegion, EllipsePixelRegion,
                                         RectanglePixelRegion, CircleAnnulusPixelRegion))
                         and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
-                    bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
+                    bad_regions.append((region, 'Pixel region provided but data is aligned by WCS'))
                     continue
 
                 # photutils: Convert to region shape first
@@ -1354,8 +1356,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 if max_num_regions is not None and n_loaded >= max_num_regions:
                     break
 
-                if self.combination_mode.selected == 'new' and subset_label is not None:
-                    self.app.data_collection.subset_groups[-1].label = subset_label[label_index]
+                if self.combination_mode.selected in ('new', 'replace') and subset_label is not None:  # noqa
+                    self.rename_selected(subset_label[label_index])
                     label_index += 1
 
         # Revert edit mode and subset to before the import_region call
