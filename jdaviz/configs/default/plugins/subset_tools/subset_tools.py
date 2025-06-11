@@ -5,7 +5,6 @@ import numpy as np
 
 from astropy.time import Time
 import astropy.units as u
-from functools import cached_property
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
