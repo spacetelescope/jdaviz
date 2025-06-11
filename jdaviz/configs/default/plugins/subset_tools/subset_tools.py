@@ -1026,7 +1026,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self.hub.broadcast(SnackbarMessage(f"Failed to rename subset: {repr(e)}",
                                                color='error', sender=self))
         else:
-            self.hub.broadcast(SnackbarMessage(f"Renamed '{msg['old_label']}' to '{msg['new_label']}'",
+            self.hub.broadcast(SnackbarMessage(f"Renamed '{msg['old_label']}' to '{msg['new_label']}'",  # noqa
                                                color='info', sender=self))
 
     def rename_selected(self, new_label):

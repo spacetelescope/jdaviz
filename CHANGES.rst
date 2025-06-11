@@ -19,6 +19,8 @@ New Features
 
 - Hitting the "Enter" key while changing a value in the Subset Tools plugin will make a call to accept the changes (equivalent to clicking the "Update" button). [#3600]
 
+- Hitting the "Enter" key while renaming a subset or footprint will accept the changes, hitting "Escape" will cancel. [#3600]
+
 Cubeviz
 ^^^^^^^
 
