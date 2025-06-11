@@ -12,6 +12,8 @@ Bug Fixes
 
 - Pinned specutils<2.0 until our compatibility fix is merged. [#3605]
 
+- Fix to data menu logic for LCviz compatibility. [#3613]
+
 Cubeviz
 ^^^^^^^
 
