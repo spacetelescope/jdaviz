@@ -38,11 +38,16 @@ class FileResolver(BaseResolver):
         return LoaderUserApi(self, expose=['filepath'])
 
     def _on_file_chooser_path_changed(self, path):
-        self.filepath = str(self.filepath_reactive.value)
+        if self.filepath_reactive.value is not None:
+            self.filepath = os.path.join(self.file_chooser_dir.value, self.filepath_reactive.value)
+        else:
+            self.filepath = ''
 
     @observe('filepath')
     def _on_filepath_changed(self, change):
         # when the filepath traitlet is changed, need to update the file_chooser_widget to match the corresponding path
+        if self.filepath == '':
+            return
         self.filepath_reactive.value = Path(self.filepath)
         self._update_format_items()
 

@@ -16,7 +16,6 @@
     >
         <v-row>
             Select a file with data you want to load into this instance of Jdaviz.
-            Note that single clicks navigate into directories.
         </v-row>
         <v-row v-if="api_hints_enabled">
             <span class="api-hint">
