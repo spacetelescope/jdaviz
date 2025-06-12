@@ -152,7 +152,7 @@
           action_tooltip="Create sonified data and add to flux viewer"
           :action_spinner="spinner"
           action_api_hint='plg.sonify_cube()'
-          :disabled="true"
+          :add_to_viewer_disabled="true"
           @click:action="sonify_cube"
       ></plugin-add-results>
  </j-tray-plugin>
