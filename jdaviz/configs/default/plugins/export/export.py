@@ -151,12 +151,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                          selected='plugin_table_format_selected',
                                                          manual_options=plugin_table_format_options)
 
-        subset_format_options = [{'label': 'fits', 'value': 'fits', 'disabled': False},
-                                 {'label': 'reg', 'value': 'reg', 'disabled': False},
-                                 {'label': 'ecsv', 'value': 'ecsv', 'disabled': True}]
+        subset_format_options = [{'label': 'fits', 'value': 'fits'},# 'disabled': False},
+                                 {'label': 'reg', 'value': 'reg'},# 'disabled': False},
+                                 {'label': 'ecsv', 'value': 'ecsv'}]# 'disabled': True}]
 
         if self.config == 'imviz':
-            subset_format_options.append({'label': 'stcs', 'value': 'stcs', 'disabled': False})
+            subset_format_options.append({'label': 'stcs', 'value': 'stcs'})#, 'disabled': False})
 
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
@@ -329,6 +329,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def _update_subset_format_disabled(self):
         new_items = []
+        print("is this working?")
         if self.subset.selected is not None:
             try:
                 subset = self.app.get_subsets(self.subset.selected)
@@ -340,16 +341,21 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 good_formats = ["ecsv"]
             else:
                 good_formats = ["fits", "reg"]
-            for item in self.subset_format_items:
-                if item["label"] in good_formats:
-                    item["disabled"] = False
-                else:
-                    item["disabled"] = True
-                    if item["label"] == self.subset_format.selected:
-                        self.subset_format.selected = good_formats[0]
-                new_items.append(item)
-        self.subset_format_items = []
+            #print("good formats", good_formats)
+            new_items = [item for item in self.subset_format_items if item['label'] in good_formats]
+            #for item in self.subset_format_items:
+            #    print(item)
+                #if item["label"] in good_formats:
+                #    item["disabled"] = False
+                # else:
+                #     item["disabled"] = True
+                #     if item["label"] == self.subset_format.selected:
+                #         print("Did it run?")
+                #         self.subset_format.selected = good_formats[0]
+                #    new_items.append(item)
+        #self.subset_format_items = []
         self.subset_format_items = new_items
+        print(self.subset_format_items)
 
     @observe('subset_format_selected')
     def _disable_subset_format_combo(self, event):
@@ -366,8 +372,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         if bad_combo:
             # Set back to a good value and raise vue message
-            good_format = [format["label"] for format in self.subset_format_items if
-                           format["disabled"] is False][0]
+            good_format = [format["label"] for format in self.subset_format_items][0]# if
+                           #format["disabled"] is False][0]
             self.subset_format.selected = good_format
             self.format_invalid_msg = f"Cannot export '{self.subset.selected}' in {event['new']}" \
                 f" format, reverting selection to {self.subset_format.selected}."
