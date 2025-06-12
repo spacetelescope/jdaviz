@@ -18,6 +18,9 @@ Cubeviz
 ^^^^^^^
 - Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
 
+- Use validator on spectral subset layer visibility in flux/uncertainty viewers when slice indicator
+  is within the spectral subset bounds. [#3571]
+
 Imviz
 ^^^^^
 
