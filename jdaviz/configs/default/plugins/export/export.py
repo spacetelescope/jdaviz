@@ -559,6 +559,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             raise ValueError("nothing selected for export")
 
+        # NOTE: Exporting doesn't change the filename_value attribute
+        # so filename_value cannot be used to locate the output file.
+        # Is this desired behavior?
         return filename
 
     def vue_export_from_ui(self, *args, **kwargs):
