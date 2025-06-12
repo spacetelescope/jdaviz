@@ -156,6 +156,7 @@
           <plugin-select
             :items="subset_format_items.map(i => i.label)"
             :selected.sync="subset_format_selected"
+            :show_if_single_entry="true"
             label="Format"
             api_hint="plg.subset_format ="
             :api_hints_enabled="api_hints_enabled"
