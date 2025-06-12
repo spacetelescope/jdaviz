@@ -164,6 +164,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    manual_options=subset_format_options,
                                                    filters=[self._is_valid_item],
                                                    apply_filters_to_manual_options=True)
+        # Default dropdown to empty
+        # (otherwise defaults to first option in subset_format_options which isn't always available)
+        self.subset_format_selected = ''
 
         dataset_format_options = ['fits']
         self.dataset_format = SelectPluginComponent(self,
@@ -282,7 +285,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 setattr(self, attr, '')
             if attr == 'subset_selected':
                 if self.subset.selected != '':
-                    self._update_subset_format_disabled()
+                    self._set_subset_formats()
                 self._set_subset_not_supported_msg()
             if attr == 'dataset_selected':
                 self._set_dataset_not_supported_msg()
@@ -327,9 +330,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
 
-    def _update_subset_format_disabled(self):
-        new_items = []
-        print("is this working?")
+    def _set_subset_formats(self):
+        good_formats = []
         if self.subset.selected is not None:
             try:
                 subset = self.app.get_subsets(self.subset.selected)
@@ -337,48 +339,17 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # subset invalid message will already be set,
                 # no need to set valid/invalid formats.
                 return
-            if self.app._is_subset_spectral(subset[0]):
+
+            if subset and self.app._is_subset_spectral(subset[0]):
                 good_formats = ["ecsv"]
             else:
                 good_formats = ["fits", "reg"]
-            #print("good formats", good_formats)
-            new_items = [item for item in self.subset_format_items if item['label'] in good_formats]
-            #for item in self.subset_format_items:
-            #    print(item)
-                #if item["label"] in good_formats:
-                #    item["disabled"] = False
-                # else:
-                #     item["disabled"] = True
-                #     if item["label"] == self.subset_format.selected:
-                #         print("Did it run?")
-                #         self.subset_format.selected = good_formats[0]
-                #    new_items.append(item)
-        #self.subset_format_items = []
-        self.subset_format_items = new_items
-        print(self.subset_format_items)
 
-    @observe('subset_format_selected')
-    def _disable_subset_format_combo(self, event):
-        # Disable selecting a bad subset+format combination from the API
-        if self.subset.selected == '' or self.subset.selected is None:
-            return
-        subset = self.app.get_subsets(self.subset.selected)
-        bad_combo = False
-        if self.app._is_subset_spectral(subset[0]):
-            if event['new'] != "ecsv":
-                bad_combo = True
-        elif event['new'] == "ecsv":
-            bad_combo = True
-
-        if bad_combo:
-            # Set back to a good value and raise vue message
-            good_format = [format["label"] for format in self.subset_format_items][0]# if
-                           #format["disabled"] is False][0]
-            self.subset_format.selected = good_format
-            self.format_invalid_msg = f"Cannot export '{self.subset.selected}' in {event['new']}" \
-                f" format, reverting selection to {self.subset_format.selected}."
-        else:
-            self.format_invalid_msg = ''
+        self.subset_format_options = [item for item in self.subset_format_items
+                                      if item['label'] in good_formats]
+        # Avoiding mutablility issues should they arise(?)
+        self.subset_format_items = [item for item in self.subset_format_options]
+        self.subset_format.selected = self.subset_format_items[0]['label']
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
