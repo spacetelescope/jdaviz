@@ -331,6 +331,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.overwrite_warn = False
 
     def _set_subset_formats(self):
+        """
+        Set the available and default output format of the
+        selected subset according to its type.
+        """
         good_formats = []
         if self.subset.selected is not None:
             try:
@@ -345,10 +349,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             else:
                 good_formats = ["fits", "reg"]
 
-        self.subset_format_options = [item for item in self.subset_format_items
+        self.subset_format_items = [item for item in self.subset_format_items
                                       if item['label'] in good_formats]
-        # Avoiding mutablility issues should they arise(?)
-        self.subset_format_items = [item for item in self.subset_format_options]
+
+        # To update the dropdown with a 'default' value for the selected subset.
         self.subset_format.selected = self.subset_format_items[0]['label']
 
     def _set_subset_not_supported_msg(self, msg=None):
