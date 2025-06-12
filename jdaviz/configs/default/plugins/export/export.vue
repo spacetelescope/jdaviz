@@ -164,6 +164,13 @@
           />
         </div>
       </v-row>
+
+      <v-row v-if="format_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+          {{format_invalid_msg}}
+        </span>
+      </v-row>
+
     </div>
 
     <div v-if="plugin_table_items.length > 0 && serverside_enabled">
