@@ -16,6 +16,7 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
 
 Imviz
 ^^^^^
