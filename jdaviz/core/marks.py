@@ -767,6 +767,7 @@ class HistogramMark(Lines):
         super().__init__(x=min_max_value, y=y, scales=scales, colors=colors, line_style=line_style,
                          **kwargs)
 
+
 class DistanceMark(PluginMark, Lines, HubListener):
     """
     A bqplot Lines mark for showing a distance interactively in a viewer.
