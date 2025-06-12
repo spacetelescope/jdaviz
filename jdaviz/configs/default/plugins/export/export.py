@@ -345,9 +345,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 return
 
             if subset and self.app._is_subset_spectral(subset[0]):
-                good_formats = ["ecsv"]
+                good_formats = ['ecsv']
             else:
-                good_formats = ["fits", "reg"]
+                good_formats = ['fits', 'reg']
+                if self.config == 'imviz':
+                    good_formats.append('stcs')
 
         self.subset_format_items = [item for item in self.subset_format_items
                                       if item['label'] in good_formats]
