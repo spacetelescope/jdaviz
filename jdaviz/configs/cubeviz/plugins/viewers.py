@@ -294,8 +294,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # Create add data with name results_label to data collection and then add it to the
         # flux viewer
-        test = CCDData(a * u.Unit(''), wcs=wcs)
-        self.jdaviz_app.data_collection[results_label] = test
+        sonified_cube = CCDData(a * u.Unit(''), wcs=wcs)
+        self.jdaviz_app.data_collection[results_label] = sonified_cube
         self.jdaviz_app.data_collection[results_label].meta['Sonified'] = True
 
         self.jdaviz_app.add_data_to_viewer('flux-viewer', results_label)
