@@ -1203,6 +1203,13 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         if isinstance(subset_label, str):
             subset_label = [subset_label]
 
+        bad_labels = []
+        for label in subset_label:
+            if not self.app._check_valid_subset_label(label, raise_if_invalid=False):
+                bad_labels.append(label)
+        if len(bad_labels > 0):
+            raise ValueError(f"subset_label contained invalid labels: {bad_labels}")
+
         n_loaded = 0
         bad_regions = []
 
