@@ -174,6 +174,9 @@ Bug Fixes
 
 - Hide rename button in editable dropdowns in multiselect mode. [#3623]
 
+- Significantly improved the performance of Cubeviz when creating several subsets in the
+  image viewer. [#3626]
+
 Cubeviz
 ^^^^^^^
 
