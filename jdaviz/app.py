@@ -2183,7 +2183,7 @@ class Application(VuetifyTemplate, HubListener):
                 if split_label[0] == "Subset" and split_label[1].isdigit():
                     if raise_if_invalid:
                         raise ValueError("The pattern 'Subset N' is reserved for "
-                                        "auto-generated labels")
+                                         "auto-generated labels")
                     return False
 
         return True
