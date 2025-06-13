@@ -21,6 +21,8 @@ New Features
 
 - Hitting the "Enter" key while renaming a subset or footprint will accept the changes, hitting "Escape" will cancel. [#3600]
 
+- Ability to import subsets from the Subset Tools plugin UI. [#3639]
+
 Cubeviz
 ^^^^^^^
 
