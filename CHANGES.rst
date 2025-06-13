@@ -21,8 +21,10 @@ New Features
 
 - Hitting the "Enter" key while renaming a subset or footprint will accept the changes, hitting "Escape" will cancel. [#3600]
 
-- Added subset_label keyword argument to ``import_region`` method of Subset Tools plugin
+- Added ``subset_label`` keyword argument to ``import_region`` method of Subset Tools plugin
   to name the resulting subset(s). [#3616]
+
+- Ability to import subsets from the Subset Tools plugin UI. [#3639]
 
 - Aperture Photometry public API exposed, added API hints to plugin. [#3617]
 
