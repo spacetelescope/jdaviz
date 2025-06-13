@@ -26,6 +26,8 @@ Cubeviz
 
 - Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
+- Add sonified layer for each cube created by the Sonify Data plugin. [#3430]
+
 Imviz
 ^^^^^
 
@@ -59,6 +61,8 @@ Specviz2d
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3473]
+
+- New plugin to vizualize the cross-dispersion profile [#3552]
 
 API Changes
 -----------
@@ -144,6 +148,8 @@ Bug Fixes
 
 - Hide non-supported subset export formats [#3631]
 
+- Hide rename button in editable dropdowns in multiselect mode. [#3623]
+
 Cubeviz
 ^^^^^^^
 
@@ -163,6 +169,11 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+Other changes and Additions
+---------------------------
+
+- Updated minimum version of echo to 0.11, as it significantly improves the performance of CubeViz. [#3627]
 
 4.2.2 (2025-05-12)
 ==================

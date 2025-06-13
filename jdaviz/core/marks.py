@@ -176,7 +176,10 @@ class PluginMark:
     def set_x_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
-                if self.viewer.data() and hasattr(self.viewer.data()[0], 'spectral_axis'):
+                if isinstance(self.viewer, ('Spectrum2DViewer', 'MosvizProfile2DView')):
+                    # x-unit of 2d spectrum viewers are always in pixels
+                    unit = u.pix
+                elif self.viewer.data() and hasattr(self.viewer.data()[0], 'spectral_axis'):
                     unit = self.viewer.data()[0].spectral_axis.unit
                 else:
                     return
@@ -193,7 +196,10 @@ class PluginMark:
     def set_y_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
-                if self.viewer.data() and hasattr(self.viewer.data()[0], 'flux'):
+                if isinstance(self.viewer, ('Spectrum2DViewer', 'MosvizProfile2DView')):
+                    # y-unit of 2d spectrum viewers are always in pixels
+                    unit = u.pix
+                elif self.viewer.data() and hasattr(self.viewer.data()[0], 'flux'):
                     unit = self.viewer.data()[0].flux.unit
                 else:
                     return
@@ -208,17 +214,23 @@ class PluginMark:
             return
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):  # noqa
-
             if self.viewer.default_class is Spectrum1D:
                 if self.xunit is None:
                     return
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
 
                 pixar_sr = spec.meta.get('PIXAR_SR', None)
-                cube_wave = self.x * self.xunit
-                equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
+                # if x is all the same value, then we either have a vertical line mark or
+                # a flat spectrum, in either case we can use a single value for the spectral
+                # density equivalency.
+                if len(np.unique(self.x)) == 1 and (len(self.x) != len(self.y)):
+                    wave = self.x[0] * self.xunit
+                else:
+                    wave = self.x * self.xunit
+                equivs = all_flux_unit_conversion_equivs(pixar_sr, wave)
                 y = flux_conversion_general(self.y, self.yunit, unit,
                                             equivs, with_unit=False)
+
             self.y = y
 
         self.yunit = unit
@@ -226,11 +238,19 @@ class PluginMark:
     def _on_global_display_unit_changed(self, msg):
         if not self.auto_update_units:
             return
-        if self.viewer.__class__.__name__ in ['Spectrum1DViewer',
+        unit = msg.unit
+        if (msg.axis in ('spectral', 'spectral_y') and
+                self.viewer.__class__.__name__ in ('Spectrum2DViewer',
+                                                   'MosvizProfile2DView')):
+            # then we want to ignore the change to spectral unit as these viewers
+            # are always in pixel units on the x-axis
+            unit = u.pix
+        if self.viewer.__class__.__name__ in ('Spectrum1DViewer',
                                               'Spectrum2DViewer',
                                               'CubevizProfileView',
                                               'MosvizProfileView',
-                                              'MosvizProfile2DView']:
+                                              'MosvizProfile2DView'):
+
             axis_map = {'spectral': 'x', 'spectral_y': 'y'}
         else:
             return
@@ -242,7 +262,7 @@ class PluginMark:
             if isinstance(scale, LinearScale) and (scale.min, scale.max) == (0, 1):
                 return
 
-            getattr(self, f'set_{axis}_unit')(msg.unit)
+            getattr(self, f'set_{axis}_unit')(unit)
 
     def clear(self):
         self.update_xy([], [])

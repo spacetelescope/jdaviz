@@ -12,6 +12,7 @@
       :rules="rules ? rules : []"
       :multiple="multiselect"
       :chips="multiselect"
+      :disabled="disabled"
       item-text="label"
       item-value="label"
       persistent-hint
@@ -67,7 +68,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled']
+          'api_hint', 'api_hints_enabled', 'disabled']
 }
 </script>
 

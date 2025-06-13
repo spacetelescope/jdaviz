@@ -4,7 +4,8 @@ import astropy.units as u
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
-                                        SpectralSubsetSelectMixin, with_spinner)
+                                        SpectralSubsetSelectMixin, with_spinner,
+                                        AddResultsMixin)
 from jdaviz.core.user_api import PluginUserApi
 
 
@@ -25,7 +26,8 @@ else:
 
 
 @tray_registry('cubeviz-sonify-data', label="Sonify Data")
-class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
+                 AddResultsMixin):
     """
     See the :ref:`Sonify Data Plugin Documentation <cubeviz-sonify-data>` for more details.
 
@@ -56,8 +58,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     sound_devices_items = List().tag(sync=True)
     sound_devices_selected = Unicode('').tag(sync=True)
 
+    add_to_viewer_enabled = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self._plugin_description = 'Sonify a data cube'
         self.docs_description = 'Sonify a data cube using the Strauss package.'
         if not self.has_strauss or sd.default.device[1] < 0:
@@ -70,13 +75,20 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_device_indexes = None
             self.refresh_device_list()
 
+        self.results_label_default = 'Sonified data'
+        self.add_to_viewer_selected = 'flux-viewer'
+
     @property
     def user_api(self):
-        expose = []
+        expose = ['sonify_cube']
         return PluginUserApi(self, expose)
 
-    @with_spinner()
-    def vue_sonify_cube(self, *args):
+    def sonify_cube(self):
+        """
+        Create a sonified grid in the flux viewer so that sound plays when mousing over the viewer.
+        You can select the device index for audio output and also use a spectral subset to set a
+        range for sonification.
+        """
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
 
@@ -84,7 +96,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
 
         # Apply spectral subset bounds
-        if self.spectral_subset_selected is not self.spectral_subset.default_text:
+        if self.spectral_subset_selected != self.spectral_subset.default_text:
             display_unit = self.spectrum_viewer.state.x_display_unit
             min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
             max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
@@ -96,11 +108,12 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
                                            self.pccut, self.audfrqmin,
-                                           self.audfrqmax, self.eln, self.use_pccut)
+                                           self.audfrqmax, self.eln, self.use_pccut,
+                                           self.results_label)
 
-        # Automatically select spectrum-at-spaxel tool
-        spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
-        self.flux_viewer.toolbar.active_tool = spec_at_spaxel_tool
+    @with_spinner()
+    def vue_sonify_cube(self, *args):
+        self.sonify_cube()
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
