@@ -95,7 +95,8 @@ class FormatSelect(SelectPluginComponent):
                         continue
                     if self.debug:
                         self._dbg_importers[label] = this_importer
-                    if self.plugin._restrict_to_target is not None and this_importer.target['label'] != self.plugin._restrict_to_target:
+                    if (self.plugin._restrict_to_target is not None and
+                            this_importer.target['label'] != self.plugin._restrict_to_target):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'not matching target'
                         continue
