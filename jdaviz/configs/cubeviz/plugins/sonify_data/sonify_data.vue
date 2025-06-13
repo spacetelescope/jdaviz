@@ -25,6 +25,7 @@
       api_hint="plg.dataset ="
       :api_hints_enabled="api_hints_enabled"
       hint="Select the data set."
+      :disabled="true"
     />
     <plugin-subset-select
       :items="spectral_subset_items"
@@ -112,31 +113,14 @@
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
-
+    <j-plugin-section-header>Live Sound Options</j-plugin-section-header>
     <v-row>
-      <plugin-action-button
-        :spinner="spinner"
-        @click="sonify_cube"
-      >
-        Sonify data
-      </plugin-action-button>
-      <plugin-action-button v-if="!stream_active"
-        @click="start_stop_stream"
-      >
-        Start stream
-      </plugin-action-button>
-      <plugin-action-button v-if="stream_active"
-        @click="start_stop_stream"
-      >
-        Stop stream
-      </plugin-action-button>
       <plugin-action-button
         @click="refresh_device_list_in_dropdown"
       >
         Refresh Device List
       </plugin-action-button>
     </v-row>
-    <j-plugin-section-header>Live Sound Options</j-plugin-section-header>
     <v-row>
       <v-select
         :menu-props="{ left: true }"
@@ -148,10 +132,28 @@
         persistent-hint
         ></v-select>
     </v-row>
+
     <v-row>
-        Volume
+        Overall Volume
         <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
     </v-row>
-   </v-row>
+    <j-plugin-section-header>Add Results Options</j-plugin-section-header>
+      <plugin-add-results
+          :label.sync="results_label"
+          :label_default="results_label_default"
+          :label_auto.sync="results_label_auto"
+          :label_invalid_msg="results_label_invalid_msg"
+          :label_overwrite="results_label_overwrite"
+          label_hint="Label for the sonified data"
+          :add_to_viewer_items="add_to_viewer_items"
+          :add_to_viewer_selected.sync="add_to_viewer_selected"
+          :add_to_viewer_enabled="false"
+          action_label="Sonify data"
+          action_tooltip="Create sonified data and add to flux viewer"
+          :action_spinner="spinner"
+          action_api_hint='plg.sonify_cube()'
+          :add_to_viewer_disabled="true"
+          @click:action="sonify_cube"
+      ></plugin-add-results>
  </j-tray-plugin>
 </template>

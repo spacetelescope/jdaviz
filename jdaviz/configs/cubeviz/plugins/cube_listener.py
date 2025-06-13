@@ -13,7 +13,8 @@ except ImportError:
     pass
 
 #  smallest fraction of the max audio amplitude that can be represented by a 16-bit signed integer
-MINVOL = 1/(2**15 - 1)
+INT_MAX = 2**15 - 1
+MINVOL = 1/INT_MAX
 
 
 @contextmanager
@@ -45,7 +46,7 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     # set range in spectral flux representing the maximum and minimum sound frequency power:
     # 0 (numeric): absolute 0 in flux units, such that any flux above 0 will sound.
     # '100' (string): 100th percentile (i.e. maximum value) in spectral flux.
-    lims = {'spectrum': (0, '100')}
+    lims = {'spectrum': (0, '%100')}
 
     # set up source
     sources = Events(data.keys())
@@ -97,7 +98,8 @@ class CubeListenerData:
         self.cursig = np.zeros(self.siglen, dtype='int16')
         self.newsig = np.zeros(self.siglen, dtype='int16')
 
-        if self.cursig.nbytes * pow(1024, -3) > 2:
+        # ensure sigcube isn't too big before we initialise it
+        if self.cube[:, :, 0].size * self.siglen * 2 * pow(1024, -3) > 2:
             raise Exception("Cube projected to be > 2Gb!")
 
         self.sigcube = np.zeros((*self.cube.shape[:2], self.siglen), dtype='int16')
