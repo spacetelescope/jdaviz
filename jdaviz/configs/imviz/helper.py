@@ -175,12 +175,13 @@ class Imviz(ImageConfigHelper):
                     kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
-                self._load(filepath, data_label, format='Image', **kw)
+                self._load(filepath, format='Image', **kw)
                 return
                 self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
+                data = data.squeeze()
                 # in parser, if nddata, return self.input.squeeze()
                 if data.ndim != 3:
                     raise ValueError(f'Imviz cannot load this array with ndim={data.ndim}')
@@ -196,11 +197,10 @@ class Imviz(ImageConfigHelper):
 
                 if data_label:
                     kw['data_label'] = data_label
-                data = data.squeeze()
                 # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
-                self.loaders['object'].object = data[i, :, :]
-                self.loaders['object'].importer()
-                # self._load(data[i, :, :], data_label)
+                # self.loaders['object'].object = data[i, :, :]
+                # self.loaders['object'].importer()
+                self._load(data[i, :, :], format='image')
                 return
 
                 self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
@@ -209,9 +209,9 @@ class Imviz(ImageConfigHelper):
             if data_label:
                 kwargs['data_label'] = data_label
             # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
-            self.loaders['object'].object = data
-            self.loaders['object'].importer()
-            # self._load(data)
+            # self.loaders['object'].object = data
+            # self.loaders['object'].importer()
+            self._load(data, format='image')
             return
             self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
 

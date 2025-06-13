@@ -46,7 +46,7 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.app.config == 'imviz':
             self.data_label_default = 'Image'
 
-        self.input_hdulist = isinstance(self.input, fits.HDUList)
+        self.input_hdulist = isinstance(self.input, fits.HDUList) or isinstance(self.input, fits.hdu.image.ImageHDU)
         if self.input_hdulist:
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
@@ -64,7 +64,7 @@ class ImageImporter(BaseImporterToDataCollection):
             return False
         # flat image, not a cube
         # isinstance NDData
-        return isinstance(self.input, (fits.HDUList, NDData, np.ndarray, asdf.AsdfFile))
+        return isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU, NDData, np.ndarray, asdf.AsdfFile))
 
 
     @property
@@ -80,6 +80,9 @@ class ImageImporter(BaseImporterToDataCollection):
             return self.input
         elif isinstance(self.input, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel)):
             return self.input
+        elif isinstance(self.input, fits.hdu.image.ImageHDU):
+            # self.extension.selected_name = self.input.name
+            return [_hdu2data(self.input, self.data_label_value, None, False)]
         hdulist = self.input
         return [_hdu2data(hdu, self.data_label_value, hdulist)[0] for hdu in self.extension.selected_hdu]
 
@@ -94,6 +97,8 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(self.output, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel)):
             data = _roman_asdf_2d_to_glue_data(self.output, data_label)
             self.add_to_data_collection(data, f"{data_label}[ASDF]", show_in_viewer=True)
+        elif isinstance(self.output, fits.hdu.image.ImageHDU):
+            self.add_to_data_collection(self.output, f"{data_label}[HDU]", show_in_viewer=True)
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, spec in zip(self.extension.selected_name, self.output):
