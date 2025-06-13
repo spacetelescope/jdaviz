@@ -64,7 +64,7 @@ class ImageImporter(BaseImporterToDataCollection):
             return False
         # flat image, not a cube
         # isinstance NDData
-        return isinstance(self.input, fits.HDUList) or isinstance(self.input, NDData) or isinstance(self.input, np.ndarray) or isinstance(self.input, asdf.AsdfFile)
+        return isinstance(self.input, (fits.HDUList, NDData, np.ndarray, asdf.AsdfFile))
 
 
     @property
