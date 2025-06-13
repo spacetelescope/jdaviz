@@ -14,6 +14,8 @@ Bug Fixes
 
 - Fix to data menu logic for LCviz compatibility. [#3613]
 
+- Hide rename button in editable dropdowns in multiselect mode. [#3623]
+
 Cubeviz
 ^^^^^^^
 - Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
