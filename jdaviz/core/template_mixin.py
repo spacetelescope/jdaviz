@@ -5368,6 +5368,11 @@ class Plot(PluginSubcomponent):
                 style_state = self.layers[label].state.as_dict()
             else:
                 style_state = {}
+            # hack to temporarily fix marks not disappearing when data removed from plot
+            # remove these 2 lines after JDAT 5420 is resolved
+            comps = {c.label: c for c in data.components}
+            data.update_components({comps[comp]: np.full_like(data[component], fill_value=np.nan)
+                                    for comp in self._viewer_components})
             self._remove_data(label, broadcast=False)
             self._add_data(label, broadcast=False, **kwargs)
             self.update_style(label, **style_state)
