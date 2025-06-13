@@ -65,4 +65,4 @@ class SubsetImporter(BaseImporterToPlugin):
 
     def __call__(self, subset_label=None):
         self.app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input,
-                                                                      subset_label=self.subset_label_value)  # noqa
+                                                                      subset_label=self.subset_label_value.strip())  # noqa
