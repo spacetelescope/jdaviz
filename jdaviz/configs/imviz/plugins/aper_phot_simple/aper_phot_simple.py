@@ -48,8 +48,30 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.clear_table`
     * :meth:`fitted_models`
+    * :meth:`calculate_photometry`
+    * :meth:`unpack_batch_options`
+    * :meth:`calculate_batch_photometry`
+    * :meth:`fit_radial_profile`
+    * ``multiselect``
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to use for photometry.
+    * ``aperture``
+    * ``background``
+    * ``background_value``
+    * ``pixel_area``
+    * ``counts_factor``
+    * ``flux_scaling``
+    * ``table`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+    * ````
     """
+    ('multiselect', 'dataset', 'aperture', 'background',
+                  'background_value', 'pixel_area', 'counts_factor', 'flux_scaling',
+                  'calculate_photometry', 'unpack_batch_options',
+                  'calculate_batch_photometry', 'table', 'clear_table',
+                  'export_table', 'fitted_models', 'current_plot_type',
+                  'fit_radial_profile', 'plot')
     template_file = __file__, "aper_phot_simple.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
