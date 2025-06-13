@@ -3,6 +3,7 @@
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aperture-photometry'"
     :uses_active_status="uses_active_status"
+    :api_hints_enabled.sync="api_hints_enabled"
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
     :popout_button="popout_button"
@@ -22,6 +23,8 @@
       :show_if_single_entry="false"
       label="Data"
       hint="Select the data for photometry."
+      api_hint="plg.dataset = "
+      :api_hints_enabled="api_hints_enabled"
     />
 
     <div v-if='config == "cubeviz" && is_cube'>
@@ -46,6 +49,8 @@
         :show_if_single_entry="true"
         label="Aperture"
         hint="Select aperture region for photometry (cannot be an annulus or composite subset)."
+        api_hint="plg.aperture = "
+        :api_hints_enabled="api_hints_enabled"
       />
 
       <v-row v-if="aperture_selected.length && !aperture_selected_validity.is_aperture">
@@ -61,6 +66,8 @@
           :show_if_single_entry="true"
           label="Background"
           hint="Select subset region for background calculation (cannot be a composite subset)."
+          api_hint="plg.background = "
+          :api_hints_enabled="api_hints_enabled"
         />
 
         <v-row v-if="(multiselect && aperture_selected.includes(background_selected)) || aperture_selected === background_selected">
@@ -76,13 +83,14 @@
         </v-row>
         <v-row v-else>
           <v-text-field
-            label="Background value"
             v-model.number="background_value"
             type="number"
             hint="Background to subtract"
             :suffix="display_unit"
             :disabled="background_selected!='Manual'"
             persistent-hint
+            :label="api_hints_enabled ? 'plg.background_value =' : 'Background value'"
+            :class="api_hints_enabled ? 'api-hint' : null"
           >
           </v-text-field>
         </v-row>
@@ -98,7 +106,8 @@
         <v-row v-if="(!multiselect || !pixel_area_multi_auto) && display_solid_angle_unit!='pix2'">
 
           <v-text-field
-            label="Pixel area"
+            :label="api_hints_enabled ? 'plg.pixel_area =' : 'Pixel area'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="pixel_area"
             type="number"
             hint="Pixel area in arcsec squared, only used if data is in units of surface brightness."
@@ -109,7 +118,8 @@
 
         <v-row>
           <v-text-field
-            label="Counts conversion factor"
+            :label="api_hints_enabled ? 'plg.counts_factor =' : 'Counts conversion factor'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="counts_factor"
             type="number"
             hint="Factor to convert data unit to counts, in unit of flux/counts"
@@ -129,12 +139,13 @@
         </v-row>
         <v-row v-if="!multiselect || !flux_scaling_multi_auto">
           <v-text-field
-            label="Flux scaling"
             v-model.number="flux_scaling"
             type="number"
-            :suffix="flux_scaling_display_unit"
             hint="Used in -2.5 * log(flux / flux_scaling)"
+            :suffix="flux_scaling_display_unit"
             persistent-hint
+            :label="api_hints_enabled ? 'plg.flux_scaling =' : 'Flux scaling'"
+            :class="api_hints_enabled ? 'api-hint' : null"
           >
           </v-text-field>
         </v-row>
@@ -150,6 +161,8 @@
           :selected.sync="current_plot_type"
           label="Plot Type"
           hint="Aperture photometry plot type"
+          api_hint="plg.current_plot_type = "
+          :api_hints_enabled="api_hints_enabled"
         />
 
         <v-row v-if="!multiselect && current_plot_type==='Radial Profile (Raw)' && aperture_area > 5000">
@@ -161,10 +174,11 @@
         <v-row v-if="!multiselect && current_plot_type.indexOf('Radial Profile') != -1">
 
           <v-switch
-            label="Fit Gaussian"
             hint="Fit Gaussian1D to radial profile"
             v-model="fit_radial_profile"
-            persistent-hint>
+            persistent-hint
+            :label="api_hints_enabled ? 'plg.fit_radial_profile =' : 'Fit Gaussian'"
+            :class="api_hints_enabled ? 'api-hint' : null">
           </v-switch>
         </v-row>
 
@@ -173,9 +187,14 @@
             :results_isolated_to_plugin="true"
             @click="do_aper_phot"
             :spinner="spinner"
+            :api_hints_enabled="api_hints_enabled"
             :disabled="aperture_selected === background_selected || !aperture_selected_validity.is_aperture || counts_factor < 0"
           >
-            Calculate
+            {{ api_hints_enabled ?
+              'plg.calculate_photometry()'
+              :
+              'Calculate'
+            }}
           </plugin-action-button>
         </v-row>
       </div>

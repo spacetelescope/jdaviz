@@ -26,7 +26,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin = self.imviz.plugins['Aperture Photometry']
 
         # Model fitting is already tested in astropy.
         # Here, we enable it just to make sure it does not crash.
@@ -34,30 +34,30 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure invalid Data/Subset selection does not crash plugin.
         with pytest.raises(ValueError):
-            phot_plugin.dataset_selected = 'no_such_data'
+            phot_plugin.dataset.selected = 'no_such_data'
         with pytest.raises(ValueError):
             # will raise an error and revert to first entry
-            phot_plugin.aperture_selected = 'no_such_subset'
-        assert phot_plugin.aperture_selected == ''
-        phot_plugin.aperture_selected = phot_plugin.aperture.labels[0]
+            phot_plugin.aperture.selected = 'no_such_subset'
+        assert phot_plugin.aperture.selected == ''
+        phot_plugin.aperture.selected = phot_plugin.aperture.labels[0]
         assert_allclose(phot_plugin.background_value, 0)
 
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.aperture_selected = phot_plugin.aperture.labels[0]
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.aperture.selected = phot_plugin.aperture.labels[0]
         with pytest.raises(ValueError):
-            phot_plugin.background_selected = 'no_such_subset'
-        assert phot_plugin.background_selected == 'Manual'
+            phot_plugin.background.selected = 'no_such_subset'
+        assert phot_plugin.background.selected == 'Manual'
         assert_allclose(phot_plugin.background_value, 0)
 
         # Perform photometry on both images using same Subset.
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.aperture_selected = 'Subset 1'
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.aperture.selected = 'Subset 1'
         assert phot_plugin.dataset.selected_dc_item is not None
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
-        phot_plugin.dataset_selected = 'has_wcs_2[SCI,1]'
+        phot_plugin.dataset.selected = 'has_wcs_2[SCI,1]'
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         assert phot_plugin.dataset.selected_dc_item is not None
         assert phot_plugin.aperture.selected_spatial_region is not None
@@ -66,11 +66,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.counts_factor, 0)
         assert_allclose(phot_plugin.pixel_area, 0)
         assert_allclose(phot_plugin.flux_scaling, 0)
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 2
-        assert phot_plugin.plot_available
-        assert len(phot_plugin.plot.layers['profile'].layer.data['x']) > 0
+        assert phot_plugin._obj.plot_available
+        assert len(phot_plugin.plot._obj.layers['profile'].layer.data['x']) > 0
 
         # Check photometry results.
         assert tbl.colnames == [
@@ -122,10 +122,10 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.plugins['Subset Tools'].combination_mode = 'new'
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.aperture_selected = 'Subset 2'
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.aperture.selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 3  # New result is appended
         assert tbl[-1]['id'] == 3
@@ -146,11 +146,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.plugins['Subset Tools'].combination_mode = 'new'
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.aperture_selected = 'Subset 3'
-        phot_plugin.background_selected = 'Subset 3'
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.aperture.selected = 'Subset 3'
+        phot_plugin.background.selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
@@ -166,25 +166,24 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert tbl[-1]['subset_label'] == 'Subset 3'
 
         # Make sure background auto-updates.
-        phot_plugin.background_selected = 'Manual'
+        phot_plugin.background.selected = 'Manual'
         assert_allclose(phot_plugin.background_value, 1)  # Keeps last value
-        phot_plugin.background_selected = 'Subset 1'
+        phot_plugin.background.selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 1)
 
         hdu3 = fits.ImageHDU(np.ones((10, 10)) + 1, name='SCI')
         hdu3.header.update(self.wcs_2.to_header())
         self.imviz.load_data(hdu3, data_label='twos')
-        phot_plugin.dataset_selected = 'twos[SCI,1]'
+        phot_plugin.dataset.selected = 'twos[SCI,1]'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
         # Curve of growth
         phot_plugin.current_plot_type = 'Curve of Growth'
-        phot_plugin.vue_do_aper_phot()
-        assert phot_plugin.plot.figure.title == 'Curve of growth from aperture center'
+        phot_plugin._obj.vue_do_aper_phot()
+        assert phot_plugin.plot._obj.figure.title == 'Curve of growth from aperture center'
 
     def test_batch_unpack(self):
-        # TODO: remove ._obj when API is made public
-        phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
+        phot_plugin = self.imviz.plugins['Aperture Photometry']
 
         # NOTE: these input values are not currently validated, so it does not matter that the
         # datasets and subsets do not exist with these names (if that changes, this test will
@@ -216,8 +215,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
         )  # Draw a circle
 
-        # TODO: remove ._obj when API is made public
-        phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
+        phot_plugin = self.imviz.plugins['Aperture Photometry']
         assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
         assert phot_plugin.aperture.choices == ['Subset 1']
 
@@ -225,27 +223,27 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
                                                 {'dataset': 'has_wcs_2[SCI,1]'}])
 
-        assert len(phot_plugin.table) == 2
+        assert len(phot_plugin.table._obj) == 2
 
         with pytest.raises(RuntimeError):
             phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
                                                     {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
 
         # second entry above should have been successful, resulting in one addition to the results
-        assert len(phot_plugin.table) == 3
+        assert len(phot_plugin.table._obj) == 3
 
         # now run through the UI directly
         phot_plugin.multiselect = True
         phot_plugin.dataset.select_all()
         phot_plugin.aperture.select_none()
         assert len(phot_plugin.unpack_batch_options()) == 0
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin._obj.vue_do_aper_phot()
 
-        assert len(phot_plugin.table) == 3
+        assert len(phot_plugin.table._obj) == 3
         phot_plugin.aperture.select_all()
         assert len(phot_plugin.unpack_batch_options()) == 2
-        phot_plugin.vue_do_aper_phot()
-        assert len(phot_plugin.table) == 5
+        phot_plugin._obj.vue_do_aper_phot()
+        assert len(phot_plugin.table._obj) == 5
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
@@ -254,16 +252,16 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         self.imviz.plugins['Subset Tools'].import_region(
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
         )  # Draw a circle
-        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin = self.imviz.plugins['Aperture Photometry']
 
-        phot_plugin.dataset_selected = 'has_wcs[SCI,1]'
-        phot_plugin.aperture_selected = 'Subset 1'
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin.dataset.selected = 'has_wcs[SCI,1]'
+        phot_plugin.aperture.selected = 'Subset 1'
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
-        phot_plugin.dataset_selected = 'no_wcs[SCI,1]'
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin.dataset.selected = 'no_wcs[SCI,1]'
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
         assert_array_equal(tbl['sky_center'], None)
@@ -294,7 +292,7 @@ class TestAdvancedAperPhot:
 
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj
-        self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]._obj
+        self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),
@@ -307,11 +305,11 @@ class TestAdvancedAperPhot:
         ('Subset 4', 837.0023608207703)])
     def test_aperphot(self, data_label, local_bkg, subset_label, expected_sum):
         """All data should give similar result for the same Subset."""
-        self.phot_plugin.dataset_selected = data_label
-        self.phot_plugin.aperture_selected = subset_label
-        self.phot_plugin.background_selected = 'Manual'
+        self.phot_plugin.dataset.selected = data_label
+        self.phot_plugin.aperture.selected = subset_label
+        self.phot_plugin.background.selected = 'Manual'
         self.phot_plugin.background_value = local_bkg
-        self.phot_plugin.vue_do_aper_phot()
+        self.phot_plugin._obj.vue_do_aper_phot()
         tbl = self.phot_plugin.export_table()
 
         # Imperfect down-sampling and imperfect apertures, so 10% is good enough.
@@ -330,9 +328,9 @@ class TestAdvancedAperPhot:
         """All background (median) should give similar result for the same Subset.
         Down-sampled data has higher factor due to flux conservation.
         """
-        self.phot_plugin.dataset_selected = data_label
-        self.phot_plugin.aperture_selected = "Subset 1"  # Does not matter
-        self.phot_plugin.background_selected = bg_label
+        self.phot_plugin.dataset.selected = data_label
+        self.phot_plugin.aperture.selected = "Subset 1"  # Does not matter
+        self.phot_plugin.background.selected = bg_label
 
         # Imperfect down-sampling and abusing apertures, so 10% is good enough.
         assert_allclose(float(self.phot_plugin.background_value), expected_bg * fac, rtol=0.1)
@@ -349,8 +347,8 @@ def test_annulus_background(imviz_helper):
     imviz_helper.load_data(gauss4, data_label='four_gaussians')
     imviz_helper.load_data(ones, data_label='ones')
 
-    phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
-    phot_plugin.dataset_selected = 'ones'
+    phot_plugin = imviz_helper.plugins['Aperture Photometry']
+    phot_plugin.dataset.selected = 'ones'
 
     # Mark an object of interest
     circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
@@ -360,14 +358,14 @@ def test_annulus_background(imviz_helper):
     imviz_helper.plugins['Subset Tools'].import_region([circle_1, annulus_1],
                                                        combination_mode='new')
 
-    phot_plugin.aperture_selected = 'Subset 1'
-    phot_plugin.background_selected = 'Subset 2'
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.background.selected = 'Subset 2'
 
     # Check annulus for ones
     assert_allclose(phot_plugin.background_value, 1)
 
     # Switch data
-    phot_plugin.dataset_selected = 'four_gaussians'
+    phot_plugin.dataset.selected = 'four_gaussians'
     assert_allclose(phot_plugin.background_value, bg_4gauss_1)  # Changed
 
     # Draw ellipse on another object
@@ -383,28 +381,28 @@ def test_annulus_background(imviz_helper):
     assert 'Subset 4' in phot_plugin.aperture.choices
     assert 'Subset 4' in phot_plugin.background.choices
 
-    phot_plugin.aperture_selected = 'Subset 4'
+    phot_plugin.aperture.selected = 'Subset 4'
     assert not phot_plugin.aperture.selected_validity.get('is_aperture', True)
     with pytest.raises(ValueError, match="Selected aperture is not valid"):
         phot_plugin.calculate_photometry()
 
-    phot_plugin.aperture_selected = 'Subset 3'
+    phot_plugin.aperture.selected = 'Subset 3'
     assert phot_plugin.aperture.selected_validity.get('is_aperture', False)
-    phot_plugin.background_selected = 'Subset 4'
+    phot_plugin.background.selected = 'Subset 4'
 
     # Check new annulus for four_gaussians
     assert_allclose(phot_plugin.background_value, bg_4gauss_2)  # Changed
 
     # Switch to manual, should not change
-    phot_plugin.background_selected = 'Manual'
+    phot_plugin.background.selected = 'Manual'
     assert_allclose(phot_plugin.background_value, bg_4gauss_2)
 
     # Switch to Subset, should change a lot because this is not background area
-    phot_plugin.background_selected = 'Subset 1'
+    phot_plugin.background.selected = 'Subset 1'
     assert_allclose(phot_plugin.background_value, bg_4gauss_3)
 
     # Switch back to annulus, should be same as before in same mode
-    phot_plugin.background_selected = 'Subset 4'
+    phot_plugin.background.selected = 'Subset 4'
     assert_allclose(phot_plugin.background_value, bg_4gauss_2)
 
     # Edit the annulus and make sure background updates
@@ -430,17 +428,17 @@ def test_fit_radial_profile_with_nan(imviz_helper):
     imviz_helper.plugins['Subset Tools'].import_region(
         [circle_1], combination_mode='new')
 
-    phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
-    phot_plugin.dataset_selected = 'four_gaussians'
-    phot_plugin.aperture_selected = 'Subset 1'
+    phot_plugin = imviz_helper.plugins['Aperture Photometry']
+    phot_plugin.dataset.selected = 'four_gaussians'
+    phot_plugin.aperture.selected = 'Subset 1'
     phot_plugin.current_plot_type = 'Radial Profile'
     phot_plugin.fit_radial_profile = True
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # Fitter warnings do not matter, only want error.
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin._obj.vue_do_aper_phot()
     tbl = imviz_helper.plugins['Aperture Photometry'].export_table()
 
-    assert phot_plugin.result_failed_msg == ''
+    assert phot_plugin._obj.result_failed_msg == ''
     assert_allclose(tbl['sum'][0], 8590.419296)
 
 
@@ -511,7 +509,7 @@ def test_curve_of_growth(with_unit):
 
 def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
-    phot_plugin = cubeviz_helper.plugins['Aperture Photometry']._obj
+    phot_plugin = cubeviz_helper.plugins['Aperture Photometry']
     uc_plugin = cubeviz_helper.plugins['Unit Conversion']
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
 
@@ -520,12 +518,12 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
     subset_plugin.import_region(CirclePixelRegion(center=PixCoord(x=3, y=3), radius=2),
                                 combination_mode='new')
 
-    phot_plugin.dataset_selected = 'test[FLUX]'
+    phot_plugin.dataset.selected = 'test[FLUX]'
     phot_plugin.multiselect = True
     phot_plugin.aperture.selected = ['Subset 1', 'Subset 2']
 
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
-    assert len(phot_plugin.table) == 2
+    assert len(phot_plugin.table._obj) == 2
     tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
     assert_quantity_allclose(tbl['sum'], [5.980836e-12, 2.037396e-10] * u.Jy, rtol=1e-4)
 
@@ -534,7 +532,7 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
 
     phot_plugin.calculate_batch_photometry(full_exceptions=True)
 
-    assert len(phot_plugin.table) == 4
+    assert len(phot_plugin.table._obj) == 4
     tbl = cubeviz_helper.plugins['Aperture Photometry'].export_table()
     # get_aperture_photometry_results converts all to the same units
     assert_quantity_allclose(tbl['sum'],
