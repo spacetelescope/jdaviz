@@ -185,7 +185,7 @@ class TestExportSubsets:
             export_plugin.subset_format.selected = 'x'
 
         # Test that selecting disabled option raises an error
-        with pytest.raises(ValueError, match="Cannot export Subset 1 in ecsv format, reverting selection to fits"):  # noqa
+        with pytest.raises(ValueError, match="Cannot export 'Subset 1' in 'ecsv' format."):  # noqa
             export_plugin.subset_format.selected = 'ecsv'
 
         # test that attempting to save a composite subset raises an error

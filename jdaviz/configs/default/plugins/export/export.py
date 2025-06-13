@@ -93,6 +93,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
     data_invalid_msg = Unicode().tag(sync=True)
+    format_invalid_msg = Unicode().tag(sync=True)
 
     # We currently disable exporting spectrum-viewer in Cubeviz
     viewer_invalid_msg = Unicode().tag(sync=True)
@@ -364,12 +365,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             bad_combo = True
 
         if bad_combo:
-            # Set back to a good value and raise error
-            good_format = [format["label"] for format in self.subset_format_items if
-                           format["disabled"] is False][0]
-            self.subset_format.selected = good_format
-            raise ValueError(f"Cannot export {self.subset.selected} in {event['new']}"
-                             f" format, reverting selection to {self.subset_format.selected}")
+            # raise vue message
+            self.format_invalid_msg = (f"Cannot export '{self.subset.selected}' "
+                                       f"in '{event['new']}' format.")
+            raise ValueError(f"{self.format_invalid_msg}")
+        else:
+            self.format_invalid_msg = ''
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
@@ -549,10 +550,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
+            elif self.format_invalid_msg:
+                raise ValueError(self.format_invalid_msg)
+
             if self.overwrite_warn and not overwrite:
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
+
             if self.subset_format.selected in ('fits', 'reg'):
                 self.save_subset_as_region(selected_subset_label, filename)
             elif self.subset_format.selected == 'ecsv':
