@@ -151,12 +151,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                          selected='plugin_table_format_selected',
                                                          manual_options=plugin_table_format_options)
 
-        subset_format_options = [{'label': 'fits', 'value': 'fits'},# 'disabled': False},
-                                 {'label': 'reg', 'value': 'reg'},# 'disabled': False},
-                                 {'label': 'ecsv', 'value': 'ecsv'}]# 'disabled': True}]
+        subset_format_options = [{'label': 'fits', 'value': 'fits'},
+                                 {'label': 'reg', 'value': 'reg'},
+                                 {'label': 'ecsv', 'value': 'ecsv'}]
 
         if self.config == 'imviz':
-            subset_format_options.append({'label': 'stcs', 'value': 'stcs'})#, 'disabled': False})
+            subset_format_options.append({'label': 'stcs', 'value': 'stcs'})
 
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
@@ -352,7 +352,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     good_formats.append('stcs')
 
         self.subset_format_items = [item for item in self.subset_format_items
-                                      if item['label'] in good_formats]
+                                    if item['label'] in good_formats]
 
         # To update the dropdown with a 'default' value for the selected subset.
         self.subset_format.selected = self.subset_format_items[0]['label']
