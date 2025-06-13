@@ -46,7 +46,7 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.app.config == 'imviz':
             self.data_label_default = 'Image'
 
-        self.input_hdulist = isinstance(self.input, fits.HDUList) or isinstance(self.input, fits.hdu.image.ImageHDU)
+        self.input_hdulist = isinstance(self.input, fits.HDUList)
         if self.input_hdulist:
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
@@ -97,8 +97,9 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(self.output, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel)):
             data = _roman_asdf_2d_to_glue_data(self.output, data_label)
             self.add_to_data_collection(data, f"{data_label}[ASDF]", show_in_viewer=True)
-        elif isinstance(self.output, fits.hdu.image.ImageHDU):
-            self.add_to_data_collection(self.output, f"{data_label}[HDU]", show_in_viewer=True)
+        elif isinstance(self.input, fits.hdu.image.ImageHDU):
+            data = _hdu2data(self.input, self.data_label_value, None, False)[0]
+            self.add_to_data_collection(data, f"{data_label}[HDU]", show_in_viewer=True)
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, spec in zip(self.extension.selected_name, self.output):

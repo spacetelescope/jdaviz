@@ -200,7 +200,7 @@ class Imviz(ImageConfigHelper):
                 # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
                 # self.loaders['object'].object = data[i, :, :]
                 # self.loaders['object'].importer()
-                self._load(data[i, :, :], format='image')
+                self._load(data[i, :, :])
                 return
 
                 self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
@@ -211,7 +211,7 @@ class Imviz(ImageConfigHelper):
             # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
             # self.loaders['object'].object = data
             # self.loaders['object'].importer()
-            self._load(data, format='image')
+            self._load(data)
             return
             self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
 
