@@ -290,7 +290,7 @@ intersphinx_mapping.update({  # noqa: F405
     'roman_datamodels': ('https://roman-datamodels.readthedocs.io/en/stable/', None),
     'skimage': ('https://scikit-image.org/docs/stable/', None),
     'specreduce': ('https://specreduce.readthedocs.io/en/stable/', None),
-    'specutils': ('https://specutils.readthedocs.io/en/stable/', None),
+    'specutils': ('https://specutils.readthedocs.io/en/v1.20.3/', None),
     'stdatamodels': ('https://stdatamodels.readthedocs.io/en/latest/', None),
     'traitlets': ('https://traitlets.readthedocs.io/en/stable/', None),
     'jwst': ('https://jwst-pipeline.readthedocs.io/en/stable/', None),
