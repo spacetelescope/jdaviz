@@ -78,19 +78,21 @@ class ImageImporter(BaseImporterToDataCollection):
         # if nddata return it
         if isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
             return self.input
+        elif isinstance(self.input, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel)):
+            return self.input
         hdulist = self.input
         return [_hdu2data(hdu, self.data_label_value, hdulist)[0] for hdu in self.extension.selected_hdu]
 
     def __call__(self):
         data_label = self.data_label_value
-        if isinstance(self.input, NDData):
-            data = _nddata_to_glue_data(self.input, data_label)
+        if isinstance(self.output, NDData):
+            data = _nddata_to_glue_data(self.output, data_label)
             self.add_to_data_collection(data, f"{data_label}[Array]", show_in_viewer=True)
-        elif isinstance(self.input, np.ndarray):
-            data = _ndarray_to_glue_data(self.input, data_label)
+        elif isinstance(self.output, np.ndarray):
+            data = _ndarray_to_glue_data(self.output, data_label)
             self.add_to_data_collection(data, f"{data_label}[Array]", show_in_viewer=True)
-        elif isinstance(self.input, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel)):
-            data = _roman_asdf_2d_to_glue_data(self.input, data_label)
+        elif isinstance(self.output, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel)):
+            data = _roman_asdf_2d_to_glue_data(self.output, data_label)
             self.add_to_data_collection(data, f"{data_label}[ASDF]", show_in_viewer=True)
         else:
             with self.app._jdaviz_helper.batch_load():
