@@ -56,17 +56,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`unpack_batch_options`
     * ``aperture`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
     * ``background`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
-    * ``background_value``  
+    * ``background_value``
       Fixed value to use as background level.
-    * ``counts_factor``  
+    * ``counts_factor``
       Factor to convert data to unit of counts, in unit of flux/counts.
-    * ``current_plot_type``  
+    * ``current_plot_type``
       Choice of Curve of Growth, Radial Profile, or Radial Profile (Raw).
       Only applicable when multiselect=False.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
-    * ``flux_scaling``  
+    * ``flux_scaling``
       Flux scaling factor for calculation of magnitudes in output table.
-    * ``multiselect``  
+    * ``multiselect``
       Enable multiselect mode to select multiple datasets for aperture photometry.
     * ``pixel_area``
     * ``plot`` (:class:`~jdaviz.core.template_mixin.Plot`):
