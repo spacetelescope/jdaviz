@@ -174,7 +174,7 @@ class TestExportSubsets:
                                match=re.escape(
                                    f"'{bad_format}' not one of {spatial_valid_formats}, "
                                    f"reverting selection to '{current_format}'")):  # noqa
-                export_plugin.subset_format.selected=bad_format
+                export_plugin.subset_format.selected = bad_format
 
         # Overwrite not enabled, so no-op with warning.
         export_plugin.export(raise_error_for_overwrite=False)
@@ -223,7 +223,7 @@ class TestExportSubsets:
                                match=re.escape(
                                    f"'{bad_format}' not one of {spectral_valid_formats}, "
                                    f"reverting selection to '{current_format}'")):  # noqa
-                export_plugin.subset_format.selected=bad_format
+                export_plugin.subset_format.selected = bad_format
 
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
