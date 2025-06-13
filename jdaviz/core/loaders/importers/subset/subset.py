@@ -57,12 +57,16 @@ class SubsetImporter(BaseImporterToPlugin):
         nsubsets = len(self.app.data_collection.subset_groups)
         self.subset_label_default = f"Subset {nsubsets + 1}"
 
-        if self.app._check_valid_subset_label(self.subset_label_value, raise_if_invalid=False):
-            self.subset_label_invalid_msg = 'invalid subset_label'
+        try:
+            self.app._check_valid_subset_label(self.subset_label_value, raise_if_invalid=True)
+        except ValueError as e:
+            self.subset_label_invalid_msg = f'invalid subset_label: {str(e)}'
             return
 
         self.subset_label_invalid_msg = ''
 
     def __call__(self, subset_label=None):
+        if self.subset_label_invalid_msg:
+            raise ValueError(self.subset_label_invalid_msg)
         self.app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input,
                                                                       subset_label=self.subset_label_value.strip())  # noqa
