@@ -341,7 +341,7 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
     # do aperture photometry with inital cube units to compare original results
     # to results after flux unit conversion
     ap._obj.vue_do_aper_phot()
-    orig_tab = Table(ap.results)
+    orig_tab = Table(ap._obj.results)
 
     # set to new unit
     uc.flux_unit.selected = new_flux_unit_str
@@ -355,7 +355,7 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
     assert_allclose((ap._obj.flux_scaling * new_flux_unit).to(flux_unit, equiv).value, 1.)
 
     ap._obj.vue_do_aper_phot()
-    new_tab = Table(ap.results)
+    new_tab = Table(ap._obj.results)
 
     # if ap. phot silently fails, then 'new_tab' will just be the last
     # calculated one, so make sure this didn't happen
