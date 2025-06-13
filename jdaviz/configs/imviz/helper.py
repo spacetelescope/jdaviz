@@ -144,6 +144,12 @@ class Imviz(ImageConfigHelper):
         image as Numpy array and load the latter instead.
 
         """
+        self.app.state.dev_loaders = True
+        self.loaders['file'].filepath = data
+        self.loaders['file'].filepath.importer.data_label = data_label
+        self.loaders['file'].filepath.importer()
+        return
+
         prev_data_labels = self.app.data_collection.labels
 
         if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
