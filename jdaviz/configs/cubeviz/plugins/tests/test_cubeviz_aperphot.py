@@ -324,7 +324,7 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
 
     # equivalencies for unit conversion, we only need u.spectral_density because
     # no flux<>sb conversions will occur in this plugin
-    equiv = u.spectral_density(ap._cube_wave)
+    equiv = u.spectral_density(ap._obj._cube_wave)
 
     # check initial unit traitlets are synced between ap. phot and unit conv. plugins
     assert uc.flux_unit.selected == ap.flux_scaling_display_unit == flux_unit_str
