@@ -142,6 +142,8 @@ Bug Fixes
 
 - Pinned specutils<2.0 until our compatibility fix is merged. [#3605]
 
+- Hide rename button in editable dropdowns in multiselect mode. [#3623]
+
 Cubeviz
 ^^^^^^^
 
@@ -161,6 +163,11 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+Other changes and Additions
+---------------------------
+
+- Updated minimum version of echo to 0.11, as it significantly improves the performance of CubeViz. [#3627]
 
 4.2.2 (2025-05-12)
 ==================

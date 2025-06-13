@@ -29,10 +29,10 @@
       </template>
       <template v-slot:append>
         <v-icon style="cursor: pointer">mdi-menu-down</v-icon>
-        <j-tooltip tooltipcontent="rename">
+        <j-tooltip tooltipcontent="rename" v-if="!multiselect">
           <v-icon style="cursor: pointer" @click="modeRename">mdi-pencil</v-icon>
         </j-tooltip>
-        <j-tooltip tooltipcontent="remove">
+        <j-tooltip tooltipcontent="remove" v-if="!multiselect">
           <v-icon style="cursor: pointer" @click="modeRemove">mdi-delete</v-icon>
         </j-tooltip>
         <j-tooltip tooltipcontent="create new">
