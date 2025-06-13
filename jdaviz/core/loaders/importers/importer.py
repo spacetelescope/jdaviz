@@ -153,7 +153,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def add_to_data_collection(self, data, data_label=None, show_in_viewer=True):
         if data_label is None:
-            data_label = self.data_label_value
+            data_label = self.data_label_value.strip()
         if hasattr(data, 'meta'):
             try:
                 data.meta = standardize_metadata(data.meta)
