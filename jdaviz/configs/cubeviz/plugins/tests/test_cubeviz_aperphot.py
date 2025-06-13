@@ -327,10 +327,10 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
     equiv = u.spectral_density(ap._obj._cube_wave)
 
     # check initial unit traitlets are synced between ap. phot and unit conv. plugins
-    assert uc.flux_unit.selected == ap.flux_scaling_display_unit == flux_unit_str
+    assert uc.flux_unit.selected == ap._obj.flux_scaling_display_unit == flux_unit_str
     assert uc.angle_unit.selected == angle_unit_str
-    assert ap.display_unit == cube_unit_str
-    assert ap.flux_scaling_display_unit == flux_unit_str
+    assert ap._obj.display_unit == cube_unit_str
+    assert ap._obj.flux_scaling_display_unit == flux_unit_str
 
     # set background to manual and background/flux scaling to 1 to make it
     # easier to compare between unit conversions
@@ -347,12 +347,12 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
     uc.flux_unit.selected = new_flux_unit_str
 
     # make sure display units in aperture phot plugin reflect change
-    assert (u.Unit(ap.display_unit) * angle_unit).to_string() == new_flux_unit
-    assert ap.flux_scaling_display_unit == new_flux_unit_str
+    assert (u.Unit(ap._obj.display_unit) * angle_unit).to_string() == new_flux_unit
+    assert ap._obj.flux_scaling_display_unit == new_flux_unit_str
 
     # make sure background and flux scaling were converted to new unit
     assert_allclose((ap.background_value * new_flux_unit).to(flux_unit, equiv).value, 1.)
-    assert_allclose((ap.flux_scaling * new_flux_unit).to(flux_unit, equiv).value, 1.)
+    assert_allclose((ap._obj.flux_scaling * new_flux_unit).to(flux_unit, equiv).value, 1.)
 
     ap._obj.vue_do_aper_phot()
     new_tab = Table(ap.results)
