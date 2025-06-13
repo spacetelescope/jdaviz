@@ -26,14 +26,91 @@ _expose = ['show', 'load', 'batch_load',
            'viewers',
            'new_viewers',
            'get_data']
-_incl = ['App', 'enable_hot_reloading', '__version__']
+_incl = ['App', 'enable_hot_reloading', '__version__', 'gca', 'get_all_apps', 'new']
 _temporary_incl = ['open', 'Cubeviz', 'Imviz', 'Mosviz', 'Rampviz', 'Specviz', 'Specviz2d']
 __all__ = _expose + _incl + _temporary_incl
 
 
-global _ca
+global _apps
+global _current_index
 
-_ca = App(api_hints_obj='jd')
+_apps = []
+
+
+def new(replace=False, set_as_current=True):
+    """
+    Create a new jdaviz application instance and assign as the current instance.
+
+    Parameters
+    ----------
+    replace : bool, optional
+        If True, replaces the current application instance with the new one.
+        Default is False, which means a new instance is added to the list of applications.
+    set_as_current : bool, optional
+        If True, sets the newly created application instance as the current instance.
+        Default is True.
+
+    Returns
+    -------
+    App
+        A new instance of the App class.
+    """
+    global _apps
+    global _current_index
+    ca = App(api_hints_obj='jd')
+    if replace:
+        _apps[_current_index] = ca
+    else:
+        _apps += [ca]
+        if set_as_current:
+            _current_index = len(_apps) - 1
+    return ca
+
+
+new()
+
+
+def get_all_apps():
+    """
+    Get a list of all jdaviz application instances.
+
+    Returns
+    -------
+    list
+        A list of all jdaviz application instances.
+    """
+    return _apps
+
+
+def gca(index=None, set_as_current=True):
+    """
+    Get the current jdaviz application instance.
+
+    Parameters
+    ----------
+    index : int, optional
+        The index of the application instance to retrieve.
+        Default is the current instance.
+    set_as_current : bool, optional
+        If True, sets the application instance at the specified index as the current instance.
+        Default is True.
+
+    Returns
+    -------
+    App
+        The most jdaviz application instance.
+    """
+    global _current_index
+    if index is None:
+        index = _current_index
+    app = _apps[index]
+    if set_as_current:
+        if index < 0:
+            # make sure we have a positive index so
+            # this remains fixed when adding new entries
+            index = len(_apps) + index
+        _current_index = index
+    return app
 
 
 def __dir__():
@@ -42,7 +119,7 @@ def __dir__():
 
 def __getattr__(name):
     if name in _expose:
-        return getattr(_ca, name)
+        return getattr(gca(), name)
     if name in globals():
         return globals()[name]
     raise AttributeError()
