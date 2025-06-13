@@ -95,6 +95,10 @@ class FormatSelect(SelectPluginComponent):
                         continue
                     if self.debug:
                         self._dbg_importers[label] = this_importer
+                    if self.plugin._restrict_to_target is not None and this_importer.target['label'] != self.plugin._restrict_to_target:
+                        # skip importers that do not match the target
+                        self._invalid_importers[label] = 'not matching target'
+                        continue
                     if this_importer.is_valid:
                         if self._is_valid_item(this_importer):
                             item = {'label': importer_name,
@@ -206,6 +210,7 @@ class BaseResolver(PluginTemplateMixin):
         self.set_active_loader_callback = kwargs.pop('set_active_loader_callback', None)
         self.open_callback = kwargs.pop('open_callback', None)
         self.close_callback = kwargs.pop('close_callback', None)
+        self._restrict_to_target = kwargs.pop('restrict_to_target', None)
         super().__init__(*args, **kwargs)
 
         # subclasses should call self._update_format_items on any change
@@ -273,10 +278,20 @@ class BaseResolver(PluginTemplateMixin):
                 return importer.target.get('label', '') == target
             return matches_target
 
-        if self.target_selected == 'Any':
+        if self._restrict_to_target is not None:
+            self.format.filters = [matches_target_factory(self._restrict_to_target)]
+        elif self.target_selected == 'Any':
             self.format.filters = []
         else:
             self.format.filters = [matches_target_factory(self.target_selected)]
+
+    def _get_valid_import_formats(self):
+        if self._restrict_to_target is not None:
+            # if the resolver was initialized with a list of valid import formats,
+            # use that instead of the registry
+            return [self._restrict_to_target]
+        # fallback on all items available in the registry
+        return loader_importer_registry.members.keys()
 
     @observe('format_selected')
     def _on_format_selected_changed(self, change={}):
@@ -287,7 +302,7 @@ class BaseResolver(PluginTemplateMixin):
                self.format._invalid_importers.keys()) and self.target_selected:
                 # if no valid importer for format_selected, provide supported sources/formats
                 # to user in a warning message
-                self.valid_import_formats = ", ".join(loader_importer_registry.members.keys())
+                self.valid_import_formats = ", ".join(self._get_valid_import_formats())
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
             self.valid_import_formats = ''
