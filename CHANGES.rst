@@ -142,6 +142,8 @@ Bug Fixes
 
 - Pinned specutils<2.0 until our compatibility fix is merged. [#3605]
 
+- Hide non-supported subset export formats [#3631]
+
 Cubeviz
 ^^^^^^^
 
