@@ -550,10 +550,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
+            elif self.format_invalid_msg:
+                raise ValueError(self.format_invalid_msg)
+
             if self.overwrite_warn and not overwrite:
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
+
             if self.subset_format.selected in ('fits', 'reg'):
                 self.save_subset_as_region(selected_subset_label, filename)
             elif self.subset_format.selected == 'ecsv':
