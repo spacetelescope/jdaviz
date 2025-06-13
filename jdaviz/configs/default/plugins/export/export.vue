@@ -279,7 +279,9 @@
         :api_hints_enabled="api_hints_enabled"
         :disabled="filename_value.length === 0 ||
                    movie_recording ||
-                   subset_invalid_msg.length > 0 || data_invalid_msg.length > 0 ||
+                   subset_invalid_msg.length > 0 ||
+                   data_invalid_msg.length > 0 ||
+                   format_invalid_msg.length > 0 ||
                    viewer_invalid_msg.length > 0 ||
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
