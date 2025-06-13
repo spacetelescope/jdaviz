@@ -366,7 +366,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         if bad_combo:
             # raise vue message
-            self.format_invalid_msg = f"Cannot export '{self.subset.selected}' in {event['new']}."
+            self.format_invalid_msg = (f"Cannot export {self.subset.selected} "
+                                       f"in {event['new']} format.")
+            raise ValueError(f"{self.format_invalid_msg}")
         else:
             self.format_invalid_msg = ''
 
