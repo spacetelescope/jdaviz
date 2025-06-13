@@ -77,6 +77,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``loaders``
+      Dictionary of loaders to load subsets into the plugin.
     * ``subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Manages subset selection and creation
     * ``combination_mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
@@ -179,14 +181,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     @property
     def user_api(self):
-        expose = ['subset', 'combination_mode',
+        expose = ['loaders', 'subset', 'combination_mode',
                   'recenter_dataset', 'recenter',
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset',
                   'update_subset', 'simplify_subset']
-        if self.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d'):
-            expose += ['loaders']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,

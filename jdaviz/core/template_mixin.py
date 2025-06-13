@@ -264,15 +264,11 @@ class LoadersMixin(VuetifyTemplate, HubListener):
     loader_selected = Unicode().tag(sync=True)
     loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
 
-    dev_loaders = Bool(False).tag(sync=True)
-
     @property
     def loaders(self):
         if not len(self.loader_items):
             self._update_loader_items()
         from ipywidgets.widgets import widget_serialization
-        if not (self.app.state.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d')):  # noqa
-            raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.loader_items}
         return loaders
