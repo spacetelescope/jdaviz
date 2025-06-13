@@ -201,7 +201,10 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5), edit_subset='Subset 1',
                                     combination_mode='and')
 
+        # It should already be 'reg' but specificty is nice
+        old_format = 'reg'
         export_plugin.subset.selected = 'Subset 1'
+        export_plugin.subset_format.selected = old_format
         assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
         with pytest.raises(NotImplementedError,
                            match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
@@ -228,6 +231,10 @@ class TestExportSubsets:
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
         assert os.path.isfile(f'test_spectral_region.{current_format}')
+
+        # Confirm that flipping back to 'Subset 1' returns the format to 'reg'
+        export_plugin.subset.selected = 'Subset 1'
+        assert export_plugin.subset_format.selected == old_format
 
     def test_export_stcs_circle_ellipse(self, imviz_helper):
         wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,

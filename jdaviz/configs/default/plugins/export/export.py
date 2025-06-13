@@ -164,9 +164,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    manual_options=subset_format_options,
                                                    filters=[self._is_valid_item],
                                                    apply_filters_to_manual_options=True)
-        # Default dropdown to empty
-        # (otherwise defaults to first option in subset_format_options which isn't always available)
-        self.subset_format_selected = ''
+        # Default dropdown set to 'fits'
+        self.subset_format.selected = 'fits'
+        self.persistent_spatial_subset_format = 'fits'
+        self.persistent_spectral_subset_format = 'ecsv'
+        self.subset_format_dict = {}
 
         dataset_format_options = ['fits']
         self.dataset_format = SelectPluginComponent(self,
@@ -346,16 +348,25 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
             if subset and self.app._is_subset_spectral(subset[0]):
                 good_formats = ['ecsv']
+                # aka *to* spectral *from* spatial
+                if self.subset_format.selected not in good_formats:
+                    self.persistent_spatial_subset_format = self.subset_format.selected
+                    self.subset_format.selected = self.persistent_spectral_subset_format
+
             else:
                 good_formats = ['fits', 'reg']
                 if self.config == 'imviz':
                     good_formats.append('stcs')
 
+                # aka *to* spatial *from* spectral
+                if self.subset_format.selected not in good_formats:
+                    # Uncomment the line below if more than one spectral formats is offered
+                    # self.persistent_spectral_subset_format = self.subset_format.selected
+                    self.subset_format.selected = self.persistent_spatial_subset_format
+
         self.subset_format_items = [item for item in self.subset_format_items
                                     if item['label'] in good_formats]
 
-        # To update the dropdown with a 'default' value for the selected subset.
-        self.subset_format.selected = self.subset_format_items[0]['label']
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
