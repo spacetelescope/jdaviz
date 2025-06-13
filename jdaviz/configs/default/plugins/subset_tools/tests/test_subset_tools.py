@@ -222,6 +222,22 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
     assert cubeviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
 
 
+def test_bad_labels(cubeviz_helper, spectrum1d_cube):
+    spec_regions = [SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
+                    SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
+                    SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)]
+
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+    with pytest.raises(ValueError, match="Each subset label must be unique"):
+        subset_label = ["Test", "Test", "Test"]
+        plg.import_region(spec_regions, combination_mode="new", subset_label=subset_label)
+
+    with pytest.raises(ValueError, match="subset_label contained invalid labels"):
+        subset_label = ["Test", "Subset 2", "Test 2"]
+        plg.import_region(spec_regions, combination_mode="new", subset_label=subset_label)
+
+
 def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path):
     cubeviz_helper.load_data(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']

@@ -1200,7 +1200,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
             regions = [regions]
-        if isinstance(subset_label, str):
+
+        if isinstance(subset_label, (list, tuple)):
+            if len(subset_label) > 1 and len(set(subset_label)) < len(subset_label):
+                raise ValueError("Each subset label must be unique")
+        elif isinstance(subset_label, str):
             subset_label = [subset_label]
 
         bad_labels = []
