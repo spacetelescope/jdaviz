@@ -355,3 +355,8 @@ class CubevizProfileView(Spectrum1DViewer, WithSliceIndicator):
     @property
     def _default_flux_viewer_reference_name(self):
         return self.jdaviz_helper._default_flux_viewer_reference_name
+
+    def add_subset(self, *args, **kwargs):
+        # The cubeviz profile viewer uses datasets to represent the subsets,
+        # so we can ignore actual glue subsets here
+        return False
