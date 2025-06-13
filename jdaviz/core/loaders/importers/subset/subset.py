@@ -57,6 +57,12 @@ class SubsetImporter(BaseImporterToPlugin):
         nsubsets = len(self.app.data_collection.subset_groups)
         self.subset_label_default = f"Subset {nsubsets + 1}"
 
+        if self.subset_label_value == self.subset_label_default:
+            # _check_valid_subset_label will say this is invalid,
+            # once that changes, this block can be removed.
+            self.subset_label_invalid_msg = ''
+            return
+
         try:
             self.app._check_valid_subset_label(self.subset_label_value, raise_if_invalid=True)
         except ValueError as e:
