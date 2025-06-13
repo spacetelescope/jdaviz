@@ -49,7 +49,6 @@
         :show_if_single_entry="true"
         label="Aperture"
         hint="Select aperture region for photometry (cannot be an annulus or composite subset)."
-        hint="Select the data for photometry."
         api_hint="plg.aperture = "
         :api_hints_enabled="api_hints_enabled"
       />
@@ -177,9 +176,9 @@
           <v-switch
             hint="Fit Gaussian1D to radial profile"
             v-model="fit_radial_profile"
-            persistent-hint>
+            persistent-hint
             :label="api_hints_enabled ? 'plg.fit_radial_profile =' : 'Fit Gaussian'"
-            :class="api_hints_enabled ? 'api-hint' : null"
+            :class="api_hints_enabled ? 'api-hint' : null">
           </v-switch>
         </v-row>
 
