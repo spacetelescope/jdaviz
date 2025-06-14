@@ -21,6 +21,8 @@ New Features
 
 - Hitting the "Enter" key while renaming a subset or footprint will accept the changes, hitting "Escape" will cancel. [#3600]
 
+- Add ``aid`` attribute to image viewers for compatibility with the Astro Image Display API. [#3622] 
+
 Cubeviz
 ^^^^^^^
 

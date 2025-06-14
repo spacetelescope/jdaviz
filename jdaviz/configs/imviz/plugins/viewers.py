@@ -7,6 +7,7 @@ from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz import wcs_utils
+from jdaviz.configs.default import aida
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
@@ -66,6 +67,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         self.state.image_external_padding = 0.5
 
         self.data_menu._obj.dataset.add_filter('is_image')
+        self.aid = aida.AID(self)
 
     def on_mouse_or_key_event(self, data):
         active_image_layer = self.active_image_layer
