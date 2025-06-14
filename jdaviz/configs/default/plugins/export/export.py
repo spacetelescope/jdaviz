@@ -376,9 +376,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         #   self.subset.selected, good_formats[0])
 
         # Persisent across subset types
-        self.subset_format.selected = self.subset_format_dict.get(
-           subset_type, good_formats[0])
-
+        self.subset_format.selected = self.subset_format_dict.get(subset_type, good_formats[0])
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
