@@ -146,7 +146,7 @@ Bug Fixes
 
 - Pinned specutils<2.0 until our compatibility fix is merged. [#3605]
 
-- Hide non-supported subset export formats [#3633]
+- Hide non-supported subset export formats. [#3633]
 
 - Hide rename button in editable dropdowns in multiselect mode. [#3623]
 
