@@ -132,6 +132,8 @@ Other Changes and Additions
   dependencies installed with the ``[all]`` extra dependencies flag
   (i.e., ``pip install jdaviz[all]``). [#3556]
 
+- Hide non-supported subset export formats. [#3633]
+
 4.2.3 (unreleased)
 ==================
 
@@ -145,8 +147,6 @@ Bug Fixes
   until a target is selected. [#3593]
 
 - Pinned specutils<2.0 until our compatibility fix is merged. [#3605]
-
-- Hide non-supported subset export formats. [#3633]
 
 - Hide rename button in editable dropdowns in multiselect mode. [#3623]
 
