@@ -233,6 +233,7 @@ class TestExportSubsets:
         assert os.path.isfile(f'test_spectral_region.{current_format}')
 
         # Confirm that flipping back to 'Subset 1' returns the format to 'reg'
+        # not the default 'fits'
         export_plugin.subset.selected = 'Subset 1'
         assert export_plugin.subset_format.selected == old_format
 
