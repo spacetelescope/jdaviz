@@ -156,6 +156,7 @@
           <plugin-select
             :items="subset_format_items.map(i => i.label)"
             :selected.sync="subset_format_selected"
+            :show_if_single_entry="true"
             label="Format"
             api_hint="plg.subset_format ="
             :api_hints_enabled="api_hints_enabled"
@@ -164,6 +165,13 @@
           />
         </div>
       </v-row>
+
+      <v-row v-if="format_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+          {{format_invalid_msg}}
+        </span>
+      </v-row>
+
     </div>
 
     <div v-if="plugin_table_items.length > 0 && serverside_enabled">

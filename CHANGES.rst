@@ -132,6 +132,8 @@ Other Changes and Additions
   dependencies installed with the ``[all]`` extra dependencies flag
   (i.e., ``pip install jdaviz[all]``). [#3556]
 
+- Hide non-supported subset export formats. [#3633]
+
 4.2.3 (unreleased)
 ==================
 
