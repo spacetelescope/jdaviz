@@ -31,38 +31,45 @@ class TestExportSubsets:
         export_plugin = imviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
 
-        assert export_plugin.subset_format.selected == 'fits'  # default format
-        assert export_plugin.subset_invalid_msg == ''  # for non-composite spatial
+        # Make no assumptions on default since the 'default' is now
+        # set by the first option in the list of available formats
+        # (but it's *almost* 100% likely to be fits)
+        spatial_valid_formats = ['fits', 'reg']
+        assert export_plugin.subset_format.selected in spatial_valid_formats
 
-        assert export_plugin.filename.value.endswith('.fits')
-        export_plugin.export()
-        assert os.path.isfile(export_plugin.filename.value)
+        for current_format in spatial_valid_formats:
+            export_plugin.subset_format.selected = current_format
+            assert export_plugin.subset_format.selected == current_format
+            assert export_plugin.subset_invalid_msg == ''  # for non-composite spatial
 
-        # read exported file back in
-        with fits.open(export_plugin.filename.value) as hdu:
-            fits_region = hdu[1].data[0]
+            assert export_plugin.filename.value.endswith(f".{current_format}")
+            export_plugin.export()
+            assert os.path.isfile(export_plugin.filename.value)
 
-        assert fits_region[0] == 'circle'
-        assert fits_region[1] == fits_region[2] == 250.0
-        assert fits_region[3] == 100.0
-        assert fits_region[4] == 0.0
+            # changing file name and catching the result (the new filename/path)
+            # for checking the file
+            new_filename = 'test'
+            export_plugin.filename.value = new_filename
+            output_filename = export_plugin.export()
+            assert os.path.isfile(f'{new_filename}.{current_format}')
+            assert os.path.isfile(output_filename)
 
-        # now test changing file format
-        export_plugin.subset_format.selected = 'reg'
-        assert export_plugin.filename.value.endswith('.reg')
-        export_plugin.export()
-        assert os.path.isfile(export_plugin.filename.value)
+            if current_format == 'fits':
+                # read exported file back in
+                with fits.open(output_filename) as hdu:
+                    fits_region = hdu[1].data[0]
 
-        # read exported file back in
-        region = Regions.read(export_plugin.filename.value)[0]
-        assert region.center.x == 250.0
-        assert region.center.y == 250.0
-        assert region.radius == 100.0
+                assert fits_region[0] == 'circle'
+                assert fits_region[1] == fits_region[2] == 250.0
+                assert fits_region[3] == 100.0
+                assert fits_region[4] == 0.0
 
-        # changing file name
-        export_plugin.filename_value = 'test'
-        export_plugin.export()
-        assert os.path.isfile('test.reg')
+            elif current_format == 'reg':
+                # read exported file back in
+                region = Regions.read(output_filename)[0]
+                assert region.center.x == 250.0
+                assert region.center.y == 250.0
+                assert region.radius == 100.0
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
@@ -129,36 +136,41 @@ class TestExportSubsets:
         export_plugin = cubeviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
 
-        assert export_plugin.subset_format.selected == 'fits'  # default format
+        # Again no assumptions here on default
+        spatial_valid_formats = ['fits', 'reg']
+        assert export_plugin.subset_format.selected in spatial_valid_formats
 
-        assert export_plugin.filename.value.endswith('.fits')
-        export_plugin.export()
-        assert os.path.isfile(export_plugin.filename.value)
+        for current_format in spatial_valid_formats:
+            export_plugin.subset_format.selected = current_format
+            assert export_plugin.subset_format.selected == current_format  # default format
+            assert export_plugin.filename.value.endswith(current_format)
+            export_plugin.export()
+            assert os.path.isfile(export_plugin.filename.value)
 
-        # read exported file back in
-        with fits.open(export_plugin.filename.value) as hdu:
-            fits_region = hdu[1].data[0]
+            # changing file name and catching the result (the new filename/path)
+            # for checking the file
+            new_filename = 'test'
+            export_plugin.filename.value = new_filename
+            output_filename = export_plugin.export()
+            assert os.path.isfile(f'{new_filename}.{current_format}')
+            assert os.path.isfile(output_filename)
 
-        assert fits_region[0] == 'circle'
-        assert fits_region[1] == fits_region[2] == 50.0
-        assert fits_region[3] == 10.0
-        assert fits_region[4] == 0.0
+            if current_format == 'fits':
+                # read exported file back in
+                with fits.open(output_filename) as hdu:
+                    fits_region = hdu[1].data[0]
 
-        # now test changing file format
-        export_plugin.subset_format.selected = 'reg'
-        export_plugin.export()
-        assert os.path.isfile(export_plugin.filename.value)
+                assert fits_region[0] == 'circle'
+                assert fits_region[1] == fits_region[2] == 50.0
+                assert fits_region[3] == 10.0
+                assert fits_region[4] == 0.0
 
-        # read exported file back in
-        region = Regions.read(export_plugin.filename.value)[0]
-        assert region.center.x == 50.0
-        assert region.center.y == 50.0
-        assert region.radius == 10.0
-
-        # changing file name
-        export_plugin.filename_value = 'test'
-        export_plugin.export()
-        assert os.path.isfile('test.reg')
+            elif current_format == 'reg':
+                # read exported file back in
+                region = Regions.read(output_filename)[0]
+                assert region.center.x == 50.0
+                assert region.center.y == 50.0
+                assert region.radius == 10.0
 
         # Overwrite not enable, so no-op with warning.
         export_plugin.export(raise_error_for_overwrite=False)
@@ -181,11 +193,13 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
+                           match = re.escape(
+                               "'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
         # Test that selecting disabled option raises an error
-        with pytest.raises(ValueError, match="Cannot export 'Subset 1' in 'ecsv' format."):  # noqa
+        with pytest.raises(ValueError,
+                           match = "Cannot export 'Subset 1' in 'ecsv' format."):  # noqa
             export_plugin.subset_format.selected = 'ecsv'
 
         # test that attempting to save a composite subset raises an error
@@ -194,7 +208,11 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5), edit_subset='Subset 1',
                                     combination_mode='and')
 
+        old_format = 'reg'
         export_plugin.subset.selected = 'Subset 1'
+        # This needs to be set again otherwise we'll raise an error because the selected format
+        # is still 'ecsv' from the ValueError test above.
+        export_plugin.subset_format.selected = old_format
         assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
         with pytest.raises(NotImplementedError,
                            match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
@@ -206,18 +224,24 @@ class TestExportSubsets:
         subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
                                                    15.5 * spectral_axis_unit))
         export_plugin.subset.selected = 'Subset 2'
+        current_format = 'ecsv'
 
         # Format should auto-update to first non-disabled entry
-        assert export_plugin.subset_format.selected == 'ecsv'
+        assert export_plugin.subset_format.selected == current_format
         for format in export_plugin.subset_format.items:
-            if format['label'] != 'ecsv':
+            if format['label'] != current_format:
                 assert format['disabled']
             else:
                 assert format['disabled'] is False
 
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
-        assert os.path.isfile('test_spectral_region.ecsv')
+        assert os.path.isfile(f'test_spectral_region.{current_format}')
+
+        # Confirm that flipping back to 'Subset 1' returns the format to 'reg'
+        # not the default 'fits'
+        export_plugin.subset.selected = 'Subset 1'
+        assert export_plugin.subset_format.selected == old_format
 
     def test_export_stcs_circle_ellipse(self, imviz_helper):
         wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
