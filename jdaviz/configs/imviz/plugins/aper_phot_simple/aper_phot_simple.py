@@ -44,11 +44,37 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
 
-    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
-    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.clear_table`
     * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
+    * :meth:`calculate_batch_photometry`
+    * :meth:`calculate_photometry`
     * :meth:`fitted_models`
+    * :meth:`fit_radial_profile`
+    * :meth:`unpack_batch_options`
+    * ``aperture`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+    * ``background`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+    * ``background_value``
+      Fixed value to use as background level.
+    * ``counts_factor``
+      Factor to convert data unit to counts, in unit of flux/counts.
+    * ``current_plot_type``
+      Choice of Curve of Growth, Radial Profile, or Radial Profile (Raw).
+      Only applicable when ``multiselect=False``.
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+    * ``flux_scaling``
+      Flux scaling factor for calculation of magnitudes in output table.
+    * ``multiselect``
+      Enable multiselect mode to select multiple datasets for aperture photometry.
+    * ``pixel_area``
+        In arcsec squared, only used if data is in units of surface brightness.
+    * ``plot`` (:class:`~jdaviz.core.template_mixin.Plot`):
+        Plot, based on selection of ``current_plot_type``. Only applicable when
+        ``multiselect=False``
+    * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
+        Table with photometry results.
     """
     template_file = __file__, "aper_phot_simple.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -157,14 +183,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        # TODO: expose public API once finalized
-        # expose=('multiselect', 'dataset', 'aperture',
-        #                                   'background', 'background_value',
-        #                                   'pixel_area', 'counts_factor', 'flux_scaling',
-        #                                   'calculate_photometry',
-        #                                   'unpack_batch_options', 'calculate_batch_photometry')
+        expose = ('multiselect', 'dataset', 'aperture', 'background',
+                  'background_value', 'pixel_area', 'counts_factor', 'flux_scaling',
+                  'calculate_photometry', 'unpack_batch_options',
+                  'calculate_batch_photometry', 'table', 'clear_table',
+                  'export_table', 'fitted_models', 'current_plot_type',
+                  'fit_radial_profile', 'plot')
 
-        return PluginUserApi(self, expose=('export_table', 'fitted_models'))
+        return PluginUserApi(self, expose=expose)
 
     @property
     def fitted_models(self):

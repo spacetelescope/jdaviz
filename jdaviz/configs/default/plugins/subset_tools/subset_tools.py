@@ -5,7 +5,6 @@ import numpy as np
 
 from astropy.time import Time
 import astropy.units as u
-from functools import cached_property
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
@@ -163,6 +162,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                    multiselect='multiselect',
                                    default_text="Create New")
         self.subset_states = []
+        self.selected_subset_group = None
         self.spectral_display_unit = None
 
         align_by = getattr(self.app, '_align_by', None)
@@ -999,11 +999,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 self.subset_definitions[index][i]['value'] = new_value
                 break
 
-    @cached_property
-    def selected_subset_group(self):
+    @observe('subset_selected')
+    def set_selected_subset_group(self, _):
         for subset_group in self.app.data_collection.subset_groups:
             if subset_group.label == self.subset.selected:
-                return subset_group
+                self.selected_subset_group = subset_group
+                break
 
     def rename_subset(self, old_label, new_label):
         """
@@ -1046,7 +1047,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         self._sync_available_from_state()
 
     def import_region(self, region, edit_subset=None, combination_mode=None, max_num_regions=20,
-                      refdata_label=None, return_bad_regions=False, region_format=None):
+                      refdata_label=None, return_bad_regions=False, region_format=None,
+                      subset_label=None):
         """
         Method for creating subsets from regions or region files.
 
@@ -1093,6 +1095,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             Passed to ``Regions.read(format=region_format)``.  Only applicable if ``region``
             is a string pointing to a valid file that ``Regions`` can read.
 
+        subset_label : list, str, or `None`
+            Label to apply to the resulting subset(s), replacing the default "Subset [N]"
+            naming scheme. If multiple regions are input, this should be a list of strings
+            with length matching the number of resulting subsets.
+
         Returns
         -------
         bad_regions : list of (obj, str) or `None`
@@ -1111,13 +1118,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     raw_regs = SpectralRegion.read(region)
 
                 return self._load_regions(raw_regs, edit_subset, combination_mode, max_num_regions,
-                                          refdata_label, return_bad_regions)
+                                          refdata_label, return_bad_regions,
+                                          subset_label=subset_label)
         else:
             return self._load_regions(region, edit_subset, combination_mode, max_num_regions,
-                                      refdata_label, return_bad_regions)
+                                      refdata_label, return_bad_regions, subset_label=subset_label)
 
     def _load_regions(self, regions, edit_subset=None, combination_mode=None, max_num_regions=None,
-                      refdata_label=None, return_bad_regions=False, **kwargs):
+                      refdata_label=None, return_bad_regions=False, subset_label=None, **kwargs):
         """Load given region(s) into the viewer.
         WCS-to-pixel translation and mask creation, if needed, is relative
         to the image defined by ``refdata_label``. Meanwhile, the rest of
@@ -1169,6 +1177,11 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             If `True`, return the regions that failed to load (see ``bad_regions``);
             This is useful for debugging. If `False`, do not return anything (`None`).
 
+        subset_label : list, str, or `None`
+            Label to apply to the resulting subset(s), replacing the default "Subset [N]"
+            naming scheme. If multiple regions are input, this should be a list of strings
+            with length matching the number of resulting subsets.
+
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
             **This is ignored if the region can be made interactive.**
@@ -1187,6 +1200,20 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
             regions = [regions]
+
+        if isinstance(subset_label, (list, tuple)):
+            if len(subset_label) > 1 and len(set(subset_label)) < len(subset_label):
+                raise ValueError("Each subset label must be unique")
+        elif isinstance(subset_label, str):
+            subset_label = [subset_label]
+
+        bad_labels = []
+        if subset_label is not None:
+            for label in subset_label:
+                if not self.app._check_valid_subset_label(label, raise_if_invalid=False):
+                    bad_labels.append(label)
+        if len(bad_labels) > 0:
+            raise ValueError(f"subset_label contained invalid labels: {bad_labels}")
 
         n_loaded = 0
         bad_regions = []
@@ -1231,6 +1258,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 # self.app.session.edit_subset_mode.edit_subset = None
                 self.subset.selected = self.subset.default_text
 
+            label_index = 0
             for index, region in enumerate(regions):
                 # Set combination mode for how region will be applied to current subset
                 # or created as a new subset
@@ -1258,7 +1286,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                         CirclePixelRegion, EllipsePixelRegion,
                                         RectanglePixelRegion, CircleAnnulusPixelRegion))
                         and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
-                    bad_regions.append((region, 'Pixel region provided by data is aligned by WCS'))
+                    bad_regions.append((region, 'Pixel region provided but data is aligned by WCS'))
                     continue
 
                 # photutils: Convert to region shape first
@@ -1325,9 +1353,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
                     # NOTE: Region creation info is thus lost.
                     try:
-                        subset_label = f'{msg_prefix} {msg_count}'
+                        mask_label = f'{msg_prefix} {msg_count}'
                         state = MaskSubsetState(im, data.pixel_component_ids)
-                        self.app.data_collection.new_subset_group(subset_label, state)
+                        self.app.data_collection.new_subset_group(mask_label, state)
                         msg_count += 1
                     except Exception as e:  # pragma: no cover
                         bad_regions.append((region, f'Failed to load: {repr(e)}'))
@@ -1338,6 +1366,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                 n_loaded += 1
                 if max_num_regions is not None and n_loaded >= max_num_regions:
                     break
+
+                if self.combination_mode.selected in ('new', 'replace') and subset_label is not None:  # noqa
+                    self.rename_selected(subset_label[label_index])
+                    label_index += 1
 
         # Revert edit mode and subset to before the import_region call
         self.app.session.edit_subset_mode.edit_subset = previous_subset

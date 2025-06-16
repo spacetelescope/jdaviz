@@ -21,6 +21,11 @@ New Features
 
 - Hitting the "Enter" key while renaming a subset or footprint will accept the changes, hitting "Escape" will cancel. [#3600]
 
+- Added subset_label keyword argument to ``import_region`` method of Subset Tools plugin
+  to name the resulting subset(s). [#3616]
+
+- Aperture Photometry public API exposed, added API hints to plugin. [#3617]
+
 Cubeviz
 ^^^^^^^
 
@@ -132,7 +137,28 @@ Other Changes and Additions
   dependencies installed with the ``[all]`` extra dependencies flag
   (i.e., ``pip install jdaviz[all]``). [#3556]
 
-4.2.3 (unreleased)
+4.2.4 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.2.3 (2025-06-16)
 ==================
 
 Bug Fixes
@@ -155,18 +181,6 @@ Cubeviz
   is within the spectral subset bounds. [#3571]
 
 - Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Other changes and Additions
 ---------------------------

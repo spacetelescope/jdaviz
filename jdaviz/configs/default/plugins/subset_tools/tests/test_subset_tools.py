@@ -185,32 +185,57 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 
 
 @pytest.mark.parametrize(
-    ('spec_regions', 'mode', 'len_subsets', 'len_subregions'),
+    ('spec_regions', 'mode', 'len_subsets', 'len_subregions', 'subset_label'),
     [([SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'new', 3, 1),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'new', 3, 1,
+     ['Spectral 1', 'Spectral 2', 'Spectral 3']),
      ([SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'replace', 1, 1),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'replace', 1, 1, None),  # noqa
      ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), 'or', 1, 3),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), 'or', 1, 3, None),
      ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
        SpectralRegion(5.8 * u.um, 5.9 * u.um) +
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
-       SpectralRegion(7 * u.um, 7.2 * u.um)), ['new', 'andnot', 'or', 'or'], 1, 4),
-     (SpectralRegion(5.8 * u.um, 5.9 * u.um), None, 1, 1)
+       SpectralRegion(7 * u.um, 7.2 * u.um)), ['new', 'andnot', 'or', 'or'], 1, 4, 'Test Combined'),  # noqa
+     (SpectralRegion(5.8 * u.um, 5.9 * u.um), None, 1, 1, 'Test Single')
      ]
 )
 def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
-                                len_subregions):
+                                len_subregions, subset_label):
     cubeviz_helper.load_data(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
-    plg.import_region(spec_regions, combination_mode=mode)
+    plg.import_region(spec_regions, combination_mode=mode, subset_label=subset_label)
     subsets = cubeviz_helper.app.get_subsets()
+    print(subsets)
     assert len(subsets) == len_subsets
-    assert len(subsets['Subset 1']) == len_subregions
+    if subset_label is None:
+        subset_label = ['Subset 1']
+    elif isinstance(subset_label, str):
+        subset_label = [subset_label]
+    else:
+        for label in list(subset_label):
+            assert label in subsets
+    assert len(subsets[subset_label[0]]) == len_subregions
     assert cubeviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+
+
+def test_bad_labels(cubeviz_helper, spectrum1d_cube):
+    spec_regions = [SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
+                    SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
+                    SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)]
+
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+    with pytest.raises(ValueError, match="Each subset label must be unique"):
+        subset_label = ["Test", "Test", "Test"]
+        plg.import_region(spec_regions, combination_mode="new", subset_label=subset_label)
+
+    with pytest.raises(ValueError, match="subset_label contained invalid labels"):
+        subset_label = ["Test", "Subset 2", "Test 2"]
+        plg.import_region(spec_regions, combination_mode="new", subset_label=subset_label)
 
 
 def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path):
@@ -250,9 +275,9 @@ def test_import_sky_region_in_cubeviz(cubeviz_helper, spectrum1d_cube):
 
     aperture = CircleSkyRegion(coord, aper_rad)
 
-    status = plg.import_region(aperture, return_bad_regions=True)
+    status = plg.import_region(aperture, return_bad_regions=True, subset_label='Test 1')
     assert status == []
-    assert cubeviz_helper.app.get_subsets('Subset 1')
+    assert cubeviz_helper.app.get_subsets('Test 1')
 
 
 def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):

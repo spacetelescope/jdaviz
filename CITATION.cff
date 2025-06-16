@@ -61,6 +61,9 @@ authors:
 - family-names: "Pacifici"
   given-names: "Camilla"
   orcid: "https://orcid.org/0000-0003-4196-0617"
+- family-names: "Portman"
+  given-names: "Matthew"
+  orcid: "https://orcid.org/0000-0002-1601-1199"
 - family-names: "Robitaille"
   given-names: "Thomas"
   orcid: "https://orcid.org/0000-0002-8642-1329"
@@ -73,9 +76,9 @@ authors:
 - family-names: "Volfman"
   given-names: "Sabrina"
 title: "Jdaviz"
-version: 4.2.2
+version: 4.2.3
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2025-05-12
+date-released: 2025-06-16
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
