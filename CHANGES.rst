@@ -132,7 +132,28 @@ Other Changes and Additions
   dependencies installed with the ``[all]`` extra dependencies flag
   (i.e., ``pip install jdaviz[all]``). [#3556]
 
-4.2.3 (unreleased)
+4.2.4 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.2.3 (2025-06-16)
 ==================
 
 Bug Fixes
@@ -155,18 +176,6 @@ Cubeviz
   is within the spectral subset bounds. [#3571]
 
 - Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Other changes and Additions
 ---------------------------
