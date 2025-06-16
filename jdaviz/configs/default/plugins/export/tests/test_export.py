@@ -71,6 +71,14 @@ class TestExportSubsets:
                 assert region.center.y == 250.0
                 assert region.radius == 100.0
 
+        # test that invalid file extension raises an error for spatial region
+        for bad_format in ('x', 'ecsv'):
+            with pytest.raises(ValueError,
+                               match=re.escape(
+                                   f"'{bad_format}' not one of {spatial_valid_formats}, "
+                                   f"reverting selection to '{current_format}'")):  # noqa
+                export_plugin.subset_format.selected = bad_format
+
     def test_not_implemented(self, cubeviz_helper, spectral_cube_wcs):
         """
         Test that trying to export non-supported subsets
