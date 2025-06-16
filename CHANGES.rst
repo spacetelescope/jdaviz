@@ -24,6 +24,8 @@ New Features
 - Added subset_label keyword argument to ``import_region`` method of Subset Tools plugin
   to name the resulting subset(s). [#3616]
 
+- Aperture Photometry public API exposed, added API hints to plugin. [#3617]
+
 Cubeviz
 ^^^^^^^
 

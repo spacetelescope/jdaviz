@@ -24,13 +24,13 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     # Make sure MASK is not an option even when shown in viewer.
     cubeviz_helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
+    plg = cubeviz_helper.plugins["Aperture Photometry"]
     assert plg.dataset.labels == ["test[FLUX]", "test[ERR]"]
-    assert plg.cube_slice == "4.894e+00 um"
+    assert plg._obj.cube_slice == "4.894e+00 um"
 
-    plg.dataset_selected = "test[FLUX]"
-    plg.aperture_selected = "Subset 1"
-    plg.vue_do_aper_phot()
+    plg.dataset.selected = "test[FLUX]"
+    plg.aperture.selected = "Subset 1"
+    plg._obj.vue_do_aper_phot()
     row = plg.export_table()[0]
 
     # Basically, we should recover the input rectangle here.
@@ -50,7 +50,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     # Move slider and make sure it recomputes for a new slice automatically.
     cube_slice_plg = cubeviz_helper.plugins["Slice"]._obj
     cube_slice_plg.vue_goto_first()
-    plg.vue_do_aper_phot()
+    plg._obj.vue_do_aper_phot()
     row = plg.export_table()[1]
 
     # Same rectangle but different slice value.
@@ -75,10 +75,10 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     # Need this to make it available for photometry data drop-down.
     cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] collapsed")
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
-    plg.dataset_selected = "test[FLUX] collapsed"
-    plg.aperture_selected = "Subset 1"
-    plg.vue_do_aper_phot()
+    plg = cubeviz_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test[FLUX] collapsed"
+    plg.aperture.selected = "Subset 1"
+    plg._obj.vue_do_aper_phot()
     row = plg.export_table()[2]
 
     # Basically, we should recover the input rectangle here.
@@ -97,8 +97,8 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 
     # Invalid counts conversion factor
     plg.counts_factor = -1
-    plg.vue_do_aper_phot()
-    assert "cannot be negative" in plg.result_failed_msg
+    plg._obj.vue_do_aper_phot()
+    assert "cannot be negative" in plg._obj.result_failed_msg
 
 
 def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cube_hdu_obj_microns):
@@ -117,10 +117,10 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
     cubeviz_helper.plugins['Subset Tools'].import_region(aper)
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
-    plg.dataset_selected = "test[FLUX] spatial-smooth stddev-1.0"
-    plg.aperture_selected = "Subset 1"
-    plg.vue_do_aper_phot()
+    plg = cubeviz_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test[FLUX] spatial-smooth stddev-1.0"
+    plg.aperture.selected = "Subset 1"
+    plg._obj.vue_do_aper_phot()
     row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here.
@@ -155,10 +155,10 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     cubeviz_helper.plugins['Subset Tools'].import_region(
         [aper, bg], combination_mode='new')
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
-    plg.dataset_selected = "test[FLUX]"
-    plg.aperture_selected = "Subset 1"
-    plg.background_selected = "Subset 2"
+    plg = cubeviz_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test[FLUX]"
+    plg.aperture.selected = "Subset 1"
+    plg.background.selected = "Subset 2"
 
     #  Check that the default flux scaling is present for MJy / sr cubes
     if cube_unit == (u.MJy / u.sr):
@@ -182,7 +182,7 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
         solid_angle_unit = PIX2
         cube_unit = u.MJy / solid_angle_unit  # cube unit in app is now per pix2
 
-    plg.vue_do_aper_phot()
+    plg._obj.vue_do_aper_phot()
     row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here, minus background.
@@ -218,16 +218,16 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
     cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg],
                                                          combination_mode='new')
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
-    plg.dataset_selected = "test[FLUX]"
-    plg.aperture_selected = "Subset 1"
-    plg.background_selected = "Subset 2"
+    plg = cubeviz_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test[FLUX]"
+    plg.aperture.selected = "Subset 1"
+    plg.background.selected = "Subset 2"
 
     # Make sure per steradian is handled properly.
     assert_allclose(plg.pixel_area, 0.01)
     assert_allclose(plg.flux_scaling, 0.003631)
 
-    plg.vue_do_aper_phot()
+    plg._obj.vue_do_aper_phot()
     row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
     # Basically, we should recover the input rectangle here, minus background.
@@ -311,7 +311,7 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
 
     # get plugins
     st = cubeviz_helper.plugins['Subset Tools']
-    ap = cubeviz_helper.plugins['Aperture Photometry']._obj
+    ap = cubeviz_helper.plugins['Aperture Photometry']
     uc = cubeviz_helper.plugins['Unit Conversion']
 
     # load aperture
@@ -319,43 +319,43 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
     st.import_region(aper, combination_mode='new')
 
     # select dataset and aperture in plugin
-    ap.dataset_selected = "test[FLUX]"
-    ap.aperture_selected = "Subset 1"
+    ap.dataset.selected = "test[FLUX]"
+    ap.aperture.selected = "Subset 1"
 
     # equivalencies for unit conversion, we only need u.spectral_density because
     # no flux<>sb conversions will occur in this plugin
-    equiv = u.spectral_density(ap._cube_wave)
+    equiv = u.spectral_density(ap._obj._cube_wave)
 
     # check initial unit traitlets are synced between ap. phot and unit conv. plugins
-    assert uc.flux_unit.selected == ap.flux_scaling_display_unit == flux_unit_str
+    assert uc.flux_unit.selected == ap._obj.flux_scaling_display_unit == flux_unit_str
     assert uc.angle_unit.selected == angle_unit_str
-    assert ap.display_unit == cube_unit_str
-    assert ap.flux_scaling_display_unit == flux_unit_str
+    assert ap._obj.display_unit == cube_unit_str
+    assert ap._obj.flux_scaling_display_unit == flux_unit_str
 
     # set background to manual and background/flux scaling to 1 to make it
     # easier to compare between unit conversions
-    ap.background_selected == 'Manual'
+    ap.background.selected == 'Manual'
     ap.background_value = 1.
     ap.flux_scaling = 1.
 
     # do aperture photometry with inital cube units to compare original results
     # to results after flux unit conversion
-    ap.vue_do_aper_phot()
-    orig_tab = Table(ap.results)
+    ap._obj.vue_do_aper_phot()
+    orig_tab = Table(ap._obj.results)
 
     # set to new unit
     uc.flux_unit.selected = new_flux_unit_str
 
     # make sure display units in aperture phot plugin reflect change
-    assert (u.Unit(ap.display_unit) * angle_unit).to_string() == new_flux_unit
-    assert ap.flux_scaling_display_unit == new_flux_unit_str
+    assert (u.Unit(ap._obj.display_unit) * angle_unit).to_string() == new_flux_unit
+    assert ap._obj.flux_scaling_display_unit == new_flux_unit_str
 
     # make sure background and flux scaling were converted to new unit
     assert_allclose((ap.background_value * new_flux_unit).to(flux_unit, equiv).value, 1.)
-    assert_allclose((ap.flux_scaling * new_flux_unit).to(flux_unit, equiv).value, 1.)
+    assert_allclose((ap._obj.flux_scaling * new_flux_unit).to(flux_unit, equiv).value, 1.)
 
-    ap.vue_do_aper_phot()
-    new_tab = Table(ap.results)
+    ap._obj.vue_do_aper_phot()
+    new_tab = Table(ap._obj.results)
 
     # if ap. phot silently fails, then 'new_tab' will just be the last
     # calculated one, so make sure this didn't happen
