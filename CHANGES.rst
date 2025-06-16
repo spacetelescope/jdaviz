@@ -143,6 +143,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Disable export and raise vue error message upon selection of unsupported subset format. [#3635]
+
 Cubeviz
 ^^^^^^^
 
