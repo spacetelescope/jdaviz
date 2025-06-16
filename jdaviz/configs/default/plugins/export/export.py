@@ -158,6 +158,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if self.config == 'imviz':
             subset_format_options.append({'label': 'stcs', 'value': 'stcs', 'disabled': False})
 
+        self.subset_format_dict = {}
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
@@ -231,27 +232,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         except KeyError:
             is_spectral = False
 
-        # Persisting subset format across selections
-        if hasattr(self, 'subset_format_dict'):
-            # Persistent across subsets
-            # self.subset_format_dict[self.subset.selected] = self.subset_format_selected
-
-            # Persistent across subset types
-            if is_spectral:
-                self.subset_format_dict['spectral'] = selected
-            else:
-                self.subset_format_dict['spatial'] = selected
-
-        else:
-            self.subset_format_dict = {}
-
         if self.subset.selected == '' or self.subset.selected is None:
             return
 
         # Disable selecting a bad subset+format combination from the API
         bad_combo = False
-        if is_spectral and selected != 'ecsv':
-            bad_combo = True
+        if is_spectral:
+            if selected != 'ecsv':
+                bad_combo = True
         elif selected == 'ecsv':
             bad_combo = True
 
@@ -262,6 +250,17 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             raise ValueError(f"{self.subset_format_invalid_msg}")
         else:
             self.subset_format_invalid_msg = ''
+
+            # Persist subset format across selections
+            # Across subsets
+            # self.subset_format_dict[self.subset.selected] = self.subset_format_selected
+
+            # Across subset types (spatial/spectral)
+            if is_spectral:
+                self.subset_format_dict['spectral'] = selected
+            else:
+                self.subset_format_dict['spatial'] = selected
+
 
     @observe('viewer_items', 'dataset_items', 'subset_items',
              'plugin_table_items', 'plugin_plot_items')
@@ -398,20 +397,20 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     item["disabled"] = False
                 else:
                     item["disabled"] = True
-                    # Use persistent format
-                    if item["label"] == self.subset_format.selected:
-                        # Persist across subsets
-                        # self.subset_format.selected = self.subset_format_dict.get(
-                        #   self.subset.selected, good_formats[0])
-
-                        # Persist across subset types
-                        self.subset_format.selected = self.subset_format_dict.get(
-                            subset_type, good_formats[0])
 
                 new_items.append(item)
 
         self.subset_format_items = []
         self.subset_format_items = new_items
+
+        # Persist subset format across selections
+        # Across subsets
+        # self.subset_format.selected = self.subset_format_dict.get(
+        #   self.subset.selected, good_formats[0])
+
+        # Across subset types (spatial/spectral)
+        self.subset_format.selected = self.subset_format_dict.get(
+            subset_type, good_formats[0])
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
