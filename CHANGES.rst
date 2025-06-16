@@ -1,4 +1,4 @@
-4.2.3 (unreleased)
+4.2.3 (2025-06-16)
 ==================
 
 Bug Fixes
@@ -7,7 +7,7 @@ Bug Fixes
 - Exporting as SVG now behaves the same as exporting PNG and respects
   specified output directory. [#3592]
 
-- Improve the "no matching importers" message and suppress it 
+- Improve the "no matching importers" message and suppress it
   until a target is selected. [#3593]
 
 - Pinned specutils<2.0 until our compatibility fix is merged. [#3605]
@@ -22,18 +22,6 @@ Cubeviz
 
 - Use validator on spectral subset layer visibility in flux/uncertainty viewers when slice indicator
   is within the spectral subset bounds. [#3571]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Other changes and Additions
 ---------------------------
