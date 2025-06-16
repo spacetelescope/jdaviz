@@ -92,7 +92,7 @@
 
 <script>
 module.exports = {
-  props: ['mode', 'edit_value', 'items', 'selected', 'label', 'hint', 'rules',
+  props: ['mode', 'edit_value', 'items', 'selected', 'multiselect', 'label', 'hint', 'rules',
           'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled'
   ],
   computed: {
