@@ -261,7 +261,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             else:
                 self.subset_format_dict['spatial'] = selected
 
-
     @observe('viewer_items', 'dataset_items', 'subset_items',
              'plugin_table_items', 'plugin_plot_items')
     def _set_relevant(self, *args):
@@ -387,16 +386,16 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 return
             if self.app._is_subset_spectral(subset[0]):
                 subset_type = 'spectral'
-                good_formats = ["ecsv"]
+                good_formats = ['ecsv']
             else:
                 subset_type = 'spatial'
                 good_formats = ['fits', 'reg']
 
             for item in self.subset_format_items:
-                if item["label"] in good_formats:
-                    item["disabled"] = False
+                if item['label'] in good_formats:
+                    item['disabled'] = False
                 else:
-                    item["disabled"] = True
+                    item['disabled'] = True
 
                 new_items.append(item)
 
