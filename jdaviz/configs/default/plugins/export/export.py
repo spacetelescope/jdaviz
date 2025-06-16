@@ -220,6 +220,49 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.subset_format._update_items()
             self.subset_format_invalid_msg = ''
 
+    @observe('subset_format_selected')
+    def _on_subset_format_selected(self, event):
+
+        subset = self.app.get_subsets(self.subset.selected)
+        selected = self.subset_format_selected
+
+        try:
+            is_spectral = self.app._is_subset_spectral(subset[0])
+        except KeyError:
+            is_spectral = False
+
+        # Persisting subset format across selections
+        if hasattr(self, 'subset_format_dict'):
+            # Persistent across subsets
+            # self.subset_format_dict[self.subset.selected] = self.subset_format_selected
+
+            # Persistent across subset types
+            if is_spectral:
+                self.subset_format_dict['spectral'] = selected
+            else:
+                self.subset_format_dict['spatial'] = selected
+
+        else:
+            self.subset_format_dict = {}
+
+        if self.subset.selected == '' or self.subset.selected is None:
+            return
+
+        # Disable selecting a bad subset+format combination from the API
+        bad_combo = False
+        if is_spectral and selected != 'ecsv':
+            bad_combo = True
+        elif selected == 'ecsv':
+            bad_combo = True
+
+        if bad_combo:
+            # raise vue message
+            self.subset_format_invalid_msg = (f"Cannot export '{self.subset.selected}' "
+                                              f"in '{event['new']}' format.")
+            raise ValueError(f"{self.subset_format_invalid_msg}")
+        else:
+            self.subset_format_invalid_msg = ''
+
     @observe('viewer_items', 'dataset_items', 'subset_items',
              'plugin_table_items', 'plugin_plot_items')
     def _set_relevant(self, *args):
@@ -329,7 +372,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.overwrite_warn = False
 
     def _update_subset_format_disabled(self):
+        """
+        Set the available and default output format of the
+        selected subset according to its type.
+        """
         new_items = []
+        good_formats = []
+        subset_type = ''
         if self.subset.selected is not None:
             try:
                 subset = self.app.get_subsets(self.subset.selected)
@@ -338,40 +387,31 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # no need to set valid/invalid formats.
                 return
             if self.app._is_subset_spectral(subset[0]):
+                subset_type = 'spectral'
                 good_formats = ["ecsv"]
             else:
-                good_formats = ["fits", "reg"]
+                subset_type = 'spatial'
+                good_formats = ['fits', 'reg']
+
             for item in self.subset_format_items:
                 if item["label"] in good_formats:
                     item["disabled"] = False
                 else:
                     item["disabled"] = True
+                    # Use persistent format
                     if item["label"] == self.subset_format.selected:
-                        self.subset_format.selected = good_formats[0]
+                        # Persist across subsets
+                        # self.subset_format.selected = self.subset_format_dict.get(
+                        #   self.subset.selected, good_formats[0])
+
+                        # Persist across subset types
+                        self.subset_format.selected = self.subset_format_dict.get(
+                            subset_type, good_formats[0])
+
                 new_items.append(item)
+
         self.subset_format_items = []
         self.subset_format_items = new_items
-
-    @observe('subset_format_selected')
-    def _disable_subset_format_combo(self, event):
-        # Disable selecting a bad subset+format combination from the API
-        if self.subset.selected == '' or self.subset.selected is None:
-            return
-        subset = self.app.get_subsets(self.subset.selected)
-        bad_combo = False
-        if self.app._is_subset_spectral(subset[0]):
-            if event['new'] != "ecsv":
-                bad_combo = True
-        elif event['new'] == "ecsv":
-            bad_combo = True
-
-        if bad_combo:
-            # raise vue message
-            self.subset_format_invalid_msg = (f"Cannot export '{self.subset.selected}' "
-                                       f"in '{event['new']}' format.")
-            raise ValueError(f"{self.subset_format_invalid_msg}")
-        else:
-            self.subset_format_invalid_msg = ''
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
