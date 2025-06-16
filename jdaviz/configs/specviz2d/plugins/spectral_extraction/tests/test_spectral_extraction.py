@@ -29,10 +29,12 @@ def test_plugin(specviz2d_helper):
 
     # test trace marks - won't be created until after opening the plugin
     sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    assert len(sp2dv.figure.marks) == 3
+    # includes 2 hidden marks from cross-dispersion profile plugin
+    assert len(sp2dv.figure.marks) == 5
 
     pext.keep_active = True
-    assert len(sp2dv.figure.marks) == 12
+    # includes 2 hidden marks from cross-dispersion profile plugin
+    assert len(sp2dv.figure.marks) == 14
     assert pext.marks['trace'].marks_list[0].visible is True
     assert len(pext.marks['trace'].marks_list[0].x) > 0
 
@@ -73,7 +75,8 @@ def test_plugin(specviz2d_helper):
     # TODO: Investigate extra hidden mark from glue-jupyter, see
     # https://github.com/spacetelescope/jdaviz/pull/2478#issuecomment-1731864411
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    assert len(sp2dv.figure.marks) in [16, 18]
+    # and there are 2 invisible marks from the cross-dispersion profile plugin
+    assert len(sp2dv.figure.marks) in [18, 20]
 
     # interact with background section, check marks
     pext.trace_trace_selected = 'New Trace'
@@ -275,6 +278,7 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
     pext = specviz2d_helper.plugins['Spectral Extraction']
 
     for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+
         # iterate through flux units verifying that selected object/spectrum is obtained using
         # display units
         uc.flux_unit.selected = new_flux_unit

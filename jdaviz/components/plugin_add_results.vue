@@ -32,6 +32,7 @@
         :api_hint="add_results_api_hint && add_results_api_hint+'.viewer ='"
         :api_hints_enabled="api_hints_enabled && add_results_api_hint"
         :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
+        :add_to_viewer_disabled="add_to_viewer_disabled"
       ></plugin-viewer-select>
     </div>
 
@@ -94,7 +95,8 @@
     props: ['add_results_api_hint',
             'label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
             'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'auto_update_result',
-            'action_disabled', 'action_spinner', 'action_label', 'action_api_hint', 'action_tooltip', 'api_hints_enabled'],
+            'action_disabled', 'action_spinner', 'action_label', 'action_api_hint', 'action_tooltip', 'api_hints_enabled',
+            'add_to_viewer_disabled'],
     computed: {
       actionButtonText() {
         if (this.api_hints_enabled && this.action_api_hint) {

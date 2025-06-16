@@ -26,6 +26,8 @@ Cubeviz
 
 - Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
+- Add sonified layer for each cube created by the Sonify Data plugin. [#3430]
+
 Imviz
 ^^^^^
 
@@ -59,6 +61,8 @@ Specviz2d
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3473]
+
+- New plugin to vizualize the cross-dispersion profile [#3552]
 
 API Changes
 -----------
