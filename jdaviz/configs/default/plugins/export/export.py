@@ -93,7 +93,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
     data_invalid_msg = Unicode().tag(sync=True)
-    format_invalid_msg = Unicode().tag(sync=True)
+    subset_format_invalid_msg = Unicode().tag(sync=True)
 
     # We currently disable exporting spectrum-viewer in Cubeviz
     viewer_invalid_msg = Unicode().tag(sync=True)
@@ -218,6 +218,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _on_subset_selected(self, event):
         if hasattr(self, 'subset_format'):
             self.subset_format._update_items()
+            self.subset_format_invalid_msg = ''
 
     @observe('viewer_items', 'dataset_items', 'subset_items',
              'plugin_table_items', 'plugin_plot_items')
@@ -366,11 +367,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         if bad_combo:
             # raise vue message
-            self.format_invalid_msg = (f"Cannot export '{self.subset.selected}' "
+            self.subset_format_invalid_msg = (f"Cannot export '{self.subset.selected}' "
                                        f"in '{event['new']}' format.")
-            raise ValueError(f"{self.format_invalid_msg}")
+            raise ValueError(f"{self.subset_format_invalid_msg}")
         else:
-            self.format_invalid_msg = ''
+            self.subset_format_invalid_msg = ''
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
@@ -550,8 +551,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
-            elif self.format_invalid_msg:
-                raise ValueError(self.format_invalid_msg)
+            elif self.subset_format_invalid_msg:
+                raise ValueError(self.subset_format_invalid_msg)
 
             if self.overwrite_warn and not overwrite:
                 if raise_error_for_overwrite:
