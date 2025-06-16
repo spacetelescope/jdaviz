@@ -165,9 +165,9 @@
         </div>
       </v-row>
 
-      <v-row v-if="format_invalid_msg.length > 0">
+      <v-row v-if="subset_format_invalid_msg.length > 0">
         <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
-          {{format_invalid_msg}}
+          {{subset_format_invalid_msg}}
         </span>
       </v-row>
 
@@ -281,7 +281,7 @@
                    movie_recording ||
                    subset_invalid_msg.length > 0 ||
                    data_invalid_msg.length > 0 ||
-                   format_invalid_msg.length > 0 ||
+                   subset_format_invalid_msg.length > 0 ||
                    viewer_invalid_msg.length > 0 ||
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
