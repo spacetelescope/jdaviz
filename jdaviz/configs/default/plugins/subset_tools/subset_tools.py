@@ -1353,9 +1353,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
                     # NOTE: Region creation info is thus lost.
                     try:
-                        subset_label = f'{msg_prefix} {msg_count}'
+                        mask_label = f'{msg_prefix} {msg_count}'
                         state = MaskSubsetState(im, data.pixel_component_ids)
-                        self.app.data_collection.new_subset_group(subset_label, state)
+                        self.app.data_collection.new_subset_group(mask_label, state)
                         msg_count += 1
                     except Exception as e:  # pragma: no cover
                         bad_regions.append((region, f'Failed to load: {repr(e)}'))
