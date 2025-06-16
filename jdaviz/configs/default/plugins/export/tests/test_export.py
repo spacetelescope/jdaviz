@@ -193,13 +193,13 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match = re.escape(
+                           match=re.escape(
                                "'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
         # Test that selecting disabled option raises an error
         with pytest.raises(ValueError,
-                           match = "Cannot export 'Subset 1' in 'ecsv' format."):  # noqa
+                           match="Cannot export 'Subset 1' in 'ecsv' format."):  # noqa
             export_plugin.subset_format.selected = 'ecsv'
 
         # test that attempting to save a composite subset raises an error
