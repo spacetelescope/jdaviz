@@ -200,3 +200,14 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
     @property
     def _default_flux_viewer_reference_name(self):
         return self.jdaviz_helper._default_flux_viewer_reference_name
+
+    def add_subset(self, subset, *args, **kwargs):
+        # The cubeviz profile viewer does not show the spectra/profiles based
+        # on the subsets of the cubes, but based on extracted datasets derived
+        # from those subsets. We can ignore all subsets that have a subset
+        # state that was defined from the image, and we recognize these by
+        # looking for subset states that are defined based on two attributes.
+        if len(subset.subset_state.attributes) == 2:
+            return False
+        else:
+            return super().add_subset(subset, *args, **kwargs)

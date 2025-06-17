@@ -7,6 +7,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Significantly improved the performance of Cubeviz when creating several subsets in the
+  image viewer. [#3626]
+
 Imviz
 ^^^^^
 
