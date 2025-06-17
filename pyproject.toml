@@ -138,7 +138,6 @@ filterwarnings = [
     "error",
     "ignore:numpy\\.ufunc size changed:RuntimeWarning",
     "ignore:numpy\\.ndarray size changed:RuntimeWarning",
-    "ignore:Passing unrecognized arguments to super:DeprecationWarning",
     "ignore:.*With traitlets 4\\.1, metadata should be set using the \\.tag\\(\\) method:DeprecationWarning",
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
