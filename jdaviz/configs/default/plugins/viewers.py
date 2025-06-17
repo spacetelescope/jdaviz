@@ -9,6 +9,7 @@ from glue.core.units import UnitConverter
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
+from glue.utils import avoid_circular
 
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
@@ -319,6 +320,7 @@ class JdavizViewerMixin(WithCache):
 
         self._data_menu.visible_layers = visible_layers
 
+    @avoid_circular
     def _on_layers_update(self, layers=None):
         if self.__class__.__name__ == 'MosvizTableViewer':
             # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
