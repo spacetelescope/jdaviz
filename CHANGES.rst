@@ -143,13 +143,20 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- Disable export and raise vue error message upon selection of unsupported subset format. [#3635]
+- Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
 
 Cubeviz
 ^^^^^^^
 
+- Significantly improved the performance of Cubeviz when creating several subsets in the
+  image viewer. [#3626]
+
 Imviz
 ^^^^^
+
+- Fix dropdowns for overlay not showing in UI. [#3640]
+
+- Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
 
 Mosviz
 ^^^^^^
