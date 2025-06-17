@@ -149,6 +149,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fix dropdowns for overlay not showing in UI. [#3640]
+
 Mosviz
 ^^^^^^
 
