@@ -780,7 +780,7 @@ class DistanceMark(PluginMark, Lines, HubListener):
             scales=viewer.scales,
             x=[x0, x1],
             y=[y0, y1],
-            colors=['red'],
+            colors=[accent_color],
             stroke_width=2,
             visible=True,
             display_legend=False
@@ -797,5 +797,3 @@ class DistanceMark(PluginMark, Lines, HubListener):
         """Updates the endpoints of the line."""
         self.x = [x0, x1]
         self.y = [y0, y1]
-
-
