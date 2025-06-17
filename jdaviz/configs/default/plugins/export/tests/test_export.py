@@ -98,7 +98,7 @@ class TestExportSubsets:
 
     def test_export_subsets_wcs(self, imviz_helper, spectral_cube_wcs):
 
-        # using cube WCS instead of 2d imaging wcs for consistancy with
+        # using cube WCS instead of 2d imaging wcs for consistency with
         # cubeviz test. accessing just the spatial part of this.
         wcs = spectral_cube_wcs.celestial
 
@@ -133,29 +133,35 @@ class TestExportSubsets:
         cubeviz_helper.load_data(data)
         subset_plugin = cubeviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=50, yc=50, radius=10))
-        spatial_subset = 'Subset 1'
 
-        # Subset 1, Spectral Subset
+        # Subset 2, Spectral Subset
         spectral_axis_unit = u.Unit(
             cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
         subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
                                                    15.5 * spectral_axis_unit))
-        spectral_subset = 'Subset 2'
 
         export_plugin = cubeviz_helper.plugins['Export']._obj
 
+        # Assert that the default name is set and that they're in order
+        # Mostly to confirm the use of spatial/specctral_subset variables
+        assert export_plugin.subset.choices[0] == 'Subset 1'
+        spatial_subset = 'Subset 1'
 
-        # Again no assumptions here on default
+        assert export_plugin.subset.choices[1] == 'Subset 2'
+        spectral_subset = 'Subset 2'
+
+        # No subset is selected by default
+        assert export_plugin.subset.selected == ''
+
+        export_plugin.subset.selected = spatial_subset
         spatial_valid_formats = ['fits', 'reg']
+        # Assert that the first subset created has the first format available (fits).
         assert export_plugin.subset_format.selected in spatial_valid_formats
 
         for current_format in spatial_valid_formats:
-            # Set to spatial
-            export_plugin.subset.selected = spatial_subset
-
-            # Check format
+            # Check that the format and filename are set correctly
             export_plugin.subset_format.selected = current_format
-            assert export_plugin.subset_format.selected == current_format  # default format
+            assert export_plugin.subset_format.selected == current_format
             assert export_plugin.filename.value.endswith(current_format)
 
             # Attempt export
@@ -194,8 +200,8 @@ class TestExportSubsets:
                                        f"in '{current_format}' format is not supported."):  # noqa
                 export_plugin.export()
 
-        # Reset to spatial
-        export_plugin.subset.selected = spatial_subset
+            # Reset to spatial
+            export_plugin.subset.selected = spatial_subset
 
         # Overwrite not enable, so no-op with warning.
         export_plugin.export(raise_error_for_overwrite=False)
@@ -235,11 +241,14 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5), edit_subset='Subset 1',
                                     combination_mode='and')
 
-        # TODO: If this is *not* selected it won't update the msg
         export_plugin.subset.selected = spatial_subset
+        # A user *must* (re)select the subset for the subset_invalid_msg to be filled
+        # if the subset is already selected and subsequently edited, the message
+        # will be an empty string
         assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
+        # However it *will* still fail on export.
         with pytest.raises(NotImplementedError,
-                           match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
+                           match='Subset cannot be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
 
         export_plugin.subset.selected = spectral_subset
