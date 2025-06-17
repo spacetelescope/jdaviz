@@ -58,8 +58,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'cubeviz'):
-            # cubeviz allowed for cubeviz.specviz.load_data support
+        if self.app.config not in ('deconfigged', 'imviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube
@@ -71,7 +70,7 @@ class ImageImporter(BaseImporterToDataCollection):
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'imviz-0'
+        return 'imviz-image-viewer'
 
     @property
     def output(self):
@@ -81,7 +80,6 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(self.input, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel)):
             return self.input
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            # self.extension.selected_name = self.input.name
             return [_hdu2data(self.input, self.data_label_value, None, False)]
         hdulist = self.input
         return [_hdu2data(hdu, self.data_label_value, hdulist)[0] for hdu in self.extension.selected_hdu]
@@ -89,17 +87,17 @@ class ImageImporter(BaseImporterToDataCollection):
     def __call__(self):
         data_label = self.data_label_value
         if isinstance(self.output, NDData):
-            data = _nddata_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}[Array]", show_in_viewer=True)
+            data, data_label = _nddata_to_glue_data(self.output, data_label)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         elif isinstance(self.output, np.ndarray):
             data = _ndarray_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}[Array]", show_in_viewer=True)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         elif isinstance(self.output, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel)):
-            data = _roman_asdf_2d_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}[ASDF]", show_in_viewer=True)
+            data, data_label = _roman_asdf_2d_to_glue_data(self.output, data_label)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            data = _hdu2data(self.input, self.data_label_value, None, False)[0]
-            self.add_to_data_collection(data, f"{data_label}[HDU]", show_in_viewer=True)
+            data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, spec in zip(self.extension.selected_name, self.output):
@@ -179,7 +177,10 @@ def _nddata_to_glue_data(ndd, data_label):
         if arr is None:
             continue
         comp_label = attrib.upper()
-        cur_label = f'{data_label}[{comp_label}]'
+        if 'plugin' in ndd.meta.keys() and ndd.meta['plugin'] == 'orientation':
+            cur_label = f'{data_label}'
+        else:
+            cur_label = f'{data_label}[{comp_label}]'
         cur_data = Data(label=cur_label)
         cur_data.meta.update(standardize_metadata(ndd.meta))
         if ndd.wcs is not None:
@@ -194,7 +195,7 @@ def _nddata_to_glue_data(ndd, data_label):
             bunit = ''
         component = Component.autotyped(raw_arr, units=bunit)
         cur_data.add_component(component=component, label=comp_label)
-        return cur_data
+        return cur_data, cur_label
 
 
 def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
@@ -233,4 +234,4 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         # if comp_label == 'DQ':
         #     prep_data_layer_as_dq(data)
 
-        return data
+        return data, new_data_label
