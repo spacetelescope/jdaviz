@@ -145,6 +145,8 @@ Bug Fixes
 
 - Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
 
+- Disable export and raise vue error message upon selection of unsupported subset format. [#3635]
+
 Cubeviz
 ^^^^^^^
 
