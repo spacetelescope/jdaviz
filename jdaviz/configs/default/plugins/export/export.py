@@ -22,7 +22,6 @@ from specutils import Spectrum1D
 from astropy import units as u
 from astropy.nddata import CCDData
 from regions import CircleSkyRegion, EllipseSkyRegion
-import bqplot
 import IPython
 
 try:
@@ -515,12 +514,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
             if filetype == "mp4":
                 self.save_movie(viewer, filename, filetype,
-                                width=self.image_width if self.image_custom_size else None,
-                                height=self.image_height if self.image_custom_size else None)
+                                width=f"{self.image_width}px" if self.image_custom_size else None,
+                                height=f"{self.image_height}px" if self.image_custom_size else None)
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
-                                 width=self.image_width if self.image_custom_size else None,
-                                 height=self.image_height if self.image_custom_size else None)
+                                 width=f"{self.image_width}px" if self.image_custom_size else None,
+                                 height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
 
             # restore marks to their original state
             for restore, mark in zip(restores, viewer.figure.marks):
