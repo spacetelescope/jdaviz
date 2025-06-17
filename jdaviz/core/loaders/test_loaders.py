@@ -90,13 +90,13 @@ def test_fits_spectrum2d(deconfigged_helper):
 
     ldr.importer()
 
-    # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
+    # ensure get_data works, retrieves a Spectrum object, and has spectral WCS attached correctly
     sp2d = deconfigged_helper.get_data('2D Spectrum')
-    assert isinstance(sp2d, Spectrum1D)
+    assert isinstance(sp2d, Spectrum)
     assert str(sp2d.spectral_axis.unit) == 'um'
 
     sp1d = deconfigged_helper.get_data('2D Spectrum (auto-ext)')
-    assert isinstance(sp1d, Spectrum1D)
+    assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'um'
 
 
