@@ -196,7 +196,7 @@ class TestExportSubsets:
             # Finally, attempt to export with Spectral subset
             export_plugin.subset.selected = spectral_subset
             with pytest.raises(ValueError,
-                               match = f"Export of '{spectral_subset}' "
+                               match=f"Export of '{spectral_subset}' "
                                        f"in '{current_format}' format is not supported."):  # noqa
                 export_plugin.export()
 
@@ -254,8 +254,7 @@ class TestExportSubsets:
         export_plugin.subset.selected = spectral_subset
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
-        assert os.path.isfile(f'test_spectral_region.ecsv')
-
+        assert os.path.isfile('test_spectral_region.ecsv')
 
     def test_export_stcs_circle_ellipse(self, imviz_helper):
         wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
