@@ -1,23 +1,22 @@
-import os
-import asdf
+import warnings
 
+import asdf
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
-from traitlets import Bool, List, Unicode, observe, Any
+from traitlets import Bool, List, Any
 
 
-from jdaviz.core.template_mixin import AutoTextField, SelectFileExtensionComponent
+from jdaviz.core.template_mixin import SelectFileExtensionComponent
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 from jdaviz.utils import (
-    standardize_metadata, standardize_roman_metadata,
-    PRIHDR_KEY, _wcs_only_label, download_uri_to_path, get_cloud_fits
+    standardize_metadata, standardize_roman_metadata, PRIHDR_KEY
 )
 
 try:
@@ -54,7 +53,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                                           multiselect='extension_multiselect',
                                                           manual_options=self.input,
                                                           filters=[_validate_fits_image2d])
-            self.extension.selected = [self.extension.choices[0]]
+            self.extension.selected = self.extension.select_default()
 
     @property
     def is_valid(self):
@@ -63,7 +62,8 @@ class ImageImporter(BaseImporterToDataCollection):
             return False
         # flat image, not a cube
         # isinstance NDData
-        return isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU, NDData, np.ndarray, asdf.AsdfFile))
+        return isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
+                                       NDData, np.ndarray, asdf.AsdfFile))
 
 
     @property
@@ -77,12 +77,14 @@ class ImageImporter(BaseImporterToDataCollection):
         # if nddata return it
         if isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
             return self.input
-        elif isinstance(self.input, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel)):
+        elif (isinstance(self.input, asdf.AsdfFile) or
+              (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
             return self.input
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             return [_hdu2data(self.input, self.data_label_value, None, False)]
         hdulist = self.input
-        return [_hdu2data(hdu, self.data_label_value, hdulist)[0] for hdu in self.extension.selected_hdu]
+        return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
+                for hdu in self.extension.selected_hdu]
 
     def __call__(self):
         data_label = self.data_label_value
@@ -92,7 +94,8 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(self.output, np.ndarray):
             data = _ndarray_to_glue_data(self.output, data_label)
             self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
-        elif isinstance(self.output, asdf.AsdfFile) or (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel)):
+        elif (isinstance(self.output, asdf.AsdfFile) or
+              (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel))):
             data, data_label = _roman_asdf_2d_to_glue_data(self.output, data_label)
             self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
@@ -101,7 +104,6 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, spec in zip(self.extension.selected_name, self.output):
-                    # check if unique, if not, use app to get data label
                     self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True)
 
 
@@ -198,6 +200,39 @@ def _nddata_to_glue_data(ndd, data_label):
         return cur_data, cur_label
 
 
+def _try_gwcs_to_fits_sip(gwcs):
+    """
+    Try to convert this GWCS to FITS SIP. Some GWCS models
+    cannot be converted to FITS SIP. In that case, a warning
+    is raised and the GWCS is used, as is.
+    """
+    try:
+        result = WCS(gwcs.to_fits_sip())
+    except ValueError as err:
+        warnings.warn(
+            "The GWCS coordinates could not be simplified to "
+            "a SIP-based FITS WCS, the following error was "
+            f"raised: {err}",
+            UserWarning
+        )
+        result = gwcs
+
+    return result
+
+
+def prep_data_layer_as_dq(data):
+    # nans are used to mark "good" flags in the DQ colormap, so
+    # convert DQ array to float to support nans:
+    for component_id in data.main_components:
+        if component_id.label.startswith("DQ"):
+            break
+
+    cid = data.get_component(component_id)
+    data_arr = np.float32(cid.data)
+    data_arr[data_arr == 0] = np.nan
+    data.update_components({cid: data_arr})
+
+
 def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
     if ext == '*':
         # NOTE: Update as needed. Should cover all the image extensions available.
@@ -212,10 +247,10 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
     meta = standardize_roman_metadata(file_obj)
     gwcs = meta.get('wcs', None)
 
-    # if try_gwcs_to_fits_sip and gwcs is not None:
-    #     coords = _try_gwcs_to_fits_sip(gwcs)
-    # else:
-    coords = gwcs
+    if try_gwcs_to_fits_sip and gwcs is not None:
+        coords = _try_gwcs_to_fits_sip(gwcs)
+    else:
+        coords = gwcs
 
     for cur_ext in ext_list:
         comp_label = cur_ext.upper()
@@ -231,7 +266,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         component = Component(np.array(ext_values), units=bunit)
         data.add_component(component=component, label=comp_label)
         data.meta.update(standardize_metadata(dict(meta)))
-        # if comp_label == 'DQ':
-        #     prep_data_layer_as_dq(data)
+        if comp_label == 'DQ':
+            prep_data_layer_as_dq(data)
 
         return data, new_data_label
