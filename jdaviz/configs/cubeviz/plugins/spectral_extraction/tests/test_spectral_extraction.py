@@ -56,16 +56,15 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
 
 
 def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_uncerts):
-    # Also test if gaussian smooth plugin is run before spec extract
+    # Test if gaussian smooth plugin is run before spec extract
     # that spec extract yields results of correct cube data
-    gs_plugin = cubeviz_helper.plugins['Gaussian Smooth']._obj
-
-    # give uniform unit uncertainties for spec extract test:
+    # give uniform unit uncertainties for spec extract test
     spectrum1d_cube_with_uncerts.uncertainty = StdDevUncertainty(
         np.ones_like(spectrum1d_cube_with_uncerts.data)
     )
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
+    gs_plugin = cubeviz_helper.plugins['Gaussian Smooth']._obj
 
     gs_plugin.dataset_selected = f'{cubeviz_helper.app.data_collection[0].label}'
     gs_plugin.mode_selected = 'Spatial'
@@ -466,8 +465,7 @@ def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
     # now remove from this subset a circular region in the center:
     circle = CircularROI(0.5, 1.5, 1)
 
-    subset_plugin.combination_mode = 'andnot'
-    subset_plugin.import_region(circle)
+    subset_plugin.import_region(circle, edit_subset='Subset 1', combination_mode='andnot')
 
     # now the subset is composite:
     assert spec_extr_plugin.aperture.is_composite
@@ -483,7 +481,6 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     upper_aperture = RectangularROI(2.5, 3.5, -0.5, 1.5)
 
     subset_plugin.import_region(lower_aperture)
-    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(upper_aperture)
 
     spec_extr_plugin.aperture_selected = 'Subset 1'
@@ -494,14 +491,13 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
 
     rectangle = RectangularROI(-0.5, 3.5, -0.5, 1.5)
 
-    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(rectangle)
 
     subset_plugin._obj.subset_selected = 'Subset 3'
     circle = CircularROI(1.5, 0.5, 1.1)
 
-    subset_plugin.combination_mode = 'andnot'
-    subset_plugin.import_region(circle)
+    subset_plugin.import_region(circle, edit_subset='Subset 3',
+                                combination_mode='andnot')
 
     spec_extr_plugin.aperture_selected = 'Subset 3'
 
@@ -585,11 +581,11 @@ def test_spectral_extraction_unit_conv_one_spec(
     "start_slice, aperture, expected_rtol, uri, calspec_url",
     (
         (5.2, (20.5, 17, 10.9), 0.03,
-         "mast:jwst/product/jw01524-o003_t002_miri_ch1-shortmediumlong_s3d.fits",
+         "mast:jwst/product/jw01524-o003_t002_miri_ch1-medium_s3d.fits",
          calspec_url + "delumi_mod_005.fits"),  # delta UMi
 
         (4.85, (28, 21, 12), 0.03,
-         "mast:jwst/product/jw01050-o003_t005_miri_ch1-shortmediumlong_s3d.fits",
+         "mast:jwst/product/jw01050-o003_t005_miri_ch1-medium_s3d.fits",
          calspec_url + "hd159222_mod_007.fits"),  # HD 159222
     )
 )

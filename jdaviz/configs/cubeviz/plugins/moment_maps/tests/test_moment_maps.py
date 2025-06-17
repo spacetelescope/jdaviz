@@ -30,18 +30,19 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
         cubeviz_helper.load_data(cube, data_label='test')
 
     mm = cubeviz_helper.plugins['Moment Maps']
-    assert not mm._obj.continuum_marks['center'].visible
+    cmc = mm._obj.continuum_marks['center']
+    assert len(cmc.marks) == 0
     with mm.as_active():
-        assert mm._obj.continuum_marks['center'].visible
         mm.n_moment = 0
         # no continuum so marks should be empty
-        assert len(mm._obj.continuum_marks['center'].x) == 0
+        assert len(cmc.marks) == 0
 
         mom = mm.calculate_moment()
 
         mm.continuum = 'Surrounding'
         mm.continuum_width = 10
-        assert len(mm._obj.continuum_marks['center'].x) > 0
+        cm = cmc.marks_list[0]
+        assert len(cm.x) > 0
 
         mom_sub = mm.calculate_moment()
         assert isinstance(mom_sub.wcs, WCS)
@@ -58,6 +59,9 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
         mm._obj.output_unit_selected = "Surface Brightness"
         with pytest.raises(ValueError, match="units must be in"):
             mm.calculate_moment()
+
+        mm.continuum = 'None'
+        assert len(cm.x) == 0
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
@@ -116,7 +120,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     assert mm._obj.results_label_overwrite is True
 
     # Make sure coordinate display works in flux viewer (loaded data, not the moment map)
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 1)
@@ -196,7 +200,7 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
     mm.calculate_moment()
 
     # Make sure coordinate display works
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
                                                         'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -4.14668e+02 km / s",
@@ -390,7 +394,7 @@ def test_moment_zero_unit_flux_conversions(cubeviz_helper,
 
     # and flux viewer for mouseover info
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
 
     # convert to new flux unit
     uc.flux_unit.selected = new_flux_unit_str

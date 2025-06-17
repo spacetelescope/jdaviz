@@ -3,8 +3,8 @@ import re
 import warnings
 from copy import deepcopy
 
-from astropy.utils import deprecated
 import numpy as np
+from astropy.utils import deprecated
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage
@@ -109,6 +109,13 @@ class Imviz(ImageConfigHelper):
         show_in_viewer : str or bool
             If `True`, show the data in default viewer.  If a string, show in that viewer.
 
+        gwcs_to_fits_sip : bool, optional
+            Try to convert GWCS coordinates into an approximate FITS SIP solution. Typical
+            precision loss due to this approximation is of order 0.1 pixels. This may
+            improve image rendering performance for images with expensive GWCS
+            transformations. If this keyword argument isn't specified, the choice
+            will be taken from the Orientation plugin's ``gwcs_to_fits_sip`` traitlet.
+
         kwargs : dict
             Extra keywords to be passed into app-level parser.
             The only one you might call directly here is ``ext`` (any FITS
@@ -125,6 +132,9 @@ class Imviz(ImageConfigHelper):
 
         """
         prev_data_labels = self.app.data_collection.labels
+
+        if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
+            kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
 
         if isinstance(data, str):
             filelist = data.split(',')
@@ -199,7 +209,7 @@ class Imviz(ImageConfigHelper):
                     if not is_wcs_only and linked_by_wcs and not has_wcs:
                         self.app.hub.broadcast(SnackbarMessage(
                             f"'{applied_label}' will be added to the data collection but not "
-                            f"the viewer '{show_in_viewer}', since data are linked by WCS, but "
+                            f"the viewer '{show_in_viewer}', since data are aligned by WCS, but "
                             f"'{applied_label}' has no WCS.",
                             color="warning", timeout=8000, sender=self)
                         )
@@ -313,6 +323,7 @@ class Imviz(ImageConfigHelper):
         """
         return self.plugins['Aperture Photometry'].export_table()
 
+    @deprecated(since="4.2", alternative="plugins['Catalog Search'].export_table()")
     def get_catalog_source_results(self):
         """Return table of sources given by querying from a catalog, if any.
         Results are calculated using :ref:`imviz-catalogs` plugin.

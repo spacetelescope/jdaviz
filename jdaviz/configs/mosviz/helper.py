@@ -415,9 +415,17 @@ class Mosviz(ConfigHelper, LineListMixin):
             raise NotImplementedError("Please set valid values for the Mosviz.load_data() method")
 
         if allow_link_table:
-            self.link_table_data(None)
+            try:
+                self.link_table_data(None)
+            except KeyError:
+                self.app.hub.broadcast(SnackbarMessage(
+                    "The table data was not linked", color="warning", sender=self))
 
-        self._add_redshift_column()
+        try:
+            self._add_redshift_column()
+        except ValueError:
+            self.app.hub.broadcast(SnackbarMessage(
+                "No data found with label 'MOS Table'", color="warning", sender=self))
 
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
@@ -432,7 +440,13 @@ class Mosviz(ConfigHelper, LineListMixin):
         ).figure.axes[1].label_offset = "-50"
 
         # Load the first object into the viewers automatically
-        self.app.get_viewer(self._default_table_viewer_reference_name).figure_widget.highlighted = 0
+        try:
+            self.app.get_viewer(
+                self._default_table_viewer_reference_name
+            ).figure_widget.highlighted = 0
+        except ValueError:
+            self.app.hub.broadcast(SnackbarMessage(
+                "No data found with label 'MOS Table'", color="warning", sender=self))
 
         # Notify the user that this all loaded successfully
         self.app.hub.broadcast(SnackbarMessage(

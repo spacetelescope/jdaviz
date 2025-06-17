@@ -42,10 +42,12 @@ def test_plugin(specviz_helper, spectrum1d):
     plugin.selected_continuum = 'Surrounding'
     plugin.width = 3
 
-    for result_dict in plugin.results:
+    for result_dict in plugin.get_results():
         if result_dict in ['Line Flux']:
             # should have an assigned uncertainty (with min required version of specutils)
             assert len(result_dict.get('uncertainty')) > 0
+
+    assert len(plugin.table) == 1
 
 
 @pytest.mark.filterwarnings(r"ignore:'W/m2/m' contains multiple slashes")
@@ -77,7 +79,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.width = 1
 
-    for result in plugin.results:
+    for result in plugin.get_results():
         # Check that there exists a value
         assert not np.isnan(float(result['result']))
         # Check the unit is not dimensionless
@@ -105,7 +107,7 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     plugin.dataset_selected = 'Spectrum (sum)'
     plugin.continuum_subset_selected = 'Surrounding'
 
-    results = plugin.results
+    results = plugin.get_results()
     assert results[0]['unit'] == 'W / m2'
 
     viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
@@ -115,14 +117,14 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     la.keep_active = True
     la.spectral_subset.selected = 'Subset 1'
 
-    marks_before = [la._obj.continuum_marks['left'].y,
-                    la._obj.continuum_marks['right'].y]
+    marks_before = [la._obj.continuum_marks['left'].marks_list[0].y,
+                    la._obj.continuum_marks['right'].marks_list[0].y]
 
     # change flux unit and make sure result stays the same after conversion
     uc.flux_unit.selected = 'MJy'
 
-    marks_after = [la._obj.continuum_marks['left'].y,
-                   la._obj.continuum_marks['right'].y]
+    marks_after = [la._obj.continuum_marks['left'].marks_list[0].y,
+                   la._obj.continuum_marks['right'].marks_list[0].y]
 
     # ensure continuum marks update when spectral_y is changed by
     # multiply converted continuum marks by expected scale factor (MJy -> Jy)
@@ -141,14 +143,14 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     else:
         scaling_factor = cube.meta.get('PIXAR_SR')
 
-    marks_after = [la._obj.continuum_marks['left'].y,
-                   la._obj.continuum_marks['right'].y]
+    marks_after = [la._obj.continuum_marks['left'].marks_list[0].y,
+                   la._obj.continuum_marks['right'].marks_list[0].y]
 
     # ensure continuum marks update when spectral_y_type is changed
     # multiply converted continuum marks by expected pixel scale factor
     assert_allclose([mark / scaling_factor for mark in marks_before], marks_after, rtol=1e-5)
 
-    results = plugin.results
+    results = plugin.get_results()
     line_flux_before_unit_conversion = results[0]
     # convert back and forth between unit<>str for string format consistency
     unit_str = u.Unit(f'W / {sq_angle_unit.to_string()} m2').to_string()
@@ -156,7 +158,7 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
 
     # change flux unit and make sure result stays the same after conversion
     uc.flux_unit.selected = 'MJy'
-    results = plugin.results
+    results = plugin.get_results()
     np.testing.assert_allclose(float(results[0]['result']),
                                float(line_flux_before_unit_conversion['result']))
     np.testing.assert_allclose(float(results[0]['uncertainty']),
@@ -206,7 +208,7 @@ def test_line_identify(specviz_helper, spectrum1d):
 
     ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
     la_plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    la_plugin.plugin_opened = True
+    la_plugin.get_results()
     rest_names = [line['name_rest'] for line in ll_plugin.list_contents['Test List']['lines']]
 
     # will default to no selection
@@ -296,7 +298,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)
+    np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 2.153181e-13, atol=1e-15)
 
 
 def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
@@ -325,7 +327,7 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # continuum and spectral cannot be the same value
-    assert plugin.results[0]['result'] == ''
+    assert plugin.get_results()[0]['result'] == ''
 
 
 def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
@@ -352,7 +354,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.spectral_subset_selected = 'Subset 1'
     plugin.continuum_width = 11
-    assert plugin.results[0]['result'] == ''
+    assert plugin.get_results()[0]['result'] == ''
 
 
 def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
@@ -381,7 +383,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), -2.79572e-13, atol=1e-15)
+    np.testing.assert_allclose(float(plugin.get_results()[0]['result']), -2.79572e-13, atol=1e-15)
 
 
 def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
@@ -416,7 +418,7 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 1.482418e-14, atol=1e-16)
+    np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 1.482418e-14, atol=1e-16)
 
 
 def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
@@ -446,7 +448,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 4.204513e-14, atol=1e-16)
+    np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 4.204513e-14, atol=1e-16)
 
 
 def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
@@ -476,7 +478,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 7.570859e-14, atol=1e-16)
+    np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 7.570859e-14, atol=1e-16)
 
 
 def test_subset_changed(specviz_helper, spectrum1d):
@@ -506,11 +508,12 @@ def test_subset_changed(specviz_helper, spectrum1d):
     plugin.width = 3
 
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7500 * unit))
+                                                                        7500 * unit),
+                                                         edit_subset='Subset 1')
     specviz_helper.app.state.drawer_content = 'plugins'
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)
+    np.testing.assert_allclose(float(plugin.get_results()[0]['result']), 2.153181e-13, atol=1e-15)
 
 
 def test_invalid_subset(specviz_helper, spectrum1d):

@@ -32,7 +32,6 @@
       </v-expansion-panels>
     </v-row>
 
-
     <div @mouseover="() => active_step='trace'">
       <j-plugin-section-header :active="active_step==='trace'">Trace</j-plugin-section-header>
       <v-row>

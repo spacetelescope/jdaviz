@@ -47,7 +47,8 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage)
-from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
+from jdaviz.core.registries import (tool_registry, tray_registry,
+                                    viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
@@ -67,6 +68,10 @@ SplitPanes()
 GoldenLayout()
 
 enable_spaxel_unit()
+
+# This shows up repeatedly when doing many operations, I think it's reasonable to disable it
+warnings.filterwarnings('ignore', message="The unit 'Angstrom' has been deprecated"
+                        "in the VOUnit standard")
 
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
 EXT_TYPES = dict(flux=['flux', 'sci'],
@@ -135,7 +140,9 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
                      'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
                      'j-loader-panel': 'components/loader_panel.vue',
+                     'j-new-viewer-panel': 'components/new_viewer_panel.vue',
                      'j-loader': 'components/loader.vue',
+                     'j-viewer-creator': 'components/viewer_creator.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
@@ -145,6 +152,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-subset-icon': 'components/subset_icon.vue',
                      'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
+                     'j-about-menu': 'components/about_menu.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
@@ -198,13 +206,25 @@ class ApplicationState(State):
     propagate to the traitlet in order to trigger a UI re-render.
     """
     drawer_content = CallbackProperty(
-        'plugins', docstring="Content shown in the tray drawer.")
+        '', docstring="Content shown in the tray drawer.")
+    add_subtab = CallbackProperty(
+        0, docstring="Index of the active subtab in the add sidebar.")
+    settings_subtab = CallbackProperty(
+        0, docstring="Index of the active subtab in the settings sidebar.")
+    info_subtab = CallbackProperty(
+        0, docstring="Index of the active subtab in the info sidebar.")
+    jdaviz_version = CallbackProperty(
+        __version__, docstring="Version of Jdaviz.")
+    global_search = CallbackProperty(
+        '', docstring="Global search string.")
+    global_search_menu = CallbackProperty(
+        False, docstring="Whether to show the global search menu.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
     show_api_hints = CallbackProperty(
         False, docstring="Whether to show API hints.")
-    logger_overlay = CallbackProperty(
-        False, docstring="State of the logger history overlay.")
+    subset_mode_create = CallbackProperty(
+        False, docstring="Whether to create a new subset.")
 
     snackbar = DictCallbackProperty({
         'show': False,
@@ -215,8 +235,6 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     snackbar_queue = SnackbarQueue()
-
-    snackbar_history = ListCallbackProperty(docstring="Previously dismissed snackbar items")
 
     settings = DictCallbackProperty({
         'data': {
@@ -257,7 +275,11 @@ class ApplicationState(State):
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
-        '', docstring="Index of the active loader tab shown in the tray.")
+        '', docstring="Active loader shown in the loaders panel.")
+    new_viewer_items = ListCallbackProperty(
+        docstring="List of new viewer items available to the application.")
+    new_viewer_selected = CallbackProperty(
+        '', docstring="Active new viewer shown in the new viewers panel.")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -277,6 +299,8 @@ class ApplicationState(State):
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
+    viewer_items = ListCallbackProperty(
+        docstring="List (flat) of viewer objects")
 
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
@@ -296,16 +320,20 @@ class Application(VuetifyTemplate, HubListener):
 
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
+    api_hints_obj = Unicode("").tag(sync=True)  # will use config if not defined
     vdocs = Unicode("").tag(sync=True)
     docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
+    golden_layout_state = Dict(default_value=None, allow_none=True).tag(sync=True)
+    force_open_about = Bool(False).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._jdaviz_helper = None
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
+        self._default_data_cls = {}
         self.popout_button = PopoutButton(self)
         self.style_registry_instance = style_registry.get_style_registry()
 
@@ -595,7 +623,8 @@ class Application(VuetifyTemplate, HubListener):
             return 'info'
 
         msg_level = _verbosity_levels.index(_color_to_level(msg.color))
-        self.state.snackbar_queue.put(self.state, msg,
+        logger_plg = self._jdaviz_helper.plugins.get('Logger', None)
+        self.state.snackbar_queue.put(self.state, logger_plg, msg,
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)
 
@@ -697,6 +726,8 @@ class Application(VuetifyTemplate, HubListener):
         refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
         if new_refdata_label not in refdata_choices:
             viewer.state.ref_data_helper.append_data(new_refdata)
+        if new_refdata_label not in [lyr.layer.label for lyr in viewer.layers]:
+            viewer.add_data(new_refdata)
         viewer.state.ref_data_helper.refresh()
 
         # set the new reference data in the viewer:
@@ -943,21 +974,25 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_store.get(vid)
 
-    def _get_wcs_from_subset(self, subset_state):
+    def _get_wcs_from_subset(self, subset_state, data=None):
         """ Usually WCS is subset.parent.coords, except special cubeviz case."""
+        parent_data = subset_state.attributes[0].parent if not data else self.data_collection[data]
 
+        # 3D WCS is not yet supported so this workaround allows SkyRegions to
+        # be returned for data in cubeviz
         if self.config == 'cubeviz':
-            parent_data = subset_state.attributes[0].parent
             wcs = parent_data.meta.get("_orig_spatial_wcs", None)
         else:
-            wcs = subset_state.xatt.parent.coords
-
+            if not hasattr(parent_data, 'coords'):
+                raise AttributeError(f'{parent_data} does not have anything set for'
+                                     f'the coords attribute, unable to extract WCS')
+            wcs = parent_data.coords
         return wcs
 
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,
                     simplify_spectral=True, use_display_units=False,
-                    include_sky_region=False):
+                    include_sky_region=False, wrt_data=None):
         """
         Returns all branches of glue subset tree in the form that subset plugin
         can recognize.
@@ -984,6 +1019,9 @@ class Application(VuetifyTemplate, HubListener):
             parent data, return a sky region in addition to pixel region. If
             subset is composite, a sky region for each constituent subset will
             be returned.
+        wrt_data : str or None
+            Name of data to use for applying WCS to subset when returning as
+            a sky region object.
 
         Returns
         -------
@@ -1017,11 +1055,13 @@ class Application(VuetifyTemplate, HubListener):
                 # objects that must be traversed
                 subset_region = self.get_sub_regions(subset.subset_state,
                                                      simplify_spectral, use_display_units,
-                                                     get_sky_regions=include_sky_region)
+                                                     get_sky_regions=include_sky_region,
+                                                     wrt_data=wrt_data)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
                 subset_region = self._get_roi_subset_definition(subset.subset_state,
-                                                                to_sky=include_sky_region)
+                                                                to_sky=include_sky_region,
+                                                                wrt_data=wrt_data)
 
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
@@ -1150,20 +1190,28 @@ class Application(VuetifyTemplate, HubListener):
                  "sky_region": None,
                  "subset_state": subset_state}]
 
-    def _get_roi_subset_definition(self, subset_state, to_sky=False):
-
-        # pixel region
-        roi_as_region = roi_subset_state_to_region(subset_state)
-
+    def _get_roi_subset_definition(self, subset_state, to_sky=False, wrt_data=None):
         wcs = None
-        if to_sky:
-            wcs = self._get_wcs_from_subset(subset_state)
+        # If SkyRegion is explicitly requested or the user has specified something for
+        # wrt_data, this will be true
+        if to_sky or wrt_data is not None:
+            wcs = self._get_wcs_from_subset(subset_state, data=wrt_data)
 
         # if no spatial wcs on subset, we have to skip computing sky region for this subset
         # but want to do so without raising an error (since many subsets could be requested)
         roi_as_sky_region = None
         if wcs is not None:
-            roi_as_sky_region = roi_as_region.to_sky(wcs)
+            if self.config == 'cubeviz':
+                # the value for wcs returned above will be in 2D dimensions, which is needed
+                # for this translation to work
+                roi_as_sky_region = roi_subset_state_to_region(subset_state).to_sky(wcs)
+            else:
+                roi_as_sky_region = roi_subset_state_to_region(subset_state, to_sky=True)
+
+            roi_as_region = roi_as_sky_region.to_pixel(wcs)
+        else:
+            # pixel region
+            roi_as_region = roi_subset_state_to_region(subset_state)
 
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
@@ -1172,16 +1220,19 @@ class Application(VuetifyTemplate, HubListener):
                  "subset_state": subset_state}]
 
     def get_sub_regions(self, subset_state, simplify_spectral=True,
-                        use_display_units=False, get_sky_regions=False):
+                        use_display_units=False, get_sky_regions=False,
+                        wrt_data=None):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
                 one = self.get_sub_regions(subset_state.state1,
                                            simplify_spectral, use_display_units,
-                                           get_sky_regions=get_sky_regions)
+                                           get_sky_regions=get_sky_regions,
+                                           wrt_data=wrt_data)
                 two = self.get_sub_regions(subset_state.state2,
                                            simplify_spectral, use_display_units,
-                                           get_sky_regions=get_sky_regions)
+                                           get_sky_regions=get_sky_regions,
+                                           wrt_data=wrt_data)
                 if simplify_spectral and isinstance(two, SpectralRegion):
                     merge_func = self._merge_overlapping_spectral_regions_worker
                 else:
@@ -1334,12 +1385,16 @@ class Application(VuetifyTemplate, HubListener):
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
                 return self.get_sub_regions(subset_state.state1,
-                                            simplify_spectral, use_display_units)
+                                            simplify_spectral,
+                                            use_display_units,
+                                            get_sky_regions=get_sky_regions,
+                                            wrt_data=wrt_data)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI, Range, or MultiMask.
             if isinstance(subset_state, RoiSubsetState):
-                return self._get_roi_subset_definition(subset_state, to_sky=get_sky_regions)
+                return self._get_roi_subset_definition(subset_state, to_sky=get_sky_regions,
+                                                       wrt_data=wrt_data)
 
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state,
@@ -1347,19 +1402,71 @@ class Application(VuetifyTemplate, HubListener):
             elif isinstance(subset_state, MultiMaskSubsetState):
                 return self._get_multi_mask_subset_definition(subset_state)
 
+    def delete_subsets(self, subset_labels=None):
+        """
+        Delete all or specified subsets in app.
+
+        This method removes subsets based on the provided ``subset_labels`` (a
+        single subset label or multiple labels). If ``subset_labels``
+        is None (default), all subsets will be removed.
+
+        Parameters
+        ----------
+        subset_labels : str or list of str or None
+            The label(s) of the subsets to delete. If None, all subsets will be
+            removed.
+        """
+
+        # delete all subsets
+        if subset_labels is None:
+            for subset_group in self.data_collection.subset_groups:
+                self.data_collection.remove_subset_group(subset_group)
+
+        else:
+            if isinstance(subset_labels, str):
+                subset_labels = [subset_labels]
+            labels = np.asarray(subset_labels)
+            sg = self.data_collection.subset_groups
+            subset_grp_labels = {s.label: s for s in sg}
+
+            # raise ValueError if any subset in 'subset_labels' isn't actually
+            # in the data collection, before deleting subsets
+            invalid_labels = ~np.isin(labels, list(subset_grp_labels.keys()))
+            if np.any(invalid_labels):
+                bad = ', '.join([x for x in labels[invalid_labels]])
+                raise ValueError(f'{bad} not in data collection, can not delete.')
+            else:
+                for label in labels:
+                    self.data_collection.remove_subset_group(subset_grp_labels[label])
+
     def _get_display_unit(self, axis):
         if self._jdaviz_helper is None:
             # cannot access either the plugin or the spectrum viewer.
             # Plugins that access the unit at this point will need to
             # detect that they are set to unitless and attempt again later.
             return ''
-        elif self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
+
+        try:
+            uc = self.get_tray_item_from_name('g-unit-conversion')  # even if not relevant
+        except KeyError:
+            # UC plugin not available (should only be for: imviz, mosviz)
+            uc = None
+        if uc is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
+            if hasattr(self._jdaviz_helper, '_default_spectrum_viewer_reference_name'):
+                viewer_name = self._jdaviz_helper._default_spectrum_viewer_reference_name
+            elif hasattr(self._jdaviz_helper, '_default_spectrum_2d_viewer_reference_name'):
+                viewer_name = self._jdaviz_helper._default_spectrum_2d_viewer_reference_name
+            elif axis == 'temporal':
+                # No unit for ramp's time (group/resultant) axis:
+                return None
+            else:
+                raise NotImplementedError("No default viewer reference found.")
             if axis == 'spectral':
-                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+                sv = self.get_viewer(viewer_name)
                 return sv.data()[0].spectral_axis.unit
             elif axis in ('flux', 'sb', 'spectral_y'):
-                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+                sv = self.get_viewer(viewer_name)
                 sv_y_unit = sv.data()[0].flux.unit
                 if axis == 'spectral_y':
                     return sv_y_unit
@@ -1395,12 +1502,8 @@ class Application(VuetifyTemplate, HubListener):
                     if sv_y_angle_unit:
                         return sv_y_unit
                     return sv_y_unit / solid_angle_unit
-            elif axis == 'temporal':
-                # No unit for ramp's time (group/resultant) axis:
-                return None
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
-        uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
         if axis == 'spectral_y':
             return uc.spectral_y_unit
         try:
@@ -1532,6 +1635,7 @@ class Application(VuetifyTemplate, HubListener):
         if data_label in self.data_collection.labels:
             warnings.warn(f"Overwriting existing data entry with label '{data_label}'")
 
+        self._default_data_cls[data_label] = data.__class__
         self.data_collection[data_label] = data
 
         # manage associated Data entries:
@@ -1619,43 +1723,50 @@ class Application(VuetifyTemplate, HubListener):
 
         return data_label
 
-    def return_unique_name(self, data_label, ext=None):
-        if data_label is None:
-            data_label = "Unknown"
+    def return_unique_name(self, label, typ='data', ext=None):
+        if typ == 'data':
+            exist_labels = self.data_collection.labels
+        elif typ == 'viewer':
+            exist_labels = list(self._viewer_store.keys())
+        elif isinstance(typ, list):
+            exist_labels = typ
+        else:
+            raise ValueError("typ must be either 'data', 'viewer', or a list of strings")
+        if label is None:
+            label = "Unknown"
 
         # This regex checks for any length of characters that end
         # with a space followed by parenthesis with a number inside.
         # If there is a match, the space and parenthesis section will be
         # removed so that the remainder of the label can be checked
-        # against the data_label.
+        # against the label.
         check_if_dup = re.compile(r"(.*)(\s\(\d*\))$")
-        labels = self.data_collection.labels
         number_of_duplicates = 0
         max_number = 0
-        for label in labels:
+        for exist_label in exist_labels:
             # If label is a duplicate of another label
-            if re.fullmatch(check_if_dup, label):
-                label_split = label.split(" ")
-                label_without_dup = " ".join(label_split[:-1])
-                label = label_without_dup
+            if re.fullmatch(check_if_dup, exist_label):
+                exist_label_split = exist_label.split(" ")
+                exist_label_without_dup = " ".join(exist_label_split[:-1])
+                exist_label = exist_label_without_dup
                 # Remove parentheses and cast to float
-                number_dup = int(label_split[-1][1:-1])
+                number_dup = int(exist_label_split[-1][1:-1])
                 # Used to keep track the max number of duplicates,
                 # even if not all duplicates are loaded (or some
                 # are renamed)
                 if number_dup > max_number:
                     max_number = number_dup
 
-            if ext and f"{data_label}[{ext}]" == label:
+            if ext and f"{label}[{ext}]" == exist_label:
                 number_of_duplicates += 1
-            elif ext is None and data_label == label:
+            elif ext is None and label == exist_label:
                 number_of_duplicates += 1
 
         if ext:
-            data_label = f"{data_label}[{ext}]"
+            label = f"{label}[{ext}]"
 
         if number_of_duplicates > 0:
-            data_label = f"{data_label} ({number_of_duplicates})"
+            label = f"{label} ({number_of_duplicates})"
 
         # It is possible to add data named "test (1)" and then
         # add another data named "test" and return_unique_name will see the
@@ -1664,12 +1775,12 @@ class Application(VuetifyTemplate, HubListener):
         # causes issues. This block alters the duplicate number to be something unique
         # (one more than the max number duplicate found)
         # if a duplicate is still found in data_collection.
-        if data_label in self.data_collection.labels:
-            label_split = data_label.split(" ")
+        if label in exist_labels:
+            label_split = label.split(" ")
             label_without_dup = " ".join(label_split[:-1])
-            data_label = f"{label_without_dup} ({max_number + 1})"
+            label = f"{label_without_dup} ({max_number + 1})"
 
-        return data_label
+        return label
 
     def add_data_to_viewer(self, viewer_reference, data_label,
                            visible=True, clear_other_data=False):
@@ -1858,7 +1969,7 @@ class Application(VuetifyTemplate, HubListener):
         to require that the viewer supports spectrum visualization.
         """
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-        from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+        from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer, Spectrum2DViewer
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import (
             MosvizTableViewer, MosvizProfile2DView
@@ -1867,8 +1978,8 @@ class Application(VuetifyTemplate, HubListener):
             RampvizImageView, RampvizProfileView
         )
 
-        spectral_viewers = (SpecvizProfileView, CubevizProfileView)
-        spectral_2d_viewers = (MosvizProfile2DView, )
+        spectral_viewers = (Spectrum1DViewer, CubevizProfileView)
+        spectral_2d_viewers = (Spectrum2DViewer, MosvizProfile2DView)
         table_viewers = (MosvizTableViewer, )
         image_viewers = (ImvizImageView, CubevizImageView, RampvizImageView)
         flux_viewers = (CubevizImageView, RampvizImageView)
@@ -2068,11 +2179,12 @@ class Application(VuetifyTemplate, HubListener):
 
         else:
             split_label = subset_name.split(" ")
-            if split_label[0] == "Subset" and split_label[1].isdigit():
-                if raise_if_invalid:
-                    raise ValueError("The pattern 'Subset N' is reserved for "
-                                     "auto-generated labels")
-                return False
+            if len(split_label) > 1:
+                if split_label[0] == "Subset" and split_label[1].isdigit():
+                    if raise_if_invalid:
+                        raise ValueError("The pattern 'Subset N' is reserved for "
+                                         "auto-generated labels")
+                    return False
 
         return True
 
@@ -2461,6 +2573,20 @@ class Application(VuetifyTemplate, HubListener):
         kwargs = event.get('kwargs', {})
         return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
+    def vue_search_item_clicked(self, event):
+        attr, label = event['attr'], event['label']
+        if attr == 'data_menus':
+            item = self._jdaviz_helper.viewers[label].data_menu
+        else:
+            item = getattr(self._jdaviz_helper, attr)[label]
+        if label == 'About':
+            item.show_popup()
+        elif attr == 'data_menus':
+            item.open_menu()
+        else:
+            kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
+            item.open_in_tray(**kw)
+
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
@@ -2667,6 +2793,7 @@ class Application(VuetifyTemplate, HubListener):
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
             'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            'api_methods': viewer._data_menu.api_methods if hasattr(viewer, '_data_menu') else [],
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
@@ -2753,13 +2880,19 @@ class Application(VuetifyTemplate, HubListener):
             container='gl-stack',
             viewers=[new_viewer_item])
 
+        self.state.viewer_items.append(new_viewer_item)
+
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
         vid = new_viewer_item['id']
         self._viewer_store[vid] = viewer
 
         # Add viewer locally
-        self.state.stack_items.append(new_stack_item)
+        if self.config in ('deconfigged', 'specviz', 'specviz2d', 'lcviz'):
+            # add to bottom (eventually will want more control in placement)
+            self.state.stack_items[0]['children'].append(new_stack_item)
+        else:
+            self.state.stack_items.append(new_stack_item)
 
         self.session.application.viewers.append(viewer)
 
@@ -2866,7 +2999,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # Loaders
         def open():
-            self.state.drawer_content = 'loaders'
+            self.state.drawer_content = 'loaders'  # TODO: rename to "add"?
+            self.state.add_subtab = 0
 
         def close():
             self.state.loader_selected = ''
@@ -2876,42 +3010,146 @@ class Application(VuetifyTemplate, HubListener):
 
         # registry will be populated at import
         import jdaviz.core.loaders  # noqa
-        for name, loader_cls in loader_resolver_registry.members.items():
-            loader = loader_cls(app=self,
-                                open_callback=open,
-                                close_callback=close,
-                                set_active_loader_callback=set_active_loader)
+        for name, Resolver in loader_resolver_registry.members.items():
+            loader = Resolver(app=self,
+                              open_callback=open,
+                              close_callback=close,
+                              set_active_loader_callback=set_active_loader)
             self.state.loader_items.append({
                 'name': name,
                 'label': name,
-                'widget': "IPY_MODEL_" + loader.model_id
+                'requires_api_support': loader.requires_api_support,
+                'widget': "IPY_MODEL_" + loader.model_id,
+                'api_methods': loader.api_methods,
             })
         # initialize selection (tab) to first entry
         if len(self.state.loader_items):
             self.state.loader_selected = self.state.loader_items[0]['name']
 
         # Tray plugins
-        for name in config.get('tray', []):
+        if self.config == 'deconfigged':
+            self.update_tray_items_from_registry()
+            import jdaviz.core.viewer_creators  # noqa
+            self.update_new_viewers_from_registry()
+        else:
+            for name in config.get('tray', []):
+                tray_registry_member = tray_registry.members.get(name)
+                self.state.tray_items.append(self._create_tray_item(tray_registry_member))
 
-            tray = tray_registry.members.get(name)
+    def update_loaders_from_registry(self):
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_loaders_from_registry is only "
+                                      "implemented for the deconfigged app")
+        for loader in self._jdaviz_helper.loaders.values():
+            loader.format._update_items()
 
-            tray_item_instance = tray.get('cls')(app=self, tray_instance=True)
+    def update_tray_items_from_registry(self):
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_tray_items_from_registry is only "
+                                      "implemented for the deconfigged app")
+        # need to rebuild in order, just pulling from existing dict if its already there
+        tray_items = []
+        for category in ['app:options', 'data:reduction',
+                         'data:manipulation', 'data:analysis',
+                         'core']:
+            for tray_registry_member in tray_registry.members_in_category(category):
+                if not tray_registry_member.get('overwrite', False):
+                    try:
+                        tray_item = self.get_tray_item_from_name(
+                            tray_registry_member.get('name'), return_widget=False)
+                    except KeyError:
+                        create_new = True
+                    else:
+                        create_new = False
+                else:
+                    create_new = True
 
-            # store a copy of the tray name in the instance so it can be accessed by the
-            # plugin itself
-            tray_item_label = tray.get('label')
+                if create_new:
+                    try:
+                        tray_item = self._create_tray_item(tray_registry_member)
+                    except Exception as e:
+                        self.hub.broadcast(SnackbarMessage(
+                            f"Failed to load plugin {tray_registry_member.get('name')}: {e}",
+                            sender=self, color='error'))
+                tray_items.append(tray_item)
 
-            tray_item_description = tray_item_instance.plugin_description
+        self.state.tray_items = tray_items
 
-            # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
-            self.state.tray_items.append({
-                'name': name,
-                'label': tray_item_label,
-                'tray_item_description': tray_item_description,
-                'api_methods': tray_item_instance.api_methods,
-                'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
-                'widget': "IPY_MODEL_" + tray_item_instance.model_id
-            })
+    def _create_tray_item(self, tray_registry_member):
+        tray_item_instance = tray_registry_member.get('cls')(app=self, tray_instance=True)
+
+        # store a copy of the tray name in the instance so it can be accessed by the
+        # plugin itself
+        tray_item_label = tray_registry_member.get('label')
+
+        tray_item_description = tray_item_instance.plugin_description
+        # NOTE: is_relevant is later updated by observing irrelvant_msg traitlet
+        tray_item = {
+            'name': tray_registry_member.get('name'),
+            'label': tray_item_label,
+            'sidebar': tray_item_instance._sidebar,
+            'subtab': tray_item_instance._subtab,
+            'tray_item_description': tray_item_description,
+            'api_methods': tray_item_instance.api_methods,
+            'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
+            'widget': "IPY_MODEL_" + tray_item_instance.model_id
+        }
+        return tray_item
+
+    def update_new_viewers_from_registry(self):
+        # TODO: implement jdaviz.new_viewers dictionary to instantiated items here
+        if self.config != 'deconfigged':
+            raise NotImplementedError("update_new_viewers_from_registry is only "
+                                      "implemented for the deconfigged app")
+
+        # need to rebuild in order, just pulling from existing dict if its already there
+        new_viewer_items = []
+        for name, vc_registry_member in viewer_creator_registry.members.items():
+            try:
+                item = self.get_new_viewer_item_from_name(
+                            name, return_widget=False)
+            except KeyError:
+                try:
+                    item = self._create_new_viewer_item(vc_registry_member)
+                except Exception as e:
+                    self.hub.broadcast(SnackbarMessage(
+                        f"Failed to load viewer {name}: {e}",
+                        sender=self, color='error'))
+                    continue
+
+            new_viewer_items.append(item)
+
+        self.state.new_viewer_items = new_viewer_items
+        relevant_items = [nvi for nvi in new_viewer_items if nvi['is_relevant']]
+        if not len(self.state.new_viewer_selected) and len(relevant_items):
+            self.state.new_viewer_selected = relevant_items[0]['label']
+
+    def _create_new_viewer_item(self, vc_registry_member):
+        def open():
+            self.state.drawer_content = 'loaders'  # TODO: rename to "add"?
+            self.state.add_subtab = 1
+
+        def close():
+            self.state.new_viewer_selected = ''
+
+        def set_active_viewer_creator(new_viewer_label):
+            self.state.new_viewer_selected = new_viewer_label
+
+        vc_instance = vc_registry_member(app=self,
+                                         open_callback=open,
+                                         close_callback=close,
+                                         set_active_callback=set_active_viewer_creator)
+        new_viewer_item = {
+            'label': vc_registry_member._registry_label,
+            'widget': "IPY_MODEL_" + vc_instance.model_id,
+            'api_methods': vc_instance.api_methods,
+            'is_relevant': vc_instance.is_relevant,
+        }
+        return new_viewer_item
+
+    def get_new_viewer_item_from_name(self, name, return_widget=True):
+        return self._get_state_item_from_name(self.state.new_viewer_items,
+                                              name, return_widget)
 
     def _reset_state(self):
         """ Resets the application state """
@@ -2945,7 +3183,25 @@ class Application(VuetifyTemplate, HubListener):
         cfg = get_configuration(path=path, section=section, config=config)
         return cfg
 
-    def get_tray_item_from_name(self, name):
+    def _get_state_item_from_name(self, state_list, name, return_widget=True):
+        from ipywidgets.widgets import widget_serialization
+
+        ret_item = None
+        for item in state_list:
+            if item.get('name') == name or item.get('label') == name:
+                ipy_model_id = item['widget']
+                if return_widget:
+                    ret_item = widget_serialization['from_json'](ipy_model_id, None)
+                else:
+                    ret_item = item
+                break
+
+        if ret_item is None:
+            raise KeyError(f'{name} not found')
+
+        return ret_item
+
+    def get_tray_item_from_name(self, name, return_widget=True):
         """Return the instance of a tray item for a given name.
         This is useful for direct programmatic access to Jdaviz plugins
         registered under tray items.
@@ -2966,19 +3222,7 @@ class Application(VuetifyTemplate, HubListener):
         KeyError
             Name not found.
         """
-        from ipywidgets.widgets import widget_serialization
-
-        tray_item = None
-        for item in self.state.tray_items:
-            if item['name'] == name or item['label'] == name:
-                ipy_model_id = item['widget']
-                tray_item = widget_serialization['from_json'](ipy_model_id, None)
-                break
-
-        if tray_item is None:
-            raise KeyError(f'{name} not found in app.state.tray_items')
-
-        return tray_item
+        return self._get_state_item_from_name(self.state.tray_items, name, return_widget)
 
     def _init_data_associations(self):
         # assume all Data are parents:

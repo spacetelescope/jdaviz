@@ -59,7 +59,7 @@ Common Issues
 If you encounter problems while following these installation instructions,
 please consult :ref:`known installation issues <known_issues_installation>`.
 
-Note that ``jdaviz`` requires Python 3.10 or newer. If your ``pip`` corresponds to an older version of
+Note that ``jdaviz`` requires Python 3.11 or newer. If your ``pip`` corresponds to an older version of
 Python, it will raise an error that it cannot find a valid package.
 
 Users occasionally encounter problems running the pure ``pip`` install above. For those
@@ -141,8 +141,8 @@ Github or contact the `JWST Help Desk <https://jwsthelp.stsci.edu>`_.
 
 .. _optional-deps-roman:
 
-Optional Dependencies for Roman
--------------------------------
+Optional Dependencies
+---------------------
 
 Dependencies for working with data products from the Roman Space Telescope
 are available for optional installation from PyPI with::
@@ -153,6 +153,23 @@ or while building from source with::
 
     pip install -U .[roman]
 
+Dependencies for sonifying data may be similarly installed with the ``strauss`` flag::
+
+    pip install -U jdaviz[strauss]
+
+Note that any installation including the ``strauss`` dependencies may require you to
+install ``libportaudio2``, for example on Ubuntu::
+
+    sudo apt-get install libportaudio2
+
+Finally, dependencies for running the standalone version of Jdaviz in an embedded browser
+instead of a system browser using QT can be installed with::
+
+    pip install -U jdaviz[qt]
+
+All optional dependencies can be installed using the ``all`` flag::
+
+    pip install -U jdaviz[all]
 
 Developer Installation
 ----------------------

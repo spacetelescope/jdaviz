@@ -9,7 +9,7 @@
     :scroll_to.sync="scroll_to">
 
     <plugin-loaders-panel
-      v-if="dev_loaders"
+      v-if="dev_loaders || ['deconfigged', 'specviz', 'specviz2d'].indexOf('config') !== -1"
       :loader_panel_ind.sync="loader_panel_ind"
       :loader_items="loader_items"
       :loader_selected.sync="loader_selected"
@@ -39,7 +39,7 @@
 
     <v-row align=center>
       <v-col cols=10 justify="left">
-        <plugin-subset-select 
+        <plugin-subset-select
           :items="subset_items"
           :selected.sync="subset_selected"
           :multiselect="multiselect"
@@ -87,11 +87,11 @@
               <j-tooltip tooltipcontent="Recenter subset to centroid of selected data">
                 <v-btn
                   color="primary"
-                  text 
+                  text
                   @click="recenter_subset"
                   :class="api_hints_enabled ? 'api-hint' : null"
                 >
-                  {{ api_hints_enabled ? 
+                  {{ api_hints_enabled ?
                     'plg.recenter()'
                     :
                     'Recenter'
@@ -149,11 +149,14 @@
         </v-row>
         <v-row v-else class="row-no-outside-padding">
           <v-text-field
-            :label="item.name"
+            :label="api_hints_enabled ? 'plg.update_subset(\'' + subset_selected + '\', subregion=' + index + ', ' + item.att + '=' + item.value + ')' : item.name"
             v-model.number="item.value"
             type="number"
+            @keyup="if ($event.key == 'Enter') {update_subset()}"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
             :suffix="item.unit ? item.unit.replace('Angstrom', 'A') : ''"
+            :class="api_hints_enabled ? 'api-hint' : null"
+            persistent-hint
           ></v-text-field>
         </v-row>
       </div>
@@ -172,9 +175,14 @@
           <plugin-action-button
             :disabled="!can_simplify"
             :results_isolated_to_plugin="false"
+            :api_hints_enabled="api_hints_enabled"
             @click="simplify_subset"
           >
-            Simplify
+            {{ api_hints_enabled ?
+              'plg.simplify_subset()'
+              :
+              'Simplify'
+            }}
           </plugin-action-button>
         </j-tooltip>
         <plugin-action-button

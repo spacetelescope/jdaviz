@@ -119,7 +119,7 @@ You can create your own :class:`~specutils.Spectrum1D` object by hand to load in
     from jdaviz import Cubeviz
 
     flux = np.arange(16).reshape((2, 2, 4)) * u.Jy
-    wcs_dict = {"CTYPE1": "WAVE-LOG, "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
+    wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
                 "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
                 "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
                 "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
@@ -209,10 +209,6 @@ form ``(region, reason)``:
 
 .. note:: Sky regions are currently unsupported in Cubeviz, unlike Imviz.
 
-For more details on the API, please see
-:py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
-and :py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
-in Cubeviz.
 
 Loading from a URL or URI
 -------------------------

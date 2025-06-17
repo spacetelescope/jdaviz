@@ -1,3 +1,4 @@
+import operator
 import os
 import time
 import threading
@@ -5,6 +6,7 @@ import warnings
 from collections import deque
 from urllib.parse import urlparse
 
+import asdf
 import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
@@ -14,6 +16,7 @@ from astroquery.mast import Observations, conf
 from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
+from regions import CirclePixelRegion, CircleAnnulusPixelRegion
 
 from glue.config import settings
 from glue.config import colormaps as glue_colormaps
@@ -44,6 +47,7 @@ class SnackbarQueue:
     Class that performs the role of VSnackbarQueue, which is not
     implemented in ipyvuetify.
     '''
+
     def __init__(self):
         self.queue = deque()
         # track whether we're showing a loading message which won't clear by timeout,
@@ -53,19 +57,19 @@ class SnackbarQueue:
         # to give time for the app to load.
         self.first = True
 
-    def put(self, state, msg, history=True, popup=True):
+    def put(self, state, logger_plg, msg, history=True, popup=True):
         if msg.color not in ['info', 'warning', 'error', 'success', None]:
             raise ValueError(f"color ({msg.color}) must be on of: info, warning, error, success")
 
-        if not msg.loading and history:
+        if not msg.loading and history and logger_plg is not None:
             now = time.localtime()
             timestamp = f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
             new_history = {'time': timestamp, 'text': msg.text, 'color': msg.color}
             # for now, we'll hardcode the max length of the stored history
-            if len(state.snackbar_history) >= 50:
-                state.snackbar_history = state.snackbar_history[1:] + [new_history]
+            if len(logger_plg.history) >= 50:
+                logger_plg.history = logger_plg.history[1:] + [new_history]
             else:
-                state.snackbar_history.append(new_history)
+                logger_plg.history = logger_plg.history + [new_history]
 
         if not (popup or msg.loading):
             if self.loading:
@@ -124,7 +128,11 @@ class SnackbarQueue:
             # so they are not missed
             msg = self.queue[0]
             if msg.text == state.snackbar['text']:
-                _ = self.queue.popleft()
+                try:
+                    _ = self.queue.popleft()
+                except IndexError:
+                    # in case the queue has been cleared in the meantime
+                    pass
 
         # in case there are messages in the queue still,
         # display the next.
@@ -308,8 +316,8 @@ def standardize_roman_metadata(data_model):
     d : dict
         Flattened dictionary of metadata
     """
-    import roman_datamodels.datamodels as rdm
-    if isinstance(data_model, rdm.DataModel):
+    # if the file is a Roman DataModel:
+    if hasattr(data_model, 'to_flat_dict'):
         # Roman metadata are in nested dicts that we flatten:
         flat_dict_meta = data_model.to_flat_dict()
 
@@ -319,6 +327,9 @@ def standardize_roman_metadata(data_model):
             for k, v in flat_dict_meta.items()
             if 'roman.meta' in k
         }
+    elif isinstance(data_model, asdf.AsdfFile):
+        # otherwise use default standardization
+        return standardize_metadata(data_model['roman']['meta'])
 
 
 class ColorCycler:
@@ -357,6 +368,75 @@ class ColorCycler:
 
     def reset(self):
         self.counter = -1
+
+
+def _chain_regions(regions, ops):
+    """
+    Combine multiple regions into a compound pixel/sky region based on the
+    specified operators.
+
+    If the operators are valid binary operators recognized  by both glue and
+    Regions, the function returns a compound region. Otherwise, it returns a
+    list of individual regions paired with their respective operators, or just
+    returns the region if regions only contains one region.
+
+    Parameters
+    ----------
+    regions : list
+        A list of region objects.
+    ops : list of str
+        A list of glue states that map to operator names to describe how to
+        combine regions (e.g. 'AndState').
+
+    Returns
+    -------
+    Compound region or list
+        A single compound region if valid operators are provided; otherwise,
+        a list of tuples containing individual regions and their associated
+        operators.
+    """
+
+    if len(regions) == 1:
+        return regions[0]
+
+    valid_operators = {
+        'AndState': operator.and_,
+        'OrState': operator.or_,
+        'XorState': operator.xor
+    }
+
+    operators = ops[1:]  # first subset doesn't need an operator
+
+    # if regions cant be combined into a compound region as an annulus or with
+    # and/or/xor, return list of tuples of (region, operator)
+    annulus = _combine_if_annulus(regions[0], regions[1], operators[0])
+    if annulus is None:
+        if not np.all(np.isin(operators, list(valid_operators.keys()))):
+            return list(zip(regions, [''] + operators))
+
+    r1 = annulus or regions[0]
+    for i in range(2 if annulus else 0, len(operators)):
+        r1 = valid_operators[operators[i]](r1, regions[i + 1])
+
+    return r1
+
+
+def _combine_if_annulus(region1, region2, op):
+    """
+    Determine whether applying `region2` to `region1` using the specified
+    operator results in a circular annulus. If the conditions are met,
+    return a `CircleAnnulusPixelRegion`; otherwise, return `None`.
+    """
+    if (
+        isinstance(region1, (CirclePixelRegion))
+        and isinstance(region1, (CirclePixelRegion))
+        and op == 'AndNotState'
+        and region1.center == region2.center
+        and region1.radius > region2.radius
+    ):
+        return CircleAnnulusPixelRegion(center=region1.center,
+                                        inner_radius=region2.radius,
+                                        outer_radius=region1.radius)
 
 
 def get_subset_type(subset):
@@ -464,6 +544,62 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
+def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, timeout=None,
+                   dryrun=False):
+    """
+    Retrieve and open a FITS file from an S3 URI using fsspec. Return the input
+    unchanged if it is not an S3 URI.
+
+    If ``possible_uri`` is an S3 URI, the specified extensions from the FITS
+    file will be opened remotely using `astropy.io.fits` with `fsspec`.
+    Anonymous access is assumed for S3. If the URI is not S3-based, the input
+    is returned as-is.
+
+    Parameters
+    ----------
+    possible_uri : str
+        A path or URI to the FITS file. If the URI uses the ``s3://`` scheme,
+        the file is accessed via fsspec and returned as an `~astropy.io.fits.HDUList`.
+        Otherwise, the string is returned unchanged.
+    ext : int, str, or list, optional
+        Extension(s) to load from the FITS file. Can be an integer index (e.g., 0),
+        a string name (e.g., "SCI"), or a list of such values. If `None`, all extensions
+        are loaded.
+    cache : None, bool, or str, optional
+    local_path : str, optional
+    timeout : float, optional
+    dryrun : bool, optional
+
+    Returns
+    -------
+    file_obj : `~astropy.io.fits.HDUList` or str
+        If the URI is an S3 FITS file, returns an `HDUList` containing the requested
+        extensions. Otherwise, returns the original input string.
+    """
+
+    parsed_uri = urlparse(possible_uri)
+
+    # TODO: Add caching logic
+    if parsed_uri.scheme.lower() == 's3':
+        downloaded_hdus = []
+        # this loads the requested extensions into local memory:
+        with fits.open(possible_uri, fsspec_kwargs={"anon": True}) as hdul:
+            if ext is None:
+                ext_list = list(range(len(hdul)))
+            elif not isinstance(ext, list):
+                ext_list = [ext]
+            else:
+                ext_list = ext
+            for extension in ext_list:
+                hdu_obj = hdul[extension]
+                downloaded_hdus.append(hdu_obj.copy())
+
+        file_obj = fits.HDUList(downloaded_hdus)
+        return file_obj
+    # not s3 resource, return string as is
+    return possible_uri
+
+
 def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,
                          dryrun=False):
     """
@@ -523,6 +659,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         # avoiding creating local paths in a tmp dir when in standalone:
         local_path = os.path.join(os.environ["JDAVIZ_START_DIR"], local_path)
 
+    timeout = int(timeout) if timeout is not None else timeout
     parsed_uri = urlparse(possible_uri)
 
     cache_none_msg = (
@@ -604,6 +741,11 @@ def layer_is_2d(layer):
     # returns True for subclasses of BaseData with ndim=2, both for
     # layers that are WCS-only as well as images containing data:
     return isinstance(layer, BaseData) and layer.ndim == 2
+
+
+def layer_is_3d(layer):
+    # returns True for subclasses of BaseData with ndim=3:
+    return isinstance(layer, BaseData) and layer.ndim == 3
 
 
 def layer_is_2d_or_3d(layer):

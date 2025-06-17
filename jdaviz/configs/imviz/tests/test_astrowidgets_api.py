@@ -85,22 +85,25 @@ class TestCenter(BaseImviz_WCS_WCS):
     def test_center_on_pix(self):
         self.imviz.link_data(align_by='wcs')
 
-        # This is the second loaded data that is dithered by 1-pix.
+        # This is the second loaded data that is dithered by 1-pix in x
+        limits_first_data = np.array([-5.5, 5.5, -5.5, 5.5])
+        limits_dithered_data = limits_first_data.copy()
+        limits_dithered_data[:2] -= 1
+
         self.viewer.center_on((0, 0))
-        expected_position = [-6.75, 4.25, -5.75, 5.25]
         rtol = 1e-4
-        assert_allclose(self.viewer.get_limits(), expected_position, rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), limits_dithered_data, rtol=rtol)
 
         # This is the first data.
         self.viewer.blink_once()
         self.viewer.center_on((0, 0))
-        assert_allclose(self.viewer.get_limits(), [-5.75, 5.25, -5.75, 5.25], rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), limits_first_data, rtol=rtol)
 
         # Centering by sky on second data.
         self.viewer.blink_once()
         sky = self.wcs_2.pixel_to_world(0, 0)
         self.viewer.center_on(sky)
-        assert_allclose(self.viewer.get_limits(), expected_position, rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), limits_dithered_data, rtol=rtol)
 
 
 class TestZoom(BaseImviz_WCS_NoWCS):
@@ -348,3 +351,18 @@ def test_markers_gwcs_lonlat(imviz_helper):
     calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
     imviz_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
     assert imviz_helper.app.data_collection[1].label == 'my_sky'
+
+    viewer = imviz_helper.app.get_viewer('imviz-0')
+    viewer.reset_markers()
+
+    # change orientation and ensure catalogs can be plotted using new orientation
+    # data collection entry
+    orientation = imviz_helper.plugins['Orientation']
+    orientation.align_by = "WCS"
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin.catalog.selected = 'Gaia'
+    catalogs_plugin.max_sources = 10
+
+    with pytest.warns(ResourceWarning):
+        catalogs_plugin.search(error_on_fail=True)

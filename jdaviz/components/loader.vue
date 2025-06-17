@@ -18,15 +18,15 @@
                       :items="target_items"
                       :selected.sync="target_selected"
                       @update:selected="$emit('update:target_selected', $event)"
-                      tooltip_suffix="formats"
+                      tooltip_suffix="compatible formats"
                       api_hint="ldr.target ="
                       :api_hints_enabled="api_hints_enabled"
                     />
-                  </v-row>  
+                  </v-row>
 
-                  <v-row v-if="format_items.length == 0">
+                  <v-row v-if="format_items.length == 0 && valid_import_formats">
                       <v-alert type="warning" style="margin-left: -12px; margin-right: -12px; width: 100%">
-                          No matching importers found for input.
+                          No compatible importer found. Supported input types include: {{ valid_import_formats }}.
                       </v-alert>
                   </v-row>
                   <v-row v-if="format_items.length === 1" style="margin-top: 16px">
@@ -68,11 +68,12 @@
     </v-card-text>
     <v-card-actions>
         <v-spacer></v-spacer>
-        <plugin-action-button 
+        <plugin-action-button
           :spinner="import_spinner"
-          :disabled="!format_selected.length"
+          :disabled="!format_selected.length || import_disabled"
           :results_isolated_to_plugin="false"
           :api_hints_enabled="api_hints_enabled"
+
           @click="$emit('import-clicked')">
           {{ api_hints_enabled ?
             'ldr.importer()'
@@ -89,7 +90,7 @@ module.exports = {
   props: ['title', 'popout_button',
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',
-          'importer_widget', 'import_spinner',
-          'api_hints_enabled'],
+          'importer_widget', 'import_spinner', 'import_disabled',
+          'api_hints_enabled', 'valid_import_formats'],
 }
 </script>

@@ -29,10 +29,10 @@
       </template>
       <template v-slot:append>
         <v-icon style="cursor: pointer">mdi-menu-down</v-icon>
-        <j-tooltip tooltipcontent="rename">
+        <j-tooltip tooltipcontent="rename" v-if="!multiselect">
           <v-icon style="cursor: pointer" @click="modeRename">mdi-pencil</v-icon>
         </j-tooltip>
-        <j-tooltip tooltipcontent="remove">
+        <j-tooltip tooltipcontent="remove" v-if="!multiselect">
           <v-icon style="cursor: pointer" @click="modeRemove">mdi-delete</v-icon>
         </j-tooltip>
         <j-tooltip tooltipcontent="create new">
@@ -63,7 +63,7 @@
     <v-text-field
       v-else-if="['rename', 'add'].indexOf(mode) !== -1"
       v-model="edit_value"
-      @keyup="$emit('update:edit_value', $event.target.value)"
+      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
       :label="textFieldLabel"
       :class="textFieldClass"
       :hint="mode == 'rename' ? 'Rename '+label.toLowerCase() : 'Add '+label.toLowerCase()"
@@ -92,7 +92,7 @@
 
 <script>
 module.exports = {
-  props: ['mode', 'edit_value', 'items', 'selected', 'label', 'hint', 'rules',
+  props: ['mode', 'edit_value', 'items', 'selected', 'multiselect', 'label', 'hint', 'rules',
           'api_hint', 'api_hint_add', 'api_hint_rename', 'api_hint_remove', 'api_hints_enabled'
   ],
   computed: {

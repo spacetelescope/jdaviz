@@ -103,7 +103,6 @@ class SpectrumPerSpaxel(ProfileFromCube):
     def deactivate(self):
         for k in ("y_min", "y_max"):
             self._profile_viewer.state.remove_callback(k, self.on_limits_change)
-        self.viewer.stop_stream()
         super().deactivate()
 
     def on_limits_change(self, *args):
@@ -113,7 +112,6 @@ class SpectrumPerSpaxel(ProfileFromCube):
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
-            self.viewer.stop_stream()
             self._reset_profile_viewer_bounds()
             self._is_moving = False
             return
@@ -160,7 +158,6 @@ class SpectrumPerSpaxel(ProfileFromCube):
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
             self._reset_profile_viewer_bounds()
             self._mark.visible = False
-            self.viewer.stop_stream()
         else:
             y_values = spectrum.flux[x, y, :].value
             if np.all(np.isnan(y_values)):
@@ -168,9 +165,6 @@ class SpectrumPerSpaxel(ProfileFromCube):
                 return
             self._mark.update_xy(spectrum.spectral_axis.value, y_values)
             self._mark.visible = True
-
-            self.viewer.start_stream()
-            self.viewer.update_sonified_cube(x, y)
 
             # Data might have inf too.
             new_ymin = np.nanmin(y_values)

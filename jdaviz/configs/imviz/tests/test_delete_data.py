@@ -70,13 +70,13 @@ class TestDeleteData(BaseImviz_WCS_WCS):
 
         # Check that the reparenting and coordinate recalculations happened
         assert subset1.subset_state.xatt.parent.label == "Default orientation"
-        assert_allclose(subset1.subset_state.center(), (1.75, 1.75))
+        assert_allclose(subset1.subset_state.center(), (2, 2))
 
         assert subset2.subset_state.xatt.parent.label == "Default orientation"
-        assert_allclose(subset2.subset_state.roi.xmin, -0.25)
-        assert_allclose(subset2.subset_state.roi.ymin, -0.25)
-        assert_allclose(subset2.subset_state.roi.xmax, 1.75)
-        assert_allclose(subset2.subset_state.roi.ymax, 1.75)
+        assert_allclose(subset2.subset_state.roi.xmin, 0, atol=1e-8)
+        assert_allclose(subset2.subset_state.roi.ymin, 0, atol=1e-8)
+        assert_allclose(subset2.subset_state.roi.xmax, 2)
+        assert_allclose(subset2.subset_state.roi.ymax, 2)
 
 
 class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):

@@ -16,10 +16,12 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.region_translators import region2stcs_string
 
 from specutils import Spectrum1D
 from astropy import units as u
 from astropy.nddata import CCDData
+from regions import CircleSkyRegion, EllipseSkyRegion
 import bqplot
 import IPython
 
@@ -34,7 +36,8 @@ else:
 __all__ = ['Export']
 
 
-@tray_registry('export', label="Export")
+@tray_registry('export', label="Export",
+               category='core', sidebar='save')
 class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
              DatasetMultiSelectMixin, PluginTableSelectMixin, PluginPlotSelectMixin,
              MultiselectMixin):
@@ -126,6 +129,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
                                 'from_plugin']
 
+        self.viewer.add_filter('is_not_empty')
+
         viewer_format_options = ['png', 'svg']
         if self.config == 'cubeviz':
             if not self.app.state.settings.get('server_is_remote'):
@@ -150,10 +155,16 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         subset_format_options = [{'label': 'fits', 'value': 'fits', 'disabled': False},
                                  {'label': 'reg', 'value': 'reg', 'disabled': False},
                                  {'label': 'ecsv', 'value': 'ecsv', 'disabled': True}]
+
+        if self.config == 'imviz':
+            subset_format_options.append({'label': 'stcs', 'value': 'stcs', 'disabled': False})
+
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
-                                                   manual_options=subset_format_options)
+                                                   manual_options=subset_format_options,
+                                                   filters=[self._is_valid_item],
+                                                   apply_filters_to_manual_options=True)
 
         dataset_format_options = ['fits']
         self.dataset_format = SelectPluginComponent(self,
@@ -191,6 +202,34 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.serverside_enabled = False
+
+        self._set_relevant()
+
+    def _is_valid_item(self, item):
+        return self._is_not_stcs(item) or self._is_stcs_region_supported(item)
+
+    def _is_not_stcs(self, item):
+        return item.get('label', '') != 'stcs'
+
+    def _is_stcs_region_supported(self, item):
+        region = getattr(self.subset, 'selected_spatial_region', None)
+        return isinstance(region, (CircleSkyRegion, EllipseSkyRegion))
+
+    @observe('subset_selected')
+    def _on_subset_selected(self, event):
+        if hasattr(self, 'subset_format'):
+            self.subset_format._update_items()
+
+    @observe('viewer_items', 'dataset_items', 'subset_items',
+             'plugin_table_items', 'plugin_plot_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not (len(self.viewer_items) or len(self.dataset_items) or len(self.subset_items)
+                or len(self.plugin_table_items) or len(self.plugin_plot_items)):
+            self.irrelevant_msg = 'Nothing to export'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def user_api(self):
@@ -523,11 +562,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-
             if self.subset_format.selected in ('fits', 'reg'):
                 self.save_subset_as_region(selected_subset_label, filename)
             elif self.subset_format.selected == 'ecsv':
                 self.save_subset_as_table(filename)
+            elif self.subset_format.selected == 'stcs':
+                self.save_subset_as_stcs(filename)
 
         elif len(self.dataset.selected):
             filetype = self.dataset_format.selected
@@ -794,6 +834,34 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         ).start()
 
         return filename
+
+    def save_subset_as_stcs(self, filename):
+        """
+        Save a subset region to a text file in STC-S format.
+
+        Currently implemented for Circle and Ellipse sky regions only.
+
+        Parameters
+        ----------
+        filename : str
+            Write the STC-S region to a text file with this name.
+
+        Raises
+        ------
+        RuntimeError
+            If data is not aligned by WCS, which is required for STC-S export.
+        """
+        align_by = getattr(self.app, '_align_by', None)
+        if align_by != 'wcs':
+            raise RuntimeError("Please link datasets by WCS first using the Orientation plugin.")
+
+        region = self.app.get_subsets(subset_name=self.subset.selected,
+                                      include_sky_region=True)[0]['sky_region']
+
+        stcs_str = region2stcs_string(region)
+
+        with open(filename, 'w') as f:
+            f.write(stcs_str)
 
     def save_subset_as_region(self, selected_subset_label, filename):
         """

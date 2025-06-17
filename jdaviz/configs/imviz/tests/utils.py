@@ -234,7 +234,9 @@ def create_example_gwcs(shape):
 
     pipeline = [(detector_frame, det2sky), (sky_frame, None)]
 
-    return gwcs_wcs.WCS(pipeline)
+    wcs = gwcs_wcs.WCS(pipeline)
+    wcs.bounding_box = [(0, shape[0]), (0, shape[1])]
+    return wcs
 
 
 def create_wfi_image_model(image_shape=(20, 10), **kwargs):

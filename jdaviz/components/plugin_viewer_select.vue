@@ -31,6 +31,7 @@
       :chips="multiselect && !api_hints_enabled"
       item-text="label"
       item-value="label"
+      :disabled="add_to_viewer_disabled"
       persistent-hint
     >
     <template v-slot:selection="{ item, index }">
@@ -90,7 +91,7 @@
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
           'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck',
-          'api_hint', 'api_hint_multiselect', 'api_hints_enabled']
+          'api_hint', 'api_hint_multiselect', 'api_hints_enabled', 'add_to_viewer_disabled']
 };
 </script>
 

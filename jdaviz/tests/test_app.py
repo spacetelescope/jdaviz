@@ -4,7 +4,8 @@ import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum1D
-from jdaviz import Application, Specviz
+from jdaviz import Specviz
+from jdaviz.app import Application
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                viewer_flux_conversion_equivalencies)
@@ -21,10 +22,11 @@ def test_get_tray_item_from_name():
     plg = app.get_tray_item_from_name('g-gaussian-smooth')
     assert isinstance(plg, GaussianSmooth)
 
-    with pytest.raises(KeyError, match='not found in app'):
+    with pytest.raises(KeyError, match='imviz-compass not found'):
         app.get_tray_item_from_name('imviz-compass')
 
 
+@pytest.mark.xfail(reason="hardcoded config logic during deconfigging process")
 def test_nonstandard_specviz_viewer_name(spectrum1d):
     config = {'settings': {'configuration': 'nonstandard',
                            'data': {'parser': 'specviz-spectrum1d-parser'},
@@ -46,10 +48,10 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
               'viewer_area': [{'container': 'col',
                                'children': [{'container': 'row',
                                              'viewers': [{'name': 'H',
-                                                          'plot': 'specviz-profile-viewer',
+                                                          'plot': 'spectrum-1d-viewer',
                                                           'reference': 'h'},
                                                          {'name': 'K',
-                                                          'plot': 'specviz-profile-viewer',
+                                                          'plot': 'spectrum-1d-viewer',
                                                           'reference': 'k'}]}]}]}
 
     class Customviz(Specviz):

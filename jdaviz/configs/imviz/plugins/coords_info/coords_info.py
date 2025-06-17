@@ -9,10 +9,10 @@ from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
+from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer, Spectrum2DViewer
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
@@ -30,7 +30,8 @@ __all__ = ['CoordsInfo']
 class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "coords_info.vue"
 
-    _supported_viewer_classes = (SpecvizProfileView,
+    _supported_viewer_classes = (Spectrum1DViewer,
+                                 Spectrum2DViewer,
                                  ImvizImageView,
                                  CubevizImageView,
                                  RampvizImageView,
@@ -38,7 +39,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                  MosvizImageView,
                                  MosvizProfile2DView)
 
-    _viewer_classes_with_marker = (RampvizProfileView, SpecvizProfileView, MosvizProfile2DView)
+    _viewer_classes_with_marker = (Spectrum1DViewer, Spectrum2DViewer,
+                                   RampvizProfileView, MosvizProfile2DView)
 
     dataset_icon = Unicode("").tag(
         sync=True
@@ -67,11 +69,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.image_unit = None
 
         # subscribe/unsubscribe to mouse events across all existing viewers
-        viewer_refs = []
         for viewer in self.app._viewer_store.values():
             if isinstance(viewer, self._supported_viewer_classes):
                 self._create_viewer_callbacks(viewer)
-                viewer_refs.append(viewer.reference_id)
 
         self.dataset._manual_options = ['auto', 'none']
 
@@ -92,7 +92,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             id = viewer.reference_id
         if id in self._marks:
             return
-        if isinstance(viewer, MosvizProfile2DView):
+        if isinstance(viewer, Spectrum2DViewer):
             self._marks[id] = PluginLine(viewer,
                                          x=[0, 0], y=[0, 1],
                                          scales={'x': viewer.scales['x'],
@@ -102,7 +102,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._marks[id] = PluginScatter(viewer,
                                             marker='rectangle', stroke_width=1,
                                             visible=False)
-        if isinstance(viewer, MosvizProfileView):
+        if isinstance(viewer, Spectrum1DViewer):
             matched_id = f"{id}:matched"
             self._marks[matched_id] = PluginLine(viewer,
                                                  x=[0, 0], y=[0, 1],
@@ -156,6 +156,19 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if self.app.config == 'mosviz':
             return {'mosviz-1': ['mosviz-2:matched'],
                     'mosviz-2': ['mosviz-1']}
+        if self.app.config == 'deconfigged':
+            # dynamic matched viewers
+            matched_markers = {}
+            for viewer_id, viewer in self.app._viewer_store.items():
+                if isinstance(viewer, Spectrum1DViewer):
+                    matched_markers[viewer_id] = [vid
+                                                  for vid, v in self.app._viewer_store.items()
+                                                  if isinstance(v, Spectrum2DViewer)]
+                elif isinstance(viewer, Spectrum2DViewer):
+                    matched_markers[viewer_id] = [f"{vid}:matched"
+                                                  for vid, v in self.app._viewer_store.items()
+                                                  if isinstance(v, Spectrum1DViewer)]
+            return matched_markers
         return {}
 
     def as_text(self):
@@ -166,23 +179,27 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def as_dict(self):
         return self._dict
 
-    def reset_coords_display(self):
-        self.row1a_title = '\u00A0'  # to force empty line if no other content
-        self.row1a_text = ""
-        self.row1b_title = ""
-        self.row1b_text = ""
-        self.row1_unreliable = False
+    def reset_coords_display(self, clear_rows=[1, 2, 3]):
+        if 1 in clear_rows:
+            self.row1a_title = '\u00A0'  # to force empty line if no other content
+            self.row1a_text = ""
+            self.row1b_title = ""
+            self.row1b_text = ""
+            self.row1_unreliable = False
 
-        self.row2_title = '\u00A0'
-        self.row2_text = ""
-        self.row2_unreliable = False
+        if 2 in clear_rows:
+            self.row2_title = '\u00A0'
+            self.row2_text = ""
+            self.row2_unreliable = False
 
-        self.row3_title = '\u00A0'
-        self.row3_text = ""
-        self.row3_unreliable = False
+        if 3 in clear_rows:
+            self.row3_title = '\u00A0'
+            self.row3_text = ""
+            self.row3_unreliable = False
 
-        self.icon = ""
-        self._dict = {}
+        if clear_rows == [1, 2, 3]:
+            self.icon = ""
+            self._dict = {}
 
     def _viewer_mouse_clear_event(self, viewer, data=None):
         self.reset_coords_display()
@@ -212,6 +229,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
+        self.app.state.show_toolbar_buttons = False
+
         # update last known cursor position (so another event like a change in layers can update
         # the coordinates with the last known position)
         self._x, self._y = x, y
@@ -223,7 +242,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # update display for a (possible) change to the active layer based on the last known
         # cursor position
-        self.update_display(viewer, self._x, self._y)
+        self.update_display(viewer, self._x, self._y, mouseevent=False)
 
     @observe('dataset_selected')
     def _selected_dataset_changed(self, *args):
@@ -237,16 +256,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def vue_next_layer(self, *args, **kwargs):
         self.dataset.select_next()
 
-    def update_display(self, viewer, x, y):
+    def update_display(self, viewer, x, y, mouseevent=True):
         self._dict = {}
-        if isinstance(viewer, (SpecvizProfileView, RampvizProfileView)):
-            self._spectrum_viewer_update(viewer, x, y)
+        if isinstance(viewer, (Spectrum1DViewer, RampvizProfileView)):
+            self._spectrum_viewer_update(viewer, x, y, mouseevent=mouseevent)
         elif isinstance(viewer,
-                        (ImvizImageView, CubevizImageView,
+                        (Spectrum2DViewer,
+                         ImvizImageView, CubevizImageView,
                          MosvizImageView, MosvizProfile2DView,
                          RampvizImageView)
                         ):
-            self._image_viewer_update(viewer, x, y)
+            self._image_viewer_update(viewer, x, y, mouseevent=mouseevent)
 
     def _image_shape_inds(self, image):
         # return the indices in image.shape for the x and y dimension, respectively
@@ -269,7 +289,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         else:  # pragma: no cover
             raise ValueError(f'does not support ndim={image.ndim}')
 
-    def _image_viewer_update(self, viewer, x, y):
+    def _image_viewer_update(self, viewer, x, y, mouseevent=True):
         # Display the current cursor coordinates (both pixel and world) as
         # well as data values. For now we use the first dataset in the
         # viewer for the data values.
@@ -281,7 +301,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
-        self.app.state.show_toolbar_buttons = False
         if self.dataset.selected == 'auto':
             image = active_layer.layer
         elif self.dataset.selected == 'none':
@@ -332,6 +351,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         elif isinstance(viewer, ImvizImageView):
             x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
+
+            if unreliable_world or unreliable_pixel:
+                # if the mouseover coords are outside the bounding box of `image`,
+                # extrapolate using the reference data layer as the image instead:
+                image = viewer.state.reference_data
+
             if coords_status:
                 try:
                     sky = image.coords.pixel_to_world(x, y).icrs
@@ -401,7 +426,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 self.reset_coords_display()
                 coords_status = False
 
-        elif isinstance(viewer, MosvizProfile2DView):
+        elif isinstance(viewer, Spectrum2DViewer):
             self._dict['spectral_axis'] = self._dict['axes_x']
             self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
             self._dict['value'] = self._dict['axes_y']
@@ -417,19 +442,20 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             world_dec_deg = celestial_coordinates_deg[1]
 
             if "nan" in (world_ra, world_dec, world_ra_deg, world_dec_deg):
-                self.reset_coords_display()
+                self.reset_coords_display(clear_rows=[2, 3])
+            else:
+                self.row2_title = 'World'
+                self.row2_text = f'{world_ra} {world_dec} (ICRS)'
+                self.row2_unreliable = unreliable_world
+                self.row3_title = ''
+                self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
 
-            self.row2_title = 'World'
-            self.row2_text = f'{world_ra} {world_dec} (ICRS)'
-            self.row2_unreliable = unreliable_world
-            self.row3_title = ''
-            self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
             self.row3_unreliable = unreliable_world
             self._dict['world_ra'] = sky.ra.value
             self._dict['world_dec'] = sky.dec.value
             self._dict['world:unreliable'] = unreliable_world
-        elif isinstance(viewer, MosvizProfile2DView) and hasattr(getattr(image, 'coords', None),
-                                                                 'pixel_to_world'):
+        elif isinstance(viewer, Spectrum2DViewer) and hasattr(getattr(image, 'coords', None),
+                                                              'pixel_to_world'):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
             try:
                 wave, pixel = image.coords.pixel_to_world(x, y)
@@ -460,9 +486,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row3_unreliable = False
 
         maxsize = int(np.ceil(np.log10(np.max(active_layer.layer.shape)))) + 3
-        fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-        self.row1a_title = 'Pixel'
-        self.row1a_text = (fmt.format(x, y))
+        if unreliable_pixel or any(['nan' in map(str, (x, y))]):
+            row1a_text = ""
+            row1a_title = ""
+        else:
+            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
+            row1a_text = fmt.format(x, y)
+            row1a_title = 'Pixel'
+
+        self.row1a_text = row1a_text
+        self.row1a_title = row1a_title
+
         self.row1_unreliable = unreliable_pixel
         self._dict['pixel_x'] = float(x)
         self._dict['pixel_y'] = float(y)
@@ -482,12 +516,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # Check if shape is [x, y, z] or [y, x] and show value accordingly.
         ix_shape, iy_shape = self._image_shape_inds(image)
 
-        if (-0.5 < x < image.shape[ix_shape] - 0.5 and -0.5 < y < image.shape[iy_shape] - 0.5
-                and hasattr(active_layer, 'attribute')):
+        if (
+                (
+                    -0.5 < x < image.shape[ix_shape] - 0.5 and
+                    -0.5 < y < image.shape[iy_shape] - 0.5
+                    and hasattr(active_layer, 'attribute')
+                ) and not (unreliable_world or unreliable_pixel)
+        ):
 
             attribute = active_layer.attribute
 
-            if isinstance(viewer, (ImvizImageView, MosvizImageView, MosvizProfile2DView)):
+            if isinstance(viewer, (ImvizImageView, MosvizImageView, Spectrum2DViewer)):
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
 
                 if associated_dq_layers is not None:
@@ -497,16 +536,20 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_value = dq_data[int(round(y)), int(round(x))]
 
                 unit = u.Unit(image.get_component(attribute).units)
-                if (isinstance(viewer, MosvizProfile2DView) and unit != ''
+                if (isinstance(viewer, Spectrum2DViewer) and unit != ''
                    and u.Unit(self.app._get_display_unit(attribute)).physical_type
                    not in ['frequency', 'wavelength', 'length']
                    and unit != self.app._get_display_unit(attribute)):
+                    to_unit = self.app._get_display_unit(attribute)
+                    if (check_if_unit_is_per_solid_angle(unit) and attribute == 'flux'):
+                        to_unit = self.app._get_display_unit('sb')
+
                     equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
                     value = flux_conversion_general(value, unit,
-                                                    self.app._get_display_unit(attribute),
+                                                    to_unit,
                                                     equivalencies,
                                                     with_unit=False)
-                    unit = self.app._get_display_unit(attribute)
+                    unit = to_unit
 
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
                 arr = image.get_component(attribute).data
@@ -572,7 +615,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row1b_title = ''
             self.row1b_text = ''
 
-        if isinstance(viewer, MosvizProfile2DView):
+        if isinstance(viewer, Spectrum2DViewer):
             self.marks[viewer._reference_id].update_xy([x, x], [0, 1])
             self.marks[viewer._reference_id].visible = True
 
@@ -580,13 +623,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if coords_status and hasattr(getattr(image, 'coords', None), 'pixel_to_world'):
                     # should already have wave computed from setting the coords-info
                     matched_viewer = self.app.get_viewer(matched_marker_id.split(':matched')[0])
-                    wave = wave.to_value(matched_viewer.state.x_display_unit)
-                    self.marks[matched_marker_id].update_xy([wave, wave], [0, 1])
+                    wave_matched = wave.to_value(matched_viewer.state.x_display_unit)
+                    self.marks[matched_marker_id].update_xy([wave_matched, wave_matched], [0, 1])
                     self.marks[matched_marker_id].visible = True
                 else:
                     self.marks[matched_marker_id].visible = False
 
-    def _spectrum_viewer_update(self, viewer, x, y):
+    def _spectrum_viewer_update(self, viewer, x, y, mouseevent=True):
         def _cursor_fallback():
             self._dict['axes_x'] = x
             self._dict['axes_x:unit'] = str(viewer.state.x_display_unit)
@@ -726,11 +769,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         else:
             self.icon = ""
 
-        self.marks[viewer._reference_id].update_xy([closest_wave], [closest_flux])
-        self.marks[viewer._reference_id].visible = True
-        for matched_marker_id in self._matched_markers.get(viewer._reference_id, []):
-            # NOTE: this currently assumes the the matched marker is a vertical line with a
-            # normalized y-scale
-            self.marks[matched_marker_id].update_xy([closest_i, closest_i], [0, 1])
-            self.marks[matched_marker_id].visible = True
         _copy_axes_to_spectral()
+
+        if mouseevent:
+            self.marks[viewer._reference_id].update_xy([closest_wave], [closest_flux])
+            self.marks[viewer._reference_id].visible = True
+            for matched_marker_id in self._matched_markers.get(viewer._reference_id, []):
+                # NOTE: this currently assumes the the matched marker is a vertical line with a
+                # normalized y-scale
+                self.marks[matched_marker_id].update_xy([closest_i, closest_i], [0, 1])
+                self.marks[matched_marker_id].visible = True

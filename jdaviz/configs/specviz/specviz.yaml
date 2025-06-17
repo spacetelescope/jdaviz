@@ -28,11 +28,12 @@ tray:
   - specviz-line-analysis
   - export
   - about
+  - logger
 viewer_area:
   - container: col
     children:
       - container: row
         viewers:
           - name: Spectrum
-            plot: specviz-profile-viewer
+            plot: spectrum-1d-viewer
             reference: spectrum-viewer

@@ -51,6 +51,7 @@
         :items="items"
         :item-key="item_key"
         :show-select="show_rowselect"
+        :single-select="!multiselect"
         v-model="selected_rows"
         class="elevation-1 width-100"
       ></v-data-table>
@@ -101,6 +102,7 @@ module.exports = {
   }
   .tray-plugin .plugin-table-component {
     margin: 0px -12px 0px -12px;
+    overflow-x: hidden;
   }
 
 </style>

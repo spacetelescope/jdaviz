@@ -34,7 +34,7 @@ base_wcs_layer_label = 'Default orientation'
 align_by_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
-@tray_registry('imviz-orientation', label=orientation_plugin_label, viewer_requirements="image")
+@tray_registry('imviz-orientation', label=orientation_plugin_label)
 class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Orientation Plugin Documentation <imviz-orientation>` for more details.
@@ -74,6 +74,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_fast_approximation = Bool(True).tag(sync=True)
     wcs_linking_available = Bool(False).tag(sync=True)
+    gwcs_to_fits_sip = Bool(False).tag(sync=True)
 
     need_clear_astrowidget_markers = Bool(False).tag(sync=True)
     plugin_markers_exist = Bool(False).tag(sync=True)
@@ -156,6 +157,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 'delete_subsets', 'viewer', 'orientation',
                 'rotation_angle', 'east_left', 'add_orientation',
                 'set_north_up_east_left', 'set_north_up_east_right',
+                'gwcs_to_fits_sip'
             )
         )
 
@@ -276,8 +278,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         Delete all subsets app-wide.  Required before changing ``align_by``.
         """
         # subsets will be deleted on changing link type:
-        for subset_group in self.app.data_collection.subset_groups:
-            self.app.data_collection.remove_subset_group(subset_group)
+        self.app.delete_subsets()
 
     def vue_delete_subsets(self, *args):
         self.delete_subsets()

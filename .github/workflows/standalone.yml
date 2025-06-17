@@ -27,7 +27,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38  # v5.4.0
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
       with:
         python-version: "3.11"
 
@@ -42,7 +42,7 @@ jobs:
           apt: '^libxcb.*-dev libxkbcommon-x11-dev libegl1-mesa libopenblas-dev libhdf5-dev'
 
     - name: Setup headless display
-      uses: pyvista/setup-headless-display-action@v3
+      uses: pyvista/setup-headless-display-action@v4
 
     - name: Install jdaviz
       run: pip install .[test,qt]
@@ -79,14 +79,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (non-OSX)
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: |
@@ -95,14 +95,14 @@ jobs:
   # Do not want to deal with OSX certs in pull request builds.
   build_binary_osx:
     runs-on: ${{ matrix.os }}
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [macos-14]
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
-      uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d  # v3
+      uses: apple-actions/import-codesign-certs@cfd6eb39a2c848ead8836bda6b56813585404ba7  # v5.0.0
       if: ${{ matrix.os == 'macos-14' }}
       with:
         p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
@@ -112,37 +112,20 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38  # v5.4.0
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
       with:
         python-version: "3.11"
 
     - name: Install jdaviz
-      run: pip install .[test]
+      run: pip install .[test,qt]
 
     - name: Install pyinstaller
-      run: pip install "pyinstaller<6"
+      run: pip install "pyinstaller"
 
     - name: Create standalone binary
       env:
         DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
       run: (cd standalone; pyinstaller ./jdaviz.spec)
-
-    - name: Remove invalid files for OSX
-      # hopefully we can improve this in the future
-      # by using good hooks
-      # i think the issue is that we have a . in the name, there are many
-      # google hits on pyqt having the same issue
-      # and we might be able to remove it after https://github.com/pyinstaller/pyinstaller/pull/7619
-      # is released (pyinstaller 5.13 probably)
-      if: ${{ matrix.os == 'macos-14' }}
-      run: |
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/skimage/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/shapely/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/shapely/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/special/*.dylib
 
     - name: Codesign (OSX)
       if: ${{ matrix.os == 'macos-14' }}
@@ -183,7 +166,7 @@ jobs:
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os == 'macos-14' }}
-      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
+      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz --port=8765 &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
@@ -202,14 +185,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: always()
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos-14') }}
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1  # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: standalone/dist/jdaviz.dmg

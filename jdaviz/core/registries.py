@@ -5,9 +5,11 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
-__all__ = ['convert', 'UniqueDictRegistry', 'ViewerRegistry', 'TrayRegistry',
+__all__ = ['convert', 'UniqueDictRegistry', 'ViewerRegistry',
+           'ViewerCreatorRegistry', 'TrayRegistry',
            'ToolRegistry', 'MenuRegistry', 'DataParserRegistry',
-           'viewer_registry', 'tray_registry', 'tool_registry', 'menu_registry',
+           'viewer_registry', 'viewer_creator_registry',
+           'tray_registry', 'tool_registry', 'menu_registry',
            'data_parser_registry',
            'loader_resolver_registry', 'loader_parser_registry', 'loader_importer_registry']
 
@@ -51,7 +53,7 @@ class UniqueDictRegistry(DictRegistry):
             Whether to overwrite an existing entry with the same ``label``.
         """
         if name in self.members and not overwrite:
-            raise ValueError(f"Viewer with the name {name} already exists, "
+            raise ValueError(f"Registry item with the name {name} already exists, "
                              f"please choose a different name or pass overwrite=True.")
         else:
             self.members[name] = cls
@@ -88,6 +90,15 @@ class ViewerRegistry(UniqueDictRegistry):
             self.members[name] = {'label': label, 'cls': cls}
 
 
+class ViewerCreatorRegistry(UniqueDictRegistry):
+    def __call__(self, name=None, overwrite=False):
+        def decorator(cls):
+            cls._registry_label = name
+            self.add(name, cls, overwrite=overwrite)
+            return cls
+        return decorator
+
+
 class TrayRegistry(UniqueDictRegistry):
     """Registry containing references to plugins that will be added to the sidebar
     tray tabs.
@@ -105,7 +116,7 @@ class TrayRegistry(UniqueDictRegistry):
     }
 
     def __call__(self, name=None, label=None, icon=None,
-                 viewer_requirements=[], overwrite=False):
+                 category=None, sidebar=None, subtab=None, overwrite=False):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -115,12 +126,14 @@ class TrayRegistry(UniqueDictRegistry):
                     f"registered components must inherit from "
                     f"`ipyvuetify.VuetifyTemplate`.")
 
-            self.add(name, cls, label, icon, viewer_requirements, overwrite)
+            self.add(name, cls, label, icon, category,
+                     sidebar, subtab, overwrite)
             return cls
         return decorator
 
     def add(self, name, cls, label=None, icon=None,
-            viewer_requirements=[], overwrite=False):
+            category=None, sidebar=None, subtab=None,
+            overwrite=False):
         """Add an item to the registry.
 
         Parameters
@@ -135,42 +148,25 @@ class TrayRegistry(UniqueDictRegistry):
             The label displayed in the tooltip when hovering over the tray tab.
         icon : str, optional
             The name of the icon to render in the tray tab.
-        viewer_requirements : str, list of str
-            Required viewers for this plugin.
         overwrite : bool, optional
             Whether to overwrite an existing entry with the same ``label``.
         """
         if name in self.members and not overwrite:
-            raise ValueError(f"Viewer with the name {name} already exists, "
+            raise ValueError(f"Tray item with the name {name} already exists, "
                              f"please choose a different name or pass overwrite=True.")
         else:
-            # store the registry name/label so we can access them from the instantiated
-            # objects (when determining if a specific plugin is open, for example)
-            viewer_reference_name_kwargs = {}
-
-            if not isinstance(viewer_requirements, list):
-                viewer_requirements = [viewer_requirements]
-
-            for category in viewer_requirements:
-                if category not in self.default_viewer_reqs:
-                    raise ValueError(f'Viewer requirements not defined '
-                                     f'for viewer category: "{category}" '
-                                     f'in plugin "{cls.__class__.__name__}".')
-
-                req = self.default_viewer_reqs[category]
-                viewer_cls_attr = req['cls_attr']
-                viewer_specific_kwarg = req['init_kwarg']
-                requirements = req['require_kwargs']
-                viewer_reference_name_kwargs[viewer_cls_attr] = [
-                    viewer_specific_kwarg, {
-                        k: True for k in requirements
-                    }
-                ]
-
             cls._registry_name = name
             cls._registry_label = label
-            self.members[name] = {'label': label, 'icon': icon, 'cls': cls,
-                                  'viewer_reference_name_kwargs': viewer_reference_name_kwargs}
+            cls._sidebar = sidebar if sidebar is not None else 'plugins'
+            cls._subtab = subtab
+            self.members[name] = {'label': label, 'name': name,
+                                  'icon': icon, 'cls': cls,
+                                  'category': category, sidebar: sidebar,
+                                  'subtab': subtab}
+
+    def members_in_category(self, category):
+        members = [m for m in self.members.values() if m['category'] == category]
+        return sorted(members, key=lambda x: x['label'].lower())
 
 
 class ToolRegistry(UniqueDictRegistry):
@@ -238,6 +234,7 @@ class LoaderStepRegistry(UniqueDictRegistry):
 
 
 viewer_registry = ViewerRegistry()
+viewer_creator_registry = ViewerCreatorRegistry()
 tray_registry = TrayRegistry()
 tool_registry = ToolRegistry()
 menu_registry = MenuRegistry()

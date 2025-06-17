@@ -36,6 +36,7 @@ tray:
   - cubeviz-sonify-data
   - export
   - about
+  - logger
 viewer_area:
   - container: col
     children:

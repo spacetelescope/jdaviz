@@ -116,7 +116,7 @@
                 :api_hints_enabled="api_hints_enabled"
                 @click="reset_viewer_bounds"
               >
-                {{api_hints_enabled ? 
+                {{api_hints_enabled ?
                   'plg.reset_viewer_bounds()'
                   :
                   'Reset viewer bounds'
@@ -223,6 +223,7 @@
       :icon_radialtocheck="icon_radialtocheck"
       :colormode="image_color_mode_sync['mixed'] ? 'mixed' : image_color_mode_value"
       :cmap_samples="cmap_samples"
+      :active_layer="active_layer"
       label="Layers"
       hint="Select the data or subset to set options."
       style="margin-top: 36px"
@@ -231,7 +232,7 @@
       no layers selected
     </div>
     <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; margin-right: -24px; padding-right: 24px; border-bottom: 2px solid #00617E">
-      <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
+      <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states || sonified_audible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
         <plugin-switch
           :value.sync="marker_visible_value"
@@ -279,8 +280,30 @@
             :api_hints_enabled="api_hints_enabled"
             wait="300"
             max="1"
-            step="0.01" 
+            step="0.01"
             :value.sync="subset_opacity_value"
+          />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="sonified_audible_sync.in_subscribed_states" :sync="volume_sync"">
+          <plugin-switch
+              :value.sync="sonified_audible_value"
+              label="Audible"
+              api_hint='plg.sonified_audible = '
+              :api_hints_enabled="api_hints_enabled"
+              :use_icon="'speaker'"
+            />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="sonified_audible_sync.in_subscribed_states" :sync="volume_sync"">
+        <plugin-slider v-if="sonified_audible_value"
+            label='Volume'
+            api_hint="plg.volume = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="100"
+            step="1"
+            :value.sync="volume_value"
           />
       </glue-state-sync-wrapper>
 
@@ -293,7 +316,7 @@
           label="Show Line"
           api_hint='plg.line_visible = '
           :api_hints_enabled="api_hints_enabled"
-          :use_eye_icon="true"
+          use_icon="eye"
         />
       </glue-state-sync-wrapper>
 
@@ -499,7 +522,7 @@
           label="Show Image"
           api_hint='plg.image_visible = '
           :api_hints_enabled="api_hints_enabled"
-          :use_eye_icon="true"
+          use_icon="eye"
         />
       </glue-state-sync-wrapper>
 
@@ -774,7 +797,7 @@
 
             <div v-if="contour_mode_value === 'Linear'">
               <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_min')">
-                <glue-float-field 
+                <glue-float-field
                   :label="api_hints_enabled ? 'plg.contour_min =' : 'Contour Min'"
                   :class="api_hints_enabled ? 'api-hint' : null"
                   :value.sync="contour_min_value"

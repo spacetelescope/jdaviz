@@ -4,6 +4,7 @@ import warnings
 
 import matplotlib
 import numpy as np
+from functools import cached_property
 from echo import delay_callback
 from astropy.visualization import ManualInterval, ContrastBiasStretch
 from glue.core.subset_group import GroupedSubset
@@ -22,10 +23,11 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, LayerSelect,
                                         PlotOptionsSyncState, Plot,
                                         skip_if_no_updates_since_last_active, with_spinner)
-from jdaviz.core.events import ChangeRefDataMessage
+from jdaviz.core.events import ChangeRefDataMessage, ViewerAddedMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.sonified_layers import SonifiedLayerState
 # by importing from utils, glue_colormaps will include the custom Random colormap
 from jdaviz.utils import is_not_wcs_only, cmap_samples, glue_colormaps
 
@@ -104,7 +106,8 @@ def _round_step(step):
     return float(np.round(step, decimals)), decimals
 
 
-@tray_registry('g-plot-options', label="Plot Options")
+@tray_registry('g-plot-options', label="Plot Options",
+               category='core', sidebar='settings', subtab=0)
 class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     """
     The Plot Options Plugin gives access to per-viewer and per-layer options and enables
@@ -181,6 +184,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
+    * ``volume_level`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz. Set the volume for the selected sonified layer.
+    * ``sonified_audible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz. Set if the selected sonified layer will output audio.
     """
     template_file = __file__, "plot_options.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -286,6 +293,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     marker_colormap_vmax_sync = Dict().tag(sync=True)
 
     # image viewer/layer options
+    active_layer = Unicode().tag(sync=True)
     stretch_function_value = Unicode().tag(sync=True)
     stretch_function_sync = Dict().tag(sync=True)
 
@@ -372,6 +380,12 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
     stretch_hist_spinner = Bool(False).tag(sync=True)
 
+    volume_value = IntHandleEmpty(50).tag(sync=True)
+    volume_sync = Dict().tag(sync=True)
+
+    sonified_audible_value = Bool(False).tag(sync=True)
+    sonified_audible_sync = Dict().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -420,6 +434,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         def is_not_subset(state):
             return not is_spatial_subset(state)
+
+        def is_sonified(state):
+            return isinstance(state, SonifiedLayerState)
 
         def line_visible(state):
             # exclude for scatter layers where the marker is shown instead of the line
@@ -538,40 +555,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                    'stretch_params_value', 'stretch_params_sync',
                                                    state_filter=is_image)
 
-        self.stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram',
-                                      update_callback=self._update_stretch_histogram)
-        # Add the stretch bounds tool to the default Plot viewer.
-        self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
-        self.stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])
-
-        self.stretch_histogram._add_data('histogram', x=[0, 1])
-
-        self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
-        self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
-        self.stretch_histogram.add_line(
-            label='stretch_curve',
-            x=[], y=[],
-            ynorm='vmin',
-            color="#007BA1",  # "inactive" blue
-            opacities=[0.5],
-        )
-        self.stretch_histogram.add_scatter(
-            label='stretch_knots',
-            x=[], y=[],
-            ynorm='vmin',
-            color="#c75d2c",  # "active" orange (tool enabled by default)
-        )
-        self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
-        self.stretch_histogram.viewer.state.update_bins_on_reset_limits = False
-        self.stretch_histogram.viewer.state.x_limits_percentile = 95
-        with self.stretch_histogram.figure.hold_sync():
-            self.stretch_histogram.figure.axes[0].label = 'pixel value'
-            self.stretch_histogram.figure.axes[0].num_ticks = 3
-            self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
-            self.stretch_histogram.figure.axes[1].label = 'density'
-            self.stretch_histogram.figure.axes[1].num_ticks = 2
-        self.stretch_histogram_widget = f'IPY_MODEL_{self.stretch_histogram.model_id}'
-
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
                                                    state_filter=is_spatial_subset)
@@ -618,6 +601,15 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                           'contour_custom_levels_value', 'contour_custom_levels_sync',   # noqa
                                                           spinner='contour_spinner')
 
+        self.volume_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'volume',
+                                                 'volume_value', 'volume_sync',
+                                                 state_filter=is_sonified)
+
+        self.sonified_audible = PlotOptionsSyncState(self, self.viewer, self.layer, 'audible',
+                                                     'sonified_audible_value',
+                                                     'sonified_audible_sync',
+                                                     state_filter=is_sonified)
+
         # Axes options:
         # axes_visible hidden for imviz in plot_options.vue
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
@@ -630,15 +622,32 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             sv.state.add_callback('y_display_unit',
                                   self._on_global_display_unit_changed)
 
+        # Add layer callback to image viewers to track active layer
+        for viewer in self.app._viewer_store.values():
+            viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
+
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
+
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
+
+        self._set_relevant()
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not len(self.viewer_items):
+            self.irrelevant_msg = 'No viewers'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
                   'select_all', 'subset_visible', 'reset_viewer_bounds']
         if self.config == "cubeviz":
-            expose += ['uncertainty_visible']
+            expose += ['uncertainty_visible', 'volume_level', 'sonified_audible']
         if self.config != "imviz":
             expose += ['x_min', 'x_max', 'y_min', 'y_max',
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
@@ -674,6 +683,44 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.viewer_multiselect = value
         self.layer_multiselect = value
 
+    @cached_property
+    def stretch_histogram(self):
+        stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram',
+                                 update_callback=self._update_stretch_histogram)
+        # Add the stretch bounds tool to the default Plot viewer.
+        stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
+        stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])
+
+        stretch_histogram._add_data('histogram', x=[0, 1])
+
+        stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
+        stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
+        stretch_histogram.add_line(
+            label='stretch_curve',
+            x=[], y=[],
+            ynorm='vmin',
+            color="#007BA1",  # "inactive" blue
+            opacities=[0.5],
+        )
+        stretch_histogram.add_scatter(
+            label='stretch_knots',
+            x=[], y=[],
+            ynorm='vmin',
+            color="#c75d2c",  # "active" orange (tool enabled by default)
+        )
+        stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
+        stretch_histogram.viewer.state.update_bins_on_reset_limits = False
+        stretch_histogram.viewer.state.x_limits_percentile = 95
+        with stretch_histogram.figure.hold_sync():
+            stretch_histogram.figure.axes[0].label = 'pixel value'
+            stretch_histogram.figure.axes[0].num_ticks = 3
+            stretch_histogram.figure.axes[0].tick_format = '0.1e'
+            stretch_histogram.figure.axes[1].label = 'density'
+            stretch_histogram.figure.axes[1].num_ticks = 2
+        self.stretch_histogram_widget = f'IPY_MODEL_{stretch_histogram.model_id}'
+        self.send_state('stretch_histogram_widget')
+        return stretch_histogram
+
     def select_all(self, viewers=True, layers=True):
         """
         Enable multiselect mode and select all viewers and/or layers.
@@ -706,6 +753,27 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             self.display_units['image'] = 'pix'
         self.send_state('display_units')
         self._update_viewer_zoom_steps()
+
+    def _on_viewer_added(self, msg):
+        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        viewer.state.add_callback('layers', lambda msg: self._layers_changed(viewer=viewer))
+
+    @observe('viewer_selected')
+    def _layers_changed(self, msg=None, viewer=None):
+        # We need msg first in the keyword arguments to catch the msg value from the observe,
+        # even though we don't end up using it
+        if self.viewer_multiselect or not hasattr(self, 'viewer'):
+            self.active_layer = ""
+            return
+
+        if viewer is None:
+            viewer = self.viewer.selected_obj
+
+        if viewer is self.viewer.selected_obj and self._viewer_is_image_viewer():  # noqa
+            if viewer.active_image_layer is None:
+                self.active_layer = ""
+                return
+            self.active_layer = viewer.active_image_layer.layer.label
 
     def vue_unmix_state(self, names):
         if isinstance(names, str):

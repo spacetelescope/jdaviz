@@ -241,7 +241,7 @@ class TestVOImvizRemote:
             # Also verify we get a snackbar message for it
             assert any(
                 "Source is required" in d["text"]
-                for d in imviz_helper.app.state.snackbar_history
+                for d in imviz_helper.plugins['Logger'].history
             )
 
         # If waveband selected, but NOT filtering by coverage, then allow registry query
@@ -297,7 +297,7 @@ class TestVOImvizRemote:
             vo_plugin.query_registry_resources()
             assert any(
                 expected_error_msg in d["text"]
-                for d in imviz_helper.app.state.snackbar_history
+                for d in imviz_helper.plugins['Logger'].history
             )
             assert len(vo_plugin.resource.choices) == 0
 
@@ -310,13 +310,13 @@ class TestVOImvizRemote:
         # However, if we try to query a resource, we should be prevented
         # since the source still isn't resolvable.
         # Clear existing messages
-        imviz_helper.app.state.snackbar_history = []
+        imviz_helper.plugins['Logger'].history = []
         vo_plugin.resource.selected = "HST.M51"
         with pytest.raises(LookupError, match=expected_error_msg):
             vo_plugin.vue_query_resource()
             assert any(
                 expected_error_msg in d["text"]
-                for d in imviz_helper.app.state.snackbar_history
+                for d in imviz_helper.plugins['Logger'].history
             )
 
     @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
@@ -366,14 +366,14 @@ class TestVOImvizRemote:
         # Test that user was warned about failed file loading on fake result
         assert any(
             "Unable to load file to viewer" in d["text"]
-            for d in imviz_helper.app.state.snackbar_history
+            for d in imviz_helper.plugins['Logger'].history
         )
         # But also test that didn't prevent us from loading the valid results
         assert len(imviz_helper.app.data_collection) == 1
         assert "M51_HST.M51" in imviz_helper.data_labels[0]
 
         # Load second data product
-        imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
+        imviz_helper.plugins['Logger'].history = []  # Clear snackbar warnings
         # User should be warned about misaligned data if WCS linking isn't set
         # and there's already data in the data collection
         assert imviz_helper.plugins["Orientation"].align_by == "Pixels"
@@ -384,11 +384,11 @@ class TestVOImvizRemote:
         assert vo_plugin.data_loading is False
         assert any(
             "WCS linking is not enabled; data layers may not be aligned" in d["text"]
-            for d in imviz_helper.app.state.snackbar_history
+            for d in imviz_helper.plugins['Logger'].history
         )
 
         # Load third data product
-        imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
+        imviz_helper.plugins['Logger'].history = []  # Clear snackbar warnings
         # If we switch to WCS linking, we shouldn't get a warning anymore
         # since the data will be aligned
         imviz_helper.plugins["Orientation"].align_by = "WCS"
@@ -400,5 +400,5 @@ class TestVOImvizRemote:
         assert all(
             "WCS linking is not enabled; data layers may not be aligned"
             not in d["text"]
-            for d in imviz_helper.app.state.snackbar_history
+            for d in imviz_helper.plugins['Logger'].history
         )

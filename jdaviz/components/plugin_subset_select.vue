@@ -43,7 +43,7 @@
           </span>
         </div>
       </template>
-      <template v-slot:append v-if="selected !== 'Create New'">
+      <template v-slot:append v-if="selected !== 'Create New' && !multiselect">
         <v-icon style="cursor: pointer">mdi-menu-down</v-icon>
         <j-tooltip tooltipcontent="rename" v-if="api_hint_rename">
           <v-icon style="cursor: pointer" @click="() => {rename_new_label = selected; rename_mode = true}">mdi-pencil</v-icon>
@@ -84,15 +84,16 @@
       v-model="rename_new_label"
       :label="textFieldLabel"
       :class="textFieldClass"
+      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
       hint="Rename subset."
       persistent-hint
     >
       <template v-slot:append>
         <j-tooltip v-if="items.length > 0" tooltipcontent="Cancel change">
-          <v-icon style="cursor: pointer" @click="() => {rename_new_label = ''; rename_mode = false}">mdi-close</v-icon>
+          <v-icon style="cursor: pointer" @click="() => {changeCancel()}">mdi-close</v-icon>
         </j-tooltip>
         <j-tooltip tooltipcontent="Accept change">
-          <v-icon style="cursor: pointer" @click="() => {$emit('rename-subset', {'old_label': selected, 'new_label': rename_new_label}); rename_mode = false}">mdi-check</v-icon>
+          <v-icon style="cursor: pointer" @click="() => {changeAccept()}">mdi-check</v-icon>
         </j-tooltip>
       </template>
     </v-text-field>
@@ -130,6 +131,16 @@ module.exports = {
       } else {
         return null;
       }
+    }
+  },
+  methods: {
+    changeAccept() {
+      this.$emit('rename-subset', {'old_label': this.selected, 'new_label': this.rename_new_label})
+      this.rename_mode = false
+    },
+    changeCancel() {
+      this.rename_new_label = ''
+      this.rename_mode = false
     }
   }
 };

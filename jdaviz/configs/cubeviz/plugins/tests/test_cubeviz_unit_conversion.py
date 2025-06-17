@@ -45,9 +45,9 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     ap_plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover = cubeviz_helper._coords_info
 
-    cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(1, 1), 1, 1))
+    cubeviz_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(PixCoord(1, 1), 1, 1))
     ap_plg.background_selected = "Subset 1"
 
     for flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
@@ -156,7 +156,7 @@ def test_unit_translation(cubeviz_helper, angle_unit):
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)
-    cubeviz_helper.load_regions(CirclePixelRegion(center, radius=2.5))
+    cubeviz_helper.plugins['Subset Tools'].import_region(CirclePixelRegion(center, radius=2.5))
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 
@@ -222,7 +222,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     uc_plg.flux_unit = 'Jy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Jy / angle_unit
-    label_mouseover = cubeviz_helper.app.session.application._tools["g-coords-info"]
+    label_mouseover = cubeviz_helper._coords_info
     flux_viewer = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_flux_viewer_reference_name
     )
@@ -345,7 +345,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     assert y_display_unit == u.ct / angle_unit
 
     # and test mouseover info
-    label_mouseover = cubeviz_helper.app.session.application._tools["g-coords-info"]
+    label_mouseover = cubeviz_helper._coords_info
     flux_viewer = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_flux_viewer_reference_name
     )

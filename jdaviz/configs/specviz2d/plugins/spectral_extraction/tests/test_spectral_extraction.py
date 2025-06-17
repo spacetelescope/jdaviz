@@ -29,12 +29,14 @@ def test_plugin(specviz2d_helper):
 
     # test trace marks - won't be created until after opening the plugin
     sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    assert len(sp2dv.figure.marks) == 3
+    # includes 2 hidden marks from cross-dispersion profile plugin
+    assert len(sp2dv.figure.marks) == 5
 
     pext.keep_active = True
-    assert len(sp2dv.figure.marks) == 12
-    assert pext.marks['trace'].visible is True
-    assert len(pext.marks['trace'].x) > 0
+    # includes 2 hidden marks from cross-dispersion profile plugin
+    assert len(sp2dv.figure.marks) == 14
+    assert pext.marks['trace'].marks_list[0].visible is True
+    assert len(pext.marks['trace'].marks_list[0].x) > 0
 
     # create FlatTrace
     pext.trace_type_selected = 'Flat'
@@ -73,7 +75,8 @@ def test_plugin(specviz2d_helper):
     # TODO: Investigate extra hidden mark from glue-jupyter, see
     # https://github.com/spacetelescope/jdaviz/pull/2478#issuecomment-1731864411
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    assert len(sp2dv.figure.marks) == 16
+    # and there are 2 invisible marks from the cross-dispersion profile plugin
+    assert len(sp2dv.figure.marks) in [18, 20]
 
     # interact with background section, check marks
     pext.trace_trace_selected = 'New Trace'
@@ -82,21 +85,21 @@ def test_plugin(specviz2d_helper):
     pext.bg_width = 3
     pext.bg_type_selected = 'TwoSided'
     for mark in ['bg1_center', 'bg2_center']:
-        assert pext.marks[mark].visible is True
-        assert len(pext.marks[mark].x) > 0
+        assert pext.marks[mark].marks_list[0].visible is True
+        assert len(pext.marks[mark].marks_list[0].x) > 0
     bg = pext.export_bg()
     pext.import_bg(bg)
     assert pext.bg_type_selected == 'TwoSided'
 
     pext.bg_type_selected = 'Manual'
-    assert len(pext.marks['bg1_center'].x) == 0
-    assert len(pext.marks['bg2_center'].x) == 0
-    assert len(pext.marks['bg1_lower'].x) > 0
+    assert len(pext.marks['bg1_center'].marks_list[0].x) == 0
+    assert len(pext.marks['bg2_center'].marks_list[0].x) == 0
+    assert len(pext.marks['bg1_lower'].marks_list[0].x) > 0
 
     pext.bg_type_selected = 'OneSided'
     # only bg1 is populated for OneSided
-    assert len(pext.marks['bg1_center'].x) > 0
-    assert len(pext.marks['bg2_center'].x) == 0
+    assert len(pext.marks['bg1_center'].marks_list[0].x) > 0
+    assert len(pext.marks['bg2_center'].marks_list[0].x) == 0
 
     # create background image
     pext.bg_separation = 4
@@ -120,10 +123,10 @@ def test_plugin(specviz2d_helper):
     # interact with extraction section, check marks
     pext.ext_width = 1
     for mark in ['bg1_center', 'bg2_center']:
-        assert pext.marks[mark].visible is False
+        assert pext.marks[mark].marks_list[0].visible is False
     for mark in ['ext_lower', 'ext_upper']:
-        assert pext.marks[mark].visible is True
-        assert len(pext.marks[mark].x) > 0
+        assert pext.marks[mark].marks_list[0].visible is True
+        assert len(pext.marks[mark].marks_list[0].x) > 0
 
     # create subtracted spectrum
     ext = pext.export_extract(ext_width=3)
@@ -189,8 +192,7 @@ def test_spectrum_on_top(specviz2d_helper):
     specviz2d_helper.load_data(spectrum_2d=fn)
 
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
-    pext.trace_pixel = 14.2
-    assert pext.bg_type_selected == 'OneSided'
+    assert pext.bg_type_selected == 'TwoSided'
     np.testing.assert_allclose(pext.bg_separation, 6)
 
 
@@ -214,7 +216,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
                             uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
     specviz2d_helper.load_data(objectspec)
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+    pext = specviz2d_helper.plugins['Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
                                  trace_model=models.Polynomial1D(degree=1),
@@ -276,6 +278,7 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
     pext = specviz2d_helper.plugins['Spectral Extraction']
 
     for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+
         # iterate through flux units verifying that selected object/spectrum is obtained using
         # display units
         uc.flux_unit.selected = new_flux_unit

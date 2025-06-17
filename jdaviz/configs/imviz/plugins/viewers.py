@@ -27,7 +27,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     ['jdaviz:panzoommatch', 'jdaviz:imagepanzoom'],
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
-                    ['jdaviz:blinkonce', 'jdaviz:contrastbias', 'jdaviz:selectcatalog'],
+                    ['jdaviz:blinkonce', 'jdaviz:contrastbias',
+                        'jdaviz:selectcatalog', 'jdaviz:selectfootprint'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
                 ]
 
@@ -208,14 +209,21 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 # world_to_pixel return scalar ndarray that we need to convert to float.
                 if align_by == 'wcs':
                     if not reverse:
-                        outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
-                            self.state.reference_data, x, y)
-                        x, y = list(map(float, pixel_to_pixel(
+                        # Convert X,Y from reference data to the one we are actually seeing.
+
+                        x_image_coords, y_image_coords = list(map(float, pixel_to_pixel(
                             self.state.reference_data.coords, image.coords, x, y)))
                         outside_image_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
-                            image, x, y)
-                        unreliable_pixel = outside_image_bounding_box or outside_ref_bounding_box
-                        unreliable_world = unreliable_pixel
+                            image, x_image_coords, y_image_coords)
+
+                        if outside_image_bounding_box:
+                            # coordinates outside the bounding box are unreliable
+                            unreliable_pixel = unreliable_world = True
+                        else:
+                            x, y = x_image_coords, y_image_coords
+                            # any coordinate inside the bounding box should be reliable
+                            unreliable_pixel = unreliable_world = False
+
                     else:
                         # We don't bother with unreliable_pixel and unreliable_world computation
                         # because this takes input (x, y) in the frame of visible layer and wants

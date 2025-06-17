@@ -8,7 +8,9 @@ from jdaviz.core.template_mixin import (TemplateMixin, LayerSelect,
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
                                 ChangeRefDataMessage, ViewerRenamedMessage)
+from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
+
 
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
@@ -119,7 +121,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # changing the selection has no consequence.
         def data_not_in_viewer(data):
             return data.label not in self.layer.choices
-        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer', data_not_in_viewer]
+
+        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
+                                data_not_in_viewer]
 
         self.orientation = LayerSelect(self,
                                        'orientation_layer_items',
@@ -172,6 +176,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         return [sg.label for sg in self.app.data_collection.subset_groups]
 
     @property
+    def existing_sonified_labels(self):
+        return [sd.layer.label for sd in self._viewer.state.layers
+                if isinstance(sd, SonifiedLayerState)]
+
+    @property
     def data_labels_loaded(self):
         return [layer['label'] for layer in self.layer_items
                 if layer['label'] not in self.existing_subset_labels]
@@ -196,6 +205,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.layer.viewer = self._viewer.reference
         except AttributeError:
             return
+        self._on_refdata_change()
 
     def _on_app_icons_updated(self, msg):
         if msg.icon_type == 'viewer':
@@ -204,13 +214,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.layer_icons = msg.icons
         self._set_viewer_id()
 
-    def _on_refdata_change(self, msg):
-        if msg.viewer_id != self.viewer_id:
+    def _on_refdata_change(self, msg=None):
+        if msg is not None and msg.viewer_id != self.viewer_id:
+            return
+        if getattr(self._viewer.state, 'reference_data', None) is None:
             return
         self.orientation_align_by_wcs = self._viewer.state.reference_data.meta.get('_WCS_ONLY', False)  # noqa
         if self.orientation_align_by_wcs:
             with self.during_select_sync():
-                self.orientation.selected = str(self._viewer.state.reference_data.label)
+                ref_label = self._viewer.state.reference_data.label
+                if ref_label not in self.orientation.choices:
+                    self.orientation._update_items()
+                self.orientation.selected = str(ref_label)
 
     def _on_viewer_renamed_message(self, msg):
         if self.viewer_reference == msg.old_viewer_ref:
@@ -350,7 +365,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             # forbid deleting non-plugin generated data
             selected_items = self.layer.selected_item
             for i, layer in enumerate(self.layer.selected):
-                if (layer not in self.existing_subset_labels
+                if isinstance(self.layer.selected_obj[0][0], SonifiedDataLayerArtist):
+                    self.delete_app_enabled = False
+                    self.delete_app_tooltip = "Cannot delete sonified data from app"
+                    break
+                elif (layer not in self.existing_subset_labels
                         and selected_items['from_plugin'][i] is None):
                     self.delete_app_enabled = False
                     self.delete_app_tooltip = f"Cannot delete imported data from {self.app.config}"
@@ -391,7 +410,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         """
         for layer in self._viewer.layers:
             if layer.layer.label == layer_label:
-                layer.visible = visible
+                if isinstance(layer, SonifiedDataLayerArtist):
+                    layer.audible = visible
+                else:
+                    layer.visible = visible
             elif hasattr(layer.layer, 'data') and layer.layer.data.label == layer_label:
                 layer.visible = layer.layer.label in self.visible_layers
             if not visible and self.app._get_assoc_data_parent(layer.layer.label) == layer_label:

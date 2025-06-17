@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from regions import PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion
+from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion,
+                     EllipseSkyRegion)
 from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
@@ -24,7 +25,7 @@ class TestLoadRegions(BaseRegionHandler):
 
     def teardown_method(self, method):
         """Clear all the subsets for the next test method."""
-        self.cubeviz._delete_all_regions()
+        self.cubeviz.app.delete_subsets()
 
     def test_regions_mask(self):
         mask = np.zeros((9, 10), dtype=np.bool_)
@@ -50,22 +51,26 @@ class TestLoadRegions(BaseRegionHandler):
         bad_regions = self.cubeviz.plugins['Subset Tools'].import_region(
             my_reg_sky_1, return_bad_regions=True)
 
-        # TODO: Update expected results when we support sky regions in Cubeviz.
-        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
+        assert len(bad_regions) == 0
 
     def test_spatial_spectral_mix(self):
-        # Manually draw ellipse.
-        self.cubeviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
-
-        # Manually draw wavelength range.
+        # Draw ellipse and wavelength range.
         unit = u.Unit(self.cubeviz.plugins['Unit Conversion'].spectral_unit.selected)
-        self.cubeviz.plugins['Subset Tools'].import_region(SpectralRegion(4.892 * unit,
-                                                                          4.896 * unit))
-        self.cubeviz.app.session.edit_subset_mode.edit_subset = None
+        self.cubeviz.plugins['Subset Tools'].import_region([
+            EllipsePixelRegion(center=PixCoord(x=4.5, y=4.0), width=9.0, height=8.0),
+            SpectralRegion(4.892 * unit, 4.896 * unit)
+        ])
 
         # Get spatial regions only.
-        st = self.cubeviz.plugins['Subset Tools']._obj
-        spatial_subsets_as_regions = st.get_regions(region_type='spatial')
+        st = self.cubeviz.plugins['Subset Tools']
+
+        assert isinstance(st.get_regions(region_type='spatial')['Subset 1'],
+                          EllipseSkyRegion)
+        assert isinstance(st.get_regions(region_type='spatial')['Subset 1'],
+                          EllipseSkyRegion)
+
+        spatial_subsets_as_regions = st.get_regions(region_type='spatial',
+                                                    wrt_data='has_microns[FLUX]')
         assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
         assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
         # ensure agreement between app.get_subsets and subset_tools.get_regions
@@ -78,8 +83,8 @@ class TestLoadRegions(BaseRegionHandler):
         with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
             spectral_subsets = self.cubeviz.specviz.get_spectra()
         assert list(spectral_subsets.keys()) == ['Spectrum (sum)',
-                                                 'Spectrum (Subset 1, sum)',
                                                  'Spectrum (sum) (Subset 2)',
+                                                 'Spectrum (Subset 1, sum)',
                                                  'Spectrum (Subset 1, sum) (Subset 2)']
         for sp in spectral_subsets.values():
             assert isinstance(sp, Spectrum1D)
