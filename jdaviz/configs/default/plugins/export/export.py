@@ -610,36 +610,30 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.overwrite_warn = False
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False,
-                    width: str | None = None, height: str | None = None):
-        def get_png(figure: bqplot.Figure):
-            nonlocal filename
-            if filetype == "png":
+                    width=None, height=None):
+        if filename is None:
+            filename = self.filename_default
 
-                if filename is None:
-                    filename = self.filename_default
+        def on_img_received(data):
+            try:
+                with filename.open(mode='bw') as f:
+                    f.write(data)
+            except Exception as e:
+                self.hub.broadcast(SnackbarMessage(
+                    f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
+                    sender=self, color="error"))
+            finally:
+                self.hub.broadcast(SnackbarMessage(
+                    f"{self.viewer.selected} exported to {str(filename)}",
+                    sender=self, color="success"))
 
-                def on_img_received(data):
-                    try:
-                        with filename.open(mode='bw') as f:
-                            f.write(data)
-                    except Exception as e:
-                        self.hub.broadcast(SnackbarMessage(
-                            f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
-                            sender=self, color="error"))
-                    finally:
-                        self.hub.broadcast(SnackbarMessage(
-                            f"{self.viewer.selected} exported to {str(filename)}",
-                            sender=self, color="success"))
+        def get_png(figure):
+            if figure._upload_png_callback is not None:
+                raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
 
-                if figure._upload_png_callback is not None:
-                    raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
+            figure.get_png_data(on_img_received)
 
-                figure.get_png_data(on_img_received)
-
-            elif filetype == "svg":
-                figure.save_svg(str(filename) if filename is not None else None)
-
-        if width is not None or height is not None:
+        if filetype == 'png' and (width is not None or height is not None):
             assert width is not None and height is not None, \
                 "Both width and height must be provided"
             import ipywidgets as widgets
@@ -683,8 +677,15 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 get_png(cloned_viewer.figure)
             _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
             _show_hidden(cloned_viewer.figure, width, height)
-        else:
+        elif filetype == 'png':
+            # NOTE: get_png already check if _upload_png_callback is not None
             get_png(viewer.figure)
+        elif filetype == 'svg':
+            if viewer.figure._upload_svg_callback is not None:
+                raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
+            viewer.figure.get_svg_data(on_img_received)
+        else:
+            raise ValueError(f"Unsupported filetype={filetype} for save_figure")
 
     @with_spinner('movie_recording')
     def _save_movie(self, viewer, i_start, i_end, fps, filename, rm_temp_files, width, height):
