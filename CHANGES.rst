@@ -151,6 +151,8 @@ Imviz
 
 - Fix dropdowns for overlay not showing in UI. [#3640]
 
+- Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
+
 Mosviz
 ^^^^^^
 
@@ -389,8 +391,6 @@ Bug Fixes
 - Fixes data-menu visibility when app is scrolled out of view. [#3391]
 
 - Fix Slice plugin for indexing through temporal slices. [#3235]
-
-- Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
 
 Cubeviz
 ^^^^^^^
