@@ -38,13 +38,13 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_collapse_exception_handling(cubeviz_helper, spectral_cube_wcs):
-    cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
+    cubeviz_helper.load_data(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
 
     coll = cubeviz_helper.plugins['Collapse']._obj
 
-    # Inject bad function selection for use by spectrum1D.collapse
+    # Inject bad function selection for use by spectrum.collapse
     # NOTE: Empty strings are allowed per the validating method _selected_changed
-    # in SelectPluginComponent... but spectrum1D.collapse does not accept them
+    # in SelectPluginComponent... but spectrum.collapse does not accept them
     coll.function.selected = ""
     with pytest.raises(Exception):
         coll.collapse()
