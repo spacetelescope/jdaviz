@@ -94,11 +94,11 @@ def test_fits_spectrum2d(deconfigged_helper):
 
     # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
     sp2d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d')  # noqa
-    assert isinstance(sp2d, Spectrum1D)
+    assert isinstance(sp2d, Spectrum)
     assert str(sp2d.spectral_axis.unit) == 'um'
 
     sp1d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d (auto-ext)')  # noqa
-    assert isinstance(sp1d, Spectrum1D)
+    assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'um'
 
 
