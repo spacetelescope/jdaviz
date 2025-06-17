@@ -215,25 +215,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         region = getattr(self.subset, 'selected_spatial_region', None)
         return isinstance(region, (CircleSkyRegion, EllipseSkyRegion))
 
-    @observe('subset_selected')
-    def _on_subset_selected(self, event):
-        if hasattr(self, 'subset_format'):
-            self.subset_format._update_items()
-            self.subset_format_invalid_msg = ''
-
-    @observe('subset_format_selected')
-    def _on_subset_format_selected(self, event):
+    def _is_subset_format_supported(self):
+        if self.subset.selected == '' or self.subset.selected is None:
+            return
 
         subset = self.app.get_subsets(self.subset.selected)
-        selected = self.subset_format_selected
+        selected = self.subset_format.selected
+        self.subset_format_invalid_msg = ''
 
         try:
             is_spectral = self.app._is_subset_spectral(subset[0])
         except KeyError:
             is_spectral = False
-
-        if self.subset.selected == '' or self.subset.selected is None:
-            return
 
         # Disable selecting a bad subset+format combination from the API
         bad_combo = False
@@ -246,20 +239,30 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if bad_combo:
             # raise vue message
             self.subset_format_invalid_msg = (f"Cannot export '{self.subset.selected}' "
-                                              f"in '{event['new']}' format.")
-            raise ValueError(f"{self.subset_format_invalid_msg}")
-        else:
-            self.subset_format_invalid_msg = ''
+                                              f"in '{selected}' format.")
+            return False
+
+        return True
+
+    @observe('subset_selected')
+    def _on_subset_selected(self, event):
+        if hasattr(self, 'subset_format'):
+            self.subset_format._update_items()
+            self._is_subset_format_supported()
+
+    @observe('subset_format_selected')
+    def _on_subset_format_selected(self, event):
+        self._is_subset_format_supported()
 
             # Persist subset format across selections
             # Across subsets
             # self.subset_format_dict[self.subset.selected] = self.subset_format_selected
 
             # Across subset types (spatial/spectral)
-            if is_spectral:
-                self.subset_format_dict['spectral'] = selected
-            else:
-                self.subset_format_dict['spatial'] = selected
+            # if is_spectral:
+            #     self.subset_format_dict['spectral'] = selected
+            # else:
+            #     self.subset_format_dict['spatial'] = selected
 
     @observe('viewer_items', 'dataset_items', 'subset_items',
              'plugin_table_items', 'plugin_plot_items')
@@ -375,8 +378,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         selected subset according to its type.
         """
         new_items = []
-        good_formats = []
-        subset_type = ''
+        # good_formats = []
+        # subset_type = ''
         if self.subset.selected is not None:
             try:
                 subset = self.app.get_subsets(self.subset.selected)
@@ -385,10 +388,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # no need to set valid/invalid formats.
                 return
             if self.app._is_subset_spectral(subset[0]):
-                subset_type = 'spectral'
+                # subset_type = 'spectral'
                 good_formats = ['ecsv']
             else:
-                subset_type = 'spatial'
+                # subset_type = 'spatial'
                 good_formats = ['fits', 'reg']
 
             for item in self.subset_format_items:
@@ -408,8 +411,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         #   self.subset.selected, good_formats[0])
 
         # Across subset types (spatial/spectral)
-        self.subset_format.selected = self.subset_format_dict.get(
-            subset_type, good_formats[0])
+        # self.subset_format.selected = self.subset_format_dict.get(
+        #     subset_type, good_formats[0])
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
