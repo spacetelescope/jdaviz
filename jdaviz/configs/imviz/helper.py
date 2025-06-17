@@ -181,7 +181,8 @@ class Imviz(ImageConfigHelper):
                 self.loaders['file'].format = 'Image'
                 # if data_label:
                 print(self.loaders['file'].importer.data_label, data_label, cur_data_label)
-                self.loaders['file'].importer.data_label = data_label if data_label is not None else cur_data_label
+                self.loaders['file'].importer.data_label = (data_label if data_label is not None
+                                                            else cur_data_label)
                 self.loaders['file'].importer()
                 return
                 self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
