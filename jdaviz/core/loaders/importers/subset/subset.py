@@ -1,6 +1,6 @@
 from regions import Regions
 from specutils import SpectralRegion
-from traitlets import Unicode, Bool
+from traitlets import Unicode, Bool, observe
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage)
 
@@ -71,8 +71,18 @@ class SubsetImporter(BaseImporterToPlugin):
 
         self.subset_label_invalid_msg = ''
 
+    @observe('subset_label_invalid_msg')
+    def _set_import_disabled(self, change={}):
+        self.resolver.import_disabled = len(self.subset_label_invalid_msg) > 0
+
     def __call__(self, subset_label=None):
         if self.subset_label_invalid_msg:
             raise ValueError(self.subset_label_invalid_msg)
+        if self.subset_label_value.strip() == self.subset_label_default:
+            # no need to pass subset_label since it is Subset N,
+            # and otherwise the backend will raise an error
+            kwargs = {}
+        else:
+            kwargs = {'subset_label': self.subset_label_value.strip()}
         self.app._jdaviz_helper.plugins['Subset Tools'].import_region(self.input,
-                                                                      subset_label=self.subset_label_value.strip())  # noqa
+                                                                      **kwargs)  # noqa
