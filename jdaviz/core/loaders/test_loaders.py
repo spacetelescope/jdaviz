@@ -112,7 +112,7 @@ def test_resolver_url(deconfigged_helper):
     assert len(loader.format.choices) == 0
 
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
-    assert len(loader.format.choices) == 3  # may change with future importers
+    assert len(loader.format.choices) == 4  # may change with future importers
     assert loader.format.selected == '2D Spectrum'  # default may change with future importers
 
     # test target filtering
@@ -124,7 +124,7 @@ def test_resolver_url(deconfigged_helper):
     assert loader.importer.data_label == '1D Spectrum'
 
     loader.target = 'Any'
-    assert len(loader.format.choices) == 3
+    assert len(loader.format.choices) == 4
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == '2D Spectrum'
 
