@@ -65,7 +65,6 @@ class ImageImporter(BaseImporterToDataCollection):
         return isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
                                        NDData, np.ndarray, asdf.AsdfFile))
 
-
     @property
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
