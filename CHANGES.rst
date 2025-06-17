@@ -17,6 +17,8 @@ Imviz
 
 - Fix dropdowns for overlay not showing in UI. [#3640]
 
+- Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
+
 Mosviz
 ^^^^^^
 
