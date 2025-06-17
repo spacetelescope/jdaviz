@@ -148,9 +148,6 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
 
     specviz_helper.load_data(spectrum1d)
 
-    specviz_helper.app.state.dev_loaders = True
-    specviz_helper.plugins['Subset Tools']._obj.dev_loaders = True
-
     loader = specviz_helper.plugins['Subset Tools'].loaders['file']
 
     assert len(loader.format.choices) == 0
