@@ -213,9 +213,9 @@ class Imviz(ImageConfigHelper):
                     self.loaders['object'].importer.data_label.value = data_label
                 self.loaders['object'].importer()
                 # self._load(data[i, :, :])
-                return
+                # return
 
-                self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
+                # self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 
         else:
             if data_label:
@@ -228,9 +228,9 @@ class Imviz(ImageConfigHelper):
                 self.loaders['object'].importer.data_label.value = data_label
             self.loaders['object'].importer()
             # self._load(data)
-            return
-            self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
-
+            # return
+            # self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
+        return
         # find the current label(s) - TODO: replace this by calling default label functionality
         # above instead of having to refind it
         applied_labels = []
