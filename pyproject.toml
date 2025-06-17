@@ -25,7 +25,7 @@ dependencies = [
     "specutils>=2.0.0",
     "specreduce@git+https://github.com/astropy/specreduce.git",
     "photutils>=2.2",
-    "glue-astronomy@git+https://github.com/glue-viz/glue-astronomy.git@refs/pull/100/merge",
+    "glue-astronomy@git+https://github.com/glue-viz/glue-astronomy.git",
     "asteval>=0.9.23",
     "idna",
     "vispy>=0.6.5",
