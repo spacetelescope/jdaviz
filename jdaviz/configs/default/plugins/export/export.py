@@ -52,6 +52,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`)
     * ``viewer_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``image_custom_size`` (Bool)
+    * ``image_width`` (int)
+        The width of the image to export, in pixels, if ``image_custom_size`` is `True`.
+    * ``image_height`` (int)
+        The height of the image to export, in pixels, if ``image_custom_size`` is `True`.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`)
     * ``dataset_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
@@ -69,6 +74,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     viewer_format_items = List().tag(sync=True)
     viewer_format_selected = Unicode().tag(sync=True)
+    image_custom_size = Bool(False).tag(sync=True)
+    image_width = IntHandleEmpty(800).tag(sync=True)
+    image_height = IntHandleEmpty(600).tag(sync=True)
 
     plugin_table_format_items = List().tag(sync=True)
     plugin_table_format_selected = Unicode().tag(sync=True)
@@ -236,6 +244,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         expose = ['viewer', 'viewer_format',
+                  'image_custom_size', 'image_width', 'image_height',
                   'dataset', 'dataset_format',
                   'subset', 'subset_format',
                   'plugin_table', 'plugin_table_format',
@@ -446,7 +455,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
-               raise_error_for_overwrite=True, width: str | None = None, height: str | None = None):
+               raise_error_for_overwrite=True):
         """
         Export selected item(s)
 
@@ -465,13 +474,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             If `True`, raise exception when ``overwrite=False`` but
             output file already exists. Otherwise, a message will be sent
             to application snackbar instead.
-
-        width : str, optional
-            Width of the exported image. Required if height is provided.
-
-        height : str, optional
-            Height of the exported image. Required if width is provided.
-
         """
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
@@ -512,10 +514,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 restores.append(restore)
 
             if filetype == "mp4":
-                self.save_movie(viewer, filename, filetype, width=width, height=height)
+                self.save_movie(viewer, filename, filetype,
+                                width=self.image_width if self.image_custom_size else None,
+                                height=self.image_height if self.image_custom_size else None)
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
-                                 width=width, height=height)
+                                 width=self.image_width if self.image_custom_size else None,
+                                 height=self.image_height if self.image_custom_size else None)
 
             # restore marks to their original state
             for restore, mark in zip(restores, viewer.figure.marks):
@@ -751,7 +756,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.movie_interrupt = False
 
     def save_movie(self, viewer, filename, filetype, i_start=None, i_end=None, fps=None,
-                   rm_temp_files=True, width: str | None = None, height: str | None = None):
+                   rm_temp_files=True, width=None, height=None):
         """Save selected slices as a movie.
 
         This method creates a PNG file per frame (``._cubeviz_movie_frame_<n>.png``)
