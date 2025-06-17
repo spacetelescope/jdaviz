@@ -143,6 +143,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
+
 Cubeviz
 ^^^^^^^
 
