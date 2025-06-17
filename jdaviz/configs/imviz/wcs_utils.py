@@ -431,7 +431,7 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     ndd = NDData(
         data=placeholder_data,
         wcs=new_rotated_wcs,
-        meta={wcs_only_key: True, '_pixel_scales': pixel_scales}
+        meta={wcs_only_key: True, '_pixel_scales': pixel_scales, 'plugin': 'orientation'}
     )
     return ndd
 

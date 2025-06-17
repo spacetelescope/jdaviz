@@ -175,7 +175,14 @@ class Imviz(ImageConfigHelper):
                     kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
-                self._load(filepath, format='Image', **kw)
+                # self._load(filepath, format='Image', **kw)
+                self.loaders['file'].filepath = filepath
+                self.loaders['file'].target = 'Any'
+                self.loaders['file'].format = 'Image'
+                # if data_label:
+                print(self.loaders['file'].importer.data_label, data_label, cur_data_label)
+                self.loaders['file'].importer.data_label = data_label if data_label is not None else cur_data_label
+                self.loaders['file'].importer()
                 return
                 self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
 
@@ -200,7 +207,11 @@ class Imviz(ImageConfigHelper):
                 # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
                 # self.loaders['object'].object = data[i, :, :]
                 # self.loaders['object'].importer()
-                self._load(data[i, :, :])
+                self.loaders['object'].object = data[i, :, :]
+                if data_label:
+                    self.loaders['object'].importer.data_label.value = data_label
+                self.loaders['object'].importer()
+                # self._load(data[i, :, :])
                 return
 
                 self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
@@ -211,7 +222,11 @@ class Imviz(ImageConfigHelper):
             # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
             # self.loaders['object'].object = data
             # self.loaders['object'].importer()
-            self._load(data)
+            self.loaders['object'].object = data
+            if data_label:
+                self.loaders['object'].importer.data_label.value = data_label
+            self.loaders['object'].importer()
+            # self._load(data)
             return
             self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
 
