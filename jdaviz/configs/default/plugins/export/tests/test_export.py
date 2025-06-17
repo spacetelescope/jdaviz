@@ -129,21 +129,36 @@ class TestExportSubsets:
 
         data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
 
+        # Subset 1, Spatial Subset
         cubeviz_helper.load_data(data)
         subset_plugin = cubeviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=50, yc=50, radius=10))
+        spatial_subset = 'Subset 1'
+
+        # Subset 1, Spectral Subset
+        spectral_axis_unit = u.Unit(
+            cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+        subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
+                                                   15.5 * spectral_axis_unit))
+        spectral_subset = 'Subset 2'
 
         export_plugin = cubeviz_helper.plugins['Export']._obj
-        export_plugin.subset.selected = 'Subset 1'
+
 
         # Again no assumptions here on default
         spatial_valid_formats = ['fits', 'reg']
         assert export_plugin.subset_format.selected in spatial_valid_formats
 
         for current_format in spatial_valid_formats:
+            # Set to spatial
+            export_plugin.subset.selected = spatial_subset
+
+            # Check format
             export_plugin.subset_format.selected = current_format
             assert export_plugin.subset_format.selected == current_format  # default format
             assert export_plugin.filename.value.endswith(current_format)
+
+            # Attempt export
             export_plugin.export()
             assert os.path.isfile(export_plugin.filename.value)
 
@@ -172,6 +187,16 @@ class TestExportSubsets:
                 assert region.center.y == 50.0
                 assert region.radius == 10.0
 
+            # Finally, attempt to export with Spectral subset
+            export_plugin.subset.selected = spectral_subset
+            with pytest.raises(ValueError,
+                               match = f"Export of '{spectral_subset}' "
+                                       f"in '{current_format}' format is not supported."):  # noqa
+                export_plugin.export()
+
+        # Reset to spatial
+        export_plugin.subset.selected = spatial_subset
+
         # Overwrite not enable, so no-op with warning.
         export_plugin.export(raise_error_for_overwrite=False)
         assert export_plugin.overwrite_warn
@@ -197,10 +222,12 @@ class TestExportSubsets:
                                "'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
-        # Test that selecting disabled option raises an error
+        # Test that attempting to export with disabled option raises an error
+        export_plugin.subset_format.selected = 'ecsv'
         with pytest.raises(ValueError,
-                           match="Cannot export 'Subset 1' in 'ecsv' format."):  # noqa
-            export_plugin.subset_format.selected = 'ecsv'
+                           match=f"Export of '{spatial_subset}' "
+                                 f"in 'ecsv' format is not supported."):  # noqa
+            export_plugin.export()
 
         # test that attempting to save a composite subset raises an error
         subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5), edit_subset='Subset 1',
@@ -208,40 +235,18 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5), edit_subset='Subset 1',
                                     combination_mode='and')
 
-        old_format = 'reg'
-        export_plugin.subset.selected = 'Subset 1'
-        # This needs to be set again otherwise we'll raise an error because the selected format
-        # is still 'ecsv' from the ValueError test above.
-        export_plugin.subset_format.selected = old_format
+        # TODO: If this is *not* selected it won't update the msg
+        export_plugin.subset.selected = spatial_subset
         assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
         with pytest.raises(NotImplementedError,
                            match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
 
-        # Test saving spectral subset
-        spectral_axis_unit = u.Unit(
-            cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-        subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
-                                                   15.5 * spectral_axis_unit))
-        export_plugin.subset.selected = 'Subset 2'
-        current_format = 'ecsv'
-
-        # Format should auto-update to first non-disabled entry
-        assert export_plugin.subset_format.selected == current_format
-        for format in export_plugin.subset_format.items:
-            if format['label'] != current_format:
-                assert format['disabled']
-            else:
-                assert format['disabled'] is False
-
+        export_plugin.subset.selected = spectral_subset
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
-        assert os.path.isfile(f'test_spectral_region.{current_format}')
+        assert os.path.isfile(f'test_spectral_region.ecsv')
 
-        # Confirm that flipping back to 'Subset 1' returns the format to 'reg'
-        # not the default 'fits'
-        export_plugin.subset.selected = 'Subset 1'
-        assert export_plugin.subset_format.selected == old_format
 
     def test_export_stcs_circle_ellipse(self, imviz_helper):
         wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,

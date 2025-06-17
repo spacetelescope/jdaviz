@@ -240,7 +240,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         # raise vue message
         if not is_supported:
-            self.subset_format_invalid_msg = (f"Export '{self.subset.selected}' "
+            self.subset_format_invalid_msg = (f"Export of '{self.subset.selected}' "
                                               f"in '{selected}' format is not supported.")
 
         return is_supported
