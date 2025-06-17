@@ -164,7 +164,11 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                 try:  # dataset selected wcs is 1d
                     wav = wcs.pixel_to_world(self.pixel)
                 except ValueError:  # dataset selected wcs is 2d
-                    wav = wcs.pixel_to_world(0, self.pixel)[0]
+                    if data.spectral_axis_index == 0:
+                        wav = wcs.pixel_to_world(0, self.pixel)[0]
+                    else:
+                        # It's 2D, so this is the only option
+                        wav = wcs.pixel_to_world(self.pixel, 0)[0]
                 self.wav = wav.to(u.Unit(self.sa_display_unit), u.spectral()).value
             else:
                 self.wav = None
