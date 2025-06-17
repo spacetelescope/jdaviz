@@ -144,8 +144,6 @@ class Imviz(ImageConfigHelper):
         image as Numpy array and load the latter instead.
 
         """
-        self.app.state.dev_loaders = True
-
         prev_data_labels = self.app.data_collection.labels
 
         if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
@@ -153,10 +151,6 @@ class Imviz(ImageConfigHelper):
 
         if isinstance(data, str):
             filelist = data.split(',')
-            # self.loaders['file'].filepath = filelist
-            # self.loaders['file'].filepath.importer.data_label = data_label
-            # self.loaders['file'].filepath.importer()
-            # return
 
             if len(filelist) > 1 and data_label:
                 raise ValueError('Do not manually overwrite data_label for '
@@ -175,22 +169,12 @@ class Imviz(ImageConfigHelper):
                     kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
-                # self._load(filepath, format='Image', **kw)
-                self.loaders['file'].filepath = filepath
-                self.loaders['file'].target = 'Any'
-                self.loaders['file'].format = 'Image'
-                # if data_label:
-                print(self.loaders['file'].importer.data_label, data_label, cur_data_label)
-                self.loaders['file'].importer.data_label = (data_label if data_label is not None
-                                                            else cur_data_label)
-                self.loaders['file'].importer()
-                return
+
                 self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
                 data = data.squeeze()
-                # in parser, if nddata, return self.input.squeeze()
                 if data.ndim != 3:
                     raise ValueError(f'Imviz cannot load this array with ndim={data.ndim}')
 
@@ -205,32 +189,14 @@ class Imviz(ImageConfigHelper):
 
                 if data_label:
                     kw['data_label'] = data_label
-                # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
-                # self.loaders['object'].object = data[i, :, :]
-                # self.loaders['object'].importer()
-                self.loaders['object'].object = data[i, :, :]
-                if data_label:
-                    self.loaders['object'].importer.data_label.value = data_label
-                self.loaders['object'].importer()
-                # self._load(data[i, :, :])
-                # return
 
-                # self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
+                self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 
         else:
             if data_label:
                 kwargs['data_label'] = data_label
-            # self.loaders['object'].format.selected = self.loaders['object'].format.choices[0]
-            # self.loaders['object'].object = data
-            # self.loaders['object'].importer()
-            self.loaders['object'].object = data
-            if data_label:
-                self.loaders['object'].importer.data_label.value = data_label
-            self.loaders['object'].importer()
-            # self._load(data)
-            # return
-            # self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
-        return
+
+            self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
         # find the current label(s) - TODO: replace this by calling default label functionality
         # above instead of having to refind it
         applied_labels = []
