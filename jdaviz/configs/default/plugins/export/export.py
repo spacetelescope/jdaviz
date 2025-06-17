@@ -305,9 +305,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     @observe('viewer_selected', 'dataset_selected', 'subset_selected',
              'plugin_table_selected', 'plugin_plot_selected')
     def _sync_singleselect(self, event):
-
         if not hasattr(self, 'dataset') or not hasattr(self, 'viewer'):
-            # plugin not fully intialized
+            # plugin not fully initialized
             return
         # if multiselect is not enabled, only allow a single selection across all select components
         if self.multiselect:
@@ -541,7 +540,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filetype = self.subset_format.selected
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
             if self.subset_invalid_msg != '':
-                raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
+                raise NotImplementedError(f'Subset cannot be exported - {self.subset_invalid_msg}')
             elif self.subset_format_invalid_msg:
                 raise ValueError(self.subset_format_invalid_msg)
 
