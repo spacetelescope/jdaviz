@@ -13,14 +13,13 @@ __all__ = ['RegionsParser']
 class RegionsParser(BaseParser):
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz'):
-            # NOTE: temporary during deconfig process
-            return False
         if isinstance(self.input, str):
             ext = self.input.split('.')[-1]
-            # once deconfigging is complete:
-            # return ext in ('reg', 'fits', 'ecsv')
-            return ext == 'ecsv'
+            if self.app.config == 'imviz':
+                return ext in ('reg', 'fits')
+            elif self.app.config in ('specviz', 'specviz2d'):
+                return ext == 'ecsv'
+            return ext in ('reg', 'fits', 'ecsv')
 
     @cached_property
     def output(self):
