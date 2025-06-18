@@ -695,7 +695,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
         if not dryrun:
             with conf.set_temp('timeout', timeout):
-                if mast_mission is None:
+                if mast_mission in (None, ""):
                     (status, msg, url) = Observations.download_file(
                         possible_uri, cache=cache, local_path=local_path
                     )
