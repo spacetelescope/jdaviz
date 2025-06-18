@@ -154,7 +154,6 @@ filterwarnings = [
     # and https://github.com/scipy/scipy/pull/19275
     "ignore:.*numpy\\.core.*:DeprecationWarning",
     "ignore:The load_data function is deprecated.*",
-    "ignore:.*use_side_effect is deprecated.*",
     "ignore:.*The WCS transformation has more axes.*",
     "ignore:.*from MJD-BEG.*",
     "ignore:.*Set OBSGEO-L to.*",
