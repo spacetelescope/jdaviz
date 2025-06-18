@@ -108,7 +108,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
         self.flux_viewer.toolbar.active_tool = spec_at_spaxel_tool
 
-        msg = SnackbarMessage(f"'{self.results_label}' sonified successfully.",
+        msg = SnackbarMessage(f"Data cube sonified successfully.",
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
