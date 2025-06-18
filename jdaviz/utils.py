@@ -12,7 +12,7 @@ from astropy.io import fits
 from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-from astroquery.mast import Observations, conf
+from astroquery.mast import MastMissions, Observations, conf
 from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
@@ -601,7 +601,7 @@ def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, tim
 
 
 def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,
-                         dryrun=False):
+                         dryrun=False, mast_mission=None):
     """
     Retrieve data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
@@ -695,9 +695,16 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
         if not dryrun:
             with conf.set_temp('timeout', timeout):
-                (status, msg, url) = Observations.download_file(
-                    possible_uri, cache=cache, local_path=local_path
-                )
+                if mast_mission is None:
+                    (status, msg, url) = Observations.download_file(
+                        possible_uri, cache=cache, local_path=local_path
+                    )
+                else:
+                    m = MastMissions()
+                    m.mission = mast_mission
+                    (status, msg, url) = m.download_file(parsed_uri.path,
+                                                         cache=cache,
+                                                         local_path=local_path)
         else:
             status = "COMPLETE"
 
