@@ -39,7 +39,7 @@ class URLResolver(BaseResolver):
     def is_valid(self):
         return urlparse(self.url.strip()).scheme in ['http', 'https', 'mast', 'ftp']
 
-    @observe('url', 'cache', 'timeout')
+    @observe('url', 'cache', 'timeout', 'mast_mission')
     def _on_url_changed(self, change):
         self._update_format_items()
 
