@@ -93,7 +93,6 @@ class Specviz(ConfigHelper, LineListMixin):
         if mast_mission is not None:
             load_kwargs['mast_mission'] = mast_mission
 
-
         if isinstance(data, (SpectrumList, SpectrumCollection)) and isinstance(data_label, list):
             if len(data_label) != len(data):
                 raise ValueError(f"Length of data labels list ({len(data_label)}) is different"

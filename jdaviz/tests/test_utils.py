@@ -50,7 +50,7 @@ def test_url_to_download_imviz_local_path_warning(imviz_helper):
 
 def test_uri_to_download_specviz_local_path_check():
     uri = "mast:jw02732-c1001_t004_miri/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
-    local_path = download_uri_to_path(uri, cache=False, dryrun=True, mast_mission="jwst")  # No download
+    local_path = download_uri_to_path(uri, cache=False, dryrun=True)  # No download
 
     # Wrong: '.\\JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits'
     # Correct:  '.\\jw02732-c1001_t004_miri_ch1-short_x1d.fits'
