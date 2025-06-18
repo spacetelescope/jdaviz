@@ -26,7 +26,7 @@ _expose = ['show', 'load', 'batch_load',
            'viewers',
            'new_viewers',
            'get_data']
-_incl = ['enable_hot_reloading', '__version__', 'gca', 'get_all_apps', 'new']
+_incl = ['enable_hot_reloading', '__version__', 'gca', 'get_all_apps', 'app']
 _temporary_incl = ['open', 'Cubeviz', 'Imviz', 'Mosviz', 'Rampviz', 'Specviz', 'Specviz2d']
 __all__ = _expose + _incl + _temporary_incl
 
@@ -37,7 +37,7 @@ global _current_index
 _apps = []
 
 
-def new(replace=False, set_as_current=True):
+def app(replace=False, set_as_current=True):
     """
     Create a new jdaviz application instance and assign as the current instance.
 
@@ -101,17 +101,17 @@ def gca(index=None, set_as_current=True):
     if not len(_apps):
         # on first access (either to gca() directly or anything redirected through _expose),
         # create a first instance
-        new(set_as_current=True)
+        app(set_as_current=True)
     if index is None:
         index = _current_index
-    app = _apps[index]
+    _app = _apps[index]
     if set_as_current:
         if index < 0:
             # make sure we have a positive index so
             # this remains fixed when adding new entries
             index = len(_apps) + index
         _current_index = index
-    return app
+    return _app
 
 
 def __dir__():
