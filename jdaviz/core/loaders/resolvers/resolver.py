@@ -225,8 +225,11 @@ class BaseResolver(PluginTemplateMixin):
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
         setattr(self, self.default_input, inp)
         user_api = self.user_api
+        print(kwargs)
         for k, v in kwargs.items():
+            print(f"checking {k}")
             if hasattr(user_api, k):
+                print(f"Setting {k} to {v}")
                 setattr(user_api, k, v)
         return self
 

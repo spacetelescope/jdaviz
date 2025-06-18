@@ -25,7 +25,9 @@ class URLResolver(BaseResolver):
 
     def __init__(self, *args, **kwargs):
         self.local_path = os.curdir
-        self.mast_mission = kwargs.pop("mast_mission", "")
+        if "mast_mission" in kwargs:
+            self.mast_mission = kwargs['mast_mission']
+            kwargs.pop('mast_mission')
         super().__init__(*args, **kwargs)
 
     @property
