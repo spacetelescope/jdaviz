@@ -6,6 +6,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SpectralSubsetSelectMixin, with_spinner)
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.events import SnackbarMessage
 
 
 __all__ = ['SonifyData']
@@ -106,6 +107,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # Automatically select spectrum-at-spaxel tool
         spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
         self.flux_viewer.toolbar.active_tool = spec_at_spaxel_tool
+
+        msg = SnackbarMessage("Data cube sonified successfully.",
+                              color='success',
+                              sender=self)
+        self.app.hub.broadcast(msg)
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active

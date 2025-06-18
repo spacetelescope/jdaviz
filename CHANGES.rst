@@ -12,6 +12,8 @@ Cubeviz
 - Significantly improved the performance of Cubeviz when creating several subsets in the
   image viewer. [#3626]
 
+- Broadcast snackbar message to user when sonification of a data cube completes. [#3647]
+
 Imviz
 ^^^^^
 
