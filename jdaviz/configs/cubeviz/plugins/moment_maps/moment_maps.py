@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.nddata import CCDData
 from astropy.utils import minversion
 from traitlets import Bool, List, Unicode, observe
-from specutils import manipulation, analysis, Spectrum1D
+from specutils import manipulation, analysis, Spectrum
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
@@ -293,8 +293,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         else:
             w = data.coords
         data_wcs = getattr(w, 'celestial', None)
-        if data_wcs:
-            data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
 
         # Convert spectral axis to velocity units if desired output is in velocity
         if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):
@@ -305,15 +303,17 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
             slab_sa = slab.spectral_axis.to("km/s", doppler_convention="relativistic",
                                             doppler_rest=ref_wavelength)
-            slab = Spectrum1D(slab.flux, slab_sa, uncertainty=slab.uncertainty)
+            slab = Spectrum(slab.flux, slab_sa, uncertainty=slab.uncertainty,
+                            spectral_axis_index=cube.spectral_axis_index)
         # Otherwise convert spectral axis to display units, have to do frequency <-> wavelength
         # before calculating
         else:
             slab_sa = slab.spectral_axis.to(self.app._get_display_unit('spectral'))
-            slab = Spectrum1D(slab.flux, slab_sa, uncertainty=slab.uncertainty)
+            slab = Spectrum(slab.flux, slab_sa, uncertainty=slab.uncertainty,
+                            spectral_axis_index=cube.spectral_axis_index)
 
         # Finally actually calculate the moment
-        self.moment = analysis.moment(slab, order=n_moment).T
+        self.moment = analysis.moment(slab, order=n_moment)
         # If n>1 and velocity is desired, need to take nth root of result
         if n_moment > 0 and self.output_unit_selected.lower() == "velocity":
             self.moment = np.power(self.moment, 1/self.n_moment)

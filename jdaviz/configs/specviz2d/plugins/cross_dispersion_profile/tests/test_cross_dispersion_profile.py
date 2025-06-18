@@ -3,7 +3,7 @@ import astropy.units as u
 from astropy.modeling.fitting import LevMarLSQFitter
 from astropy.modeling.models import Gaussian1D
 from astropy.tests.helper import assert_quantity_allclose
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 
 def test_cross_dispersion_profile(specviz2d_helper):
@@ -18,7 +18,7 @@ def test_cross_dispersion_profile(specviz2d_helper):
     for i in range(25):
         arr[:, i] = Gaussian1D(amplitude=i, mean=5, stddev=1)(y)
 
-    data = Spectrum1D(flux=arr * u.Jy, spectral_axis=x * u.nm)
+    data = Spectrum(flux=arr * u.Jy, spectral_axis=x * u.nm)
     specviz2d_helper.load_data(data)
 
     cdp = specviz2d_helper.plugins['Cross Dispersion Profile']
