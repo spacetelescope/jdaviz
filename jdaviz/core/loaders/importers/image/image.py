@@ -53,7 +53,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                                           multiselect='extension_multiselect',
                                                           manual_options=self.input,
                                                           filters=[_validate_fits_image2d])
-            self.extension.selected = self.extension.select_default()
+            self.extension.selected = [self.extension.choices[0]]
 
     @property
     def is_valid(self):
