@@ -50,6 +50,9 @@ def open(filename, show=True, **kwargs):
         fn_dl_kw = {"local_path": kwargs["local_path"]}
     else:
         fn_dl_kw = {}
+    if "mast_mission" in kwargs:
+        fn_dl_kw["mast_mission"] = kwargs['mast_mission']
+
     filename = download_uri_to_path(filename, cache=True, **fn_dl_kw)
 
     # Identify the correct config
@@ -58,6 +61,8 @@ def open(filename, show=True, **kwargs):
         raise NotImplementedError(f"Multiple helpers provided: {compatible_helpers}."
                                   "Unsure which to launch")
     else:
+        if "mast_mission" in kwargs:
+            kwargs.pop('mast_mission')
         return _launch_config_with_data(compatible_helpers[0], hdul, filepath=filename,
                                         show=show, **kwargs)
 

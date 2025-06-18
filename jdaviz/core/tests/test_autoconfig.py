@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from astroquery.mast import Observations
+from astroquery.mast import MastMissions
 from astropy.utils.data import download_file
 
 from jdaviz import open as jdaviz_open
@@ -13,10 +13,10 @@ from jdaviz.core.launcher import Launcher, STATUS_HINTS
 
 
 AUTOCONFIG_EXAMPLES = (
-    ("mast:JWST/product/jw02732004001_02103_00004_mirifushort_x1d.fits", Specviz),
-    ("mast:JWST/product/jw01538160001_16101_00004_nrs1_s2d.fits", Specviz2d),
-    ("mast:JWST/product/jw02727-o002_t062_nircam_clear-f090w_i2d.fits", Imviz),
-    ("mast:JWST/product/jw02732004001_02103_00004_mirifushort_s3d.fits", Cubeviz),
+    ("mast:jw02732004001_02103_00004/jw02732004001_02103_00004_mirifushort_x1d.fits", Specviz),
+    ("mast:jw01538160001_16101_00004/jw01538160001_16101_00004_nrs1_s2d.fits", Specviz2d),
+    ("mast:jw02727002001_02101_00001/jw02727-o002_t062_nircam_clear-f090w_i2d.fits", Imviz),
+    ("mast:jw02732004001_02103_00004/jw02732004001_02103_00004_mirifushort_s3d.fits", Cubeviz),
     ("https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits", Cubeviz)
     # Check that MaNGA cubes go to cubeviz. This file is originally from:
     # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz)
@@ -36,6 +36,7 @@ def test_autoconfig(uris, tmp_path):
     kwargs = dict(cache=True, show=False)
     if uri.startswith('mast'):
         kwargs['local_path'] = local_path
+        kwargs['mast_mission'] = 'jwst'
 
     viz_helper = jdaviz_open(uri, **kwargs)
     assert isinstance(viz_helper, helper_class)
@@ -65,7 +66,10 @@ def test_launcher(tmp_path):
     for uri, config in AUTOCONFIG_EXAMPLES:
         if uri.startswith("mast:"):
             download_path = str(tmp_path / Path(uri).name)
-            Observations.download_file(uri, local_path=download_path)
+            m = MastMissions()
+            m.mission = 'jwst'
+            print(uri.split(':')[1])
+            m.download_file(uri.split(':')[1], local_path=download_path)
         elif uri.startswith("http"):
             download_path = download_file(uri, cache=True, timeout=100)
         launcher.filepath = download_path

@@ -173,6 +173,7 @@ class ConfigHelper(HubListener):
             Additional kwargs are passed on to both the loader and importer, as applicable.
             Any kwargs that do not match valid inputs are silently ignored.
         """
+        print(kwargs)
         resolver = find_matching_resolver(self.app, inp,
                                           resolver=loader,
                                           format=format,
