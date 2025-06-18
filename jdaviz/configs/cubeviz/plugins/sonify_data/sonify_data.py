@@ -112,7 +112,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                            self.audfrqmax, self.eln, self.use_pccut,
                                            self.results_label)
 
-        msg = SnackbarMessage("Data cube sonified successfully.", color='success', sender=self)
+        msg = SnackbarMessage(f"'{self.results_label}' sonified successfully.",
+                              color='success',
+                              sender=self)
         self.app.hub.broadcast(msg)
 
     @with_spinner()
