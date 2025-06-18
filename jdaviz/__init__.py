@@ -67,9 +67,6 @@ def new(replace=False, set_as_current=True):
     return ca
 
 
-new()
-
-
 def get_all_apps():
     """
     Get a list of all jdaviz application instances.
@@ -101,6 +98,10 @@ def gca(index=None, set_as_current=True):
         The most jdaviz application instance.
     """
     global _current_index
+    if not len(_apps):
+        # on first access (either to gca() directly or anything redirected through _expose),
+        # create a first instance
+        new(set_as_current=True)
     if index is None:
         index = _current_index
     app = _apps[index]
