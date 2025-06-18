@@ -49,8 +49,8 @@ def test_url_to_download_imviz_local_path_warning(imviz_helper):
 
 
 def test_uri_to_download_specviz_local_path_check():
-    uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
-    local_path = download_uri_to_path(uri, cache=False, dryrun=True)  # No download
+    uri = "mast:jw02732-c1001_t004_miri/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
+    local_path = download_uri_to_path(uri, cache=False, dryrun=True, mast_mission="jwst")  # No download
 
     # Wrong: '.\\JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits'
     # Correct:  '.\\jw02732-c1001_t004_miri_ch1-short_x1d.fits'
@@ -59,9 +59,9 @@ def test_uri_to_download_specviz_local_path_check():
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper, tmp_path):
-    uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
+    uri = "mast:jw02732-c1001_t004_miri/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
     local_path = str(tmp_path / uri.split('/')[-1])
-    specviz_helper.load_data(uri, cache=True, local_path=local_path)
+    specviz_helper.load_data(uri, cache=True, local_path=local_path, mast_mission='jwst')
 
 
 @pytest.mark.remote_data

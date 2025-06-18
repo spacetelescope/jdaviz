@@ -46,7 +46,7 @@ class Specviz(ConfigHelper, LineListMixin):
     @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
                   concat_by_file=False, cache=None, local_path=None, timeout=None,
-                  load_as_list=False):
+                  load_as_list=False, mast_mission=None):
         """
         Load data into Specviz.
 
@@ -90,6 +90,9 @@ class Specviz(ConfigHelper, LineListMixin):
             load_kwargs['timeout'] = timeout
         if local_path is not None:
             load_kwargs['local_path'] = local_path
+        if mast_mission is not None:
+            load_kwargs['mast_mission'] = mast_mission
+
 
         if isinstance(data, (SpectrumList, SpectrumCollection)) and isinstance(data_label, list):
             if len(data_label) != len(data):
@@ -114,6 +117,7 @@ class Specviz(ConfigHelper, LineListMixin):
             format = '1D Spectrum'
         if data_label is not None:
             data_label = self.app.return_unique_name(data_label)
+        print(load_kwargs)
         self.load(data, format=format,
                   data_label=data_label,
                   show_in_viewer=show_in_viewer,

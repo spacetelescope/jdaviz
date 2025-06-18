@@ -20,15 +20,18 @@ class URLResolver(BaseResolver):
     url = Unicode("").tag(sync=True)
     cache = Bool(True).tag(sync=True)
     local_path = Unicode("").tag(sync=True)
+    mast_mission = Unicode("").tag(sync=True)
     timeout = FloatHandleEmpty(10).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self.local_path = os.curdir
+        self.mast_mission = kwargs.pop("mast_mission", "")
         super().__init__(*args, **kwargs)
 
     @property
     def user_api(self):
-        return LoaderUserApi(self, expose=['url', 'cache', 'local_path', 'timeout'])
+        return LoaderUserApi(self, expose=['url', 'cache', 'local_path',
+                                           'timeout', 'mast_mission'])
 
     @property
     def is_valid(self):
@@ -39,5 +42,7 @@ class URLResolver(BaseResolver):
         self._update_format_items()
 
     def __call__(self):
+        print(f"Calling with {self.mast_mission}")
         return download_uri_to_path(self.url.strip(), cache=self.cache,
-                                    local_path=self.local_path, timeout=self.timeout)
+                                    local_path=self.local_path, timeout=self.timeout,
+                                    mast_mission=self.mast_mission)
