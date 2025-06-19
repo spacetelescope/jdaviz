@@ -3,7 +3,7 @@
     <g-viewer-tab
       v-for="(child, index) in stack.children"
       :stack="child"
-      :key="index"
+      :key="child.id"
       :data_items="data_items"
       :app_settings="app_settings"
       :config="config"
