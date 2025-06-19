@@ -4,9 +4,8 @@
 Displaying Spectra
 ******************
 
-Because of its use of `glue <https://glueviz.org/>`_ as the underlying data-handling layer and its
-applicability in several different contexts, Specviz takes a modular approach
-to displaying data that has been loaded.
+Specviz takes a modular approach to displaying data to support the flexibility of
+ `glue <https://glueviz.org/>`_ as the data-handling layer in the many applicable contexts.
 
 The first spectrum you load will be automatically displayed in the viewer with
 the view window set by the extent of the spectrum. Additional spectra may not be
@@ -33,12 +32,18 @@ Data layers can be toggled in each viewer's data menu, opened by clicking the
 legend in the top right of the viewer. Here, you can click the "eye" icon
 next to the listed data to toggle that layer's visibility.
 
+.. image:: ./img/data_menu.png
+    :alt: Specviz Data Menu
+
 Data can be unloaded from a viewer by clicking on the data row
 and selecting "Remove from viewer" in the delete submenu on the
 bottom bar of the data menu.  Data unloaded from the viewer will also be excluded
 as options from dataset dropdown menus in the various plugins.  Unloaded data will be available
 to re-load into the viewer (by clicking the ``+`` icon in the top right of the data menu).
-
+<!--
+TODO: Is there supposed to be an easy/quick way to reload the data? There's nothing
+when I click 'source' -> 'object'
+-->
 
 .. _specviz_cursor_info:
 
