@@ -169,6 +169,7 @@ class Imviz(ImageConfigHelper):
                     kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
+
                 self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
@@ -194,8 +195,8 @@ class Imviz(ImageConfigHelper):
         else:
             if data_label:
                 kwargs['data_label'] = data_label
-            self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
 
+            self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
         # find the current label(s) - TODO: replace this by calling default label functionality
         # above instead of having to refind it
         applied_labels = []
