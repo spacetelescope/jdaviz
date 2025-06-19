@@ -1,4 +1,5 @@
 import warnings
+from contextlib import contextmanager
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
@@ -187,6 +188,7 @@ class TargetSelect(SelectPluginComponent):
 
 
 class BaseResolver(PluginTemplateMixin):
+    _defer_update_format_items = False  # only use via defer_update_format_items contex manager
     default_input = None
     requires_api_support = False
 
@@ -218,16 +220,29 @@ class BaseResolver(PluginTemplateMixin):
                                    items='target_items',
                                    selected='target_selected')
 
+    @contextmanager
+    def defer_update_format_items(self):
+        """
+        Context manager to delay updating format items until multiple traitlets have been set.
+        """
+        self._defer_update_format_items = True
+        try:
+            yield
+        finally:
+            self._defer_update_format_items = False
+            self._update_format_items()
+
     @classmethod
     def from_input(cls, app, inp, **kwargs):
         self = cls(app=app)
         if self.default_input is None:
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
-        setattr(self, self.default_input, inp)
-        user_api = self.user_api
-        for k, v in kwargs.items():
-            if hasattr(user_api, k):
-                setattr(user_api, k, v)
+        with self.defer_update_format_items():
+            setattr(self, self.default_input, inp)
+            user_api = self.user_api
+            for k, v in kwargs.items():
+                if hasattr(user_api, k):
+                    setattr(user_api, k, v)
         return self
 
     @property
@@ -253,6 +268,8 @@ class BaseResolver(PluginTemplateMixin):
 
     @with_spinner('format_items_spinner')
     def _update_format_items(self):
+        if self._defer_update_format_items:
+            return
         # NOTE: this will result in a call to the implemented __call__ on the resolver
         self.format._update_items()
         self.target._update_items()  # assumes format._importers is updated from above
