@@ -207,7 +207,9 @@ the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectral_regions` metho
 
 Line Selection
 ==============
-
+<!--
+TODO: Deprecated?
+-->
 This button will allow you to click and select a vertical line when multiple
 lines from a line list are over-plotted. Further analysis can be performed on this
 line of interest.
@@ -263,6 +265,6 @@ Here is an example on how to set the plot options from the API.
 .. code-block:: python
 
     plot_options = specviz.plugins['Plot Options']
-    plotopt.line_color = 'blue'
-    plotopt.line_width = 3
+    plot_options.line_color = 'blue'
+    plot_options.line_width = 3
     plot_options.uncertainty_visible = True
