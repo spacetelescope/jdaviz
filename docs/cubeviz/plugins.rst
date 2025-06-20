@@ -1,6 +1,9 @@
 *********************
 Data Analysis Plugins
 *********************
+<!--
+TODO: Tab label shows v0.1dev...
+-->
 
 The Cubeviz data analysis plugins are meant to aid quick-look analysis
 of 2D image data. All plugins are accessed via the :guilabel:`plugin`
