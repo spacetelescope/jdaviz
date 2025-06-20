@@ -767,33 +767,80 @@ class HistogramMark(Lines):
         super().__init__(x=min_max_value, y=y, scales=scales, colors=colors, line_style=line_style,
                          **kwargs)
 
-
-class DistanceMark(PluginMark, Lines, HubListener):
-    """
-    A bqplot Lines mark for showing a distance interactively in a viewer.
-    This mark is intended for spatial data (pixels or world coordinates)
-    """
-    def __init__(self, viewer, x0, y0, x1, y1):
+class DistanceLabel(Label, PluginMark, HubListener):
+    def __init__(self, viewer, x, y, text, **kwargs):
         self.viewer = viewer
-
-        super().__init__(
-            scales=viewer.scales,
-            x=[x0, x1],
-            y=[y0, y1],
-            colors=[accent_color],
-            stroke_width=2,
-            visible=True,
-            display_legend=False
-        )
+        kwargs.setdefault('y_offset', -10)
+        kwargs.setdefault('colors', [accent_color])
+        kwargs.setdefault('font_weight', 'bold')
+        kwargs.setdefault('align', 'middle')
+        
+        super().__init__(x=[x], y=[y], text=[text], scales=viewer.scales, **kwargs)
         self.auto_update_units = False
-
+        
     def set_x_unit(self, unit=None):
         pass
-
+  
     def set_y_unit(self, unit=None):
         pass
+   
+    def update_position(self, x, y, text):
+        self.x = [x]
+        self.y = [y]
+        self.text = [text]
+        
+class DistanceMeasurement:
+    def __init__(self, viewer, x0, y0, x1, y1, text=""):
+        self.viewer = viewer
+        self.line = Lines(
+            x=[x0, x1],
+            y=[y0, y1],
+            scales=viewer.scales,
+            colors=[accent_color],
+            stroke_width=2
+        )
+        self.label_shadow = DistanceLabel(
+            viewer,
+            x=(x0 + x1) / 2,
+            y=(y0 + y1) / 2,
+            text=text,
+            colors=['black'],
+            stroke_width=10,
+            font_weight='bold'
+        )
+        self.label_text = DistanceLabel(
+            viewer,
+            x=(x0 + x1) / 2,
+            y=(y0 + y1) / 2,
+            text=text,
+            colors=['white'],
+            font_weight='bold'
+        )
+        self.visible = True
+    
+    @property
+    def marks(self):
+        return [self.line, self.label_shadow, self.label_text]
+    
+    @property
+    def visible(self):
+        return self.line.visible
+    
+    @visible.setter
+    def visible(self, visible):
+        self.line.visible = visible
+        self.label_shadow.visible = visible
+        self.label_text.visible = visible
+   
+    def update_points(self, x0, y0, x1, y1, text=""):
+        # Update the line's endpoints
+        self.line.x = [x0, x1]
+        self.line.y = [y0, y1]
+        # Calculate the midpoint
+        mid_x = (x0 + x1) / 2
+        mid_y = (y0 + y1) / 2
+        # Update the position and text of BOTH labels
+        self.label_shadow.update_position(mid_x, mid_y, text)
+        self.label_text.update_position(mid_x, mid_y, text)
 
-    def update_points(self, x0, y0, x1, y1):
-        """Updates the endpoints of the line."""
-        self.x = [x0, x1]
-        self.y = [y0, y1]
+
