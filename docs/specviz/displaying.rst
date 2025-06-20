@@ -107,7 +107,7 @@ To pan, simply click and drag the window.
 
 Horizontal/Vertical Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^
-The |icon-zoom-pan-horiz| (horizontal) and |icon-zoom-pan-vert| (vertical) Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
+The |icon-zoom-pan-horiz| (Horizontal) and |icon-zoom-pan-vert| (Vertical) Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
 
 Setting Viewer Bounds
 ^^^^^^^^^^^^^^^^^^^^^
@@ -121,7 +121,7 @@ expandable menu "Viewer bounds".
 From the API
 ------------
 
-The Specviz helper contains a set of convenience methods to programmatically define the view of the spectrum viewer. You may instantiate a Specviz Helper via::
+The Specviz helper contains a set of convenience methods to programmatically define the view of the spectrum viewer. You may instantiate a Specviz Helper via:
 
 .. code-block:: python
 
@@ -133,6 +133,10 @@ The Specviz helper contains a set of convenience methods to programmatically def
 
 Limit methods
 ^^^^^^^^^^^^^
+<!--
+TODO: THESE WILL BE DEPRECATED IN THE NEXT STABLE RELEASE
+Also, using 'auto' with set_limits() is deprecated behavior.
+-->
 You can use the methods :py:meth:`~jdaviz.configs.specviz.helper.Specviz.x_limits` and
 :py:meth:`~jdaviz.configs.specviz.helper.Specviz.y_limits` to modify the field of
 view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra),
@@ -145,7 +149,7 @@ a `~astropy.units.Quantity`, or ``'auto'`` to automatically scale:
     specviz.x_limits(650*u.nm,750*u.nm)
     specviz.y_limits('auto', 110.0)
 
-Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion:
+Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz will set the bounds the upper and lower bounds of the SpectralRegion:
 
 .. code-block:: python
 
@@ -170,7 +174,8 @@ To quickly flip an axis to change to and from ascending/descending, use
 Defining Spectral Regions
 =========================
 
-Spectral regions can be defined by clicking on the |icon-region-horiz| icon at the right of the
+Spectral regions allow users to select subsets of the data array.
+These can be defined by clicking on the |icon-region-horiz| icon at the right of the
 viewer toolbar.
 
 To select a region of interest, move the cursor to one of the end points
