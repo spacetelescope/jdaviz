@@ -69,7 +69,7 @@ field. To instead see all available archives on the IVOA registry, toggle the :g
     If you are expecting an archive that does not appear, try disabling coverage filtering.
 
 Additionally, select the corresponding waveband of the archive you are looking for; this will limit the query to
-archives and services within your specified wavelength range. Waveband definitions can be found here.
+archives and services within your specified wavelength range. Waveband definitions can be found here.<!-- TODO: missing link? -->
 
 After selecting the waveband, the plugin will query the VO registry for services that match the provided criteria.
 If coverage filtering is enabled, only archives and surveys that report coverage within the user's specified area
@@ -77,7 +77,7 @@ will be reported. Otherwise, the list will return all available archives and sur
 resource to query and press the :guilabel:`Query Archive` button to search your specified archive with your
 specific target.
 
-Once the query is complete, a table of results will be populated below, with the archive provided ``Title``,
+Once the query is complete, the table of results will be populated with the archive provided ``Title``,
 ``Date``, and ``Instrument`` of each result. Select your desired data products to load and click
 :guilabel:`Load Data` to download and import your selected data products to Imviz.
 
@@ -168,9 +168,9 @@ In order to load Roman files, you will need to install the :ref:`optional-deps-r
 Batch Loading Multiple Images
 -----------------------------
 
-To save on performance while loading multiple images into Imviz, you can optionally use
-:meth:`~jdaviz.core.helpers.ConfigHelper.batch_load` to parse all of the data first (within a for
-loop or multiple calls to ``load_data``, for example), and defer the linking and loading of the new
+To save on performance while loading multiple images into Imviz, you can optionally use the
+:meth:`~jdaviz.core.helpers.ConfigHelper.batch_load` context manager to parse all of the data first (within a
+loop, for example, or multiple calls to ``load_data``), and defer the linking and loading of the new
 data entries into the viewer until after the parsing is complete::
 
     from jdaviz import Imviz
@@ -236,7 +236,7 @@ Loading markers can be done with the following commands:
     viewer.add_markers(coord_i2d, use_skycoord=True, marker_name='my_markers')
 
 If you have a large catalog, you might want to filter your table to the
-marks of interest before adding them to Imviz in order to avoid performance
+marks of interest before adding them to Imviz to avoid performance
 issues associated with adding large numbers of markers. For instance, if your
 image has FITS WCS, you could use `astropy.wcs.WCS.footprint_contains` if you
 only want the marks within a footprint. Alternately, you could filter by
