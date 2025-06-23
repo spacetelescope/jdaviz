@@ -8,14 +8,14 @@ Exporting Data From Specviz
 ==========
 
 After data have been manipulated or analyzed, it is possible to export
-those data currently back into your Jupyter notebook:
+those data currently back into your Jupyter notebook via:
 
 .. code-block:: python
 
     specviz.get_spectra()
 
 which yields a either a single `specutils.Spectrum1D` object or a dictionary of
-`specutils.Spectrum1D` (if there are multiple displayed spectra) that you can
+`specutils.Spectrum1D` objects (if there are multiple displayed spectra) that you can
 manipulate however you wish.  You can then load the modified spectrum back into
 the notebook via the API described in :ref:`specviz-import-api`.
 
@@ -58,7 +58,10 @@ Spectral Regions
 If you have spectral region subsets, you can extract the parameters of these subsets
 as a `specutils spectral region <https://specutils.readthedocs.io/en/stable/spectral_regions.html>`_.
 For a list of available spectral regions to extract, you can type:
-
+<!--
+TODO: We're getting a deprecation warning from astropy about `get_spectral_regions()`
+It is suggesting to use `subset_tools.get_regions()` instead.
+-->
 .. code-block:: python
 
     regions = specviz.get_spectral_regions()
