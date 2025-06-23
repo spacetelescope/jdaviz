@@ -75,7 +75,7 @@ To avoid inaccurate transforms, consider one of the following workflows:
 
 .. warning::
 
-    If you rely on the GWCS bounding box, it will be set to None when
+    If you rely on the GWCS bounding box, it will be set to ``None`` when
     you data is loaded into Imviz, but the original bounding box,
     if available, is now in a hidden ``_orig_bounding_box``
     attribute of the GWCS object. You can restore the bounding box by
@@ -165,7 +165,7 @@ viewer to lock it in place.
 
 There are other options available for region of interest. At the top of the user interface,
 there is a section that says either "+ No selection (create new)" or "Subset n" where n is an integer
-that tells you which Subset is currently selected. To the right of this area, are red circles that allow
+that tells you which Subset is currently selected. Red circles to the right of this area allow
 you to change the method of region selection. The options are:
 
 * ``replace``: will remove the previously created selection and place the newly created subset.
@@ -185,8 +185,6 @@ You can use these options to further adjust the region of interest and adapt it 
 
     :ref:`Exporting Spatial Regions <imviz_export_regions>`
         Exporting regions from within the Jupyter notebook.
-
-You can :ref:`import <imviz-import-regions-api>` and :ref:`export <imviz_export_regions>` regions from the API.
 
 .. seealso::
 
@@ -210,7 +208,7 @@ Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon (only available if
 there are more than one image loaded in the viewer) and then left-clicking on the image to blink
-forward; right-clicking would blink backwards.
+forward; right-clicking to blink backwards.
 
 You can also blink forward by pressing the "b" key on your keyboard while moused over the image.
 If you press Shift + "b" ("B"), you may blink backwards.
@@ -239,7 +237,7 @@ Imviz has a |icon-white-to-black| button under the |icon-blink| menu that can al
 adjust those values.
 
 After right-clicking on the blink icon, left click on the constrast/bias icon to activate it.
-Now you can click and drag on the image viewer to change to change the contrast
+Now you can click and drag on the image viewer to change the contrast
 and bias. Moving along the X-axis will change the bias and moving along the Y-axis will change the
 contrast. If you would like to reset to the default contrast and bias settings, you can
 double-click on the display while the mode is active.
@@ -251,7 +249,7 @@ Display Settings
 
 To access all of the different display settings for an image viewer, click the
 |icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
-Changing the display settings DOES NOT change the underlying data, only the
+Changing the display settings <b>does not</b> change the underlying data, only the
 visualization of that data.
 
 .. image:: ../img/imviz_plot_options.png
@@ -274,7 +272,7 @@ later in this Section.
 Layer
 -----
 
-This option allows you to change which layer you are changing the settings for.
+This option allows you to choose the layer for which you are changing the settings.
 
 Show image
 ----------
@@ -285,12 +283,12 @@ Color mode
 ----------
 
 This option allows you to choose whether to use a colormap or or a single color to visualize the image.
-The colormap can be selected from a dropdown within the Layer tab. In "Color" mode, the color
-can be chosen from a color picker under "Image Color" within the Layer tab.
+The colormap can be selected from a dropdown within the Layer tab.
 
-In "Color" mode, the option "Assign RGB presets" appears. This will automatically
-assign colors spanning from blue to red to the available layers and will adjust opacity and
-stretch to produce a composite color image (also known as RGB image). You will then
+In "Color" mode, the color can be chosen from a color picker under "Image Color"
+within the Layer tab. The option "Assign RGB presets" also appears. This will automatically
+assign colors (spanning from blue to red) to the available layers and will adjust opacity and
+stretch to produce a composite color image (also known as a RGB image). You will then
 be able to fine tune all options within each Layer tab.
 
 From the API
