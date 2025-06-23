@@ -356,6 +356,23 @@ dropdown and then pressing the :guilabel:`Sonify Data` button. The output device
 Once sonified, the resulting layers can be adjusted in the Plot Options plugin so that multiple sonified
 layers can be adjusted like a mixing board.
 
+Note, for mac m-series users, the ``Strauss`` library requires the
+`sounddevice <https://python-sounddevice.readthedocs.io/en/latest/>`_ and
+`PortAudio <https://www.portaudio.com>`_ libraries. In order to avoid errors with the sonification
+process, ``sounddevice`` and ``PortAudio`` must be installed as follows (whether Strauss is already
+installed or not is not affected by these instructions):
+
+1. Download the latest/stable ``PortAudio`` release from
+   `PortAudio's website <https://files.portaudio.com/download.html>`_.
+2. Unpack the tarball and ``cd`` into the ``portaudio`` directory.
+3. Following the 'debug' build instructions on
+   `PortAudio's website <https://files.portaudio.com/docs/v19-doxydocs/compile_mac_coreaudio.html>`_,
+   run ``./configure --enable-mac-debug && make && sudo make install``. This will place a
+   "libportaudio.dylib" in the directory "usr/local/lib/" which ``sounddevice`` will link to.
+4. Install ``sounddevice`` via ``pip`` (*not* ``conda`` as ``conda`` will attempt to install
+   and link to it's own portaudio).
+5. Install ``Strauss`` if not already done and sonify away!
+
 .. _cubeviz-export-plot:
 
 Export
