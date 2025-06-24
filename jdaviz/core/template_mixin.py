@@ -2416,7 +2416,7 @@ class SubsetSelect(SelectPluginComponent):
         elif 'is_spatial' in self.filters:
             get_data_kwargs['spatial_subset'] = subset
 
-        subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
+        subset = self.app._jdaviz_helper._get_data(**get_data_kwargs)
         return subset.mask
 
     @cached_property
