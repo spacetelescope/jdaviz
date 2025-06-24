@@ -53,9 +53,9 @@ class SubsetImporter(BaseImporterToPlugin):
             self.subset_label_invalid_msg = 'subset_label must be provided'
             return
 
-        # ensure the default label is unique for the data-collection
-        nsubsets = len(self.app.data_collection.subset_groups)
-        self.subset_label_default = f"Subset {nsubsets + 1}"
+        # set the default label to be the same as glue would set if
+        # not passing subset_label explicitly
+        self.subset_label_default = f"Subset {self.app.data_collection._sg_count + 1}"
 
         if self.subset_label_value == self.subset_label_default:
             # _check_valid_subset_label will say this is invalid,
