@@ -14,8 +14,8 @@ those data currently back into your Jupyter notebook:
 
     specviz.get_spectra()
 
-which yields a either a single `specutils.Spectrum1D` object or a dictionary of
-`specutils.Spectrum1D` (if there are multiple displayed spectra) that you can
+which yields a either a single `specutils.Spectrum` object or a dictionary of
+`specutils.Spectrum` (if there are multiple displayed spectra) that you can
 manipulate however you wish.  You can then load the modified spectrum back into
 the notebook via the API described in :ref:`specviz-import-api`.
 
@@ -35,7 +35,7 @@ To extract a spectrum with a spectral subset applied:
 
     specviz.get_data(spectral_subset='Subset 1')
 
-In this case, the returned `specutils.Spectrum1D` object will have a ``mask``
+In this case, the returned `specutils.Spectrum` object will have a ``mask``
 attribute, where ``True`` corresponds to the region outside the selected subset
 (i.e., the region that has been masked out). You could load back in a copy of the
 spectrum containing only your subset by running:
@@ -43,7 +43,7 @@ spectrum containing only your subset by running:
 .. code-block:: python
 
     spec = specviz.get_data(spectral_subset='Subset 1')
-    subset_spec = Spectrum1D(flux=spec.flux[~spec.mask],
+    subset_spec = Spectrum(flux=spec.flux[~spec.mask],
                              spectral_axis=spec.spectral_axis[~spec.mask])
     specviz.load_data(subset_spec)
 
