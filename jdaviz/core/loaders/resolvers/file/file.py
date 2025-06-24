@@ -37,6 +37,13 @@ class FileResolver(BaseResolver):
     def user_api(self):
         return LoaderUserApi(self, expose=['filepath'])
 
+    @classmethod
+    def from_input(cls, app, inp, **kwargs):
+        # prevent errors from solara being raised if input is not valid
+        if not os.path.exists(inp) or not os.path.isfile(inp):
+            raise ValueError(f"'{inp}' is not a valid file path.")
+        return super().from_input(app, inp, **kwargs)
+
     def _on_file_chooser_path_changed(self, path):
         if self.filepath_reactive.value is not None:
             self.filepath = os.path.join(self.file_chooser_dir.value, self.filepath_reactive.value)
