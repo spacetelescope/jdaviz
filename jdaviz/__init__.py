@@ -95,7 +95,7 @@ def gca(index=None, set_as_current=True):
     Returns
     -------
     App
-        The most jdaviz application instance.
+        The current jdaviz application instance.
     """
     global _current_index
     if not len(_apps):
