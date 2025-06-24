@@ -145,6 +145,9 @@ Bug Fixes
 
 - Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
 
+- Fix model fitting bug in deconfigged app where selecting a spectral 
+  subset threw a traceback. [#3655]
+
 Cubeviz
 ^^^^^^^
 
