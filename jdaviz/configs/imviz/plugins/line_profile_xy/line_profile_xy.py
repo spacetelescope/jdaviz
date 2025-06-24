@@ -126,7 +126,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         xy_limits = viewer._get_zoom_limits(data)
 
         # if any zoom limits are nan, that means that they fall outside the GWCS
-        # bounding box, so
+        # bounding box, so use image size for limits in that case
         x_limits = xy_limits[:, 0]
         y_limits = xy_limits[:, 1]
 
