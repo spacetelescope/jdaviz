@@ -67,21 +67,6 @@ class JdavizViewerMixin(WithCache):
 
         self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
 
-    def _clone_viewer(self):
-        new_viewer = type(self)(session=self.session)
-        # TODO: this is needed for jdaviz only, without it it should also
-        # work for glue-jupyter
-        new_viewer._reference_id = self.reference_id + "_TODO_IS_THIS_OK?"
-        d = self.state.as_dict()
-        new_viewer.state.update_from_dict(d)
-
-        for layer in self.layers:
-            layer_state = layer.state
-            new_layer = type(layer)(view=new_viewer, viewer_state=new_viewer.state,
-                                    layer_state=layer_state)
-            new_layer.update()
-        return new_viewer
-
     @property
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
@@ -149,6 +134,21 @@ class JdavizViewerMixin(WithCache):
 
     def _get_clone_viewer_reference(self):
         return self.jdaviz_helper._get_clone_viewer_reference(self.reference)
+
+    def _clone_viewer_outside_app(self):
+        new_viewer = type(self)(session=self.session)
+        # TODO: this is needed for jdaviz only, without it it should also
+        # work for glue-jupyter
+        new_viewer._reference_id = self.reference_id + "_TODO_IS_THIS_OK?"
+        d = self.state.as_dict()
+        new_viewer.state.update_from_dict(d)
+
+        for layer in self.layers:
+            layer_state = layer.state
+            new_layer = type(layer)(view=new_viewer, viewer_state=new_viewer.state,
+                                    layer_state=layer_state)
+            new_layer.update()
+        return new_viewer
 
     def clone_viewer(self):
         name = self.jdaviz_helper._get_clone_viewer_reference(self.reference)

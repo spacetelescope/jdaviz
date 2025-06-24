@@ -667,7 +667,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                         callback()
                 widget.observe(view_count_changed, "_view_count")
 
-            cloned_viewer = viewer._clone_viewer()
+            cloned_viewer = viewer._clone_viewer_outside_app()
             # make sure we will the size of our container which defines the
             # size of the figure
             cloned_viewer.figure.layout.width = "100%"
