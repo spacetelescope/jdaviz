@@ -160,6 +160,8 @@ Imviz
 
 - Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
 
+- Fix get_zoom_limits when WCS linked and out of image bounds. [#3654]
+
 Mosviz
 ^^^^^^
 

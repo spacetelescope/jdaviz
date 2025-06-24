@@ -124,12 +124,16 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             y_label = 'Value'
 
         xy_limits = viewer._get_zoom_limits(data)
+
+        # if any zoom limits are nan, that means that they fall outside the GWCS
+        # bounding box, so
         x_limits = xy_limits[:, 0]
         y_limits = xy_limits[:, 1]
-        x_min = max(int(x_limits.min()), 0)
-        x_max = min(int(x_limits.max()), nx)
-        y_min = max(int(y_limits.min()), 0)
-        y_max = min(int(y_limits.max()), ny)
+
+        x_min = max(int(np.nan_to_num(x_limits.min(), nan=0)), 0)
+        x_max = min(int(np.nan_to_num(x_limits.max(), nan=nx)), nx)
+        y_min = max(int(np.nan_to_num(y_limits.min(), nan=0)), 0)
+        y_max = min(int(np.nan_to_num(y_limits.max(), nan=ny)), ny)
 
         self.plot_across_x.figure.title = f'X={x}'
         self.plot_across_x._update_data('line', x=range(comp.data.shape[0]), y=comp.data[:, x],
