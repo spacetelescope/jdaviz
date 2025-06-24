@@ -2912,7 +2912,12 @@ class ApertureSubsetSelect(SubsetSelect):
 
                 slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
                 # Add slice mask to fractional pixel array
-                mask_weights[:, :, index] = slice_mask
+                if slice_axis == 2:
+                    mask_weights[:, :, index] = slice_mask
+                elif slice_axis == 1:
+                    mask_weights[:, index, :] = slice_mask
+                elif slice_axis == 0:
+                    mask_weights[index, :, :] = slice_mask
         else:
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)

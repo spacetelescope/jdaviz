@@ -13,7 +13,7 @@ If you are creating your own data products, please read the page :ref:`create_pr
 
 .. seealso::
 
-    `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum1d.html#reading-from-a-file>`_
+    `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum.html#reading-from-a-file>`_
         Specutils documentation on loading data as :class:`~specutils.Spectrum` objects.
 
 Specviz2D can either take both a 2D or 1D spectrum as input, or can automatically extract a 1D

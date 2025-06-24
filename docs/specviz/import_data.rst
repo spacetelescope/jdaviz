@@ -13,7 +13,7 @@ If you are creating your own data products, please read the page :ref:`create_pr
 
 .. seealso::
 
-    `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum1d.html#reading-from-a-file>`_
+    `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum.html#reading-from-a-file>`_
         Specutils documentation on loading data as :class:`~specutils.Spectrum` objects.
 
 .. _specviz-import-commandline:
