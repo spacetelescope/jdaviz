@@ -56,7 +56,7 @@ The data is returned as a 3D `specutils.Spectrum` object.
 To write out a `specutils.Spectrum` cube from Cubeviz
 (e.g., a fitted cube from :ref:`model-fitting`),
 where the mask (if available) is as defined in
-`Spectrum masks <https://specutils.readthedocs.io/en/latest/spectrum1d.html#including-masks>`_:
+`Spectrum masks <https://specutils.readthedocs.io/en/latest/spectrum.html#including-masks>`_:
 
 .. code-block:: python
 
