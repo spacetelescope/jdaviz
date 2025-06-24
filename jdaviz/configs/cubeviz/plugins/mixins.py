@@ -116,7 +116,7 @@ class WithSliceSelection:
                     # rampviz uses coordinate components:
                     world_comp_ids = layer.layer.data.coordinate_components
 
-                if len(world_comp_ids) == 2:
+                if len(world_comp_ids) < 3:
                     # Case where 2D image is loaded in image viewer
                     continue
 
