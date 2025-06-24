@@ -15,7 +15,7 @@ If you are creating your own data products, please read the page :ref:`create_pr
 Cubeviz will automatically parse the data into the multiple viewers as described in
 :ref:`cubeviz-display-cubes`. For the best experience, data loaded into Cubeviz should contain valid WCS
 keywords. For more information on how :class:`~specutils.Spectrum`
-uses WCS, please go to the `Spectrum defining WCS section <https://specutils.readthedocs.io/en/stable/spectrum1d.html#defining-wcs>`_.
+uses WCS, please go to the `Spectrum defining WCS section <https://specutils.readthedocs.io/en/stable/spectrum.html#defining-wcs>`_.
 To check if your FITS file contains valid WCS keywords, please use
 `Astropy WCS validate <astropy.wcs.validate>`.
 For an example on loading a cube with valid WCS keywords, please see the :ref:`cubeviz-import-api`
@@ -141,7 +141,7 @@ object, you can load it into Cubeviz as follows:
     import numpy as np
     from astropy.wcs import wcs
     import astropy.units as u
-    from specutils import Spectrum1D
+    from specutils import Spectrum
     from jdaviz import Cubeviz
     from jwst import datamodels
 
