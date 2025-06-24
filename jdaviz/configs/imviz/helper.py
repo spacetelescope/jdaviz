@@ -14,11 +14,24 @@ from jdaviz.utils import (data_has_valid_wcs, get_wcs_only_layer_labels,
 
 __all__ = ['Imviz']
 
+# temporary implementation of a "current app" feature for imviz,
+# useful for Cobalt dev work until imviz is fully superceded by
+# the current app feature in deconfigged. see:
+# https://github.com/spacetelescope/jdaviz/pull/3632
+global _current_app
+_current_app = None
+
 
 class Imviz(ImageConfigHelper):
     """Imviz Helper class."""
     _default_configuration = 'imviz'
     _default_viewer_reference_name = "image-viewer"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        global _current_app
+        _current_app = self
 
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.

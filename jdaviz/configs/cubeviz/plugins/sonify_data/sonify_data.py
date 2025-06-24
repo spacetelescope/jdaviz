@@ -7,6 +7,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SpectralSubsetSelectMixin, with_spinner,
                                         AddResultsMixin)
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.events import SnackbarMessage
 
 
 __all__ = ['SonifyData']
@@ -110,6 +111,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                            self.pccut, self.audfrqmin,
                                            self.audfrqmax, self.eln, self.use_pccut,
                                            self.results_label)
+
+        msg = SnackbarMessage(f"'{self.results_label}' sonified successfully.",
+                              color='success',
+                              sender=self)
+        self.app.hub.broadcast(msg)
 
     @with_spinner()
     def vue_sonify_cube(self, *args):

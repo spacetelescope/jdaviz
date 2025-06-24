@@ -37,3 +37,8 @@ def test_create_new_viewer(imviz_helper, image_2d_wcs):
     # remove data from the new viewer, check that it was removed
     imviz_helper.app.remove_data_from_viewer(viewer_name, data_label)
     assert len(imviz_helper.app.get_viewer(viewer_name).data()) == 0
+
+
+def test_temporary_imviz_current_app(imviz_helper):
+    from jdaviz.configs.imviz.helper import _current_app
+    assert _current_app == imviz_helper

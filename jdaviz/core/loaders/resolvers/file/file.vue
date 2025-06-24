@@ -16,15 +16,12 @@
     >
         <v-row>
             Select a file with data you want to load into this instance of Jdaviz.
-            Note that single clicks navigate into directories.
         </v-row>
         <v-row v-if="api_hints_enabled">
             <span class="api-hint">
                 ldr.filepath = '{{ filepath }}'
             </span>
         </v-row>
-        <v-row>
-          <g-file-import id="file-uploader"></g-file-import>
-        </v-row>
+        <jupyter-widget :widget="file_chooser_widget"></jupyter-widget>
     </j-loader>
 </template>

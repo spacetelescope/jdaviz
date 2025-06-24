@@ -20,7 +20,7 @@ dependencies = [
     "ipysplitpanes>=0.1.0",
     "ipygoldenlayout>=0.3.0",
     "ipywidgets>=8.0.6",
-    "solara>=1.40.0",
+    "solara>=1.49.0",
     "pyyaml>=5.4.1",
     "specutils>=1.18,<2.0",
     "specreduce>=1.4.1,!=1.5.0,!=1.5.1",

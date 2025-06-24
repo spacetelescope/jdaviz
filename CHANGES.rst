@@ -145,11 +145,22 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
+
 Cubeviz
 ^^^^^^^
 
+- Significantly improved the performance of Cubeviz when creating several subsets in the
+  image viewer. [#3626]
+
+- Broadcast snackbar message to user when sonification of a data cube completes. [#3647]
+
 Imviz
 ^^^^^
+
+- Fix dropdowns for overlay not showing in UI. [#3640]
+
+- Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
 
 Mosviz
 ^^^^^^
