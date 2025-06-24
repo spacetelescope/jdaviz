@@ -3,6 +3,7 @@ import specutils
 from astropy import units as u
 from astropy.nddata import CCDData
 from astropy.utils import minversion
+from astropy.wcs import WCS
 from traitlets import Bool, List, Unicode, observe
 from specutils import manipulation, analysis, Spectrum
 
@@ -292,7 +293,15 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             w = data.meta['_orig_spec'].wcs
         else:
             w = data.coords
-        data_wcs = getattr(w, 'celestial', None)
+
+        if hasattr(w, 'celestial'):
+            # This is the FITS WCS case
+            data_wcs = getattr(w, 'celestial', None)
+        elif hasattr(w, 'to_fits_sip'):
+            # If it's a GWCS we pull out the celestial part
+            data_wcs = WCS(w.to_fits_sip())
+        else:
+            data_wcs = None
 
         # Convert spectral axis to velocity units if desired output is in velocity
         if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):
