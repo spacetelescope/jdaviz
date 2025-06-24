@@ -78,11 +78,21 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         self.results_label_default = 'Sonified data'
         self.add_to_viewer_selected = 'flux-viewer'
+        self._results_label_counter = 1
 
     @property
     def user_api(self):
         expose = ['sonify_cube']
         return PluginUserApi(self, expose)
+
+    @observe('results_label_invalid_msg')
+    def _avoid_temporary_vue_error(self, event):
+        """
+        Update `results_label` when a new sonification is added to the viewer to avoid
+        an unsightly vue error. This also updates the label with a new 'default'.
+        """
+        if self.results_label in self.app.data_collection and self._avoid_temporary_error:
+            self.results_label = f"{self.results_label_default} ({self._results_label_counter})"
 
     def sonify_cube(self):
         """
@@ -105,6 +115,10 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         # Ensure the current spectral region bounds are up-to-date at render time
         self.update_wavelength_range(None)
+
+        # Used in `_avoid_temporary_vue_error` above
+        self._avoid_temporary_error = True
+
         # generate the sonified cube
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
@@ -116,6 +130,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
+
+        self._results_label_counter += 1
+        self._avoid_temporary_error = False
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
