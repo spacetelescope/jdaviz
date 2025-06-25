@@ -165,6 +165,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    filters=[self._is_valid_item],
                                                    apply_filters_to_manual_options=True)
 
+        if 'specviz' in self.config:
+            self.subset_format.selected = 'ecsv'
+
         dataset_format_options = ['fits']
         self.dataset_format = SelectPluginComponent(self,
                                                     items='dataset_format_items',
