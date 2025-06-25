@@ -673,7 +673,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             cloned_viewer.figure.layout.width = "100%"
             cloned_viewer.figure.layout.height = "100%"
 
-            def on_figure_displayed(fig):
+            def on_figure_displayed():
                 # we need a bit of a delay to ensure the figure is fully displayed
                 # maybe this can be fixed on the bqplot side in the future
                 import time
