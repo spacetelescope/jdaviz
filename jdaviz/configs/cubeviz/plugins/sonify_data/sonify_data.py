@@ -9,6 +9,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.events import SnackbarMessage
 
+from glue.core.message import DataCollectionAddMessage
+
 
 __all__ = ['SonifyData']
 
@@ -77,22 +79,28 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.refresh_device_list()
 
         self.results_label_default = 'Sonified data'
-        self.add_to_viewer_selected = 'flux-viewer'
-        self._results_label_counter = 1
+        self.results_label_static = self.results_label_default
+
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler = self._on_new_sonification)
 
     @property
     def user_api(self):
         expose = ['sonify_cube']
         return PluginUserApi(self, expose)
 
-    @observe('results_label_invalid_msg')
-    def _avoid_temporary_vue_error(self, event):
+    def _on_new_sonification(self, msg):
         """
-        Update `results_label` when a new sonification is added to the viewer to avoid
-        an unsightly vue error. This also updates the label with a new 'default'.
+        Update default label when a new sonification is added to the viewer to avoid
+        an unsightly vue error.
         """
-        if self.results_label in self.app.data_collection and self._avoid_temporary_error:
-            self.results_label = f"{self.results_label_default} ({self._results_label_counter})"
+        self.results_label_auto = True
+        # Count number of default labels in the viewer via substring matching.
+        counter = len([True for i in self.app.data_collection
+                       if self.results_label_static in i.label])
+
+        if counter:
+            self.results_label_default = f"{self.results_label_static} ({counter})"
 
     def sonify_cube(self):
         """
@@ -116,9 +124,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # Ensure the current spectral region bounds are up-to-date at render time
         self.update_wavelength_range(None)
 
-        # Used in `_avoid_temporary_vue_error` above
-        self._avoid_temporary_error = True
-
         # generate the sonified cube
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
@@ -130,9 +135,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
-
-        self._results_label_counter += 1
-        self._avoid_temporary_error = False
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
