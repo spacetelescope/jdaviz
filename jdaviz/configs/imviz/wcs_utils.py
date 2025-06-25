@@ -552,6 +552,12 @@ def compute_scale(wcs, fiducial, disp_axis, pscale_ratio=1):
     if spectral and disp_axis is None:  # pragma: no cover
         raise ValueError('If input WCS is spectral, a disp_axis must be given')
 
+    # gwcs will not interally strip units off input if the forward transform
+    # does not use quantities, so they must be removed before checking if points
+    # are in image and computing the inverse
+    if not wcs.forward_transform.uses_quantity and hasattr(fiducial, 'value'):
+        fiducial = fiducial.value
+
     if wcs.in_image(*fiducial):
         crpix = np.array(wcs.invert(*fiducial))
     else:
