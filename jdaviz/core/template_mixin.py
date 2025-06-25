@@ -264,15 +264,11 @@ class LoadersMixin(VuetifyTemplate, HubListener):
     loader_selected = Unicode().tag(sync=True)
     loader_panel_ind = Any(None).tag(sync=True)  # None: close, 0: open
 
-    dev_loaders = Bool(False).tag(sync=True)
-
     @property
     def loaders(self):
         if not len(self.loader_items):
             self._update_loader_items()
         from ipywidgets.widgets import widget_serialization
-        if not (self.app.state.dev_loaders or self.config in ('deconfigged', 'specviz', 'specviz2d')):  # noqa
-            raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.loader_items}
         return loaders
@@ -301,12 +297,8 @@ class LoadersMixin(VuetifyTemplate, HubListener):
             loader = Resolver(app=self.app,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
-                              set_active_loader_callback=set_active_loader)
-            loader.target.set_filter_target_in(self._registry_label)
-            if not len(loader.format.filters):
-                # if default input had no target choices, then the format filter
-                # has not yet been applied
-                loader._on_target_selected_changed()
+                              set_active_loader_callback=set_active_loader,
+                              restrict_to_target=self._registry_label)
             loader_items.append({
                 'name': name,
                 'label': name,
@@ -511,10 +503,8 @@ def with_spinner(spinner_traitlet='spinner'):
             setattr(self, spinner_traitlet, True)
             try:
                 ret_ = meth(self, *args, **kwargs)
-            except Exception:
+            finally:
                 setattr(self, spinner_traitlet, False)
-                raise
-            setattr(self, spinner_traitlet, False)
             return ret_
         return wrapper
     return decorator
