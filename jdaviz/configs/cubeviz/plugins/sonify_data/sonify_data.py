@@ -82,7 +82,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         self.results_label_static = self.results_label_default
 
         self.hub.subscribe(self, DataCollectionAddMessage,
-                           handler = self._on_new_sonification)
+                           handler=self._on_new_sonification)
 
     @property
     def user_api(self):
