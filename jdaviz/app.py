@@ -2370,11 +2370,9 @@ class Application(VuetifyTemplate, HubListener):
 
                     elif isinstance(subset_group.subset_state, RangeSubsetState):
                         range_state = subset_group.subset_state
-                        wcs_index = (old_parent.coords.world_n_dim - 1 -
-                                     old_parent.meta['spectral_axis_index'])
-                        cur_unit = u.Unit(old_parent.coords.world_axis_units[wcs_index])
                         wcs_index = (new_parent.coords.world_n_dim - 1 -
                                      new_parent.meta['spectral_axis_index'])
+                        cur_unit = u.Unit(old_parent.coords.world_axis_units[wcs_index])
                         new_unit = u.Unit(new_parent.coords.world_axis_units[wcs_index])
                         if cur_unit is not new_unit:
                             range_state.lo, range_state.hi = cur_unit.to(new_unit, [range_state.lo,
