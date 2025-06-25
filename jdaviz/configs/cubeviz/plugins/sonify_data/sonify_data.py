@@ -80,25 +80,20 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         self.add_to_viewer_selected = 'flux-viewer'
 
-        self.results_label_default = 'Sonified data'
-        self.results_label_static = self.results_label_default
-
-        self.hub.subscribe(self, DataCollectionAddMessage,
-                           handler=self._update_label_default)
+        self._update_label_default(None)
 
     @property
     def user_api(self):
         expose = ['sonify_cube']
         return PluginUserApi(self, expose)
 
-    def _update_label_default(self, msg):
+    @observe('results_label_invalid_msg')
+    def _update_label_default(self, event):
         """
         Update default label when a new sonification is added to the viewer.
         """
-        self.results_label_auto = True
         # Modify default label to avoid vue error from re-using label
-        self.results_label_default = self.app.return_unique_name(
-            self.results_label_static, typ='data')
+        self.results_label_default = self.app.return_unique_name('Sonified data', typ='data')
 
     def sonify_cube(self):
         """
