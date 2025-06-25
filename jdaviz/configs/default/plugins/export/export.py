@@ -243,8 +243,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.subset_format_invalid_msg = (f"Export of '{self.subset.selected}' "
                                               f"in '{selected}' format is not supported.")
 
-        return is_supported
-
     @observe('subset_selected')
     def _on_subset_selected(self, event):
         if hasattr(self, 'subset_format'):
@@ -377,6 +375,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             else:
                 if self.subset.selected == '':
                     self.subset_invalid_msg = ''
+                    self.subset_format_invalid_msg = ''
                 elif self.app._is_subset_spectral(subset[0]):
                     self.subset_invalid_msg = ''
                 elif len(subset) > 1:
@@ -385,6 +384,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     self.subset_invalid_msg = ''
         else:  # no subset selected (can be '' instead of None if previous selection made)
             self.subset_invalid_msg = ''
+            self.subset_format_invalid_msg = ''
 
     def _set_dataset_not_supported_msg(self, msg=None):
         if self.dataset.selected_obj is not None:
