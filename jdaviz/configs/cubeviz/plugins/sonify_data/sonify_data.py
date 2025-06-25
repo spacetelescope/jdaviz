@@ -9,8 +9,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.events import SnackbarMessage
 
-from glue.core.message import DataCollectionAddMessage
-
 
 __all__ = ['SonifyData']
 
