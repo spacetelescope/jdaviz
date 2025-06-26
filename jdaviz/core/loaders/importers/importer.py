@@ -161,11 +161,11 @@ class BaseImporterToDataCollection(BaseImporter):
             except TypeError:
                 pass
         self.app.add_data(data, data_label=data_label)
-        if show_in_viewer:
-            self.load_into_viewer(data_label)
         # store the original input class so that get_data can default to the
         # same class as the input
         self.app.data_collection[data_label]._native_data_cls = data.__class__
+        if show_in_viewer:
+            self.load_into_viewer(data_label)
 
     def __call__(self, show_in_viewer=True):
         if self.data_label_invalid_msg:
