@@ -44,7 +44,6 @@ class SonifiedDataLayerArtist(ImageLayerArtist):
         if value is None:
             return
         self.state.audible = value
-        self.state.visible = value
 
     def enable(self):
         if self.enabled:
@@ -59,7 +58,6 @@ class SonifiedDataLayerArtist(ImageLayerArtist):
     def remove(self):
         super().remove()
         self.audible = False
-        self.visible = False
 
 
 class SonifiedLayerStateWidget(v.VuetifyTemplate):

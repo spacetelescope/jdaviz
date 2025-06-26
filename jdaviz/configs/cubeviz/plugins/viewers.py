@@ -143,14 +143,14 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             # audible changing
             self.layer_volume[layer.layer.label] = layer.volume
             self.sonified_layers_enabled += ([layer.layer.label] if
-                                             getattr(layer, 'visible', False) else [])
+                                             getattr(layer, 'audible', False) else [])
 
             # TODO: is there a better way to ensure that only unique callbacks are added?
             layer.remove_callback('volume', self.recalculate_combined_sonified_grid)
-            layer.remove_callback('visible', self.recalculate_combined_sonified_grid)
+            layer.remove_callback('audible', self.recalculate_combined_sonified_grid)
 
             layer.add_callback('volume', self.recalculate_combined_sonified_grid)
-            layer.add_callback('visible', self.recalculate_combined_sonified_grid)
+            layer.add_callback('audible', self.recalculate_combined_sonified_grid)
 
         # Need to force an update of the layer icons since
         # audible is a state attribute, not a layer artist attribute
