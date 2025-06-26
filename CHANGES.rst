@@ -139,6 +139,8 @@ Other Changes and Additions
   dependencies installed with the ``[all]`` extra dependencies flag
   (i.e., ``pip install jdaviz[all]``). [#3556]
 
+- Auto-update sonification label upon adding sonification to viewer. [#3430, #3656]
+
 4.2.4 (unreleased)
 ==================
 

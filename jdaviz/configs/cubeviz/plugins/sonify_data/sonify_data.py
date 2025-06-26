@@ -76,13 +76,22 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_device_indexes = None
             self.refresh_device_list()
 
-        self.results_label_default = 'Sonified data'
         self.add_to_viewer_selected = 'flux-viewer'
+
+        self._update_label_default(None)
 
     @property
     def user_api(self):
         expose = ['sonify_cube']
         return PluginUserApi(self, expose)
+
+    @observe('results_label_invalid_msg')
+    def _update_label_default(self, event):
+        """
+        Update default label when a new sonification is added to the viewer.
+        """
+        # Modify default label to avoid vue error from re-using label
+        self.results_label_default = self.app.return_unique_name('Sonified data', typ='data')
 
     def sonify_cube(self):
         """
@@ -105,6 +114,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         # Ensure the current spectral region bounds are up-to-date at render time
         self.update_wavelength_range(None)
+
         # generate the sonified cube
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
