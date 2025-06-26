@@ -82,7 +82,7 @@ class CubeListenerData:
             self.n_cpu = n_cpu
         # Set spectral axis and spatial axes indices for later use
         self.spectral_axis_index = spectral_axis_index
-        spatial_inds = [0,1,2]
+        spatial_inds = [0, 1, 2]
         spatial_inds.remove(self.spectral_axis_index)
         self.spatial_inds = spatial_inds
 
@@ -106,17 +106,20 @@ class CubeListenerData:
         # do we normalise for equal loudness?
         self.eln = eln
 
-        self.idx1 = 0
-        self.idx2 = 0
         self.cbuff = False
         self.cursig = np.zeros(self.siglen, dtype='int16')
         self.newsig = np.zeros(self.siglen, dtype='int16')
 
         # ensure sigcube isn't too big before we initialise it
-        if self.cube[:, :, 0].size * self.siglen * 2 * pow(1024, -3) > 2:
+        slices = [slice(None),]*3
+        slices[spectral_axis_index] = 0
+        if self.cube[*slices].size * self.siglen * 2 * pow(1024, -3) > 2:
             raise Exception("Cube projected to be > 2Gb!")
 
-        self.sigcube = np.zeros((*self.cube.shape[:2], self.siglen), dtype='int16')
+        sigcube_shape = list(self.cube.shape)
+        sigcube_shape[spectral_axis_index] = self.siglen
+        print(sigcube_shape)
+        self.sigcube = np.zeros(sigcube_shape, dtype='int16')
 
     def set_wl_bounds(self, w1, w2):
         """
@@ -165,7 +168,10 @@ class CubeListenerData:
 
         pool.close()
 
-        self.cursig[:] = self.sigcube[self.idx1, self.idx2, :]
+        if self.spectral_axis_index == 2:
+            self.cursig[:] = self.sigcube[0, 0, :]
+        elif self.spectral_axis_index == 0:
+            self.cursig[:] = self.sigcube[:, 0, 0]
         self.newsig[:] = self.cursig[:]
         t1 = time.time()
         print(f"Took {t1-t0}s to process "
