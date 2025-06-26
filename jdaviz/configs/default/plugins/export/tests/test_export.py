@@ -45,7 +45,7 @@ class TestExportSubsets:
         for current_format in spatial_valid_formats:
             export_plugin.subset_format.selected = current_format
             assert export_plugin.subset_format.selected == current_format
-            assert export_plugin.subset_invalid_msg == '' # for non-composite spatial
+            assert export_plugin.subset_invalid_msg == ''  # for non-composite spatial
             assert export_plugin.subset_format_invalid_msg == ''
 
             assert export_plugin.filename.value.endswith(f".{current_format}")
