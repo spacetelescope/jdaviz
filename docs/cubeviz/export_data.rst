@@ -32,8 +32,7 @@ To extract all the subsets created in the viewers, call the Subset Tools plugin:
     :ref:`Export Spectra <specviz-export-data>`
         Documentation on how to export data from the ``spectrum-viewer``.
 
-The following line of code can be used to extract 1D spectra that have been
-extracted either automatically or manually.
+The following line of code can be used to extract 1D spectra.
 To use a ``function`` other than sum, use the :ref:`Spectral Extraction <spectral-extraction>` plugin
 first to create a 1D spectrum and then refer to it by label in ``get_data``.
 
@@ -44,7 +43,7 @@ first to create a 1D spectrum and then refer to it by label in ``get_data``.
 3D Data Cubes
 =============
 
-To extract the entire cube, you can run the following code (replace "data_name"
+To extract the entire cube, you can run the following code (replace `"data_name"`
 with the name of the data you want to extract):
 
 .. code-block:: python
@@ -53,7 +52,7 @@ with the name of the data you want to extract):
 
 The data is returned as a 3D `specutils.Spectrum1D` object.
 
-To write out a `specutils.Spectrum1D` cube from Cubeviz
+To write a `specutils.Spectrum1D` cube to disk from Cubeviz
 (e.g., a fitted cube from :ref:`model-fitting`),
 where the mask (if available) is as defined in
 `Spectrum1D masks <https://specutils.readthedocs.io/en/latest/spectrum1d.html#including-masks>`_:
@@ -118,8 +117,7 @@ Cubeviz can export photometry output table like Imviz through the Aperture Photo
     :ref:`Imviz Aperture Photometry <imviz_export_photometry>`
         Imviz documentation describing exporting of aperture photometry results in Jdaviz.
 
-In addition to the columns that :ref:`Imviz Aperture Photometry <imviz_export_photometry>`
-would provide, the table from Cubeviz has this extra column after ``data_label``:
-
-* ``slice_wave``: Wavelength value at the selected slice of the cube used for computation.
-  If a 2D data (e.g., collapsed cube) is selected, the value would be NaN instead.
+In addition to the columns that :ref:`Imviz Aperture Photometry <imviz_export_photometry>` provides,
+the table from Cubeviz has an extra column after ``data_label`` entitled ``slice_wave`` that stores
+the wavelength value at the selected slice of the cube used for computation.
+If a 2D data (e.g., collapsed cube) is selected, the value will be NaN.
