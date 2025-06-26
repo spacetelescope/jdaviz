@@ -2282,7 +2282,9 @@ class SubsetSelect(SelectPluginComponent):
         elif 'is_spatial' in self.filters:
             get_data_kwargs['spatial_subset'] = subset
 
-        subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
+        # uses jdaviz_helper's _get_data so we can pass subset args
+        # as, get_data from core helper doesn't support subset args
+        subset = self.app._jdaviz_helper._get_data(**get_data_kwargs)
         return subset.mask
 
     @cached_property
