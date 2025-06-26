@@ -1,19 +1,25 @@
 from functools import cached_property
-from astropy.io import fits
+import asdf
 
 from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
 
+try:
+    from roman_datamodels import datamodels as rdd
+except ImportError:
+    HAS_ROMAN_DATAMODELS = False
+else:
+    HAS_ROMAN_DATAMODELS = True
 
-__all__ = ['FITSParser']
+__all__ = ['ASDFParser']
 
 
-@loader_parser_registry('fits')
-class FITSParser(BaseParser):
+@loader_parser_registry('asdf')
+class ASDFParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz'):
+        if self.app.config not in ('deconfigged', 'imviz'):
             # NOTE: temporary during deconfig process
             return False
 
@@ -26,4 +32,6 @@ class FITSParser(BaseParser):
 
     @cached_property
     def output(self):
-        return fits.open(self.input)
+        if HAS_ROMAN_DATAMODELS:
+            return rdd.open(self.input)
+        return asdf.open(self.input)
