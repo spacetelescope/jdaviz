@@ -99,6 +99,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         You can select the device index for audio output and also use a spectral subset to set a
         range for sonification.
         """
+        current_label = self.results_label
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
 
@@ -116,13 +117,18 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         self.update_wavelength_range(None)
 
         # generate the sonified cube
-        self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
-                                           selected_device_index, self.assidx, self.ssvidx,
-                                           self.pccut, self.audfrqmin,
-                                           self.audfrqmax, self.eln, self.use_pccut,
-                                           self.results_label)
+        sonified_cube = self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
+                                                           selected_device_index, self.assidx,
+                                                           self.ssvidx, self.pccut, self.audfrqmin,
+                                                           self.audfrqmax, self.eln,
+                                                           self.use_pccut, self.results_label)
+        #self.app.data_collection[current_label] = sonified_cube
+        sonified_cube.meta['Sonified'] = True
+        self.add_results.add_results_from_plugin(sonified_cube, replace=False)
 
-        msg = SnackbarMessage(f"'{self.results_label}' sonified successfully.",
+        self.flux_viewer.recalculate_combined_sonified_grid()
+
+        msg = SnackbarMessage(f"'{current_label}' sonified successfully.",
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
@@ -133,7 +139,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
-        self.flux_viewer.stream_active = not self.flux_viewer.stream_active
 
     @observe('spectral_subset_selected')
     def update_wavelength_range(self, event):
