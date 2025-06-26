@@ -1863,7 +1863,10 @@ class LayerSelect(SelectPluginComponent):
                     if live_plugin_results is None:
                         live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None  # noqa
 
-                    if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
+                    if is_sonified:
+                        # hard-code sonified layer icon color for data menu and plot options
+                        colors = '#000000'
+                    elif (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
                             and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
                     else:
