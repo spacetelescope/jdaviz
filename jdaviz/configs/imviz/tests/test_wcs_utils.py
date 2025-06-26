@@ -175,3 +175,7 @@ def test_compute_scale():
 
     pixscale = wcs_utils.compute_scale(image_gwcs, fiducial, None, pscale_ratio=1e+5)
     assert_allclose(pixscale, 3.0555555555555554)
+
+    # test with units
+    pixscale = wcs_utils.compute_scale(image_gwcs, fiducial * u.deg, None)
+    assert_allclose(pixscale, 3.0555555555555554e-05)
