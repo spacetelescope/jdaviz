@@ -118,7 +118,6 @@ class CubeListenerData:
 
         sigcube_shape = list(self.cube.shape)
         sigcube_shape[spectral_axis_index] = self.siglen
-        print(sigcube_shape)
         self.sigcube = np.zeros(sigcube_shape, dtype='int16')
 
     def set_wl_bounds(self, w1, w2):
@@ -133,9 +132,7 @@ class CubeListenerData:
         Iterate through the cube, convert each spectrum to a signal, and store
         in class attributes
         """
-        print(self.wlens)
         lo2hi = self.wlens.argsort()[::-1]
-        print(lo2hi)
 
         t0 = time.time()
 
@@ -151,7 +148,7 @@ class CubeListenerData:
                 # Store fitted values
                 if self.spectral_axis_index in [2, -1]:
                     self.sigcube[x, y, :] = sig
-                elif spectrum.spectral_axis_index == 0:
+                elif self.spectral_axis_index == 0:
                     self.sigcube[:, y, x] = sig
 
         results = []

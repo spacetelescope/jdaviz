@@ -239,20 +239,19 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                     np.logical_and(wlens >= r[0].to_value(u.m),
                                                    wlens <= r[1].to_value(u.m)))
             wlens = wlens[wdx]
-            if spectrum.spectral_axis_index == 2:
-                flux = flux[:, :, wdx]
-            elif spectrum.spectral_axis_index == 1:
-                flux = flux[:, wdx, :]
-            elif spectrum.spectral_axis_index == 0:
-                flux = flux[wdx, :, :]
+            flux_slices = [slice(None),]*3
+            flux_slices[spectrum.spectral_axis_index] = wdx
+            flux = flux[*flux_slices]
 
-        pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut, 0, 99), axis=-1)
+        pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut, 0, 99),
+                                axis=spectrum.spectral_axis_index)
 
         # clip zeros and remove NaNs
         clipped_arr = np.nan_to_num(np.clip(flux, 0, np.inf), copy=False)
 
         # make a rough white-light image from the clipped array
-        whitelight = np.expand_dims(clipped_arr.sum(-1), axis=2)
+        whitelight = np.expand_dims(clipped_arr.sum(spectrum.spectral_axis_index),
+                                    axis=spectrum.spectral_axis_index)
 
         if use_pccut:
             # subtract any percentile cut
@@ -296,26 +295,29 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # Create a 2D array with coordinates starting at (0, 0) and going until (x_size, y_size)
         a = np.arange(1, x_size * y_size + 1).reshape((x_size, y_size))
+        print(a.shape, a)
 
         # Create fake WCS so the sonified layer can be added to a CCDData object and
         # then get added to the image viewer
+        """
         wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
                    'CRPIX1': 1, 'CRVAL1': 337.5202808,
                    'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                    'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
+        """
+
+        if hasattr(spectrum.wcs, 'celestial'):
+            wcs = spectrum.wcs.celestial
+        elif hasattr(spectrum.wcs, 'to_fits_sip'):
+            # GWCS case
+            wcs = WCS(spectrum.wcs.to_fits_sip())
+        else:
+            wcs = None
 
         # Create add data with name results_label to data collection and then add it to the
         # flux viewer
         sonified_cube = CCDData(a * u.Unit(''), wcs=wcs)
-        print(sonified_cube)
-        print(sonified_cube.shape)
-        self.jdaviz_app.data_collection[results_label] = sonified_cube
-        self.jdaviz_app.data_collection[results_label].meta['Sonified'] = True
-
-        self.jdaviz_app.add_data_to_viewer('flux-viewer', results_label)
-
-        # Clear cache and recompute
-        self.recalculate_combined_sonified_grid()
+        return sonified_cube
 
     def _viewer_mouse_event(self, data):
         if data['event'] in ('mouseleave', 'mouseenter') or not self.sonified_layers_enabled:
