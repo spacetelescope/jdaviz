@@ -294,15 +294,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         else:
             w = data.coords
 
-        if hasattr(w, 'celestial'):
-            # This is the FITS WCS case
-            data_wcs = getattr(w, 'celestial', None)
-        elif hasattr(w, 'to_fits_sip'):
-            # If it's a GWCS we pull out the celestial part
-            data_wcs = WCS(w.to_fits_sip())
-        else:
-            data_wcs = None
-
         # Convert spectral axis to velocity units if desired output is in velocity
         if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):
             # Catch this if called from API
@@ -366,6 +357,15 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 self.moment = moment
 
         # Reattach the WCS so we can load the result
+        if hasattr(w, 'celestial'):
+            # This is the FITS WCS case
+            data_wcs = getattr(w, 'celestial', None)
+        elif hasattr(w, 'to_fits_sip'):
+            # If it's a GWCS we pull out the celestial part
+            data_wcs = WCS(w.to_fits_sip())
+        else:
+            data_wcs = None
+
         self.moment = CCDData(self.moment, wcs=data_wcs)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")

@@ -559,7 +559,7 @@ def test_deconf_mf_with_subset(deconfigged_helper):
     flux = np.ones(9) * u.Jy
     flux[7] = 10 * u.Jy
     wavelength = np.arange(9) * u.um
-    spec = Spectrum1D(flux=flux, spectral_axis=wavelength)
+    spec = Spectrum(flux=flux, spectral_axis=wavelength)
     deconfigged_helper.load(spec, data_label="1D Spectrum", format='1D Spectrum')
 
     subset = deconfigged_helper.plugins['Subset Tools']

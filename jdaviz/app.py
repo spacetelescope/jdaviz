@@ -880,7 +880,7 @@ class Application(VuetifyTemplate, HubListener):
             ref_index = ind
             if (len_linked_pixel == 2 and
                     (linked_data.meta.get("Plugin", None) in
-                     ['Moment Maps', 'Collapse'])):
+                     ['Moment Maps', 'Collapse', 'Sonify Data'])):
 
                 if spectral_axis_index in (2, -1):
                     link_to_x = 'z'
