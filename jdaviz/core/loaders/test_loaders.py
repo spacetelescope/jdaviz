@@ -83,10 +83,12 @@ def test_fits_spectrum2d(deconfigged_helper):
     ldr = deconfigged_helper.loaders['url']
     ldr.url = 'mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits'
 
-    # because the WCS fails to parse with fits, this will default
-    # to being parsed directly by specutils
-    assert ldr.format == '2D Spectrum'
-    assert ldr.importer._obj.input_hdulist is False
+    # Default is Image but the test switches to 2D Spectrum
+    # since this file type is not yet supported by the image loader
+    assert ldr.format == 'Image'
+    assert ldr.importer._obj.input_hdulist is True
+
+    ldr.format = '2D Spectrum'
 
     ldr.importer()
 
@@ -113,7 +115,7 @@ def test_resolver_url(deconfigged_helper):
 
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
     assert len(loader.format.choices) == 4  # may change with future importers
-    assert loader.format.selected == '2D Spectrum'  # default may change with future importers
+    assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
