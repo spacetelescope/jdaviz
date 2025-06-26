@@ -40,10 +40,9 @@ and selecting "Remove from viewer" in the delete submenu on the
 bottom bar of the data menu.  Data unloaded from the viewer will also be excluded
 as options from dataset dropdown menus in the various plugins.  Unloaded data will be available
 to re-load into the viewer (by clicking the ``+`` icon in the top right of the data menu).
-<!--
-TODO: Is there supposed to be an easy/quick way to reload the data? There's nothing
-when I click 'source' -> 'object'
--->
+.. comment
+   TODO: Is there supposed to be an easy/quick way to reload the data? There's nothing
+   when I click 'source' -> 'object'
 
 .. _specviz_cursor_info:
 
@@ -133,10 +132,10 @@ The Specviz helper contains a set of convenience methods to programmatically def
 
 Limit methods
 ^^^^^^^^^^^^^
-<!--
-TODO: THESE WILL BE DEPRECATED IN THE NEXT STABLE RELEASE
-Also, using 'auto' with set_limits() is deprecated behavior.
--->
+.. comment
+   TODO: THESE WILL BE DEPRECATED IN THE NEXT STABLE RELEASE
+   Also, using 'auto' with set_limits() is deprecated behavior.
+
 You can use the methods :py:meth:`~jdaviz.configs.specviz.helper.Specviz.x_limits` and
 :py:meth:`~jdaviz.configs.specviz.helper.Specviz.y_limits` to modify the field of
 view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra),
@@ -207,9 +206,9 @@ the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectral_regions` metho
 
 Line Selection
 ==============
-<!--
-TODO: Deprecated?
--->
+.. comment
+   TODO: Deprecated?
+
 This button will allow you to click and select a vertical line when multiple
 lines from a line list are over-plotted. Further analysis can be performed on this
 line of interest.

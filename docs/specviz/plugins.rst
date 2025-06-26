@@ -1,7 +1,7 @@
 .. _specviz-plugins:
-<!--
-TODO: Tab label shows v0.1dev...
--->
+.. comment
+   TODO: Tab label shows v0.1dev...
+
 *********************
 Data Analysis Plugins
 *********************
@@ -147,9 +147,9 @@ To export the table into the notebook, call
 
 Unit Conversion
 ===============
-<!--
-TODO: The pull down labels have changed and are deprecated!
--->
+.. comment
+   TODO: The pull down labels have changed and are deprecated!
+
 The spectral flux density and spectral axis units can be converted
 using the Unit Conversion plugin.
 
@@ -187,9 +187,8 @@ pulldown.
 They are loaded and displayed by pressing :guilabel:`Load List`.
 Each loaded list is shown under :guilabel:`Loaded Lines` and can
 be be removed by pressing the :guilabel:`circled-x` button.
-<!--
-TODO: is there any way we can insert an icon of the circled-x?
--->
+.. comment
+   TODO: is there any way we can insert an icon of the circled-x?
 
 .. image:: ../img/line_lists.png
 
