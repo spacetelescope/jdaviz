@@ -4,6 +4,7 @@ from astropy.coordinates import SkyCoord
 import traitlets
 import ipywidgets as widgets
 
+
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
                                 AddDataMessage, RemoveDataMessage,
                                 MarkersPluginUpdate)
@@ -11,6 +12,7 @@ from jdaviz.core.marks import MarkersMark, DistanceMeasurement
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin, Table
 from jdaviz.core.user_api import PluginUserApi
+
 
 __all__ = ['Markers']
 
@@ -35,6 +37,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     uses_active_status = traitlets.Bool(True).tag(sync=True)
     
     distances_table = traitlets.Instance(Table).tag(sync=True, **widgets.widget_serialization)
+
 
     _default_table_values = {'spectral_axis': np.nan,
                              'spectral_axis:unit': '',
@@ -89,30 +92,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.table.headers_avail = headers
         self.table.headers_visible = headers
         self.table._default_values_by_colname = self._default_table_values
+        self.table.items_per_page = 15
+        self.table.hide_items_per_page = True
         
         self._distance_marks = {}
         self._distance_first_point = None
-        self._distance_line_endpoints = None
         
-        self.distance_display = "N/A"
-
-        def clear_table_callback():
-            for mark in self.marks.values():
-                mark.clear()
-                
-            for viewer_id, dist_measure in self._distance_marks.items():
-                viewer = self.app.get_viewer_by_id(viewer_id)
-                viewer.figure.marks = [m for m in viewer.figure.marks if m not in dist_measure.marks]
-            self._distance_marks.clear()
-            self.distance_display = "N/A"
-            
-            self._distance_first_point = None
-            self._distance_line_endpoints = None
-            if self.distances_table is not None:
-                self.distances_table.clear_table()
-            self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))
-            
-        self.table._clear_callback = clear_table_callback
+        # The _clear_callback is triggered by the "Clear Table" button in the UI
+        self.table._clear_callback = self._clear_all_data
         
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -148,7 +135,39 @@ Press 'd' twice to measure the distance between any two points. Hold the 'Option
             headers=['Start RA', 'Start Dec', 'End RA', 'End Dec',
                      'Separation (arcsec)', 'Distance (pix)', 'Position Angle (deg)'],
         )
+        table.items_per_page = 15
+        table.hide_items_per_page = True
         return table
+
+    def _clear_all_data(self):
+        """
+        Clears all data from the tables AND all marks from the viewer.
+        This is called by the "Clear Table" UI button.
+        """
+        self.table.clear_table()
+        if self.distances_table is not None:
+            self.distances_table.clear_table()
+        self.clear_viewer_marks()
+
+    def clear_viewer_marks(self):
+        """
+        Clears all visual marks from all viewers without clearing the data tables.
+        This is called by the 'r' key press.
+        """
+        for mark in self.marks.values():
+            mark.clear()
+            
+        for viewer_id, dist_measures in self._distance_marks.items():
+            viewer = self.app.get_viewer_by_id(viewer_id)
+            marks_to_remove = []
+            for dm in dist_measures:
+                marks_to_remove.extend(dm.marks)
+            viewer.figure.marks = [m for m in viewer.figure.marks if m not in marks_to_remove]
+        
+        self._distance_marks.clear()
+        
+        self.distance_display = "N/A"
+        self._distance_first_point = None
 
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
@@ -182,86 +201,52 @@ Press 'd' twice to measure the distance between any two points. Hold the 'Option
         viewer_mark = self._get_mark(viewer)
         if not np.any(in_viewer):
             viewer_mark.x, viewer_mark.y = [], []
-            return
+        else:
+            orig_world_x = np.asarray(qtable['world_ra'][in_viewer])
+            orig_world_y = np.asarray(qtable['world_dec'][in_viewer])
+            pixel_unreliable = np.asarray(qtable['pixel:unreliable'][in_viewer])
             
-        orig_world_x = np.asarray(qtable['world_ra'][in_viewer])
-        orig_world_y = np.asarray(qtable['world_dec'][in_viewer])
-        pixel_unreliable = np.asarray(qtable['pixel:unreliable'][in_viewer])
-        
-        if self.app._align_by.lower() == 'wcs':
-            # convert from the sky coordinates in the table to pixels via the WCS of the current
-            # reference data
-            new_wcs = viewer.state.reference_data.coords
-            try:
-                new_x, new_y = new_wcs.world_to_pixel_values(orig_world_x*u.deg,
-                                                             orig_world_y*u.deg)
-                for coord in [new_x, new_y]:
-                    coord[pixel_unreliable] = np.nan
-                    
-            except Exception:
-                # fail gracefully
-                new_x, new_y = [], []
-        elif self.app._align_by == 'pixels':
-            # we need to convert based on the WCS of the individual data layers on which each mark
-            # was first created
-            new_x, new_y = np.zeros_like(orig_world_x), np.zeros_like(orig_world_y)
-            in_viewer_qtable = qtable[in_viewer]
-            for data_label in np.unique(in_viewer_qtable['data_label']):
-                these = in_viewer_qtable['data_label'] == data_label
-                if not np.any(these):
-                    continue
-                
-                wcs = self.app.data_collection[data_label].coords
+            if self.app._align_by.lower() == 'wcs':
+                # convert from the sky coordinates in the table to pixels via the WCS of the current
+                # reference data
+                new_wcs = viewer.state.reference_data.coords
                 try:
-                    original_indices_mask = (qtable['data_label'] == data_label) & in_viewer
-                    new_x[original_indices_mask], new_y[original_indices_mask] = wcs.world_to_pixel_values(
-                        np.asarray(qtable['world_ra'][original_indices_mask]) * u.deg,
-                        np.asarray(qtable['world_dec'][original_indices_mask]) * u.deg
-                    )
+                    new_x, new_y = new_wcs.world_to_pixel_values(orig_world_x*u.deg,
+                                                                 orig_world_y*u.deg)
+                    for coord in [new_x, new_y]:
+                        coord[pixel_unreliable] = np.nan
+                        
                 except Exception:
                     # fail gracefully
                     new_x, new_y = [], []
-                    break
-        else:
-            raise NotImplementedError(f"align_by {self.app._align_by} not implemented")
+            elif self.app._align_by.lower() == 'pixels':
+                # we need to convert based on the WCS of the individual data layers
+                new_x, new_y = np.zeros_like(orig_world_x), np.zeros_like(orig_world_y)
+                in_viewer_qtable = qtable[in_viewer]
+                for data_label in np.unique(in_viewer_qtable['data_label']):
+                    these = in_viewer_qtable['data_label'] == data_label
+                    if not np.any(these):
+                        continue
+                    
+                    wcs = self.app.data_collection[data_label].coords
+                    try:
+                        original_indices_mask = (qtable['data_label'] == data_label) & in_viewer
+                        new_x[original_indices_mask], new_y[original_indices_mask] = wcs.world_to_pixel_values(
+                            np.asarray(qtable['world_ra'][original_indices_mask]) * u.deg,
+                            np.asarray(qtable['world_dec'][original_indices_mask]) * u.deg
+                        )
+                    except Exception:
+                        # fail gracefully
+                        new_x, new_y = [], []
+                        break
+            else:
+                raise NotImplementedError(f"align_by {self.app._align_by} not implemented")
             
-        viewer_mark.x, viewer_mark.y = new_x, new_y
-
-        if viewer_id in self._distance_marks and self._distance_line_endpoints is not None:
-            dist_measure = self._distance_marks[viewer_id]
-            p1 = self._distance_line_endpoints['p1']
-            p2 = self._distance_line_endpoints['p2']
-
-            world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
-                           p1.get('world_ra') is not None and p2.get('world_ra') is not None)
-
-            if not world_avail:
-                dist_measure.visible = False
-                return
-
-            try:
-                c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
-                c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
-                world_coords_x = np.array([p1['world_ra'], p2['world_ra']]) * u.deg
-                world_coords_y = np.array([p1['world_dec'], p2['world_dec']]) * u.deg
-
-                if self.app._align_by.lower() == 'wcs':
-                    plot_x, plot_y = world_coords_x.value, world_coords_y.value
-                    dist_str = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
-                else:  # Aligned by pixels
-                    plot_x, plot_y = viewer.state.reference_data.coords.world_to_pixel_values(
-                        world_coords_x, world_coords_y
-                    )
-                    dist_str = f"{np.sqrt((plot_x[1]-plot_x[0])**2 + (plot_y[1]-plot_y[0])**2):.2f} pix"
-
-                dist_measure.update_points(plot_x[0], plot_y[0], plot_x[1], plot_y[1], text=dist_str)
-                dist_measure.visible = True
-            except Exception:
-                dist_measure.visible = False
+            viewer_mark.x, viewer_mark.y = new_x, new_y
 
     def _add_distance_row(self, p1, p2):
         """
-        Adds a single row to the distances table with the results
+        Adds a single row to the measurements table with the results
         of a distance measurement.
         """
         world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
@@ -367,8 +352,9 @@ Press 'd' twice to measure the distance between any two points. Hold the 'Option
         for mark in self.marks.values():
             mark.visible = self.is_active
             
-        for dist_measure in self._distance_marks.values():
-            dist_measure.visible = self.is_active
+        for viewer_marks in self._distance_marks.values():
+            for mark in viewer_marks:
+                mark.visible = self.is_active
             
         for viewer in self.app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
@@ -386,10 +372,10 @@ Press 'd' twice to measure the distance between any two points. Hold the 'Option
             row_info = self.coords_info.as_dict()
             if 'viewer' in self.table.headers_avail:
                 row_info['viewer'] = viewer.reference if viewer.reference is not None else viewer.reference_id # noqa
-
+                
             for k in self.table.headers_avail:
                 row_info.setdefault(k, self._default_table_values.get(k, ''))
-
+                
             try:
                 # if the pixel values are unreliable, set their table values as nan
                 row_item_to_add = {k: float('nan') if row_info.get('pixel:unreliable', False) and
@@ -397,17 +383,15 @@ Press 'd' twice to measure the distance between any two points. Hold the 'Option
                                  for k, v in row_info.items()
                                  if k in self.table.headers_avail}
                 self.table.add_item(row_item_to_add)
-            except ValueError as err: #pragma: no cover
+            except ValueError as err: # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
-
+                
             x, y = row_info['axes_x'], row_info['axes_y']
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
-
-            self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table.items), sender=self))
-
+            
         elif data['event'] == 'keydown' and data['key'] == 'r':
-            self.table.clear_table()
-
+            self.clear_viewer_marks()
+            
         elif data['event'] == 'keydown' and data.get('key') in ('d', '∂'):
             if data.get('altKey', False):
                 coords = self._get_snap_coordinates(viewer)
@@ -417,49 +401,43 @@ Press 'd' twice to measure the distance between any two points. Hold the 'Option
 
             if self._distance_first_point is None:
                 self._distance_first_point = coords
-                if viewer_id in self._distance_marks:
-                    self._distance_marks[viewer_id].visible = False
-                self._distance_line_endpoints = None
+                self.distance_display = "..."
             else:
                 p1 = self._distance_first_point
                 p2 = coords
-
-                world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
-                               p1.get('world_ra') is not None and p2.get('world_ra') is not None and
-                               not p1.get('world:unreliable', True) and
-                               not p2.get('world:unreliable', True) and
-                               np.all(np.isfinite([p1.get('world_ra', np.nan), p1.get('world_dec', np.nan),
-                                                   p2.get('world_ra', np.nan), p2.get('world_dec', np.nan)])))
-
-                if self.app._align_by.lower() == 'wcs' and world_avail:
-                    c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
-                    c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
-                    dist = c1.separation(c2)
-                    display_str = f"{dist.to(u.arcsec).value:.2f} arcsec"
+                self._distance_first_point = None
+                
+                if self.app._align_by.lower() == 'wcs':
+                    world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
+                                   p1.get('world_ra') is not None and p2.get('world_ra') is not None)
+                    if world_avail:
+                        c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
+                        c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
+                        display_str = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
+                    else:
+                        display_str = "N/A"
                 else:
                     dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
                                        (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
                     display_str = f"{dist_pix:.2f} pix"
-
+                
                 self.distance_display = display_str
-
+                
                 self._add_distance_row(p1, p2)
-
+                
                 plot_x0, plot_y0 = p1.get('axes_x'), p1.get('axes_y')
                 plot_x1, plot_y1 = p2.get('axes_x'), p2.get('axes_y')
 
                 if None in (plot_x0, plot_y0, plot_x1, plot_y1):
+                    self.distance_display = "N/A"
                     return
 
-                if viewer_id not in self._distance_marks:
-                    dist_measure = DistanceMeasurement(viewer, plot_x0, plot_y0, plot_x1, plot_y1, text=display_str)
-                    self._distance_marks[viewer_id] = dist_measure
-                    viewer.figure.marks = viewer.figure.marks + dist_measure.marks
-                else:
-                    dist_measure = self._distance_marks[viewer_id]
-                    dist_measure.update_points(plot_x0, plot_y0, plot_x1, plot_y1, text=display_str)
-                    dist_measure.visible = True
+                dist_measure = DistanceMeasurement(viewer, plot_x0, plot_y0, plot_x1, plot_y1, text=display_str)
+                dist_measure.endpoints = {'p1': p1, 'p2': p2}
 
-                self._distance_line_endpoints = {'p1': p1, 'p2': p2}
-                self._distance_first_point = None
+                self._distance_marks.setdefault(viewer_id, []).append(dist_measure)
+                
+                viewer.figure.marks = viewer.figure.marks + dist_measure.marks
+
+
 
