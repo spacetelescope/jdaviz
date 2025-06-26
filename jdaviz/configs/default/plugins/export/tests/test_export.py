@@ -29,6 +29,11 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
         export_plugin = imviz_helper.plugins['Export']._obj
+
+        # Check initialization of these two
+        assert export_plugin.subset_invalid_msg == ''
+        assert export_plugin.subset_format_invalid_msg == ''
+
         export_plugin.subset.selected = 'Subset 1'
 
         # Make no assumptions on default since the 'default' is now
@@ -40,7 +45,8 @@ class TestExportSubsets:
         for current_format in spatial_valid_formats:
             export_plugin.subset_format.selected = current_format
             assert export_plugin.subset_format.selected == current_format
-            assert export_plugin.subset_invalid_msg == ''  # for non-composite spatial
+            assert export_plugin.subset_invalid_msg == '' # for non-composite spatial
+            assert export_plugin.subset_format_invalid_msg == ''
 
             assert export_plugin.filename.value.endswith(f".{current_format}")
             export_plugin.export()
@@ -164,6 +170,9 @@ class TestExportSubsets:
             assert export_plugin.subset_format.selected == current_format
             assert export_plugin.filename.value.endswith(current_format)
 
+            assert export_plugin.subset_invalid_msg == ''  # for non-composite spatial
+            assert export_plugin.subset_format_invalid_msg == ''
+
             # Attempt export
             export_plugin.export()
             assert os.path.isfile(export_plugin.filename.value)
@@ -195,6 +204,9 @@ class TestExportSubsets:
 
             # Finally, attempt to export with Spectral subset
             export_plugin.subset.selected = spectral_subset
+            # subset_format_invalid_msg should already be populated since
+            # the selected format is fits/reg
+            assert export_plugin.subset_format_invalid_msg != ''
             with pytest.raises(ValueError,
                                match=f"Export of '{spectral_subset}' "
                                        f"in '{current_format}' format is not supported."):  # noqa
@@ -255,6 +267,14 @@ class TestExportSubsets:
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
         assert os.path.isfile('test_spectral_region.ecsv')
+
+        # Revert spectral subset format selection to fits and check
+        # that the format message is populated
+        export_plugin.subset_format.selected = 'fits'
+        assert export_plugin.subset_format_invalid_msg != ''
+        # Delete the spectral subset and check that the message is reset
+        cubeviz_helper.app.delete_subsets(spectral_subset)
+        assert export_plugin.subset_format_invalid_msg == ''
 
     def test_export_stcs_circle_ellipse(self, imviz_helper):
         wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
