@@ -605,7 +605,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                  'volume_value', 'volume_sync',
                                                  state_filter=is_sonified)
 
-        # updated to use visible so syncing occurs between plot options and data menu
         self.sonified_audible = PlotOptionsSyncState(self, self.viewer, self.layer, 'audible',
                                                      'sonified_audible_value',
                                                      'sonified_audible_sync',
