@@ -189,7 +189,6 @@ class Imviz(ImageConfigHelper):
 
                 if data_label:
                     kw['data_label'] = data_label
-
                 self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 
         else:
