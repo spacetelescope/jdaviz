@@ -6,6 +6,10 @@ Bug Fixes
 
 - Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
 
+- Fixed issue in ``compute_scale`` to handle the case when the wcs forward
+  transform does not use units, which was previously causing issues when
+  aligning by WCS. [#3658]
+
 Cubeviz
 ^^^^^^^
 
