@@ -10,7 +10,7 @@ import astropy.units as u
 from specutils import Spectrum
 from specutils.fitting import fit_lines
 
-__all__ = ['fit_model_to_spectrum']
+__all__ = ['fit_model_to_spectrum', 'generate_spaxel_list']
 
 
 def fit_model_to_spectrum(spectrum, component_list, expression,
@@ -153,7 +153,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
         n_cpu = mp.cpu_count() - 1
 
     # Generate list of all spaxels to be fitted
-    spaxels = _generate_spaxel_list(spectrum)
+    spaxels = generate_spaxel_list(spectrum)
 
     fitted_models = []
 
@@ -371,7 +371,7 @@ def _handle_parameter_units(model, fitted_parameters_cube, param_units):
     return fitted_parameters_dict
 
 
-def _generate_spaxel_list(spectrum):
+def generate_spaxel_list(spectrum, spectral_axis_index=None):
     """
     Generates a list with tuples, each one addressing the (x,y)
     coordinates of a spaxel in a 3-D spectrum cube. If a mask is available,
@@ -379,23 +379,33 @@ def _generate_spaxel_list(spectrum):
 
     Parameters
     ----------
-    spectrum : :class:`specutils.Spectrum`
-        The spectrum that stores the cube in its ``'flux'`` attribute.
+    spectrum : :class:`specutils.Spectrum` or numpy array
+        The spectrum that stores the cube in its ``'flux'`` attribute,
+        or a simple numpy array of values.
 
     Returns
     -------
     spaxels : list
         List with spaxels
     """
-    if spectrum.spectral_axis_index in [2, -1]:
-        n_x, n_y, _ = spectrum.flux.shape
-    elif spectrum.spectral_axis_index == 0:
-        _, n_y, n_x = spectrum.flux.shape
+    # Handle this being either a Spectrum or an array passed from sonification
+    if spectral_axis_index is None and hasattr(spectrum, 'spectral_axis_index'):
+        spectral_axis_index = spectrum.spectral_axis_index
 
-    if spectrum.mask is None:
+    if hasattr(spectrum, 'flux'):
+        flux = spectrum.flux
+    else:
+        flux = spectrum
+
+    if spectral_axis_index in [2, -1]:
+        n_x, n_y, _ = flux.shape
+    elif spectral_axis_index == 0:
+        _, n_y, n_x = flux.shape
+
+    if not hasattr(spectrum, 'mask') or spectrum.mask is None:
         spx = [[(x, y) for x in range(n_x)] for y in range(n_y)]
     else:
-        # return only non-masked spaxels
+        # This is a specutils.Spectrum, return only non-masked spaxels
         if spectrum.spectral_axis_index in [2, -1]:
             spx = [[(x, y) for x in range(n_x) if np.any(~spectrum.mask[x, y])]
                    for y in range(n_y) if np.any(~spectrum.mask[:, y])]
