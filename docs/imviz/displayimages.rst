@@ -249,7 +249,7 @@ Display Settings
 
 To access all of the different display settings for an image viewer, click the
 |icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
-Changing the display settings <b>does not</b> change the underlying data, only the
+Changing the display settings **does not** change the underlying data, only the
 visualization of that data.
 
 .. image:: ../img/imviz_plot_options.png
