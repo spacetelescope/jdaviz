@@ -11,6 +11,7 @@ from astropy.wcs import WCS
 from glue.core.roi import XRangeROI
 from numpy.testing import assert_allclose, assert_array_equal
 from specutils.spectra import Spectrum1D
+from specutils import SpectralRegion
 
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
@@ -551,3 +552,24 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == expected_unit_string
+
+
+def test_deconf_mf_with_subset(deconfigged_helper):
+    flux = np.ones(9) * u.Jy
+    flux[7] = 10 * u.Jy
+    wavelength = np.arange(9) * u.um
+    spec = Spectrum1D(flux=flux, spectral_axis=wavelength)
+    deconfigged_helper.load(spec, data_label="1D Spectrum")
+
+    subset = deconfigged_helper.plugins['Subset Tools']
+    subset.import_region(SpectralRegion(6 * u.Unit('um'), 7 * u.Unit('um')))
+
+    mf = deconfigged_helper.plugins['Model Fitting']
+    # ensure deconfigged app can access subsets in plugin
+    mf.spectral_subset.selected = 'Subset 1'
+    mf.add_results.label = 'linear model'
+    mf.create_model_component()
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit()
