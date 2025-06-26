@@ -605,7 +605,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                  'volume_value', 'volume_sync',
                                                  state_filter=is_sonified)
 
-        self.sonified_audible = PlotOptionsSyncState(self, self.viewer, self.layer, 'audible',
+        self.sonified_audible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                      'sonified_audible_value',
                                                      'sonified_audible_sync',
                                                      state_filter=is_sonified)

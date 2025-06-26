@@ -1835,7 +1835,6 @@ class LayerSelect(SelectPluginComponent):
     def _layer_to_dict(self, layer_label):
         is_subset = None
         is_sonified = None
-        audible = None
         subset_type = None
         zorder = None
         from_plugin = None
@@ -1855,7 +1854,6 @@ class LayerSelect(SelectPluginComponent):
                             subset_type = get_subset_type(layer.layer)
                     if is_sonified is None:
                         is_sonified = isinstance(layer, SonifiedDataLayerArtist)
-                        audible = getattr(layer.state, 'audible', False)
                     if zorder is None:
                         zorder = layer.state.zorder
                     if from_plugin is None:
@@ -1879,7 +1877,6 @@ class LayerSelect(SelectPluginComponent):
         return {"label": layer_label,
                 "is_subset": is_subset,
                 "is_sonified": is_sonified,
-                "audible": audible,
                 "subset_type": subset_type,
                 "zorder": zorder,
                 "from_plugin": from_plugin,

@@ -412,6 +412,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if layer.layer.label == layer_label:
                 if isinstance(layer, SonifiedDataLayerArtist):
                     layer.audible = visible
+                    layer.visible = visible
                 else:
                     layer.visible = visible
             elif hasattr(layer.layer, 'data') and layer.layer.data.label == layer_label:
