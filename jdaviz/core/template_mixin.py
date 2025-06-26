@@ -1871,7 +1871,7 @@ class LayerSelect(SelectPluginComponent):
                         colors.append(layer.state.color)
 
                     visibilities.append(getattr(layer.state, 'bitmap_visible', True)
-                                        and layer.visible)
+                                        and getattr(layer, 'visible' if not is_sonified else 'audible'))  # noqa
                     linewidths.append(getattr(layer.state, 'linewidth', 0))
 
         return {"label": layer_label,
