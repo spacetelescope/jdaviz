@@ -239,7 +239,12 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                     np.logical_and(wlens >= r[0].to_value(u.m),
                                                    wlens <= r[1].to_value(u.m)))
             wlens = wlens[wdx]
-            flux = flux[:, :, wdx]
+            if spectrum.spectral_axis_index == 2:
+                flux = flux[:, :, wdx]
+            elif spectrum.spectral_axis_index == 1:
+                flux = flux[:, wdx, :]
+            elif spectrum.spectral_axis_index == 0:
+                flux = flux[wdx, :, :]
 
         pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut, 0, 99), axis=-1)
 
@@ -260,7 +265,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                               samplerate=sample_rate, buffsize=buffer_size,
                                               wl_unit=self.sonification_wl_unit,
                                               audfrqmin=audfrqmin, audfrqmax=audfrqmax,
-                                              eln=eln, vol=self.volume_level)
+                                              eln=eln, vol=self.volume_level,
+                                              spectral_axis_index=spectrum.spectral_axis_index)
         self.sonified_cube.sonify_cube()
         self.sonified_cube.sigcube = (
                 self.sonified_cube.sigcube * pow(whitelight / whitelight.max(),
@@ -270,14 +276,23 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                       callback=self.sonified_cube.player_callback)
         self.sonified_cube.cbuff = True
 
-        x_size = self.sonified_cube.sigcube.shape[0]
-        y_size = self.sonified_cube.sigcube.shape[1]
+        spatial_inds = [0, 1, 2]
+        spatial_inds.remove(spectrum.spectral_axis_index)
+        x_size = self.sonified_cube.sigcube.shape[spatial_inds[0]]
+        y_size = self.sonified_cube.sigcube.shape[spatial_inds[1]]
 
         # Create a new entry for the sonified layer in data_lookup. The value is a dictionary
         # containing (x_size * y_size) keys with values being arrays that represent sounds
-        self.data_lookup[results_label] = {(x, y): self.sonified_cube.sigcube[x, y, :]
-                                           for x in range(0, x_size)
-                                           for y in range(0, y_size)}
+        if spectrum.spectral_axis_index == 2:
+            self.data_lookup[results_label] = {(x, y): self.sonified_cube.sigcube[x, y, :]
+                                               for x in range(0, x_size)
+                                               for y in range(0, y_size)}
+        elif spectrum.spectral_axis_index == 0:
+            # This looks wrong but it's because in this case x_size is actually the y axis and vice
+            # versa, wasn't sure about the best way to handle the spatial_inds thing above.
+            self.data_lookup[results_label] = {(y, x): self.sonified_cube.sigcube[:, x, y]
+                                               for x in range(0, x_size)
+                                               for y in range(0, y_size)}
 
         # Create a 2D array with coordinates starting at (0, 0) and going until (x_size, y_size)
         a = np.arange(1, x_size * y_size + 1).reshape((x_size, y_size))
@@ -292,6 +307,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Create add data with name results_label to data collection and then add it to the
         # flux viewer
         sonified_cube = CCDData(a * u.Unit(''), wcs=wcs)
+        print(sonified_cube)
+        print(sonified_cube.shape)
         self.jdaviz_app.data_collection[results_label] = sonified_cube
         self.jdaviz_app.data_collection[results_label].meta['Sonified'] = True
 
