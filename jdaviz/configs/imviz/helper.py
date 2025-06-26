@@ -169,7 +169,6 @@ class Imviz(ImageConfigHelper):
                     kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
-
                 self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
@@ -189,6 +188,7 @@ class Imviz(ImageConfigHelper):
 
                 if data_label:
                     kw['data_label'] = data_label
+
                 self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 
         else:

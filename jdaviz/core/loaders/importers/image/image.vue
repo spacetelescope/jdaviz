@@ -19,7 +19,7 @@
         label="Data Label"
         api_hint="ldr.importer.data_label ="
         :api_hints_enabled="api_hints_enabled"
-        hint="Label to assign to the new data entry."
+        hint="Prefix to assign to the new data entry."
       ></plugin-auto-label>
     </v-row>
   </v-contatiner>
