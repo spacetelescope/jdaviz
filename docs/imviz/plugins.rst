@@ -345,10 +345,10 @@ an interactively selected region. A typical workflow is as follows:
    If your image is already background subtracted, choose "Manual" and set the
    :guilabel:`Background value` at 0.
 
-6. For some JWST and HST images, pixel area in arcsec$^2$ is automatically
+6. For some JWST and HST images, pixel area in arcsec2 is automatically
    populated in the :guilabel:`Pixel area` field from image metadata. If it does
    not auto-populate for you, you can manually enter a value but it must be in the
-   unit of arcsec$^2$. This field is only used if "per steradian" is detected
+   unit of arcsec2. This field is only used if "per steradian" is detected
    in display data unit. Otherwise, it is solely informational.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes if auto-population is not possible.**

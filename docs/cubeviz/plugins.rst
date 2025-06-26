@@ -237,7 +237,7 @@ emission line. Moment maps of continuum emission can also be created, but
 moments other than moment 0 may not be physically meaningful.  Also note
 that by default, the units in the moment 1 and moment 2 maps reflect the units of the
 spectral axis (microns in this case). For moments higher than 0, the output units can
-instead be converted to velocity (e.g., m/s for moment 1, m$^2$/s$^2$ for moment 2, etc.) by
+instead be converted to velocity (e.g., m/s for moment 1, m2/s2 for moment 2, etc.) by
 selecting the :guilabel:`Velocity` radio button under :guilabel:`Output Units`
 and providing a reference wavelength, commonly that of the spectral line of interest.
 

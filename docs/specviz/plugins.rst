@@ -158,7 +158,7 @@ Select the frequency, wavelength, or energy unit in the
 (e.g., Angstrom, Hertz, erg).
 
 Select the flux density unit in the :guilabel:`New Flux Unit` pulldown
-(e.g., Jansky, $\dfrac{W}{Hz/m2}$, $\dfrac{ph}{Angstrom cm2 s}$).
+(e.g., Jansky, W/Hz/m2, ph/Angstrom cm2 s).
 
 Note that this affects the default units in all viewers and plugins, where applicable,
 but does not affect the underlying data.
@@ -291,7 +291,7 @@ total flux, and equivalent width. Uncertainties on the derived properties are al
 returned. For more information on the algorithms used, refer to the `specutils documentation
 <https://specutils.readthedocs.io/en/stable/analysis.html>`_.
 
-The line flux results are automatically converted to $\dfrac{\text{Watts}}{text{meter}^2}$,
+The line flux results are automatically converted to Watts/meter2,
 when appropriate.
 
 From the API
