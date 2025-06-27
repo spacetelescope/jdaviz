@@ -70,7 +70,7 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
+                           match=re.escape("'x' not one of ['fits', 'reg', 'ecsv', 'stcs'], reverting selection to 'reg'")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
     def test_not_implemented(self, cubeviz_helper, spectral_cube_wcs):
@@ -186,12 +186,12 @@ class TestExportSubsets:
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
                            match=re.escape("'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
-            export_plugin.subset_format.selected = 'x'
+            export_plugin.subset_format.selected ='x'
 
         # Test that attempting to export with disabled option raises an error
         export_plugin.subset_format.selected = 'ecsv'
         with pytest.raises(ValueError,
-                           match=f"Export of '{spatial_subset}' "
+                           match=f"Export of 'Subset 1' "
                                  f"in 'ecsv' format is not supported."):  # noqa
             export_plugin.export()
 
@@ -206,7 +206,6 @@ class TestExportSubsets:
                            match='Subset cannot be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
 
-        export_plugin.subset.selected = 'Subset 2'
         # Test saving spectral subset
         subset_plugin.combination_mode = 'new'
         spectral_axis_unit = u.Unit(
