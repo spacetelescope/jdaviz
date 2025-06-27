@@ -1908,6 +1908,10 @@ class Application(VuetifyTemplate, HubListener):
         # Cannot sort because of None
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
+    def get_viewers_of_cls(self, cls):
+        """Return a list of viewers of a specific class."""
+        return [viewer for viewer in self._viewer_store.values() if isinstance(viewer, cls)]
+
     def _update_viewer_reference_name(
         self, old_reference, new_reference, update_id=False
     ):
