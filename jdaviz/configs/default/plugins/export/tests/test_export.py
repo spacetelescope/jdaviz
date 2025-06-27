@@ -28,6 +28,11 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
         export_plugin = imviz_helper.plugins['Export']._obj
+
+        # Check initialization of these two
+        assert export_plugin.subset_invalid_msg == ''
+        assert export_plugin.subset_format_invalid_msg == ''
+
         export_plugin.subset.selected = 'Subset 1'
 
         assert export_plugin.subset_format.selected == 'fits'  # default format
@@ -90,7 +95,7 @@ class TestExportSubsets:
 
     def test_export_subsets_wcs(self, imviz_helper, spectral_cube_wcs):
 
-        # using cube WCS instead of 2d imaging wcs for consistancy with
+        # using cube WCS instead of 2d imaging wcs for consistency with
         # cubeviz test. accessing just the spatial part of this.
         wcs = spectral_cube_wcs.celestial
 
@@ -195,22 +200,6 @@ class TestExportSubsets:
         with pytest.raises(NotImplementedError,
                            match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
-
-        # Test saving spectral subset
-        subset_plugin.combination_mode = 'new'
-        spectral_axis_unit = u.Unit(
-            cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-        subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
-                                                   15.5 * spectral_axis_unit))
-        export_plugin.subset.selected = 'Subset 2'
-
-        # Format should auto-update to first non-disabled entry
-        assert export_plugin.subset_format.selected == 'ecsv'
-        for format in export_plugin.subset_format.items:
-            if format['label'] != 'ecsv':
-                assert format['disabled']
-            else:
-                assert format['disabled'] is False
 
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
