@@ -40,9 +40,6 @@ and selecting "Remove from viewer" in the delete submenu on the
 bottom bar of the data menu.  Data unloaded from the viewer will also be excluded
 as options from dataset dropdown menus in the various plugins.  Unloaded data will be available
 to re-load into the viewer (by clicking the ``+`` icon in the top right of the data menu).
-.. comment
-   TODO: Is there supposed to be an easy/quick way to reload the data? There's nothing
-   when I click 'source' -> 'object'
 
 .. _specviz_cursor_info:
 
@@ -132,41 +129,26 @@ The Specviz helper contains a set of convenience methods to programmatically def
 
 Limit methods
 ^^^^^^^^^^^^^
-.. comment
-   TODO: THESE WILL BE DEPRECATED IN THE NEXT STABLE RELEASE
-   Also, using 'auto' with set_limits() is deprecated behavior.
 
-You can use the methods :py:meth:`~jdaviz.configs.specviz.helper.Specviz.x_limits` and
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.y_limits` to modify the field of
-view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra),
-a `~astropy.units.Quantity`, or ``'auto'`` to automatically scale:
+You can use the
+method :py:meth:`~jdaviz.configs.default.plugins.viewers.JdavizViewerMixin.set_limits`
+to modify the field of view of Specviz. You can provide an int, float, or ``None`` in current
+axis units:
 
 .. code-block:: python
 
     from astropy import units as u
-    specviz.x_limits()
-    specviz.x_limits(650*u.nm,750*u.nm)
-    specviz.y_limits('auto', 110.0)
+    # set_limits takes arguments in the order of: x_min, x_max, y_min, y_max
+    specviz.viewers['spectrum-viewer'].set_limits(650, 750, None, 110.0)
 
-Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz will set the bounds the upper and lower bounds of the SpectralRegion:
-
-.. code-block:: python
-
-    from specutils import SpectralRegion
-    bounds = SpectralRegion(0.45*u.nm, 0.6*u.nm)
-    specviz.x_limits(bounds)
+.. note::
+   In previous versions of the code, units could be provided as well as the string 'auto'. This
+   behavior is now deprecated as of version 4.2.
 
 Autoscale methods
 ^^^^^^^^^^^^^^^^^
 You can also quickly return to the default zoom using
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.autoscale_x` and
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.autoscale_y`.
-
-Axis Orientation methods
-^^^^^^^^^^^^^^^^^^^^^^^^
-To quickly flip an axis to change to and from ascending/descending, use
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.flip_x` and
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.flip_y`.
+:py:meth:`~jdaviz.configs.default.plugins.viewers.JdavizViewerMixin.reset_limits`.
 
 .. _spectral-regions:
 
@@ -206,18 +188,15 @@ the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectral_regions` metho
 
 Line Selection
 ==============
-.. comment
-   TODO: Deprecated?
 
-This button will allow you to click and select a vertical line when multiple
-lines from a line list are over-plotted. Further analysis can be performed on this
+The |icon-line-select| icon, which appears when lines from a line list are over-plotted,
+allows you to click and select a vertical line. Further analysis can be performed on this
 line of interest.
 
 .. seealso::
 
     :ref:`Line Lists <line-lists>`
         Documentation on using line lists within Specviz.
-
 
 .. _specviz-plot-settings:
 
