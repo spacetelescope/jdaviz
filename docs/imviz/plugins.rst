@@ -224,10 +224,6 @@ two points in a viewer. This functionality is available whenever the Markers plu
 This will draw a line between the two points. A label showing the distance will appear,
 rotated to be parallel with the line, and offset to prevent intersecting the line.
 
-.. image:: ./img/imviz_distance_tool.png
-    :alt: Imviz Distance Tool
-    :width: 600px
-
 A new table, :guilabel:`Measurements`, will also appear below the main markers table. This
 table logs the start and end coordinates (both pixel and world, if available), the on-sky
 separation, the pixel distance, and the position angle for each measurement.

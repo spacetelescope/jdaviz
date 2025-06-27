@@ -820,26 +820,26 @@ class DistanceMeasurement:
             y=[],
             scales=viewer.scales,
             colors=[accent_color],
-            stroke_width=2
+            stroke_width=3.5
         )
 
         anchor_x, anchor_y = (x0 + y0) / 2, (x1 + y1) / 2
 
-        # The shadow label provides a thick black outline for contrast.
         self.label_shadow = DistanceLabel(
             viewer, anchor_x, anchor_y, text,
             colors=['black'],
-            stroke_width=8,
+            stroke_width=12,
             font_weight='bold',
-            default_size=18
+            default_size=22          
         )
-
+        
         self.label_text = DistanceLabel(
             viewer, anchor_x, anchor_y, text,
             colors=[accent_color],
             font_weight='bold',
-            default_size=18
+            default_size=22
         )
+
         self.visible = True
         self.update_points(x0, y0, x1, y1, text)
 
@@ -856,7 +856,6 @@ class DistanceMeasurement:
         self.line.visible = visible
         self.label_shadow.visible = visible
         self.label_text.visible = visible
-
     
     def update_points(self, x0, y0, x1, y1, text=""):
         x0_v = getattr(x0, 'value', x0)
