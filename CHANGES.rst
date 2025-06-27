@@ -31,9 +31,7 @@ Cubeviz
 
 - Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
-- Add sonified layer for each cube created by the Sonify Data plugin. [#3430]
-
-- Update sonified layer icon to distinguish from other layers in legend, plot options, and data menu. [#3660]
+- Add sonified layer for each cube created by the Sonify Data plugin. [#3430, #3660]
 
 Imviz
 ^^^^^
