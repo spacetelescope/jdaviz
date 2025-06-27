@@ -203,7 +203,7 @@ def test_background_extraction_and_display(specviz2d_helper):
     pext.export_bg_sub(add_data=True)
     assert specviz2d_helper.app.data_collection[2].label == 'background-subtracted'
 
-    pext.export_bg(add_data=True)
+    pext.export_bg_img(add_data=True)
     assert specviz2d_helper.app.data_collection[3].label == 'background'
 
 
