@@ -1,3 +1,146 @@
+4.3 (unreleased)
+================
+
+New Features
+------------
+
+- The Plot Options plugin now highlights the tab for the active (top-most) data layer
+  in the selected viewer. [#3514]
+
+- Added an STC-S string region parser to the Footprints plugin. [#3479]
+
+- General (work-in-progress) centralized app-instance available at top package-level. [#3475, #3526, #3522, #3531, #3555, #3577]
+
+- Added a results history table to the Line Analysis plugin.  Results are no longer updated in realtime with changes to inputs,
+  but rather when clicking the button or calling ``get_results``, at which point an entry is added to the results history table
+  by default. [#3557]
+
+- User API access to ``simplify_subset()`` method in the Subset Tools plugin. [#3601]
+
+- Hitting the "Enter" key while changing a value in the Subset Tools plugin will make a call to accept the changes (equivalent to clicking the "Update" button). [#3600]
+
+- Hitting the "Enter" key while renaming a subset or footprint will accept the changes, hitting "Escape" will cancel. [#3600]
+
+- Added ``subset_label`` keyword argument to ``import_region`` method of Subset Tools plugin
+  to name the resulting subset(s). [#3616]
+
+- Ability to import subsets from the Subset Tools plugin UI. [#3639]
+
+- Aperture Photometry public API exposed, added API hints to plugin. [#3617]
+
+Cubeviz
+^^^^^^^
+
+- Ability to ingest and export ``SkyRegion`` objects. [#3502]
+
+- Add sonified layer for each cube created by the Sonify Data plugin. [#3430]
+
+Imviz
+^^^^^
+
+- Added ability to load remote data from a S3 URI to Imviz. [#3500]
+
+- Footprints plugin now supports selecting the closest overlay
+  to a clicked point in the image viewer. [#3525, #3539, #3546, #3554]
+
+- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS [#3483, #3535]
+
+- The Export plugin now supports saving spatial subsets as STC-S strings, including CircleSkyRegion and EllipseSkyRegion,
+  which are exported as ``CIRCLE`` and ``ELLIPSE`` STC-S shapes, respectively. [#3591, #3595]
+
+- Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS. [#3483, #3535, #3540]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
+
+Specviz2d
+^^^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3473]
+
+- Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
+  deprecated and will open the new sidebar.  [#3473]
+
+- New plugin to vizualize the cross-dispersion profile [#3552]
+
+API Changes
+-----------
+
+- Allow ``get_regions`` and ``get_subsets`` to take a data label and have a subset apply to the wcs of that data.
+  By setting a value for ``wrt_data``, the user is requesting a region type that is the opposite of the current link
+  type, (i.e. ``SkyRegion`` when linked by pixel or ``PixelRegion`` when linked by wcs.) Also deprecate the
+  ``return_sky_region`` kwarg and leave a deprecation warning to use ``wrt_data`` instead. [#3527]
+
+Cubeviz
+^^^^^^^
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
+- BEHAVIOR CHANGE: Change ``import_region`` method to default to creating a new subset when run.
+  Also allow editing a subset using the ``edit_subset`` argument. [#3523]
+
+Imviz
+^^^^^
+
+- Radial profile and curve of growth in Aperture Photometry plugin are now consistent
+  with ``photutils.profiles``. [#3510]
+
+- Catalog Search: When catalog is imported from file, its original column names are
+  preserved on export. [#3519]
+
+- User API for Catalog Search plugin (including ``catalog``,  ``max_sources``,``search``,
+  ``table``, and ``table_selected``) is now public. [#3529]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+- Catalog Search: Fixed a bug where the plugin modifies the input table if
+  ``import_catalog`` is used on a table instance (not from file). [#3519]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
+
+- Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
+  dependencies installed with the ``[all]`` extra dependencies flag
+  (i.e., ``pip install jdaviz[all]``). [#3556]
+
+- Auto-update sonification label upon adding sonification to viewer. [#3430, #3656]
+
 4.2.4 (unreleased)
 ==================
 
@@ -5,6 +148,12 @@ Bug Fixes
 ---------
 
 - Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
+
+- Disable export and raise vue error message upon selection of unsupported subset format. [#3635]
+
+- Fixed issue in ``compute_scale`` to handle the case when the wcs forward
+  transform does not use units, which was previously causing issues when
+  aligning by WCS. [#3658]
 
 Cubeviz
 ^^^^^^^
@@ -20,6 +169,8 @@ Imviz
 - Fix dropdowns for overlay not showing in UI. [#3640]
 
 - Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
+
+- Fix get_zoom_limits when WCS linked and out of image bounds. [#3654]
 
 Mosviz
 ^^^^^^
@@ -50,10 +201,11 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
-- Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
 
 - Use validator on spectral subset layer visibility in flux/uncertainty viewers when slice indicator
   is within the spectral subset bounds. [#3571]
+
+- Broadcast snackbar message to user when Collapse plugin fails to perform the collapse. [#3604]
 
 Other changes and Additions
 ---------------------------
