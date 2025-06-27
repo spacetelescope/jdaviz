@@ -15,17 +15,17 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 
         lc_plugin.align_by = 'WCS'
         lc_plugin.wcs_fast_approximation = False
-        assert self.imviz.get_alignment_method("Default orientation", "has_wcs_2[SCI,1]") == "wcs"
+        assert self.imviz.get_alignment_method("Default orientation", "has_wcs_2[SCI]") == "wcs"
 
         # wcs_fast_approximation should revert/default to True when change back to Pixels.
         lc_plugin.align_by = 'Pixels'
         assert lc_plugin.wcs_fast_approximation is True
-        assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_2[SCI,1]") == "pixels"
+        assert self.imviz.get_alignment_method("has_wcs_1[SCI]", "has_wcs_2[SCI]") == "pixels"
 
-        assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_1[SCI,1]") == "self"
+        assert self.imviz.get_alignment_method("has_wcs_1[SCI]", "has_wcs_1[SCI]") == "self"
 
         with pytest.raises(ValueError, match=".*combo not found"):
-            self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "foo")
+            self.imviz.get_alignment_method("has_wcs_1[SCI]", "foo")
 
     def test_astrowidgets_markers_disable_relinking(self):
         lc_plugin = self.imviz.plugins['Orientation']
@@ -51,7 +51,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         lc_plugin.align_by = 'Pixels'
 
         # Blink to second image, if we have to.
-        if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
+        if self.viewer.top_visible_data_label != "has_wcs_2[SCI]":
             self.viewer.blink_once()
 
         label_mouseover = self.imviz._coords_info
@@ -87,7 +87,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         lc_plugin.align_by = 'WCS'
 
         # Blink to second image, if we have to.
-        if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
+        if self.viewer.top_visible_data_label != "has_wcs_2[SCI]":
             self.viewer.blink_once()
 
         label_mouseover = self.imviz._coords_info
@@ -129,7 +129,7 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
 
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI]")
         lc_plugin.viewer = "imviz-1"
 
         lc_plugin.set_north_up_east_right()
@@ -144,8 +144,8 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
 
         # Both viewers should revert back to same reference when pixel-linked.
         lc_plugin.align_by = 'Pixels'
-        assert self.viewer.state.reference_data.label == "has_wcs_1[SCI,1]"
-        assert viewer_2.state.reference_data.label == "has_wcs_1[SCI,1]"
+        assert self.viewer.state.reference_data.label == "has_wcs_1[SCI]"
+        assert viewer_2.state.reference_data.label == "has_wcs_1[SCI]"
 
         lc_plugin.align_by = 'WCS'
         assert self.viewer.state.reference_data.label == "Default orientation"
@@ -173,7 +173,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
 
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI]")
         lc_plugin.viewer = "imviz-1"
         lc_plugin.orientation = "North-up, East-left"
 
@@ -246,4 +246,4 @@ class TestOrientationNoData(BaseImviz_WCS_WCS):
         lc_plugin.viewer = "imviz-1"
         # This would error prior to bugfix
         lc_plugin.orientation = "North-up, East-left"
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI]")

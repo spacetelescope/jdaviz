@@ -42,7 +42,7 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
     def test_wcslink_fallback_pixels(self):
         self.imviz.link_data(align_by='wcs')
 
-        assert self.viewer.get_alignment_method('has_wcs[SCI,1]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs[SCI]') == 'wcs'
 
         # Also check the coordinates display: Last loaded is on top.
 
@@ -65,8 +65,8 @@ class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
         self.check_all_pixel_links()
 
-        assert self.viewer.get_alignment_method('has_wcs[SCI,1]') == 'self'
-        assert self.viewer.get_alignment_method('no_wcs[SCI,1]') == 'pixels'
+        assert self.viewer.get_alignment_method('has_wcs[SCI]') == 'self'
+        assert self.viewer.get_alignment_method('no_wcs[SCI]') == 'pixels'
 
         # Also check the coordinates display: Last loaded is on top.
 
@@ -94,7 +94,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 2
         assert isinstance(links[0], (AffineLink, OffsetLink))
-        assert self.viewer.get_alignment_method('has_wcs_2[SCI,1]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs_2[SCI]') == 'wcs'
 
         # Customize display on second image (last loaded).
         self.viewer.set_colormap('Viridis')
@@ -189,8 +189,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 2
         assert isinstance(links[0], WCSLink)
-        assert self.viewer.get_alignment_method('has_wcs_1[SCI,1]') == 'wcs'
-        assert self.viewer.get_alignment_method('has_wcs_2[SCI,1]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs_1[SCI]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs_2[SCI]') == 'wcs'
 
     # Also test other exception handling here.
 
