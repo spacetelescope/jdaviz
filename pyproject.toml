@@ -153,7 +153,9 @@ filterwarnings = [
     "ignore:.*numpy\\.core.*:DeprecationWarning",
     "ignore:The load_data function is deprecated.*",
     "ignore:.*Set OBSGEO-L to.*",
-    "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",  # windows
+    # This warning will not fail in CI, but causes issues running tests locally on Windows so test locally if considering
+    # removing this in the future
+    "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",
 ]
 
 [tool.coverage.run]
