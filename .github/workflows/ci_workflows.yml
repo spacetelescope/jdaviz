@@ -115,6 +115,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Upload Coverage
     steps:
+    # work around CodeCov upload issue
+    # see: https://github.com/codecov/codecov-action/issues/1801
+    - uses: actions/checkout@v4
     - name: Download coverage artifacts
       uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806  # v4.1.9
       with:
