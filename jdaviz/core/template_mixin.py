@@ -1825,7 +1825,6 @@ class LayerSelect(SelectPluginComponent):
     def _layer_to_dict(self, layer_label):
         is_subset = None
         is_sonified = None
-        audible = None
         subset_type = None
         zorder = None
         from_plugin = None
@@ -1845,7 +1844,6 @@ class LayerSelect(SelectPluginComponent):
                             subset_type = get_subset_type(layer.layer)
                     if is_sonified is None:
                         is_sonified = isinstance(layer, SonifiedDataLayerArtist)
-                        audible = getattr(layer.state, 'audible', False)
                     if zorder is None:
                         zorder = layer.state.zorder
                     if from_plugin is None:
@@ -1853,20 +1851,22 @@ class LayerSelect(SelectPluginComponent):
                     if live_plugin_results is None:
                         live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None  # noqa
 
-                    if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
+                    if is_sonified:
+                        # hard-code sonified layer icon color for data menu and plot options
+                        colors = '#000000'
+                    elif (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
                             and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
                     else:
                         colors.append(layer.state.color)
 
                     visibilities.append(getattr(layer.state, 'bitmap_visible', True)
-                                        and layer.visible)
+                                        and getattr(layer, 'visible' if not is_sonified else 'audible'))  # noqa
                     linewidths.append(getattr(layer.state, 'linewidth', 0))
 
         return {"label": layer_label,
                 "is_subset": is_subset,
                 "is_sonified": is_sonified,
-                "audible": audible,
                 "subset_type": subset_type,
                 "zorder": zorder,
                 "from_plugin": from_plugin,

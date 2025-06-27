@@ -54,9 +54,11 @@ module.exports = {
     visibilityBackgroundStyle(visible) {
       if (visible === 'mixed'){
         return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.3), rgba(0,0,0,0.3) 3px, transparent 3px, transparent 3px, transparent 10px)'
-      }
-      else if (visible) {
+      } else if (visible) {
         return 'repeating-linear-gradient(30deg, transparent, transparent 10px)'
+      } else if (this.colors.length === 1 && this.colors == '#000000') {
+        /* TODO: use this whenever the background is DARK not just completely BLACK */
+        return 'repeating-linear-gradient(30deg, rgba(255,255,255,0.4), rgba(255,255,255,0.4) 8px, transparent 8px, transparent 8px, transparent 10px)'
       } else {
         return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.4), rgba(0,0,0,0.4) 8px, transparent 8px, transparent 8px, transparent 10px)'
       }
