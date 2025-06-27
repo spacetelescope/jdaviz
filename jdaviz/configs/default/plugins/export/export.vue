@@ -164,6 +164,13 @@
           />
         </div>
       </v-row>
+
+      <v-row v-if="subset_format_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+          {{subset_format_invalid_msg}}
+        </span>
+      </v-row>
+
     </div>
 
     <div v-if="plugin_table_items.length > 0 && serverside_enabled">
@@ -272,7 +279,9 @@
         :api_hints_enabled="api_hints_enabled"
         :disabled="filename_value.length === 0 ||
                    movie_recording ||
-                   subset_invalid_msg.length > 0 || data_invalid_msg.length > 0 ||
+                   subset_invalid_msg.length > 0 ||
+                   data_invalid_msg.length > 0 ||
+                   subset_format_invalid_msg.length > 0 ||
                    viewer_invalid_msg.length > 0 ||
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
