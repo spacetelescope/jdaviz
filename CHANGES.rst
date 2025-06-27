@@ -33,6 +33,8 @@ Cubeviz
 
 - Add sonified layer for each cube created by the Sonify Data plugin. [#3430]
 
+- Update sonified layer icon to distinguish from other layers in legend, plot options, and data menu. [#3660]
+
 Imviz
 ^^^^^
 
@@ -152,8 +154,6 @@ Cubeviz
   image viewer. [#3626]
 
 - Broadcast snackbar message to user when sonification of a data cube completes. [#3647]
-
-- Update sonified layer icon to distinguish from other layers in legend, plot options, and data menu. [#3660]
 
 Imviz
 ^^^^^
