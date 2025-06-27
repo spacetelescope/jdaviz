@@ -75,7 +75,7 @@ class SubsetImporter(BaseImporterToPlugin):
     def _set_import_disabled(self, change={}):
         self.resolver.import_disabled = len(self.subset_label_invalid_msg) > 0
 
-    def __call__(self, subset_label=None):
+    def __call__(self):
         if self.subset_label_invalid_msg:
             raise ValueError(self.subset_label_invalid_msg)
         if self.subset_label_value.strip() == self.subset_label_default:

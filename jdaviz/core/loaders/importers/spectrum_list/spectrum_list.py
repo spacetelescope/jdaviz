@@ -65,11 +65,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'spectrum-1d-viewer'
 
-    def __call__(self):
+    def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
-                self.add_to_data_collection(spec, f"{data_label}_{i}", show_in_viewer=True)
+                self.add_to_data_collection(spec, f"{data_label}_{i}",
+                                            show_in_viewer=show_in_viewer)
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
@@ -147,6 +148,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
                                             wave_units,
                                             flux_units)
 
-    def __call__(self):
+    def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
-        self.add_to_data_collection(self.output, f"{data_label}", show_in_viewer=True)
+        self.add_to_data_collection(self.output, f"{data_label}",
+                                    show_in_viewer=show_in_viewer)
