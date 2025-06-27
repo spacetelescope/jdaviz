@@ -5,7 +5,7 @@ Importing Data into Rampviz
 ***************************
 
 
-Level 1 ramp products loaded into Rampviz with
+Level 1 ramp products can be loaded into Rampviz with
 :py:meth:`~jdaviz.configs.rampviz.helper.Rampviz.load_data`. Rampviz loads
 Level 1 ramp cubes from:
 

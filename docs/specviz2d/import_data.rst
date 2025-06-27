@@ -16,7 +16,7 @@ If you are creating your own data products, please read the page :ref:`create_pr
     `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum1d.html#reading-from-a-file>`_
         Specutils documentation on loading data as :class:`~specutils.Spectrum1D` objects.
 
-Specviz2D can either take both a 2D and 1D spectrum as input, or can automatically extract a 1D
+Specviz2D can either take both a 2D or 1D spectrum as input, or can automatically extract a 1D
 spectrum if only a 2D spectrum is provided.  To view the extraction parameters and override the
 extraction, see the :ref:`spectral extraction plugin <specviz2d-spectral-extraction>`.
 

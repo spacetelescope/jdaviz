@@ -126,8 +126,3 @@ Display Settings
 
     :ref:`Display Settings <imviz-display-settings>`
         Documentation on various display settings in the jdaviz viewers.
-
-To access all of the different display settings for an image viewer, click the
-|icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
-Changing the display settings **does not** change the underlying data, only the
-visualization of that data.
