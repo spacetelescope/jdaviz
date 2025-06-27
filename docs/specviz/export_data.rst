@@ -58,13 +58,10 @@ Spectral Regions
 If you have spectral region subsets, you can extract the parameters of these subsets
 as a `specutils spectral region <https://specutils.readthedocs.io/en/stable/spectral_regions.html>`_.
 For a list of available spectral regions to extract, you can type:
-.. comment
-   TODO: We're getting a deprecation warning from astropy about `get_spectral_regions()`
-   It is suggesting to use `subset_tools.get_regions()` instead.
 
 .. code-block:: python
 
-    regions = specviz.get_spectral_regions()
+    regions = specviz.plugins['Subset Tools'].get_regions()
     regions
 
 To extract the spectral region you want:
