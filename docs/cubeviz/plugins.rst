@@ -364,8 +364,7 @@ layers can be adjusted like a mixing board.
     1. Download the latest/stable ``PortAudio`` release from
        `PortAudio's website <https://files.portaudio.com/download.html>`_.
     2. Unpack the tarball and ``cd`` into the ``portaudio`` directory.
-    3. Following the 'debug' build instructions on
-       `PortAudio's website <https://files.portaudio.com/docs/v19-doxydocs/compile_mac_coreaudio.html>`_,
+    3. Following the `'debug' build instructions <https://files.portaudio.com/docs/v19-doxydocs/compile_mac_coreaudio.html>`_,
        run ``./configure --enable-mac-debug && make && sudo make install``. This will place a
        "libportaudio.dylib" in the directory "usr/local/lib/" which ``sounddevice`` will link to.
     4. Install ``sounddevice`` via ``pip`` (*not* ``conda`` as ``conda`` will attempt to install

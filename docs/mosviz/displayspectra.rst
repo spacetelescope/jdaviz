@@ -41,7 +41,7 @@ Plot Settings
         Specviz documentation on plot settings for a 1D spectrum viewer.
 
 Display Settings
-=============
+================
 
 .. seealso::
 

@@ -108,7 +108,7 @@ call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_ex
 
 
 Trace objects created outside of jdaviz can be loaded into the app
-via :py:meth:`~jdaviz.core.helpers.load`:
+via :py:meth:`~jdaviz.core.helpers._load`:
 
 .. code-block:: python
 
@@ -204,7 +204,8 @@ Extraction parameters can be set from the notebook by accessing the plugin.
     sp_ext.ext_type = 'Boxcar'
     sp_ext.ext_width = 8
 
-To export and access the :py:class:`specreduce.extract.SpectralExtraction` object defined
+To export and access
+the :py:class:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction` object defined
 in the plugin,
 call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract`:
 
@@ -215,7 +216,8 @@ call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_ex
 To access the extracted spectrum as a :class:`~specutils.Spectrum1D` object,
 call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract_spectrum`.
 
-To import the parameters from a :py:class:`specreduce.extract.SpectralExtraction` object
+To import the parameters from
+a :py:class:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction` object
 (either a new object, or an exported one modified in the notebook) into the plugin,
 call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_extract`:
 

@@ -362,8 +362,8 @@ bias values by sliding it left.
 Stretch
 -------
 
-The Stretch Function (see `Image stretching and normalization
- <https://docs.astropy.org/en/stable/visualization/normalization.html>`_)
+The Stretch Function
+(see `Image stretching and normalization <https://docs.astropy.org/en/stable/visualization/normalization.html>`_)
 allows you to change the equation that is used to convert data values between
 :guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the
 image. The "Stretch Percentile Preset" can be used to set the :guilabel:`min` and :guilabel:`max`
