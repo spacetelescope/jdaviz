@@ -167,10 +167,10 @@ class BaseImporterToDataCollection(BaseImporter):
         # same class as the input
         self.app.data_collection[data_label]._native_data_cls = data.__class__
 
-    def __call__(self):
+    def __call__(self, show_in_viewer=True):
         if self.data_label_invalid_msg:
             raise ValueError(self.data_label_invalid_msg)
-        self.add_to_data_collection(self.output, show_in_viewer=True)
+        self.add_to_data_collection(self.output, show_in_viewer=show_in_viewer)
 
 
 class BaseImporterToPlugin(BaseImporter):

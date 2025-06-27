@@ -197,8 +197,8 @@ class ImporterUserApi(UserApiWrapper):
             expose += ['data_label']
         super().__init__(importer, expose, readonly, excl_from_dict, deprecated)
 
-    def __call__(self):
-        return self._obj()
+    def __call__(self, *args, **kwargs):
+        return self._obj(*args, **kwargs)
 
     def __repr__(self):
         return f'<{self._obj._registry_label} API>'
