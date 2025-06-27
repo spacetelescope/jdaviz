@@ -149,6 +149,8 @@ Bug Fixes
 
 - Improve performance when adding/removing subsets by avoiding circular callbacks. [#3628]
 
+- Disable export and raise vue error message upon selection of unsupported subset format. [#3635]
+
 - Fixed issue in ``compute_scale`` to handle the case when the wcs forward
   transform does not use units, which was previously causing issues when
   aligning by WCS. [#3658]
