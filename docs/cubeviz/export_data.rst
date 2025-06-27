@@ -43,7 +43,7 @@ first to create a 1D spectrum and then refer to it by label in ``get_data``.
 3D Data Cubes
 =============
 
-To extract the entire cube, you can run the following code (replace `"data_name"`
+To extract the entire cube, you can run the following code (replace "data_name"
 with the name of the data you want to extract):
 
 .. code-block:: python

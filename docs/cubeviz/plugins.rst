@@ -391,7 +391,7 @@ Movie
 .. note::
 
     For MPEG-4, this feature needs ``opencv-python`` to be installed;
-    see `opencv-python on PyPI <https://pypi.org/project/opencv-python/>_`.
+    see `opencv-python on PyPI <https://pypi.org/project/opencv-python/>`_.
 
 Expand the "Export to video" section, then enter the desired starting and
 ending slice indices (inclusive), the frame rate in frames per second (FPS),

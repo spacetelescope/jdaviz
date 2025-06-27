@@ -112,7 +112,7 @@ via :py:meth:`~jdaviz.core.helpers.load`:
 
 .. code-block:: python
 
-    specviz2d.load_trace(my_trace, data_label="my trace")
+    specviz2d.load(my_trace, data_label="my trace")
 
 or directly into the plugin
 via :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_trace`
