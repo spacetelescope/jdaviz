@@ -147,17 +147,15 @@ To export the table into the notebook, call
 
 Unit Conversion
 ===============
-.. comment
-   TODO: The pull down labels have changed and are deprecated!
 
 The spectral flux density and spectral axis units can be converted
 using the Unit Conversion plugin.
 
 Select the frequency, wavelength, or energy unit in the
-:guilabel:`New Spectral Axis Unit` pulldown
+:guilabel:`Spectral Unit` pulldown
 (e.g., Angstrom, Hertz, erg).
 
-Select the flux density unit in the :guilabel:`New Flux Unit` pulldown
+Select the flux density unit in the :guilabel:`Flux Unit` pulldown
 (e.g., Jansky, W/Hz/m2, ph/Angstrom cm2 s).
 
 Note that this affects the default units in all viewers and plugins, where applicable,
