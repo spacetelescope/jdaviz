@@ -559,7 +559,7 @@ def test_deconf_mf_with_subset(deconfigged_helper):
     flux[7] = 10 * u.Jy
     wavelength = np.arange(9) * u.um
     spec = Spectrum1D(flux=flux, spectral_axis=wavelength)
-    deconfigged_helper.load(spec, data_label="1D Spectrum")
+    deconfigged_helper.load(spec, data_label="1D Spectrum", format='1D Spectrum')
 
     subset = deconfigged_helper.plugins['Subset Tools']
     subset.import_region(SpectralRegion(6 * u.Unit('um'), 7 * u.Unit('um')))
