@@ -203,8 +203,8 @@ the location of that marker along with the applicable data and viewer labels int
 
 With the plugin open in the tray, mouse over any viewer and press the "m" key to log the information
 displayed in the app toolbar into the table.  The markers remain at that fixed pixel-position in
-the viewer they were created (regardless of changes to the underlying data or linking) and are only
-visible when the plugin is opened.
+the viewer they were created (regardless of changes to the underlying data or linking,
+see :ref:`dev_glue_linking`) and are only visible when the plugin is opened.
 
 In Imviz, the table also exposes columns labeled "pixel:unreliable", "world:unreliable", and
 "value:unreliable".  These will be logged as ``True`` in cases where the information is outside
@@ -250,9 +250,6 @@ any data without WCS can no longer be shown in WCS linking mode.
 For the best experience, it is recommended that you decide what kind of
 link you want and set it at the beginning of your Imviz session,
 rather than later.
-
-[TODO: We should introduce glue linking earlier since we discuss
-it in some of the above paragraphs.]: #
 
 For more details on linking, see :ref:`dev_glue_linking`.
 
