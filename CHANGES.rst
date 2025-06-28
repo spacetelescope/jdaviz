@@ -28,6 +28,8 @@ New Features
 
 - Aperture Photometry public API exposed, added API hints to plugin. [#3617]
 
+- Allow custom resolutions when exporting viewers to png or mp4. [#3478]
+
 Cubeviz
 ^^^^^^^
 
