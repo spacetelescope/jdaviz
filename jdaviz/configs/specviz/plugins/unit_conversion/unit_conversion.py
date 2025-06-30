@@ -2,6 +2,7 @@ from contextlib import nullcontext
 from functools import cached_property
 
 from astropy import units as u
+from glue.core import Data as glue_core_data
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
 from specutils import Spectrum1D
@@ -205,15 +206,21 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
+        if isinstance(msg.data, glue_core_data):
+            data_obj = None
 
         if (not len(self.spectral_unit_selected)
                 or not len(self.flux_unit_selected)
                 or not len(self.angle_unit_selected)
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
-            data_obj = msg.data.get_object()
-            if isinstance(data_obj, Spectrum1D):
 
-                self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)  # noqa
+            data_obj = msg.data.get_object()
+
+            # if the viewer is spectral and the data is Spectrum1D, get flux/sb/spectral
+            # axis units from the Spectrum 1D object
+            if isinstance(data_obj, Spectrum1D) and isinstance(viewer, Spectrum1DViewer):
+                self.spectral_unit._addl_unit_strings = viewer.state.__class__.x_display_unit.get_choices(viewer.state)  # noqa
+
                 if not len(self.spectral_unit_selected):
                     try:
                         self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
@@ -280,7 +287,50 @@ class UnitConversion(PluginTemplateMixin):
             # set the attribute display unit (contour and stretch units) for the new layer
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
+<<<<<<< HEAD
             self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
+=======
+
+            if not isinstance(data_obj, tracing.FlatTrace):
+
+                if not len(self.spectral_unit_selected):
+                    try:
+                        self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
+                    except ValueError:
+                        self.spectral_unit.selected = ''
+
+                if not self.flux_unit_selected:
+                    # get flux/sb unit from data object, and solid angle to turn sb into flux
+                    angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit,
+                                                                  return_unit=True)
+                    flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
+
+                    self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
+                    try:
+                        self.flux_unit.selected = str(flux_unit)
+                    except ValueError:
+                        self.flux_unit.selected = ''
+
+                if not self.angle_unit_selected:
+                    angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit,
+                                                                  return_unit=True)
+                    self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
+                    try:
+                        if angle_unit is None:
+                            if self.config == 'specviz2d':
+                                self.has_angle = False
+                                self.has_sb = False
+                            else:
+                                # default to pix2 if input data is not in surface brightness units
+                                # TODO: for cubeviz, should we check the cube itself?
+                                self.angle_unit.selected = 'pix2'
+                        else:
+                            self.angle_unit.selected = str(angle_unit)
+                    except ValueError:
+                        self.angle_unit.selected = ''
+
+            if self.angle_unit:
+                self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
             self._clear_cache('image_layers')
 
     def _on_slice_changed(self, msg):
