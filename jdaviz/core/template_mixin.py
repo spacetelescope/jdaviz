@@ -3955,6 +3955,9 @@ class DatasetSelect(SelectPluginComponent):
                     and data.coords is not None
                     and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
 
+        def is_spectral(data):
+            return is_spectrum(data) or (is_cube(data) and getattr(data.coords, 'is_spectral', False))
+
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
                 uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
