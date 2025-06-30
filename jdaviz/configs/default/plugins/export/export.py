@@ -150,9 +150,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                  {'label': 'reg', 'value': 'reg'},
                                  {'label': 'ecsv', 'value': 'ecsv'}]
 
-        if self.config == 'imviz':
-            subset_format_options.append({'label': 'stcs', 'value': 'stcs'})
-
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
