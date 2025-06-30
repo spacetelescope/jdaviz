@@ -57,6 +57,11 @@ def app(replace=False, set_as_current=True):
     """
     global _apps
     global _current_index
+    # NOTE: here we call this "App" for the user, but it is really the "deconfigged"
+    # config-helper, which in turn has a .app to access the internal/private Application
+    # instance.  After the other configs pass their deprecation period, we should try to
+    # rename the internal Application instance and/or merge functionality in with the
+    # App class to avoid confusion.
     ca = App(api_hints_obj='jd')
     if replace:
         _apps[_current_index] = ca
