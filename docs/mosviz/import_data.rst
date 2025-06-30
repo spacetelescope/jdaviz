@@ -101,8 +101,6 @@ The NIRCam parser expects ``*_cal.fits`` and ``*_x1d`` files in the same format 
 
 Manual Loading
 ==============
-.. comment
-   TODO: should `load_data` be deprecated for `load` as in specviz and possibly other configs?
 
 If an automatic parser is not provided yet for your data, Mosviz provides manual loading by
 specifying which files are which, and the associations between them. This is done by

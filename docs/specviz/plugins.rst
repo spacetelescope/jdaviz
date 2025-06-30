@@ -184,10 +184,7 @@ Preset Line Lists via the :guilabel:`Available Line Lists`
 pulldown.
 They are loaded and displayed by pressing :guilabel:`Load List`.
 Each loaded list is shown under :guilabel:`Loaded Lines` and can
-be be removed by pressing the :guilabel:`circled-x` button.
-
-.. comment
-   TODO: is there any way we can insert an icon of the circled-x?
+be be removed manually.
 
 .. image:: ../img/line_lists.png
 
