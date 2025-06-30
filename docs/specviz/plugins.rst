@@ -1,6 +1,4 @@
 .. _specviz-plugins:
-.. comment
-   TODO: Tab label shows v0.1dev...
 
 *********************
 Data Analysis Plugins
