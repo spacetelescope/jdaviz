@@ -34,7 +34,8 @@ from jdaviz.utils import PRIHDR_KEY
 __all__ = ['SimpleAperturePhotometry']
 
 
-@tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
+@tray_registry('imviz-aper-phot-simple', label="Aperture Photometry",
+               category="data:analysis")
 class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                DatasetMultiSelectMixin, TableMixin, PlotMixin, MultiselectMixin):
     """
@@ -121,6 +122,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
 
+        self.dataset.add_filter('is_image')
+
         self.background = SubsetSelect(self,
                                        'background_items',
                                        'background_selected',
@@ -180,6 +183,15 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             self.hub.subscribe(self, GlobalDisplayUnitChanged,
                                handler=self._on_display_units_changed)
+
+        self._set_relevant()
+
+    @observe('dataset_items')
+    def _set_relevant(self, *args):
+        if not len(self.dataset_items):
+            self.irrelevant_msg = 'No image layers'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def user_api(self):
