@@ -784,7 +784,7 @@ class DistanceLabel(Label, PluginMark, HubListener):
         kwargs.setdefault('baseline', 'middle')
         kwargs.setdefault('x_offset', 0)
         kwargs.setdefault('y_offset', 0)
-        
+
         super().__init__(x=[x], y=[y], text=[text], scales=viewer.scales, **kwargs)
         self.auto_update_units = False
 
@@ -830,9 +830,9 @@ class DistanceMeasurement:
             colors=['black'],
             stroke_width=12,
             font_weight='bold',
-            default_size=22          
+            default_size=22
         )
-        
+
         self.label_text = DistanceLabel(
             viewer, anchor_x, anchor_y, text,
             colors=[accent_color],
@@ -856,7 +856,7 @@ class DistanceMeasurement:
         self.line.visible = visible
         self.label_shadow.visible = visible
         self.label_text.visible = visible
-    
+
     def update_points(self, x0, y0, x1, y1, text=""):
         x0_v = getattr(x0, 'value', x0)
         y0_v = getattr(y0, 'value', y0)
@@ -871,10 +871,10 @@ class DistanceMeasurement:
 
         dx_data = x1_v - x0_v
         dy_data = y1_v - y0_v
-        
+
         angle_rad = np.arctan2(-dy_data, dx_data)
         angle_deg = np.rad2deg(angle_rad)
-        
+
         # Check for the special case of a perfect diagonal line.
         # A small tolerance is used for floating-point comparison.
         if abs(abs(dx_data) - abs(dy_data)) < 1e-9:
@@ -913,7 +913,7 @@ class DistanceMeasurement:
         # Normalize the display angle for readability.
         if abs(angle_deg) > 90:
             angle_deg -= 180 * np.sign(angle_deg)
-        
+
         for label in (self.label_shadow, self.label_text):
             label.x = [mid_x]
             label.y = [mid_y]
@@ -921,4 +921,3 @@ class DistanceMeasurement:
             label.rotate_angle = angle_deg
             label.x_offset = x_offset_int
             label.y_offset = -y_offset_int
-
