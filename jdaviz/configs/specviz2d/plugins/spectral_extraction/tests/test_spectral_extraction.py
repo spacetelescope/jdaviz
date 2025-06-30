@@ -186,14 +186,25 @@ def test_user_api(specviz2d_helper):
 
 @pytest.mark.remote_data
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
-def test_spectrum_on_top(specviz2d_helper):
-    fn = download_file('https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits', cache=True)  # noqa
+def test_background_extraction_and_display(specviz2d_helper):
+    uri = 'mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
+    fn = download_file(f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}',
+                       cache=True)
 
     specviz2d_helper.load_data(spectrum_2d=fn)
-
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+
+    # check that the background extraction method and parameters are as expected
     assert pext.bg_type_selected == 'TwoSided'
     np.testing.assert_allclose(pext.bg_separation, 6)
+
+    # test extracting background and background subtracted images and adding
+    # them to the viewer
+    pext.export_bg_sub(add_data=True)
+    assert specviz2d_helper.app.data_collection[2].label == 'background-subtracted'
+
+    pext.export_bg_img(add_data=True)
+    assert specviz2d_helper.app.data_collection[3].label == 'background'
 
 
 @pytest.mark.filterwarnings('ignore')
