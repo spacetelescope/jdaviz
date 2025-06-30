@@ -28,6 +28,11 @@ class TestExportSubsets:
         subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
         export_plugin = imviz_helper.plugins['Export']._obj
+
+        # Check initialization of these two
+        assert export_plugin.subset_invalid_msg == ''
+        assert export_plugin.subset_format_invalid_msg == ''
+
         export_plugin.subset.selected = 'Subset 1'
 
         assert export_plugin.subset_format.selected == 'fits'  # default format
@@ -90,7 +95,7 @@ class TestExportSubsets:
 
     def test_export_subsets_wcs(self, imviz_helper, spectral_cube_wcs):
 
-        # using cube WCS instead of 2d imaging wcs for consistancy with
+        # using cube WCS instead of 2d imaging wcs for consistency with
         # cubeviz test. accessing just the spatial part of this.
         wcs = spectral_cube_wcs.celestial
 
@@ -123,13 +128,17 @@ class TestExportSubsets:
 
         cubeviz_helper.load_data(data)
         subset_plugin = cubeviz_helper.plugins['Subset Tools']
+
         subset_plugin.import_region(CircularROI(xc=50, yc=50, radius=10))
 
         export_plugin = cubeviz_helper.plugins['Export']._obj
+
+        assert export_plugin.subset_invalid_msg == ''
+        assert export_plugin.subset_format_invalid_msg == ''
+
         export_plugin.subset.selected = 'Subset 1'
 
         assert export_plugin.subset_format.selected == 'fits'  # default format
-
         assert export_plugin.filename.value.endswith('.fits')
         export_plugin.export()
         assert os.path.isfile(export_plugin.filename.value)
@@ -183,17 +192,22 @@ class TestExportSubsets:
                            match=re.escape("'x' not one of ['fits', 'reg', 'ecsv'], reverting selection to 'reg'")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
-        # Test that selecting disabled option raises an error
-        with pytest.raises(ValueError, match="Cannot export Subset 1 in ecsv format, reverting selection to fits"):  # noqa
-            export_plugin.subset_format.selected = 'ecsv'
+        # Test that attempting to export with disabled option raises an error
+        export_plugin.subset_format.selected = 'ecsv'
+        with pytest.raises(ValueError,
+                           match="Export of 'Subset 1' "
+                                 "in 'ecsv' format is not supported."):  # noqa
+            export_plugin.export()
 
         # test that attempting to save a composite subset raises an error
         subset_plugin.combination_mode.selected = 'and'
         subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
         subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5))
 
+        export_plugin.subset.selected = 'Subset 1'
+        assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
         with pytest.raises(NotImplementedError,
-                           match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
+                           match='Subset cannot be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
 
         # Test saving spectral subset
@@ -204,17 +218,14 @@ class TestExportSubsets:
                                                    15.5 * spectral_axis_unit))
         export_plugin.subset.selected = 'Subset 2'
 
-        # Format should auto-update to first non-disabled entry
-        assert export_plugin.subset_format.selected == 'ecsv'
-        for format in export_plugin.subset_format.items:
-            if format['label'] != 'ecsv':
-                assert format['disabled']
-            else:
-                assert format['disabled'] is False
-
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
         assert os.path.isfile('test_spectral_region.ecsv')
+
+        export_plugin.subset_format.selected = 'fits'
+        with pytest.raises(ValueError,
+                           match="Export of 'Subset 2' in 'fits' format is not supported."):  # noqa
+            export_plugin.export()
 
 
 @pytest.mark.usefixtures('_jail')
