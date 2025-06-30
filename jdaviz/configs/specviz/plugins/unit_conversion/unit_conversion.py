@@ -233,7 +233,7 @@ class UnitConversion(PluginTemplateMixin):
                 or not len(self.angle_unit_selected)
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
 
-            data_obj = msg.data.get_object()
+            data_obj = self.app._jdaviz_helper.get_data(msg.data.label)
 
             # if the viewer is spectral and the data is Spectrum1D, get flux/sb/spectral
             # axis units from the Spectrum 1D object
