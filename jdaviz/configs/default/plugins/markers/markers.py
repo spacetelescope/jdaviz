@@ -66,7 +66,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'index', 'value', 'value:unit']
 
-        elif self.config in ('specviz2d', 'deconfigged'):
+        elif self.config in ('specviz2d'):
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'value', 'value:unit', 'viewer']
@@ -75,6 +75,13 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'world_ra', 'world_dec', 'index',
                        'value', 'value:unit', 'viewer']
+        elif self.config == 'deconfigged':
+            # for now combination of specviz2d + imviz (will eventually need more)
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'pixel_x', 'pixel_y', 'pixel:unreliable',
+                       'world_ra', 'world_dec', 'world:unreliable',
+                       'value', 'value:unit', 'value:unreliable',
+                       'viewer']
         else:
             # allow downstream configs to override headers
             headers = kwargs.get('headers', [])
