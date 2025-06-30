@@ -103,24 +103,25 @@ class ImageImporter(BaseImporterToDataCollection):
 
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
+        output = self.output
         # region
-        if isinstance(self.output, str) and self.input.endswith('.reg'):
-            self.app.get_tray_item_from_name('Subset Tools').import_region(self.output)
+        if isinstance(output, str) and self.input.endswith('.reg'):
+            self.app.get_tray_item_from_name('Subset Tools').import_region(output)
         # nddata
-        elif isinstance(self.output, NDData):
-            returned_data = _nddata_to_glue_data(self.output, data_label)
+        elif isinstance(output, NDData):
+            returned_data = _nddata_to_glue_data(output, data_label)
             for data_label, data in returned_data.items():
                 self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
                                             cls=self.input.__class__)
         # ndarray
-        elif isinstance(self.output, np.ndarray):
-            data = _ndarray_to_glue_data(self.output, data_label)
+        elif isinstance(output, np.ndarray):
+            data = _ndarray_to_glue_data(output, data_label)
             self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
                                         cls=self.input.__class__)
         # asdf
-        elif (isinstance(self.output, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel))):
-            returned_data = _roman_asdf_2d_to_glue_data(self.output, data_label)
+        elif (isinstance(output, asdf.AsdfFile) or
+              (HAS_ROMAN_DATAMODELS and isinstance(output, rdd.DataModel))):
+            returned_data = _roman_asdf_2d_to_glue_data(output, data_label)
             for data_label, data in returned_data.items():
                 self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
                                             cls=self.input.__class__)
@@ -132,8 +133,9 @@ class ImageImporter(BaseImporterToDataCollection):
         # fits
         else:
             with self.app._jdaviz_helper.batch_load():
-                for ext, spec in zip(self.extension.selected_name, self.output):
-                    self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True,
+                for ext, ext_output in zip(self.extension.selected_name, output):
+                    self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
+                                                show_in_viewer=show_in_viewer,
                                                 cls=self.input.__class__)
 
 
