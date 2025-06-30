@@ -172,7 +172,7 @@ class Imviz(ImageConfigHelper):
                 else:
                     kw['data_label'] = data_label
                 self.loaders['file'].filepath = filepath
-                self.loaders['file'].target = 'Any'
+                # self.loaders['file'].target = 'Any'
                 self.loaders['file'].format = 'Image'
                 self.loaders['file'].importer.data_label = (data_label if data_label is not None
                                                             else cur_data_label)
