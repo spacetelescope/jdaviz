@@ -147,12 +147,12 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                 # raising an error here will allow using specutils.Spectrum > Spectrum2D
                 raise
 
-    def __call__(self):
+    def __call__(self, show_in_viewer=True):
         # get a copy of both of these before additional data entries changes defaults
         data_label = self.data_label_value
         ext_data_label = self.ext_data_label_value
 
-        super().__call__()
+        super().__call__(show_in_viewer=show_in_viewer)
 
         if not self.auto_extract:
             return
