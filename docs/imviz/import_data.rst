@@ -71,7 +71,9 @@ field. To instead see all available archives on the IVOA registry, toggle the :g
 Additionally, select the corresponding waveband of the archive you are looking for;
 this will limit the query to
 archives and services within your specified wavelength range.
-Waveband definitions can be found here. .. TODO: missing link on 'here'?
+Waveband definitions can be found here.
+.. comment
+   TODO: missing link on 'here'?
 
 After selecting the waveband, the plugin will query the VO registry for services that match the provided criteria.
 If coverage filtering is enabled, only archives and surveys that report coverage within the user's specified area
