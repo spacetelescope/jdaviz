@@ -109,6 +109,7 @@ call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_ex
 
 Trace objects created outside of jdaviz can be loaded into the app
 via :py:meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_trace`:
+
 .. comment
    TODO: this code needs a sanity check... should load be used instead? If so, that too is failing.
 

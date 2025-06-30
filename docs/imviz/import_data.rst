@@ -72,6 +72,7 @@ Additionally, select the corresponding waveband of the archive you are looking f
 this will limit the query to
 archives and services within your specified wavelength range.
 Waveband definitions can be found here.
+
 .. comment
    TODO: missing link on 'here'?
 
