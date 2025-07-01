@@ -237,14 +237,11 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):
-        # use non-default GWCS rather than FITS SIP (not the default),
-        # to test the GWCS compatibility:
-        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = False
 
         # Default behavior: Science image
         with pytest.warns(UserWarning, match='You may be querying for a remote file'):
             # if you don't pass a `cache` value, a warning should be raised:
-            imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100)
+            imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100, gwcs_to_fits_sip=False)
 
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('DATA')
@@ -533,20 +530,8 @@ class TestParseImage:
          (False, GWCS),)
     )
     def test_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, gwcs_to_fits_sip=gwcs_to_fits_sip)
-
-        data = imviz_helper.app.data_collection[0]
-        assert isinstance(data.coords, expected_cls)
-
-    @pytest.mark.remote_data
-    @pytest.mark.parametrize(
-        ('gwcs_to_fits_sip', 'expected_cls'),
-        ((True, WCS),
-         (False, GWCS),)
-    )
-    def test_orientation_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
-        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = gwcs_to_fits_sip
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True)
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True,
+                               gwcs_to_fits_sip=gwcs_to_fits_sip)
 
         data = imviz_helper.app.data_collection[0]
         assert isinstance(data.coords, expected_cls)
