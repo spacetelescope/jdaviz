@@ -85,8 +85,8 @@ class ImageImporter(BaseImporterToDataCollection):
         are met but this approximation is not possible, a warning will be
         emitted and the original GWCS will be used.
         """
-        wcs = data.coords
-        if data.coords and self.gwcs_to_fits_sip and isinstance(wcs, GWCS):
+        wcs = glue_data.coords
+        if glue_data.coords and self.gwcs_to_fits_sip and isinstance(wcs, GWCS):
             glue_data.coords = _try_gwcs_to_fits_sip(wcs)
 
     @property
