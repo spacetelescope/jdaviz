@@ -39,7 +39,6 @@ class ImageImporter(BaseImporterToDataCollection):
     extension_items = List().tag(sync=True)
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
-    has_gwcs = Bool(False).tag(sync=True)
     gwcs_to_fits_sip = Bool(False).tag(sync=True)
     has_gwcs = Bool(False).tag(sync=True)
 
