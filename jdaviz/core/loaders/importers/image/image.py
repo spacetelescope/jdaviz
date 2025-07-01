@@ -41,6 +41,7 @@ class ImageImporter(BaseImporterToDataCollection):
     extension_multiselect = Bool(True).tag(sync=True)
     has_gwcs = Bool(False).tag(sync=True)
     gwcs_to_fits_sip = Bool(False).tag(sync=True)
+    has_gwcs = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -107,27 +108,28 @@ class ImageImporter(BaseImporterToDataCollection):
         data_label = self.data_label_value
         if isinstance(self.output, NDData):
             data, data_label = _nddata_to_glue_data(self.output, data_label)
-            self._glue_data_wcs_to_fits(data)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         elif isinstance(self.output, np.ndarray):
             data = _ndarray_to_glue_data(self.output, data_label)
-            self._glue_data_wcs_to_fits(data)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         elif (isinstance(self.output, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel))):
             data, data_label = _roman_asdf_2d_to_glue_data(self.output, data_label,
                                                            self.gwcs_to_fits_sip)
-            self._glue_data_wcs_to_fits(data)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
-            self._glue_data_wcs_to_fits(data)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, spec in zip(self.extension.selected_name, self.output):
+                    # if any of the inputs have a GWCS, expose the FITS SIP approximation toggle
+                    if not self.has_gwcs:
+                        self.has_gwcs = isinstance(data.coords, GWCS)
+
                     self._glue_data_wcs_to_fits(spec)
                     self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True)
+                    return
+
+        self.has_gwcs = isinstance(data.coords, GWCS)
+        self._glue_data_wcs_to_fits(data)
+        self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):

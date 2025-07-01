@@ -23,7 +23,7 @@
       ></plugin-auto-label>
     </v-row>
     <v-row>
-      <plugin-switch
+      <plugin-switch v-if="has_gwcs"
         :value.sync="gwcs_to_fits_sip"
         label="Approximate GWCS with FITS SIP"
         api_hint="ldr.gwcs_to_fits_sip = "
