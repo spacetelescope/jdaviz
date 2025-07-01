@@ -333,7 +333,7 @@
                 <g-viewer-tab
                   v-for="(stack, index) in state.stack_items"
                   :stack="stack"
-                  :key="stack.viewers.map(v => v.id).join('-')"
+                  :key="stack.viewers.map(v => v.id).join('-') + stack.children.map(v => v.id).join('-')"
                   :data_items="state.data_items"
                   :app_settings="state.settings"
                   :config="config"
