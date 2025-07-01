@@ -1,3 +1,4 @@
+import time
 from traitlets import Bool, List, Unicode, observe
 import astropy.units as u
 
@@ -99,6 +100,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         You can select the device index for audio output and also use a spectral subset to set a
         range for sonification.
         """
+        t0 = time.time()
         current_label = self.results_label
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
@@ -124,13 +126,13 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                                            self.ssvidx, self.pccut, self.audfrqmin,
                                                            self.audfrqmax, self.eln,
                                                            self.use_pccut, self.results_label)
-        #self.app.data_collection[current_label] = sonified_cube
         sonified_cube.meta['Sonified'] = True
         self.add_results.add_results_from_plugin(sonified_cube, replace=False)
 
         self.flux_viewer.recalculate_combined_sonified_grid()
 
-        msg = SnackbarMessage(f"'{previous_label}' sonified successfully.",
+        t1 = time.time()
+        msg = SnackbarMessage(f"'{previous_label}' sonified successfully in {t1-t0} seconds.",
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)

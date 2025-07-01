@@ -134,11 +134,15 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             data_unit = u.count
 
         try:
-            return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs)
+            if wcs.world_axis_physical_types == [None, None]:
+                # specutils will complain in the case of an input
+                # pixel to pixel table with no units
+                wcs = None
+            return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
-            # In some cases, the above call to Spectrum1D will fail if no
+            # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,
-            # the Spectrum1D.read parser may work, so we try that next.
+            # the Spectrum.read parser may work, so we try that next.
             # If that also fails, then drop the WCS.
             try:
                 Spectrum.read(self._resolver())
