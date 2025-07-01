@@ -122,7 +122,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                                            self.ssvidx, self.pccut, self.audfrqmin,
                                                            self.audfrqmax, self.eln,
                                                            self.use_pccut, self.results_label)
-        #self.app.data_collection[current_label] = sonified_cube
         sonified_cube.meta['Sonified'] = True
         self.add_results.add_results_from_plugin(sonified_cube, replace=False)
 
