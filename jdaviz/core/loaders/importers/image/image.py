@@ -101,7 +101,7 @@ class ImageImporter(BaseImporterToDataCollection):
         return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
                 for hdu in self.extension.selected_hdu]
 
-    def __call__(self):
+    def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
         # region
         if isinstance(self.output, str) and self.input.endswith('.reg'):
@@ -110,26 +110,31 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(self.output, NDData):
             returned_data = _nddata_to_glue_data(self.output, data_label)
             for data_label, data in returned_data.items():
-                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                            cls=self.input.__class__)
         # ndarray
         elif isinstance(self.output, np.ndarray):
             data = _ndarray_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                        cls=self.input.__class__)
         # asdf
         elif (isinstance(self.output, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel))):
             returned_data = _roman_asdf_2d_to_glue_data(self.output, data_label)
             for data_label, data in returned_data.items():
-                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                            cls=self.input.__class__)
         # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                        cls=self.input.__class__)
         # fits
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, spec in zip(self.extension.selected_name, self.output):
-                    self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True)
+                    self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True,
+                                                cls=self.input.__class__)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):

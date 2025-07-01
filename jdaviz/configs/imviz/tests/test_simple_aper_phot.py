@@ -255,7 +255,7 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         )  # Draw a circle
         phot_plugin = self.imviz.plugins['Aperture Photometry']
 
-        print(phot_plugin.dataset.choices)
+        # print(phot_plugin.dataset.choices, phot_plugin.dataset.selected)
         phot_plugin.dataset_selected = 'has_wcs[SCI]'
         phot_plugin.aperture_selected = 'Subset 1'
         phot_plugin.vue_do_aper_phot()
