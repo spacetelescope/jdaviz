@@ -31,17 +31,14 @@ def _valid_glue_display_unit(unit_str, viewer, axis='x'):
     # astropy)
     if not unit_str or not viewer:
         return unit_str
-    if isinstance(viewer, JdavizProfileView):
-        unit_u = u.Unit(unit_str)
-        choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(viewer.state)  # noqa
-        choices_str = [choice for choice in choices_str if choice is not None]
-        choices_u = [u.Unit(choice) for choice in choices_str]
-        if unit_u not in choices_u:
-            raise ValueError(f"{unit_str} could not find match in valid {axis} display units {choices_str}")  # noqa
-        ind = choices_u.index(unit_u)
-        return choices_str[ind]
-    else:
-        return unit_str
+    unit_u = u.Unit(unit_str)
+    choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(viewer.state)  # noqa
+    choices_str = [choice for choice in choices_str if choice is not None]
+    choices_u = [u.Unit(choice) for choice in choices_str]
+    if unit_u not in choices_u:
+        raise ValueError(f"{unit_str} could not find match in valid {axis} display units {choices_str}")  # noqa
+    ind = choices_u.index(unit_u)
+    return choices_str[ind]
 
 
 def _flux_to_sb_unit(flux_unit, angle_unit):
@@ -208,7 +205,7 @@ class UnitConversion(PluginTemplateMixin):
     def spectral_y_unit(self):
         return self.sb_unit_selected if self.spectral_y_type_selected == 'Surface Brightness' else self.flux_unit_selected  # noqa
 
-    @cached_property
+    @property
     def image_layers(self):
         return [layer
                 for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)  # noqa
@@ -231,7 +228,8 @@ class UnitConversion(PluginTemplateMixin):
         if (not len(self.spectral_unit_selected)
                 or not len(self.flux_unit_selected)
                 or not len(self.angle_unit_selected)
-                or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
+                or (self.config in ('cubeviz', 'deconfigged')
+                    and not len(self.spectral_y_type_selected))):
 
             data_obj = self.app._jdaviz_helper.get_data(msg.data.label)
 
@@ -463,19 +461,25 @@ class UnitConversion(PluginTemplateMixin):
 
         for layer in layers:
             # DQ layer doesn't play nicely with this attribute
+            # TODO: detect a DQ layer in a way that doesn't depend on the label
+            if not hasattr(layer.state, 'attribute_display_unit'):
+                continue
             if "DQ" in layer.layer.label or isinstance(layer.layer, GroupedSubset):
                 continue
-            elif ("flux" not in [str(c) for c in layer.layer.components]
-                    or u.Unit(layer.layer.get_component("flux").units).physical_type != 'surface brightness'):  # noqa
+            for comp in layer.layer.components:
+                if u.Unit(layer.layer.get_component(comp).units).physical_type == 'surface brightness':  # noqa
+                    break
+            else:
+                # if no component with surface brightness units, skip this layer
                 continue
-            if hasattr(layer.state, 'attribute_display_unit'):
-                if self.config == "cubeviz":
-                    ctx = u.set_enabled_equivalencies(
-                        u.spectral() + u.spectral_density(self._cube_wave) +
-                        _eqv_flux_to_sb_pixel() +
-                        _eqv_pixar_sr(layer.layer.meta.get('_pixel_scale_factor', 1)))
-                else:
-                    ctx = nullcontext()
-                with ctx:
-                    layer.state.attribute_display_unit = _valid_glue_display_unit(
-                        attr_unit, layer, 'attribute')
+
+            if self.config == "cubeviz":
+                ctx = u.set_enabled_equivalencies(
+                    u.spectral() + u.spectral_density(self._cube_wave) +
+                    _eqv_flux_to_sb_pixel() +
+                    _eqv_pixar_sr(layer.layer.meta.get('_pixel_scale_factor', 1)))
+            else:
+                ctx = nullcontext()
+            with ctx:
+                layer.state.attribute_display_unit = _valid_glue_display_unit(
+                    attr_unit, layer, 'attribute')

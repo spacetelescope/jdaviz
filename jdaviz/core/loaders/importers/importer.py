@@ -164,6 +164,7 @@ class BaseImporterToDataCollection(BaseImporter):
         # store the original input class so that get_data can default to the
         # same class as the input
         self.app.data_collection[data_label]._native_data_cls = data.__class__ if cls is None else cls
+        self.app.data_collection[data_label]._importer = self.__class__.__name__
         if show_in_viewer:
             self.load_into_viewer(data_label)
 
