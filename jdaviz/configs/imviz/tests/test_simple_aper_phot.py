@@ -42,22 +42,22 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.aperture.selected = phot_plugin.aperture.labels[0]
         assert_allclose(phot_plugin.background_value, 0)
 
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI]'
-        phot_plugin.aperture_selected = phot_plugin.aperture.labels[0]
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI]'
+        phot_plugin.aperture.selected = phot_plugin.aperture.labels[0]
         with pytest.raises(ValueError):
             phot_plugin.background.selected = 'no_such_subset'
         assert phot_plugin.background.selected == 'Manual'
         assert_allclose(phot_plugin.background_value, 0)
 
         # Perform photometry on both images using same Subset.
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI]'
-        phot_plugin.aperture_selected = 'Subset 1'
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI]'
+        phot_plugin.aperture.selected = 'Subset 1'
         assert phot_plugin.dataset.selected_dc_item is not None
         phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
-        phot_plugin.dataset_selected = 'has_wcs_2[SCI]'
+        phot_plugin.dataset.selected = 'has_wcs_2[SCI]'
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         assert phot_plugin.dataset.selected_dc_item is not None
         assert phot_plugin.aperture.selected_spatial_region is not None
@@ -122,8 +122,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.plugins['Subset Tools'].combination_mode = 'new'
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI]'
-        phot_plugin.aperture_selected = 'Subset 2'
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI]'
+        phot_plugin.aperture.selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
@@ -146,9 +146,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.plugins['Subset Tools'].combination_mode = 'new'
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
-        phot_plugin.dataset_selected = 'has_wcs_1[SCI]'
-        phot_plugin.aperture_selected = 'Subset 3'
-        phot_plugin.background_selected = 'Subset 3'
+        phot_plugin.dataset.selected = 'has_wcs_1[SCI]'
+        phot_plugin.aperture.selected = 'Subset 3'
+        phot_plugin.background.selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
         phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
@@ -174,7 +174,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         hdu3 = fits.ImageHDU(np.ones((10, 10)) + 1, name='SCI')
         hdu3.header.update(self.wcs_2.to_header())
         self.imviz.load_data(hdu3, data_label='twos')
-        phot_plugin.dataset_selected = 'twos[SCI]'
+        phot_plugin.dataset.selected = 'twos[SCI]'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
         # Curve of growth
@@ -216,7 +216,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         )  # Draw a circle
 
         # TODO: remove ._obj when API is made public
-        phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
+        phot_plugin = self.imviz.plugins['Aperture Photometry']
         assert phot_plugin.dataset.choices == ['has_wcs_1[SCI]', 'has_wcs_2[SCI]']
         assert phot_plugin.aperture.choices == ['Subset 1']
 
@@ -256,14 +256,14 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         phot_plugin = self.imviz.plugins['Aperture Photometry']
 
         # print(phot_plugin.dataset.choices, phot_plugin.dataset.selected)
-        phot_plugin.dataset_selected = 'has_wcs[SCI]'
-        phot_plugin.aperture_selected = 'Subset 1'
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin.dataset.selected = 'has_wcs[SCI]'
+        phot_plugin.aperture.selected = 'Subset 1'
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 1
 
-        phot_plugin.dataset_selected = 'no_wcs[SCI]'
-        phot_plugin.vue_do_aper_phot()
+        phot_plugin.dataset.selected = 'no_wcs[SCI]'
+        phot_plugin._obj.vue_do_aper_phot()
         tbl = phot_plugin.export_table()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
         assert_array_equal(tbl['sky_center'], None)

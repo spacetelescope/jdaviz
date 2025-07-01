@@ -174,6 +174,8 @@ class Imviz(ImageConfigHelper):
                 self.loaders['file'].filepath = filepath
                 # self.loaders['file'].target = 'Any'
                 self.loaders['file'].format = 'Image'
+                if ext is not None:
+                    self.loaders['file'].extension.selected = [name for name in ext]
                 self.loaders['file'].importer.data_label = (data_label if data_label is not None
                                                             else cur_data_label)
                 self.loaders['file'].importer()
