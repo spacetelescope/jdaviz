@@ -11,6 +11,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
 from astropy.utils.data import download_file
+from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astroquery.mast import Observations, conf
 from matplotlib import colors as mpl_colors
@@ -853,3 +854,24 @@ def _hex_for_cmap(cmap):
 
 
 cmap_samples = {cmap[1].name: _hex_for_cmap(cmap[1]) for cmap in glue_colormaps.members}
+
+
+def _try_gwcs_to_fits_sip(gwcs):
+    """
+    Try to convert this GWCS to FITS SIP. Some GWCS models
+    cannot be converted to FITS SIP. In that case, a warning
+    is raised and the GWCS is used, as is.
+    """
+    try:
+        result = WCS(gwcs.to_fits_sip(), relax=True)
+
+    except ValueError as err:
+        warnings.warn(
+            "The GWCS coordinates could not be simplified to "
+            "a SIP-based FITS WCS, the following error was "
+            f"raised: {err}",
+            UserWarning
+        )
+        result = gwcs
+
+    return result

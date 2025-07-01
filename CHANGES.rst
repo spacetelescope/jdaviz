@@ -50,6 +50,8 @@ Imviz
 
 - Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS. [#3483, #3535, #3540]
 
+- Moved 'to FITS SIP' switch from Orientation to loader. [#3679]
+
 Mosviz
 ^^^^^^
 
