@@ -1,5 +1,4 @@
 from contextlib import nullcontext
-from functools import cached_property
 
 from astropy import units as u
 from glue.core import Data as glue_core_data

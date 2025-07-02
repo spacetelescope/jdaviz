@@ -90,24 +90,31 @@ class ImageImporter(BaseImporterToDataCollection):
         output = self.output
         if isinstance(output, NDData):
             data, data_label = _nddata_to_glue_data(output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer, cls=self.input.__class__)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=self.input.__class__)
         elif isinstance(output, np.ndarray):
             data = _ndarray_to_glue_data(output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer, cls=self.input.__class__)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=self.input.__class__)
         elif (isinstance(output, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(output, rdd.DataModel))):
             data, data_label = _roman_asdf_2d_to_glue_data(output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer, cls=CCDData)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             data, data_label = _hdu2data(output, self.data_label_value, None, True)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer, cls=CCDData)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, ext_output in zip(self.extension.selected_name, output):
                     self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
                                                 show_in_viewer=show_in_viewer,
                                                 cls=CCDData)
-
 
 
 def _validate_fits_image2d(hdu, raise_error=False):
