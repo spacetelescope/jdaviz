@@ -122,7 +122,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
 
-        self.dataset.add_filter('is_image')
+        self.dataset.add_filter('is_cube_or_image')
 
         self.background = SubsetSelect(self,
                                        'background_items',
@@ -188,6 +188,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @observe('dataset_items')
     def _set_relevant(self, *args):
+        if self.config != "deconfigged":
+            return
         if not len(self.dataset_items):
             self.irrelevant_msg = 'No image layers'
         else:
