@@ -921,3 +921,15 @@ class DistanceMeasurement:
             label.rotate_angle = angle_deg
             label.x_offset = x_offset_int
             label.y_offset = -y_offset_int
+
+    def clear(self):
+        """Clears the measurement by resetting the data of its constituent marks."""
+        self.line.x = []
+        self.line.y = []
+        self.label_text.x = []
+        self.label_text.y = []
+        self.label_text.text = [""]
+        self.label_shadow.x = []
+        self.label_shadow.y = []
+        self.label_shadow.text = [""]
+        self.visible = False
