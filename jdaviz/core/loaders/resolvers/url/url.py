@@ -42,9 +42,8 @@ class URLResolver(BaseResolver):
 
     @cached_property
     def _output_file(self):
-        return download_uri_to_path(self.url.strip(), cache = self.cache,
-                                    local_path = self.local_path, timeout = self.timeout)
+        return download_uri_to_path(self.url.strip(), cache=self.cache,
+                                    local_path=self.local_path, timeout=self.timeout)
 
     def __call__(self):
         return self._output_file
-
