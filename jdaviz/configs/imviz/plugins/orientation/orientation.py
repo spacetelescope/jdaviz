@@ -34,7 +34,8 @@ base_wcs_layer_label = 'Default orientation'
 align_by_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
-@tray_registry('imviz-orientation', label=orientation_plugin_label)
+@tray_registry('imviz-orientation', label=orientation_plugin_label,
+               category='app:options')
 class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Orientation Plugin Documentation <imviz-orientation>` for more details.
@@ -103,6 +104,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Rotate viewer orientation and choose alignment (pixel or sky).'
 
+        self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
+
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
         self.align_by = SelectPluginComponent(self,
@@ -145,6 +148,17 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                            handler=self._on_data_add_to_viewer)
 
         self._update_layer_label_default()
+
+        self._set_relevant()
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not len(self.viewer_items):
+            self.irrelevant_msg = 'No image viewers with WCS'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def user_api(self):
