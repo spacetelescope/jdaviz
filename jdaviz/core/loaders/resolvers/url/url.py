@@ -8,6 +8,8 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.utils import download_uri_to_path
 
+from functools import cached_property
+
 
 __all__ = ['URLResolver']
 
@@ -38,6 +40,11 @@ class URLResolver(BaseResolver):
     def _on_url_changed(self, change):
         self._update_format_items()
 
+    @cached_property
+    def _output_file(self):
+        return download_uri_to_path(self.url.strip(), cache = self.cache,
+                                    local_path = self.local_path, timeout = self.timeout)
+
     def __call__(self):
-        return download_uri_to_path(self.url.strip(), cache=self.cache,
-                                    local_path=self.local_path, timeout=self.timeout)
+        return self._output_file
+
