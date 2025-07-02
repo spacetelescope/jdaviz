@@ -31,6 +31,8 @@ def _valid_glue_display_unit(unit_str, viewer, axis='x'):
     if not unit_str or not viewer:
         return unit_str
     unit_u = u.Unit(unit_str)
+    if not hasattr(viewer.state.__class__, f'{axis}_display_unit'):
+        return unit_str
     choices_str = getattr(viewer.state.__class__, f'{axis}_display_unit').get_choices(viewer.state)  # noqa
     choices_str = [choice for choice in choices_str if choice is not None]
     choices_u = [u.Unit(choice) for choice in choices_str]
