@@ -279,3 +279,35 @@ def test_mosviz_viewer_mouseover_sb(specviz2d_helper):
                   "Wave 5.00000e+00 um",
                   '')
     assert output2d == expected2d
+
+
+def test_image_deconfigged(deconfigged_helper, image_nddata_wcs):
+    """
+    Test that the unit conversion plugin works in deconfigged mode.
+    """
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label="Test Image")
+    plg = deconfigged_helper.plugins["Unit Conversion"]
+
+    viewer = deconfigged_helper.viewers['Image']
+    label_mouseover = deconfigged_helper.app.session.application._tools['g-coords-info']
+
+    assert plg.flux_unit == "Jy"
+
+    label_mouseover._viewer_mouse_event(viewer._obj,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 1, 'y': 1}})
+    assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.00000e+00 Jy',
+                                         'World 22h30m04.7961s -20d49m58.9990s (ICRS)',
+                                         '337.5199835909 -20.8330552820 (deg)')
+
+    # Check that the units can be changed
+    plg.flux_unit = "MJy"
+
+    assert plg.flux_unit == "MJy"
+
+    label_mouseover._viewer_mouse_event(viewer._obj,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 1, 'y': 1}})
+    assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.00000e-06 MJy',
+                                         'World 22h30m04.7961s -20d49m58.9990s (ICRS)',
+                                         '337.5199835909 -20.8330552820 (deg)')
