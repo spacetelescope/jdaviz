@@ -4,7 +4,6 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import sys
 import os
-import time
 
 try:
     from strauss.sonification import Sonification
@@ -134,8 +133,6 @@ class CubeListenerData:
         """
         lo2hi = self.wlens.argsort()[::-1]
 
-        t0 = time.time()
-
         spaxels = generate_spaxel_list(self.cube, self.spectral_axis_index)
 
         # Callback to collect results from workers into the cubes
@@ -170,9 +167,6 @@ class CubeListenerData:
         elif self.spectral_axis_index == 0:
             self.cursig[:] = self.sigcube[:, 0, 0]
         self.newsig[:] = self.cursig[:]
-        t1 = time.time()
-        print(f"Took {t1-t0}s to process "
-              f"{self.cube.shape[self.spatial_inds[0]]*self.cube.shape[self.spatial_inds[1]]} spaxels")  # noqa
 
     def player_callback(self, outdata, frames, time, status):
         cur = self.cursig
