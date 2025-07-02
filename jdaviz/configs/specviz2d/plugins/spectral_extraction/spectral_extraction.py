@@ -21,7 +21,7 @@ from jdaviz.core.marks import PluginMarkCollection, PluginLine
 
 from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
-from specutils import Spectrum1D
+from specutils import Spectrum
 from specreduce import tracing
 from specreduce import background
 from specreduce import extract
@@ -246,7 +246,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'trace_dataset_items',
                                            'trace_dataset_selected',
                                            filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
-        self.trace_dataset.get_data_cls = Spectrum1D
+        self.trace_dataset.get_data_cls = Spectrum
 
         self.trace_type = SelectPluginComponent(self,
                                                 items='trace_type_items',

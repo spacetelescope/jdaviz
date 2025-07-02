@@ -4,7 +4,7 @@ import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.core.marks import MarkersMark
@@ -246,7 +246,7 @@ def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
 def test_markers_specviz2d_unit_conversion(specviz2d_helper):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
+    spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
     specviz2d_helper.load_data(spectrum2d)
 
     uc = specviz2d_helper.plugins['Unit Conversion']

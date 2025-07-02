@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion,
                      EllipseSkyRegion)
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum, SpectralRegion
 
 from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
 
@@ -87,4 +87,4 @@ class TestLoadRegions(BaseRegionHandler):
                                                  'Spectrum (Subset 1, sum)',
                                                  'Spectrum (Subset 1, sum) (Subset 2)']
         for sp in spectral_subsets.values():
-            assert isinstance(sp, Spectrum1D)
+            assert isinstance(sp, Spectrum)
