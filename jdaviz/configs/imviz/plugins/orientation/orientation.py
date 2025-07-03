@@ -174,6 +174,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
     def _link_image_data(self):
+        if len(self.irrelevant_msg):
+            return
         self.linking_in_progress = True
         try:
             align_by = self.align_by.selected.lower()
@@ -260,7 +262,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # incompatible:
         wcs_linked = self.align_by.selected == 'WCS'
         viewer_selected = self.app.get_viewer(self.viewer.selected)
-
+        if viewer_selected is None:
+            self.linking_in_progress = False
+            return
         data_in_viewer = self.app.get_viewer(viewer_selected.reference).data()
 
         for data in self.app.data_collection:
@@ -456,6 +460,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._ensure_layer_icon_exists(base_wcs_layer_label)
 
     def _on_data_add_to_viewer(self, msg):
+        if self.viewer.selected_obj is None:
+            return
         all_wcs_only_layers = all(
             layer.layer.meta.get(_wcs_only_label)
             for layer in self.viewer.selected_obj.layers
@@ -697,6 +703,8 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     # data1 = reference, data2 = actual data
     data_already_linked = []
     image_viewers = app.get_viewers_of_cls(ImvizImageView)
+    if not len(image_viewers):
+        return
     if (align_by == old_align_by and
             (align_by == "pixels" or wcs_fast_approximation == app._wcs_fast_approximation)):
         # We are only here to link new data with existing configuration,
