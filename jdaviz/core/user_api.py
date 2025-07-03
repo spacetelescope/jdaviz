@@ -187,6 +187,8 @@ class PluginUserApi(UserApiWrapper):
             default = ['open_in_tray', 'close_in_tray', 'show']
         else:
             default = ['show']
+        if hasattr(plugin, 'loaders'):
+            default += ['loaders']
         expose = list(set(list(expose) + default))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']

@@ -15,7 +15,8 @@ from jdaviz.core.region_translators import is_stcs_string, regions2roi, stcs_str
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         EditableSelectPluginComponent, SelectPluginComponent,
-                                        FileImportSelectPluginComponent, HasFileImportSelect)
+                                        FileImportSelectPluginComponent, HasFileImportSelect,
+                                        LoadersMixin)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 
@@ -115,7 +116,7 @@ def find_closest_polygon_point(px, py, polygons):
 
 @tray_registry('imviz-footprints', label="Footprints",
                category='data:analysis')
-class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
+class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, LoadersMixin):
     """
     See the :ref:`Footprints Plugin Documentation <imviz-footprints>` for more details.
 
@@ -125,6 +126,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``loaders``
+      Dictionary of loaders to load subsets into the plugin.
     * ``overlay`` (:class:`~jdaviz.core.template_mixin.EditableSelectPluginComponent`): the
         currently active overlay (all other traitlets control this overlay instance)
     * :meth:`rename_overlay`

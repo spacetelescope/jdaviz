@@ -12,6 +12,13 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <plugin-loaders-panel
+      :loader_panel_ind.sync="loader_panel_ind"
+      :loader_items="loader_items"
+      :loader_selected.sync="loader_selected"
+      :api_hints_enabled="api_hints_enabled"
+    ></plugin-loaders-panel>
+
     <plugin-editable-select
       :mode.sync="overlay_mode"
       :edit_value.sync="overlay_edit_value"
