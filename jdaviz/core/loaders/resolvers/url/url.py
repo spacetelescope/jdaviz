@@ -1,16 +1,13 @@
 from traitlets import Bool, Unicode, observe
 from urllib.parse import urlparse
 import os
+from functools import cached_property
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.utils import download_uri_to_path
-
-from jdaviz.core.events import SnackbarMessage
-
-from functools import cached_property
 
 
 __all__ = ['URLResolver']
