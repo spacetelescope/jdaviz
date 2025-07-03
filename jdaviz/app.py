@@ -1910,7 +1910,12 @@ class Application(VuetifyTemplate, HubListener):
 
     def get_viewers_of_cls(self, cls):
         """Return a list of viewers of a specific class."""
-        return [viewer for viewer in self._viewer_store.values() if isinstance(viewer, cls)]
+        if isinstance(cls, str):
+            cls_name = cls
+        else:
+            cls_name = cls.__name__
+        return [viewer for viewer in self._viewer_store.values()
+                if viewer.__class__.__name__ == cls_name]
 
     def _update_viewer_reference_name(
         self, old_reference, new_reference, update_id=False

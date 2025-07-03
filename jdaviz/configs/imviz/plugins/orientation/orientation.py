@@ -13,6 +13,7 @@ from traitlets import List, Unicode, Bool, Dict, observe
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
+from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (
     ExitBatchLoadMessage, ChangeRefDataMessage,
@@ -436,6 +437,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         wcs_only_layers = get_wcs_only_layer_labels(self.app)
 
+        # TODO: update to only image viewers
         viewers_to_update = kwargs.get(
             'viewers_to_update', self.app._viewer_store.keys()
         )
@@ -679,6 +681,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     #
     # data1 = reference, data2 = actual data
     data_already_linked = []
+    image_viewers = app.get_viewers_of_cls(ImvizImageView)
     if (align_by == old_align_by and
             (align_by == "pixels" or wcs_fast_approximation == app._wcs_fast_approximation)):
         # We are only here to link new data with existing configuration,
@@ -687,7 +690,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             data_already_linked.append(link.data2)
     else:  # pragma: no cover
         # Everything has to be relinked.
-        for viewer in app._viewer_store.values():
+        for viewer in image_viewers:
             if len(viewer._marktags):
                 raise ValueError(f"cannot change align_by (from '{app._align_by}' to "
                                  f"'{align_by}') when markers are present. "
@@ -701,7 +704,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     # wcs -> pixels: First loaded real data will be reference.
     if align_by == 'pixels' and old_align_by == 'wcs':
         # default reference layer is the first-loaded image in default viewer:
-        refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
+        refdata = image_viewers[0].first_loaded_data
         if refdata is None:  # No data in viewer, just use first in collection  # pragma: no cover
             iref = 0
             refdata = app.data_collection[iref]
@@ -716,13 +719,15 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     elif align_by == 'wcs' and old_align_by == 'pixels':
         # Have to create the default orientation first.
         if base_wcs_layer_label not in app.data_collection.labels:
-            default_reference_layer = (app._jdaviz_helper.default_viewer._obj.first_loaded_data
+            default_reference_layer = (image_viewers[0].first_loaded_data
                                        or app.data_collection[0])
             degn = get_compass_info(default_reference_layer.coords, default_reference_layer.shape)[-3]  # noqa: E501
             # Default rotation is the same orientation as the original reference data:
             rotation_angle = -degn * u.deg
             ndd = _get_rotated_nddata_from_label(app, default_reference_layer.label, rotation_angle)
-            app._jdaviz_helper.load_data(ndd, base_wcs_layer_label, show_in_viewer=False)
+            app._jdaviz_helper.load(ndd, format='Image',
+                                    data_label=base_wcs_layer_label,
+                                    show_in_viewer=False)
 
         # set default layer to reference data in all viewers:
         for viewer_id in app.get_viewer_ids():
@@ -736,7 +741,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         refdata, iref = get_reference_image_data(app)
         # App just loaded, nothing yet, so take first image.
         if refdata is None:
-            refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
+            refdata = image_viewers[0].first_loaded_data
             if refdata is None:  # No data in viewer, just use first in collection
                 iref = 0
                 refdata = app.data_collection[iref]
@@ -806,7 +811,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
 
-    for viewer in app._viewer_store.values():
+    for viewer in image_viewers.values():
         wcs_linked = align_by == 'wcs'
         # viewer-state needs to know link type for reset_limits behavior
         viewer.state.linked_by_wcs = wcs_linked
