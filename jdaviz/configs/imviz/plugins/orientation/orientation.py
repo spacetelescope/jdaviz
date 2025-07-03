@@ -103,7 +103,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         # description displayed under plugin title in tray
-        self._plugin_description = 'Rotate viewer orientation and choose alignment (pixel or sky).'
+        self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'
 
         self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
 
@@ -434,7 +434,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     @observe('viewer_items')
     def _send_wcs_layers_to_all_viewers(self, *args, **kwargs):
-        if not hasattr(self, 'viewer'):
+        if not hasattr(self, 'viewer') or not getattr(self.app, '_jdaviz_helper', None):
             return
 
         wcs_only_layers = get_wcs_only_layer_labels(self.app)
@@ -514,9 +514,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def ref_data(self):
-        if hasattr(self, 'viewer'):
-            return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
-        return None
+        if not hasattr(self, 'viewer'):
+            return None
+        viewer = self.app.get_viewer(self.viewer.selected)
+        if not hasattr(viewer, 'state'):
+            return None
+        return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
 
     @property
     def _refdata_change_available(self):
