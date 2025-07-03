@@ -89,10 +89,10 @@ class ImageImporter(BaseImporterToDataCollection):
             glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
         return glue_data
 
-    @cached_property
+    @property
     def data_and_label(self):
         """Tuple of (data, data_label)."""
-        if isinstance(self.input, NDData): or isinstance(self.input, np.ndarray):
+        if isinstance(self.input, NDData):
             data, data_label = _nddata_to_glue_data(self.input, data_label)
         elif isinstance(self.input, np.ndarray):
             data_label = self.data_label_value
@@ -137,7 +137,7 @@ class ImageImporter(BaseImporterToDataCollection):
             with self.app._jdaviz_helper.batch_load():
                 for ext, spec in zip(data_label, data):
                     self._glue_data_wcs_to_fits(spec)
-                    self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True)
+                    self.add_to_data_collection(spec, f"{spec}[{ext}]", show_in_viewer=True)
         else:
             self._glue_data_wcs_to_fits(data)
             self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
