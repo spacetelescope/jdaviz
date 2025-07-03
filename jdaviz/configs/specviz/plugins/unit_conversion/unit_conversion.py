@@ -233,7 +233,7 @@ class UnitConversion(PluginTemplateMixin):
                 or not len(self.angle_unit_selected)
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
 
-            data_obj = msg.data.get_object()
+            data_obj = self.app._jdaviz_helper.get_data(msg.data.label)
 
             # if the viewer is spectral and the data is Spectrum1D, get flux/sb/spectral
             # axis units from the Spectrum 1D object
@@ -307,17 +307,18 @@ class UnitConversion(PluginTemplateMixin):
 
             if not isinstance(data_obj, tracing.FlatTrace):
 
-                if not len(self.spectral_unit_selected):
+                if not len(self.spectral_unit_selected) and hasattr(data_obj, 'spectral_axis'):
                     try:
                         self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
                     except ValueError:
                         self.spectral_unit.selected = ''
 
                 if not self.flux_unit_selected:
+                    flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
                     # get flux/sb unit from data object, and solid angle to turn sb into flux
-                    angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit,
+                    angle_unit = check_if_unit_is_per_solid_angle(flux_unit,
                                                                   return_unit=True)
-                    flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
+                    flux_unit = flux_unit if angle_unit is None else flux_unit * angle_unit  # noqa
 
                     self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
                     try:
@@ -326,7 +327,8 @@ class UnitConversion(PluginTemplateMixin):
                         self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
-                    angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit,
+                    flux_unit = data_obj.flux.unit if hasattr(data_obj, 'flux') else data_obj.unit
+                    angle_unit = check_if_unit_is_per_solid_angle(flux_unit,
                                                                   return_unit=True)
                     self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
                     try:

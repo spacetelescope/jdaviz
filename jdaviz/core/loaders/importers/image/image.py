@@ -4,7 +4,7 @@ import asdf
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import NDData
+from astropy.nddata import NDData, CCDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from traitlets import Bool, List, Any
@@ -57,13 +57,13 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube
         # isinstance NDData
         return isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                       NDData, np.ndarray, asdf.AsdfFile))
+                                       NDData, np.ndarray, asdf.AsdfFile, str))
 
     @property
     def default_viewer_reference(self):
@@ -73,37 +73,75 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
-        # if nddata return it
-        if isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
+        print(self.data_label_value, type(self.input))
+        # png, jpg
+        if isinstance(self.input, str) and self.input.endswith(('.jpg', '.jpeg', '.png')):
+            from skimage.io import imread
+            from skimage.color import rgb2gray, rgba2rgb
+            im = imread(self.input)
+            if im.shape[2] == 4:
+                pf = rgb2gray(rgba2rgb(im))
+            else:  # Assume RGB
+                pf = rgb2gray(im)
+            return pf[::-1, :]  # Flip it
+        # regions
+        # elif isinstance(self.input, str) and self.input.endswith('.reg'):
+        #     return self.input
+        # ndarray
+        elif isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
             return self.input
+        # asdf
         elif (isinstance(self.input, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
             return self.input
+        # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             return [_hdu2data(self.input, self.data_label_value, None, False)]
+        # fits
         hdulist = self.input
         return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
                 for hdu in self.extension.selected_hdu]
 
-    def __call__(self):
+    def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
-        if isinstance(self.output, NDData):
-            data, data_label = _nddata_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
-        elif isinstance(self.output, np.ndarray):
-            data = _ndarray_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
-        elif (isinstance(self.output, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel))):
-            data, data_label = _roman_asdf_2d_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+        output = self.output
+        # region
+        # if isinstance(output, str) and self.input.endswith('.reg'):
+        #     self.app.get_tray_item_from_name('Subset Tools').import_region(output)
+        # nddata
+        if isinstance(output, NDData):
+            returned_data = _nddata_to_glue_data(output, data_label)
+            for data_label, data in returned_data.items():
+                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                            cls=self.input.__class__)
+        # ndarray
+        elif isinstance(output, np.ndarray):
+            data = _ndarray_to_glue_data(output, data_label)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                        cls=self.input.__class__)
+        # asdf
+        elif (isinstance(output, asdf.AsdfFile) or
+              (HAS_ROMAN_DATAMODELS and isinstance(output, rdd.DataModel))):
+            returned_data = _roman_asdf_2d_to_glue_data(output, data_label)
+            for data_label, data in returned_data.items():
+                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                            cls=CCDData)
+        # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+            # data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
+            for data, data_label in output:
+                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                            cls=CCDData)
+        # fits
         else:
             with self.app._jdaviz_helper.batch_load():
-                for ext, spec in zip(self.extension.selected_name, self.output):
-                    self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True)
+                for ext, ext_output in zip(self.extension.selected_name, output):
+                    self.add_to_data_collection(ext_output, ext_output.label,
+                                                show_in_viewer=show_in_viewer,
+                                                cls=CCDData)
+                    # self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
+                    #                             show_in_viewer=show_in_viewer,
+                    #                             cls=CCDData)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):
@@ -173,11 +211,13 @@ def _nddata_to_glue_data(ndd, data_label):
     if ndd.data.ndim != 2:
         raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
 
+    returned_data = {}
     for attrib in ('data', 'mask', 'uncertainty'):
         arr = getattr(ndd, attrib)
         if arr is None:
             continue
         comp_label = attrib.upper()
+        # Do not add extension if data is coming from orientation plugin
         if 'plugin' in ndd.meta.keys() and ndd.meta['plugin'] == 'orientation':
             cur_label = f'{data_label}'
         else:
@@ -196,7 +236,8 @@ def _nddata_to_glue_data(ndd, data_label):
             bunit = ''
         component = Component.autotyped(raw_arr, units=bunit)
         cur_data.add_component(component=component, label=comp_label)
-        return cur_data, cur_label
+        returned_data[cur_label] = cur_data
+    return returned_data
 
 
 def _try_gwcs_to_fits_sip(gwcs):
@@ -250,6 +291,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         coords = _try_gwcs_to_fits_sip(gwcs)
     else:
         coords = gwcs
+    returned_data = {}
 
     for cur_ext in ext_list:
         comp_label = cur_ext.upper()
@@ -267,5 +309,6 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         data.meta.update(standardize_metadata(dict(meta)))
         if comp_label == 'DQ':
             prep_data_layer_as_dq(data)
+        returned_data[new_data_label] = data
 
-        return data, new_data_label
+    return returned_data

@@ -137,7 +137,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * PIX2, rtol=1e-4)
         assert_allclose(tbl[-1]['sum'], 28.274334, rtol=1e-4)
         assert_allclose(tbl[-1]['mean'], 1, rtol=1e-4)
-        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
+        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI]'
         assert tbl[-1]['subset_label'] == 'Subset 2'
 
         # Make sure it also works on a rectangle subset.
@@ -215,6 +215,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
         )  # Draw a circle
 
+        # TODO: remove ._obj when API is made public
         phot_plugin = self.imviz.plugins['Aperture Photometry']
         assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
         assert phot_plugin.aperture.choices == ['Subset 1']

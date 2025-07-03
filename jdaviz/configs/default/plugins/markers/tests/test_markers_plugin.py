@@ -401,9 +401,9 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove',
                                              'domain': {'x': 5, 'y': 5}})
-        assert label_mouseover.as_dict()['data_label'] == 'no_wcs[SCI,1]'
+        assert label_mouseover.as_dict()['data_label'] == 'no_wcs[SCI]'
 
-        # top-layer in new viewer is has_wcs[SCI,1]
+        # top-layer in new viewer is has_wcs[SCI]
         label_mouseover._viewer_mouse_event(nv,
                                             {'event': 'mousemove',
                                              'domain': {'x': 5, 'y': 5}})
