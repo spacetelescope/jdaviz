@@ -10,6 +10,8 @@ Initialize an instance of the Mosviz app in a Jupyter notebook using the followi
 
     from jdaviz import Mosviz
     mosviz = Mosviz()
+    # If solely using the Mosviz API, feel free to comment out the following line.
+    mosviz.show()
 
 After running the code above, you can interact with the Mosviz application from
 subsequent notebook cells via the API methods attached to the
