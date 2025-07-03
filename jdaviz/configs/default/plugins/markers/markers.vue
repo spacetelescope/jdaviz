@@ -10,7 +10,31 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <jupyter-widget :widget="table_widget"></jupyter-widget> 
+    <div class="jd-plugin-section">
+      <div style="font-weight: bold; margin-bottom: 5px;">Markers Table</div>
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
+    </div>
+
+    <v-divider class="my-4"></v-divider>
+
+    <div class="jd-plugin-section">
+      <div style="font-weight: bold; margin-bottom: 5px;">Distance Tool</div>
+      <div class="text--secondary" style="margin-bottom: 10px;">
+        Press 'd' twice to measure; hold 'd' + 'option'/'alt' to snap.
+      </div>
+      <div>
+        <b>Distance:</b> {{ distance_display }}
+      </div>
+    </div>
+
+    <v-divider class="my-4"></v-divider>
+
+    <div class="jd-plugin-section">
+      <div style="font-weight: bold; margin-bottom: 5px;">Measurements Table</div>
+      <jupyter-widget :widget="distances_table"></jupyter-widget>
+    </div>
 
   </j-tray-plugin>
 </template>
+
+
