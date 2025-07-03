@@ -237,7 +237,7 @@ it to re-link by pixels or WCS as needed.
 
 For WCS linking, the "fast approximation" option uses an affine transform
 to represent the offset between images, if possible. This method, although less accurate,
-is much more performant but should be accurate to within a pixel for most cases.
+is much more performant and should still be accurate to within a pixel for most cases.
 If approximation fails, WCS linking will fall back to the full transformation.
 
 Since Jdaviz v3.9, when linking by WCS, a hidden reference data layer
