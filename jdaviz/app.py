@@ -709,7 +709,7 @@ class Application(VuetifyTemplate, HubListener):
         Change reference data to Data with ``data_label``.
         This does not work on data without WCS.
         """
-        if self.config != 'imviz':
+        if self.config not in ('imviz', 'deconfigged'):
             # this method is only meant for Imviz for now
             return
 

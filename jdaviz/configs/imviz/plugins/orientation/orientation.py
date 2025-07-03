@@ -398,10 +398,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             target_wcs_north_up=True,
         )
 
-        self.app._jdaviz_helper.load_data(
-            ndd, data_label=label,
-            show_in_viewer=False
-        )
+        add_wcs_data_to_app(self.app, ndd, data_label=label)
 
         # add orientation layer to all viewers:
         for viewer_ref in self.app._viewer_store:
@@ -422,13 +419,18 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _add_data_to_viewer(self, data_label, viewer_id):
         viewer = self.app.get_viewer_by_id(viewer_id)
+        if not isinstance(viewer, ImvizImageView):
+            return
 
         if data_label not in viewer.data_menu.orientation.choices:
             self.app.add_data_to_viewer(viewer_id, data_label)
         self._ensure_layer_icon_exists(data_label)
 
     def _on_viewer_added(self, msg):
-        self._send_wcs_layers_to_all_viewers(viewers_to_update=[msg._viewer_id])
+        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        if not isinstance(viewer, ImvizImageView):
+            return
+        self._send_wcs_layers_to_all_viewers(viewers_to_update=[msg.viewer_id])
 
     @observe('viewer_items')
     def _send_wcs_layers_to_all_viewers(self, *args, **kwargs):
@@ -604,6 +606,11 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
 
+def add_wcs_data_to_app(app, data, data_label=None):
+    app._jdaviz_helper._load(data, format='Image',
+                             data_label=data_label, show_in_viewer=False)
+
+
 def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True,
                     error_on_fail=False):
     """(Re)link loaded data in Imviz with the desired link type.
@@ -725,9 +732,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             # Default rotation is the same orientation as the original reference data:
             rotation_angle = -degn * u.deg
             ndd = _get_rotated_nddata_from_label(app, default_reference_layer.label, rotation_angle)
-            app._jdaviz_helper.load(ndd, format='Image',
-                                    data_label=base_wcs_layer_label,
-                                    show_in_viewer=False)
+            add_wcs_data_to_app(app, ndd, data_label=base_wcs_layer_label)
 
         # set default layer to reference data in all viewers:
         for viewer_id in app.get_viewer_ids():
@@ -811,7 +816,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
 
-    for viewer in image_viewers.values():
+    for viewer in image_viewers:
         wcs_linked = align_by == 'wcs'
         # viewer-state needs to know link type for reset_limits behavior
         viewer.state.linked_by_wcs = wcs_linked
