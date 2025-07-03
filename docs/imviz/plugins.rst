@@ -365,7 +365,7 @@ an interactively selected region. A typical workflow is as follows:
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
 
-8. If you also want photometry result in magnitude units, you can enter a flux
+8. If you also want your photometry result in magnitude units, you can enter a flux
    scaling factor in the :guilabel:`Flux scaling` field.
    :guilabel:`Flux scaling` is populated for JWST images
    if MJy/sr data unit is detected and pixel area is given to factor out the per-steradian unit.
