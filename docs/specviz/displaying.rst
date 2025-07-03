@@ -4,7 +4,7 @@
 Displaying Spectra
 ******************
 
-Specviz takes a modular approach to displaying data to support the flexibility of
+Specviz takes a modular approach to displaying data to take advantage of the flexibility of
  `glue <https://glueviz.org/>`_ as the data-handling layer in the many applicable contexts.
 
 The first spectrum you load will be automatically displayed in the viewer with
