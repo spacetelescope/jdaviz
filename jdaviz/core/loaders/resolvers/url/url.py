@@ -8,6 +8,8 @@ from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.utils import download_uri_to_path
 
+from jdaviz.core.events import SnackbarMessage
+
 from functools import cached_property
 
 
@@ -38,6 +40,13 @@ class URLResolver(BaseResolver):
 
     @observe('url', 'cache', 'timeout')
     def _on_url_changed(self, change):
+        # _uri_output_file is a string to the local path which uses the same file name
+        # as that from the URL. By stripping the local path, we can match to the URL.
+        # We check for bool for 'cache' on/off.
+        if (self._uri_output_file.lstrip(f"{self.local_path}") not in self.url.strip()
+                or isinstance(change['new'], bool)):
+            del self._uri_output_file
+
         self._update_format_items()
 
     @cached_property
