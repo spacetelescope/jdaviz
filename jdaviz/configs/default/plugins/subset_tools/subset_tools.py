@@ -244,7 +244,6 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         >>> imviz.link_data(align_by='pixels')
         >>> data = NDData(np.ones((128, 128)) * u.nJy, wcs=getfixture('image_2d_wcs'))
         >>> imviz.load_data(data)
-        <class 'astropy.nddata.nddata.NDData'>
         >>> plg = imviz.plugins['Subset Tools']
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=1163.618408203125, y=1433.47998046875), radius=141.28575134277344))  # noqa E501
         >>> type(plg.get_regions()['Subset 1'])

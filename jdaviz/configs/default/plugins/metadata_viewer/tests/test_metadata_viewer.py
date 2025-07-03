@@ -28,7 +28,7 @@ def test_view_dict(imviz_helper):
     imviz_helper.load_data(ndd_4, data_label='has_primary_2')
     imviz_helper.load_data(arr, data_label='no_meta')
     assert mv.dataset.labels == ['has_simple_meta[DATA]', 'has_nested_meta[DATA]',
-                                 'has_primary[DATA]', 'has_primary_2[DATA]', 'no_meta']
+                                 'has_primary[DATA,1]', 'has_primary_2[DATA,1]', 'no_meta']
 
     mv.dataset_selected = 'has_simple_meta[DATA]'
     assert not mv.has_primary
@@ -48,7 +48,7 @@ def test_view_dict(imviz_helper):
         ('EXTNAME', 'ASDF', ''), ('REF.bar', '10.0', ''),
         ('REF.foo.1', '', ''), ('REF.foo.2.0', '1', ''), ('REF.foo.2.1', '2', '')]
 
-    mv.dataset_selected = 'has_primary[DATA]'
+    mv.dataset_selected = 'has_primary[DATA,1]'
     assert mv.has_primary
     assert not mv.show_primary
     assert mv.has_comments
@@ -65,7 +65,7 @@ def test_view_dict(imviz_helper):
                            ('NAXIS', '0', 'number of array dimensions'),
                            ('SIMPLE', 'True', 'conforms to FITS standard')]
 
-    mv.dataset_selected = 'has_primary_2[DATA]'
+    mv.dataset_selected = 'has_primary_2[DATA,1]'
     assert mv.show_primary  # Make sure it sticks if possible
     assert mv.has_comments
     assert mv.metadata == [('APERTURE', '#TODO', 'Aperture'),

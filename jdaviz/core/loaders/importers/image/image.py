@@ -73,6 +73,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
+        print(self.data_label_value, type(self.input))
         # png, jpg
         if isinstance(self.input, str) and self.input.endswith(('.jpg', '.jpeg', '.png')):
             from skimage.io import imread
@@ -84,8 +85,8 @@ class ImageImporter(BaseImporterToDataCollection):
                 pf = rgb2gray(im)
             return pf[::-1, :]  # Flip it
         # regions
-        elif isinstance(self.input, str) and self.input.endswith('.reg'):
-            return self.input
+        # elif isinstance(self.input, str) and self.input.endswith('.reg'):
+        #     return self.input
         # ndarray
         elif isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
             return self.input
@@ -105,10 +106,10 @@ class ImageImporter(BaseImporterToDataCollection):
         data_label = self.data_label_value
         output = self.output
         # region
-        if isinstance(output, str) and self.input.endswith('.reg'):
-            self.app.get_tray_item_from_name('Subset Tools').import_region(output)
+        # if isinstance(output, str) and self.input.endswith('.reg'):
+        #     self.app.get_tray_item_from_name('Subset Tools').import_region(output)
         # nddata
-        elif isinstance(output, NDData):
+        if isinstance(output, NDData):
             returned_data = _nddata_to_glue_data(output, data_label)
             for data_label, data in returned_data.items():
                 self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
@@ -127,16 +128,20 @@ class ImageImporter(BaseImporterToDataCollection):
                                             cls=CCDData)
         # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
-                                        cls=CCDData)
+            # data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
+            for data, data_label in output:
+                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                            cls=CCDData)
         # fits
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, ext_output in zip(self.extension.selected_name, output):
-                    self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
+                    self.add_to_data_collection(ext_output, ext_output.label,
                                                 show_in_viewer=show_in_viewer,
                                                 cls=CCDData)
+                    # self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
+                    #                             show_in_viewer=show_in_viewer,
+                    #                             cls=CCDData)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):
@@ -159,7 +164,7 @@ def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
     else:
         bunit = ''
 
-    comp_label = f'{hdu.name.upper()}'
+    comp_label = f'{hdu.name.upper()},{hdu.ver}'
     new_data_label = f'{data_label}[{comp_label}]'
 
     data = Data(label=new_data_label)

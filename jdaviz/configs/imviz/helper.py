@@ -171,17 +171,8 @@ class Imviz(ImageConfigHelper):
                     kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
-                self.loaders['file'].filepath = filepath
-                # self.loaders['file'].target = 'Any'
-                self.loaders['file'].format = 'Image'
-                if ext is not None:
-                    self.loaders['file'].extension.selected = [name for name in ext]
-                self.loaders['file'].importer.data_label = (data_label if data_label is not None
-                                                            else cur_data_label)
-                self.loaders['file'].importer()
                 # data_label = data_label if data_label is not None else cur_data_label
-                # self._load(filepath, data_label=data_label)
-                # self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
+                self._load(filepath, data_label=cur_data_label)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
@@ -202,21 +193,28 @@ class Imviz(ImageConfigHelper):
                 if data_label:
                     kw['data_label'] = data_label
 
-                self.loaders['object'].object = data[i, :, :]
-                if data_label:
-                    self.loaders['object'].importer.data_label.value = data_label
-                self.loaders['object'].importer()
-                # self._load(data[i, :, :], data_label=data_label)
+                # self.loaders['object'].object = data[i, :, :]
+                # if data_label:
+                #     self.loaders['object'].importer.data_label.value = data_label
+                # if 'ext' in kwargs and kwargs['ext'] is not None:
+                #     self.loaders['object'].extension.selected = [name for name in kwargs['ext']]
+                # self.loaders['object'].importer()
+                data_label = data_label
+                self._load(data[i, :, :], data_label=data_label)
                 # self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 
         else:
+            print("in else")
             if data_label:
                 kwargs['data_label'] = data_label
-            self.loaders['object'].object = data
-            if data_label:
-                self.loaders['object'].importer.data_label.value = data_label
-            self.loaders['object'].importer()
-            # self._load(data, data_label=data_label)
+            # self.loaders['object'].object = data
+            # if data_label:
+            #     self.loaders['object'].importer.data_label.value = data_label
+            # if 'ext' in kwargs and kwargs['ext'] is not None:
+            #     print(self.loaders['object'].input_hdulist)
+            #     self.loaders['object'].extension.selected = [name for name in kwargs['ext']]
+            # self.loaders['object'].importer()
+            self._load(data, data_label=data_label)
             # self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
         return
         # find the current label(s) - TODO: replace this by calling default label functionality

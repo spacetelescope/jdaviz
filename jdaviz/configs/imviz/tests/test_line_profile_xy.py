@@ -37,7 +37,7 @@ class TestLineProfileXYPixelLinked(BaseImviz_WCS_NoWCS):
         self.imviz.load_data(ndd, data_label='ndd', show_in_viewer=False)
 
         viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'has_wcs[SCI]')
+        self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'has_wcs[SCI,1]')
         self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'ndd[DATA]')
 
         # Blink also triggers viewer takeover and line profile redraw,
@@ -114,7 +114,7 @@ class TestLineProfileXYWCSLinked(BaseImviz_WCS_WCS):
         self.imviz.load_data(ndd, data_label='ndd', show_in_viewer=False)
 
         viewer_2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'has_wcs_1[SCI]')
+        self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'has_wcs_1[SCI,1]')
         self.imviz.app.add_data_to_viewer(viewer_2.reference_id, 'ndd[DATA]')
 
         # Blink also triggers viewer takeover and line profile redraw,

@@ -11,7 +11,7 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
     def test_panzoom_tools(self):
         v = self.imviz.default_viewer._obj
         v2 = self.imviz.create_image_viewer()
-        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI]')
+        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI,1]')
 
         t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5

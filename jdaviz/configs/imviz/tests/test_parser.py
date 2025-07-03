@@ -215,8 +215,8 @@ class TestParseImage:
 
         for i in range(2):
             data = imviz_helper.app.data_collection[i]
-            comp = data.get_component('PRIMARY')
-            assert data.label == f'myfits_{i}[PRIMARY]'
+            comp = data.get_component('PRIMARY,1')
+            assert data.label == f'myfits_{i}[PRIMARY,1]'
             assert data.shape == (2, 2)
             assert data.meta['FOO'] == 'bar'
             np.testing.assert_allclose(comp.data.mean(), i)
@@ -393,8 +393,8 @@ class TestParseImage:
         # Default behavior: Load first image
         imviz_helper.load_data(url, cache=True)
         data = imviz_helper.app.data_collection[0]
-        comp = data.get_component('SCI')
-        expected_label = os.path.splitext(os.path.basename(url))[0] + '[SCI]'
+        comp = data.get_component('SCI,1')
+        expected_label = os.path.splitext(os.path.basename(url))[0] + '[SCI,1]'
         assert data.label == expected_label
         assert data.shape[0] == 4299
         # This file keeps slightly changing shape, it's very annoying.
@@ -411,7 +411,7 @@ class TestParseImage:
         imviz_helper.plugins['Subset Tools'].import_region(
             EllipsePixelRegion(center=PixCoord(x=1488.5, y=2576), width=47, height=70))  # Galaxy
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
-        phot_plugin.data_selected = 'contents[SCI]'
+        phot_plugin.data_selected = 'contents[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 1'
         assert phot_plugin.aperture.selected_validity.get('is_aperture')
         phot_plugin.background_value = 0.0014  # Manual entry: Median on whole array
@@ -472,8 +472,8 @@ class TestParseImage:
         imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
                                show_in_viewer=False)
         data = imviz_helper.app.data_collection[1]
-        comp = data.get_component('CTX')
-        assert data.label == 'jclj01010_drz[CTX]'
+        comp = data.get_component('CTX,1')
+        assert data.label == 'jclj01010_drz[CTX,1]'
         assert data.meta['EXTNAME'] == 'CTX'
         assert comp.units == ''  # BUNIT is not set
 
@@ -481,8 +481,8 @@ class TestParseImage:
         imviz_helper.load_data(filename, ext=('WHT', 1), data_label='jclj01010_drz',
                                show_in_viewer=False)
         data = imviz_helper.app.data_collection[2]
-        comp = data.get_component('WHT')
-        assert data.label == 'jclj01010_drz[WHT]'
+        comp = data.get_component('WHT,1')
+        assert data.label == 'jclj01010_drz[WHT,1]'
         assert data.meta['EXTNAME'] == 'WHT'
         assert comp.units == ''  # BUNIT is not set
 
@@ -491,32 +491,32 @@ class TestParseImage:
             # Default behavior: Load first image
             imviz_helper.load_data(pf, show_in_viewer=False)
             data = imviz_helper.app.data_collection[3]
-            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[SCI]')
+            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[SCI,1]')
             assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
-            assert 'SCI' in data.components
+            assert 'SCI,1' in data.components
 
             # Request specific extension (name only), use given label
             imviz_helper.load_data(pf, ext='CTX', show_in_viewer=False)
             data = imviz_helper.app.data_collection[4]
-            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[CTX]')
+            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[CTX,1]')
             assert data.meta['EXTNAME'] == 'CTX'
-            assert 'CTX' in data.components
+            assert 'CTX,1' in data.components
 
             # Pass in HDU directly, use given label
             imviz_helper.load_data(pf[2], data_label='foo', show_in_viewer=False)
             data = imviz_helper.app.data_collection[5]
-            assert data.label == 'foo[WHT]'
+            assert data.label == 'foo[WHT,1]'
             assert data.meta['EXTNAME'] == 'WHT'
-            assert 'WHT' in data.components
+            assert 'WHT,1' in data.components
 
             # Load all extensions
             imviz_helper.app.data_collection.clear()
             imviz_helper.load_data(filename, ext='*', show_in_viewer=False)
             data = imviz_helper.app.data_collection
             assert len(data.labels) == 3
-            assert data.labels[0].endswith('[SCI]')
-            assert data.labels[1].endswith('[WHT]')
-            assert data.labels[2].endswith('[CTX]')
+            assert data.labels[0].endswith('[SCI,1]')
+            assert data.labels[1].endswith('[WHT,1]')
+            assert data.labels[2].endswith('[CTX,1]')
 
         # Cannot load non-image extension
         with pytest.raises(ValueError, match='Imviz cannot load this HDU'):

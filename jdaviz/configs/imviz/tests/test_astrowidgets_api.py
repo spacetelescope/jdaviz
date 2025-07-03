@@ -316,12 +316,12 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         # Remove markers with default name.
         self.viewer.remove_markers()
         assert self.imviz.app.data_collection.labels == [
-            'has_wcs[SCI]', 'no_wcs[SCI]', 'my_sky']
+            'has_wcs[SCI,1]', 'no_wcs[SCI,1]', 'my_sky']
 
         # Reset markers (runs remove_markers with marker_name set)
         self.viewer.reset_markers()
         assert self.imviz.app.data_collection.labels == [
-            'has_wcs[SCI]', 'no_wcs[SCI]']
+            'has_wcs[SCI,1]', 'no_wcs[SCI,1]']
 
         assert len(self.imviz.app.data_collection.links) == 10
 
