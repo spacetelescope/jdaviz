@@ -37,11 +37,9 @@ class URLResolver(BaseResolver):
 
     @observe('url', 'cache', 'timeout')
     def _on_url_changed(self, change):
-        # _uri_output_file is a string to the local path which uses the same file name
-        # as that from the URL. By stripping the local path, we can match to the URL.
-        # We check for bool for 'cache' on/off.
-        if (self._uri_output_file.lstrip(f"{self.local_path}") not in self.url.strip()
-                or isinstance(change['new'], bool)):
+        # Clear the cached property to force re-download
+        # or otherwise read from local file cache.
+        if '_uri_output_file' in self.__dict__ and change['name'] in ('url', 'cache'):
             del self._uri_output_file
 
         self._update_format_items()
