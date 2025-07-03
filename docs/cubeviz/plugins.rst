@@ -358,8 +358,8 @@ layers can be adjusted like a mixing board.
     For mac m-series users, the ``Strauss`` library requires the
     `sounddevice <https://python-sounddevice.readthedocs.io/en/latest/>`_ and
     `PortAudio <https://www.portaudio.com>`_ libraries. In order to avoid errors with the sonification
-    process, ``sounddevice`` and ``PortAudio`` must be installed as follows (whether Strauss is already
-    installed or not is not affected by these instructions):
+    process, ``sounddevice`` and ``PortAudio`` must be installed as follows (these steps can be followed
+    either before or after installing Strauss itself):
 
     1. Download the latest/stable ``PortAudio`` release from
        `PortAudio's website <https://files.portaudio.com/download.html>`_.
