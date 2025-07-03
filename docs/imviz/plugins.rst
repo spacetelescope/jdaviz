@@ -340,7 +340,7 @@ an interactively selected region. A typical workflow is as follows:
     (see :ref:`imviz_defining_spatial_regions`).
 
    If your image is already background subtracted, choose "Manual" and set the
-   :guilabel:`Background value` at 0.
+   :guilabel:`Background value` to 0.
 
 6. For some JWST and HST images, pixel area in arcsec2 is automatically
    populated in the :guilabel:`Pixel area` field from image metadata. If it does
