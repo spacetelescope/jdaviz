@@ -1929,9 +1929,11 @@ class LayerSelect(SelectPluginComponent):
 
     def _on_subset_created(self, msg=None):
         new_subset_label = self.app.data_collection.subset_groups[-1].label
-        viewer = self.viewer if isinstance(self.viewer, list) else [self.viewer]
-        for current_viewer in viewer:
-            for layer in self._get_viewer(current_viewer).state.layers:
+        viewers = self.viewer if isinstance(self.viewer, list) else [self.viewer]
+        for current_viewer in viewers:
+            if (viewer := self._get_viewer(current_viewer)) is None:
+                continue
+            for layer in viewer.state.layers:
                 if layer.layer.label == new_subset_label and is_not_wcs_only(layer.layer):
                     layer.add_callback('color', self._update_items)
                     layer.add_callback('visible', self._update_items)
@@ -3954,6 +3956,9 @@ class DatasetSelect(SelectPluginComponent):
             return (data.ndim == 2
                     and data.coords is not None
                     and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
+
+        def is_spectrum_or_cube(data):
+            return is_spectrum(data) or is_cube(data)
 
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):

@@ -569,12 +569,11 @@ class ConfigHelper(HubListener):
         data = self.app.data_collection[data_label]
 
         if not cls:
-            if self.app.config == 'deconfigged' and data_label in self.app._default_data_cls:
-                cls = self.app._default_data_cls.get(data_label)
+            if hasattr(data, '_native_data_cls'):
+                cls = data._native_data_cls
+            # TODO: once everything goes through loaders, can we remove everything below?
             elif 'Trace' in data.meta:
                 cls = None
-            elif hasattr(data, '_native_data_cls'):
-                cls = data._native_data_cls
             elif data.ndim == 2 and self.app.config == "specviz2d":
                 cls = Spectrum1D
             elif data.ndim == 2:

@@ -12,7 +12,8 @@ from jdaviz.utils import get_top_layer_index
 __all__ = ['LineProfileXY']
 
 
-@tray_registry('imviz-line-profile-xy', label="Image Profiles (XY)")
+@tray_registry('imviz-line-profile-xy', label="Image Profiles (XY)",
+               category="data:analysis")
 class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "line_profile_xy.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -26,6 +27,8 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.viewer.add_filter('is_image_viewer')
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot line profiles across X and Y.'
@@ -47,6 +50,15 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
                                  and then click PLOT."
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
+
+        self._set_relevant()
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if not len(self.viewer_items):
+            self.irrelevant_msg = 'No image viewers'
+        else:
+            self.irrelevant_msg = ''
 
     def reset_results(self):
         self.plot_available = False
