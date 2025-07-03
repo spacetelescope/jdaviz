@@ -189,6 +189,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             # Only broadcast after success.
             self.app.hub.broadcast(LinkUpdatedMessage(
                 align_by, self.wcs_use_fallback, self.wcs_fast_approximation, sender=self.app))
+            self.orientation._update_items()
         finally:
             self.linking_in_progress = False
 
@@ -399,15 +400,13 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
         add_wcs_data_to_app(self.app, ndd, data_label=label)
+        self.orientation._update_items()
 
         # add orientation layer to all viewers:
         for viewer_ref in self.app._viewer_store:
             self._add_data_to_viewer(label, viewer_ref)
 
         if set_on_create:
-            # Not sure why this is sometimes missing, but we can add it here
-            if label not in self.orientation.choices:
-                self.orientation.choices += [label]
             self.orientation.selected = label
 
     def _ensure_layer_icon_exists(self, data_label):
@@ -612,6 +611,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 def add_wcs_data_to_app(app, data, data_label=None):
     app._jdaviz_helper._load(data, format='Image',
                              data_label=data_label, show_in_viewer=False)
+    # TODO: refactor logic to avoid having to send an AddDataMessage just to update icons
+    # ensure that icons are updated by forcing a call to app._on_layers_changed
+    image_viewer = app.get_viewers_of_cls(ImvizImageView)[0]
+    app.hub.broadcast(AddDataMessage(data=app.data_collection[data_label],
+                                     viewer=image_viewer, viewer_id=image_viewer.reference,
+                                     sender=app))
 
 
 def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True,
