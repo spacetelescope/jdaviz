@@ -436,7 +436,7 @@ catalog dropdown menu.
     the Gaia catalog and works best when you only have a single image loaded in a viewer.
 
 To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_,
-choose "From File..." from the dropdown menu.
+choose "From File..." from the menu.
 The file must be parseable by `astropy.table.Table.read` and must contain the following column(s):
 
 * ``'sky_centroid'``: Column with `~astropy.coordinates.SkyCoord` sky coordinates of the sources.
