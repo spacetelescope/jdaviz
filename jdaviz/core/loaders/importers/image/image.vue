@@ -26,7 +26,7 @@
       <plugin-switch v-if="has_gwcs"
         :value.sync="gwcs_to_fits_sip"
         label="Approximate GWCS with FITS SIP"
-        api_hint="ldr.gwcs_to_fits_sip = "
+        api_hint="ldr.importer.gwcs_to_fits_sip = "
         :api_hints_enabled="api_hints_enabled"
         hint="Try to convert GWCS into FITS SIP for better performance aligning images (typical precision <0.1 pixels)."
       />

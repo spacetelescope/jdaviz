@@ -70,7 +70,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('gwcs_to_fits_sip'))
+        return PluginUserApi(self, expose=('gwcs_to_fits_sip',))
 
     @property
     def default_viewer_reference(self):
@@ -87,6 +87,7 @@ class ImageImporter(BaseImporterToDataCollection):
         """
         if self.gwcs_to_fits_sip and self.has_gwcs:
             glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
+        return glue_data
 
     @property
     def output(self):
