@@ -13,7 +13,7 @@
     Heads up: Rampviz is new, and in active development.
 
 Rampviz is a visualization and analysis toolbox for ramp cubes from
-infrared detectors designed to work with ramp files from the Roman Space Telescope and JWST.
+infrared detectors, and is designed to work with ramp files from the Roman Space Telescope and JWST.
 It utilizes the `glue visualization <https://glueviz.org>`_ tool.
 
 **Using Rampviz**
