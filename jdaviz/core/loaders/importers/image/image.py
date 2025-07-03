@@ -4,7 +4,7 @@ import asdf
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import NDData
+from astropy.nddata import NDData, CCDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from traitlets import Bool, List, Any
@@ -85,25 +85,36 @@ class ImageImporter(BaseImporterToDataCollection):
         return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
                 for hdu in self.extension.selected_hdu]
 
-    def __call__(self):
+    def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
-        if isinstance(self.output, NDData):
-            data, data_label = _nddata_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
-        elif isinstance(self.output, np.ndarray):
-            data = _ndarray_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
-        elif (isinstance(self.output, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel))):
-            data, data_label = _roman_asdf_2d_to_glue_data(self.output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+        output = self.output
+        if isinstance(output, NDData):
+            data, data_label = _nddata_to_glue_data(output, data_label)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
+        elif isinstance(output, np.ndarray):
+            data = _ndarray_to_glue_data(output, data_label)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
+        elif (isinstance(output, asdf.AsdfFile) or
+              (HAS_ROMAN_DATAMODELS and isinstance(output, rdd.DataModel))):
+            data, data_label = _roman_asdf_2d_to_glue_data(output, data_label)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+            self.add_to_data_collection(data, f"{data_label}",
+                                        show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
         else:
             with self.app._jdaviz_helper.batch_load():
-                for ext, spec in zip(self.extension.selected_name, self.output):
-                    self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True)
+                for ext, ext_output in zip(self.extension.selected_name, output):
+                    self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
+                                                show_in_viewer=show_in_viewer,
+                                                cls=CCDData)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):

@@ -9,37 +9,60 @@ from astropy.nddata import NDData
 from astropy.wcs import WCS
 from gwcs import coordinate_frames as cf, wcs as gwcs_wcs
 
-__all__ = ['BaseImviz_WCS_NoWCS', 'BaseImviz_WCS_WCS', 'BaseImviz_WCS_GWCS', 'BaseImviz_GWCS_GWCS']
+__all__ = ['_image_hdu_nowcs', '_image_hdu_wcs', '_image_nddata_wcs',
+           'BaseImviz_WCS_NoWCS', 'BaseImviz_WCS_WCS', 'BaseImviz_WCS_GWCS', 'BaseImviz_GWCS_GWCS']
+
+
+def _image_hdu_nowcs(arr=np.ones((10, 10))):
+    """
+    Create a FITS ImageHDU without WCS.
+    """
+    return fits.ImageHDU(arr, name='SCI')
+
+
+def _image_hdu_wcs(arr=np.ones((10, 10))):
+    """
+    Create a FITS ImageHDU with WCS.
+    """
+    hdu = _image_hdu_nowcs(arr)
+    # Apply some celestial WCS from
+    # https://learn.astropy.org/rst-tutorials/celestial_coords1.html
+    hdu.header.update({'CTYPE1': 'RA---TAN',
+                       'CUNIT1': 'deg',
+                       'CDELT1': -0.0002777777778,
+                       'CRPIX1': 1,
+                       'CRVAL1': 337.5202808,
+                       'NAXIS1': 10,
+                       'CTYPE2': 'DEC--TAN',
+                       'CUNIT2': 'deg',
+                       'CDELT2': 0.0002777777778,
+                       'CRPIX2': 1,
+                       'CRVAL2': -20.833333059999998,
+                       'NAXIS2': 10})
+    return hdu
+
+
+def _image_nddata_wcs(arr=np.ones((10, 10)), unit=u.Jy):
+    """
+    Create a NDData object with WCS.
+    """
+    hdu = _image_hdu_wcs(arr)
+    return NDData(hdu.data, wcs=WCS(hdu.header), unit=unit)
 
 
 class BaseImviz_WCS_NoWCS:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):
-        hdu = fits.ImageHDU(np.arange(100).reshape((10, 10)), name='SCI')
-
-        # Apply some celestial WCS from
-        # https://learn.astropy.org/rst-tutorials/celestial_coords1.html
-        hdu.header.update({'CTYPE1': 'RA---TAN',
-                           'CUNIT1': 'deg',
-                           'CDELT1': -0.0002777777778,
-                           'CRPIX1': 1,
-                           'CRVAL1': 337.5202808,
-                           'NAXIS1': 10,
-                           'CTYPE2': 'DEC--TAN',
-                           'CUNIT2': 'deg',
-                           'CDELT2': 0.0002777777778,
-                           'CRPIX2': 1,
-                           'CRVAL2': -20.833333059999998,
-                           'NAXIS2': 10})
-
         # Data with WCS
-        imviz_helper.load_data(hdu, data_label='has_wcs')
+        hdu_wcs = _image_hdu_wcs(arr=np.arange(100).reshape((10, 10)))
+        imviz_helper.load_data(hdu_wcs, data_label='has_wcs')
 
         # Data without WCS
-        imviz_helper.load_data(hdu, data_label='no_wcs')
+        hdu_nowcs = _image_hdu_nowcs(arr=np.arange(100).reshape((10, 10)))
+        imviz_helper.load_data(hdu_nowcs, data_label='no_wcs')
         imviz_helper.app.data_collection[1].coords = None
 
-        self.wcs = WCS(hdu.header)
+        self.wcs = WCS(hdu_wcs.header)
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj
         self.subset_plugin = self.imviz.plugins['Subset Tools']
@@ -53,21 +76,8 @@ class BaseImviz_WCS_WCS:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):
         arr = np.ones((10, 10))
-
         # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
-        hdu1 = fits.ImageHDU(arr, name='SCI')
-        hdu1.header.update({'CTYPE1': 'RA---TAN',
-                            'CUNIT1': 'deg',
-                            'CDELT1': -0.0002777777778,
-                            'CRPIX1': 1,
-                            'CRVAL1': 337.5202808,
-                            'NAXIS1': 10,
-                            'CTYPE2': 'DEC--TAN',
-                            'CUNIT2': 'deg',
-                            'CDELT2': 0.0002777777778,
-                            'CRPIX2': 1,
-                            'CRVAL2': -20.833333059999998,
-                            'NAXIS2': 10})
+        hdu1 = _image_hdu_wcs(arr=arr)
         imviz_helper.load_data(hdu1, data_label='has_wcs_1')
 
         # Second data with WCS, similar to above but dithered by 1 pixel in X.
