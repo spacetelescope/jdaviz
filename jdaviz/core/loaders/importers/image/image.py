@@ -56,7 +56,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                                           manual_options=self.input,
                                                           filters=[_validate_fits_image2d])
             self.extension.selected = [self.extension.choices[0]]
-            self.has_gwcs
+            self.has_gwcs = self.set_has_gwcs()
 
     @property
     def is_valid(self):
@@ -89,46 +89,58 @@ class ImageImporter(BaseImporterToDataCollection):
             glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
         return glue_data
 
-    @property
-    def output(self):
-        # if nddata return it
-        if isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
-            return self.input
+    @cached_property
+    def data_and_label(self):
+        """Tuple of (data, data_label)."""
+        if isinstance(self.input, NDData): or isinstance(self.input, np.ndarray):
+            data, data_label = _nddata_to_glue_data(self.input, data_label)
+        elif isinstance(self.input, np.ndarray):
+            data_label = self.data_label_value
+            data = _ndarray_to_glue_data(self.output, data_label)
         elif (isinstance(self.input, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
-            return self.input
-        elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            return [_hdu2data(self.input, self.data_label_value, None, False)]
-        hdulist = self.input
-        return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
-                for hdu in self.extension.selected_hdu]
-
-    def __call__(self):
-        data_label = self.data_label_value
-        if isinstance(self.output, NDData):
-            data, data_label = _nddata_to_glue_data(self.output, data_label)
-        elif isinstance(self.output, np.ndarray):
-            data = _ndarray_to_glue_data(self.output, data_label)
-        elif (isinstance(self.output, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(self.output, rdd.DataModel))):
-            data, data_label = _roman_asdf_2d_to_glue_data(self.output, data_label,
-                                                           self.gwcs_to_fits_sip)
+            # do not pass in gwcs_to_fits_sip here yet, get the glue data
+            # object first to see if that should be exposed as an option, and the
+            # data.coords will be replaced with the approximation if toggled
+            # self.gwcs_to_fits_sip = True (from UI or loader API)
+            data, data_label = _roman_asdf_2d_to_glue_data(self.input, 
+                                                           self.data_label_value)
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
         else:
-            with self.app._jdaviz_helper.batch_load():
-                for ext, spec in zip(self.extension.selected_name, self.output):
-                    # if any of the inputs have a GWCS, expose the FITS SIP approximation toggle
-                    if not self.has_gwcs:
-                        self.has_gwcs = isinstance(data.coords, GWCS)
+            data = [_hdu2data(hdu, self.data_label_value, self.input)[0]
+                    for hdu in self.extension.selected_hdu]
+            data_label = self.extension.selected_name
 
+    def set_has_gwcs(self):
+        """
+        Set the has_gwcs traitlet which controls if the toggle for loading data 
+        with a FITS SIP approximation should be exposed.
+        """
+        data, _ = self.data_and_label
+        gwcs_to_fits_sip = False
+
+        if len(data):
+            if np.any([isinstance(dat.coords, GWCS) for dat in data]):
+                gwcs_to_fits_sip = True
+        else:
+            if isinstance(data.coords, GWCS):
+                gwcs_to_fits_sip = True
+
+        self.gwcs_to_fits_sip = gwcs_to_fits_sip
+
+
+    def __call__(self):
+        data, data_label = self.data_and_label
+
+        if len(data):
+            with self.app._jdaviz_helper.batch_load():
+                for ext, spec in zip(data_label, data):
                     self._glue_data_wcs_to_fits(spec)
                     self.add_to_data_collection(spec, f"{data_label}[{ext}]", show_in_viewer=True)
-                    return
-
-        self.has_gwcs = isinstance(data.coords, GWCS)
-        self._glue_data_wcs_to_fits(data)
-        self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
+        else:
+            self._glue_data_wcs_to_fits(data)
+            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=True)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):
