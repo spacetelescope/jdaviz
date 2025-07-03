@@ -67,9 +67,13 @@ Extract a ramp from a ramp cube.
 Data products from infrared detectors flow through the official
 :ref:`JWST <jwst:user-docs>` or
 `Roman <https://roman-pipeline.readthedocs.io/en/latest/>`_ mission pipelines
-in `levels <https://jwst-pipeline.readthedocs.io/en/stable/jwst/pipeline/main.html#pipelines>`_.
-Infrared detectors use an "up-the-ramp" readout pattern, which is summarized in the
+in levels. Infrared detectors use an "up-the-ramp" readout pattern, which is summarized in the
 `JWST documentation <https://jwst-docs.stsci.edu/understanding-exposure-times>`_.
+
+.. note::
+    For more information on the JWST and Roman stages/levels, see
+    `JWST pipeline stage documentation <https://jwst-pipeline.readthedocs.io/en/stable/jwst/pipeline/main.html#pipelines>`_
+    `Roman data pipelines documentation <https://roman-docs.stsci.edu/data-handbook-home/roman-data-pipelines>`_.
 
 The Ramp Extraction plugin is a quick-look tool; it does not yet support every feature of the
 mission pipelines. The mission pipelines produce rate images from ramp cubes by fitting the
