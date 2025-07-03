@@ -115,6 +115,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # Ensure the current spectral region bounds are up-to-date at render time
         self.update_wavelength_range(None)
 
+        previous_label = self.results_label
+
         # generate the sonified cube
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
@@ -122,7 +124,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                            self.audfrqmax, self.eln, self.use_pccut,
                                            self.results_label)
 
-        msg = SnackbarMessage(f"'{self.results_label}' sonified successfully.",
+        msg = SnackbarMessage(f"'{previous_label}' sonified successfully.",
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
