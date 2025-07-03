@@ -17,9 +17,13 @@ Automatic Directory Loading
 Mosviz provides instrument-specific directory parsers for select instruments. At this
 time, Mosviz supports automatic parsing for the following instruments:
 
-* :ref:`mosviz-import-auto-dir-nirspec`
-* :ref:`mosviz-import-auto-dir-niriss`
-* :ref:`mosviz-import-auto-dir-nircam`
+* `NIRSPEC <https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph#gsc.tab=0>`_
+* `NIRISS <https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph#gsc.tab=0>`_
+* `NIRCAM <https://jwst-docs.stsci.edu/jwst-near-infrared-camera#gsc.tab=0>`_
+
+.. note::
+   For more information on the data products produced by JWST's various instruments, see
+   `JWST Science Data Overview <https://jwst-docs.stsci.edu/accessing-jwst-data/jwst-science-data-overview#gsc.tab=0>`_
 
 In a Jupyter context (notebook or Lab), you must specify the instrument with a directory
 as such:
@@ -81,10 +85,10 @@ JWST NIRISS
 
 The NIRISS parser expects a directory with the following types of files:
 
-* ``*_i2d.fits`` : Level 3 2D images from the ``calwebb_image3`` imaging pipeline
-* ``*_cat.ecsv`` : Level 3 source catalog from the ``calwebb_image3`` imaging pipeline **(For best performance, it's recommended that your directory only contain one.)**
-* ``*_cal.fits`` : Level 2 2D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 2D viewer by default.)*
-* ``*_x1d.fits`` : Level 2 1D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 1D viewer by default.)*
+* ``*_i2d.fits`` : Level 3 2D images from the `calwebb_image3 <https://jwst-pipeline.readthedocs.io/en/stable/jwst/pipeline/calwebb_image3.html#calwebb-image3>`_ imaging pipeline
+* ``*_cat.ecsv`` : Level 3 source catalog from the `calwebb_image3 <https://jwst-pipeline.readthedocs.io/en/stable/jwst/pipeline/calwebb_image3.html#calwebb-image3>`_ imaging pipeline **(For best performance, it's recommended that your directory only contain one.)**
+* ``*_cal.fits`` : Level 2 2D spectra in vertical (R) and horizontal (C) orientations from the `calwebb_spec2 <https://jwst-pipeline.readthedocs.io/en/stable/jwst/pipeline/calwebb_spec2.html#calwebb-spec2>`_ spectroscopic pipeline *(C spectra are shown first in 2D viewer by default.)*
+* ``*_x1d.fits`` : Level 2 1D spectra in vertical (R) and horizontal (C) orientations from the `calwebb_spec2 <https://jwst-pipeline.readthedocs.io/en/stable/jwst/pipeline/calwebb_spec2.html#calwebb-spec2>`_ spectroscopic pipeline *(C spectra are shown first in 1D viewer by default.)*
 
 .. _mosviz-import-auto-dir-nircam:
 

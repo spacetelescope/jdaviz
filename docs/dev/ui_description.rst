@@ -4,10 +4,10 @@ Glupyter Framework Overview
 
 The glue-jupyter ("glupyter") package supports interacting with and
 visualizing data within the Jupyter environment using core elements from
-the glue python package. It is distinct because unlike the more
-prominent glue package, glupyter does not leverage Qt as the front-end
+the ``glue`` python package. It is distinct because unlike the more
+prominent ``glue`` package, glupyter does not leverage Qt as the front-end
 GUI library. Instead, glupyter maintains the separation between the data
-model (e.g., the core elements from glue that are not dependent on the
+model (e.g., the core elements from ``glue`` that are not dependent on the
 front-end library), and the view of the data (in this case, web-based
 tooling provided by Jupyter).
 
@@ -164,7 +164,7 @@ There are three fundamental forms of communication between widgets:
 
 1. direction communication using the ``observer`` pattern using `Traitlets <https://traitlets.readthedocs.io/en/stable/>`_,
 2. global communication using the centralized event hub provided by glue,
-3. and callback properties on glue objects.
+3. and callback properties on ``glue`` objects.
 
 Direct messaging
 ~~~~~~~~~~~~~~~~
@@ -231,12 +231,12 @@ independently.
 
 The Jdaviz package includes a base class that can be used for adding
 widgets that would need to communicate through global events. This is
-is the ``TemplateMixin`` class and allows passing glue session objects
-to widgets upon their instantiation. The glue session contains the ``Hub``
+is the ``TemplateMixin`` class and allows passing ``glue`` session objects
+to widgets upon their instantiation. The ``glue`` session contains the ``Hub``
 object available to the application and it, along with other useful
 data objects, are easily accessible through the ``TemplateMixin``.
 
-Using the glue event framework is covered in great detail in the
+Using the ``glue`` event framework is covered in great detail in the
 `glue documentation <http://docs.glueviz.org/en/stable/developer_guide/communication.html>`__.
 The code snippet gives an example of how an event listener may be
 implemented inside a widget:
@@ -271,10 +271,10 @@ Glue callback properties
 In cases where traitlets are not appropriate (e.g., where some python object is
 not a strict inherited class of ``HasTraitlet``), glue's ``CallbackProperty`` s
 can be used in conjunction with a ``State`` class object. It should be noted,
-however, that glue callback properties do not interact with the front-end UI
+however, that ``glue`` callback properties do not interact with the front-end UI
 as in the case using traitlets; that is, changing the value of a callback
 property will not automatically propagate that change to the front-end. More
-information on using glue callback properties can be be found in
+information on using ``glue`` callback properties can be be found in
 :ref:`glueviz:state-viewer`.
 
 

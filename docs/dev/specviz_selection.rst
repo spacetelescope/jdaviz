@@ -14,7 +14,7 @@ Data loaded in are imported into Jdaviz and immediately converted into a
 are returned by the ``specviz.get_spectra()`` method.
 
 The selection tool allows the user to specify a specific range on the graph.
-This is defined by the underlying glue library upon which Jdaviz relies on as a
+This is defined by the underlying ``glue`` library upon which Jdaviz relies on as a
 "glue subset." Thus throughout the software documentation, we will refer to these
 user defined ranges as "subsets." Effectively, the selection tool defines a mask that
 can be thought of as "definition" of which data is and is not included in the subset.

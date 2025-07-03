@@ -40,8 +40,9 @@ This plugin gives access to per-viewer and per-layer plotting options.
 Data Quality
 ============
 
-Visualize data quality arrays for science data. The currently supported
-data quality flag mappings include JWST (all instruments) and Roman/WFI.
+This plugin allows you to visualize data quality arrays for science data.
+The currently supported data quality flag mappings include JWST (all instruments)
+and Roman/WFI.
 
 Each science data layer can have one associated data quality layer.
 The visibility of the data quality layer can be toggled from the data
@@ -52,7 +53,7 @@ plugin will infer the correct flag mapping from the file metadata.
 The opacity of the data quality layer can be changed relative to the
 opacity of the science data layer using the slider.
 
-The Quality Flag section contains a dropdown for applying a filter to the
+The "Quality Flag" section contains a dropdown for applying a filter to the
 visualized bits. Select bits from the dropdown to visualize only flags
 containing those bits. The list of data quality flags beneath shows
 every flag in the data quality layer in bold, followed by the
@@ -97,9 +98,10 @@ in the "Filter by bits" dropdown, or from the API we could:
 Subset Tools
 ============
 
-This plugin allows you to select an existing subset to modify, or to select
-:guilabel:`Create new` to create a new subset by selecting and using the region selector
-in the spectrum viewer toolbar. You can also choose the operation that will be
+This plugin allows you to create new subsets or modify existing subsets.
+
+To create a new subset, select :guilabel:`Create new`, and use the region
+selector in the spectrum viewer toolbar. You can also choose the operation that will be
 applied by the selector tool. Note that these are synched with the subset tools
 in the app-level toolbar. It might not show some static regions loaded
 via the API unless an interactive region is drawn after.
@@ -110,9 +112,9 @@ multiple disjoint regions) being displayed, the logical operations joining them
 (``OR``, ``AND``, etc.) are shown as well for each region. This shows how all regions
 are added together to create the subset shown in the viewer.
 
-For a simple subset or group of subsets in Imviz only, you can choose to recenter based
-on the selected Data. To switch to multiselect mode, click the icon in the top right of
-the plugin and select multiple subsets from the drop-down menu.
+In Imviz only, you can choose to recenter the viewer on a single subset
+or group of subsets. To switch to multiselect mode, click the icon in the
+top right of the plugin and select multiple subsets from the drop-down menu.
 The centroid is calculated by :attr:`photutils.aperture.ApertureStats.centroid`,
 which is the center-of-mass of the data within the aperture.
 No background subtraction is performed. Click :guilabel:`Recenter`
@@ -130,9 +132,9 @@ This may take multiple iterations to converge.
 For a simple subset, you can edit its parameters by changing the values
 in the corresponding editable text fields. Once you have entered the new
 value(s), click :guilabel:`Update` to apply. You should see the subset
-parameters, shape, and orientation (if applicable) all update concurrently.
+parameters, shape, and orientation (if applicable) as all update concurrently.
 
-Angle is counter-clockwise rotation around the center in degrees.
+Note, angle is reported in degrees as a counter-clockwise rotation about the center.
 
 From the API
 ------------
@@ -149,9 +151,10 @@ with only the subset specified:
 This will return a dictionary with the name (as displayed in the UI), attribute, and
 value for each editable attribute of each subregion of the specified subset. Note that
 passing ``subset_label`` in the ``update_subset`` call will also set the selected subset
-in the plugin UI to the specified subset, while not specifying ``subset_label`` will operate
-on the currently selected subset in the plugin. The attributes returned by the call above can
-be updated by passing their new values as keyword arguments, for example:
+in the plugin UI to the specified subset. If ``subset_label`` is not specified,
+``update_subset`` will operate on the currently selected subset in the plugin.
+The attributes returned by the call above can be updated by passing their new
+values as keyword arguments, for example:
 
 .. code-block:: python
 
@@ -183,11 +186,12 @@ will create a new subset but
   st.import_region(CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5), edit_subset='Subset 1',
    combination_mode='or')
 
-will append the region to the existing Subset 1 using the 'or' ``combination_mode``. Other options for
-``combination_mode`` include 'and', 'andnot', 'new', 'replace', and 'xor'. If you set a value for ``edit_subset`` but
-not ``combination_mode``, the assumption will be that the new region is replacing the existing subset named in
-``edit_subset``. This API method acts independently of the UI so all settings from before ``import_region`` was called
-will be restored afterward.
+will append the region to the existing Subset 1 using the 'or' ``combination_mode``.
+Other options for ``combination_mode`` include "and", "andnot", "new", "replace", and "xor".
+If you set a value for ``edit_subset`` but not ``combination_mode``, the assumption will be
+that the new region is replacing the existing subset named in ``edit_subset``.
+This API method acts independently of the UI so all settings from before ``import_region``
+was called will be restored afterward.
 
 .. _markers-plugin:
 
@@ -199,10 +203,10 @@ the location of that marker along with the applicable data and viewer labels int
 
 With the plugin open in the tray, mouse over any viewer and press the "m" key to log the information
 displayed in the app toolbar into the table.  The markers remain at that fixed pixel-position in
-the viewer they were created (regardless of changes to the underlying data or linking) and are only
-visible when the plugin is opened.
+the viewer they were created (regardless of changes to the underlying data or linking,
+see :ref:`dev_glue_linking`) and are only visible when the plugin is opened.
 
-In Imviz, the table also exposed columns labeled "pixel:unreliable", "world:unreliable", and
+In Imviz, the table also exposes columns labeled "pixel:unreliable", "world:unreliable", and
 "value:unreliable".  These will be logged as ``True`` in cases where the information is outside
 the bounds of the reference image's WCS (noted in the mouseover display by the information showing
 as grayed).
@@ -232,10 +236,9 @@ All images are automatically linked by pixels on load but you can use
 it to re-link by pixels or WCS as needed.
 
 For WCS linking, the "fast approximation" option uses an affine transform
-to represent the offset between images, if possible. It is much more
-performant at the cost of accuracy but should be accurate to within a pixel
-for most cases. If approximation fails, WCS linking still automatically
-falls back to full transformation.
+to represent the offset between images, if possible. This method, although less accurate,
+is much more performant and should still be accurate to within a pixel for most cases.
+If approximation fails, WCS linking will fall back to the full transformation.
 
 Since Jdaviz v3.9, when linking by WCS, a hidden reference data layer
 without distortion (labeled "Default orientation") will be created and all the data would be linked to
@@ -269,9 +272,9 @@ presets (N-up, E-left/right) or provide your own sky angle.
 
 .. warning::
 
-    Each rotation request created a new reference data layer in the background.
+    Each rotation request creates a new reference data layer in the background.
     Just as in :ref:`imviz-import-data`, the performance would be impacted by
-    the number of active rotation layers you have; Only keep the desired rotation layer.
+    the number of active rotation layers you have; only keep the desired rotation layer.
     Note that the "default orientation" layer cannot be removed.
 
 .. _imviz-compass:
@@ -291,9 +294,9 @@ to change the active viewer that it tracks.
 Image Profiles (XY)
 ===================
 
-This plugin plots line profiles across X and Y for the pixel under cursor
-when ``l`` key is pressed on the image viewer. You can also manually type in the
-values of X and Y, and then press the :guilabel:`PLOT` button.
+This plugin plots line profiles across X and Y. The plugin can be activated by either:
+pressing ``l`` at the desired pixel location on the image viewer, or by manually
+specifying the pixel coordinates X and Y, before selecting the :guilabel:`PLOT` button.
 The top visible image, the same one displayed under :ref:`imviz-compass`,
 will be used for these plots.
 
@@ -326,9 +329,8 @@ an interactively selected region. A typical workflow is as follows:
        You cannot use annulus region as aperture (an exception will be thrown)
        but you may use it for background (see below).
 
-5. If you want to subtract background before performing photometry,
-   you have the following 3 options. Otherwise if your image is already
-   background subtracted, choose "Manual" and leave the background set at 0:
+5. If you would like to subtract background before performing photometry,
+   you have the following options:
 
   * Manual: Enter the background value in the :guilabel:`Background value` field.
     This value must be in the same unit as display data, if applicable.
@@ -337,13 +339,16 @@ an interactively selected region. A typical workflow is as follows:
     created with the :guilabel:`replace` option are acceptable as background regions
     (see :ref:`imviz_defining_spatial_regions`).
 
-6. For some JWST and HST images, pixel area in arcsec squared is automatically
+   If your image is already background subtracted, choose "Manual" and set the
+   :guilabel:`Background value` to 0.
+
+6. For some JWST and HST images, pixel area in arcsec2 is automatically
    populated in the :guilabel:`Pixel area` field from image metadata. If it does
    not auto-populate for you, you can manually enter a value but it must be in the
-   unit of arcsec squared. This field is only used if per steradian is detected
-   in display data unit. Otherwise, it is only informational.
+   unit of arcsec2. This field is only used if "per steradian" is detected
+   in display data unit. Otherwise, it is solely informational.
    If this field is not applicable for you, leave it at 0.
-   **This field resets every time Data selection changes if auto-population not possible.**
+   **This field resets every time Data selection changes if auto-population is not possible.**
 
    .. warning::
 
@@ -353,22 +358,23 @@ an interactively selected region. A typical workflow is as follows:
        This is because, for performance reasons, the plugin multiplies
        by the area after the aperture sum is calculated.
 
-7. If you also want photometry result in the unit of counts, you can enter a
+7. If you also want your photometry result in the unit of counts, you can enter a
    conversion factor in the :guilabel:`Counts conversion factor` field. The value
    must be in the unit of display data unit per counts. This is used to convert linear
    flux unit (e.g., MJy/sr) to counts. This field is only used if data has a valid unit.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
-8. If you also want photometry result in magnitude unit, you can enter a flux
+
+8. If you also want your photometry result in magnitude units, you can enter a flux
    scaling factor in the :guilabel:`Flux scaling` field.
    :guilabel:`Flux scaling` is populated for JWST images
    if MJy/sr data unit is detected and pixel area is given to factor out the per-steradian unit.
    The value used, if this is the case, is the scaling to convert MJy to AB magnitude.
    Otherwise, the value must be in the
    same unit as display data unit. A magnitude is then calculated using
-   ``-2.5 * log(flux / flux_scaling)``. This calculation only makes sense if your
+   $-2.5 * \text{log}(\text{flux} / \text{flux_scaling})$. This calculation only makes sense if your
    display data unit is already in linear flux unit. Setting this to 1 is equivalent
-   to not applying any scaling. This field is only used if data has a valid unit.
+   to no scaling. This field is only used if data has a valid unit.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
 9. Select the desired radial profile plot type using the :guilabel:`Plot Type` dropdown menu
@@ -429,11 +435,12 @@ catalog dropdown menu.
     This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog and
     the Gaia catalog and works best when you only have a single image loaded in a viewer.
 
-To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_, choose "From File...".
-The file must be able to be parsed by `astropy.table.Table.read` and contains the following columns:
+To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_,
+choose "From File..." from the menu.
+The file must be parseable by `astropy.table.Table.read` and must contain the following column(s):
 
 * ``'sky_centroid'``: Column with `~astropy.coordinates.SkyCoord` sky coordinates of the sources.
-* ``'label'``: (Optional) Column with string identifiers of the sources.
+* ``'label'`` (Optional): Column with string identifiers of the sources.
   If not provided, unique string identifiers will be generated automatically.
   If you have numerical identifiers, they will be recast as strings.
 
@@ -472,19 +479,19 @@ Footprints
 
 This plugin supports loading and overplotting instrument footprint overlays on the image viewers.
 Any number of overlays can be plotted simultaneously from any number of the available
-preset instruments (requires pysiaf to be installed), by loading an Astropy regions object from
-a file, or by passing an STC-S string.
+preset instruments (requires ``pysiaf`` to be installed), by loading an Astropy regions object from
+a file, or by passing an ``STC-S`` string.
 
 The top dropdown allows renaming, adding, and removing footprint overlays.  To modify the display
-and input parameters for a given overlay, select it in the dropdown, and modify the choices
-in the plugin to change its color, opacity, visibilities in any image viewer in the app, or to
-select between various preset instruments and change the input options (position on the sky,
-position angle, offsets, etc).
+and input parameters for a given overlay, select the overlay in the dropdown, and modify the choices
+in the plugin to change its color, opacity, visibilities in any image viewer in the app.
+You can also select between various preset instruments and change the input options
+(position on the sky, position angle, offsets, etc).
 
 To import a file, choose "From File..." from the presets dropdown and select a valid file (must
 be able to be parsed by `regions.Regions.read`).
 
-To import a regions file, object, or STC-S string from the API:
+To import a regions file, object, or ``STC-S`` string from the API:
 
 .. code-block:: python
 

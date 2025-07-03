@@ -14,7 +14,8 @@ Mosviz is a quick-look analysis and visualization tool for multi-object spectros
 It is designed to work with pipeline output: spectra and associated images, or just with spectra.
 Mosviz is created to work with data from any telescope/instrument,
 but is built with the micro-shutter assembly (MSA) on the JWST/NIRSpec spectrograph
-and the JWST/NIRCam imager in mind. As such, Mosviz has some features specific to NIRSpec and NIRCam data.
+and the JWST/NIRCam imager in mind. As such, Mosviz has some features specific to
+NIRSpec and NIRCam data.
 
 The NIRSpec MSA can produce ~100 spectra per pointing.
 Many users will perform surveys with the MSA that will result in data sets containing many spectra.
@@ -26,13 +27,15 @@ measurements of quantities such as wavelengths, velocities, line fluxes, widths.
 Quickstart
 ==========
 
-To load a sample `NIRISS Nirspec Data Set <https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip>`_ into ``Mosviz`` in the standalone app, unzip the downloaded zip file and run:
+To load a sample `NIRISS Nirspec Data Set <https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip>`_
+into ``Mosviz`` in the standalone app, unzip the downloaded zip file and run:
 
 .. code-block:: bash
 
     jdaviz --layout=mosviz /path/to/mosviz_nirspec_data_0.3/level3
 
-Or to load in a Jupyter notebook, see the :gh-notebook:`MosvizExample` or :gh-notebook:`MosvizNIRISSExample`.
+Or to load in a Jupyter notebook, see the :gh-notebook:`MosvizExample`
+or :gh-notebook:`MosvizNIRISSExample`.
 
 Using Mosviz
 ============

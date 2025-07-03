@@ -58,7 +58,7 @@ Notes on GWCS
 If your *reference data* has GWCS with a bounding box, any coordinates transformation
 outside that bounding box is less reliable. This still applies even when you are
 looking at some other data that is not the reference data if they are linked by WCS
-because all transformations in glue go through the reference data. Such a situation
+because all transformations in ``glue`` go through the reference data. Such a situation
 is indicated by the affected coordinates becoming gray.
 
 If your data of interest also has a GWCS with a bounding box, only
@@ -75,7 +75,7 @@ To avoid inaccurate transforms, consider one of the following workflows:
 
 .. warning::
 
-    If you rely on the GWCS bounding box, it will be set to None when
+    If you rely on the GWCS bounding box, it will be set to ``None`` when
     you data is loaded into Imviz, but the original bounding box,
     if available, is now in a hidden ``_orig_bounding_box``
     attribute of the GWCS object. You can restore the bounding box by
@@ -165,7 +165,7 @@ viewer to lock it in place.
 
 There are other options available for region of interest. At the top of the user interface,
 there is a section that says either "+ No selection (create new)" or "Subset n" where n is an integer
-that tells you which Subset is currently selected. To the right of this area, are red circles that allow
+that tells you which Subset is currently selected. Red circles to the right of this area allow
 you to change the method of region selection. The options are:
 
 * ``replace``: will remove the previously created selection and place the newly created subset.
@@ -186,8 +186,6 @@ You can use these options to further adjust the region of interest and adapt it 
     :ref:`Exporting Spatial Regions <imviz_export_regions>`
         Exporting regions from within the Jupyter notebook.
 
-You can :ref:`import <imviz-import-regions-api>` and :ref:`export <imviz_export_regions>` regions from the API.
-
 .. seealso::
 
     `Defining subsets using glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
@@ -201,7 +199,7 @@ to make subsets visible or invisible, to change their color, and to change their
 Single-Pixel Selection
 ----------------------
 
-This tool is no longer available as of Jdaviz v3.9; use :ref:`markers-plugin` plugin instead.
+This tool is no longer available as of Jdaviz v3.9; use the :ref:`markers-plugin` plugin instead.
 
 Blinking
 ========
@@ -210,7 +208,7 @@ Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon (only available if
 there are more than one image loaded in the viewer) and then left-clicking on the image to blink
-forward; right-clicking would blink backwards.
+forward; right-clicking to blink backwards.
 
 You can also blink forward by pressing the "b" key on your keyboard while moused over the image.
 If you press Shift + "b" ("B"), you may blink backwards.
@@ -239,7 +237,7 @@ Imviz has a |icon-white-to-black| button under the |icon-blink| menu that can al
 adjust those values.
 
 After right-clicking on the blink icon, left click on the constrast/bias icon to activate it.
-Now you can click and drag on the image viewer to change to change the contrast
+Now you can click and drag on the image viewer to change the contrast
 and bias. Moving along the X-axis will change the bias and moving along the Y-axis will change the
 contrast. If you would like to reset to the default contrast and bias settings, you can
 double-click on the display while the mode is active.
@@ -251,7 +249,7 @@ Display Settings
 
 To access all of the different display settings for an image viewer, click the
 |icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
-Changing the display settings DOES NOT change the underlying data, only the
+Changing the display settings **does not** change the underlying data, only the
 visualization of that data.
 
 .. image:: ../img/imviz_plot_options.png
@@ -274,7 +272,7 @@ later in this Section.
 Layer
 -----
 
-This option allows you to change which layer you are changing the settings for.
+This option allows you to choose the layer for which you are changing the settings.
 
 Show image
 ----------
@@ -285,12 +283,12 @@ Color mode
 ----------
 
 This option allows you to choose whether to use a colormap or or a single color to visualize the image.
-The colormap can be selected from a dropdown within the Layer tab. In "Color" mode, the color
-can be chosen from a color picker under "Image Color" within the Layer tab.
+The colormap can be selected from a dropdown within the Layer tab.
 
-In "Color" mode, the option "Assign RGB presets" appears. This will automatically
-assign colors spanning from blue to red to the available layers and will adjust opacity and
-stretch to produce a composite color image (also known as RGB image). You will then
+In "Color" mode, the color can be chosen from a color picker under "Image Color"
+within the Layer tab. The option "Assign RGB presets" also appears. This will automatically
+assign colors (spanning from blue to red) to the available layers and will adjust opacity and
+stretch to produce a composite color image (also known as an RGB image). You will then
 be able to fine tune all options within each Layer tab.
 
 From the API
@@ -319,7 +317,7 @@ Adding Custom Colormap
 ^^^^^^^^^^^^^^^^^^^^^^
 
 A custom colormap can only be added when Imviz is run in a notebook, not from the
-command line. The custom colormap must be added to glue *before* starting Imviz.
+command line. The custom colormap must be added to ``glue`` *before* starting Imviz.
 The example below adds a random colormap generated by ``photutils`` into glue:
 
 .. code-block:: python
@@ -364,15 +362,17 @@ bias values by sliding it left.
 Stretch
 -------
 
-The Stretch Function allows you to change the equation that is used to convert data values between
+The Stretch Function
+(see `Image stretching and normalization <https://docs.astropy.org/en/stable/visualization/normalization.html>`_)
+allows you to change the equation that is used to convert data values between
 :guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the
-image. The Percentile can be used to set the :guilabel:`min` and :guilabel:`max`
+image. The "Stretch Percentile Preset" can be used to set the :guilabel:`min` and :guilabel:`max`
 values based on percentiles of the data.
 An interactive histogram is available. It shows vertical lines representing
 the ``stretch_vmin`` and ``stretch_vmax`` values, and a colorbar on top.
 The stretch "curve" is plotted on the histogram to represent
 how pixel values are mapped to the colorbar and can be toggled on and off in the plugin.
-The collapsed menu "More stretch options"
+The collapsed menu "More Stretch Options"
 includes a toggle to limit the histogram to the current zoom limits (which is not on by default)
 and fields to set :guilabel:`min` and :guilabel:`max` manually.
 
@@ -380,7 +380,7 @@ From the API
 ^^^^^^^^^^^^
 
 The stretch function for just the image being displayed
-(the acceptable values are as defined by glue backend) can be set using
+(the acceptable values are as defined by ``glue`` backend) can be set using
 the Astrowidgets API:
 
 .. code-block:: python
