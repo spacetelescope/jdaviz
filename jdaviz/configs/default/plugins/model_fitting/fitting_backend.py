@@ -1,11 +1,7 @@
 from asteval import Interpreter
-
 import multiprocessing as mp
 from multiprocessing import Pool
-
 import numpy as np
-
-import astropy.units as u
 
 from specutils import Spectrum1D
 from specutils.fitting import fit_lines
@@ -322,40 +318,6 @@ def _build_model(component_list, expression):
     model = aeval(expression)
 
     return model
-
-
-def _handle_parameter_units(model, fitted_parameters_cube, param_units):
-    """
-    Extracts parameter units from a CompoundModel and parameter values
-    from a list of 2D numpy arrays, and returns a dict of 2D Quantity
-    arrays. The dict values are keyed by the parameter names.
-
-    Parameters
-    ----------
-    model : :class:`astropy.modeling.CompoundModel`
-        An instance of a model.
-    fitted_parameters_cube : ndarray
-        A 3D array in which the 1st dimension addresses model
-        parameters, and the 2nd and 3rd dimensions address
-        spaxels.
-    param_units : list
-        A list with each parameter's units (this is not available
-        in the model instance itself).
-
-    Returns
-    -------
-    fitted_parameters_dict : dict
-        2D Quantity arrays keyed by parameter name
-    """
-
-    fitted_parameters_dict = {}
-
-    for index in range(len(model.parameters)):
-        key = model.param_names[index]
-        _ary = fitted_parameters_cube[index, :, :]
-        fitted_parameters_dict[key] = u.Quantity(_ary, param_units[index])
-
-    return fitted_parameters_dict
 
 
 def _generate_spaxel_list(spectrum):
