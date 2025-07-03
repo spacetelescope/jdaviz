@@ -103,7 +103,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         # description displayed under plugin title in tray
-        self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'
+        self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'  # noqa
 
         self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
 

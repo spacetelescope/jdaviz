@@ -130,8 +130,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                        'orientation_layer_selected',
                                        'viewer_id',
                                        only_wcs_layers=True)
-        # TODO: listen to viewers added/removed and set based on whether there are image viewers with WCS reference layers
-        self.orientation_enabled = self.config in ('imviz', 'deconfigged')
+
+        self.orientation_enabled = (self.config in ('imviz', 'deconfigged')
+                                    and viewer.__class__.__name__ == 'ImvizImageView')
 
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
