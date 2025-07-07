@@ -12,6 +12,9 @@
 
     <div class="jd-plugin-section">
       <div style="font-weight: bold; margin-bottom: 5px;">Markers Table</div>
+      <div class="text--secondary" style="margin-bottom: 10px;">
+        Press 'm' to create a marker.
+      </div>
       <jupyter-widget :widget="table_widget"></jupyter-widget>
     </div>
 
@@ -31,10 +34,8 @@
 
     <div class="jd-plugin-section">
       <div style="font-weight: bold; margin-bottom: 5px;">Measurements Table</div>
-      <jupyter-widget :widget="distances_table"></jupyter-widget>
+      <jupyter-widget :widget="measurements_table"></jupyter-widget>
     </div>
 
   </j-tray-plugin>
 </template>
-
-

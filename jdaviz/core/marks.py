@@ -820,7 +820,7 @@ class DistanceMeasurement:
             y=[],
             scales=viewer.scales,
             colors=[accent_color],
-            stroke_width=3.5
+            stroke_width=2
         )
 
         anchor_x, anchor_y = (x0 + y0) / 2, (x1 + y1) / 2
@@ -830,14 +830,14 @@ class DistanceMeasurement:
             colors=['black'],
             stroke_width=12,
             font_weight='bold',
-            default_size=22
+            default_size=15
         )
 
         self.label_text = DistanceLabel(
             viewer, anchor_x, anchor_y, text,
             colors=[accent_color],
             font_weight='bold',
-            default_size=22
+            default_size=15
         )
 
         self.visible = True
