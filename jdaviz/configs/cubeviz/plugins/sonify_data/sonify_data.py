@@ -1,6 +1,11 @@
 import time
-from traitlets import Bool, List, Unicode, observe
+
+from astropy.nddata import CCDData
 import astropy.units as u
+from astropy.wcs import WCS
+import numpy as np
+from scipy.special import erf
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
@@ -8,8 +13,9 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SpectralSubsetSelectMixin, with_spinner,
                                         AddResultsMixin)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.core.events import SnackbarMessage
-
+from jdaviz.core.events import SnackbarMessage, AddDataMessage, RemoveDataMessage
+from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL, INT_MAX
+from jdaviz.core.sonified_layers import SonifiedLayerState
 
 __all__ = ['SonifyData']
 
@@ -78,8 +84,21 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.refresh_device_list()
 
         self.add_to_viewer_selected = 'flux-viewer'
+        self.sonified_cube = None
+        self.sonification_wl_ranges = None
+        self.sonification_wl_unit = None
+        self.stream = None
+        # Dictionary that contains keys with UUIDs for each
+        # sonified data layer. The value of each key is another dictionary containing
+        # coordinates as keys and arrays representing sounds as the value.
+        self.data_lookup = {}
 
         self._update_label_default(None)
+
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._data_added_to_viewer)
+        #self.hub.subscribe(self, RemoveDataMessage,
+        #                   handler=self._data_removed_from_viewer)
 
     @property
     def user_api(self):
@@ -93,6 +112,33 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         """
         # Modify default label to avoid vue error from re-using label
         self.results_label_default = self.app.return_unique_name('Sonified data', typ='data')
+
+    def _data_added_to_viewer(self, msg):
+        # Keep track of the volume attribute for each layer.
+        for layer in msg.viewer.state.layers:
+            if not isinstance(layer, SonifiedLayerState):
+                continue
+
+            # Find layer, add volume check to dictionary and add callback to volume changing and
+            # audible changing
+            msg.viewer.layer_volume[layer.layer.label] = layer.volume
+            msg.viewer.sonified_layers_enabled += ([layer.layer.label] if
+                                                   getattr(layer, 'audible', False) else [])  # noqa
+
+            if 'volume' not in layer.callback_properties():
+                layer.add_callback('volume', msg.viewer.recalculate_combined_sonified_grid)
+            if 'audible' not in layer.callback_properties():
+                layer.add_callback('audible', msg.viewer.recalculate_combined_sonified_grid)
+
+    def start_stream(self):
+        print("Starting stream in plugin")
+        if self.stream and not self.stream.closed:
+            self.stream.start()
+            print("Started the stream")
+
+    def stop_stream(self):
+        if self.stream and not self.stream.closed:
+            self.stream.stop()
 
     def sonify_cube(self):
         """
@@ -112,7 +158,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             display_unit = self.spectrum_viewer.state.x_display_unit
             min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
             max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
-            self.flux_viewer.update_listener_wls((min_wavelength, max_wavelength), display_unit)
+            self.sonification_wl_ranges = ([min_wavelength, max_wavelength],)
+            self.sonification_wl_unit = display_unit
 
         # Ensure the current spectral region bounds are up-to-date at render time
         self.update_wavelength_range(None)
@@ -120,11 +167,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         previous_label = self.results_label
 
         # generate the sonified cube
-        sonified_cube = self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
-                                                           selected_device_index, self.assidx,
-                                                           self.ssvidx, self.pccut, self.audfrqmin,
-                                                           self.audfrqmax, self.eln,
-                                                           self.use_pccut, self.results_label)
+        sonified_cube = self.get_sonified_cube(self.sample_rate, self.buffer_size,
+                                               selected_device_index, self.assidx,
+                                               self.ssvidx, self.pccut, self.audfrqmin,
+                                               self.audfrqmax, self.eln,
+                                               self.use_pccut, self.results_label)
         sonified_cube.meta['Sonified'] = True
         self.add_results.add_results_from_plugin(sonified_cube, replace=False)
 
@@ -135,6 +182,144 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
+
+    def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
+                          pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label):
+        spectrum = self.flux_viewer.active_cube_layer.layer.get_object(statistic=None)
+        wlens = spectrum.wavelength.to('m').value
+        flux = spectrum.flux.value
+        self.sample_rate = sample_rate
+        self.buffer_size = buffer_size
+
+        if self.sonification_wl_ranges:
+            wdx = np.zeros(wlens.size).astype(bool)
+            for r in self.sonification_wl_ranges:
+                # index just the spectral subregion
+                wdx = np.logical_or(wdx,
+                                    np.logical_and(wlens >= r[0].to_value(u.m),
+                                                   wlens <= r[1].to_value(u.m)))
+            wlens = wlens[wdx]
+            flux_slices = [slice(None),]*3
+            flux_slices[spectrum.spectral_axis_index] = wdx
+            flux = flux[*flux_slices]
+
+        pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut, 0, 99),
+                                axis=spectrum.spectral_axis_index)
+
+        # clip zeros and remove NaNs
+        clipped_arr = np.nan_to_num(np.clip(flux, 0, np.inf), copy=False)
+
+        # make a rough white-light image from the clipped array
+        whitelight = np.expand_dims(clipped_arr.sum(spectrum.spectral_axis_index),
+                                    axis=spectrum.spectral_axis_index)
+
+        if use_pccut:
+            # subtract any percentile cut
+            clipped_arr -= np.expand_dims(pc_cube, axis=spectrum.spectral_axis_index)
+
+            # and re-clip
+            clipped_arr = np.clip(clipped_arr, 0, np.inf)
+
+        self.sonified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
+                                     samplerate=sample_rate, buffsize=buffer_size,
+                                     wl_unit=self.sonification_wl_unit,
+                                     audfrqmin=audfrqmin, audfrqmax=audfrqmax,
+                                     eln=eln, vol=self.volume,
+                                     spectral_axis_index=spectrum.spectral_axis_index)
+
+        self.sonified_cube.sonify_cube()
+        self.sonified_cube.sigcube = (
+                self.sonified_cube.sigcube * pow(whitelight / whitelight.max(),
+                                                 ssvidx)).astype('int16')
+        self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, device=device,
+                                      channels=1, dtype='int16', latency='low',
+                                      callback=self.sonified_cube.player_callback)
+        self.sonified_cube.cbuff = True
+
+        spatial_inds = [0, 1, 2]
+        spatial_inds.remove(spectrum.spectral_axis_index)
+        x_size = self.sonified_cube.sigcube.shape[spatial_inds[0]]
+        y_size = self.sonified_cube.sigcube.shape[spatial_inds[1]]
+
+        # Create a new entry for the sonified layer in data_lookup. The value is a dictionary
+        # containing (x_size * y_size) keys with values being arrays that represent sounds
+        if spectrum.spectral_axis_index == 2:
+            self.data_lookup[results_label] = {(x, y): self.sonified_cube.sigcube[x, y, :]
+                                               for x in range(0, x_size)
+                                               for y in range(0, y_size)}
+        elif spectrum.spectral_axis_index == 0:
+            # This looks wrong but it's because in this case x_size is actually the y axis and vice
+            # versa, wasn't sure about the best way to handle the spatial_inds thing above.
+            self.data_lookup[results_label] = {(y, x): self.sonified_cube.sigcube[:, x, y]
+                                               for x in range(0, x_size)
+                                               for y in range(0, y_size)}
+
+        # Create a 2D array with coordinates starting at (0, 0) and going until (x_size, y_size)
+        a = np.arange(1, x_size * y_size + 1).reshape((x_size, y_size))
+
+        # Create fake WCS so the sonified layer can be added to a CCDData object and
+        # then get added to the image viewer
+        """
+        wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+                   'CRPIX1': 1, 'CRVAL1': 337.5202808,
+                   'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+                   'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
+        """
+
+        if hasattr(spectrum.wcs, 'celestial'):
+            wcs = spectrum.wcs.celestial
+        elif hasattr(spectrum.wcs, 'to_fits_sip'):
+            # GWCS case
+            wcs = WCS(spectrum.wcs.to_fits_sip())
+        else:
+            wcs = None
+
+        # Create add data with name results_label to data collection and then add it to the
+        # flux viewer
+        sonified_cube = CCDData(a * u.Unit(''), wcs=wcs)
+        return sonified_cube
+
+    def recalculate_combined_sonified_grid(self, event=None):
+        self.layer_volume = {}
+        self.sonified_layers_enabled = []
+        # Keep track of the volume attribute for each layer.
+        for layer in self.state.layers:
+            if not isinstance(layer, SonifiedLayerState):
+                continue
+
+            self.sonified_layers_enabled += ([layer.layer.label] if
+                                             getattr(layer, 'audible', False) else [])
+
+        # Need to force an update of the layer icons since
+        # audible is a state attribute, not a layer artist attribute
+        self.jdaviz_app.state.layer_icons.notify_all()
+
+        if 'combined_sonified_grid' in self.__dict__:
+            del self.__dict__['combined_sonified_grid']
+        self.combined_sonified_grid
+
+    def update_sonified_cube_with_coord(self, coord, vollim='buff'):
+        # Set newsig to the combined sound array at coord
+        if (int(coord[0]), int(coord[1])) not in self.flux_viewer.combined_sonified_grid:
+            return
+
+        # use cached version of combined sonified grid
+        compsig = self.flux_viewer.combined_sonified_grid[int(coord[0]), int(coord[1])]
+
+        # Adjust volume to remove clipping
+        if vollim == 'sig':
+            # sigmoidal volume limiting
+            self.sonified_cube.newsig = (erf(compsig/INT_MAX) * INT_MAX).astype('int16')
+        elif vollim == 'clip':
+            # hard-clipped volume limiting
+            self.sonified_cube.newsig = np.clip(compsig, -INT_MAX, INT_MAX).astype('int16')
+        elif vollim == 'buff':
+            # renormalise buffer
+            sigmax = abs(compsig).max()
+            if sigmax > INT_MAX:
+                compsig = ((INT_MAX/abs(compsig).max()) * compsig)
+            self.sonified_cube.newsig = compsig.astype('int16')
+        self.sonified_cube.cbuff = True
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
@@ -153,17 +338,26 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             wlranges = self.spectral_subset.selected_obj.subregions
         else:
             wlranges = None
-        self.flux_viewer.update_listener_wls(wlranges, display_unit)
+        self.sonification_wl_ranges = wlranges
+        self.sonification_wl_unit = display_unit
 
     @observe('volume')
     def update_volume_level(self, event):
-        self.flux_viewer.update_volume_level(event['new'])
+        for viewer in self.sonified_viewers:
+            viewer.update_volume_level(event['new'])
 
     @observe('sound_devices_selected')
     def update_sound_device(self, event):
+        # This might get called before the plugin is fully initialized
+        if not hasattr(self, 'sonified_cube') or not self.sonified_cube:
+            return
         if event['new'] != event['old']:
             didx = dict(zip(*self.build_device_lists()))[event['new']]
-            self.flux_viewer.update_sound_device(didx)
+            # This was moved here from viewers.py now that the stream is handled here.
+            self.stop_stream()
+            self.stream = sd.OutputStream(samplerate=self.sample_rate, blocksize=self.buffer_size,
+                                            device=didx, channels=1, dtype='int16',
+                                            latency='low', callback=self.sonified_cube.player_callback)
 
     def refresh_device_list(self):
         devices, indexes = self.build_device_lists()

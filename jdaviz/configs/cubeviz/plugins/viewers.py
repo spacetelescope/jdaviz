@@ -1,13 +1,8 @@
 from functools import cached_property
 
 from glue.core import BaseData
-
 from glue_jupyter.bqplot.image import BqplotImageView
 import numpy as np
-from astropy import units as u
-from astropy.nddata import CCDData
-from astropy.wcs import WCS
-from scipy.special import erf
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.configs.cubeviz.plugins.mixins import WithSliceIndicator, WithSliceSelection
@@ -62,11 +57,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Hide axes by default
         self.state.show_axes = False
 
-        self.sonified_cube = None
-        self.stream = None
-
-        self.sonification_wl_ranges = None
-        self.sonification_wl_unit = None
         self.volume_level = None
 
         self.data_menu._obj.dataset.add_filter('is_cube_or_image')
@@ -76,11 +66,19 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # coordinates as keys and arrays representing sounds as the value.
         self.data_lookup = {}
         self.layer_volume = {}
-        self.sonified_layers_enabled = []
         self.same_pix = None
         self._cached_properties = ['combined_sonified_grid']
+        self.sonified_layers_enabled = []
+
 
         self._layer_style_widget_cls[SonifiedDataLayerArtist] = SonifiedLayerStateWidget
+
+    @property
+    def _sonify_plugin(self):
+        if self.jdaviz_helper is not None:
+            return self.jdaviz_helper.plugins['Sonify Data']._obj
+        else:
+            return None
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -120,48 +118,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
 
-    def start_stream(self):
-        if self.stream and not self.stream.closed:
-            self.stream.start()
-
-    def stop_stream(self):
-        if self.stream and not self.stream.closed:
-            self.stream.stop()
-
-    def recalculate_combined_sonified_grid(self, event=None):
-        self.layer_volume = {}
-        self.sonified_layers_enabled = []
-        # Keep track of the volume attribute for each layer.
-        for layer in self.state.layers:
-            if not isinstance(layer, SonifiedLayerState):
-                continue
-
-            # Find layer, add volume check to dictionary and add callback to volume changing and
-            # audible changing
-            self.layer_volume[layer.layer.label] = layer.volume
-            self.sonified_layers_enabled += ([layer.layer.label] if
-                                             getattr(layer, 'audible', False) else [])
-
-            # TODO: is there a better way to ensure that only unique callbacks are added?
-            layer.remove_callback('volume', self.recalculate_combined_sonified_grid)
-            layer.remove_callback('audible', self.recalculate_combined_sonified_grid)
-
-            layer.add_callback('volume', self.recalculate_combined_sonified_grid)
-            layer.add_callback('audible', self.recalculate_combined_sonified_grid)
-
-        # Need to force an update of the layer icons since
-        # audible is a state attribute, not a layer artist attribute
-        self.jdaviz_app.state.layer_icons.notify_all()
-
-        if 'combined_sonified_grid' in self.__dict__:
-            del self.__dict__['combined_sonified_grid']
-        self.combined_sonified_grid
-
     @cached_property
     def combined_sonified_grid(self):
-        if not self.sonified_layers_enabled:
-            self.stop_stream()
-            return {}
 
         compiled_coords = {}
         for k, v in self.data_lookup.items():
@@ -180,45 +138,27 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                               astype(int))
         return compiled_coords
 
-    def update_sonified_cube_with_coord(self, coord, vollim='buff'):
-        # Set newsig to the combined sound array at coord
-        if (not self.sonified_layers_enabled or
-                (int(coord[0]), int(coord[1])) not in self.combined_sonified_grid):
-            return
+    def recalculate_combined_sonified_grid(self, event=None):
+        self.layer_volume = {}
+        self._sonify_plugin.sonified_layers_enabled = []
 
-        # use cached version of combined sonified grid
-        compsig = self.combined_sonified_grid[int(coord[0]), int(coord[1])]
+        for layer in self.state.layers:
+            if not isinstance(layer, SonifiedLayerState):
+                continue
 
-        # Adjust volume to remove clipping
-        if vollim == 'sig':
-            # sigmoidal volume limiting
-            self.sonified_cube.newsig = (erf(compsig/INT_MAX) * INT_MAX).astype('int16')
-        elif vollim == 'clip':
-            # hard-clipped volume limiting
-            self.sonified_cube.newsig = np.clip(compsig, -INT_MAX, INT_MAX).astype('int16')
-        elif vollim == 'buff':
-            # renormalise buffer
-            sigmax = abs(compsig).max()
-            if sigmax > INT_MAX:
-                compsig = ((INT_MAX/abs(compsig).max()) * compsig)
-            self.sonified_cube.newsig = compsig.astype('int16')
-        self.sonified_cube.cbuff = True
+            self.sonified_layers_enabled += ([layer.layer.label] if
+                                             getattr(layer, 'audible', False) else [])  # noqa
 
-    def update_listener_wls(self, wranges, wunit):
-        self.sonification_wl_ranges = wranges
-        self.sonification_wl_unit = wunit
+        # Need to force an update of the layer icons since
+        # audible is a state attribute, not a layer artist attribute
+        self.jdaviz_app.state.layer_icons.notify_all()
 
-    def update_sound_device(self, device_index):
-        if not self.sonified_cube:
-            return
-
-        self.stop_stream()
-        self.stream = sd.OutputStream(samplerate=self.sample_rate, blocksize=self.buffer_size,
-                                      device=device_index, channels=1, dtype='int16',
-                                      latency='low', callback=self.sonified_cube.player_callback)
+        if 'combined_sonified_grid' in self.__dict__:
+            del self.__dict__['combined_sonified_grid']
+        self.combined_sonified_grid
 
     def update_volume_level(self, level):
-        if not self.sonified_cube:
+        if self._sonify_plugin is None or not self._sonify_plugin.sonified_cube:
             return
         self.volume_level = level
         self.sonified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
@@ -311,7 +251,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def _viewer_mouse_event(self, data):
         if data['event'] in ('mouseleave', 'mouseenter') or not self.sonified_layers_enabled:
-            self.stop_stream()
+            self._sonify_plugin.stop_stream()
             return
         if len(self.jdaviz_app.data_collection) < 1:
             return
@@ -319,6 +259,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Extract data coordinates - these are pixels in the reference image
         x = np.floor(data['domain']['x'])
         y = np.floor(data['domain']['y'])
+
+        print(f"Got mouse event {x}, {y}")
 
         if x is None or y is None or x < 0 or y < 0:  # Out of bounds
             return
@@ -328,11 +270,13 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         elif (x, y) == self.same_pix:
             return
 
-        if (not self.sonified_cube or not hasattr(self.sonified_cube, 'newsig') or
-                not hasattr(self.sonified_cube, 'sigcube')):
+        if (not self._sonify_plugin.sonified_cube or
+                not hasattr(self._sonify_plugin.sonified_cube, 'newsig') or
+                not hasattr(self._sonify_plugin.sonified_cube, 'sigcube')):
             return
-        self.start_stream()
-        self.update_sonified_cube_with_coord((x, y))
+        print("Starting stream")
+        self._sonify_plugin.start_stream()
+        self._sonify_plugin.update_sonified_cube_with_coord((x, y))
 
     def get_data_layer_artist(self, layer=None, layer_state=None):
         if 'Sonified' in layer.meta:
