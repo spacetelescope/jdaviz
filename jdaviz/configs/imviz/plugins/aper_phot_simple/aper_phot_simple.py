@@ -829,14 +829,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if include_pixarea_fac:
             # convert pixarea, which is in arcsec2/pix2 to the display solid angle unit / pix2
 
-            if self.config == 'imviz':
+            if self.config in ('imviz', 'deconfigged'):
                 # can remove once unit conversion implemented in imviz and
                 # display_solid_angle_unit traitlet is set, for now it will always be the data units
                 display_solid_angle_unit = check_if_unit_is_per_solid_angle(comp.units,
                                                                             return_unit=True)
 
-            elif self.config == 'cubeviz':
+            elif self.config == "cubeviz":
                 display_solid_angle_unit = u.Unit(self.display_solid_angle_unit)
+
+            else:
+                raise NotImplementedError(
+                    f"Unsupported config {self.config} for aperture photometry.")
 
             # if angle unit is pix2, pixarea should be 1 pixel2 per pixel2
             if display_solid_angle_unit == PIX2:
