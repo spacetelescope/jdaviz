@@ -296,15 +296,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Create a 2D array with coordinates starting at (0, 0) and going until (x_size, y_size)
         a = np.arange(1, x_size * y_size + 1).reshape((x_size, y_size))
 
-        # Create fake WCS so the sonified layer can be added to a CCDData object and
-        # then get added to the image viewer
-        """
-        wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
-                   'CRPIX1': 1, 'CRVAL1': 337.5202808,
-                   'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
-                   'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
-        """
-
         if hasattr(spectrum.wcs, 'celestial'):
             wcs = spectrum.wcs.celestial
         elif hasattr(spectrum.wcs, 'to_fits_sip'):
