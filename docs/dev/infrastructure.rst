@@ -2,20 +2,33 @@
 Jdaviz Design and Infrastructure
 ********************************
 
+.. comment
+    TODO: The tab icon is the stsci logo on this page but not on others. It's a nice touch!
+
+This section outlines the top-level structure of Jdaviz.
+
 .. note::
 
     At the time of writing, Jdaviz was still in heavy development.
     If you notice that this page has fallen behind, please
     `report an issue to the Jdaviz GitHub issues <https://github.com/spacetelescope/jdaviz/issues/new>`_.
 
-This section outlines the top-level structure of Jdaviz. At the highest level,
-Jdaviz layers different, sometimes changing technologies in the Jupyter platform
-to do its visualization, and therefore provides a framework for these technologies
-to work together. This document describes that framework, as well as the high-level
-sets of components needed for the Jdaviz use cases; it lists the layers of the Jdaviz
-framework in essentially the order in which they contact users in a typical
-visualization-heavy workflow. An overview of the layers is in this diagram,
-and each is described in more details below:
+At the highest level, Jdaviz uses different, sometimes changing technologies in
+the Jupyter platform to do its visualization, and therefore provides a framework
+for these technologies to work together. This document describes that framework,
+as well as the high-level sets of components needed for the Jdaviz use cases;
+it lists the layers of the Jdaviz framework in approximately the order in which
+a user would interact with them in a typical visualization-heavy workflow.
+The following diagram presents an overview of the framework's layers, with each being described
+in more detail below:
+
+.. comment
+    TODO: Update the list of configs/applications in the chart
+          to say 'Jdaviz Config' or something like that?
+          Likewise, in visualization, 'Viewers' instead of Image/Table/Spectrum Viewer (not sure
+          if 'Cube Slicer' fits under that umbrella). Then change the docs to specify:
+          "'Viewers' includes Image/Table/Spectrum" and then detail those as before in a
+          bulleted list
 
 .. figure:: jdaviz.svg
     :alt: Jdaviz design and infrastructure chart.
@@ -32,7 +45,7 @@ Jdaviz: Interfaces and Applications
 Interfaces
 ----------
 
-"Interfaces" are the tools the user is using to access the analysis tools.
+"Interfaces" are the tools employed by the user to access the analysis tools.
 The word "platform" might at first seem more applicable, but in this case
 all of the interfaces are using Jupyter as the platform, to ensure a
 consistent look-and-feel and a single platform for which to target the tools.
@@ -63,8 +76,8 @@ The target interfaces are:
   maximum flexibility in embedding.
 
 Each of these interfaces uses a common set of applications implemented in Python
-and leveraging ipywidgets_ as the communication layer between Python and the
-JavaScript-level layout, rendering, and interactivity libraries. Hence the following
+and leverages ipywidgets_ as the communication layer between Python and the
+JavaScript-level layout, rendering, and interactivity libraries. Hence, the following
 layers are primarily implemented in Python, but utilize tools like ipyvuetify_ and
 ipygoldenlayout_ to allow the Python code to interact with the JavaScript
 implementations at the interface level.
@@ -84,23 +97,27 @@ applications and individual widgets.
 
 Specific target applications include:
 
-* *Specviz*: A view into a single astronomical spectrum. It provides a UI to
+* :ref:`specviz`: A view into a single astronomical spectrum. It provides a UI to
   view the spectrum, as well as perform common scientific operations like marking
   spectral regions for further analysis (e.g., in a notebook), subtracting continua,
   measuring and fitting spectral lines, etc.
-* *Mosviz*: A view into many astronomical spectra, typically the output of a
+* :ref:`specviz2d`: A view into 2D spectral data. It offers similar capabilities to
+   *Specviz*, namely that it provides a UI to visualize 2D spectra,
+   and can perform the same scientific operations on data. In addition to these, Specviz2D
+   can also extract 1D spectra from a selected region of the 2D spectrum.
+* :ref:`mosviz`: A view into many astronomical spectra, typically the output of a
   multi-object spectrograph (e.g.,
   `JWST NIRSpec <https://jwst.nasa.gov/content/observatory/instruments/nirspec.html>`_).
-  It provides capabilities for individual spectra like Specviz, but for multiple spectra
+  It provides capabilities for individual spectra like *Specviz*, but for multiple spectra
   at a time along with additional contextual information like on-sky views of the
   spectrograph slit.
-* *Cubeviz*: A view of spectroscopic data cubes (e.g., from
+* :ref:`cubeviz`: A view of spectroscopic data cubes (e.g., from
   `JWST MIRI <https://jwst.nasa.gov/content/observatory/instruments/miri.html>`_),
   along with 1D spectra extracted from the cube. In addition to common visualization
   capabilities like viewing slices or averages in image or wavelength space,
-  the application will provide some standard manipulations like smoothing, moment maps,
-  parallelized line fitting, etc.
-* *Imviz*: An image-viewer for 2D images leveraging the same machinery as the other
+  the application also provides the ability to perform smoothing operations and
+  parallelized line fitting, as well as generate moment maps, etc.
+* :ref:`imviz`: An image-viewer for 2D images leveraging the same machinery as the other
   applications. While this application is not intended to encapsulate a complete
   range of astronomical imaging-based workflows, it enables quick-look style
   visualization of images in a way that is compatible with the rest of the Jdaviz framework.
@@ -123,9 +140,10 @@ also provides the interface for registering new functionality (both UI and data/
 via glue-core's registries.
 
 Note that most of the application engine implementation belongs in glue-jupyter_
-or glue-core, as it is not unique to Jdaviz (or even astronomy). However, Jdaviz has
-customized it for specific use cases, though some of the implementations might be moved
-upstream as Jdaviz matures, especially if they are useful beyond Jdaviz.
+or `glue-core <https://github.com/glue-viz/glue>`_, as it is not unique to Jdaviz
+(or even astronomy). However, Jdaviz has customized it for specific use cases,
+though some of the implementations might be moved upstream as Jdaviz matures,
+especially if they are useful beyond Jdaviz.
 
 Visualization: Component Widgets
 ================================
