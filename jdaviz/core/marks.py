@@ -882,7 +882,7 @@ class DistanceMeasurement:
             y_offset_float = 30
 
         else:
-            offset_distance = 25
+            offset_distance = 10
             line_length_data = np.sqrt(dx_data**2 + dy_data**2)
 
             if line_length_data > 0:
