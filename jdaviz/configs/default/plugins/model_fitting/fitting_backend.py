@@ -333,7 +333,7 @@ def _build_model(component_list, expression):
     return model
 
 
-def generate_spaxel_list(spectrum):
+def generate_spaxel_list(spectrum, spectral_axis_index=None):
     """
     Generates a list with tuples, each one addressing the (x,y)
     coordinates of a spaxel in a 3-D spectrum cube. If a mask is available,

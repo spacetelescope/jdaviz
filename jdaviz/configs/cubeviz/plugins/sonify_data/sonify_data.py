@@ -101,7 +101,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         range for sonification.
         """
         t0 = time.time()
-        current_label = self.results_label
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
 
