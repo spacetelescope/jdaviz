@@ -78,6 +78,7 @@ the James Webb Space Telescope (JWST) instrument modes.
 These tools can, however, be used with data from other astronomical telescopes.
 :ref:`imviz` is a tool for visualization and quick-look analysis for 2D astronomical images.
 :ref:`specviz` is a tool for visualization and quick-look analysis of 1D astronomical spectra.
+:ref:`specviz2d` is a tool for visualization and quick-look analysis of 2D astronomical spectra.
 :ref:`cubeviz` provides a view of spectroscopic data cubes (like those
 to be produced by JWST MIRI), along with 1D spectra extracted from the
 cube.
