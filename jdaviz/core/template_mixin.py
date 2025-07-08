@@ -1954,7 +1954,10 @@ class LayerSelect(SelectPluginComponent):
         for current_viewer in viewers:
             if not len(current_viewer):
                 continue
-            for layer in self._get_viewer(current_viewer).state.layers:
+            current_viewer_obj = self._get_viewer(current_viewer)
+            if current_viewer_obj is None:
+                continue
+            for layer in current_viewer_obj.state.layers:
                 if layer.layer.label == new_data_label and not hasattr(layer.layer, 'subset_state'):
                     if is_wcs_only(layer.layer):
                         continue
