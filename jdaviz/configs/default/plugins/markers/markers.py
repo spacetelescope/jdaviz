@@ -159,16 +159,16 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         Callback for the clear button on the measurements table.
         This clears all 'd' key distance lines from all viewers.
         """
-        # The table data is cleared by the UI button's default action.
-        # This callback just needs to handle clearing the visuals.
-        for viewer_id, dist_measures in self._distance_marks.items():
-            viewer = self.app.get_viewer_by_id(viewer_id)
-            if viewer is None:
-                continue
-            marks_to_remove = []
+        all_dist_marks = set()
+        for dist_measures in self._distance_marks.values():
             for dm in dist_measures:
-                marks_to_remove.extend(dm.marks)
-            viewer.figure.marks = [m for m in viewer.figure.marks if m not in marks_to_remove]
+                all_dist_marks.update(dm.marks)
+
+        # Iterate through all viewers in the app and remove any distance marks found.
+        for viewer in self.app._viewer_store.values():
+            if not hasattr(viewer, 'figure'):
+                continue
+            viewer.figure.marks = [m for m in viewer.figure.marks if m not in all_dist_marks]
         self._distance_marks.clear()
         self.distance_display = "N/A"
         self._distance_first_point = None
