@@ -15,8 +15,9 @@ Glupyter implements a base ``JupyterApplication`` object through which
 users can manage their data, create viewers, and add links between data
 sets. The data management and linking are controlled separate from the
 viewers in that changes made directly to the data state propagate to the
-UI -- that is, the UI does not contain any state, which allows the application to be easily controlled from code. The viewers themselves are based on the
-IPyWidget package which allows the creation of widgets that can be used
+UI -- that is, the UI does not contain any state, which allows the application to be
+easily controlled from code. The viewers themselves are based on the
+ipywidgets_ package which allows the creation of widgets that can be used
 and interacted with in python, but rendered in a browser environment.
 
 There are two distinct use cases for the glupyter environment:
@@ -162,7 +163,7 @@ Widget communication
 
 There are three fundamental forms of communication between widgets:
 
-1. direction communication using the ``observer`` pattern using `Traitlets <https://traitlets.readthedocs.io/en/stable/>`_,
+1. direction communication using the ``observer`` pattern and `Traitlets <https://traitlets.readthedocs.io/en/stable/>`_,
 2. global communication using the centralized event hub provided by glue,
 3. and callback properties on ``glue`` objects.
 
@@ -269,7 +270,7 @@ Glue callback properties
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 In cases where traitlets are not appropriate (e.g., where some python object is
-not a strict inherited class of ``HasTraitlet``), glue's ``CallbackProperty`` s
+not a strict inherited class of ``HasTraitlet``), glue's ``CallbackProperty``
 can be used in conjunction with a ``State`` class object. It should be noted,
 however, that ``glue`` callback properties do not interact with the front-end UI
 as in the case using traitlets; that is, changing the value of a callback
@@ -289,7 +290,7 @@ of using plugins in conjunction with the configuration file.
 
 The UI supports four main areas currently: the tool bar area, the menu bar area,
 the tray bar area, and the content area. Plugins can be associated with one
-of these areas. Plugins themselves **must** by IPyWidget subclasses, below
+of these areas. Plugins themselves **must** be ipywidgets_ subclasses, below
 is an example of a plugin that adds a single button to the tool bar area.
 
 .. code:: python
