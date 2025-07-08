@@ -1,6 +1,7 @@
 import os
 import time
 from pathlib import Path
+import threading
 from traitlets import Bool, List, Unicode, observe
 from glue_jupyter.bqplot.image import BqplotImageView
 
@@ -618,6 +619,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if filename is None:
             filename = self.filename_default
 
+        app = viewer.jdaviz_app
+
         def on_img_received(data):
             try:
                 with filename.open(mode='bw') as f:
@@ -637,7 +640,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
             figure.get_png_data(on_img_received)
 
-        if filetype == 'png' and (width is not None or height is not None):
+        if (width is not None or height is not None):
             assert width is not None and height is not None, \
                 "Both width and height must be provided"
             import ipywidgets as widgets
@@ -652,8 +655,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                         ], tag="div", style_=f"width: {width}; height: {height};")
                     ],
                     tag="div",
-                    style_="overflow: hidden; width: 0px; height: 0px")
-                IPython.display.display(wrapper_widget)
+                    style_="overflow: hidden; width: 0px; height: 0px"
+                    )
+                # TODO: we might want to remove it from the DOM
+                app.invisible_children = [*app.invisible_children, wrapper_widget]
 
             def _widget_after_first_display(widget: widgets.Widget, callback: Callable):
                 if widget._view_count is None:
@@ -676,9 +681,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             def on_figure_displayed():
                 # we need a bit of a delay to ensure the figure is fully displayed
                 # maybe this can be fixed on the bqplot side in the future
-                import time
-                time.sleep(0.1)
-                get_png(cloned_viewer.figure)
+                def wait_in_other_thread():
+                    import time
+                    time.sleep(0.2)
+                    get_png(cloned_viewer.figure)
+                # wait in other thread to avoid blocking the main thread (widgets can update)
+                threading.Thread(target=wait_in_other_thread).start()
             _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
             _show_hidden(cloned_viewer.figure, width, height)
         elif filetype == 'png':

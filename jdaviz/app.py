@@ -35,7 +35,7 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
-from traitlets import Dict, Bool, Unicode, Any
+from traitlets import Dict, Bool, List, Unicode, Any
 from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz import __version__
@@ -325,6 +325,7 @@ class Application(VuetifyTemplate, HubListener):
     docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
+    invisible_children = List(Any()).tag(sync=True, **widget_serialization)
     golden_layout_state = Dict(default_value=None, allow_none=True).tag(sync=True)
     force_open_about = Bool(False).tag(sync=True)
 
