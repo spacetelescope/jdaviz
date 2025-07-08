@@ -386,7 +386,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 row_info['viewer'] = viewer.reference if viewer.reference is not None else viewer.reference_id # noqa
             for k in self.table.headers_avail:
                 row_info.setdefault(k, self._default_table_values.get(k, ''))
-
             try:
                 # if the pixel values are unreliable, set their table values as nan
                 row_item_to_add = {k: float('nan') if row_info.get('pixel:unreliable', False) and
@@ -396,7 +395,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 self.table.add_item(row_item_to_add)
             except ValueError as err:  # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
-
             x, y = row_info['axes_x'], row_info['axes_y']
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
@@ -406,9 +404,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 coords = self._get_snap_coordinates(viewer)
             else:
                 coords = self.coords_info.as_dict()
-
             viewer_id = viewer.reference or viewer.reference_id
-
             if self._distance_first_point is None:
                 self._distance_first_point = coords
                 self.distance_display = "..."
@@ -417,18 +413,24 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 p2 = coords
                 self._distance_first_point = None
 
-                if self.app._align_by.lower() == 'wcs':
-                    world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
-                                   p1.get('world_ra') is not None and p2.get('world_ra') is
-                                   not None)
-                    if world_avail:
-                        c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
-                        c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
-                        display_str = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
-                    else:
-                        display_str = "N/A"
-                        self.distance_display = display_str
-                        return
+                world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
+                               p1.get('world_ra') is not None and p2.get('world_ra') is not None and
+                               np.all(np.isfinite([p1['world_ra'], p1['world_dec'],
+                                                   p2['world_ra'], p2['world_dec']])))
+
+                # Special case for Imviz in pixel-alignment mode: prioritize pixels for the label.
+                if self.config == 'imviz' and self.app._align_by.lower() == 'pixels':
+                    dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
+                                       (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
+                    display_str = f"{dist_pix:.2f} pix"
+
+                # For all other cases (like Cubeviz), prioritize WCS if available.
+                elif world_avail:
+                    c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
+                    c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
+                    display_str = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
+
+                # Fallback for all cases where WCS is not available.
                 else:
                     dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
                                        (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
