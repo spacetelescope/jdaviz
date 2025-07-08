@@ -272,6 +272,12 @@ class BaseResolver(PluginTemplateMixin):
     def user_api(self):
         return LoaderUserApi(self)
 
+    @property
+    def default_label(self):
+        # override by subclass to provide a default label to the importer
+        # importers can then decide whether to use this or not.
+        return None
+
     @with_spinner('format_items_spinner')
     def _update_format_items(self):
         if self._defer_update_format_items:

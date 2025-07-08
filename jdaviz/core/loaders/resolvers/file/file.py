@@ -63,5 +63,9 @@ class FileResolver(BaseResolver):
     def is_valid(self):
         return os.path.exists(self.filepath) and os.path.isfile(self.filepath)  # noqa
 
+    @property
+    def default_label(self):
+        return os.path.splitext(os.path.basename(self.filepath))[0] if self.filepath else None
+
     def __call__(self):
         return self.filepath

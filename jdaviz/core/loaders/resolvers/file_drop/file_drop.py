@@ -2,6 +2,7 @@ from traitlets import Any, Int
 from solara import FileDropMultiple
 from ipywidgets import widget_serialization
 import io
+import os
 import reacton
 
 from jdaviz.core.registries import loader_resolver_registry
@@ -34,6 +35,14 @@ class FileDropResolver(BaseResolver):
     @property
     def is_valid(self):
         return True
+
+    @property
+    def default_label(self):
+        # Use the first file name as the default label, if available.
+        # Otherwise, return None.
+        if self._file_info and 'name' in self._file_info:
+            return os.path.splitext(self._file_info['name'])[0]
+        return None
 
     def _on_total_progress(self, progress):
         self.progress = progress

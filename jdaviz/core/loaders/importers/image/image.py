@@ -42,7 +42,9 @@ class ImageImporter(BaseImporterToDataCollection):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.app.config == 'imviz':
+        if self.default_data_label_from_resolver:
+            self.data_label_default = self.default_data_label_from_resolver
+        elif self.app.config == 'imviz':
             self.data_label_default = 'Image'
 
         self.input_hdulist = isinstance(self.input, fits.HDUList)
