@@ -460,6 +460,12 @@ class UnitConversion(PluginTemplateMixin):
         if layers is None:
             layers = self.image_layers
 
+        def has_component_with_physical_type(layer, phys_type):
+            for comp in layer.layer.components:
+                if u.Unit(layer.layer.get_component(comp).units).physical_type == phys_type:
+                    return True
+            return False
+
         for layer in layers:
             # DQ layer doesn't play nicely with this attribute
             # TODO: detect a DQ layer in a way that doesn't depend on the label
@@ -467,10 +473,7 @@ class UnitConversion(PluginTemplateMixin):
                 continue
             if "DQ" in layer.layer.label or isinstance(layer.layer, GroupedSubset):
                 continue
-            for comp in layer.layer.components:
-                if u.Unit(layer.layer.get_component(comp).units).physical_type == 'surface brightness':  # noqa
-                    break
-            else:
+            if not has_component_with_physical_type(layer, 'surface brightness'):
                 # if no component with surface brightness units, skip this layer
                 continue
 
