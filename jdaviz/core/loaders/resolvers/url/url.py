@@ -1,6 +1,7 @@
 from traitlets import Bool, Unicode, observe
 from urllib.parse import urlparse
 import os
+from functools import cached_property
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import loader_resolver_registry
@@ -36,8 +37,17 @@ class URLResolver(BaseResolver):
 
     @observe('url', 'cache', 'timeout')
     def _on_url_changed(self, change):
+        # Clear the cached property to force re-download
+        # or otherwise read from local file cache.
+        if '_uri_output_file' in self.__dict__ and change['name'] in ('url', 'cache'):
+            del self._uri_output_file
+
         self._update_format_items()
 
-    def __call__(self):
+    @cached_property
+    def _uri_output_file(self):
         return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
+
+    def __call__(self):
+        return self._uri_output_file
