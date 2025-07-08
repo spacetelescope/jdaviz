@@ -22,14 +22,6 @@ a user would interact with them in a typical visualization-heavy workflow.
 The following diagram presents an overview of the framework's layers, with each being described
 in more detail below:
 
-.. comment
-    TODO: Update the list of configs/applications in the chart
-          to say 'Jdaviz Config' or something like that?
-          Likewise, in visualization, 'Viewers' instead of Image/Table/Spectrum Viewer (not sure
-          if 'Cube Slicer' fits under that umbrella). Then change the docs to specify:
-          "'Viewers' includes Image/Table/Spectrum" and then detail those as before in a
-          bulleted list
-
 .. figure:: jdaviz.svg
     :alt: Jdaviz design and infrastructure chart.
 
@@ -38,6 +30,12 @@ in more detail below:
     interfaces. The middle layer encapsulates its component widgets and the
     visualization libraries involved. The bottom layer consists of low-level
     data analysis and I/O libraries.
+
+.. note::
+
+    In the diagram above, optional dependencies of Jdaviz have dotted lines.
+    Optional dependencies are only required for certain Jdaviz
+    workflows and are not explicitly installed by default when Jdaviz is installed.
 
 Jdaviz: Interfaces and Applications
 ===================================
@@ -186,9 +184,9 @@ Known component widgets for the target applications include:
   and selection of specific rows (to then be highlighted in other viewers or interacted
   with in notebook/lab).
 
-In addition to the component widgets above, there are also *plugins* that go with
-them to provide the necessary user interactions. Each plugin is specialized to do one
-thing, e.g., a "model fitting" plugin to allow users to fit
+In addition to the component widgets above, there are also *plugins* (e.g. :ref:`_imviz_plugins`)
+that go with them to provide the necessary user interactions. Each plugin is specialized to do one
+thing, e.g., a :ref:`"model fitting" <_specviz-model-fitting>` plugin that allows users to fit
 :ref:`astropy models <astropy:astropy-modeling>` to spectra.
 
 Data Analysis and I/O Libraries
@@ -213,13 +211,6 @@ Note that those libraries themselves depend on the wider scientific Python ecosy
 so the list and the diagram above do not fully cover all of Jdaviz's dependencies,
 but are the primary "top-level" data analysis or I/O libraries that most users are likely
 to focus on to complement or extend their Jdaviz workflows.
-
-.. note::
-
-    In the diagram above, optional dependencies of Jdaviz have dotted lines.
-    Optional dependencies mean they are only required for certain Jdaviz
-    workflows and are not explicitly installed by default when you install Jdaviz.
-
 
 .. _ipywidgets: https://ipywidgets.readthedocs.io
 .. _ipyvuetify: https://github.com/mariobuikhuizen/ipyvuetify
