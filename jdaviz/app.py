@@ -83,7 +83,16 @@ ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 @unit_converter('custom-jdaviz')
 class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
-        if cid.label == "flux":
+        if (getattr(data, '_importer', None) == 'ImageImporter' and
+                u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
+            all_flux_units = SPEC_PHOTON_FLUX_DENSITY_UNITS + ['ct']
+            angle_units = supported_sq_angle_units()
+            all_sb_units = combine_flux_and_angle_units(all_flux_units, angle_units)
+
+            list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
+                include_prefix_units=True))) + all_flux_units + all_sb_units
+                )
+        elif cid.label in ("flux"):
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
             all_flux_units = SPEC_PHOTON_FLUX_DENSITY_UNITS + ['ct']
             angle_units = supported_sq_angle_units()
@@ -112,7 +121,11 @@ class UnitConverterWithSpectral:
             # handle ramps loaded into Rampviz by avoiding conversion
             # of the groups axis:
             return values
-        elif cid.label == "flux":
+        elif (getattr(data, '_importer', None) == 'ImageImporter' and
+              u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
+            # handle surface brightness units in image-like data
+            return (values * u.Unit(original_units)).to_value(target_units)
+        elif cid.label in ("flux"):
             try:
                 spec = data.get_object(cls=Spectrum1D)
             except RuntimeError:
@@ -333,7 +346,6 @@ class Application(VuetifyTemplate, HubListener):
         self._jdaviz_helper = None
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
-        self._default_data_cls = {}
         self.popout_button = PopoutButton(self)
         self.style_registry_instance = style_registry.get_style_registry()
 
@@ -1635,7 +1647,6 @@ class Application(VuetifyTemplate, HubListener):
         if data_label in self.data_collection.labels:
             warnings.warn(f"Overwriting existing data entry with label '{data_label}'")
 
-        self._default_data_cls[data_label] = data.__class__
         self.data_collection[data_label] = data
 
         # manage associated Data entries:

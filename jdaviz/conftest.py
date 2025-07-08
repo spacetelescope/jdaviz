@@ -15,7 +15,10 @@ from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection, SpectrumList
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
-from jdaviz.configs.imviz.tests.utils import create_wfi_image_model
+from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
+                                              _image_hdu_nowcs,
+                                              _image_hdu_wcs,
+                                              _image_nddata_wcs)
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
 
@@ -422,6 +425,21 @@ def mos_image():
 def roman_imagemodel():
     if HAS_ROMAN_DATAMODELS:
         return create_wfi_image_model((20, 10))
+
+
+@pytest.fixture
+def image_hdu_nowcs():
+    return _image_hdu_nowcs()
+
+
+@pytest.fixture
+def image_hdu_wcs():
+    return _image_hdu_wcs()
+
+
+@pytest.fixture
+def image_nddata_wcs():
+    return _image_nddata_wcs()
 
 
 # Copied over from https://github.com/spacetelescope/ci_watson

@@ -2236,6 +2236,7 @@ class SubsetSelect(SelectPluginComponent):
         # intialize any subsets that have already been created
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
+        self._clear_cache()
 
     def _selected_changed(self, event):
         super()._selected_changed(event)
@@ -2445,7 +2446,7 @@ class SubsetSelect(SelectPluginComponent):
         types = self.selected_item.get('type')
         if not isinstance(types, list):
             types = [types]
-        if np.any([type not in ('spatial', None) for type in types]):
+        if np.any([type not in ('spatial', None, False) for type in types]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
             return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
@@ -3954,6 +3955,9 @@ class DatasetSelect(SelectPluginComponent):
             return (data.ndim == 2
                     and data.coords is not None
                     and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
+
+        def is_spectrum_or_cube(data):
+            return is_spectrum(data) or is_cube(data)
 
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):

@@ -536,15 +536,25 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_value = dq_data[int(round(y)), int(round(x))]
 
                 unit = u.Unit(image.get_component(attribute).units)
-                if (isinstance(viewer, Spectrum2DViewer) and unit != ''
-                   and u.Unit(self.app._get_display_unit(attribute)).physical_type
-                   not in ['frequency', 'wavelength', 'length']
-                   and unit != self.app._get_display_unit(attribute)):
+                try:
+                    disp_unit = self.app._get_display_unit(attribute)
+                except IndexError:
+                    # no layers loaded, so no display unit set
+                    disp_unit = None
+                if (isinstance(viewer, (ImvizImageView, Spectrum2DViewer))
+                        and unit != '' and disp_unit is not None
+                        and u.Unit(self.app._get_display_unit(attribute)).physical_type
+                        not in ['frequency', 'wavelength', 'length']
+                        and unit != self.app._get_display_unit(attribute)):
                     to_unit = self.app._get_display_unit(attribute)
                     if (check_if_unit_is_per_solid_angle(unit) and attribute == 'flux'):
                         to_unit = self.app._get_display_unit('sb')
 
-                    equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
+                    try:
+                        equivalencies = all_flux_unit_conversion_equivs(cube_wave=wave)
+                    except UnboundLocalError:
+                        # wave is not defined (image viewer without spectral axis)
+                        equivalencies = None
                     value = flux_conversion_general(value, unit,
                                                     to_unit,
                                                     equivalencies,

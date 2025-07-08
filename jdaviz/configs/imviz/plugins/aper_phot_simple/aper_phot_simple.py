@@ -34,7 +34,8 @@ from jdaviz.utils import PRIHDR_KEY
 __all__ = ['SimpleAperturePhotometry']
 
 
-@tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
+@tray_registry('imviz-aper-phot-simple', label="Aperture Photometry",
+               category="data:analysis")
 class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                DatasetMultiSelectMixin, TableMixin, PlotMixin, MultiselectMixin):
     """
@@ -121,6 +122,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
 
+        self.dataset.add_filter('is_cube_or_image')
+
         self.background = SubsetSelect(self,
                                        'background_items',
                                        'background_selected',
@@ -180,6 +183,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             self.hub.subscribe(self, GlobalDisplayUnitChanged,
                                handler=self._on_display_units_changed)
+
+        self._set_relevant()
+
+    @observe('dataset_items')
+    def _set_relevant(self, *args):
+        if self.config != "deconfigged":
+            return
+        if not len(self.dataset_items):
+            self.irrelevant_msg = 'No image layers'
+        else:
+            self.irrelevant_msg = ''
 
     @property
     def user_api(self):
@@ -815,14 +829,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if include_pixarea_fac:
             # convert pixarea, which is in arcsec2/pix2 to the display solid angle unit / pix2
 
-            if self.config == 'imviz':
+            if self.config in ('imviz', 'deconfigged'):
                 # can remove once unit conversion implemented in imviz and
                 # display_solid_angle_unit traitlet is set, for now it will always be the data units
                 display_solid_angle_unit = check_if_unit_is_per_solid_angle(comp.units,
                                                                             return_unit=True)
 
-            elif self.config == 'cubeviz':
+            elif self.config == "cubeviz":
                 display_solid_angle_unit = u.Unit(self.display_solid_angle_unit)
+
+            else:
+                raise NotImplementedError(
+                    f"Unsupported config {self.config} for aperture photometry.")
 
             # if angle unit is pix2, pixarea should be 1 pixel2 per pixel2
             if display_solid_angle_unit == PIX2:
