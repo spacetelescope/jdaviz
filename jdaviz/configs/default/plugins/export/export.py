@@ -617,7 +617,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if filename is None:
             filename = self.filename_default
 
-        app = viewer.jdaviz_app
+        # viewers in plugins will have viewer.app, other viewers have viewer.jdaviz_app
+        if hasattr(viewer, 'jdaviz_app'):
+            app = viewer.jdaviz_app
+        else:
+            app = viewer.app
 
         def on_img_received(data):
             try:
