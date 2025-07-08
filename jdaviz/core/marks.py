@@ -894,9 +894,15 @@ class DistanceMeasurement:
                 x_offset_float = 0
                 y_offset_float = -offset_distance
 
-            try:
-                x_scale = self.viewer.scales['x']
-                y_scale = self.viewer.scales['y']
+            # Determine text offset direction based on the center of the viewer
+            x_scale = self.viewer.scales.get('x')
+            y_scale = self.viewer.scales.get('y')
+
+            # Check if the viewer scales and their min/max values are available
+            if (x_scale is not None and y_scale is not None and
+                    x_scale.min is not None and x_scale.max is not None and
+                    y_scale.min is not None and y_scale.max is not None):
+
                 viewer_center_x = (x_scale.min + x_scale.max) / 2
                 viewer_center_y = (y_scale.min + y_scale.max) / 2
                 pos_vec_x = mid_x - viewer_center_x
@@ -904,8 +910,6 @@ class DistanceMeasurement:
                 if (pos_vec_x * perp_dx + pos_vec_y * perp_dy) > 0:
                     x_offset_float *= -1
                     y_offset_float *= -1
-            except Exception:
-                pass
 
         x_offset_int = int(round(x_offset_float))
         y_offset_int = int(round(y_offset_float))

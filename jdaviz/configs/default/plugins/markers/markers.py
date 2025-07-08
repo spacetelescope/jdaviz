@@ -131,8 +131,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                      'Separation (arcsec)', 'Distance (pix)', 'Position Angle (deg)',
                      'Viewer', 'Data Label'],
         )
-        table.items_per_page = 15
-        table.hide_items_per_page = True
         return table
 
     def _on_alignment_change(self, msg=None):
