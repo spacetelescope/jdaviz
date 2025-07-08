@@ -23,14 +23,12 @@ from specutils import Spectrum1D
 from astropy import units as u
 from astropy.nddata import CCDData
 from regions import CircleSkyRegion, EllipseSkyRegion
-import IPython
 
 try:
     import cv2
 except ImportError:
     HAS_OPENCV = False
 else:
-    import threading
     HAS_OPENCV = True
 
 __all__ = ['Export']
