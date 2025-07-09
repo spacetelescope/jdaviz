@@ -8,13 +8,14 @@ from astropy.nddata import NDData, CCDData
 from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
-from traitlets import Bool, List, Any
+from traitlets import Bool, List, Any, observe
 
 
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
     standardize_metadata, standardize_roman_metadata, PRIHDR_KEY
@@ -40,6 +41,8 @@ class ImageImporter(BaseImporterToDataCollection):
     extension_items = List().tag(sync=True)
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
+
+    data_label_is_prefix = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,18 +75,42 @@ class ImageImporter(BaseImporterToDataCollection):
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'imviz-image-viewer'
 
+    def _get_label_with_extension(self, prefix, ext=None, ver=None):
+        full_ext = ",".join([str(e) for e in (ext, ver) if e is not None])
+        return f"{prefix}[{full_ext}]" if len(full_ext) else prefix
+
+    @observe('extension_selected')
+    def _set_default_data_label(self, *args):
+        prefix = "Image"  # TODO: update with filename logic
+        if self.input_hdulist:
+            if len(self.extension.selected_name) == 1:
+                # only a single extension selected
+                self.data_label_default = self._get_label_with_extension(prefix,
+                                                                         ext=self.extension.selected_name[0],
+                                                                         ver=self.extension.selected_hdu[0].ver)
+                self.data_label_is_prefix = False
+            else:
+                # multiple extensions selected,
+                # only show the prefix and append the extension later during import
+                self.data_label_default = prefix
+                self.data_label_is_prefix = True
+        else:
+            self.data_label_default = prefix
+            self.data_label_is_prefix = False
+
     @property
     def output(self):
+        # NOTE: this should ALWAYS return a list of objects able to be imported into DataCollection
         data_label = self.data_label_value
         # NDData or ndarray
         if isinstance(self.input, NDData):
-            return _nddata_to_glue_data(self.input, data_label)
+            return _nddata_to_glue_data(self.input, data_label)  # list of Data
         elif isinstance(self.input, np.ndarray):
-            return _ndarray_to_glue_data(self.input, data_label)
+            return [_ndarray_to_glue_data(self.input, data_label)]
         # asdf
         elif (isinstance(self.input, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
-            return _roman_asdf_2d_to_glue_data(self.input, data_label)
+            return _roman_asdf_2d_to_glue_data(self.input, data_label)  # list of Data
         # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             return [_hdu2data(self.input, self.data_label_value, None, True)]
@@ -93,31 +120,25 @@ class ImageImporter(BaseImporterToDataCollection):
                 for hdu in self.extension.selected_hdu]
 
     def __call__(self, show_in_viewer=True):
-        data_label = self.data_label_value
-        output = self.output
-        if isinstance(output, dict):
-            for data_label, data in output.items():
-                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
-                                            cls=CCDData)
-        elif isinstance(output, list) and hasattr(self, 'extension'):
-            with self.app._jdaviz_helper.batch_load():
-                parent_data = None
-                for ext, ext_output in zip(self.extension.selected_name, output):
-                    data_label = ext_output.label
-                    if '[SCI' in data_label:
-                        parent_data = data_label
-                    self.add_to_data_collection(ext_output, data_label,
-                                                show_in_viewer=show_in_viewer,
-                                                cls=CCDData)
-                    if parent_data and data_label != parent_data:
-                        # Set other extensions to be child of SCI data
-                        self.app._set_assoc_data_as_child(data_label, parent_data)
-        elif isinstance(output, list):
-            for data_label, data in output:
-                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
-                                            cls=CCDData)
-        else:
-            self.add_to_data_collection(output, f"{data_label}", show_in_viewer=show_in_viewer,
+        base_data_label = self.data_label_value
+        # self.output is always a list of Data objects
+        outputs = self.output
+
+        exts = self.extension.selected_name if self.input_hdulist else [None] * len(outputs)
+        hdus = self.extension.selected_hdu if self.input_hdulist else [None] * len(outputs)
+
+        for output, ext, hdu in zip(outputs, exts, hdus):
+            if self.data_label_is_prefix:
+                # If data_label is a prefix, we need to append the extension
+                # to the data label.
+                data_label = self._get_label_with_extension(base_data_label,
+                                                            ext,
+                                                            ver=hdu.ver if hdu else None)
+            else:
+                # If data_label is not a prefix, we use it as is.
+                data_label = base_data_label
+            self.add_to_data_collection(output, data_label,
+                                        show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 
 
@@ -190,7 +211,7 @@ def _nddata_to_glue_data(ndd, data_label):
     if ndd.data.ndim != 2:
         raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
 
-    returned_data = {}
+    returned_data = []
     for attrib in ('data', 'mask', 'uncertainty'):
         arr = getattr(ndd, attrib)
         if arr is None:
@@ -215,7 +236,7 @@ def _nddata_to_glue_data(ndd, data_label):
             bunit = ''
         component = Component.autotyped(raw_arr, units=bunit)
         cur_data.add_component(component=component, label=comp_label)
-        returned_data[cur_label] = cur_data
+        returned_data.append(cur_data)
     return returned_data
 
 
@@ -270,7 +291,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         coords = _try_gwcs_to_fits_sip(gwcs)
     else:
         coords = gwcs
-    returned_data = {}
+    returned_data = []
 
     for cur_ext in ext_list:
         comp_label = cur_ext.upper()
@@ -288,6 +309,6 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         data.meta.update(standardize_metadata(dict(meta)))
         if comp_label == 'DQ':
             prep_data_layer_as_dq(data)
-        returned_data[new_data_label] = data
+        returned_data.append(data)
 
     return returned_data
