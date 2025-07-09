@@ -54,13 +54,10 @@ You can do a release from your fork directly without a clean code check-out.
    and `readthedocs (RTD) build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
    are passing.
 
-.. comment
-   TODO: Is step 2 still recommended/necessary? The link is dead.
-
 2. Lock down the ``main`` branch of the repository by setting the
    `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
-   rule for ``main`` to some high number required to merge, so that more PRs don't
-   get merged while you're releasing.
+   rule for ``main`` (note: only available to Jdaviz admins) to some high number
+   required to merge, so that more PRs don't get merged while you're releasing.
 
 3. Create a new local branch and make sure you have updated tags too. Note
    that the "x" here should actually be the letter "x", whereas the upper case "X"
@@ -273,13 +270,10 @@ cleanup on the ``main`` branch. In the following, X and Y refer to the minor rel
 which you're doing a bugfix release. For example, if you are releasing v3.5.2, replace all
 instances of ``vX.Y.x`` with ``v3.5.x``.
 
-.. comment
-   TODO: Is step 1 still recommended/necessary? The link is dead.
-
 1. Lock down the ``vX.Y.x`` branch of the repository by setting the
    `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
-   rule for ``v*.x`` to some high number required to merge, so that more PRs don't
-   get merged while you're releasing.
+   rule for ``v*.x`` (note: only available to Jdaviz admins) to some high number required to merge,
+   so that more PRs don't get merged while you're releasing.
 
 2. Review the appropriate `Milestone <https://github.com/spacetelescope/jdaviz/milestones>`_
    to see which PRs should be released in this version, and double check that any open
