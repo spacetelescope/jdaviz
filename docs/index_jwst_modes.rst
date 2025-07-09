@@ -1,6 +1,4 @@
 .. _jdaviz_instrument_table:
-.. comment
-   TODO: should this be updated with mosviz?
 
 **********
 JWST Modes
