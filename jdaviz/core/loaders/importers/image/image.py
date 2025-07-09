@@ -60,6 +60,13 @@ class ImageImporter(BaseImporterToDataCollection):
             self.extension.selected = [self.extension.choices[0]]
 
     @property
+    def user_api(self):
+        expose = []
+        if self.input_hdulist:
+            expose += ['extension']
+        return ImporterUserApi(self, expose)
+
+    @property
     def is_valid(self):
         if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
