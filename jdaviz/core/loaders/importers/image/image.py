@@ -93,8 +93,8 @@ class ImageImporter(BaseImporterToDataCollection):
             if len(self.extension.selected_name) == 1:
                 # only a single extension selected
                 self.data_label_default = self._get_label_with_extension(prefix,
-                                                                         ext=self.extension.selected_name[0],
-                                                                         ver=self.extension.selected_hdu[0].ver)
+                                                                         ext=self.extension.selected_name[0],  # noqa
+                                                                         ver=self.extension.selected_hdu[0].ver)  # noqa
                 self.data_label_is_prefix = False
             else:
                 # multiple extensions selected,
