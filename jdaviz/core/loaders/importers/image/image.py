@@ -75,61 +75,51 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
+        data_label = self.data_label_value
         # NDData or ndarray
-        if isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
-            return self.input
+        if isinstance(self.input, NDData):
+            return _nddata_to_glue_data(self.input, data_label)
+        elif isinstance(self.input, np.ndarray):
+            return _ndarray_to_glue_data(self.input, data_label)
         # asdf
         elif (isinstance(self.input, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
-            return self.input
+            return _roman_asdf_2d_to_glue_data(self.input, data_label)
         # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             return [_hdu2data(self.input, self.data_label_value, None, False)]
         # fits
         hdulist = self.input
-        return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
+        return [_hdu2data(hdu, self.data_label_value, hdulist)[1]
                 for hdu in self.extension.selected_hdu]
 
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
         output = self.output
-        # nddata
-        if isinstance(output, NDData):
-            returned_data = _nddata_to_glue_data(output, data_label)
-            for data_label, data in returned_data.items():
+        if isinstance(output, dict):
+            for data_label, data in output.items():
                 self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
                                             cls=CCDData)
-        # ndarray
-        elif isinstance(output, np.ndarray):
-            data = _ndarray_to_glue_data(output, data_label)
-            self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
-                                        cls=CCDData)
-        # asdf
-        elif (isinstance(output, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(output, rdd.DataModel))):
-            returned_data = _roman_asdf_2d_to_glue_data(output, data_label)
-            for data_label, data in returned_data.items():
-                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
-                                            cls=CCDData)
-        # ImageHDU
-        elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            # data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
-            for data, data_label in output:
-                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
-                                            cls=CCDData)
-        # fits
-        else:
+        elif isinstance(output, list) and hasattr(self, 'extension'):
             with self.app._jdaviz_helper.batch_load():
                 parent_data = None
                 for ext, ext_output in zip(self.extension.selected_name, output):
-                    if '[SCI' in ext_output.label:
-                        parent_data = ext_output.label
-                    self.add_to_data_collection(ext_output, ext_output.label,
+                    data_label = ext_output.label
+                    if '[SCI' in data_label:
+                        parent_data = data_label
+                    self.add_to_data_collection(ext_output, data_label,
                                                 show_in_viewer=show_in_viewer,
                                                 cls=CCDData)
-                    if parent_data and ext_output.label != parent_data:
+                    if parent_data and data_label != parent_data:
                         # Set other extensions to be child of SCI data
-                        self.app._set_assoc_data_as_child(ext_output.label, parent_data)
+                        self.app._set_assoc_data_as_child(data_label, parent_data)
+        elif isinstance(output, list):
+            for data_label, data in output:
+                self.add_to_data_collection(data, f"{data_label}", show_in_viewer=show_in_viewer,
+                                            cls=CCDData)
+        else:
+            self.add_to_data_collection(output, f"{data_label}", show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):
@@ -164,7 +154,7 @@ def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
 
-    return data, new_data_label
+    return new_data_label, data
 
 
 def _validate_bunit(bunit, raise_error=False):

@@ -1,7 +1,6 @@
 import os
 
 import pytest
-from astropy.wcs import FITSFixedWarning
 
 from jdaviz.utils import alpha_index, download_uri_to_path, get_cloud_fits, cached_uri
 from astropy.io import fits
@@ -39,14 +38,7 @@ def test_uri_to_download_nonexistent_mast_file(imviz_helper):
 @pytest.mark.remote_data
 def test_url_to_download_imviz_local_path_warning(imviz_helper):
     url = "https://www.astropy.org/astropy-data/tutorials/FITS-images/HorseHead.fits"
-    match_local_path_msg = (
-        'You requested to cache data to the .*local_path.*supported for downloads of '
-        'MAST URIs.*astropy download cache instead.*'
-    )
-    # with (
-    #     pytest.warns(FITSFixedWarning, match="'datfix' made the change"),
-    #     pytest.warns(UserWarning, match=match_local_path_msg)
-    # ):
+
     with pytest.raises(ValueError, match="not one of"):
         imviz_helper.load_data(url, cache=True, local_path='horsehead.fits')
 
