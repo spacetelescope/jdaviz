@@ -50,8 +50,8 @@ to load regions from a ``.reg`` file; also see :ref:`imviz-import-regions-api`.
 
 Downloading data products through the Virtual Observatory
 ---------------------------------------------------------
-Imviz supports querying and loading data products from the `IVOA's Virtual Observatory <https://ivoa.net/>`_.
-The plugin will search for registered archives that have observations which intersect the circular field
+Imviz supports querying and loading data products from `IVOA's Virtual Observatory <https://ivoa.net/>`_.
+The plugin will search for registered archives with observations that intersect the circular field
 specified by the user.
 
 To search the VO, enter a source location and a radius around which to search. The source utilizes
@@ -83,8 +83,8 @@ Once the query is complete, a table of results will be populated below, with the
 
 .. note::
 
-    Currently only SIA 1.0 services are implemented. VO services which offer only SIA2 endpoints are not
-    supported.
+    Currently only `Simple Image Access specification (SIA) 1.0 <https://www.ivoa.net/documents/WD/SIA/sia-20040524.html#:~:text=Simple%20Image%20Access%20Specification%20Version,Image%20Generation>`_
+    services are implemented. VO services which offer only SIA2 endpoints are not supported.
 
 .. _imviz-virtual-observatory:
 
