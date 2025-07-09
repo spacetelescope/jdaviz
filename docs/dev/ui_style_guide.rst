@@ -1,9 +1,6 @@
 *****************
 UI/UX Style Guide
 *****************
-.. comment
-   TODO: will this/does any of this change with deconfigged? I'm thinking things like justification
-   of action buttons and whatnot.
 
 Tray Plugins
 ------------
