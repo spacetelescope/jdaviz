@@ -181,9 +181,9 @@ Known component widgets for the target applications include:
   and selection of specific rows (to then be highlighted in other viewers or interacted
   with in notebook/lab).
 
-In addition to the component widgets above, there are also *plugins* (e.g. :ref:`_imviz_plugins`)
+In addition to the component widgets above, there are also *plugins* (e.g. :ref:`imviz-plugins`)
 that go with them to provide the necessary user interactions. Each plugin is specialized to do one
-thing, e.g., a :ref:`"model fitting" <_specviz-model-fitting>` plugin that allows users to fit
+thing, e.g., a :ref:`"model fitting" <specviz-model-fitting>` plugin that allows users to fit
 :ref:`astropy models <astropy:astropy-modeling>` to spectra.
 
 Data Analysis and I/O Libraries

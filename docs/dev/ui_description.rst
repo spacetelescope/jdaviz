@@ -321,3 +321,5 @@ using the above test button plugin class might be
 
 Plugin classes should **not** make any direct reference to the application, and
 should communicate via events.
+
+.. _ipywidgets: https://ipywidgets.readthedocs.io
