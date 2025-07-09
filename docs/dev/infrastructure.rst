@@ -97,9 +97,9 @@ Specific target applications include:
   spectral regions for further analysis (e.g., in a notebook), subtracting continua,
   measuring and fitting spectral lines, etc.
 * :ref:`specviz2d`: A view into 2D spectral data. It offers similar capabilities to
-   *Specviz*, namely that it provides a UI to visualize 2D spectra,
-   and can perform the same scientific operations on data. In addition to these, Specviz2D
-   can also extract 1D spectra from a selected region of the 2D spectrum.
+  *Specviz*, namely that it provides a UI to visualize 2D spectra,
+  and can perform the same scientific operations on data. In addition to these, Specviz2D
+  can also extract 1D spectra from a selected region of the 2D spectrum.
 * :ref:`mosviz`: A view into many astronomical spectra, typically the output of a
   multi-object spectrograph (e.g.,
   `JWST NIRSpec <https://jwst.nasa.gov/content/observatory/instruments/nirspec.html>`_).
