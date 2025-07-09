@@ -26,7 +26,7 @@ Metadata Viewer
 
 .. seealso::
 
-    :ref:`Metadata Viewer <imviz_metadata-viewer>`
+    :ref:`Metadata Viewer <imviz-metadata-viewer>`
         Imviz documentation on using the metadata viewer.
 
 .. _specviz-plot-options:

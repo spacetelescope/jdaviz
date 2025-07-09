@@ -18,7 +18,7 @@ the `~jdaviz.configs.mosviz.helper.Mosviz.specviz` attribute, e.g.,
 Pan/Zoom
 ========
 
-For an overview on general pan/zoom functionality, please see :ref:`imviz_pan_zoom`
+For an overview on general pan/zoom functionality, please see :ref:`imviz-pan-zoom`
 
 Synchronous Spectral Pan/Zoom
 -----------------------------

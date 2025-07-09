@@ -225,7 +225,7 @@ Importing catalogs via the API
 If you have a catalog file supported by `astropy.table.Table`, you
 can load the catalog into Imviz and add markers to Imviz viewers to show
 positions from the catalog. These markers are different than Imviz
-:ref:`spatial regions <imviz_defining_spatial_regions>` as they are only meant to mark catalog positions.
+:ref:`spatial regions <imviz-defining-spatial-regions>` as they are only meant to mark catalog positions.
 Loading markers can be done with the following commands:
 
 .. code-block:: python
