@@ -148,6 +148,8 @@ class Imviz(ImageConfigHelper):
 
         prev_data_labels = self.app.data_collection.labels
 
+        extensions = None if 'ext' not in kwargs else kwargs['ext']
+
         if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
             kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
 
@@ -193,27 +195,31 @@ class Imviz(ImageConfigHelper):
                 if data_label:
                     kw['data_label'] = data_label
 
-                # self.loaders['object'].object = data[i, :, :]
-                # if data_label:
-                #     self.loaders['object'].importer.data_label.value = data_label
-                # if 'ext' in kwargs and kwargs['ext'] is not None:
-                #     self.loaders['object'].extension.selected = [name for name in kwargs['ext']]
-                # self.loaders['object'].importer()
-                data_label = data_label
-                self._load(data[i, :, :], data_label=data_label)
+                self.loaders['object'].object = data[i, :, :]
+                if data_label:
+                    self.loaders['object'].importer.data_label.value = data_label
+                if extensions is not None:
+                    # Slight hack to load extensions using the ext kwarg
+                    self.loaders['object']._obj.importer.extension.selected = [f'{enum + 1}: {name}'
+                                                                               for enum, name in
+                                                                               enumerate(extensions)]
+                self.loaders['object'].importer()
+                # data_label = data_label
+                # self._load(data[i, :, :], data_label=data_label, ext=extensions)
                 # self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 
         else:
             if data_label:
                 kwargs['data_label'] = data_label
-            # self.loaders['object'].object = data
-            # if data_label:
-            #     self.loaders['object'].importer.data_label.value = data_label
-            # if 'ext' in kwargs and kwargs['ext'] is not None:
-            #     print(self.loaders['object'].input_hdulist)
-            #     self.loaders['object'].extension.selected = [name for name in kwargs['ext']]
-            # self.loaders['object'].importer()
-            self._load(data, data_label=data_label)
+            self.loaders['object'].object = data
+            if data_label:
+                self.loaders['object'].importer.data_label.value = data_label
+            if extensions is not None:
+                self.loaders['object']._obj.importer.extension.selected = [f'{enum+1}: {name}'
+                                                                           for enum, name in
+                                                                           enumerate(extensions)]
+            self.loaders['object'].importer()
+            # self._load(data, data_label=data_label, ext=extensions)
             # self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
         return
         # find the current label(s) - TODO: replace this by calling default label functionality

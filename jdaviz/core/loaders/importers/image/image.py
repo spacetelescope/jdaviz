@@ -120,13 +120,16 @@ class ImageImporter(BaseImporterToDataCollection):
         # fits
         else:
             with self.app._jdaviz_helper.batch_load():
+                parent_data = None
                 for ext, ext_output in zip(self.extension.selected_name, output):
+                    if '[SCI' in ext_output.label:
+                        parent_data = ext_output.label
                     self.add_to_data_collection(ext_output, ext_output.label,
                                                 show_in_viewer=show_in_viewer,
                                                 cls=CCDData)
-                    # self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
-                    #                             show_in_viewer=show_in_viewer,
-                    #                             cls=CCDData)
+                    if parent_data and ext_output.label != parent_data:
+                        # Set other extensions to be child of SCI data
+                        self.app._set_assoc_data_as_child(ext_output.label, parent_data)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):
