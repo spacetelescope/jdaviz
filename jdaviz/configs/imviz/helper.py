@@ -7,10 +7,10 @@ import numpy as np
 from astropy.utils import deprecated
 from glue.core.link_helpers import LinkSame
 
-from jdaviz.core.events import SnackbarMessage, NewViewerMessage
+from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.helpers import ImageConfigHelper
-from jdaviz.utils import (data_has_valid_wcs, get_wcs_only_layer_labels,
-                          get_reference_image_data, _wcs_only_label)
+from jdaviz.utils import (get_wcs_only_layer_labels,
+                          get_reference_image_data)
 
 __all__ = ['Imviz']
 
@@ -146,8 +146,6 @@ class Imviz(ImageConfigHelper):
         """
         self.app.state.dev_loaders = True
 
-        prev_data_labels = self.app.data_collection.labels
-
         extensions = None if 'ext' not in kwargs else kwargs['ext']
 
         if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
@@ -195,81 +193,12 @@ class Imviz(ImageConfigHelper):
                 if data_label:
                     kw['data_label'] = data_label
 
-                self.loaders['object'].object = data[i, :, :]
-                if data_label:
-                    self.loaders['object'].importer.data_label.value = data_label
-                if extensions is not None:
-                    # Slight hack to load extensions using the ext kwarg
-                    self.loaders['object']._obj.importer.extension.selected = [f'{enum + 1}: {name}' for enum, name in enumerate(extensions)]  # noqa
-                self.loaders['object'].importer(show_in_viewer=show_in_viewer)
-                # data_label = data_label
-                # self._load(data[i, :, :], data_label=data_label, ext=extensions)
-                # self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
+                self._load(data[i, :, :], data_label=data_label, extension=extensions)
 
         else:
             if data_label:
                 kwargs['data_label'] = data_label
-            self.loaders['object'].object = data
-            if data_label:
-                self.loaders['object'].importer.data_label.value = data_label
-            if extensions is not None:
-                self.loaders['object']._obj.importer.extension.selected = [f'{enum+1}: {name}'
-                                                                           for enum, name in
-                                                                           enumerate(extensions)]
-            self.loaders['object'].importer(show_in_viewer=show_in_viewer)
-            # self._load(data, data_label=data_label, ext=extensions)
-            # self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
-        return
-        # find the current label(s) - TODO: replace this by calling default label functionality
-        # above instead of having to refind it
-        applied_labels = []
-        applied_visible = []
-        layer_is_wcs_only = []
-        layer_has_wcs = []
-        for data in self.app.data_collection:
-            label = data.label
-            if label not in prev_data_labels:
-                applied_labels.append(label)
-                applied_visible.append(True)
-                layer_is_wcs_only.append(data.meta.get(_wcs_only_label, False))
-                layer_has_wcs.append(data_has_valid_wcs(data))
-
-        if show_in_viewer is True:
-            show_in_viewer = f"{self.app.config}-0"
-
-        if show_in_viewer:
-            linked_by_wcs = self.app._align_by == 'wcs'
-            if linked_by_wcs:
-                for applied_label, visible, is_wcs_only, has_wcs in zip(
-                        applied_labels, applied_visible, layer_is_wcs_only, layer_has_wcs
-                ):
-                    if not is_wcs_only and linked_by_wcs and not has_wcs:
-                        self.app.hub.broadcast(SnackbarMessage(
-                            f"'{applied_label}' will be added to the data collection but not "
-                            f"the viewer '{show_in_viewer}', since data are aligned by WCS, but "
-                            f"'{applied_label}' has no WCS.",
-                            color="warning", timeout=8000, sender=self)
-                        )
-
-        if self._in_batch_load and show_in_viewer:
-            for applied_label, is_wcs_only in zip(applied_labels, layer_is_wcs_only):
-                if not is_wcs_only:
-                    self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
-
-        else:
-            if 'Orientation' not in self.plugins.keys():
-                # otherwise plugin will handle linking automatically with DataCollectionAddMessage
-                self.link_data(align_by='wcs')
-
-            # One input might load into multiple Data objects.
-            # NOTE: If the batch_load context manager was used, it will
-            # handle that logic instead.
-            if show_in_viewer:
-                for applied_label, visible, has_wcs in zip(
-                        applied_labels, applied_visible, layer_has_wcs
-                ):
-                    if (has_wcs and linked_by_wcs) or not linked_by_wcs:
-                        self.app.add_data_to_viewer(show_in_viewer, applied_label, visible=visible)
+            self._load(data, data_label=data_label, extension=extensions)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.

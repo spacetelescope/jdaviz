@@ -68,13 +68,23 @@ class UserApiWrapper:
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
             elif isinstance(exp_obj, SelectFileExtensionComponent):
-                if isinstance(value, int):
-                    # allow setting by index
-                    value = exp_obj.choices[exp_obj.indices.index(value)]
-                elif isinstance(value, str):
-                    # allow setting without index
-                    if value not in exp_obj.choices:
-                        value = exp_obj.choices[exp_obj.names.index(value)]
+                def to_choice_single(value):
+                    if isinstance(value, int):
+                        # allow setting by index
+                        return exp_obj.choices[value]
+                    elif isinstance(value, str):
+                        # allow setting without index
+                        if value not in exp_obj.choices:
+                            return exp_obj.choices[exp_obj.names.index(value)]
+                        return value
+                    else:
+                        raise ValueError(f"Invalid value type: {type(value)}")
+                if isinstance(value, (list, tuple)):
+                    # allow setting by list of indices or names
+                    value = [to_choice_single(v) for v in value]
+                else:
+                    # allow setting by single index or name
+                    value = to_choice_single(value)
             exp_obj.selected = value
             return
         elif isinstance(exp_obj, AddResults):
