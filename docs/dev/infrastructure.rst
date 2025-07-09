@@ -2,9 +2,6 @@
 Jdaviz Design and Infrastructure
 ********************************
 
-.. comment
-    TODO: The tab icon is the stsci logo on this page but not on others. It's a nice touch!
-
 This section outlines the top-level structure of Jdaviz.
 
 .. note::
