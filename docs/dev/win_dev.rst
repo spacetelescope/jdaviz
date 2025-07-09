@@ -14,8 +14,8 @@ affect your development experience.
 WSL2 and Solara
 ---------------
 
-``solara`` is unable to display when ``WSL2 <https://learn.microsoft.com/en-us/windows/wsl/about>``_
-cannot start up the Windows-side browser executable. Unfortunately,
+``solara`` is unable to display when `WSL2 <https://learn.microsoft.com/en-us/windows/wsl/about>`_ cannot
+start up the Windows-side browser executable. Unfortunately,
 unlike Jupyter notebook, ``solara`` does not have a ``--no-browser``
 option with a tokenized URL you can copy-and-paste manually on the
 Windows side. Therefore, you might need to install Jdaviz natively
