@@ -6,8 +6,8 @@ Linking of datasets in glue
 
 .. note:: The glue documentation includes a page about
           `linking <http://docs.glueviz.org/en/stable/developer_guide/linking.html>`_ but
-          the present page should be considered a
-          more up-to-date guide with a focus on links useful to Jdaviz.
+          the present page is intended to provide a more focused description of the
+          the linking mechanisms used by Jdaviz.
 
 The 'why' of linking
 ====================
@@ -84,7 +84,7 @@ in another dataset.
 Linking by WCS
 ==============
 
-There are two main ways of linking by WCS, as follow.
+There are two main ways of linking by WCS, as follows.
 
 Using WCSLink (recommended)
 ---------------------------
