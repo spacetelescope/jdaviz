@@ -200,9 +200,7 @@ class Imviz(ImageConfigHelper):
                     self.loaders['object'].importer.data_label.value = data_label
                 if extensions is not None:
                     # Slight hack to load extensions using the ext kwarg
-                    self.loaders['object']._obj.importer.extension.selected = [f'{enum + 1}: {name}'
-                                                                               for enum, name in
-                                                                               enumerate(extensions)]
+                    self.loaders['object']._obj.importer.extension.selected = [f'{enum + 1}: {name}' for enum, name in enumerate(extensions)]  # no qa
                 self.loaders['object'].importer()
                 # data_label = data_label
                 # self._load(data[i, :, :], data_label=data_label, ext=extensions)
