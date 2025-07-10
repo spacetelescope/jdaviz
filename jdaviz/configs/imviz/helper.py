@@ -4,6 +4,7 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
+from astropy.io import fits
 from astropy.utils import deprecated
 from astropy.nddata import NDData
 from glue.core.link_helpers import LinkSame
@@ -166,6 +167,15 @@ class Imviz(ImageConfigHelper):
                                    data_label=data_label,
                                    show_in_viewer=show_in_viewer,
                                    **kw)
+            return
+
+        if extensions is not None and len(extensions) > 1:
+            with self.batch_load():
+                for e in extensions:
+                    kw = deepcopy(kwargs)
+                    self.load_data(data, data_label=data_label, show_in_viewer=show_in_viewer,
+                                   extension=[e], **kw)
+            return
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
@@ -186,9 +196,17 @@ class Imviz(ImageConfigHelper):
                            data_label=data_label+'[DATA]',
                            extension=extensions)
         else:
-            if isinstance(data, (NDData)):
+            # extensions is None or a single extension
+            if isinstance(data, NDData):
                 if data_label is not None and not data_label.endswith(']'):
+                    # NOTE: for backwards compatibility with previous load_data behavior
+                    # in .load() the data_label will not be appended
                     data_label = data_label + '[DATA]'
+            elif isinstance(data, fits.hdu.image.ImageHDU):
+                if data_label is not None and not data_label.endswith(']'):
+                    # NOTE: for backwards compatibility with previous load_data behavior
+                    # in .load() the data_label will not be appended
+                    data_label = data_label + f'[{data.name},{data.ver}]'
 
             self._load(data,
                        format='Image',
