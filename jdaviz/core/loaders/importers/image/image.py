@@ -85,7 +85,7 @@ class ImageImporter(BaseImporterToDataCollection):
             return _roman_asdf_2d_to_glue_data(self.input, data_label)
         # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            return [_hdu2data(self.input, self.data_label_value, None, False)]
+            return [_hdu2data(self.input, self.data_label_value, None, True)]
         # fits
         hdulist = self.input
         return [_hdu2data(hdu, self.data_label_value, hdulist)[1]
