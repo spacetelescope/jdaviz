@@ -201,7 +201,7 @@ class Imviz(ImageConfigHelper):
                 if extensions is not None:
                     # Slight hack to load extensions using the ext kwarg
                     self.loaders['object']._obj.importer.extension.selected = [f'{enum + 1}: {name}' for enum, name in enumerate(extensions)]  # noqa
-                self.loaders['object'].importer()
+                self.loaders['object'].importer(show_in_viewer=show_in_viewer)
                 # data_label = data_label
                 # self._load(data[i, :, :], data_label=data_label, ext=extensions)
                 # self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
@@ -216,7 +216,7 @@ class Imviz(ImageConfigHelper):
                 self.loaders['object']._obj.importer.extension.selected = [f'{enum+1}: {name}'
                                                                            for enum, name in
                                                                            enumerate(extensions)]
-            self.loaders['object'].importer()
+            self.loaders['object'].importer(show_in_viewer=show_in_viewer)
             # self._load(data, data_label=data_label, ext=extensions)
             # self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
         return
