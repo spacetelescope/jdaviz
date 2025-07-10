@@ -92,7 +92,10 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @observe('extension_selected')
     def _set_default_data_label(self, *args):
-        prefix = "Image"  # TODO: update with filename logic
+        if self.default_data_label_from_resolver:
+            prefix = self.default_data_label_from_resolver
+        else:
+            prefix = "Image"
         if self.input_hdulist:
             if len(self.extension.selected_name) == 1:
                 # only a single extension selected
