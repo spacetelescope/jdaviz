@@ -28,16 +28,17 @@ from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
 
-__all__ = ['SpectralExtraction']
+__all__ = ['CubeSpectralExtraction']
 
 
 @tray_registry(
-    'cubeviz-spectral-extraction', label="Spectral Extraction"
+    'spectral-extraction-3d', label="3D Spectral Extraction"
 )
-class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
-                         DatasetSelectMixin, AddResultsMixin):
+class CubeSpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
+                             DatasetSelectMixin, AddResultsMixin):
     """
-    See the :ref:`Spectral Extraction Plugin Documentation <spectral-extraction>` for more details.
+    See the :ref:`3D Spectral Extraction Plugin Documentation <spectral-extraction>`
+    for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
@@ -279,8 +280,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def _extract_in_new_instance(self, dataset=None, function='Sum', subset_lbl=None,
                                  auto_update=False, add_data=False):
-        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
-        # the tray) and extract the entire cube with defaults.
+        # create a new instance of the 3D Spectral Extraction plugin (to not
+        # affect the instance in the tray) and extract the entire cube with defaults.
         plg = self.new()
         plg.dataset.selected = self.dataset.selected if dataset is None else dataset
         if subset_lbl is not None:

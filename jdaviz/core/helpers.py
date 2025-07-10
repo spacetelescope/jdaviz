@@ -212,11 +212,17 @@ class ConfigHelper(HubListener):
         plugins = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.tray_items if item['is_relevant']}
 
+        msg_temp = "in the future, the formerly named \"{}\" plugin will only be available by its new name: \"{}\""  # noqa
+
+        old_new = (('Imviz Line Profiles (XY)', 'Image Profiles (XY)'),  # renamed in 4.0
+                   ('Spectral Extraction', '2D Spectral Extraction'),  # renamed in 4.3
+                   ('Spectral Extraction', '3D Spectral Extraction'))  # renamed in 4.3
+
         # handle renamed plugins during deprecation
-        if 'Image Profiles (XY)' in plugins:
-            # renamed in 4.0
-            plugins['Imviz Line Profiles (XY)'] = plugins['Image Profiles (XY)']._obj.user_api
-            plugins['Imviz Line Profiles (XY)']._deprecation_msg = 'in the future, the formerly named \"Imviz Line Profiles (XY)\" plugin will only be available by its new name: \"Image Profiles (XY)\".'  # noqa
+        for old, new in old_new:
+            if new in plugins:
+                plugins[old] = plugins[new]._obj.user_api
+                plugins[old]._deprecation_msg = msg_temp.format(old, new)
 
         return plugins
 
