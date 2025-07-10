@@ -93,11 +93,11 @@ def test_fits_spectrum2d(deconfigged_helper):
     ldr.importer()
 
     # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
-    sp2d = deconfigged_helper.get_data('2D Spectrum')
+    sp2d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d')  # noqa
     assert isinstance(sp2d, Spectrum1D)
     assert str(sp2d.spectral_axis.unit) == 'um'
 
-    sp1d = deconfigged_helper.get_data('2D Spectrum (auto-ext)')
+    sp1d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d (auto-ext)')  # noqa
     assert isinstance(sp1d, Spectrum1D)
     assert str(sp1d.spectral_axis.unit) == 'um'
 
@@ -123,12 +123,12 @@ def test_resolver_url(deconfigged_helper):
     loader.target = '1D Spectrum'
     assert len(loader.format.choices) == 2  # may change with future importers
     assert loader.format == '1D Spectrum List'  # default may change with future importers
-    assert loader.importer.data_label == '1D Spectrum'
+    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
     loader.target = 'Any'
     assert len(loader.format.choices) == 4
     loader.format = '2D Spectrum'
-    assert loader.importer.data_label == '2D Spectrum'
+    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
     assert len(deconfigged_helper.app.data_collection) == 0
     assert len(deconfigged_helper.viewers) == 0

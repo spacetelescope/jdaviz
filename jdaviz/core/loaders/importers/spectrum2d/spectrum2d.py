@@ -55,7 +55,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.app.config == 'specviz2d':
+        if self.default_data_label_from_resolver:
+            self.data_label_default = self.default_data_label_from_resolver
+        elif self.app.config == 'specviz2d':
             self.data_label_default = '2D Spectrum'
 
         self.ext_data_label = AutoTextField(self,

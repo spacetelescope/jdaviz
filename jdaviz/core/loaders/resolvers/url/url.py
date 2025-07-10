@@ -35,6 +35,14 @@ class URLResolver(BaseResolver):
     def is_valid(self):
         return urlparse(self.url.strip()).scheme in ['http', 'https', 'mast', 'ftp']
 
+    @property
+    def default_label(self):
+        # Use the last part of the URL as the default label, if available.
+        # Otherwise, return None.
+        if self.url.strip():
+            return os.path.splitext(os.path.basename(self.url.strip()))[0]
+        return None
+
     @observe('url', 'cache', 'timeout')
     def _on_url_changed(self, change):
         # Clear the cached property to force re-download
