@@ -1,6 +1,9 @@
 <template>
   <v-app id="web-app" :style="checkNotebookContext() ? 'display: inline' : 'display: flex'" :class="'jdaviz ' + config" ref="mainapp">
     <jupyter-widget :widget="style_registry_instance"></jupyter-widget>
+    <div style="overflow: hidden; width: 0px; height: 0px">
+      <jupyter-widget :widget="widget" v-for="widget in invisible_children" :key="widget"></jupyter-widget>
+    </div>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
 
       <v-toolbar-items v-if="config === 'deconfigged'">
