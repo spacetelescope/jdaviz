@@ -1,0 +1,41 @@
+name: Use Older Cache as Override Until Deleted
+
+on:
+  workflow_dispatch:
+    inputs:
+      cache_key:
+        description: 'Existing cache-key to use in place of newer entries until deleted'
+        required: true
+        default: ''
+        type: string
+
+jobs:
+  copy-cache-to-override:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get components for cache key
+      id: date
+      run: |
+        echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
+        echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
+        echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
+
+    - name: Restore existing cache
+      id: cache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ./
+        key: ${{ inputs.cache_key }}
+
+    - name: List cached files
+      run: |
+        echo "All cached files:"
+        ls -ls *.fits || echo "No files found"
+
+    - name: Save updated cache to override entry
+      uses: actions/cache/save@v4
+      with:
+        key: mast-cache-override-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-${{ github.run_number }}
+        path: ./
+        enableCrossOsArchive: true

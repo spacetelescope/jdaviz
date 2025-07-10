@@ -1,0 +1,131 @@
+name: Download from Astroquery to Cache
+
+on:
+  workflow_dispatch:
+    inputs:
+      append_to_cache:
+        description: 'Append to latest cache?'
+        required: false
+        default: false
+        type: boolean
+      uris:
+        description: 'List of files to download (comma-separated in format mission:filename)'
+        required: false
+        default: 'HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst:hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits,
+                  hst:hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits,
+                  hst:hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits,
+                  hst:jclj01010_drz.fits,
+                  jwst:jw01050-o003_t005_miri_ch1-medium_s3d.fits,
+                  jwst:jw01524-o003_t002_miri_ch1-medium_s3d.fits,
+                  jwst:jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits,
+                  jwst:jw01538160001_16101_00004_nrs1_s2d.fits,
+                  jwst:jw01895001004_07101_00001_nrca3_cal.fits,
+                  jwst:jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits,
+                  jwst:jw02727-o002_t062_nircam_clear-f090w_i2d.fits,
+                  jwst:jw02727-o002_t062_nircam_clear-f277w_i2d.fits,
+                  jwst:jw02732-c1001_t004_miri_ch1-short_s3d.fits,
+                  jwst:jw02732-c1001_t004_miri_ch1-short_x1d.fits,
+                  jwst:jw02732-o003_t002_nirspec_prism-clear_s3d.fits,
+                  jwst:jw02732004001_02103_00004_mirifushort_s3d.fits,
+                  jwst:jw02732004001_02103_00004_mirifushort_x1d.fits'
+        type: string
+  schedule:
+    - cron: '0 6 * * 0'  # Every Sunday at 6 AM UTC
+
+jobs:
+  download-astroquery:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install astroquery
+
+    - name: Get components for cache key
+      id: date
+      run: |
+        echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
+        echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
+        echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          echo "trigger=scheduled" >> $GITHUB_OUTPUT
+        else
+          echo "trigger=manual" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create download script
+      run: |
+        cat > download_script.py << 'EOF'
+        import os
+        from astroquery.mast import MastMissions, Observations
+
+        # Get URIs from environment variable
+        uris_input = os.environ.get('URIS')
+        uris = [uri.strip() for uri in uris_input.split(',')]
+
+        # Initialize MAST missions
+        mast = MastMissions()
+
+        for i, uri in enumerate(uris):
+            mission, uri = uri.split(':')
+            mast.mission = mission
+
+            print(f'\nProcessing URI {i+1}/{len(uris)}: {uri} (mission={mission})')
+
+            if mission.upper().startswith('HLSP'):
+                # For HLSP, use Observations to download
+                # in this case, the "mission" should be the full string between "mast:" and the filename
+                observations_uri = f'mast:{mission}/{uri}'
+                print(f'Observations.download_file(\'{observations_uri}\')')
+                try:
+                    Observations.download_file(observations_uri, local_path='./', cache=True)
+                except Exception as e:
+                    print(f'Error downloading {observations_uri}: {e}')
+            else:
+                # For other missions, use MastMissions to download
+                missions_uri = '_'.join(uri.split('_')[:3])+'/'+uri
+                print(f"mast.download_file(\'{missions_uri}\')")
+                try:
+                    mast.download_file(missions_uri, local_path='./', cache=False)
+                except Exception as e:
+                    print(f'Error processing {uri}: {e}')
+
+        print('\nDownloads completed!')
+        EOF
+
+    - name: Restore existing cache
+      id: cache-restore
+      if: ${{ inputs.append_to_cache }}
+      uses: actions/cache/restore@v4
+      with:
+        path: ./
+        key: use-restore-keys-below-to-match-in-priority-order
+        restore-keys: |
+          mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-
+          mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-
+          mast-cache-${{ steps.date.outputs.year }}-
+          mast-cache-
+
+    - name: Run download script
+      run: |
+        python download_script.py
+      env:
+        URIS: ${{ inputs.uris }}
+
+    - name: List cached files
+      run: |
+        echo "All cached files:"
+        ls -ls *.fits || echo "No files found"
+
+    - name: Save updated cache (overwrite)
+      uses: actions/cache/save@v4
+      with:
+        key: mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-${{ github.run_number }}-${{ steps.date.outputs.trigger }}
+        path: ./
+        enableCrossOsArchive: true
