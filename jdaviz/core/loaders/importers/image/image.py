@@ -58,6 +58,8 @@ class ImageImporter(BaseImporterToDataCollection):
                                                           manual_options=self.input,
                                                           filters=[_validate_fits_image2d])
             self.extension.selected = [self.extension.choices[0]]
+        else:
+            self._set_default_data_label()
 
     @property
     def user_api(self):
@@ -123,7 +125,7 @@ class ImageImporter(BaseImporterToDataCollection):
             return [_hdu2data(self.input, self.data_label_value, None, True)]
         # fits
         hdulist = self.input
-        return [_hdu2data(hdu, self.data_label_value, hdulist)[1]
+        return [_hdu2data(hdu, self.data_label_value, hdulist)
                 for hdu in self.extension.selected_hdu]
 
     def __call__(self, show_in_viewer=True):
@@ -183,7 +185,7 @@ def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
         warnings.simplefilter('ignore', category=AstropyWarning)
         data.add_component(component=component, label=comp_label)
 
-    return new_data_label, data
+    return data
 
 
 def _validate_bunit(bunit, raise_error=False):
