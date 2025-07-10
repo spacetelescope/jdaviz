@@ -20,7 +20,7 @@ tray:
   - g-subset-tools
   - g-markers
   - g-unit-conversion
-  - spectral-extraction
+  - spectral-extraction-2d
   - g-gaussian-smooth
   - g-model-fitting
   - g-line-list

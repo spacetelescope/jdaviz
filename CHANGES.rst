@@ -30,12 +30,15 @@ New Features
 
 - Allow custom resolutions when exporting viewers to png or mp4. [#3478]
 
+
 Cubeviz
 ^^^^^^^
 
 - Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
 - Add sonified layer for each cube created by the Sonify Data plugin. [#3430, #3660]
+
+- Renamed ``Spectral Extraction`` plugin to ``Cube Spectral Extraction``. [#3691]
 
 Imviz
 ^^^^^
@@ -72,6 +75,8 @@ Specviz2d
   deprecated and will open the new sidebar.  [#3473]
 
 - New plugin to vizualize the cross-dispersion profile [#3552]
+
+- Renamed ``Spectral Extraction`` plugin to ``2D Spectral Extraction``. [#3691]
 
 API Changes
 -----------

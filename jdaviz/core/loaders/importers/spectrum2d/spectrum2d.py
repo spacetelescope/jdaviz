@@ -175,7 +175,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             return
 
         try:
-            spext = self.app.get_tray_item_from_name('spectral-extraction')
+            spext = self.app.get_tray_item_from_name('spectral-extraction-2d')
             ext = spext._extract_in_new_instance(dataset=data_label,
                                                  add_data=False)
         except Exception:

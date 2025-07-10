@@ -25,7 +25,7 @@ def test_plugin(specviz2d_helper):
 
     specviz2d_helper.load_data(spectrum_2d=fn)
 
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
 
     # test trace marks - won't be created until after opening the plugin
     sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
@@ -167,7 +167,7 @@ def test_user_api(specviz2d_helper):
 
     specviz2d_helper.load_data(spectrum_2d=fn)
 
-    pext = specviz2d_helper.plugins['Spectral Extraction']
+    pext = specviz2d_helper.plugins['2D Spectral Extraction']
     pext.keep_active = True
 
     # test that setting a string to an AddResults object redirects to the label
@@ -193,7 +193,7 @@ def test_background_extraction_and_display(specviz2d_helper):
                        cache=True)
 
     specviz2d_helper.load_data(spectrum_2d=fn)
-    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
 
     # check that the background extraction method and parameters are as expected
     assert pext.bg_type_selected == 'TwoSided'
@@ -228,7 +228,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
                           uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
     specviz2d_helper.load_data(objectspec)
-    pext = specviz2d_helper.plugins['Spectral Extraction']._obj
+    pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
                                  trace_model=models.Polynomial1D(degree=1),
@@ -287,7 +287,7 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
     specviz2d_helper.load_data(mos_spectrum2d)
 
     uc = specviz2d_helper.plugins["Unit Conversion"]
-    pext = specviz2d_helper.plugins['Spectral Extraction']
+    pext = specviz2d_helper.plugins['2D Spectral Extraction']
 
     for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
 
