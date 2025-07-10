@@ -115,23 +115,21 @@ class ImageImporter(BaseImporterToDataCollection):
     @property
     def output(self):
         # NOTE: this should ALWAYS return a list of objects able to be imported into DataCollection
-        data_label = self.data_label_value
         # NDData or ndarray
         if isinstance(self.input, NDData):
-            return _nddata_to_glue_data(self.input, data_label)  # list of Data
+            return _nddata_to_glue_data(self.input)  # list of Data
         elif isinstance(self.input, np.ndarray):
-            return [_ndarray_to_glue_data(self.input, data_label)]
+            return [_ndarray_to_glue_data(self.input)]
         # asdf
         elif (isinstance(self.input, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
-            return _roman_asdf_2d_to_glue_data(self.input, data_label)  # list of Data
+            return _roman_asdf_2d_to_glue_data(self.input)  # list of Data
         # ImageHDU
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            return [_hdu2data(self.input, self.data_label_value, None, True)]
+            return [_hdu2data(self.input, None, True)]
         # fits
         hdulist = self.input
-        return [_hdu2data(hdu, self.data_label_value, hdulist)
-                for hdu in self.extension.selected_hdu]
+        return [_hdu2data(hdu, hdulist) for hdu in self.extension.selected_hdu]
 
     def __call__(self, show_in_viewer=True):
         base_data_label = self.data_label_value
@@ -170,16 +168,15 @@ def _validate_fits_image2d(hdu, raise_error=False):
     return valid
 
 
-def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
+def _hdu2data(hdu, hdulist, include_wcs=True):
     if 'BUNIT' in hdu.header:
         bunit = _validate_bunit(hdu.header['BUNIT'], raise_error=False)
     else:
         bunit = ''
 
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
-    new_data_label = f'{data_label}[{comp_label}]'
 
-    data = Data(label=new_data_label)
+    data = Data()
     if hdulist is not None and hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         data.meta[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
     data.meta.update(standardize_metadata(hdu.header))
@@ -211,17 +208,17 @@ def _validate_bunit(bunit, raise_error=False):
     return valid
 
 
-def _ndarray_to_glue_data(arr, data_label):
+def _ndarray_to_glue_data(arr):
     if arr.ndim != 2:
         raise ValueError(f'Imviz cannot load this array with ndim={arr.ndim}')
 
-    data = Data(label=data_label)
+    data = Data()
     component = Component.autotyped(arr)
     data.add_component(component=component, label='DATA')
     return data
 
 
-def _nddata_to_glue_data(ndd, data_label):
+def _nddata_to_glue_data(ndd):
     if ndd.data.ndim != 2:
         raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
 
@@ -231,12 +228,7 @@ def _nddata_to_glue_data(ndd, data_label):
         if arr is None:
             continue
         comp_label = attrib.upper()
-        # Do not add extension if data is coming from orientation plugin
-        if 'plugin' in ndd.meta.keys() and ndd.meta['plugin'] == 'orientation':
-            cur_label = f'{data_label}'
-        else:
-            cur_label = f'{data_label}[{comp_label}]'
-        cur_data = Data(label=cur_label)
+        cur_data = Data()
         cur_data.meta.update(standardize_metadata(ndd.meta))
         if ndd.wcs is not None:
             cur_data.coords = ndd.wcs
@@ -287,7 +279,7 @@ def prep_data_layer_as_dq(data):
     data.update_components({cid: data_arr})
 
 
-def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
+def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     if ext == '*':
         # NOTE: Update as needed. Should cover all the image extensions available.
         ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
@@ -309,8 +301,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
 
     for cur_ext in ext_list:
         comp_label = cur_ext.upper()
-        new_data_label = f'{data_label}[{comp_label}]'
-        data = Data(coords=coords, label=new_data_label)
+        data = Data(coords=coords)
 
         # This could be a quantity or a ndarray:
         if HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):

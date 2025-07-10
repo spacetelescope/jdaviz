@@ -185,12 +185,18 @@ class Imviz(ImageConfigHelper):
                 if data_label:
                     kw['data_label'] = data_label
 
-                self._load(data[i, :, :], format='Image', data_label=data_label, extension=extensions)
+                self._load(data[i, :, :],
+                           format='Image',
+                           data_label=data_label,
+                           extension=extensions)
 
         else:
             if data_label:
                 kwargs['data_label'] = data_label
-            self._load(data, format='Image', data_label=data_label, extension=extensions)
+            self._load(data,
+                       format='Image',
+                       data_label=data_label,
+                       extension=extensions)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.
