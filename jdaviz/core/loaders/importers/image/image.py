@@ -103,11 +103,6 @@ class ImageImporter(BaseImporterToDataCollection):
                 # only show the prefix and append the extension later during import
                 self.data_label_default = prefix
                 self.data_label_is_prefix = True
-        elif isinstance(self.input, (asdf.AsdfFile, NDData)):
-            self.data_label_default = self._get_label_with_extension(prefix,
-                                                                     ext='DATA',
-                                                                     ver=None)
-            self.data_label_is_prefix = False
         else:
             self.data_label_default = prefix
             self.data_label_is_prefix = False

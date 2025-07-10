@@ -5,6 +5,7 @@ from copy import deepcopy
 
 import numpy as np
 from astropy.utils import deprecated
+from astropy.nddata import NDData
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import NewViewerMessage
@@ -180,19 +181,15 @@ class Imviz(ImageConfigHelper):
                                   'please use Cubeviz')
                     break
 
-                kw = deepcopy(kwargs)
-
-                if data_label:
-                    kw['data_label'] = data_label
-
                 self._load(data[i, :, :],
                            format='Image',
-                           data_label=data_label,
+                           data_label=data_label+'[DATA]',
                            extension=extensions)
-
         else:
-            if data_label:
-                kwargs['data_label'] = data_label
+            if isinstance(data, (NDData)):
+                if data_label is not None and not data_label.endswith(']'):
+                    data_label = data_label + '[DATA]'
+
             self._load(data,
                        format='Image',
                        data_label=data_label,
