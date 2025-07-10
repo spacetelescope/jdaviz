@@ -16,7 +16,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.app.config == 'specviz':
+        if self.default_data_label_from_resolver:
+            self.data_label_default = self.default_data_label_from_resolver
+        elif self.app.config == 'specviz':
             self.data_label_default = '1D Spectrum'
         else:
             self.data_label_default = '1D Spectrum'

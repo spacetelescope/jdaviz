@@ -92,6 +92,10 @@ class BaseImporterToDataCollection(BaseImporter):
         return ()
 
     @property
+    def default_data_label_from_resolver(self):
+        return self._resolver.default_label
+
+    @property
     def default_viewer_label(self):
         return vid_map.get(self.default_viewer_reference, self.default_viewer_reference)
 
