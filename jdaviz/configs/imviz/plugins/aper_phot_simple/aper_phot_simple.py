@@ -542,7 +542,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 data = self.dataset.selected_dc_item
 
         comp = data.get_component(data.main_components[0])
-        if self.config == "cubeviz" and data.ndim > 2:
+        if data.ndim > 2:
             if "spectral_axis_index" in getattr(data, "meta", {}):
                 spectral_axis_index = data.meta["spectral_axis_index"]
             else:
@@ -654,7 +654,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # we can use the pre-cached value
             data = self.dataset.selected_dc_item
 
-        if self.config == "cubeviz" and data.ndim > 2:
+        if data.ndim > 2:
             if "spectral_axis_index" in getattr(data, "meta", {}):
                 spectral_axis_index = data.meta["spectral_axis_index"]
             else:

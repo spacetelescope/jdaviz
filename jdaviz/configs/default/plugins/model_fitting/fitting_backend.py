@@ -354,10 +354,7 @@ def generate_spaxel_list(spectrum, spectral_axis_index=None):
     if spectral_axis_index is None and hasattr(spectrum, 'spectral_axis_index'):
         spectral_axis_index = spectrum.spectral_axis_index
 
-    if hasattr(spectrum, 'flux'):
-        flux = spectrum.flux
-    else:
-        flux = spectrum
+    flux = getattr(spectrum, 'flux', spectrum)
 
     if spectral_axis_index in [2, -1]:
         n_x, n_y, _ = flux.shape
