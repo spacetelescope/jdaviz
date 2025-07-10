@@ -151,28 +151,20 @@ class Imviz(ImageConfigHelper):
         if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
             kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
 
-        if isinstance(data, str):
-            filelist = data.split(',')
+        if isinstance(data, str) and "," in data:
+            data = data.split(',')
 
-            if len(filelist) > 1 and data_label:
+        if isinstance(data, (tuple, list)):
+            if len(data) > 1 and data_label:
                 raise ValueError('Do not manually overwrite data_label for '
                                  'a list of images')
-
-            for data in filelist:
-                kw = deepcopy(kwargs)
-                filepath, ext, cur_data_label = split_filename_with_fits_ext(data)
-
-                # This, if valid, will overwrite input.
-                if ext is not None:
-                    kw['ext'] = ext
-
-                # This will only overwrite if not provided.
-                if not data_label:
-                    kw['data_label'] = None
-                else:
-                    kw['data_label'] = data_label
-                # data_label = data_label if data_label is not None else cur_data_label
-                self._load(filepath, data_label=cur_data_label)
+            with self.batch_load():
+                for data_i in data:
+                    kw = deepcopy(kwargs)
+                    self.load_data(data_i,
+                                   data_label=data_label,
+                                   show_in_viewer=show_in_viewer,
+                                   **kw)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
@@ -193,12 +185,12 @@ class Imviz(ImageConfigHelper):
                 if data_label:
                     kw['data_label'] = data_label
 
-                self._load(data[i, :, :], data_label=data_label, extension=extensions)
+                self._load(data[i, :, :], format='Image', data_label=data_label, extension=extensions)
 
         else:
             if data_label:
                 kwargs['data_label'] = data_label
-            self._load(data, data_label=data_label, extension=extensions)
+            self._load(data, format='Image', data_label=data_label, extension=extensions)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.
