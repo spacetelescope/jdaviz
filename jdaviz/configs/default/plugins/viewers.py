@@ -798,7 +798,13 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                 uncert_cls = uncertainty_str_to_cls_mapping[uncertainty_type_str]
                 error = uncert_cls(error).represent_as(StdDevUncertainty).array
 
-                spectral_axis = lyr.data.meta['spectral_axis_index']
+                if 'spectral_axis_index' in lyr.data.meta:
+                    spectral_axis_index = lyr.data.meta['spectral_axis_index']
+                else:
+                    # We have to make an assumption in this case.
+                    # TODO: Should we have other handling for non-spectral data (e.g. light curves?)
+                    spectral_axis_index = -1
+
                 data_obj = lyr.data.get_object(cls=self.default_class, statistic=None)
 
                 lyr_coords = lyr.data.coords
@@ -806,7 +812,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                 if isinstance(lyr_coords, SpectralCoordinates):
                     spectral_wcs = lyr_coords
                     data_x = spectral_wcs.pixel_to_world_values(
-                        np.arange(lyr.data.shape[spectral_axis])
+                        np.arange(lyr.data.shape[spectral_axis_index])
                     )
                     if isinstance(data_x, tuple):
                         data_x = data_x[0]
@@ -819,7 +825,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                         # 1D GWCS in this case, just use the coords
                         spectral_wcs = lyr_coords
                     data_x = spectral_wcs.pixel_to_world(
-                        np.arange(lyr.data.shape[spectral_axis])
+                        np.arange(lyr.data.shape[spectral_axis_index])
                     )
 
                 data_y = data_obj.data
