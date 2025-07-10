@@ -5,6 +5,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, CCDData
+from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from traitlets import Bool, List, Any
@@ -152,7 +153,9 @@ def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
     if include_wcs:
         data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
-    data.add_component(component=component, label=comp_label)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=AstropyWarning)
+        data.add_component(component=component, label=comp_label)
 
     return new_data_label, data
 
