@@ -558,7 +558,7 @@ def test_load_valid_not_valid(imviz_helper):
     imviz_helper.load_data(arr, data_label='valid', show_in_viewer=False)
 
     # Load something invalid.
-    with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
+    with pytest.raises(ValueError, match='must select a format before accessing importer'):
         imviz_helper.load_data(np.zeros(2), show_in_viewer=False)
 
     # Make sure valid data is still there.
