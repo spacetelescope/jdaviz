@@ -10,6 +10,16 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Extension to use from the FITS HDUList."
     ></plugin-select>
+    <plugin-dataset-select
+      :items="parent_items"
+      :selected.sync="parent_selected"
+      :show_if_single_entry="true"
+      :multiselect="false"
+      label="Parent Dataset"
+      api_hint="ldr.importer.parent ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Select a parent dataset to associate the new data with."
+    ></dataset-select>
     <v-row>
       <plugin-auto-label
         :value.sync="data_label_value"
