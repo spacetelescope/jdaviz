@@ -108,6 +108,11 @@ class ImageImporter(BaseImporterToDataCollection):
                 # only show the prefix and append the extension later during import
                 self.data_label_default = prefix
                 self.data_label_is_prefix = True
+        elif isinstance(self.input, NDData):
+            # will append with [DATA]/[UNCERTAINTY]/[MASK] later
+            # TODO: allow user to select extensions and include in same logic as HDUList
+            self.data_label_default = prefix
+            self.data_label_is_prefix = True
         else:
             self.data_label_default = prefix
             self.data_label_is_prefix = False
@@ -136,10 +141,22 @@ class ImageImporter(BaseImporterToDataCollection):
         # self.output is always a list of Data objects
         outputs = self.output
 
-        exts = self.extension.selected_name if self.input_hdulist else [None] * len(outputs)
-        hdus = self.extension.selected_hdu if self.input_hdulist else [None] * len(outputs)
+        if self.input_hdulist:
+            exts = self.extension.selected_name
+            hdus = self.extension.selected_hdu
+        elif isinstance(self.input, NDData):
+            exts = ['DATA', 'MASK', 'UNCERTAINTY']  # must match order in _nddata_to_glue_data
+            hdus = [None] * len(outputs)
+        else:
+            exts = [None] * len(outputs)
+            hdus = [None] * len(outputs)
 
         for output, ext, hdu in zip(outputs, exts, hdus):
+            if output is None:
+                # needed for NDData where one of the "extensions" might
+                # not be present.  Remove this once users can select
+                # which to import.
+                continue
             if self.data_label_is_prefix:
                 # If data_label is a prefix, we need to append the extension
                 # to the data label.
@@ -226,6 +243,7 @@ def _nddata_to_glue_data(ndd):
     for attrib in ('data', 'mask', 'uncertainty'):
         arr = getattr(ndd, attrib)
         if arr is None:
+            returned_data.append(None)
             continue
         comp_label = attrib.upper()
         cur_data = Data()

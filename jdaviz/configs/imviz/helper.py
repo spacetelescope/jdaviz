@@ -6,7 +6,6 @@ from copy import deepcopy
 import numpy as np
 from astropy.io import fits
 from astropy.utils import deprecated
-from astropy.nddata import NDData
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import NewViewerMessage
@@ -193,19 +192,15 @@ class Imviz(ImageConfigHelper):
 
                 self._load(data[i, :, :],
                            format='Image',
-                           data_label=data_label+'[DATA]',
+                           data_label=data_label,
                            extension=extensions)
         else:
-            # extensions is None or a single extension
-            if isinstance(data, NDData):
+            # extensions is None or a single extension or data is NDData and importer will handle
+            # appending the extension
+            if isinstance(data, fits.hdu.image.ImageHDU):
                 if data_label is not None and not data_label.endswith(']'):
-                    # NOTE: for backwards compatibility with previous load_data behavior
-                    # in .load() the data_label will not be appended
-                    data_label = data_label + '[DATA]'
-            elif isinstance(data, fits.hdu.image.ImageHDU):
-                if data_label is not None and not data_label.endswith(']'):
-                    # NOTE: for backwards compatibility with previous load_data behavior
-                    # in .load() the data_label will not be appended
+                    # NOTE: for backwards compatibility with previous load_data behavior.
+                    # In .load() the data_label will not be appended
                     data_label = data_label + f'[{data.name},{data.ver}]'
 
             self._load(data,
