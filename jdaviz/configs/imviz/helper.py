@@ -187,6 +187,12 @@ class Imviz(ImageConfigHelper):
                            data_label=data_label,
                            extension=extensions,
                            show_in_viewer=show_in_viewer)
+        elif isinstance(data, str) and data.endswith('.reg'):
+            self._load(data,
+                       format='Subset',
+                       data_label=data_label,
+                       extension=extensions,
+                       show_in_viewer=show_in_viewer)
         else:
             # extensions is None or a single extension or data is NDData and importer will handle
             # appending the extension
