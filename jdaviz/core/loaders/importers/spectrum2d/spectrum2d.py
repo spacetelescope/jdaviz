@@ -137,10 +137,18 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             if wcs.world_axis_physical_types == [None, None]:
                 # This may be a JWST file with WCS stored in ASDF
                 if 'ASDF' in hdulist:
-                    from stdatamodels import asdf_in_fits
-                    wcs = asdf_in_fits.open(hdulist).tree["meta"]["wcs"][0]
+                    try:
+                        from stdatamodels import asdf_in_fits
+                        tree = asdf_in_fits.open(hdulist).tree
+                        if 'meta' in tree and 'wcs' in tree['meta']:
+                            wcs = tree["meta"]["wcs"][0]
+                        else:
+                            wcs = None
+                    except ValueError:
+                        wcs = None
                 else:
                     wcs = None
+            print(Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1))
             return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
