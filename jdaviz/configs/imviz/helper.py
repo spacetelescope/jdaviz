@@ -155,7 +155,7 @@ class Imviz(ImageConfigHelper):
         if isinstance(data, str) and "," in data:
             data = data.split(',')
 
-        if isinstance(data, (tuple, list)):
+        if isinstance(data, (tuple, list)) and not isinstance(data, fits.HDUList):
             if len(data) > 1 and data_label:
                 raise ValueError('Do not manually overwrite data_label for '
                                  'a list of images')
