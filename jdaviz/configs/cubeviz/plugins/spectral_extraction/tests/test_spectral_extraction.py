@@ -591,7 +591,8 @@ def test_spectral_extraction_unit_conv_one_spec(
 )
 def test_spectral_extraction_scientific_validation(
     cubeviz_helper, start_slice,
-    aperture, expected_rtol, uri, calspec_url
+    aperture, expected_rtol, uri, calspec_url,
+    mast_cache_path
 ):
     """
     Compare the extracted spectrum from MIRI CH1 IFU cubes for
@@ -624,7 +625,7 @@ def test_spectral_extraction_scientific_validation(
     # load observations into Cubeviz
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        cubeviz_helper.load_data(uri, cache=True)
+        cubeviz_helper.load_data(uri, cache=True, local_path=mast_cache_path)
 
     # add a subset with an aperture centered on each source
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
