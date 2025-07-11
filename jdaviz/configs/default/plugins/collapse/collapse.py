@@ -40,7 +40,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
-    collapsed_spec_available = Bool(False).tag(sync=True)
+    collapsed_flux_available = Bool(False).tag(sync=True)
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported
@@ -52,7 +52,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
         self._label_counter = 0
 
-        self.collapsed_spec = None
+        self.collapsed_flux = None
 
         self.function = SelectPluginComponent(self,
                                               items='function_items',
@@ -111,25 +111,24 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         else:
             w = data.coords
         data_wcs = getattr(w, 'celestial', None)
-        if data_wcs:
-            data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='No observer defined on WCS')
             spec = spectral_slab(cube, spec_min, spec_max)
             # Spatial-spatial image only.
-            collapsed_spec = spec.collapse(self.function_selected.lower(), axis=-1).T  # Quantity
+            collapsed_flux = spec.collapse(self.function_selected.lower(),
+                                           axis=cube.spectral_axis_index)  # Quantity
 
             # stuff for exporting to file
-            self.collapsed_spec = CCDData(collapsed_spec, wcs=data_wcs)
-            self.collapsed_spec_available = True
+            self.collapsed_flux = CCDData(collapsed_flux, wcs=data_wcs)
+            self.collapsed_flux_available = True
             fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
             self.filename = f"collapsed_{self.function_selected.lower()}_{fname_label}.fits"
 
         if add_data:
             data = Data(coords=data_wcs)
-            data['flux'] = collapsed_spec.value
-            data.get_component('flux').units = collapsed_spec.unit.to_string()
+            data['flux'] = collapsed_flux.value
+            data.get_component('flux').units = collapsed_flux.unit.to_string()
 
             self.add_results.add_results_from_plugin(data)
 
@@ -139,7 +138,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
                 sender=self)
             self.hub.broadcast(snackbar_message)
 
-        return collapsed_spec
+        return collapsed_flux
 
     def vue_collapse(self, *args, **kwargs):
         try:

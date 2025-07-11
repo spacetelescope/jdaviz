@@ -72,7 +72,7 @@ def viewer_flux_conversion_equivalencies(values, spec):
     ----------
     values : array-like
         The values to be converted, which may represent flux or surface brightness.
-    spec : Spectrum1D
+    spec : Spectrum
 
     Returns:
     -------

@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.wcs import WCS
-from specutils import Spectrum1D, SpectralRegion
-from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
+from gwcs.wcs import WCS as GWCS
+from specutils import Spectrum, SpectralRegion
 from numpy.testing import assert_allclose, assert_array_equal
 
 from jdaviz.core.custom_units_and_equivs import PIX2
@@ -32,11 +32,10 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and extracted spectrum
     assert cubeviz_helper.app.data_collection[0].label == 'has_microns[FLUX]'
 
-    flux_cube = cubeviz_helper.app.data_collection[0].get_object(Spectrum1D, statistic=None)
+    flux_cube = cubeviz_helper.app.data_collection[0].get_object(Spectrum, statistic=None)
     assert flux_cube.spectral_axis.unit == u.um
 
     # This tests the same data as test_fits_image_hdu_parse above.
-
     cubeviz_helper.app.data_collection[0].meta['EXTNAME'] == 'FLUX'
     cubeviz_helper.app.data_collection[1].meta['EXTNAME'] == 'MASK'
     cubeviz_helper.app.data_collection[2].meta['EXTNAME'] == 'ERR'
@@ -125,7 +124,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
 def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     flux = image_cube_hdu_obj[1].data << u.Unit(image_cube_hdu_obj[1].header['BUNIT'])
     wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj)
-    sc = Spectrum1D(flux=flux, wcs=wcs)
+    sc = Spectrum(flux=flux, wcs=wcs)
     cubeviz_helper.load_data(sc)
 
     data = cubeviz_helper.app.data_collection[0]
@@ -152,7 +151,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
 
 @pytest.mark.parametrize("flux_unit", [u.nJy, u.DN, u.DN / u.s])
 def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
-    sc = Spectrum1D(flux=np.ones(24).reshape((2, 3, 4)) * flux_unit)  # x, y, z
+    sc = Spectrum(flux=np.ones(24).reshape((2, 3, 4)) * flux_unit, spectral_axis_index=2)  # x, y, z
     cubeviz_helper.load_data(sc)
     assert sc.spectral_axis.unit == u.pix
 
@@ -160,7 +159,7 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
     flux = data.get_component('flux')
     assert data.label.endswith('[FLUX]')
     assert data.shape == (2, 3, 4)  # x, y, z
-    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert isinstance(data.coords, GWCS)
     assert_array_equal(flux.data, 1)
     assert flux.units == f'{flux_unit / PIX2}'
 
@@ -169,7 +168,7 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
 
     assert len(cubeviz_helper.app.data_collection) == 1
-    assert cubeviz_helper.app.data_collection[0].label.endswith('Spectrum1D')
+    assert cubeviz_helper.app.data_collection[0].label.endswith('Spectrum')
     assert cubeviz_helper.app.data_collection[0].meta['uncertainty_type'] == 'std'
 
     # Coordinate display is only for spatial image, which is missing here.
@@ -197,7 +196,7 @@ def test_numpy_cube(cubeviz_helper):
     flux = data.get_component('flux')
     assert data.label == 'Array'
     assert data.shape == (4, 3, 2)  # x, y, z
-    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert isinstance(data.coords, GWCS)
     assert flux.units == 'ct / pix2'
 
     # Check context of second cube.
@@ -205,15 +204,16 @@ def test_numpy_cube(cubeviz_helper):
     flux = data.get_component('flux')
     assert data.label == 'uncert_array'
     assert data.shape == (4, 3, 2)  # x, y, z
-    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert isinstance(data.coords, GWCS)
     assert flux.units == 'ct / pix2'
 
 
 def test_loading_with_mask(cubeviz_helper):
     # This also tests that spaxel is converted to pix**2
-    custom_spec = Spectrum1D(flux=[[[20, 1], [9, 1]], [[3, 1], [6, np.nan]]] * u.Unit("erg / Angstrom s cm**2 spaxel"),  # noqa
-                             spectral_axis=[1, 2]*u.AA,
-                             mask=[[[1, 0], [0, 0]], [[0, 0], [0, 0]]])
+    custom_spec = Spectrum(flux=[[[20, 1], [9, 1]], [[3, 1], [6, np.nan]]] * u.Unit("erg / Angstrom s cm**2 spaxel"),  # noqa
+                           spectral_axis=[1, 2]*u.AA,
+                           mask=[[[1, 0], [0, 0]], [[0, 0], [0, 0]]],
+                           spectral_axis_index=2)
     cubeviz_helper.load_data(custom_spec)
 
     uc = cubeviz_helper.plugins['Unit Conversion']
@@ -265,7 +265,7 @@ def test_invalid_data_types(cubeviz_helper):
         cubeviz_helper.load_data(WCS(naxis=3))
 
     with pytest.raises(NotImplementedError, match='Unsupported data format'):
-        cubeviz_helper.load_data(Spectrum1D(flux=np.ones((2, 2)) * u.nJy))
+        cubeviz_helper.load_data(Spectrum(flux=np.ones((2, 2)) * u.nJy, spectral_axis_index=1))
 
     with pytest.raises(NotImplementedError, match='Unsupported data format'):
         cubeviz_helper.load_data(np.ones((2, 2)))

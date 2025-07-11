@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.utils.data import download_file
 from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import XRangeROI
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.utils import PRIHDR_KEY
 from jdaviz.configs.imviz.tests.utils import create_example_gwcs
@@ -41,6 +41,7 @@ def test_2d_parser_jwst(specviz2d_helper):
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_2d_parser_ext_hdulist(specviz2d_helper):
     # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
     specviz2d_helper.load('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
@@ -64,9 +65,9 @@ def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
                             cache=True)
     dc_0 = deconfigged_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
-    assert isinstance(deconfigged_helper.plugins['Spectral Extraction'].trace_dataset.selected_obj, Spectrum1D)  # noqa
+    assert isinstance(deconfigged_helper.plugins['Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
     # TODO: store expected class in data itself so get_data doesn't need to pass cls
-    assert isinstance(deconfigged_helper.get_data('2D Spectrum', cls=Spectrum1D), Spectrum1D)
+    assert isinstance(deconfigged_helper.get_data('2D Spectrum', cls=Spectrum), Spectrum)
 
 
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
@@ -98,7 +99,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
                                         {'event': 'mousemove', 'domain': {'x': 7.2e-6, 'y': 3}})
     assert label_mouseover.as_text() == ('Cursor 7.20000e-06, 3.00000e+00',
                                          'Wave 7.00000e-06 m (6 pix)',
-                                         'Flux -3.59571e+00 Jy')
+                                         'Flux 6.92896e-02 Jy')
 
     assert label_mouseover.icon == 'b'
 

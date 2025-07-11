@@ -4,7 +4,7 @@ from astropy import units as u
 from glue.core import Data as glue_core_data
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
-from specutils import Spectrum1D
+from specutils import Spectrum
 from traitlets import List, Unicode, observe, Bool
 from specreduce import tracing
 
@@ -234,9 +234,9 @@ class UnitConversion(PluginTemplateMixin):
 
             data_obj = self.app._jdaviz_helper.get_data(msg.data.label)
 
-            # if the viewer is spectral and the data is Spectrum1D, get flux/sb/spectral
-            # axis units from the Spectrum 1D object
-            if isinstance(data_obj, Spectrum1D) and isinstance(viewer, Spectrum1DViewer):
+            # if the viewer is spectral and the data is Spectrum, get flux/sb/spectral
+            # axis units from the Spectrum object
+            if isinstance(data_obj, Spectrum) and isinstance(viewer, Spectrum1DViewer):
                 self.spectral_unit._addl_unit_strings = viewer.state.__class__.x_display_unit.get_choices(viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
                     try:

@@ -20,7 +20,7 @@ from astropy import units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, VarianceUncertainty, InverseVariance
 )
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
@@ -586,7 +586,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                             layer_data = self.jdaviz_app._get_object_cache[cache_key]
                         else:
                             # If spectrum, collapse via the defined statistic
-                            if _class == Spectrum1D:
+                            if _class == Spectrum:
                                 layer_data = lyr.get_object(cls=_class, statistic=statistic)
                             else:
                                 layer_data = lyr.get_object(cls=_class)
@@ -745,7 +745,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
                 data_obj = lyr.data.get_object(cls=self.default_class)
 
-                if self.default_class == Spectrum1D:
+                if self.default_class == Spectrum:
                     data_x = data_obj.spectral_axis.value
                     data_y = data_obj.flux.value
                 else:
@@ -798,26 +798,34 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                 uncert_cls = uncertainty_str_to_cls_mapping[uncertainty_type_str]
                 error = uncert_cls(error).represent_as(StdDevUncertainty).array
 
-                # Then we assume that last axis is always wavelength.
-                # This may need adjustment after the following
-                # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
-                spectral_axis = -1
+                if 'spectral_axis_index' in lyr.data.meta:
+                    spectral_axis_index = lyr.data.meta['spectral_axis_index']
+                else:
+                    # We have to make an assumption in this case.
+                    # TODO: Should we have other handling for non-spectral data (e.g. light curves?)
+                    spectral_axis_index = -1
+
                 data_obj = lyr.data.get_object(cls=self.default_class, statistic=None)
 
-                if isinstance(lyr.data.coords, SpectralCoordinates):
-                    spectral_wcs = lyr.data.coords
+                lyr_coords = lyr.data.coords
+
+                if isinstance(lyr_coords, SpectralCoordinates):
+                    spectral_wcs = lyr_coords
                     data_x = spectral_wcs.pixel_to_world_values(
-                        np.arange(lyr.data.shape[spectral_axis])
+                        np.arange(lyr.data.shape[spectral_axis_index])
                     )
                     if isinstance(data_x, tuple):
                         data_x = data_x[0]
                 else:
-                    if hasattr(lyr.data.coords, 'spectral_wcs'):
-                        spectral_wcs = lyr.data.coords.spectral_wcs
-                    elif hasattr(lyr.data.coords, 'spectral'):
-                        spectral_wcs = lyr.data.coords.spectral
+                    if hasattr(lyr_coords, 'spectral_wcs'):
+                        spectral_wcs = lyr_coords.spectral_wcs
+                    elif hasattr(lyr_coords, 'spectral'):
+                        spectral_wcs = lyr_coords.spectral
+                    elif hasattr(lyr_coords, "world_n_dim") and lyr_coords.world_n_dim == 1:
+                        # 1D GWCS in this case, just use the coords
+                        spectral_wcs = lyr_coords
                     data_x = spectral_wcs.pixel_to_world(
-                        np.arange(lyr.data.shape[spectral_axis])
+                        np.arange(lyr.data.shape[spectral_axis_index])
                     )
 
                 data_y = data_obj.data

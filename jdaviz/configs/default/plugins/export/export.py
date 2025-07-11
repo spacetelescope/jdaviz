@@ -2,8 +2,14 @@ import os
 import time
 from pathlib import Path
 import threading
-from traitlets import Bool, List, Unicode, observe
+
+from astropy import units as u
+from astropy.nddata import CCDData
+from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue_jupyter.bqplot.image import BqplotImageView
+from regions import CircleSkyRegion, EllipseSkyRegion
+from specutils import Spectrum
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
@@ -13,16 +19,9 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginCompone
                                         SubsetSelectMixin, PluginTableSelectMixin,
                                         PluginPlotSelectMixin, AutoTextField,
                                         MultiselectMixin, with_spinner)
-from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
-
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.region_translators import region2stcs_string
-
-from specutils import Spectrum1D
-from astropy import units as u
-from astropy.nddata import CCDData
-from regions import CircleSkyRegion, EllipseSkyRegion
 
 try:
     import cv2
@@ -404,7 +403,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # NOTE: should not be a valid choice due to dataset filters, but we'll include
                 # another check here.
                 self.data_invalid_msg = "Data export is only available for plugin generated data."
-            elif not isinstance(self.dataset.selected_obj, (Spectrum1D, CCDData)):
+            elif not isinstance(self.dataset.selected_obj, (Spectrum, CCDData)):
                 self.data_invalid_msg = "Export is not yet implemented for this type of data"
             elif (data_unit := self.dataset.selected_obj.unit) == u.Unit('DN/s'):
                 self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501

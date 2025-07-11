@@ -86,7 +86,7 @@ class Rampviz(CubeConfigHelper):
             Spatial subset applied to data.  Only applicable if ``data_label`` points to a cube or
             image.  To extract a spectrum from a cube, use the spectral extraction plugin instead.
         temporal_subset : str, optional
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+        cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
 
         Returns

@@ -2,7 +2,7 @@ from traitlets import Bool, List, Unicode, observe
 from astropy.io import fits
 from astropy import units as u
 from astropy.wcs import WCS
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
@@ -86,7 +86,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if self.app.config not in ('deconfigged', 'specviz2d'):
             # NOTE: temporary during deconfig process
             return False
-        if not ((isinstance(self.input, Spectrum1D)
+        if not ((isinstance(self.input, Spectrum)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
                  and len([hdu for hdu in self.input if hdu_is_valid(hdu)]))):  # noqa
@@ -134,17 +134,32 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             data_unit = u.count
 
         try:
-            return Spectrum1D(flux=data * data_unit, meta=metadata, wcs=wcs)
+            if wcs.world_axis_physical_types == [None, None]:
+                # This may be a JWST file with WCS stored in ASDF
+                if 'ASDF' in hdulist:
+                    try:
+                        from stdatamodels import asdf_in_fits
+                        tree = asdf_in_fits.open(hdulist).tree
+                        if 'meta' in tree and 'wcs' in tree['meta']:
+                            wcs = tree["meta"]["wcs"][0]
+                        else:
+                            wcs = None
+                    except ValueError:
+                        wcs = None
+                else:
+                    wcs = None
+            print(Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1))
+            return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
-            # In some cases, the above call to Spectrum1D will fail if no
+            # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,
-            # the Spectrum1D.read parser may work, so we try that next.
+            # the Spectrum.read parser may work, so we try that next.
             # If that also fails, then drop the WCS.
             try:
-                Spectrum1D.read(self._resolver())
+                Spectrum.read(self._resolver())
             except Exception:
                 # specutils.Spectrum > Spectrum2D would fail, so use no WCS
-                return Spectrum1D(flux=data * data_unit, meta=metadata)
+                return Spectrum(flux=data * data_unit, meta=metadata)
             else:
                 # raising an error here will allow using specutils.Spectrum > Spectrum2D
                 raise

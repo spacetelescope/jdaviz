@@ -12,7 +12,7 @@ icon in the upper right corner of the Cubeviz application.
     :width: 200px
 
 For spectroscopic data, functions can generally be applied to both 1D and 3D datasets,
-represented as `~specutils.Spectrum1D` objects.
+represented as `~specutils.Spectrum` objects.
 Plugins that are specific to 1D spectra are described in
 more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.
 In many cases, these capabilities can be further applied on a per-spaxel basis

@@ -66,7 +66,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
         Parameters
         ----------
-        data : str, `~astropy.io.fits.HDUList`, `~specutils.Spectrum1D`, or ndarray
+        data : str, `~astropy.io.fits.HDUList`, `~specutils.Spectrum`, or ndarray
             A string file path, astropy FITS object pointing to the
             data cube, a spectrum object, or a Numpy array cube.
             If plain array is given, axes order must be ``(x, y, z)``.
@@ -149,7 +149,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
             image.  To extract a spectrum from a cube, use the spectral extraction plugin instead.
         spectral_subset : str, optional
             Spectral subset applied to data.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+        cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
         use_display_units : bool, optional
             Specify whether the returned data is in native units or the current display units.

@@ -1,7 +1,7 @@
 import itertools
 import numpy as np
 from astropy.nddata import StdDevUncertainty
-from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specutils import Spectrum, SpectrumList, SpectrumCollection
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -32,7 +32,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
         return (isinstance(self.input, (SpectrumList, SpectrumCollection))
-                or (isinstance(self.input, Spectrum1D) and self.input.flux.ndim == 2))
+                or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
 
     @property
     def output(self):
@@ -45,14 +45,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             return field[i, :]
 
         def input_to_list_of_spec(inp):
-            if isinstance(inp, Spectrum1D):
+            if isinstance(inp, Spectrum):
                 if inp.flux.ndim == 1:
                     return [inp]
-                return [Spectrum1D(spectral_axis=inp.spectral_axis,
-                                   flux=this_row(inp.flux, i),
-                                   uncertainty=this_row(inp.uncertainty, i),
-                                   mask=this_row(inp.mask, i),
-                                   meta=inp.meta)
+                return [Spectrum(spectral_axis=inp.spectral_axis,
+                                 flux=this_row(inp.flux, i),
+                                 uncertainty=this_row(inp.uncertainty, i),
+                                 mask=this_row(inp.mask, i),
+                                 meta=inp.meta)
                         for i in range(inp.flux.shape[0])]
             elif isinstance(inp, (SpectrumList, SpectrumCollection)):
                 return itertools.chain(*[input_to_list_of_spec(spec) for spec in inp])
@@ -77,7 +77,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     """
-    Combine lists of 1D spectra into a composite `~specutils.Spectrum1D` object.
+    Combine lists of 1D spectra into a composite `~specutils.Spectrum` object.
 
     Parameters
     ----------
@@ -90,7 +90,7 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
     Returns
     -------
-    spec : `~specutils.Spectrum1D`
+    spec : `~specutils.Spectrum`
         Composite 1D spectrum.
     """
     # COPIED FROM specviz.plugins.parsers since cannot import
@@ -109,8 +109,8 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     else:
         unc = None
 
-    spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
-                      uncertainty=unc)
+    spec = Spectrum(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
+                    uncertainty=unc)
     return spec
 
 
@@ -135,7 +135,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
                 # others may not, if uncert is None, set to list of NaN. later,
                 # if the concatenated list of uncertanties is all nan (meaning
                 # they were all nan to begin with, or all None), it will be set
-                # to None on the final Spectrum1D
+                # to None on the final Spectrum
                 if spec.uncertainty is not None and spec.uncertainty[wlind] is not None:
                     dfnuallorig.append(spec.uncertainty[wlind].array)
                 else:

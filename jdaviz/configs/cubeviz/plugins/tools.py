@@ -5,7 +5,7 @@ from glue.config import viewer_tool
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, _MatchedZoomMixin
@@ -145,21 +145,29 @@ class SpectrumPerSpaxel(ProfileFromCube):
                 return
             cube_data = cube_data[0]
 
-        if isinstance(cube_data, Spectrum1D):
+        if isinstance(cube_data, Spectrum):
             spectrum = cube_data
         else:
             spectrum = cube_data.get_object(statistic=None)
-        # Note: change this when Spectrum1D.with_spectral_axis is fixed.
+        # Note: change this when Spectrum.with_spectral_axis is fixed.
         x_unit = self._profile_viewer.state.x_display_unit
         if spectrum.spectral_axis.unit != x_unit:
             new_spectral_axis = spectrum.spectral_axis.to(x_unit)
-            spectrum = Spectrum1D(spectrum.flux, new_spectral_axis)
+            spectrum = Spectrum(spectrum.flux, new_spectral_axis)
 
-        if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
+        if spectrum.spectral_axis_index in [2, -1]:
+            x_ind = 0
+        else:
+            x_ind = 2
+
+        if x >= spectrum.flux.shape[x_ind] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
             self._reset_profile_viewer_bounds()
             self._mark.visible = False
         else:
-            y_values = spectrum.flux[x, y, :].value
+            if spectrum.spectral_axis_index in [2, -1]:
+                y_values = spectrum.flux[x, y, :].value
+            else:
+                y_values = spectrum.flux[:, y, x].value
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
                 return

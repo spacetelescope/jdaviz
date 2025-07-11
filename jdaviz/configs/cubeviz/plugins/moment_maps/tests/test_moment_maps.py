@@ -113,7 +113,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
 
-    assert len(dc.links) == 19
+    assert len(dc.links) == 17
 
     # label should remain unchanged but raise overwrite warnings
     assert mm._obj.results_label == 'moment 0'
@@ -123,7 +123,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
-    assert flux_viewer.state.slices == (0, 0, 1)
+    assert flux_viewer.state.slices == (1, 0, 0)
     # Slice 0 has 8 pixels, this is Slice 1
     assert label_mouseover.as_text() == (f"Pixel x=00.0 y=00.0 Value +8.00000e+00 {cube_unit}",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
@@ -155,14 +155,13 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     mm._obj.vue_calculate_moment()
 
     assert dc[-1].label == 'moment 1'
-
-    assert len(dc.links) == 27
-    assert len(dc.external_links) == 6  # pixel linked
+    assert len(dc.links) == 25
+    assert len(dc.external_links) == 5  # pixel linked
     # Link 3D z to 2D x and 3D y to 2D y
-    assert (dc.external_links[2].cids1[0].label == "Pixel Axis 0 [z]" and
-            dc.external_links[2].cids2[0].label == "Pixel Axis 1 [x]" and
-            dc.external_links[3].cids1[0].label == "Pixel Axis 1 [y]" and
-            dc.external_links[3].cids2[0].label == "Pixel Axis 0 [y]")
+    assert (dc.external_links[3].cids1[0].label == "Pixel Axis 1 [y]" and
+            dc.external_links[3].cids2[0].label == "Pixel Axis 0 [y]" and
+            dc.external_links[4].cids1[0].label == "Pixel Axis 2 [x]" and
+            dc.external_links[4].cids2[0].label == "Pixel Axis 1 [x]")
 
     # Coordinate display should be unaffected.
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
@@ -293,10 +292,8 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
     mm.calculate_moment()
     assert isinstance(mm.moment.wcs, WCS)
 
-    # Because cube axes order is re-arranged by specutils on load, this gets confusing.
-    # There is a swapaxes within Moment Map WCS calculation.
     sky_moment = mm.moment.wcs.pixel_to_world(50, 30)
-    sky_cube = cubeviz_helper.app.data_collection[0].meta["_orig_spec"].wcs.celestial.pixel_to_world(30, 50)  # noqa: E501
+    sky_cube = cubeviz_helper.app.data_collection[0].coords.pixel_to_world(50, 30, 0)[0]  # noqa: E501
     assert_allclose((sky_moment.ra.deg, sky_moment.dec.deg),
                     (sky_cube.ra.deg, sky_cube.dec.deg))
 
