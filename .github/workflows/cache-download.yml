@@ -11,6 +11,10 @@ on:
       uris:
         description: 'List of files to download (comma-separated in format mission:filename)'
         required: false
+        # add any URIs from MAST used in remote tests here
+        # the cache can be updated by manual trigger after changes are merged into main
+        # or if you need the cache for the current PR, trigger the workflow manually
+        # and append to the previous cache with the new URI(s)
         default: 'HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst:hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits,
                   hst:hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits,
                   hst:hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits,

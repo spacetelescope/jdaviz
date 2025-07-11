@@ -1,4 +1,4 @@
-<!-- This comments are hidden when you submit the pull request,
+<!-- These comments are hidden when you submit the pull request,
 so you do not need to remove them! -->
 
 <!-- Please be sure to check out our code of conduct,
@@ -37,6 +37,7 @@ This checklist is meant to remind the package maintainer(s) who will review this
 - [ ] Do the proposed changes follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Are tests added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Are docs added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
+- [ ] If new remote data is added that uses MAST, is the URI added to the `cache-download.yml` workflow?
 - [ ] Did the CI pass? If not, are the failures related?
 - [ ] Is a milestone set? Set this to bugfix milestone if this is a bug fix and needs to be released ASAP; otherwise, set this to the next major release milestone. Bugfix milestone also needs an accompanying backport label.
 - [ ] After merge, any internal documentations need updating (e.g., JIRA, Innerspace)?
