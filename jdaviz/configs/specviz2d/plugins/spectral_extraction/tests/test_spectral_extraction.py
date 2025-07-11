@@ -186,6 +186,7 @@ def test_user_api(specviz2d_helper):
 
 @pytest.mark.remote_data
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
+@pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_background_extraction_and_display(specviz2d_helper):
     uri = 'mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
     fn = download_file(f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}',
