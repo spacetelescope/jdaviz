@@ -824,7 +824,7 @@ class Application(VuetifyTemplate, HubListener):
             dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
 
-        elif (linked_data.meta.get('Plugin', None) == 'Spectral Extraction' or
+        elif (linked_data.meta.get('Plugin', None) == '3D Spectral Extraction' or
                 (linked_data.meta.get('Plugin', None) == ('Gaussian Smooth') and
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                  ref_data.ndim < 3)

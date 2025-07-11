@@ -219,7 +219,7 @@ def test_loading_with_mask(cubeviz_helper):
     uc = cubeviz_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
 
-    se = cubeviz_helper.plugins['Spectral Extraction']
+    se = cubeviz_helper.plugins['3D Spectral Extraction']
     se.function = "Mean"
     se.extract()
     extracted = cubeviz_helper.get_data("Spectrum (mean)")
@@ -246,7 +246,7 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
     uc = cubeviz_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
 
-    se = cubeviz_helper.plugins['Spectral Extraction']
+    se = cubeviz_helper.plugins['3D Spectral Extraction']
     se.function = function
     se.extract()
     extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()

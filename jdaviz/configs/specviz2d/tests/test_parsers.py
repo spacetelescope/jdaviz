@@ -65,7 +65,7 @@ def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
                             cache=True)
     dc_0 = deconfigged_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
-    assert isinstance(deconfigged_helper.plugins['Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
+    assert isinstance(deconfigged_helper.plugins['2D Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
     # TODO: store expected class in data itself so get_data doesn't need to pass cls
     assert isinstance(deconfigged_helper.get_data('2D Spectrum', cls=Spectrum), Spectrum)
 

@@ -33,7 +33,7 @@ To extract all the subsets created in the viewers, call the Subset Tools plugin:
         Documentation on how to export data from the ``spectrum-viewer``.
 
 The following line of code can be used to extract 1D spectra.
-To use a ``function`` other than sum, use the :ref:`Spectral Extraction <spectral-extraction>` plugin
+To use a ``function`` other than sum, use the :ref:`3D Spectral Extraction <spectral-extraction>` plugin
 first to create a 1D spectrum and then refer to it by label in ``get_data``.
 
 .. code-block:: python

@@ -52,7 +52,7 @@ def test_resolver_matching(specviz_helper):
 def test_trace_importer(specviz2d_helper, spectrum2d):
     specviz2d_helper._load(spectrum2d, format='2D Spectrum')
 
-    trace = specviz2d_helper.plugins['Spectral Extraction'].export_trace()
+    trace = specviz2d_helper.plugins['2D Spectral Extraction'].export_trace()
 
     res_sp = find_matching_resolver(specviz2d_helper.app, trace)
     assert res_sp._obj._registry_label == 'object'
