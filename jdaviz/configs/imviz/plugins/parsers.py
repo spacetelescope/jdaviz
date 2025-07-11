@@ -33,6 +33,7 @@ __all__ = ['parse_data']
 INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
             " to the file name to load all of them.")
 
+
 def prep_data_layer_as_dq(data):
     # nans are used to mark "good" flags in the DQ colormap, so
     # convert DQ array to float to support nans:

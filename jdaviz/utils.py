@@ -245,23 +245,26 @@ def alpha_index(index):
         return chr(97 + index//26 - 1) + chr(97 + index % 26)
 
 
-def _try_gwcs_to_fits_sip(gwcs):
+def _try_gwcs_to_fits_sip(gw):
     """
     Try to convert this GWCS to FITS SIP. Some GWCS models
     cannot be converted to FITS SIP. In that case, a warning
     is raised and the GWCS is used, as is.
     """
-    try:
-        result = WCS(gwcs.to_fits_sip(), relax=True)
+    if isinstance(gw, gwcs):
+        try:
+            result = WCS(gw.to_fits_sip(), relax=True)
 
-    except ValueError as err:
-        warnings.warn(
-            "The GWCS coordinates could not be simplified to "
-            "a SIP-based FITS WCS, the following error was "
-            f"raised: {err}",
-            UserWarning
-        )
-        result = gwcs
+        except ValueError as err:
+            warnings.warn(
+                "The GWCS coordinates could not be simplified to "
+                "a SIP-based FITS WCS, the following error was "
+                f"raised: {err}",
+                UserWarning
+            )
+            result = gw
+    else:
+        result = gw
 
     return result
 

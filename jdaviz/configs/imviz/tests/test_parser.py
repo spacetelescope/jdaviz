@@ -547,12 +547,16 @@ class TestParseImage:
         ((True, WCS),
          (False, GWCS),)
     )
-    def test_orientation_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, imviz_helper):
-        """Test gwcs_to_fits_sip through the loader API."""
-        imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = gwcs_to_fits_sip
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True)
+    @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
+    def test_importer_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, deconfigged_helper):
+        """Test gwcs_to_fits_sip through the importer API."""
+        ldr = deconfigged_helper.loaders['url']
+        ldr.url = self.jwst_asdf_url_1
+        ldr.importer.gwcs_to_fits_sip = gwcs_to_fits_sip
 
-        data = imviz_helper.app.data_collection[0]
+        ldr.importer()
+
+        data = deconfigged_helper.app.data_collection[0]
         assert isinstance(data.coords, expected_cls)
 
 

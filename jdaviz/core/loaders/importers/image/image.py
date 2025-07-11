@@ -1,5 +1,3 @@
-import warnings
-
 import asdf
 import numpy as np
 from astropy import units as u
@@ -7,6 +5,7 @@ from astropy.io import fits
 from astropy.nddata import NDData, CCDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
+from gwcs import WCS as GWCS
 from traitlets import Bool, List, Any
 
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
@@ -14,7 +13,8 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (
-    standardize_metadata, standardize_roman_metadata, PRIHDR_KEY
+    standardize_metadata, standardize_roman_metadata, PRIHDR_KEY,
+    _try_gwcs_to_fits_sip
 )
 
 try:
@@ -99,7 +99,7 @@ class ImageImporter(BaseImporterToDataCollection):
         are met but this approximation is not possible, a warning will be
         emitted and the original GWCS will be used.
         """
-        if self.gwcs_to_fits_sip and self.has_gwcs:
+        if self.gwcs_to_fits_sip:
             glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
         return glue_data
 
@@ -258,12 +258,12 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
         ext_list = (ext, )
 
     meta = standardize_roman_metadata(file_obj)
-    gwcs = meta.get('wcs', None)
+    wcs = meta.get('wcs', None)
 
-    if try_gwcs_to_fits_sip and gwcs is not None:
-        coords = _try_gwcs_to_fits_sip(gwcs)
+    if try_gwcs_to_fits_sip and wcs is not None and isinstance(wcs, GWCS):
+        coords = _try_gwcs_to_fits_sip(wcs)
     else:
-        coords = gwcs
+        coords = wcs
 
     for cur_ext in ext_list:
         comp_label = cur_ext.upper()
