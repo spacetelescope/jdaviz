@@ -386,7 +386,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             target_wcs_north_up=True,
         )
 
-        add_wcs_data_to_app(self.app, ndd, data_label=label)
+        self.app._jdaviz_helper.load_data(
+            ndd, data_label=label
+        )
 
         # add orientation layer to all viewers:
         for viewer_ref in self.app._viewer_store:
@@ -579,11 +581,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
 
-def add_wcs_data_to_app(app, data, data_label=None):
-    app._jdaviz_helper._load(data, format='Image',
-                             data_label=data_label, show_in_viewer=False)
-
-
 def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True,
                     error_on_fail=False):
     """(Re)link loaded data in Imviz with the desired link type.
@@ -704,7 +701,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             # Default rotation is the same orientation as the original reference data:
             rotation_angle = -degn * u.deg
             ndd = _get_rotated_nddata_from_label(app, default_reference_layer.label, rotation_angle)
-            add_wcs_data_to_app(app, ndd, data_label=base_wcs_layer_label)
+            app._jdaviz_helper.load_data(ndd, base_wcs_layer_label)
 
         # set default layer to reference data in all viewers:
         for viewer_id in app.get_viewer_ids():
