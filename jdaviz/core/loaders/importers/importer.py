@@ -28,6 +28,9 @@ class BaseImporter(PluginTemplateMixin):
         self._resolver = resolver
         super().__init__(app, **kwargs)
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>"
+
     @property
     def is_valid(self):
         # override by subclass
