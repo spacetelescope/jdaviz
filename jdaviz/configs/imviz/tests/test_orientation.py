@@ -113,8 +113,8 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
             #        https://jira.stsci.edu/browse/JDAT-4256
             with pytest.raises(AssertionError):
                 assert_allclose(mp._obj.marks["imviz-0"].x, [1, 0])
-            with pytest.raises(AssertionError):
-                assert_allclose(mp._obj.marks["imviz-0"].y, 0)
+
+            assert_allclose(mp._obj.marks["imviz-0"].y, 0)
 
             mp.clear_table()
 

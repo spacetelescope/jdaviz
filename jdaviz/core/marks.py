@@ -21,7 +21,8 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark',
-           'CatalogMark', 'FootprintOverlay', 'ApertureMark']
+           'CatalogMark', 'FootprintOverlay', 'ApertureMark', 'DistanceMeasurement',
+           'DistanceLabel']
 
 accent_color = "#c75d2c"
 
@@ -766,3 +767,161 @@ class HistogramMark(Lines):
         line_style = "solid"
         super().__init__(x=min_max_value, y=y, scales=scales, colors=colors, line_style=line_style,
                          **kwargs)
+
+
+class DistanceLabel(Label, PluginMark, HubListener):
+    """A specialized bqplot Label for use with the DistanceMeasurement tool.
+
+    This class inherits from the Jdaviz PluginMark to integrate with the
+    application's hub and event system, but overrides the unit conversion
+    methods to prevent the label's pixel-based coordinates from being
+    erroneously converted.
+    """
+
+    def __init__(self, viewer, x, y, text, **kwargs):
+        self.viewer = viewer
+        kwargs.setdefault('align', 'middle')
+        kwargs.setdefault('baseline', 'middle')
+        kwargs.setdefault('x_offset', 0)
+        kwargs.setdefault('y_offset', 0)
+
+        super().__init__(x=[x], y=[y], text=[text], scales=viewer.scales, **kwargs)
+        self.auto_update_units = False
+
+    def set_x_unit(self, unit=None):
+        pass
+
+    def set_y_unit(self, unit=None):
+        pass
+
+    def update_position(self, x, y, text):
+        self.x = [x]
+        self.y = [y]
+        self.text = [text]
+
+
+class DistanceMeasurement:
+    """A composite mark that displays a line between two points with a
+    dynamically rotated and offset label showing the distance.
+
+    This class manages a collection of bqplot marks (a Line and two Labels
+    for text and shadow) to create a single, cohesive measurement indicator
+    in a viewer. The core logic in the `update_points` method handles the
+    positioning, rotation, and offsetting of the label to ensure it remains
+    parallel to the line while avoiding intersection.
+    """
+
+    def __init__(self, viewer, x0, y0, x1, y1, text=""):
+        self.viewer = viewer
+        self.endpoints = None
+
+        self.line = Lines(
+            x=[],
+            y=[],
+            scales=viewer.scales,
+            colors=[accent_color],
+            stroke_width=2
+        )
+
+        anchor_x, anchor_y = (x0 + y0) / 2, (x1 + y1) / 2
+
+        self.label_shadow = DistanceLabel(
+            viewer, anchor_x, anchor_y, text,
+            colors=['black'],
+            stroke_width=12,
+            font_weight='bold',
+            default_size=15
+        )
+
+        self.label_text = DistanceLabel(
+            viewer, anchor_x, anchor_y, text,
+            colors=[accent_color],
+            font_weight='bold',
+            default_size=15
+        )
+
+        self.visible = True
+        self.update_points(x0, y0, x1, y1, text)
+
+    @property
+    def marks(self):
+        return [self.line, self.label_shadow, self.label_text]
+
+    @property
+    def visible(self):
+        return self.line.visible
+
+    @visible.setter
+    def visible(self, visible):
+        self.line.visible = visible
+        self.label_shadow.visible = visible
+        self.label_text.visible = visible
+
+    def update_points(self, x0, y0, x1, y1, text=""):
+        x0_v = getattr(x0, 'value', x0)
+        y0_v = getattr(y0, 'value', y0)
+        x1_v = getattr(x1, 'value', x1)
+        y1_v = getattr(y1, 'value', y1)
+
+        self.line.x = [x0_v, x1_v]
+        self.line.y = [y0_v, y1_v]
+
+        mid_x = (x0_v + x1_v) / 2
+        mid_y = (y0_v + y1_v) / 2
+
+        dx_data = x1_v - x0_v
+        dy_data = y1_v - y0_v
+
+        angle_rad = np.arctan2(-dy_data, dx_data)
+        angle_deg = np.rad2deg(angle_rad)
+
+        # Check for the special case of a perfect diagonal line.
+        # A small tolerance is used for floating-point comparison.
+        if abs(abs(dx_data) - abs(dy_data)) < 1e-9:
+            x_offset_float = 0
+            y_offset_float = 30
+
+        else:
+            offset_distance = 10
+            line_length_data = np.sqrt(dx_data**2 + dy_data**2)
+
+            if line_length_data > 0:
+                perp_dx = -dy_data
+                perp_dy = dx_data
+                x_offset_float = (perp_dx / line_length_data) * offset_distance
+                y_offset_float = (perp_dy / line_length_data) * offset_distance
+            else:
+                x_offset_float = 0
+                y_offset_float = -offset_distance
+
+            # Determine text offset direction based on the center of the viewer
+            x_scale = self.viewer.scales.get('x')
+            y_scale = self.viewer.scales.get('y')
+
+            # Check if the viewer scales and their min/max values are available
+            if (x_scale is not None and y_scale is not None and
+                    x_scale.min is not None and x_scale.max is not None and
+                    y_scale.min is not None and y_scale.max is not None):
+
+                viewer_center_x = (x_scale.min + x_scale.max) / 2
+                viewer_center_y = (y_scale.min + y_scale.max) / 2
+                pos_vec_x = mid_x - viewer_center_x
+                pos_vec_y = mid_y - viewer_center_y
+                if (pos_vec_x * perp_dx + pos_vec_y * perp_dy) > 0:
+                    x_offset_float *= -1
+                    y_offset_float *= -1
+
+        x_offset_int = int(round(x_offset_float))
+        y_offset_int = int(round(y_offset_float))
+
+        # Normalize the display angle for readability.
+        if abs(angle_deg) > 90:
+            angle_deg -= 180 * np.sign(angle_deg)
+
+        for label in (self.label_shadow, self.label_text):
+            label.x = [mid_x]
+            label.y = [mid_y]
+            label.text = [text]
+            label.rotate_angle = angle_deg
+            label.x_offset = x_offset_int
+            label.y_offset = -y_offset_int
