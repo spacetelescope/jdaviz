@@ -186,12 +186,14 @@ class Imviz(ImageConfigHelper):
                            format='Image',
                            data_label=data_label,
                            extension=extensions,
+                           parent=kwargs.pop('parent', None),
                            show_in_viewer=show_in_viewer)
         elif isinstance(data, str) and data.endswith('.reg'):
             self._load(data,
                        format='Subset',
                        data_label=data_label,
                        extension=extensions,
+                       parent=kwargs.pop('parent', None),
                        show_in_viewer=show_in_viewer)
         else:
             # extensions is None or a single extension or data is NDData and importer will handle
@@ -210,6 +212,7 @@ class Imviz(ImageConfigHelper):
                        data_label=data_label,
                        data_label_as_prefix=data_label_as_prefix,
                        extension=extensions,
+                       parent=kwargs.pop('parent', None),
                        show_in_viewer=show_in_viewer)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):

@@ -11,7 +11,7 @@ from glue.core.data import Component, Data
 from traitlets import Bool, List, Any, observe
 
 
-from jdaviz.core.template_mixin import SelectFileExtensionComponent
+from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -42,6 +42,10 @@ class ImageImporter(BaseImporterToDataCollection):
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
 
+    # Data-association
+    parent_items = List().tag(sync=True)
+    parent_selected = Any().tag(sync=True)
+
     # user-settable option to treat the data_label as prefix and append the extension later
     data_label_as_prefix = Bool(False).tag(sync=True)
     # whether the current data_label should be treated as a prefix
@@ -50,10 +54,16 @@ class ImageImporter(BaseImporterToDataCollection):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
         elif self.app.config == 'imviz':
             self.data_label_default = 'Image'
+
+        self.parent = DatasetSelect(self, 'parent_items', 'parent_selected',
+                                    multiselect=None, manual_options=['Auto'])
+        self.parent.add_filter('is_image', 'not_from_plugin')
+        self.parent.selected = 'Auto'
 
         self.input_hdulist = isinstance(self.input, fits.HDUList)
         if self.input_hdulist:
@@ -69,7 +79,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['data_label_as_prefix']
+        expose = ['parent', 'data_label_as_prefix']
         if self.input_hdulist:
             expose += ['extension']
         return ImporterUserApi(self, expose)
@@ -157,6 +167,32 @@ class ImageImporter(BaseImporterToDataCollection):
             exts = [None] * len(outputs)
             hdus = [None] * len(outputs)
 
+        # If parent is set to 'Auto', use any present SCI/DATA extension as parent
+        # of any other extensions
+        if self.parent.selected == 'Auto' and len(exts) > 1:
+            for ext in ('SCI', 'DATA'):
+                if ext in exts:
+                    parent_ext = ext
+                    break
+            else:
+                parent_ext = None
+            if parent_ext is not None:
+                parent_index = exts.index(parent_ext)
+                sort_inds = [parent_index] + [i for i in range(len(exts)) if i != parent_index]
+                outputs = [outputs[i] for i in sort_inds]
+                exts = [exts[i] for i in sort_inds]
+                hdus = [hdus[i] for i in sort_inds]
+
+                parent_hdu = hdus[parent_index]
+                # assume self.data_label_is_prefix is True
+                parent = self._get_label_with_extension(base_data_label,
+                                                        parent_ext,
+                                                        ver=parent_hdu.ver if parent_hdu else None)
+        elif self.parent.selected == 'Auto':
+            parent = None
+        else:
+            parent = self.parent.selected
+
         for output, ext, hdu in zip(outputs, exts, hdus):
             if output is None:
                 # needed for NDData where one of the "extensions" might
@@ -173,6 +209,7 @@ class ImageImporter(BaseImporterToDataCollection):
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
             self.add_to_data_collection(output, data_label,
+                                        parent=parent if parent != data_label else None,
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 

@@ -159,7 +159,8 @@ class BaseImporterToDataCollection(BaseImporter):
             viewer = self.app._jdaviz_helper.viewers.get(default_viewer_label)
             viewer.data_menu.add_data(data_label)
 
-    def add_to_data_collection(self, data, data_label=None, show_in_viewer=True, cls=None):
+    def add_to_data_collection(self, data, data_label=None,
+                               parent=None, show_in_viewer=True, cls=None):
         if data_label is None:
             data_label = self.data_label_value.strip()
         if hasattr(data, 'meta'):
@@ -168,6 +169,8 @@ class BaseImporterToDataCollection(BaseImporter):
             except TypeError:
                 pass
         self.app.add_data(data, data_label=data_label)
+        if parent is not None:
+            self.app._set_assoc_data_as_child(data_label, parent)
         # store the original input class so that get_data can default to the
         # same class as the input
         cls = cls if cls is not None else data.__class__
