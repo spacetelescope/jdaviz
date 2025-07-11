@@ -189,7 +189,7 @@ def test_user_api(specviz2d_helper):
 @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_background_extraction_and_display(specviz2d_helper, mast_cache_path):
     uri = 'mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
-    specviz2d_helper.load_data(spectrum2d=uri, cache=True, local_path=mast_cache_path)
+    specviz2d_helper.load_data(spectrum_2d=uri, cache=True, local_path=mast_cache_path)
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
 
     # check that the background extraction method and parameters are as expected
