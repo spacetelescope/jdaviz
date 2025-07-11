@@ -15,7 +15,7 @@ exactly the same as your local installation.
         A number of additional example notebooks.
 
 
-.. _imviz_examples:
+.. _imviz-examples:
 
 Imviz
 =====

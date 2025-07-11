@@ -11,7 +11,7 @@ Metadata Viewer
 
 .. seealso::
 
-    :ref:`Metadata Viewer <imviz_metadata-viewer>`
+    :ref:`Metadata Viewer <imviz-metadata-viewer>`
         Documentation on using the metadata viewer.
 
 

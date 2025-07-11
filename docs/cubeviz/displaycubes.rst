@@ -61,7 +61,7 @@ Box Zoom and Linked Box Zoom
 
 .. seealso::
 
-    :ref:`Box Zoom and Linked Box Zoom in Imviz <imviz_box_zoom>`
+    :ref:`Box Zoom and Linked Box Zoom in Imviz <imviz-box-zoom>`
         Documentation on panning and zooming in Imviz.
 
 .. _cubeviz-pan-zoom:
@@ -71,19 +71,19 @@ Pan/Zoom and Linked Pan/Zoom
 
 .. seealso::
 
-    :ref:`Pan/Zoom and Linked Pan/Zoom in Imviz <imviz_pan_zoom>`
+    :ref:`Pan/Zoom and Linked Pan/Zoom in Imviz <imviz-pan-zoom>`
         Documentation on panning and zooming in Imviz.
 
 .. note:: Pan/Zoom API and click-to-center feature in Imviz is not yet available on Cubeviz.
 
-.. _cubeviz_defining_spatial_regions:
+.. _cubeviz-defining-spatial-regions:
 
 Defining Spatial Regions
 ========================
 
 .. seealso::
 
-    :ref:`Defining Spatial Regions <imviz_defining_spatial_regions>`
+    :ref:`Defining Spatial Regions <imviz-defining-spatial-regions>`
         Documentation on defining spatial regions in an image viewer.
 
 Spatial regions allow users to select subsets of the data array for
@@ -109,7 +109,7 @@ alt key (Alt key on Windows, Option key on Mac) while clicking on a spaxel creat
 that point instead of moving the previously created region.
 You can then compare spectra at different spaxels using the spectrum viewer.
 You can also use the subset modes that are explained in the
-:ref:`Spatial Regions <imviz_defining_spatial_regions>`
+:ref:`Spatial Regions <imviz-defining-spatial-regions>`
 section above in the same way you would with the other subset selection tools.
 
 Note that moving the cursor outside of the image viewer or deactivating the spectrum-at-spaxel tool

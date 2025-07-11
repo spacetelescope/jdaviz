@@ -41,7 +41,7 @@ bottom bar of the data menu.  Data unloaded from the viewer will also be exclude
 as options from dataset dropdown menus in the various plugins.  Unloaded data will be available
 to re-load into the viewer (by clicking the ``+`` icon in the top right of the data menu).
 
-.. _specviz_cursor_info:
+.. _specviz-cursor-info:
 
 Cursor Information
 ==================

@@ -66,16 +66,19 @@ Jdaviz
          Jump to Rampviz
 
 ``jdaviz`` is a package of astronomical data analysis visualization
-tools based on the Jupyter platform.  These GUI-based tools link data
-visualization and interactive analysis.  They are designed to work
-within a Jupyter notebook cell, as a standalone desktop application,
+tools based on the Jupyter platform. These GUI-based
+tools link data visualization and interactive analysis. They are designed
+to work within a Jupyter notebook cell, as a standalone desktop application,
 or as embedded windows within a website -- all with nearly identical
 user interfaces.
 
 ``jdaviz`` applications currently include tools for interactive
-visualization of spectroscopic and imaging data.
+visualization of spectroscopic and imaging data primarily developed for use with
+the James Webb Space Telescope (JWST) instrument modes.
+These tools can, however, be used with data from other astronomical telescopes.
 :ref:`imviz` is a tool for visualization and quick-look analysis for 2D astronomical images.
 :ref:`specviz` is a tool for visualization and quick-look analysis of 1D astronomical spectra.
+:ref:`specviz2d` is a tool for visualization and quick-look analysis of 2D astronomical spectra.
 :ref:`cubeviz` provides a view of spectroscopic data cubes (like those
 to be produced by JWST MIRI), along with 1D spectra extracted from the
 cube.

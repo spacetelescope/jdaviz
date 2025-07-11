@@ -59,7 +59,7 @@ something like ``@update:value="$emit('update_value', $event)"`` in the relevant
 Motivations for this Design
 ---------------------------
 
-We converged on this framework for several reasons (compared to alternate options).  If ever
+We converged on this framework for several reasons. If ever
 considering changing to a different architecture, the following should be considered there as well:
 
 * Each class can only subscribe to each `~glue.core.message.Message` object once (via ``self.hub.subscribe``),
