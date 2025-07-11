@@ -69,7 +69,7 @@ def mast_cache_path():
     Returns the path to the MAST cache directory.
     This is used to ensure that tests can access cached data.
     """
-    return './mast_cache/'
+    return './mast_cache'
 
 
 @pytest.fixture
