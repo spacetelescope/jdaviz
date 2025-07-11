@@ -214,7 +214,7 @@ def test_to_unit(cubeviz_helper):
     cubeviz_helper.load_data(cube, data_label="test")
 
     # this can be removed once spectra pass through cube spectral extraction
-    extract_plg = cubeviz_helper.plugins['Cube Spectral Extraction']
+    extract_plg = cubeviz_helper.plugins['3D Spectral Extraction']
 
     extract_plg.aperture = extract_plg.aperture.choices[-1]
     extract_plg.aperture_method.selected = 'Exact'

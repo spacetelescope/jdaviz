@@ -88,23 +88,23 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
-        if 'Cube Spectral Extraction' not in self.plugins:  # pragma: no cover
+        if '3D Spectral Extraction' not in self.plugins:  # pragma: no cover
             msg = SnackbarMessage(
-                "Automatic spectral extraction requires the Cube Spectral Extraction plugin to be enabled",  # noqa
+                "Automatic spectral extraction requires the 3D Spectral Extraction plugin to be enabled",  # noqa
                 color='error', sender=self, timeout=10000)
             self.app.hub.broadcast(msg)
         else:
             try:
-                self.plugins['Cube Spectral Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
+                self.plugins['3D Spectral Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
             except Exception:
                 msg = SnackbarMessage(
                     "Automatic spectrum extraction for the entire cube failed."
-                    " See the Cube Spectral Extraction plugin to perform a custom extraction",
+                    " See the 3D Spectral Extraction plugin to perform a custom extraction",
                     color='error', sender=self, timeout=10000)
             else:
                 msg = SnackbarMessage(
                     "The extracted 1D spectrum was generated automatically for the entire cube."
-                    " See the Cube Spectral Extraction plugin for details or to"
+                    " See the 3D Spectral Extraction plugin for details or to"
                     " perform a custom extraction.",
                     color='warning', sender=self, timeout=10000)
             self.app.hub.broadcast(msg)
@@ -147,7 +147,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         spatial_subset : str, optional
             Spatial subset applied to data.  Only applicable if ``data_label``
             points to a cube or image.  To extract a spectrum from a cube, use
-            the Cube Spectral Extraction plugin instead.
+            the 3D Spectral Extraction plugin instead.
         spectral_subset : str, optional
             Spectral subset applied to data.
         cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional

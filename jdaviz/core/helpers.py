@@ -216,7 +216,7 @@ class ConfigHelper(HubListener):
 
         old_new = (('Imviz Line Profiles (XY)', 'Image Profiles (XY)'),  # renamed in 4.0
                    ('Spectral Extraction', '2D Spectral Extraction'),  # renamed in 4.3
-                   ('Spectral Extraction', 'Cube Spectral Extraction'))  # renamed in 4.3
+                   ('Spectral Extraction', '3D Spectral Extraction'))  # renamed in 4.3
 
         # handle renamed plugins during deprecation
         for old, new in old_new:

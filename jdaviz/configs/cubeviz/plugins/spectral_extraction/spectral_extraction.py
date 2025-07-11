@@ -32,12 +32,12 @@ __all__ = ['CubeSpectralExtraction']
 
 
 @tray_registry(
-    'cube-spectral-extraction', label="Cube Spectral Extraction"
+    'spectral-extraction-3d', label="3D Spectral Extraction"
 )
 class CubeSpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                              DatasetSelectMixin, AddResultsMixin):
     """
-    See the :ref:`Cube Spectral Extraction Plugin Documentation <spectral-extraction>`
+    See the :ref:`3D Spectral Extraction Plugin Documentation <spectral-extraction>`
     for more details.
 
     Only the following attributes and methods are available through the
@@ -280,7 +280,7 @@ class CubeSpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def _extract_in_new_instance(self, dataset=None, function='Sum', subset_lbl=None,
                                  auto_update=False, add_data=False):
-        # create a new instance of the Cube Spectral Extraction plugin (to not
+        # create a new instance of the 3D Spectral Extraction plugin (to not
         # affect the instance in the tray) and extract the entire cube with defaults.
         plg = self.new()
         plg.dataset.selected = self.dataset.selected if dataset is None else dataset
