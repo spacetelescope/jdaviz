@@ -135,9 +135,12 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
 
         try:
             if wcs.world_axis_physical_types == [None, None]:
-                # specutils will complain in the case of an input
-                # pixel to pixel table with no units
-                wcs = None
+                # This may be a JWST file with WCS stored in ASDF
+                if 'ASDF' in hdulist:
+                    from stdatamodels import asdf_in_fits
+                    wcs = asdf_in_fits.open(hdulist).tree["meta"]["wcs"][0]
+                else:
+                    wcs = None
             return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
