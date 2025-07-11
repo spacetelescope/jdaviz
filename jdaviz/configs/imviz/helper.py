@@ -147,7 +147,7 @@ class Imviz(ImageConfigHelper):
         """
         self.app.state.dev_loaders = True
 
-        extensions = None if 'ext' not in kwargs else kwargs['ext']
+        extensions = kwargs.pop('ext', None)
 
         if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
             kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
@@ -168,15 +168,7 @@ class Imviz(ImageConfigHelper):
                                    **kw)
             return
 
-        if extensions is not None and len(extensions) > 1:
-            with self.batch_load():
-                for e in extensions:
-                    kw = deepcopy(kwargs)
-                    self.load_data(data, data_label=data_label, show_in_viewer=show_in_viewer,
-                                   extension=[e], **kw)
-            return
-
-        elif isinstance(data, np.ndarray) and data.ndim >= 3:
+        if isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
                 data = data.squeeze()
                 # in parser, if nddata, return self.input.squeeze()
@@ -193,7 +185,8 @@ class Imviz(ImageConfigHelper):
                 self._load(data[i, :, :],
                            format='Image',
                            data_label=data_label,
-                           extension=extensions)
+                           extension=extensions,
+                           show_in_viewer=show_in_viewer)
         else:
             # extensions is None or a single extension or data is NDData and importer will handle
             # appending the extension
@@ -206,7 +199,8 @@ class Imviz(ImageConfigHelper):
             self._load(data,
                        format='Image',
                        data_label=data_label,
-                       extension=extensions)
+                       extension=extensions,
+                       show_in_viewer=show_in_viewer)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.
