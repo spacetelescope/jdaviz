@@ -9,12 +9,10 @@ from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from traitlets import Bool, List, Any
 
-
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
-
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-
+from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (
     standardize_metadata, standardize_roman_metadata, PRIHDR_KEY
 )
@@ -40,6 +38,8 @@ class ImageImporter(BaseImporterToDataCollection):
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
 
+    gwcs_to_fits_sip = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.default_data_label_from_resolver:
@@ -56,6 +56,11 @@ class ImageImporter(BaseImporterToDataCollection):
                                                           manual_options=self.input,
                                                           filters=[_validate_fits_image2d])
             self.extension.selected = [self.extension.choices[0]]
+
+    @property
+    def user_api(self):
+        expose = ['gwcs_to_fits_sip']
+        return ImporterUserApi(self, expose)
 
     @property
     def is_valid(self):
@@ -87,33 +92,49 @@ class ImageImporter(BaseImporterToDataCollection):
         return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
                 for hdu in self.extension.selected_hdu]
 
+    def _glue_data_wcs_to_fits(self, glue_data):
+        """
+        Re-set data.coords to a SIP approximation of the GWCS, if
+        gwcs_to_fits_sip is True and data.coords is a GWCS. If these conditions
+        are met but this approximation is not possible, a warning will be
+        emitted and the original GWCS will be used.
+        """
+        if self.gwcs_to_fits_sip and self.has_gwcs:
+            glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
+        return glue_data
+
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
         output = self.output
         if isinstance(output, NDData):
             data, data_label = _nddata_to_glue_data(output, data_label)
+            data = self._glue_data_wcs_to_fits(data)
             self.add_to_data_collection(data, f"{data_label}",
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
         elif isinstance(output, np.ndarray):
             data = _ndarray_to_glue_data(output, data_label)
+            data = self._glue_data_wcs_to_fits(data)
             self.add_to_data_collection(data, f"{data_label}",
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
         elif (isinstance(output, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(output, rdd.DataModel))):
             data, data_label = _roman_asdf_2d_to_glue_data(output, data_label)
+            data = self._glue_data_wcs_to_fits(data)
             self.add_to_data_collection(data, f"{data_label}",
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
         elif isinstance(self.input, fits.hdu.image.ImageHDU):
             data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
+            data = self._glue_data_wcs_to_fits(data)
             self.add_to_data_collection(data, f"{data_label}",
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
         else:
             with self.app._jdaviz_helper.batch_load():
                 for ext, ext_output in zip(self.extension.selected_name, output):
+                    data = self._glue_data_wcs_to_fits(ext_output)
                     self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
                                                 show_in_viewer=show_in_viewer,
                                                 cls=CCDData)
@@ -210,26 +231,6 @@ def _nddata_to_glue_data(ndd, data_label):
         component = Component.autotyped(raw_arr, units=bunit)
         cur_data.add_component(component=component, label=comp_label)
         return cur_data, cur_label
-
-
-def _try_gwcs_to_fits_sip(gwcs):
-    """
-    Try to convert this GWCS to FITS SIP. Some GWCS models
-    cannot be converted to FITS SIP. In that case, a warning
-    is raised and the GWCS is used, as is.
-    """
-    try:
-        result = WCS(gwcs.to_fits_sip())
-    except ValueError as err:
-        warnings.warn(
-            "The GWCS coordinates could not be simplified to "
-            "a SIP-based FITS WCS, the following error was "
-            f"raised: {err}",
-            UserWarning
-        )
-        result = gwcs
-
-    return result
 
 
 def prep_data_layer_as_dq(data):

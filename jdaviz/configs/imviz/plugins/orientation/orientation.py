@@ -156,8 +156,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 'align_by', 'wcs_fast_approximation',
                 'delete_subsets', 'viewer', 'orientation',
                 'rotation_angle', 'east_left', 'add_orientation',
-                'set_north_up_east_left', 'set_north_up_east_right',
-                'gwcs_to_fits_sip'
+                'set_north_up_east_left', 'set_north_up_east_right'
             )
         )
 
