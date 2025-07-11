@@ -79,16 +79,15 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_fits_spectrum2d(deconfigged_helper):
     ldr = deconfigged_helper.loaders['url']
     ldr.url = 'mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits'
 
     # Default is Image but the test switches to 2D Spectrum
     # since this file type is not yet supported by the image loader
-    assert ldr.format == 'Image'
+    assert ldr.format == '2D Spectrum'
     assert ldr.importer._obj.input_hdulist is True
-
-    ldr.format = '2D Spectrum'
 
     ldr.importer()
 
