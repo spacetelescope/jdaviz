@@ -108,7 +108,7 @@ class ImageImporter(BaseImporterToDataCollection):
                 # only show the prefix and append the extension later during import
                 self.data_label_default = prefix
                 self.data_label_is_prefix = True
-        elif isinstance(self.input, NDData):
+        elif isinstance(self.input, NDData) and not self.input.meta.get('plugin', None):
             # will append with [DATA]/[UNCERTAINTY]/[MASK] later
             # TODO: allow user to select extensions and include in same logic as HDUList
             self.data_label_default = prefix
