@@ -103,11 +103,13 @@ jobs:
       run: curl https://api.ipify.org
     - name: Get components for cache key
       id: date
+      if: "contains(matrix.toxposargs, '--remote-data')"
       run: |
         echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
         echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
         echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
-    - name: Restore cache
+    - name: Restore MAST cache
+      if: "contains(matrix.toxposargs, '--remote-data')"
       id: cache-restore
       uses: actions/cache/restore@v4
       with:
