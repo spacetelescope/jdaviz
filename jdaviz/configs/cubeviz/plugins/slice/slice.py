@@ -143,7 +143,8 @@ class Slice(PluginTemplateMixin):
         # middle of the first found layer)
         self._clear_cache()
         for viewer in self.slice_indicator_viewers:
-            if str(viewer.state.x_att) not in self.valid_slice_att_names:
+            if (str(viewer.state.x_att) not in self.valid_slice_att_names and
+                    str(viewer.state.x_att_pixel) not in self.valid_slice_att_names):
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 continue
             if self.app._get_display_unit(viewer.slice_display_unit_name) == '':
@@ -166,7 +167,10 @@ class Slice(PluginTemplateMixin):
     @property
     def valid_slice_att_names(self):
         if self.app.config == 'cubeviz':
-            return _spectral_axis_names + ['Pixel Axis 2 [x]', 'World 0']
+            if len(self.app.data_collection):
+                spectral_axis = self.app.data_collection[0].meta['spectral_axis_index']
+                return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
+            return _spectral_axis_names
         elif self.app.config == 'rampviz':
             return _temporal_axis_names + ['Pixel Axis 2 [x]']
 

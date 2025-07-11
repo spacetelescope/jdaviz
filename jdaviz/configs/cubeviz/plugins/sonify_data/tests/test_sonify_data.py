@@ -35,9 +35,9 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
 
     # Stop/start stream
     sonify_plg.vue_start_stop_stream()
-    assert sonify_plg.flux_viewer.stream_active is False
+    assert sonify_plg.stream_active is False
     sonify_plg.vue_start_stop_stream()
-    assert sonify_plg.flux_viewer.stream_active
+    assert sonify_plg.stream_active
 
 
 @pytest.mark.skipif(not IN_GITHUB_ACTIONS, reason="Plugin disabled only in CI")

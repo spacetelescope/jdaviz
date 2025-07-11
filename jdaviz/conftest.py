@@ -12,7 +12,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
-from specutils import Spectrum1D, SpectrumCollection, SpectrumList
+from specutils import Spectrum, SpectrumCollection, SpectrumList
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
@@ -216,7 +216,7 @@ def _create_spectrum1d_with_spectral_unit(spectralunit=u.AA):
 
     meta = dict(header=dict(FILENAME="jdaviz-test-file.fits"))
 
-    return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty, meta=meta)
+    return Spectrum(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty, meta=meta)
 
 
 @pytest.fixture
@@ -252,8 +252,8 @@ def multi_order_spectrum_list(spectrum1d, spectral_orders=10):
                 spec_axis.value / 500) * u.Jy
         uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
         meta = dict(header=dict(FILENAME="jdaviz-test-multi-order-file.fits"))
-        spectrum1d = Spectrum1D(spectral_axis=spec_axis, flux=flux,
-                                uncertainty=uncertainty, meta=meta)
+        spectrum1d = Spectrum(spectral_axis=spec_axis, flux=flux,
+                              uncertainty=uncertainty, meta=meta)
 
         sc.append(spectrum1d)
 
@@ -273,12 +273,12 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4), with_u
     if with_uncerts:
         uncert = StdDevUncertainty(np.abs(np.random.normal(flux) * fluxunit))
 
-        return Spectrum1D(flux=flux,
-                          uncertainty=uncert,
-                          wcs=w,
-                          meta=wcs_dict)
+        return Spectrum(flux=flux,
+                        uncertainty=uncert,
+                        wcs=w,
+                        meta=wcs_dict)
     else:
-        return Spectrum1D(flux=flux, wcs=w, meta=wcs_dict)
+        return Spectrum(flux=flux, wcs=w, meta=wcs_dict)
 
 
 @pytest.fixture
@@ -305,7 +305,7 @@ def spectrum1d_cube_largest():
     w = WCS(wcs_dict)
     flux = np.zeros((20, 30, 3001), dtype=np.float32)  # nx=20 ny=30 nz=3001
     flux[1:11, 5:15, :] = 1  # Bright corner
-    return Spectrum1D(flux=flux * u.Jy, wcs=w, meta=wcs_dict)
+    return Spectrum(flux=flux * u.Jy, wcs=w, meta=wcs_dict)
 
 
 @pytest.fixture
@@ -343,19 +343,19 @@ def mos_spectrum1d(mos_spectrum2d):
             10*np.exp(-0.001*(spec_axis.value-6563)**2) +
             spec_axis.value/500) * u.Jy
 
-    return Spectrum1D(spectral_axis=spec_axis, flux=flux)
+    return Spectrum(spectral_axis=spec_axis, flux=flux)
 
 
 @pytest.fixture
 def spectrum2d():
     '''
-    A simple 2D Spectrum1D with a center "trace" array rising from 0 to 10
+    A simple 2D Spectrum with a center "trace" array rising from 0 to 10
     with two "zero array" buffers above and below
     '''
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
 
-    return Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
+    return Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
 
 def _generate_mos_spectrum2d():
@@ -368,22 +368,22 @@ def _generate_mos_spectrum2d():
         'CRVAL1': 0.0, 'CRVAL2': 5.0,
         'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
     np.random.seed(42)
-    data = np.random.sample((1024, 15)) * u.Jy
+    data = np.random.sample((15, 1024)) * u.Jy
     return data, header
 
 
 @pytest.fixture
 def mos_spectrum2d():
     '''
-    A specially defined 2D (spatial) Spectrum1D whose wavelength range matches the
+    A specially defined 2D (spatial) Spectrum whose wavelength range matches the
     mos-specific 1D spectrum.
 
-    TODO: This should be reformed to match the global Spectrum1D defined above so that we may
+    TODO: This should be reformed to match the global Spectrum defined above so that we may
     deprecate the mos-specific spectrum1d.
     '''
     data, header = _generate_mos_spectrum2d()
     wcs = WCS(header)
-    return Spectrum1D(data, wcs=wcs, meta=header)
+    return Spectrum(data, wcs=wcs, meta=header)
 
 
 @pytest.fixture

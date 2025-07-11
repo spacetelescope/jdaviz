@@ -3,16 +3,16 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import numpy as np
 
-from specutils import Spectrum1D
+from specutils import Spectrum
 from specutils.fitting import fit_lines
 
-__all__ = ['fit_model_to_spectrum']
+__all__ = ['fit_model_to_spectrum', 'generate_spaxel_list']
 
 
 def fit_model_to_spectrum(spectrum, component_list, expression,
                           run_fitter=False, window=None, n_cpu=None):
     """Fits a `~astropy.modeling.CompoundModel` to a
-    `~specutils.Spectrum1D` instance.
+    `~specutils.Spectrum` instance.
 
     If the input spectrum represents a spectral cube, then fits
     the model to every spaxel in the cube, using
@@ -21,7 +21,7 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
 
     Parameters
     ----------
-    spectrum : `~specutils.Spectrum1D`
+    spectrum : `~specutils.Spectrum`
         The spectrum to be fitted.
 
     component_list : list
@@ -58,7 +58,7 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
         spaxel, a list with 2D arrays, each one storing fitted parameter
         values for all spaxels, is returned.
 
-    output_spectrum : `~specutils.Spectrum1D`
+    output_spectrum : `~specutils.Spectrum`
         The realization of the fitted model as a spectrum. The spectrum
         will be 1D or 3D depending on the shape of input spectrum.
     """
@@ -73,13 +73,13 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
 
 def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=None):
     """
-    Fits an astropy CompoundModel to a Spectrum1D instance.
+    Fits an astropy CompoundModel to a Spectrum instance.
 
     Parameters
     ----------
     initial_model : :class: `astropy.modeling.CompoundModel`
         Initial guess for the model to be fitted.
-    spectrum : :class:`specutils.Spectrum1D`
+    spectrum : :class:`specutils.Spectrum`
         The spectrum to be fitted.
     run_fitter : bool
         When False (the default), the function composes the compound
@@ -91,7 +91,7 @@ def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=
     -------
     output_model : :class: `astropy.modeling.CompoundModel`
         The model resulting from the fit.
-    output_spectrum : :class:`specutils.Spectrum1D`
+    output_spectrum : :class:`specutils.Spectrum`
         The realization of the fitted model as a spectrum.
 
     """
@@ -109,9 +109,9 @@ def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=
         output_values = initial_model(spectrum.spectral_axis)
 
     # Build return spectrum
-    output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis,
-                                 flux=output_values,
-                                 mask=spectrum.mask)
+    output_spectrum = Spectrum(spectral_axis=spectrum.spectral_axis,
+                               flux=output_values,
+                               mask=spectrum.mask)
 
     return output_model, output_spectrum
 
@@ -126,7 +126,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
     ----------
     initial_model : :class: `astropy.modeling.CompoundModel`
         Initial guess for the model to be fitted.
-    spectrum : :class:`specutils.Spectrum1D`
+    spectrum : :class:`specutils.Spectrum`
         The spectrum that stores the cube in its 'flux' attribute.
     window : `None` or :class:`specutils.spectra.SpectralRegion`
         See :func:`specutils.fitting.fitmodels.fit_lines`.
@@ -141,7 +141,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
     output_model : :list: a list that stores 2D arrays. Each array contains one
         parameter from `astropy.modeling.CompoundModel` instances
         fitted to every spaxel in the input cube.
-    output_spectrum : :class:`specutils.Spectrum1D`
+    output_spectrum : :class:`specutils.Spectrum`
         The spectrum that stores the fitted model values in its 'flux'
         attribute.
     """
@@ -149,7 +149,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
         n_cpu = mp.cpu_count() - 1
 
     # Generate list of all spaxels to be fitted
-    spaxels = _generate_spaxel_list(spectrum)
+    spaxels = generate_spaxel_list(spectrum)
 
     fitted_models = []
 
@@ -170,7 +170,10 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
             fitted_models.append({"x": x, "y": y, "model": model})
 
             # Store fitted values
-            output_flux_cube[x, y, :] = fitted_values
+            if spectrum.spectral_axis_index in [2, -1]:
+                output_flux_cube[x, y, :] = fitted_values
+            elif spectrum.spectral_axis_index == 0:
+                output_flux_cube[:, y, x] = fitted_values
 
     # Run multiprocessor pool to fit each spaxel and
     # compute model values on that same spaxel.
@@ -190,7 +193,8 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                                   initial_model,
                                   param_set=spx,
                                   window=window,
-                                  mask=spectrum.mask)
+                                  mask=spectrum.mask,
+                                  spectral_axis_index=spectrum.spectral_axis_index)
             r = pool.apply_async(worker, callback=collect_result)
             results.append(r)
         for r in results:
@@ -206,14 +210,15 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                               initial_model,
                               param_set=spaxels,
                               window=window,
-                              mask=spectrum.mask)
+                              mask=spectrum.mask,
+                              spectral_axis_index=spectrum.spectral_axis_index)
         collect_result(worker())
 
-    # Build output 3D spectrum
+    # Build output 3D spectrum. Don't need spectral_axis_index because we use the WCS
     funit = spectrum.flux.unit
-    output_spectrum = Spectrum1D(wcs=spectrum.wcs,
-                                 flux=output_flux_cube * funit,
-                                 mask=spectrum.mask)
+    output_spectrum = Spectrum(wcs=spectrum.wcs,
+                               flux=output_flux_cube * funit,
+                               mask=spectrum.mask)
 
     return fitted_models, output_spectrum
 
@@ -232,13 +237,15 @@ class SpaxelWorker:
     instance. We need to use the current model instance while
     it still exists.
     """
-    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None, mask=None):
+    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None, mask=None,
+                 spectral_axis_index=2):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
         self.param_set = param_set
         self.window = window
         self.mask = mask
+        self.spectral_axis_index = spectral_axis_index
 
     def __call__(self):
         results = {'x': [], 'y': [], 'fitted_model': [], 'fitted_values': []}
@@ -247,7 +254,7 @@ class SpaxelWorker:
             x = parameters[0]
             y = parameters[1]
 
-            # Calling the Spectrum1D constructor for every spaxel
+            # Calling the Spectrum constructor for every spaxel
             # turned out to be less expensive than expected. Experiments
             # show that the cost amounts to a couple percent additional
             # running time in comparison with a version that uses a 3D
@@ -255,14 +262,20 @@ class SpaxelWorker:
             # spectrum reference into the callable somehow prevents it
             # to execute. This behavior was seen also with other functions
             # passed to the callable.
-            flux = self.cube[x, y, :]
-            if self.mask is not None:
-                mask = self.mask[x, y, :]
-            else:
+            if self.spectral_axis_index in [2, -1]:
+                flux = self.cube[x, y, :]
+                if self.mask is not None:
+                    mask = self.mask[x, y, :]
+            elif self.spectral_axis_index == 0:
+                flux = self.cube[:, y, x]
+                if self.mask is not None:
+                    mask = self.mask[:, y, x]
+
+            if self.mask is None:
                 # If no mask is provided:
                 mask = np.zeros_like(flux.value).astype(bool)
 
-            sp = Spectrum1D(spectral_axis=self.wave, flux=flux, mask=mask)
+            sp = Spectrum(spectral_axis=self.wave, flux=flux, mask=mask)
 
             if sp.uncertainty and not np.all(sp.uncertainty.array == 0):
                 weights = 'unc'
@@ -320,7 +333,7 @@ def _build_model(component_list, expression):
     return model
 
 
-def _generate_spaxel_list(spectrum):
+def generate_spaxel_list(spectrum, spectral_axis_index=None):
     """
     Generates a list with tuples, each one addressing the (x,y)
     coordinates of a spaxel in a 3-D spectrum cube. If a mask is available,
@@ -328,22 +341,36 @@ def _generate_spaxel_list(spectrum):
 
     Parameters
     ----------
-    spectrum : :class:`specutils.Spectrum1D`
-        The spectrum that stores the cube in its ``'flux'`` attribute.
+    spectrum : :class:`specutils.Spectrum` or numpy array
+        The spectrum that stores the cube in its ``'flux'`` attribute,
+        or a simple numpy array of values.
 
     Returns
     -------
     spaxels : list
         List with spaxels
     """
-    n_x, n_y, _ = spectrum.flux.shape
+    # Handle this being either a Spectrum or an array passed from sonification
+    if spectral_axis_index is None and hasattr(spectrum, 'spectral_axis_index'):
+        spectral_axis_index = spectrum.spectral_axis_index
 
-    if spectrum.mask is None:
+    flux = getattr(spectrum, 'flux', spectrum)
+
+    if spectral_axis_index in [2, -1]:
+        n_x, n_y, _ = flux.shape
+    elif spectral_axis_index == 0:
+        _, n_y, n_x = flux.shape
+
+    if not hasattr(spectrum, 'mask') or spectrum.mask is None:
         spx = [[(x, y) for x in range(n_x)] for y in range(n_y)]
     else:
-        # return only non-masked spaxels
-        spx = [[(x, y) for x in range(n_x) if np.any(~spectrum.mask[x, y])]
-               for y in range(n_y) if np.any(~spectrum.mask[:, y])]
+        # This is a specutils.Spectrum, return only non-masked spaxels
+        if spectrum.spectral_axis_index in [2, -1]:
+            spx = [[(x, y) for x in range(n_x) if np.any(~spectrum.mask[x, y])]
+                   for y in range(n_y) if np.any(~spectrum.mask[:, y])]
+        elif spectrum.spectral_axis_index == 0:
+            spx = [[(x, y) for y in range(n_y) if np.any(~spectrum.mask[:, y, x])]
+                   for x in range(n_x) if np.any(~spectrum.mask[:, :, x])]
 
     spaxels = [item for sublist in spx for item in sublist]
 

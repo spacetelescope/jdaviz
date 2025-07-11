@@ -28,6 +28,8 @@ New Features
 
 - Aperture Photometry public API exposed, added API hints to plugin. [#3617]
 
+- Allow custom resolutions when exporting viewers to png or mp4. [#3478]
+
 Cubeviz
 ^^^^^^^
 
@@ -134,6 +136,8 @@ Other Changes and Additions
 ---------------------------
 
 - Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
+
+- Bumped minimum version of ``specutils`` to 2.0. [#2922]
 
 - Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
   dependencies installed with the ``[all]`` extra dependencies flag

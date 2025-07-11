@@ -54,5 +54,5 @@ def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
     assert spatial_with_spec.flux.ndim == 1
     assert list(spatial_with_spec.mask) == [True, True, False, False, True,
                                             True, True, True, True, True]
-    assert max(list(spatial_with_spec.flux.value)) == 232.
-    assert min(list(spatial_with_spec.flux.value)) == 16.
+    assert max(list(spatial_with_spec.flux.value)) == 157.
+    assert min(list(spatial_with_spec.flux.value)) == 13.

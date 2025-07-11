@@ -13,10 +13,13 @@ from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astroquery.mast import Observations, conf
+from gwcs import WCS as gwcs
+from gwcs.coordinate_frames import CompositeFrame, SpectralFrame
 from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
+from specutils.utils.wcs_utils import SpectralGWCS
 
 from glue.config import settings
 from glue.config import colormaps as glue_colormaps
@@ -480,6 +483,17 @@ def get_subset_type(subset):
                 # subset type:
                 continue
 
+            # check for spectral coordinate in GWCS by looking for SpectralFrame
+            if isinstance(ss_data.coords, gwcs):
+                if isinstance(ss_data.coords, (SpectralFrame, SpectralGWCS)):
+                    return 'spectral'
+                elif isinstance(ss_data.coords, CompositeFrame):
+                    if np.any([isinstance(frame, SpectralFrame) for frame in
+                               ss_data.coords.output_frame.frames]):
+                        return 'spectral'
+                else:
+                    continue
+
             # check for a spectral coordinate in FITS WCS:
             wcs_coords = (
                 ss_data.coords.wcs.ctype if hasattr(ss_data.coords, 'wcs')
@@ -490,7 +504,7 @@ def get_subset_type(subset):
                 any(str(coord).startswith('WAVE') for coord in wcs_coords) or
 
                 # also check for a spectral coordinate from the glue_astronomy translator:
-                isinstance(ss_data.coords, SpectralCoordinates)
+                isinstance(ss_data.coords, (SpectralCoordinates, SpectralGWCS))
             )
 
             if has_spectral_coords:

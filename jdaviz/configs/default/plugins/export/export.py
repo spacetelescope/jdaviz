@@ -1,8 +1,15 @@
 import os
 import time
 from pathlib import Path
-from traitlets import Bool, List, Unicode, observe
+import threading
+
+from astropy import units as u
+from astropy.nddata import CCDData
+from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue_jupyter.bqplot.image import BqplotImageView
+from regions import CircleSkyRegion, EllipseSkyRegion
+from specutils import Spectrum
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
@@ -12,23 +19,15 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginCompone
                                         SubsetSelectMixin, PluginTableSelectMixin,
                                         PluginPlotSelectMixin, AutoTextField,
                                         MultiselectMixin, with_spinner)
-from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
-
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.region_translators import region2stcs_string
-
-from specutils import Spectrum1D
-from astropy import units as u
-from astropy.nddata import CCDData
-from regions import CircleSkyRegion, EllipseSkyRegion
 
 try:
     import cv2
 except ImportError:
     HAS_OPENCV = False
 else:
-    import threading
     HAS_OPENCV = True
 
 __all__ = ['Export']
@@ -50,6 +49,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`)
     * ``viewer_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``image_custom_size`` (Bool)
+    * ``image_width`` (int)
+        The width of the image to export, in pixels, if ``image_custom_size`` is `True`.
+    * ``image_height`` (int)
+        The height of the image to export, in pixels, if ``image_custom_size`` is `True`.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`)
     * ``dataset_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
@@ -67,6 +71,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     viewer_format_items = List().tag(sync=True)
     viewer_format_selected = Unicode().tag(sync=True)
+    image_custom_size = Bool(False).tag(sync=True)
+    image_width = IntHandleEmpty(800).tag(sync=True)
+    image_height = IntHandleEmpty(600).tag(sync=True)
 
     plugin_table_format_items = List().tag(sync=True)
     plugin_table_format_selected = Unicode().tag(sync=True)
@@ -275,6 +282,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         expose = ['viewer', 'viewer_format',
+                  'image_custom_size', 'image_width', 'image_height',
                   'dataset', 'dataset_format',
                   'subset', 'subset_format',
                   'plugin_table', 'plugin_table_format',
@@ -395,7 +403,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # NOTE: should not be a valid choice due to dataset filters, but we'll include
                 # another check here.
                 self.data_invalid_msg = "Data export is only available for plugin generated data."
-            elif not isinstance(self.dataset.selected_obj, (Spectrum1D, CCDData)):
+            elif not isinstance(self.dataset.selected_obj, (Spectrum, CCDData)):
                 self.data_invalid_msg = "Export is not yet implemented for this type of data"
             elif (data_unit := self.dataset.selected_obj.unit) == u.Unit('DN/s'):
                 self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501
@@ -458,7 +466,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             If `True`, raise exception when ``overwrite=False`` but
             output file already exists. Otherwise, a message will be sent
             to application snackbar instead.
-
         """
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
@@ -499,9 +506,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 restores.append(restore)
 
             if filetype == "mp4":
-                self.save_movie(viewer, filename, filetype)
+                self.save_movie(viewer, filename, filetype,
+                                width=f"{self.image_width}px" if self.image_custom_size else None,
+                                height=f"{self.image_height}px" if self.image_custom_size else None)
             else:
-                self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+                self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
+                                 width=f"{self.image_width}px" if self.image_custom_size else None,
+                                 height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
 
             # restore marks to their original state
             for restore, mark in zip(restores, viewer.figure.marks):
@@ -599,10 +610,16 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
             self.overwrite_warn = False
 
-    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
-
+    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False,
+                    width=None, height=None):
         if filename is None:
             filename = self.filename_default
+
+        # viewers in plugins will have viewer.app, other viewers have viewer.jdaviz_app
+        if hasattr(viewer, 'jdaviz_app'):
+            app = viewer.jdaviz_app
+        else:
+            app = viewer.app
 
         def on_img_received(data):
             try:
@@ -617,18 +634,73 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"{self.viewer.selected} exported to {str(filename)}",
                     sender=self, color="success"))
 
-        if filetype == 'png' and viewer.figure._upload_png_callback is not None:
-            raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
-        if filetype == 'svg' and viewer.figure._upload_svg_callback is not None:
-            raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
+        def get_png(figure):
+            if figure._upload_png_callback is not None:
+                raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
 
-        if filetype == 'png':
-            viewer.figure.get_png_data(on_img_received)
+            figure.get_png_data(on_img_received)
+
+        if (width is not None or height is not None):
+            assert width is not None and height is not None, \
+                "Both width and height must be provided"
+            import ipywidgets as widgets
+            from typing import Callable
+
+            def _show_hidden(widget: widgets.Widget, width: str, height: str):
+                import ipyvuetify as v
+                wrapper_widget = v.Html(
+                    children=[
+                        v.Html(children=[
+                            widget
+                        ], tag="div", style_=f"width: {width}; height: {height};")
+                    ],
+                    tag="div",
+                    style_="overflow: hidden; width: 0px; height: 0px"
+                    )
+                # TODO: we might want to remove it from the DOM
+                app.invisible_children = [*app.invisible_children, wrapper_widget]
+
+            def _widget_after_first_display(widget: widgets.Widget, callback: Callable):
+                if widget._view_count is None:
+                    widget._view_count = 0
+                called_callback = False
+
+                def view_count_changed(change):
+                    nonlocal called_callback
+                    if change["new"] == 1 and not called_callback:
+                        called_callback = True
+                        callback()
+                widget.observe(view_count_changed, "_view_count")
+
+            cloned_viewer = viewer._clone_viewer_outside_app()
+            # make sure we will the size of our container which defines the
+            # size of the figure
+            cloned_viewer.figure.layout.width = "100%"
+            cloned_viewer.figure.layout.height = "100%"
+
+            def on_figure_displayed():
+                # we need a bit of a delay to ensure the figure is fully displayed
+                # maybe this can be fixed on the bqplot side in the future
+                def wait_in_other_thread():
+                    import time
+                    time.sleep(0.2)
+                    get_png(cloned_viewer.figure)
+                # wait in other thread to avoid blocking the main thread (widgets can update)
+                threading.Thread(target=wait_in_other_thread).start()
+            _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
+            _show_hidden(cloned_viewer.figure, width, height)
+        elif filetype == 'png':
+            # NOTE: get_png already check if _upload_png_callback is not None
+            get_png(viewer.figure)
         elif filetype == 'svg':
+            if viewer.figure._upload_svg_callback is not None:
+                raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
             viewer.figure.get_svg_data(on_img_received)
+        else:
+            raise ValueError(f"Unsupported filetype={filetype} for save_figure")
 
     @with_spinner('movie_recording')
-    def _save_movie(self, viewer, i_start, i_end, fps, filename, rm_temp_files):
+    def _save_movie(self, viewer, i_start, i_end, fps, filename, rm_temp_files, width, height):
         # NOTE: All the stuff here has to be in the same thread but
         #       separate from main app thread to work.
 
@@ -654,7 +726,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 slice_plg.vue_play_next()
                 cur_pngfile = Path(f"._cubeviz_movie_frame_{i}.png")
                 # TODO: skip success snackbars when exporting temp movie frames?
-                self.save_figure(viewer, filename=cur_pngfile, filetype="png", show_dialog=False)
+                self.save_figure(viewer, filename=cur_pngfile, filetype="png", show_dialog=False,
+                                 width=width, height=height)
                 temp_png_files.append(cur_pngfile)
                 i += i_step
 
@@ -690,7 +763,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.movie_interrupt = False
 
     def save_movie(self, viewer, filename, filetype, i_start=None, i_end=None, fps=None,
-                   rm_temp_files=True):
+                   rm_temp_files=True, width=None, height=None):
         """Save selected slices as a movie.
 
         This method creates a PNG file per frame (``._cubeviz_movie_frame_<n>.png``)
@@ -722,6 +795,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         rm_temp_files : bool
             Remove temporary PNG files after movie creation. Default is `True`.
+
+        width : str, optional
+            Width of the exported image. Required if height is provided.
+
+        height : str, optional
+            Height of the exported image. Required if width is provided.
 
         Returns
         -------
@@ -763,7 +842,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
 
         threading.Thread(
-            target=lambda: self._save_movie(viewer, i_start, i_end, fps, filename, rm_temp_files)
+            target=lambda: self._save_movie(viewer, i_start, i_end, fps, filename, rm_temp_files,
+                                            width, height)
         ).start()
 
         return filename

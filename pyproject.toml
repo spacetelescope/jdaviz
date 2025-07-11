@@ -22,10 +22,10 @@ dependencies = [
     "ipywidgets>=8.0.6",
     "solara>=1.49.0",
     "pyyaml>=5.4.1",
-    "specutils>=1.18,<2.0",
-    "specreduce>=1.4.1,!=1.5.0,!=1.5.1",
+    "specutils>=2.0.0",
+    "specreduce>=1.6.0",
     "photutils>=2.2",
-    "glue-astronomy>=0.10",
+    "glue-astronomy>=0.12.0",
     "asteval>=0.9.23",
     "idna",
     "vispy>=0.6.5",
@@ -149,6 +149,8 @@ filterwarnings = [
     "ignore:::specutils.spectra.spectrum1d",
     "ignore:use_side_effect is deprecated:DeprecationWarning",
     "ignore:.*is deprecated and will be removed in Pillow 13.*",
+    "ignore:.*The TestRunner class will be deprecated in a future version.*",
+    "ignore:.*The TestRunnerBase class will be deprecated in a future version.*",
     # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
     # and https://github.com/scipy/scipy/pull/19275
     "ignore:.*numpy\\.core.*:DeprecationWarning",

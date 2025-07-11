@@ -35,7 +35,7 @@ from ipypopout import PopoutButton
 from ipypopout.popout_button import get_kernel_id
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
 from regions import PixelRegion
-from specutils import Spectrum1D
+from specutils import Spectrum
 from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
@@ -2461,8 +2461,8 @@ class SubsetSelect(SelectPluginComponent):
         """
         if self.is_multiselect:  # pragma: no cover
             raise TypeError("This action cannot be done when multiselect is active")
-        if not isinstance(dataset, Spectrum1D):  # pragma: no cover
-            raise TypeError("dataset must be a Spectrum1D object")
+        if not isinstance(dataset, Spectrum):  # pragma: no cover
+            raise TypeError("dataset must be a Spectrum object")
 
         if self.selected_obj is None:
             return np.nanmin(dataset.spectral_axis), np.nanmax(dataset.spectral_axis)
@@ -2866,11 +2866,12 @@ class ApertureSubsetSelect(SubsetSelect):
             mask_weights = subset_group.subsets[0].to_mask().astype(np.float32)
             return mask_weights
 
-        # Center is reverse coordinates
+        # Center is reverse coordinates if spectral axis is last
         center = (self.selected_spatial_region.center.y,
                   self.selected_spatial_region.center.x)
         aperture = regions2aperture(self.selected_spatial_region)
-        aperture.positions = center
+        if slice_axis == 2:
+            aperture.positions = center
 
         im_shape = (flux_cube.shape[spatial_axes[0]], flux_cube.shape[spatial_axes[1]])
         aperture_method = aperture_method.lower()
@@ -2911,7 +2912,12 @@ class ApertureSubsetSelect(SubsetSelect):
 
                 slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
                 # Add slice mask to fractional pixel array
-                mask_weights[:, :, index] = slice_mask
+                if slice_axis == 2:
+                    mask_weights[:, :, index] = slice_mask
+                elif slice_axis == 1:
+                    mask_weights[:, index, :] = slice_mask
+                elif slice_axis == 0:
+                    mask_weights[index, :, :] = slice_mask
         else:
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
@@ -3370,6 +3376,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             return None, None, None
 
         spectral_axis = full_spectrum.spectral_axis
+        spectral_axis_index = full_spectrum.spectral_axis_index
         if spectral_axis.unit == u.pix:
             # plugin should be disabled so not get this far, but can still get here
             # before the disabled message is set
@@ -3474,22 +3481,23 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         min_x = min(spectral_axis.value)
         if per_pixel:
             # full_spectrum.flux is a cube, so we want to act on all spaxels independently
-            continuum_y = full_spectrum.flux[:, :, continuum_mask].value
+            continuum_y = np.take(full_spectrum.flux, continuum_mask, axis=spectral_axis_index).value  # noqa
 
             def fit_continuum(continuum_y_spaxel):
                 return np.polyfit(continuum_x-min_x, continuum_y_spaxel, deg=1)
 
             # compute the linear fit for each spaxel independently, along the spectral axis
-            slopes_intercepts = np.apply_along_axis(fit_continuum, 2, continuum_y)
-            slopes = slopes_intercepts[:, :, 0]
-            intercepts = slopes_intercepts[:, :, 1]
+            slopes_intercepts = np.apply_along_axis(fit_continuum, spectral_axis_index, continuum_y)
+            slopes = np.take(slopes_intercepts, 0, spectral_axis_index)
+            intercepts = np.take(slopes_intercepts, 1, spectral_axis_index)
 
             # spectrum.spectral_axis is an array, but we need our continuum to have the same
             # shape as the fluxes in the cube, so let's just duplicate to the correct shape
             spectral_axis_cube = np.zeros(spectrum.flux.shape)
-            spectral_axis_cube[:, :] = spectrum.spectral_axis.value
-
-            continuum = slopes[:, :, np.newaxis] * (spectral_axis_cube-min_x) + intercepts[:, :, np.newaxis]  # noqa
+            reshape_inds = [1, 1, 1]
+            reshape_inds[spectral_axis_index] = -1
+            spectral_axis_cube[:, :, :] = spectrum.spectral_axis.value.reshape(reshape_inds)
+            continuum = np.expand_dims(slopes, spectral_axis_index) * (spectral_axis_cube-min_x) + np.expand_dims(intercepts, spectral_axis_index)  # noqa
         else:
             continuum_y = full_spectrum.flux[continuum_mask].value
             slope, intercept = np.polyfit(continuum_x-min_x, continuum_y, deg=1)
@@ -3814,7 +3822,7 @@ class DatasetSelect(SelectPluginComponent):
             return NDData
         if 'is_trace' in self.filters:
             return None
-        return Spectrum1D
+        return Spectrum
 
     def _get_dc_item(self, selected):
         if selected not in self.labels:
@@ -3869,7 +3877,7 @@ class DatasetSelect(SelectPluginComponent):
                                                        add_data=False)
             return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
-                                                    cls=Spectrum1D,
+                                                    cls=Spectrum,
                                                     use_display_units=use_display_units)
 
     @cached_property

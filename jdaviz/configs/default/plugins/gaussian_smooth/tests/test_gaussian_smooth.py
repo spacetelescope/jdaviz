@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from astropy.utils.exceptions import AstropyUserWarning
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 
 def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
@@ -49,27 +49,27 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
 
     assert len(dc) == 3
     assert dc[-1].label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
-    assert len(dc.external_links) == 5
+    assert len(dc.external_links) == 4
 
     # Link cube 3D x, y, z to plugin 3D x, y, z
 
     # Link 2:
     # Pixel Axis 0 [z] from cube.pixel_component_ids[0]
     # Pixel Axis 0 [z] from plugin.pixel_component_ids[0]
-    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[0]
-    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[0]
+    assert dc.external_links[1].cids1[0] == dc[0].pixel_component_ids[0]
+    assert dc.external_links[1].cids2[0] == dc[-1].pixel_component_ids[0]
 
     # Link 3:
     # Pixel Axis 1 [y] from cube.pixel_component_ids[1]
     # Pixel Axis 1 [y] from plugin.pixel_component_ids[1]
-    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[1]
-    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[1]
+    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[1]
+    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[1]
 
     # Link 4:
     # Pixel Axis 2 [x] from cube.pixel_component_ids[2]
     # Pixel Axis 2 [x] from plugin.pixel_component_ids[2]
-    assert dc.external_links[4].cids1[0] == dc[0].pixel_component_ids[2]
-    assert dc.external_links[4].cids2[0] == dc[-1].pixel_component_ids[2]
+    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[2]
+    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[2]
 
     # Spectral smooth the input SPECTRUM
     gs.dataset_selected = 'Spectrum (sum)'
@@ -121,10 +121,10 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
 
     assert len(dc) == 3
     assert dc[-1].label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
-    assert dc[-1].shape == (4, 2, 2)  # specutils moved spectral axis to last
-    assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum1D,
+    assert dc[-1].shape == (2, 2, 4)  # specutils moved spectral axis to last
+    assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum,
                                                                            statistic=None).shape
-            == (4, 2, 2))
+            == (2, 2, 4))
 
 
 def test_specviz_smooth(specviz_helper, spectrum1d):

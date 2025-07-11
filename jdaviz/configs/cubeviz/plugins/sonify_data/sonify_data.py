@@ -1,3 +1,4 @@
+import time
 from traitlets import Bool, List, Unicode, observe
 import astropy.units as u
 
@@ -99,6 +100,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         You can select the device index for audio output and also use a spectral subset to set a
         range for sonification.
         """
+        t0 = time.time()
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
 
@@ -118,13 +120,18 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         previous_label = self.results_label
 
         # generate the sonified cube
-        self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
-                                           selected_device_index, self.assidx, self.ssvidx,
-                                           self.pccut, self.audfrqmin,
-                                           self.audfrqmax, self.eln, self.use_pccut,
-                                           self.results_label)
+        sonified_cube = self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
+                                                           selected_device_index, self.assidx,
+                                                           self.ssvidx, self.pccut, self.audfrqmin,
+                                                           self.audfrqmax, self.eln,
+                                                           self.use_pccut, self.results_label)
+        sonified_cube.meta['Sonified'] = True
+        self.add_results.add_results_from_plugin(sonified_cube, replace=False)
 
-        msg = SnackbarMessage(f"'{previous_label}' sonified successfully.",
+        self.flux_viewer.recalculate_combined_sonified_grid()
+
+        t1 = time.time()
+        msg = SnackbarMessage(f"'{previous_label}' sonified successfully in {t1-t0} seconds.",
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
@@ -135,7 +142,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
-        self.flux_viewer.stream_active = not self.flux_viewer.stream_active
 
     @observe('spectral_subset_selected')
     def update_wavelength_range(self, event):

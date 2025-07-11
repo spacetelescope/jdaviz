@@ -161,7 +161,7 @@ call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_ex
   bg = sp_ext.export_bg()
 
 To access the background image, background spectrum, or background-subtracted image as a
-:class:`~specutils.Spectrum1D` object,
+:class:`~specutils.Spectrum` object,
 call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_img`,
 :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_spectrum`,
 or :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_sub`, respectively.
@@ -213,7 +213,7 @@ call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_ex
 
   ext = sp_ext.export_extract()
 
-To access the extracted spectrum as a :class:`~specutils.Spectrum1D` object,
+To access the extracted spectrum as a :class:`~specutils.Spectrum` object,
 call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract_spectrum`.
 
 To import the parameters from
