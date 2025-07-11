@@ -42,6 +42,10 @@ class ImageImporter(BaseImporterToDataCollection):
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
 
+    # user-settable option to treat the data_label as prefix and append the extension later
+    data_label_as_prefix = Bool(False).tag(sync=True)
+    # whether the current data_label should be treated as a prefix
+    # either based on user-setting above or current extension selection
     data_label_is_prefix = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -65,7 +69,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = []
+        expose = ['data_label_as_prefix']
         if self.input_hdulist:
             expose += ['extension']
         return ImporterUserApi(self, expose)
@@ -90,14 +94,14 @@ class ImageImporter(BaseImporterToDataCollection):
         full_ext = ",".join([str(e) for e in (ext, ver) if e is not None])
         return f"{prefix}[{full_ext}]" if len(full_ext) else prefix
 
-    @observe('extension_selected')
+    @observe('extension_selected', 'data_label_as_prefix')
     def _set_default_data_label(self, *args):
         if self.default_data_label_from_resolver:
             prefix = self.default_data_label_from_resolver
         else:
             prefix = "Image"
         if self.input_hdulist:
-            if len(self.extension.selected_name) == 1:
+            if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
                 # only a single extension selected
                 self.data_label_default = self._get_label_with_extension(prefix,
                                                                          ext=self.extension.selected_name[0],  # noqa
@@ -108,7 +112,9 @@ class ImageImporter(BaseImporterToDataCollection):
                 # only show the prefix and append the extension later during import
                 self.data_label_default = prefix
                 self.data_label_is_prefix = True
-        elif isinstance(self.input, NDData) and getattr(self.input, 'meta', {}).get('plugin', None) is None:
+        elif (self.data_label_as_prefix or
+              (isinstance(self.input, NDData) and
+               getattr(self.input, 'meta', {}).get('plugin', None) is None)):
             # will append with [DATA]/[UNCERTAINTY]/[MASK] later
             # TODO: allow user to select extensions and include in same logic as HDUList
             self.data_label_default = prefix

@@ -202,9 +202,13 @@ class Imviz(ImageConfigHelper):
                     # In .load() the data_label will not be appended
                     data_label = data_label + f'[{data.name},{data.ver}]'
 
+            # if the input is a HDUList, maintain previous behavior of appending
+            # the extension, even if only a single extension is selected
+            data_label_as_prefix = isinstance(data, fits.HDUList)
             self._load(data,
                        format='Image',
                        data_label=data_label,
+                       data_label_as_prefix=data_label_as_prefix,
                        extension=extensions,
                        show_in_viewer=show_in_viewer)
 
