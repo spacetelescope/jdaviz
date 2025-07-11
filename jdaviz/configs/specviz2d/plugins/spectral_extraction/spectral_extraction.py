@@ -38,7 +38,7 @@ _model_cls = {'Spline': models.Spline1D,
                category="data:reduction")
 class SpectralExtraction2D(PluginTemplateMixin):
     """
-    The Spectral Extraction 2d plugin exposes specreduce methods for tracing,
+    The Spectral Extraction 2D plugin exposes specreduce methods for tracing,
     background subtraction, and spectral extraction from 2D spectra.
     See the :ref:`2D Spectral Extraction Plugin Documentation <specviz2d-spectral-extraction>`
     for more details.
