@@ -113,7 +113,7 @@ jobs:
       id: cache-restore
       uses: actions/cache/restore@v4
       with:
-        path: ./
+        path: ./mast_cache
         key: use-restore-keys-below-to-match-in-priority-order
         restore-keys: |
           mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-

@@ -64,6 +64,15 @@ def deconfigged_helper():
 
 
 @pytest.fixture
+def mast_cache_path():
+    """
+    Returns the path to the MAST cache directory.
+    This is used to ensure that tests can access cached data.
+    """
+    return './mast_cache/'
+
+
+@pytest.fixture
 def roman_level_1_ramp():
     from roman_datamodels.maker_utils import mk_datamodel
     from roman_datamodels.datamodels import RampModel
