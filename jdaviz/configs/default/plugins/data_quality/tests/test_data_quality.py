@@ -1,9 +1,7 @@
 import warnings
-from pathlib import Path
 import pytest
 
 import numpy as np
-from astroquery.mast import Observations
 from stdatamodels.jwst.datamodels.dqflags import pixel as pixel_jwst
 from glue.core.subset import RectangularROI
 
@@ -77,14 +75,13 @@ def test_roman_against_rdm():
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin(imviz_helper, tmp_path):
+def test_data_quality_plugin(imviz_helper, mast_cache_path):
     uri = "mast:JWST/product/jw01895001004_07101_00001_nrca3_cal.fits"
-    local_path = str(tmp_path / Path(uri).name)
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         imviz_helper.load_data(
-            uri, cache=True, local_path=local_path, ext=('SCI', 'DQ')
+            uri, cache=True, local_path=mast_cache_path, ext=('SCI', 'DQ')
         )
 
     assert len(imviz_helper.app.data_collection) == 2
@@ -173,16 +170,13 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin_hst_wfc3(imviz_helper, tmp_path):
+def test_data_quality_plugin_hst_wfc3(imviz_helper, mast_cache_path):
 
     # load HST/WFC3-UVIS observations:
     uri = "mast:HST/product/hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits"
-    download_path = str(tmp_path / Path(uri).name)
-    Observations.download_file(uri, local_path=download_path)
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(download_path, ext=('SCI', 'DQ'))
+        imviz_helper.load_data(uri, cache=True, local_path=mast_cache_path, ext=('SCI', 'DQ'))
 
     assert len(imviz_helper.app.data_collection) == 2
 
@@ -196,15 +190,12 @@ def test_data_quality_plugin_hst_wfc3(imviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin_hst_acs(imviz_helper, tmp_path):
+def test_data_quality_plugin_hst_acs(imviz_helper, mast_cache_path):
     # load HST/ACS observations:
     uri = "mast:HST/product/hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits"
-    download_path = str(tmp_path / Path(uri).name)
-    Observations.download_file(uri, local_path=download_path)
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(download_path, ext=('SCI', 'DQ'))
+        imviz_helper.load_data(uri, cache=True, local_path=mast_cache_path, ext=('SCI', 'DQ'))
 
     assert len(imviz_helper.app.data_collection) == 2
 
@@ -221,15 +212,12 @@ def test_data_quality_plugin_hst_acs(imviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_cubeviz_layer_visibility_bug(cubeviz_helper, tmp_path):
+def test_cubeviz_layer_visibility_bug(cubeviz_helper, mast_cache_path):
     # regression test for bug:
     uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_s3d.fits"
-    download_path = str(tmp_path / Path(uri).name)
-    Observations.download_file(uri, local_path=download_path)
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(download_path)
+        cubeviz_helper.load_data(uri, cache=True, local_path=mast_cache_path)
 
     # create a moment map:
     mm = cubeviz_helper.plugins['Moment Maps']

@@ -1,5 +1,4 @@
 import warnings
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -66,7 +65,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
-                            spectrum1d_cube_sb_unit, cube_type, tmp_path):
+                            spectrum1d_cube_sb_unit, cube_type):
 
     moment_unit = "Jy m"
     moment_value_str = "+6.40166e-10"
@@ -275,13 +274,12 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
+def test_momentmap_nirspec_prism(cubeviz_helper, mast_cache_path):
     uri = "mast:jwst/product/jw02732-o003_t002_nirspec_prism-clear_s3d.fits"
-    local_path = str(tmp_path / Path(uri).name)
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(uri, cache=True, local_path=local_path)
+        cubeviz_helper.load_data(uri, cache=True, local_path=mast_cache_path)
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True

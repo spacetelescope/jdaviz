@@ -48,7 +48,7 @@ jobs:
             os: ubuntu-latest
             python: '3.11'
             toxenv: py311-test-alldeps-cov
-            toxposargs: --remote-data --run-slow
+            toxposargs: --remote-data
             allow_failure: false
 
           - name: OS X - Python 3.12
@@ -75,7 +75,7 @@ jobs:
             os: ubuntu-latest
             python: '3.13'
             toxenv: py313-test-devdeps
-            toxposargs: --remote-data --run-slow
+            toxposargs: --remote-data
             allow_failure: true
 
           - name: Python 3.11 with stable versions of dependencies and Roman
@@ -103,15 +103,17 @@ jobs:
       run: curl https://api.ipify.org
     - name: Get components for cache key
       id: date
+      if: "contains(matrix.toxposargs, '--remote-data')"
       run: |
         echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
         echo "week=$(date +'%V')" >> $GITHUB_OUTPUT
         echo "day=$(date +'%j')" >> $GITHUB_OUTPUT
-    - name: Restore cache
+    - name: Restore MAST cache
+      if: "contains(matrix.toxposargs, '--remote-data')"
       id: cache-restore
       uses: actions/cache/restore@v4
       with:
-        path: ./
+        path: ./mast_cache
         key: use-restore-keys-below-to-match-in-priority-order
         restore-keys: |
           mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-
