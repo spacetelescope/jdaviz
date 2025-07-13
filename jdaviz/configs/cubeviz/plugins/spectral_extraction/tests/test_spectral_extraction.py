@@ -1,3 +1,4 @@
+import os
 import pytest
 import warnings
 
@@ -625,7 +626,11 @@ def test_spectral_extraction_scientific_validation(
     # load observations into Cubeviz
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        cubeviz_helper.load_data(uri, cache=True, local_path=mast_cache_path)
+        # NOTE: appending URI to local_path may not be necessary once cubeviz
+        # uses the new loaders infrastructure
+        cubeviz_helper.load_data(uri, cache=True,
+                                 local_path=os.path.join(mast_cache_path,
+                                                         uri.split('/')[-1]))
 
     # add a subset with an aperture centered on each source
     subset_plugin = cubeviz_helper.plugins['Subset Tools']

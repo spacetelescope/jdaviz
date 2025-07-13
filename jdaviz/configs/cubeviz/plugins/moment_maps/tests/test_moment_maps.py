@@ -1,3 +1,4 @@
+import os
 import warnings
 
 import numpy as np
@@ -279,7 +280,11 @@ def test_momentmap_nirspec_prism(cubeviz_helper, mast_cache_path):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(uri, cache=True, local_path=mast_cache_path)
+        # NOTE: appending URI to local_path may not be necessary once cubeviz
+        # uses the new loaders infrastructure
+        cubeviz_helper.load_data(uri, cache=True,
+                                 local_path=os.path.join(mast_cache_path,
+                                                         uri.split('/')[-1]))
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
