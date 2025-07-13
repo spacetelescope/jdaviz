@@ -26,6 +26,11 @@ env:
 on:
   workflow_dispatch:
     inputs:
+      skip_cache:
+        description: 'Test downloading but skip creating cache'
+        required: false
+        default: false
+        type: boolean
       append_to_cache:
         description: 'Append to latest cache?'
         required: false
@@ -131,6 +136,7 @@ jobs:
         ls -ltr || echo "No files found"
 
     - name: Save updated cache (overwrite)
+      if: ${{ !inputs.skip_cache }}
       uses: actions/cache/save@v4
       with:
         key: mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-${{ github.run_number }}-${{ steps.date.outputs.trigger }}
