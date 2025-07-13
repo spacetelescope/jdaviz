@@ -50,19 +50,19 @@ def test_2d_parser_ext_hdulist(specviz2d_helper):
 
 
 @pytest.mark.remote_data
-def test_hlsp_goods_s2d(specviz2d_helper, mast_cache_path):
+def test_hlsp_goods_s2d(specviz2d_helper):
     specviz2d_helper.load('mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits ',  # noqa
-                          cache=True, local_path=mast_cache_path)
+                          cache=True)
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
 
 
 @pytest.mark.remote_data
-def test_hlsp_goods_s2d_deconfigged(deconfigged_helper, mast_cache_path):
+def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
     deconfigged_helper.load('mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits ',  # noqa
                             format='2D Spectrum',
                             data_label='2D Spectrum',
-                            cache=True, local_path=mast_cache_path)
+                            cache=True)
     dc_0 = deconfigged_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
     assert isinstance(deconfigged_helper.plugins['2D Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa

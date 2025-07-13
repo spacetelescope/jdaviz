@@ -58,15 +58,15 @@ def test_uri_to_download_specviz_local_path_check():
 
 
 @pytest.mark.remote_data
-def test_uri_to_download_specviz(specviz_helper, mast_cache_path):
+def test_uri_to_download_specviz(specviz_helper):
     uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
-    specviz_helper.load_data(uri, cache=True, local_path=mast_cache_path)
+    specviz_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data
-def test_uri_to_download_specviz2d(specviz2d_helper, mast_cache_path):
+def test_uri_to_download_specviz2d(specviz2d_helper):
     uri = "mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits"
-    specviz2d_helper.load_data(uri, cache=True, local_path=mast_cache_path)
+    specviz2d_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data

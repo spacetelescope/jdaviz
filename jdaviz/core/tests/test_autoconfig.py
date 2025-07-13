@@ -27,13 +27,11 @@ AUTOCONFIG_EXAMPLES = (
 @pytest.mark.slow
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('uris', AUTOCONFIG_EXAMPLES)
-def test_autoconfig(uris, mast_cache_path):
+def test_autoconfig(uris):
     uri = uris[0]
     helper_class = uris[1]
 
     kwargs = dict(cache=True, show=False)
-    if uri.startswith('mast'):
-        kwargs['local_path'] = mast_cache_path
 
     viz_helper = jdaviz_open(uri, **kwargs)
     assert isinstance(viz_helper, helper_class)

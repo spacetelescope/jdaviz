@@ -1,4 +1,3 @@
-import os
 import warnings
 
 import numpy as np
@@ -275,16 +274,14 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
 
 
 @pytest.mark.remote_data
-def test_momentmap_nirspec_prism(cubeviz_helper, mast_cache_path):
+def test_momentmap_nirspec_prism(cubeviz_helper):
     uri = "mast:jwst/product/jw02732-o003_t002_nirspec_prism-clear_s3d.fits"
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         # NOTE: appending URI to local_path may not be necessary once cubeviz
         # uses the new loaders infrastructure
-        cubeviz_helper.load_data(uri, cache=True,
-                                 local_path=os.path.join(mast_cache_path,
-                                                         uri.split('/')[-1]))
+        cubeviz_helper.load_data(uri, cache=True)
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True

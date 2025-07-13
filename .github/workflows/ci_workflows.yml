@@ -120,11 +120,13 @@ jobs:
           mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-
           mast-cache-${{ steps.date.outputs.year }}-
           mast-cache-
-    - name: TMP Move cache location
+    - name: Move cache to astroquery cache directory
       if: "contains(matrix.toxposargs, '--remote-data')"
       run: |
-        mkdir -p ./mast_cache
-        mv ./*fits ./mast_cache/
+        # Create the standard astroquery cache directory structure
+        mkdir -p "$HOME/.astropy/cache/astroquery/mast"
+        # Move fits files to the astroquery MAST cache directory
+        mv ./*.fits "$HOME/.astropy/cache/astroquery/mast/"
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
     - name: Upload coverage to artifacts

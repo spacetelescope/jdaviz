@@ -75,13 +75,13 @@ def test_roman_against_rdm():
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin(imviz_helper, mast_cache_path):
+def test_data_quality_plugin(imviz_helper):
     uri = "mast:JWST/product/jw01895001004_07101_00001_nrca3_cal.fits"
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         imviz_helper.load_data(
-            uri, cache=True, local_path=mast_cache_path, ext=('SCI', 'DQ')
+            uri, cache=True, ext=('SCI', 'DQ')
         )
 
     assert len(imviz_helper.app.data_collection) == 2
@@ -170,13 +170,13 @@ def test_data_quality_plugin(imviz_helper, mast_cache_path):
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin_hst_wfc3(imviz_helper, mast_cache_path):
+def test_data_quality_plugin_hst_wfc3(imviz_helper):
 
     # load HST/WFC3-UVIS observations:
     uri = "mast:HST/product/hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(uri, cache=True, local_path=mast_cache_path, ext=('SCI', 'DQ'))
+        imviz_helper.load_data(uri, cache=True, ext=('SCI', 'DQ'))
 
     assert len(imviz_helper.app.data_collection) == 2
 
@@ -190,12 +190,12 @@ def test_data_quality_plugin_hst_wfc3(imviz_helper, mast_cache_path):
 
 
 @pytest.mark.remote_data
-def test_data_quality_plugin_hst_acs(imviz_helper, mast_cache_path):
+def test_data_quality_plugin_hst_acs(imviz_helper):
     # load HST/ACS observations:
     uri = "mast:HST/product/hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(uri, cache=True, local_path=mast_cache_path, ext=('SCI', 'DQ'))
+        imviz_helper.load_data(uri, cache=True, ext=('SCI', 'DQ'))
 
     assert len(imviz_helper.app.data_collection) == 2
 
@@ -212,12 +212,12 @@ def test_data_quality_plugin_hst_acs(imviz_helper, mast_cache_path):
 
 
 @pytest.mark.remote_data
-def test_cubeviz_layer_visibility_bug(cubeviz_helper, mast_cache_path):
+def test_cubeviz_layer_visibility_bug(cubeviz_helper):
     # regression test for bug:
     uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_s3d.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(uri, cache=True, local_path=mast_cache_path)
+        cubeviz_helper.load_data(uri, cache=True)
 
     # create a moment map:
     mm = cubeviz_helper.plugins['Moment Maps']
