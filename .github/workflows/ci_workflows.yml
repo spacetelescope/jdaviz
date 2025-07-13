@@ -113,13 +113,18 @@ jobs:
       id: cache-restore
       uses: actions/cache/restore@v4
       with:
-        path: ./mast_cache
+        path: ./
         key: use-restore-keys-below-to-match-in-priority-order
         restore-keys: |
           mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-
           mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-
           mast-cache-${{ steps.date.outputs.year }}-
           mast-cache-
+    - name: TMP Move cache location
+      if: "contains(matrix.toxposargs, '--remote-data')"
+      run: |
+        mkdir -p ./mast_cache
+        mv ./*fits ./mast_cache/
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
     - name: Upload coverage to artifacts
