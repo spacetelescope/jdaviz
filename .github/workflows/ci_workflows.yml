@@ -120,13 +120,22 @@ jobs:
           mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-
           mast-cache-${{ steps.date.outputs.year }}-
           mast-cache-
-    - name: Move cache to astroquery cache directory
+    - name: Move cache to tox working directory
       if: "contains(matrix.toxposargs, '--remote-data')"
       run: |
-        # Create the standard astroquery cache directory structure
-        mkdir -p "$HOME/.astropy/cache/astroquery/mast"
-        # Move fits files to the astroquery MAST cache directory
-        mv ./*.fits "$HOME/.astropy/cache/astroquery/mast/"
+        # Create cache directories for all possible tox environments
+        # tox runs from .tmp/{envname}, so we need to place cache files there
+        mkdir -p ".tmp/${{ matrix.toxenv }}"
+
+        # Check if any fits files exist and move them to the tox working directory
+        if ls ./*.fits 1> /dev/null 2>&1; then
+          mv ./*.fits ".tmp/${{ matrix.toxenv }}/"
+          echo "Cache files moved to .tmp/${{ matrix.toxenv }}/"
+          echo "Files in tox working directory:"
+          ls -la ".tmp/${{ matrix.toxenv }}/"*.fits
+        else
+          echo "No .fits files found in cache - tests will download files as needed"
+        fi
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
     - name: Upload coverage to artifacts
