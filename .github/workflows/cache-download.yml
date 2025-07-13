@@ -128,7 +128,7 @@ jobs:
     - name: List cached files
       run: |
         echo "All cached files:"
-        ls -ls *.fits || echo "No files found"
+        ls -ltr || echo "No files found"
 
     - name: Save updated cache (overwrite)
       uses: actions/cache/save@v4
