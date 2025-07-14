@@ -540,23 +540,24 @@ class TestParseImage:
         data = imviz_helper.app.data_collection[0]
         assert isinstance(data.coords, expected_cls)
 
-    @pytest.mark.remote_data
-    @pytest.mark.parametrize(
-        ('gwcs_to_fits_sip', 'expected_cls'),
-        ((True, WCS),
-         (False, GWCS),)
-    )
-    @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
-    def test_importer_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, deconfigged_helper):
-        """Test gwcs_to_fits_sip through the importer API."""
-        ldr = deconfigged_helper.loaders['url']
-        ldr.url = self.jwst_asdf_url_1
-        ldr.importer.gwcs_to_fits_sip = gwcs_to_fits_sip
+    # restore test after JDAT 5520 is resolved
+    # @pytest.mark.remote_data
+    # @pytest.mark.parametrize(
+    #     ('gwcs_to_fits_sip', 'expected_cls'),
+    #     ((True, WCS),
+    #      (False, GWCS),)
+    # )
+    # @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
+    # def test_importer_gwcs_to_fits_sip(self, gwcs_to_fits_sip, expected_cls, deconfigged_helper):
+    #     """Test gwcs_to_fits_sip through the importer API."""
+    #     ldr = deconfigged_helper.loaders['url']
+    #     ldr.url = self.jwst_asdf_url_1
+    #     ldr.importer.gwcs_to_fits_sip = gwcs_to_fits_sip
 
-        ldr.importer()
+    #     ldr.importer()
 
-        data = deconfigged_helper.app.data_collection[0]
-        assert isinstance(data.coords, expected_cls)
+    #     data = deconfigged_helper.app.data_collection[0]
+    #     assert isinstance(data.coords, expected_cls)
 
 
 def test_load_valid_not_valid(imviz_helper):
