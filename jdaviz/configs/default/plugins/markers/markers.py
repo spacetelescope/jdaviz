@@ -1,6 +1,7 @@
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from bqplot.marks import Lines
 from traitlets import Bool, Unicode, Instance, observe, default
 import ipywidgets as widgets
 
@@ -94,8 +95,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.table.headers_avail = headers
         self.table.headers_visible = headers
         self.table._default_values_by_colname = self._default_table_values
+
         self._distance_marks = {}
         self._distance_first_point = None
+        self._rubber_band_line = None
+        self._viewer_for_drawing = None
+        self._snap_threshold = 10  # Snap distance in screen pixels
 
         # Set the callbacks for each table's clear button
         self.table._clear_callback = self._clear_markers_table_callback
@@ -134,7 +139,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             title='Measurements',
             headers=['Start RA', 'Start Dec', 'End RA', 'End Dec',
                      'Separation (arcsec)', 'Distance (pix)', 'Position Angle (deg)',
-                     'Viewer', 'Data Label'],
+                     'Δx', 'Δy', 'Viewer', 'Data Label'],
         )
         return table
 
@@ -144,6 +149,16 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         while a measurement is in progress.
         """
         if self._distance_first_point is not None:
+            # If we are in the middle of drawing, clean up the temporary line
+            if self._rubber_band_line is not None and self._viewer_for_drawing is not None:
+                self._viewer_for_drawing.remove_event_callback(self._on_mouse_move_while_drawing)
+                self._viewer_for_drawing.figure.marks = [
+                    m for m in self._viewer_for_drawing.figure.marks
+                    if m is not self._rubber_band_line
+                ]
+                self._rubber_band_line = None
+                self._viewer_for_drawing = None
+
             self._distance_first_point = None
             self.distance_display = "N/A"
         self._recompute_mark_positions(msg.viewer)
@@ -253,7 +268,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         viewer_mark.x, viewer_mark.y = new_x, new_y
 
-    def _add_distance_row(self, p1, p2, viewer):
+    def _add_sky_distance_row(self, p1, p2, viewer):
         world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
                        p1.get('world_ra') is not None and p2.get('world_ra') is not None and
                        np.all(np.isfinite([p1['world_ra'], p1['world_dec'],
@@ -281,8 +296,20 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             'Separation (arcsec)': f"{sep_arcsec:.4f}" if not np.isnan(sep_arcsec) else "N/A",
             'Distance (pix)': f"{dist_pix:.2f}",
             'Position Angle (deg)': f"{pos_angle:.2f}" if not np.isnan(pos_angle) else "N/A",
+            'Δx': "N/A", 'Δy': "N/A",
             'Viewer': viewer_id,
             'Data Label': data_label
+        })
+
+    def _add_profile_distance_row(self, dx, dy, x_unit, y_unit):
+        """Adds a single row to the measurements table for a profile-based distance."""
+        self.measurements_table.add_item({
+            'Start RA': "N/A", 'Start Dec': "N/A",
+            'End RA': "N/A", 'End Dec': "N/A",
+            'Separation (arcsec)': "N/A", 'Distance (pix)': "N/A",
+            'Position Angle (deg)': "N/A", 'Viewer': "N/A", 'Data Label': "N/A",
+            'Δx': f"{dx:.4g} {x_unit}",
+            'Δy': f"{dy:.4g} {y_unit}"
         })
 
     def _get_snap_coordinates(self, viewer):
@@ -296,7 +323,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         marker_xs, marker_ys = viewer_mark.x, viewer_mark.y
         distances_sq = (marker_xs - cursor_x)**2 + (marker_ys - cursor_y)**2
         closest_marker_index_in_viewer = np.argmin(distances_sq)
-
         viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
         viewer_loaded_data = [lyr.layer.label for lyr in viewer.layers]
         all_items_table = self.table.export_table()
@@ -306,28 +332,17 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         in_viewer_indices = [
             i for i, item in enumerate(all_items_table)
-            if item['viewer'] == viewer_id and item['data_label'] in viewer_loaded_data
+            if item.get('viewer') == viewer_id and item.get('data_label') in viewer_loaded_data
         ]
 
         if not in_viewer_indices:
             return cursor_coords
-
         snapped_table_index = in_viewer_indices[closest_marker_index_in_viewer]
         snapped_row = all_items_table[snapped_table_index]
-        snapped_axes_x = viewer_mark.x[closest_marker_index_in_viewer]
-        snapped_axes_y = viewer_mark.y[closest_marker_index_in_viewer]
 
-        snapped_coords = {
-            'pixel_x': snapped_row['pixel_x'],
-            'pixel_y': snapped_row['pixel_y'],
-            'world_ra': snapped_row['world_ra'],
-            'world_dec': snapped_row['world_dec'],
-            'value': snapped_row['value'],
-            'axes_x': snapped_axes_x,
-            'axes_y': snapped_axes_y,
-            'world:unreliable': snapped_row.get('world:unreliable'),
-            'pixel:unreliable': snapped_row.get('pixel:unreliable')
-        }
+        snapped_coords = {k: snapped_row.get(k) for k in self.table.headers_avail}
+        snapped_coords['axes_x'] = viewer_mark.x[closest_marker_index_in_viewer]
+        snapped_coords['axes_y'] = viewer_mark.y[closest_marker_index_in_viewer]
         return snapped_coords
 
     def _get_mark(self, viewer):
@@ -358,6 +373,10 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             mark.visible = self.is_active
 
         # subscribe/unsubscribe to keypress events across all viewers
+        for viewer_marks in self._distance_marks.values():
+            for mark in viewer_marks:
+                mark.visible = self.is_active
+
         for viewer in self.app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
                 # table viewer, etc
@@ -368,6 +387,26 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 viewer.add_event_callback(callback, events=['keydown'])
             else:
                 viewer.remove_event_callback(callback)
+
+    def _on_mouse_move_while_drawing(self, event):
+        """
+        Callback for 'mousemove' event to update the rubber band line.
+        """
+        if self._rubber_band_line is None or self._distance_first_point is None:
+            return
+        cursor_x, cursor_y = event['domain']['x'], event['domain']['y']
+        m_marks = self._get_mark(self._viewer_for_drawing)
+        end_x, end_y = cursor_x, cursor_y
+        if len(m_marks.x) > 0:
+            distances_sq = (m_marks.x - cursor_x)**2 + (m_marks.y - cursor_y)**2
+            closest_index = np.argmin(distances_sq)
+            if distances_sq[closest_index] < self._snap_threshold**2:
+                end_x, end_y = m_marks.x[closest_index], m_marks.y[closest_index]
+
+        start_x = self._distance_first_point.get('axes_x')
+        start_y = self._distance_first_point.get('axes_y')
+        self._rubber_band_line.x = [start_x, end_x]
+        self._rubber_band_line.y = [start_y, end_y]
 
     # this is where items are being added to the table
     def _on_viewer_key_event(self, viewer, data):
@@ -400,42 +439,71 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             else:
                 coords = self.coords_info.as_dict()
             viewer_id = viewer.reference or viewer.reference_id
+
             if self._distance_first_point is None:
                 self._distance_first_point = coords
                 self.distance_display = "..."
+                self._viewer_for_drawing = viewer
+                start_x, start_y = coords.get('axes_x'), coords.get('axes_y')
+                self._rubber_band_line = Lines(x=[start_x, start_x], y=[start_y, start_y],
+                                               scales=viewer.scales, colors=['#c75d2c'],
+                                               line_style='solid', opacities=[0.5])
+                viewer.figure.marks = viewer.figure.marks + [self._rubber_band_line]
+                viewer.add_event_callback(self._on_mouse_move_while_drawing,
+                                          events=['mousemove'])
             else:
+                viewer.remove_event_callback(self._on_mouse_move_while_drawing)
+                viewer.figure.marks = [m for m in viewer.figure.marks
+                                       if m is not self._rubber_band_line]
+                self._rubber_band_line = None
+                self._viewer_for_drawing = None
+
                 p1 = self._distance_first_point
                 p2 = coords
                 self._distance_first_point = None
-                world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
-                               p1.get('world_ra') is not None and p2.get('world_ra') is not None and
-                               np.all(np.isfinite([p1['world_ra'], p1['world_dec'],
-                                                   p2['world_ra'], p2['world_dec']])))
-                # Special case for Imviz in pixel-alignment mode: prioritize pixels for the label.
-                if self.config == 'imviz' and self.app._align_by.lower() == 'pixels':
-                    dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
-                                       (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
-                    display_str = f"{dist_pix:.2f} pix"
-                # For all other cases (like Cubeviz), prioritize WCS if available.
-                elif world_avail:
-                    c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
-                    c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
-                    display_str = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
-                # Fallback for all cases where WCS is not available.
-                else:
-                    dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
-                                       (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
-                    display_str = f"{dist_pix:.2f} pix"
-                self.distance_display = display_str
-                self._add_distance_row(p1, p2, viewer)
+
+                is_profile = 'spectrum' in viewer.__class__.__name__.lower() or \
+                             'profile' in viewer.__class__.__name__.lower()
+
+                if is_profile:
+                    dx_val = p2.get('axes_x', 0) - p1.get('axes_x', 0)
+                    dy_val = p2.get('axes_y', 0) - p1.get('axes_y', 0)
+                    x_unit = p1.get('axes_x:unit', '')
+                    y_unit = p1.get('axes_y:unit', '')
+                    text_ui = f"Δx: {dx_val:.4g} {x_unit}, Δy: {dy_val:.4g} {y_unit}"
+                    text_plot = ""
+                    self._add_profile_distance_row(dx_val, dy_val, x_unit, y_unit)
+                else:  # Assume image viewer
+                    world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
+                                   p1.get('world_ra') is not None and p2.get('world_ra') is not
+                                   None and np.all(np.isfinite([p1['world_ra'], p1['world_dec'],
+                                                                p2['world_ra'], p2['world_dec']])))
+                    if self.config == 'imviz' and self.app._align_by.lower() == 'pixels':
+                        dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
+                                           (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
+                        text_plot = f"{dist_pix:.2f} pix"
+                    elif world_avail:
+                        c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
+                        c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
+                        text_plot = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
+                    else:
+                        dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
+                                           (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
+                        text_plot = f"{dist_pix:.2f} pix"
+                    text_ui = text_plot
+                    self._add_sky_distance_row(p1, p2, viewer)
+
+                self.distance_display = text_ui
                 plot_x0, plot_y0 = p1.get('axes_x'), p1.get('axes_y')
                 plot_x1, plot_y1 = p2.get('axes_x'), p2.get('axes_y')
+
                 if None in (plot_x0, plot_y0, plot_x1, plot_y1):
                     self.distance_display = "N/A"
                     return
+
                 dist_measure = DistanceMeasurement(viewer, plot_x0, plot_y0,
                                                    plot_x1, plot_y1,
-                                                   text=display_str)
+                                                   text=text_plot)
                 dist_measure.endpoints = {'p1': p1, 'p2': p2}
                 self._distance_marks.setdefault(viewer_id, []).append(dist_measure)
                 viewer.figure.marks = viewer.figure.marks + dist_measure.marks
