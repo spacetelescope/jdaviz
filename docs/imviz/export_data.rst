@@ -1,10 +1,10 @@
-.. _imviz_export:
+.. _imviz-export:
 
 *************************
 Exporting Data from Imviz
 *************************
 
-.. _imviz_export_regions:
+.. _imviz-export-regions:
 
 Spatial Regions
 ===============
@@ -16,7 +16,7 @@ You can extract supported spatial regions as follows:
     regions = imviz.get_interactive_regions()
     regions
 
-.. _imviz_export_photometry:
+.. _imviz-export-photometry:
 
 Aperture Photometry
 ===================

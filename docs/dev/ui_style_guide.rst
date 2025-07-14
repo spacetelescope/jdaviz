@@ -12,13 +12,13 @@ try to adhere to the following principles:
   to all popout instances via ``PopoutStyleWrapper`` (exists on anything that inherits ``TemplateMixin``).
 * Any tray plugin should utilize ``<j-tray-plugin :disabled_msg='disabled_msg' :popout_button="popout_button" :scroll_to.sync="scroll_to">`` as the
   outer-container (which provides consistent styling rules).  If the plugin makes use of active status
-  (live-preview marks or viewer callbacks), then also pass `` :uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)"``.
-  To enable the "Keep active" check, pass `` :uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)" :keep_active.sync="keep_active" ``.
+  (live-preview marks or viewer callbacks), then also pass ``:uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)"``.
+  To enable the "Keep active" check, pass ``:uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)" :keep_active.sync="keep_active"``.
   Any changes to style across all plugins should then take place in the
   ``j-tray-plugin`` stylesheet (``jdaviz/components/tray_plugin.vue``).
 * ``disabled_msg`` should be set to replace the UI with a message explaining why the plugin is disabled.
-  ``irrelevant_msg`` should be set to skip the plugin in the UI entirely where the user would not need an explanation (slice plugin not
-  relevant because cube data is not present, for example).
+  ``irrelevant_msg`` should be set to skip the plugin in the UI entirely where the user would not need an explanation
+  (for example, when cube data is not present, the slice plugin is irrelevant).
 * Each item should be wrapped in a ``v-row``, but avoid any unnecessary additional wrapping-components
   (``v-card-*``, ``v-container``, etc).
 * Only use ``v-col`` components (within a ``<v-row class="row-no-outside-padding">``) if multiple
@@ -46,7 +46,7 @@ try to adhere to the following principles:
   (see below) and/or checks on the python-side to handle the case of an empty string.
 * Use form validation wherever possible, and disable action buttons if the relevant validation
   does not pass.  This is preferred to raising errors through snackbars after pressing an action
-  button.  To do this, wrap the relevant section in a ``<v-form v-model="form_valid_section_name">``,
+  button. To do this, wrap the relevant section in a ``<v-form v-model="form_valid_section_name">``,
   create a ``form_valid_section_name = Bool(False).tag(sync=True)`` in the python class for the
   plugin, add rules to any relevant inputs, and set ``:disabled="!form_valid_section_name"`` to any
   action buttons.
@@ -67,6 +67,8 @@ try to adhere to the following principles:
   calls in ``app.py``.  These components allow the traitlets to live in the plugin-level so they
   can easily be observed, and separating per-component logic from the plugin logic itself.
 
+UI/UX Example Code
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code::
 

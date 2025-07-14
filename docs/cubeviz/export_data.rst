@@ -7,14 +7,14 @@ Exporting Data from Cubeviz
 After data have been manipulated or analyzed, it is possible to export
 those data back into your Jupyter notebook.
 
-.. _cubeviz_export_regions:
+.. _cubeviz-export-regions:
 
 Spatial and Spectral Regions
 ============================
 
 .. seealso::
 
-    :ref:`Export Spatial Regions <imviz_export>`
+    :ref:`Export Spatial Regions <imviz-export>`
         Documentation on how to export spatial regions.
 
 To extract all the subsets created in the viewers, call the Subset Tools plugin:
@@ -101,7 +101,7 @@ All mouseover information in the :ref:`markers plugin <markers-plugin>` can be e
 by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`).
 
 
-.. _cubeviz_export_photometry:
+.. _cubeviz-export-photometry:
 
 Aperture Photometry
 ===================
@@ -114,10 +114,10 @@ Cubeviz can export photometry output table like Imviz through the Aperture Photo
 
 .. seealso::
 
-    :ref:`Imviz Aperture Photometry <imviz_export_photometry>`
+    :ref:`Imviz Aperture Photometry <imviz-export-photometry>`
         Imviz documentation describing exporting of aperture photometry results in Jdaviz.
 
-In addition to the columns that :ref:`Imviz Aperture Photometry <imviz_export_photometry>` provides,
+In addition to the columns that :ref:`Imviz Aperture Photometry <imviz-export-photometry>` provides,
 the table from Cubeviz has an extra column after ``data_label`` entitled ``slice_wave`` that stores
 the wavelength value at the selected slice of the cube used for computation.
 If a 2D data (e.g., collapsed cube) is selected, the value will be NaN.

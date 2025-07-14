@@ -1,4 +1,4 @@
-.. _imviz_plugins:
+.. _imviz-plugins:
 
 *********************
 Data Analysis Plugins
@@ -12,7 +12,7 @@ icon in the upper right corner of the Imviz application.
     :alt: Imviz Plugins
     :width: 200px
 
-.. _imviz_metadata-viewer:
+.. _imviz-metadata-viewer:
 
 Metadata Viewer
 ===============
@@ -345,7 +345,7 @@ and plots a radial profile for one object within
 an interactively selected region. A typical workflow is as follows:
 
 1. Load image(s) in Imviz (see :ref:`imviz-import-data`).
-2. Draw a region over the object of interest (see :ref:`imviz_defining_spatial_regions`).
+2. Draw a region over the object of interest (see :ref:`imviz-defining-spatial-regions`).
 3. Select the desired image using the :guilabel:`Data` dropdown menu.
 4. Select the desired region using the :guilabel:`Subset` dropdown menu.
    You can use the :ref:`imviz-subset-plugin` plugin to center it first on the
@@ -366,7 +366,7 @@ an interactively selected region. A typical workflow is as follows:
   * Subset: Define a region for background calculation (median) using Subset draw tool
     and select that region using the :guilabel:`Background` dropdown menu. Only regions
     created with the :guilabel:`replace` option are acceptable as background regions
-    (see :ref:`imviz_defining_spatial_regions`).
+    (see :ref:`imviz-defining-spatial-regions`).
 
    If your image is already background subtracted, choose "Manual" and set the
    :guilabel:`Background value` to 0.
@@ -420,7 +420,7 @@ an interactively selected region. A typical workflow is as follows:
 
 .. note::
 
-    The shape you see drawn from :ref:`imviz_defining_spatial_regions` is not
+    The shape you see drawn from :ref:`imviz-defining-spatial-regions` is not
     exactly the aperture mask being used by ``photutils``. This is because
     ``photutils`` uses fractional pixels and this is not reflected in the display.
 
@@ -443,7 +443,7 @@ results are displayed under the :guilabel:`CALCULATE` button.
 
 .. seealso::
 
-    :ref:`Export Photometry <imviz_export_photometry>`
+    :ref:`Export Photometry <imviz-export-photometry>`
         Documentation on exporting photometry results.
 
 .. _imviz-catalogs:

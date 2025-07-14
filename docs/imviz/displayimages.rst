@@ -38,7 +38,7 @@ details, or remove layers from either the viewer or the entire application insta
     Deleting the first image that was loaded into Imviz may be slow, as deleting this image
     requires Imviz to re-link any remaining data together and redefine any existing subsets.
 
-.. _imviz_cursor_info:
+.. _imviz-cursor-info:
 
 Cursor Information
 ==================
@@ -93,20 +93,20 @@ Previous zoom is also available by right-clicking on the home icon and selecting
 the previous zoom icon.  This will revert to the last saved zoom state.  Zoom states
 are saved when beginning a zoom selection or when activating a pan/zoom tool.
 
-.. _imviz_box_zoom:
+.. _imviz-box-zoom:
 
 Box Zoom and Linked Box Zoom
 ============================
 
 Linked Box Zoom is an Imviz-specific feature enabled only when there are multiple viewers that
 allows the user to zoom images in multiple different viewers simultaneously, not unlike
-:ref:`imviz_pan_zoom`.
+:ref:`imviz-pan-zoom`.
 
 Single-viewer Box Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option when there are multiple viewers,
 right-click on the Linked Box Zoom button and left-click on the second option down to select it.
 
-.. _imviz_pan_zoom:
+.. _imviz-pan-zoom:
 
 Pan/Zoom and Linked Pan/Zoom
 ============================
@@ -142,7 +142,7 @@ For example:
     viewer.zoom_level = 1  # Set the zoom level directly.
     viewer.zoom(2)  # Set the relative zoom based on current zoom level.
 
-.. _imviz_defining_spatial_regions:
+.. _imviz-defining-spatial-regions:
 
 Defining Spatial Regions
 ========================
@@ -183,7 +183,7 @@ You can use these options to further adjust the region of interest and adapt it 
 
 .. seealso::
 
-    :ref:`Exporting Spatial Regions <imviz_export_regions>`
+    :ref:`Exporting Spatial Regions <imviz-export-regions>`
         Exporting regions from within the Jupyter notebook.
 
 .. seealso::
@@ -194,7 +194,7 @@ You can use these options to further adjust the region of interest and adapt it 
 There are options available in the :guilabel:`Layer` tab under the |icon-settings-sliders| icon
 to make subsets visible or invisible, to change their color, and to change their opacity.
 
-.. _imviz_defining_spatial_regions_single_pixel:
+.. _imviz-defining-spatial-regions-single-pixel:
 
 Single-Pixel Selection
 ----------------------
@@ -205,7 +205,7 @@ Blinking
 ========
 
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
-between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
+between viewing two or more images, as long as they are linked (see :ref:`imviz-pan-zoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon (only available if
 there are more than one image loaded in the viewer) and then left-clicking on the image to blink
 forward; right-clicking to blink backwards.
@@ -311,7 +311,7 @@ being set for all the images at once):
     plot_options.select_all()
     plot_options.image_colormap = 'Viridis'
 
-.. _imviz_custom_colormap:
+.. _imviz-custom-colormap:
 
 Adding Custom Colormap
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -448,7 +448,7 @@ Adding New Viewers
 In the toolbar towards the top of the UI, there is a |icon-plus| icon
 that when clicked will add new viewers to the application. You can then select from the data
 that has been loaded into the application to be visualized in these additional viewers.
-You can then utilize some of the Imviz-specific features, like :ref:`imviz_pan_zoom`.
+You can then utilize some of the Imviz-specific features, like :ref:`imviz-pan-zoom`.
 
 From the API
 ------------

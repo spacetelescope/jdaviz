@@ -51,13 +51,13 @@ procedure.
 You can do a release from your fork directly without a clean code check-out.
 
 1. Ensure `CI on Actions for main <https://github.com/spacetelescope/jdaviz/actions/workflows/ci_workflows.yml?query=branch%3Amain>`_
-   and `RTD build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
+   and `readthedocs (RTD) build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
    are passing.
 
 2. Lock down the ``main`` branch of the repository by setting the
    `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
-   rule for ``main`` to some high number required to merge, so that more PRs don't
-   get merged while you're releasing.
+   rule for ``main`` (note: only available to Jdaviz admins) to some high number
+   required to merge, so that more PRs don't get merged while you're releasing.
 
 3. Create a new local branch and make sure you have updated tags too. Note
    that the "x" here should actually be the letter "x", whereas the upper case "X"
@@ -93,8 +93,9 @@ You can do a release from your fork directly without a clean code check-out.
 
 7. Push the ``vX.Y.x`` branch to upstream.
    Make sure the CI passes. If any of the CI fails,
-   abandon this way. Stop here; do not continue! Otherwise,
-   go to the next step.
+   stop here; do not continue! Contact the maintainers
+   for information on how to proceed.
+   Otherwise, go to the next step.
 
 8. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
    and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
@@ -244,7 +245,7 @@ You can do a release from your fork directly without a clean code check-out.
 
 17. Follow procedures for :ref:`release-milestones` and :ref:`release-labels`.
 
-18. For your own sanity unrelated to the release, grab the new tag for your fork:
+18. For your own sanity (unrelated to the release), grab the new tag for your fork:
 
 .. code-block:: bash
 
@@ -267,12 +268,12 @@ The procedure for a bugfix release is a little different from a feature release 
 be releasing from an existing release branch, and will also need to do some
 cleanup on the ``main`` branch. In the following, X and Y refer to the minor release for
 which you're doing a bugfix release. For example, if you are releasing v3.5.2, replace all
-instances of ``vX.Y.x`` with ``v3.5.x``. 
+instances of ``vX.Y.x`` with ``v3.5.x``.
 
 1. Lock down the ``vX.Y.x`` branch of the repository by setting the
    `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
-   rule for ``v*.x`` to some high number required to merge, so that more PRs don't
-   get merged while you're releasing.
+   rule for ``v*.x`` (note: only available to Jdaviz admins) to some high number required to merge,
+   so that more PRs don't get merged while you're releasing.
 
 2. Review the appropriate `Milestone <https://github.com/spacetelescope/jdaviz/milestones>`_
    to see which PRs should be released in this version, and double check that any open
@@ -299,7 +300,8 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
 
 7. Push the ``vX.Y.x`` branch to upstream.
    Make sure the CI passes. If any of the CI fails,
-   abandon this way. Stop here; do not continue! Otherwise,
+   stop here; do not continue! Contact the maintainers for
+   information on how to proceed. Otherwise,
    go to the next step.
 
 8. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
@@ -368,7 +370,7 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
 
 16. Follow procedures for :ref:`release-milestones`.
 
-17. For your own sanity unrelated to the release, grab the new tag for your fork::
+17. For your own sanity (unrelated to the release), grab the new tag for your fork::
 
      git fetch upstream --tags
 
@@ -381,13 +383,13 @@ Milestones bookkeeping
 
 1. Go to `Milestones <https://github.com/spacetelescope/jdaviz/milestones>`_.
 
-2. Create a new milestone for the next release and the next bugfix release, if
-   doing a feature release, or for just the next bugfix release if you just did
-   one. You do not need to fill in the description and due date fields.
+2. If you are doing a bugfix release, create a new milestone for the next bugfix release.
+   If you are doing a feature release, create a new milestone for **both**
+   feature and bugfix releases.
+   You do not need to fill in the description and due date fields.
 
-3. For the milestone of this release, if there are any open issues or pull requests
-   still milestoned to it, move their milestones to the next feature or bugfix
-   milestone as appropriate.
+3. If there are any open issues or pull requests still attached to the current release,
+   move their milestones to the next feature or bugfix milestone as appropriate.
 
 4. Make sure the milestone of this release ends up with "0 open" and then close it.
 

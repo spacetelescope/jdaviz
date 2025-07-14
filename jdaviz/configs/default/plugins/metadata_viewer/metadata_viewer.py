@@ -12,7 +12,7 @@ __all__ = ['MetadataViewer']
                category='core', sidebar='info', subtab=0)
 class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
     """
-    See the :ref:`Metadata Viewer Plugin Documentation <imviz_metadata-viewer>` for more details.
+    See the :ref:`Metadata Viewer Plugin Documentation <imviz-metadata-viewer>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:

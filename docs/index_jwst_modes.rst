@@ -4,9 +4,9 @@
 JWST Modes
 **********
 
-This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but
-the tool should be flexible enough to read in data from many astronomical telescopes.  The table below
-summarizes Jdaviz file support specific to JWST instrument modes.
+Jdaviz is designed primarily to work with instrument modes from the
+James Webb Space Telescope (JWST). The table below summarizes Jdaviz
+file support specific to JWST instrument modes.
 
 NIRSpec
 =======
