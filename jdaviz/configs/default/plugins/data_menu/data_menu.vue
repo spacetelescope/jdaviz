@@ -62,7 +62,7 @@
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px">
               <v-list-item-content>
                 <span class="api-hint">
-                  <b>dm = {{ api_hints_obj }}.viewers['{{viewer_id}}'].data_menu</b>
+                  <b>dm = {{ api_hints_obj }}.viewers['{{viewer_reference}}'].data_menu</b>
                 </span>
               </v-list-item-content>
             </v-list-item>
@@ -189,9 +189,9 @@
                   </span>
                 </v-list-item-content>
                 <v-list-item-action>
-                  <j-tooltip 
+                  <j-tooltip
                     :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                  > 
+                  >
                     <plugin-switch
                       :value="item.visible"
                       @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
