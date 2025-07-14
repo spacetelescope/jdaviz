@@ -19,7 +19,7 @@
       api_hint="ldr.importer.parent ="
       :api_hints_enabled="api_hints_enabled"
       hint="Select a parent dataset to associate the new data with."
-    ></dataset-select>
+    ></plugin-dataset-select>
     <v-row>
       <plugin-auto-label
         :value.sync="data_label_value"
