@@ -65,13 +65,17 @@ class ImageImporter(BaseImporterToDataCollection):
         self.parent.add_filter('is_image', 'not_from_plugin')
         self.parent.selected = 'Auto'
 
-        self.input_hdulist = isinstance(self.input, fits.HDUList)
+        input = self.input
+        if isinstance(input, fits.hdu.image.ImageHDU):
+            input = fits.HDUList([input])
+
+        self.input_hdulist = isinstance(input, fits.HDUList)
         if self.input_hdulist:
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
                                                           multiselect='extension_multiselect',
-                                                          manual_options=self.input,
+                                                          manual_options=input,
                                                           filters=[_validate_fits_image2d])
             self.extension.selected = [self.extension.choices[0]]
         else:
@@ -137,20 +141,21 @@ class ImageImporter(BaseImporterToDataCollection):
     def output(self):
         # NOTE: this should ALWAYS return a list of objects able to be imported into DataCollection
         # NDData or ndarray
-        if isinstance(self.input, NDData):
-            return _nddata_to_glue_data(self.input)  # list of Data
-        elif isinstance(self.input, np.ndarray):
-            return [_ndarray_to_glue_data(self.input)]
-        # asdf
-        elif (isinstance(self.input, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
-            return _roman_asdf_2d_to_glue_data(self.input)  # list of Data
         # ImageHDU
-        elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            return [_hdu2data(self.input, None, True)]
+        input = self.input
+        if isinstance(input, fits.hdu.image.ImageHDU):
+            input = fits.HDUList([self.input])
+
+        if isinstance(input, NDData):
+            return _nddata_to_glue_data(input)  # list of Data
+        elif isinstance(input, np.ndarray):
+            return [_ndarray_to_glue_data(input)]
+        # asdf
+        elif (isinstance(input, asdf.AsdfFile) or
+              (HAS_ROMAN_DATAMODELS and isinstance(input, rdd.DataModel))):
+            return _roman_asdf_2d_to_glue_data(input)  # list of Data
         # fits
-        hdulist = self.input
-        return [_hdu2data(hdu, hdulist) for hdu in self.extension.selected_hdu]
+        return [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
 
     def __call__(self, show_in_viewer=True):
         base_data_label = self.data_label_value
