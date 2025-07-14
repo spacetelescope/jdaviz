@@ -28,14 +28,14 @@ from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
 
-__all__ = ['CubeSpectralExtraction']
+__all__ = ['SpectralExtraction3D']
 
 
 @tray_registry(
     'spectral-extraction-3d', label="3D Spectral Extraction"
 )
-class CubeSpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
-                             DatasetSelectMixin, AddResultsMixin):
+class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
+                           DatasetSelectMixin, AddResultsMixin):
     """
     See the :ref:`3D Spectral Extraction Plugin Documentation <spectral-extraction>`
     for more details.

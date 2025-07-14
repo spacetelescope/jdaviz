@@ -288,7 +288,7 @@ spectral region of interest.
 .. _spectral-extraction:
 
 3D Spectral Extraction
-========================
+======================
 
 .. image:: ../img/cubeviz_spectral_extraction.png
 
