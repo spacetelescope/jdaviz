@@ -150,9 +150,6 @@ class Imviz(ImageConfigHelper):
         # to pass to parser
         kwargs['gwcs_to_fits_sip'] = gwcs_to_fits_sip
 
-        if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
-            kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
-
         if isinstance(data, str):
             filelist = data.split(',')
 
