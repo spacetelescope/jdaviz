@@ -178,6 +178,7 @@ class ImageImporter(BaseImporterToDataCollection):
                     break
             else:
                 parent_ext = None
+                parent = None
             if parent_ext is not None:
                 parent_index = exts.index(parent_ext)
                 sort_inds = [parent_index] + [i for i in range(len(exts)) if i != parent_index]
