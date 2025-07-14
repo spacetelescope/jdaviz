@@ -780,6 +780,54 @@ class Application(VuetifyTemplate, HubListener):
                 # re-center the viewer on previous location.
                 viewer.center_on(sky_cen)
 
+    def _link_new_data_by_physical_type(self, new_data_label):
+        from glue.core.link_helpers import LinkSameWithUnits
+        import astropy.units as u
+
+        def _get_phys_type(data, comp_label):
+            comp = data.get_component(comp_label)
+            try:
+                comp_units = comp.units
+                if comp_units is None or comp_units == '':
+                    return None
+                return u.Unit(comp_units).physical_type
+            except (ValueError, TypeError, AttributeError):
+                return None
+
+        new_data = self.data_collection[new_data_label]
+
+        if (new_data._importer == 'ImageImporter' and
+                'Orientation' in self._jdaviz_helper.plugins):
+            # Orientation plugin alreadly listens for messages for added Data and handles linking
+            # orientation_plugin._link_image_data()
+            return
+
+        new_links = []
+        for existing_data in self.data_collection:
+            if existing_data.label == new_data_label:
+                continue
+
+            for new_comp in new_data.components:
+                new_phys_type = _get_phys_type(new_data, new_comp)
+                if new_phys_type is None:
+                    continue
+
+                for existing_comp in existing_data.components:
+                    existing_phys_type = _get_phys_type(existing_data, existing_comp)
+                    if existing_phys_type is None:
+                        continue
+
+                    # Create link if physical types match
+                    if new_phys_type == existing_phys_type:
+                        link = LinkSameWithUnits(new_comp, existing_comp)
+                        new_links.append(link)
+                        # only need one link for the new component, reparenting will handle if that data entry is deleted
+                        break
+
+        # Add all new links to the data collection
+        if new_links:
+            self.data_collection.add_link(new_links)
+
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
         When additional data is loaded, check to see if the spectral axis of
@@ -787,6 +835,9 @@ class Application(VuetifyTemplate, HubListener):
         them so that they can be displayed on the same profile1D plot.
         """
         if self.config == 'imviz':  # Imviz does its own thing
+            return
+        elif self.config == 'deconfigged':
+            # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
             return
