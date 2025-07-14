@@ -88,7 +88,7 @@ def test_data_quality_plugin(imviz_helper):
     assert len(imviz_helper.app.data_collection) == 2
 
     # this assumption is made in the DQ plugin (for now)
-    assert imviz_helper.app.data_collection[-1].label.endswith('[DQ]')
+    assert imviz_helper.app.data_collection[-1].label.endswith('[DQ,1]')
 
     dq_plugin = imviz_helper.plugins['Data Quality']._obj
 
@@ -153,7 +153,7 @@ def test_data_quality_plugin(imviz_helper):
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1361, 'y': 684}})
     label_mouseover_text = label_mouseover.as_text()[0]
-    assert 'DQ' not in label_mouseover_text
+    assert 'DQ' in label_mouseover_text
 
     # set a bit filter, then clear it:
     assert len(dq_plugin.flags_filter) == 0

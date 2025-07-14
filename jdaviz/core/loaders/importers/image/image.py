@@ -210,7 +210,6 @@ class ImageImporter(BaseImporterToDataCollection):
             else:
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
-            print("***", data_label, parent)
             self.add_to_data_collection(output, data_label,
                                         parent=parent if parent != data_label else None,
                                         show_in_viewer=show_in_viewer,
