@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     :config="config"
-    :plugin_key="plugin_key || 'Spectral Extraction'"
+    :plugin_key="plugin_key || '3D Spectral Extraction'"
     :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
