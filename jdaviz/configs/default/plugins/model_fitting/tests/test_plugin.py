@@ -150,9 +150,11 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     modelfit_plugin.reestimate_model_parameters()
     assert modelfit_plugin._obj.results_label_default == 'model'
     assert modelfit_plugin._obj.results_label == test_label
+
+    n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='.*Model is linear in parameters.*')
-        modelfit_plugin.calculate_fit()
+        modelfit_plugin.calculate_fit(n_cpu=n_cpu)
     assert test_label in cubeviz_helper.app.data_collection
 
 
