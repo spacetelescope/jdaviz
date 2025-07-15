@@ -363,7 +363,7 @@ class BaseResolver(PluginTemplateMixin):
 
 
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
-    formats = format if isinstance(format, list) else [format]
+    formats = format if isinstance(format, (list, tuple)) else [format]
     invalid_resolvers = {}
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():

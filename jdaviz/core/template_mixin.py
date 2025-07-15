@@ -4485,7 +4485,7 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item, replace=None, label=None):
+    def add_results_from_plugin(self, data_item, replace=None, label=None, format=None):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
@@ -4550,7 +4550,14 @@ class AddResults(BasePluginComponent):
             subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
             data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
-        self.app.add_data(data_item, label)
+        if format is not None:
+            self.app._jdaviz_helper.load(data_item,
+                                         loader='object', format=format,
+                                         data_label=label, show_in_viewer=False)
+        else:
+            # NOTE: eventually remove this entirely once all plugins are set to go through
+            # the new loaders infrastructure above
+            self.app.add_data(data_item, label)
 
         for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
                                                   preserved_attributes):
