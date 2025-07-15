@@ -621,7 +621,6 @@ def cached_uri(uri):
     fname = uri.split(':')[-1].split('/')[-1]
     if os.path.isfile(fname):
         return fname
-    raise ValueError(f"*** cached_uri not finding cached file: uri={uri}, fname={fname}, cwd={os.getcwd()}")  # noqa
     return uri
 
 
@@ -719,7 +718,6 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             local_path = os.path.join(local_path, parsed_uri.path.split('/')[-1])
 
         if not dryrun:
-            raise ValueError(f"*** attempting download from MAST: {possible_uri}, cwd={os.getcwd()}")  # noqa
             with conf.set_temp('timeout', timeout):
                 (status, msg, url) = Observations.download_file(
                     possible_uri, cache=cache, local_path=local_path
