@@ -69,7 +69,9 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([input])
 
-        self.input_hdulist = isinstance(input, (fits.HDUList, rdd.ImageModel, rdd.DataModel))
+        self.input_hdulist = (isinstance(input, fits.HDUList) or
+                              (HAS_ROMAN_DATAMODELS and
+                               isinstance(input, (rdd.ImageModel, rdd.DataModel))))
         if self.input_hdulist:
             filters = ([_validate_fits_image2d] if isinstance(input, fits.HDUList)
                        else [_validate_roman_ext])
