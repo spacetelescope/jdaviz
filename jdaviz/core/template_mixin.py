@@ -1240,7 +1240,8 @@ class SelectFileExtensionComponent(SelectPluginComponent):
             # in this case, self.manual_options is the model composed of many ndarrays,
             # with each ndarray corresponding to an hdu in FITS terms
             if self.is_multiselect:
-                return [self.manual_options[name] for name in self.manual_options if name in self.selected_name]
+                return [self.manual_options[name] for name in self.manual_options
+                        if name in self.selected_name]
             return self.manual_options[self.selected_name]
 
         if self.is_multiselect:

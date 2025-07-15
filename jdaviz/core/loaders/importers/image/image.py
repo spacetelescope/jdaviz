@@ -71,7 +71,8 @@ class ImageImporter(BaseImporterToDataCollection):
 
         self.input_hdulist = isinstance(input, (fits.HDUList, rdd.ImageModel, rdd.DataModel))
         if self.input_hdulist:
-            filters = [_validate_fits_image2d] if isinstance(input, fits.HDUList) else [_validate_roman_ext]
+            filters = ([_validate_fits_image2d] if isinstance(input, fits.HDUList)
+                       else [_validate_roman_ext])
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
@@ -119,7 +120,7 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.input_hdulist:
             if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
                 # selected_hdu may be an ndarray object if input is a roman data model
-                ver = getattr(self.extension.selected_hdu, 'ver', None)
+                ver = getattr(self.extension.selected_hdu[0], 'ver', None)
                 # only a single extension selected
                 self.data_label_default = self._get_label_with_extension(prefix,
                                                                          ext=self.extension.selected_name[0],  # noqa
@@ -157,7 +158,8 @@ class ImageImporter(BaseImporterToDataCollection):
         # asdf
         elif (isinstance(input, asdf.AsdfFile) or
               (HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)))):
-            return [_roman_asdf_2d_to_glue_data(input, ext=ext) for ext in self.extension.selected_name]  # list of Data
+            return [_roman_asdf_2d_to_glue_data(input, ext=ext)
+                    for ext in self.extension.selected_name]  # list of Data
         # fits
         return [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
 
@@ -201,8 +203,8 @@ class ImageImporter(BaseImporterToDataCollection):
 
                 parent_hdu = hdus[parent_index]
                 # Handle case for rdd.ImageModel where hdu is an ndarray
-                ver = (None if isinstance(parent_hdu, np.ndarray) or not parent_hdu
-                       else parent_hdu.ver)
+                ver = getattr(parent_hdu, 'ver', None)
+
                 # assume self.data_label_is_prefix is True
                 parent = self._get_label_with_extension(base_data_label,
                                                         parent_ext,
@@ -220,7 +222,7 @@ class ImageImporter(BaseImporterToDataCollection):
                 continue
             if self.data_label_is_prefix:
                 # Handle case where hdu is an ndarray
-                ver = None if not hasattr(hdu, 'ver') else hdu.ver
+                ver = getattr(hdu, 'ver', None)
                 # If data_label is a prefix, we need to append the extension
                 # to the data label.
                 data_label = self._get_label_with_extension(base_data_label,
