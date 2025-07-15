@@ -69,14 +69,15 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([input])
 
-        self.input_hdulist = isinstance(input, fits.HDUList)
+        self.input_hdulist = isinstance(input, (fits.HDUList, rdd.ImageModel, rdd.DataModel))
         if self.input_hdulist:
+            filters = [_validate_fits_image2d] if isinstance(input, fits.HDUList) else [_validate_roman_ext]
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
                                                           multiselect='extension_multiselect',
                                                           manual_options=input,
-                                                          filters=[_validate_fits_image2d])
+                                                          filters=filters)
             self.extension.selected = [self.extension.choices[0]]
         else:
             self._set_default_data_label()
@@ -96,7 +97,8 @@ class ImageImporter(BaseImporterToDataCollection):
         # flat image, not a cube
         # isinstance NDData
         return isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                       NDData, np.ndarray, asdf.AsdfFile))
+                                       NDData, np.ndarray, asdf.AsdfFile, rdd.DataModel,
+                                       rdd.ImageModel))
 
     @property
     def default_viewer_reference(self):
@@ -116,10 +118,12 @@ class ImageImporter(BaseImporterToDataCollection):
             prefix = "Image"
         if self.input_hdulist:
             if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
+                # selected_hdu may be an ndarray object if input is a roman data model
+                ver = getattr(self.extension.selected_hdu, 'ver', None)
                 # only a single extension selected
                 self.data_label_default = self._get_label_with_extension(prefix,
                                                                          ext=self.extension.selected_name[0],  # noqa
-                                                                         ver=self.extension.selected_hdu[0].ver)  # noqa
+                                                                         ver=ver)  # noqa
                 self.data_label_is_prefix = False
             else:
                 # multiple extensions selected,
@@ -152,8 +156,8 @@ class ImageImporter(BaseImporterToDataCollection):
             return [_ndarray_to_glue_data(input)]
         # asdf
         elif (isinstance(input, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(input, rdd.DataModel))):
-            return _roman_asdf_2d_to_glue_data(input)  # list of Data
+              (HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)))):
+            return [_roman_asdf_2d_to_glue_data(input, ext=ext) for ext in self.extension.selected_name]  # list of Data
         # fits
         return [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
 
@@ -181,6 +185,10 @@ class ImageImporter(BaseImporterToDataCollection):
                 if ext in exts:
                     parent_ext = ext
                     break
+                # Roman data model extensions are lower case
+                elif ext.lower() in exts:
+                    parent_ext = ext.lower()
+                    break
             else:
                 parent_ext = None
                 parent = None
@@ -192,10 +200,13 @@ class ImageImporter(BaseImporterToDataCollection):
                 hdus = [hdus[i] for i in sort_inds]
 
                 parent_hdu = hdus[parent_index]
+                # Handle case for rdd.ImageModel where hdu is an ndarray
+                ver = (None if isinstance(parent_hdu, np.ndarray) or not parent_hdu
+                       else parent_hdu.ver)
                 # assume self.data_label_is_prefix is True
                 parent = self._get_label_with_extension(base_data_label,
                                                         parent_ext,
-                                                        ver=parent_hdu.ver if parent_hdu else None)
+                                                        ver=ver)
         elif self.parent.selected == 'Auto':
             parent = None
         else:
@@ -208,11 +219,13 @@ class ImageImporter(BaseImporterToDataCollection):
                 # which to import.
                 continue
             if self.data_label_is_prefix:
+                # Handle case where hdu is an ndarray
+                ver = None if not hasattr(hdu, 'ver') else hdu.ver
                 # If data_label is a prefix, we need to append the extension
                 # to the data label.
                 data_label = self._get_label_with_extension(base_data_label,
                                                             ext,
-                                                            ver=hdu.ver if hdu else None)
+                                                            ver=ver)
             else:
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
@@ -233,6 +246,11 @@ def _validate_fits_image2d(hdu, raise_error=False):
             f'Imviz cannot load this HDU ({hdu}): '
             f'has_data={hdu.data is not None}, is_image={hdu.is_image}, '
             f'name={hdu.name}, ver={hdu.ver}, ndim={ndim}')
+    return valid
+
+
+def _validate_roman_ext(ext):
+    valid = ext in ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
     return valid
 
 
@@ -349,16 +367,6 @@ def prep_data_layer_as_dq(data):
 
 
 def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
-    if ext == '*':
-        # NOTE: Update as needed. Should cover all the image extensions available.
-        ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
-    elif ext is None:
-        ext_list = ('data', )
-    elif isinstance(ext, (list, tuple)):
-        ext_list = ext
-    else:
-        ext_list = (ext, )
-
     meta = standardize_roman_metadata(file_obj)
     gwcs = meta.get('wcs', None)
 
@@ -366,23 +374,20 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
         coords = _try_gwcs_to_fits_sip(gwcs)
     else:
         coords = gwcs
-    returned_data = []
 
-    for cur_ext in ext_list:
-        comp_label = cur_ext.upper()
-        data = Data(coords=coords)
+    comp_label = ext.upper()
+    data = Data(coords=coords)
 
-        # This could be a quantity or a ndarray:
-        if HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
-            ext_values = getattr(file_obj, cur_ext)
-        else:
-            ext_values = file_obj['roman'][cur_ext]
-        bunit = getattr(ext_values, 'unit', '')
-        component = Component(np.array(ext_values), units=bunit)
-        data.add_component(component=component, label=comp_label)
-        data.meta.update(standardize_metadata(dict(meta)))
-        if comp_label == 'DQ':
-            prep_data_layer_as_dq(data)
-        returned_data.append(data)
+    # This could be a quantity or a ndarray:
+    if HAS_ROMAN_DATAMODELS and isinstance(file_obj, (rdd.DataModel, rdd.ImageModel)):
+        ext_values = getattr(file_obj, ext)
+    else:
+        ext_values = file_obj['roman'][ext]
+    bunit = getattr(ext_values, 'unit', '')
+    component = Component(np.array(ext_values), units=bunit)
+    data.add_component(component=component, label=comp_label)
+    data.meta.update(standardize_metadata(dict(meta)))
+    if comp_label == 'DQ':
+        prep_data_layer_as_dq(data)
 
-    return returned_data
+    return data

@@ -13,6 +13,13 @@ from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.utils import (get_wcs_only_layer_labels,
                           get_reference_image_data)
 
+try:
+    from roman_datamodels import datamodels as rdd
+except ImportError:
+    HAS_ROMAN_DATAMODELS = False
+else:
+    HAS_ROMAN_DATAMODELS = True
+
 __all__ = ['Imviz']
 
 # temporary implementation of a "current app" feature for imviz,
@@ -202,6 +209,10 @@ class Imviz(ImageConfigHelper):
             data_label_as_prefix = (data_label is not None
                                     and not data_label.endswith(']')
                                     and getattr(data, 'meta', {}).get('plugin', None) is None)
+
+            # extensions for roman data models cannot be none, so switch default to 'data'
+            if isinstance(data, (rdd.ImageModel, rdd.DataModel)) and extensions is None:
+                extensions = 'data'
 
             self._load(data,
                        format='Image',

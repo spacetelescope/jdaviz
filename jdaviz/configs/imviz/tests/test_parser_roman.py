@@ -24,6 +24,6 @@ def test_roman_wfi_ext_options(imviz_helper, roman_imagemodel, ext_list, n_dc):
         ext_list = ('data', )
 
     for data, ext in zip(dc, ext_list):
-        assert data.label == f'roman_wfi_image_model[{ext.upper()}]'
+        assert data.label == f'roman_wfi_image_model[{ext}]'
         assert data.shape == (20, 10)  # ny, nx
         assert isinstance(data.coords, GWCS)
