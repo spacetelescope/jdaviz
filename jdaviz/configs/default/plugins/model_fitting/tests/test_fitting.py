@@ -497,6 +497,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     mf = cubeviz_helper.plugins['Model Fitting']
     uc.flux_unit = "MJy"
     mf.cube_fit = True
+    n_cpu = 1
 
     mf.create_model_component("Const1D")
     # ensure parameters amplitude unit matches display unit
@@ -506,7 +507,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit()
+        mf.calculate_fit(n_cpu=n_cpu)
 
     # It was easier to transpose this for new data shape than rewrite it
     expected_result_slice = np.array([[9.00e-05, 9.50e-05, 1.00e-04, 1.05e-04],
@@ -524,7 +525,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'MJy / {solid_angle_string}'
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit()
+        mf.calculate_fit(n_cpu=n_cpu)
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'Jy / {solid_angle_string}'
@@ -549,7 +550,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     # for spectral axis conversions and scale factor translations
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit()
+        mf.calculate_fit(n_cpu=n_cpu)
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == expected_unit_string
