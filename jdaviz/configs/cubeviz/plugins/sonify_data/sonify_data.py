@@ -14,7 +14,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         AddResultsMixin)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.events import SnackbarMessage, AddDataMessage, RemoveDataMessage
-from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL, INT_MAX
+from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, INT_MAX
 from jdaviz.core.sonified_layers import SonifiedLayerState
 
 __all__ = ['SonifyData']
@@ -85,6 +85,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         self.add_to_viewer_selected = 'flux-viewer'
         self.sonified_cube = None
+        self.sonified_viewers = []
         self.sonification_wl_ranges = None
         self.sonification_wl_unit = None
         self.stream = None
@@ -115,14 +116,34 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     def _data_added_to_viewer(self, msg):
         # Keep track of the volume attribute for each layer.
+        msg.viewer.sonified_layers_enabled = []
+        for layer in msg.viewer.state.layers:
+            if not isinstance(layer, SonifiedLayerState):
+                continue
+
+            # Add viewer to sonified_viewers if it isn't there already
+            if msg.viewer not in self.sonified_viewers:
+                self.sonified_viewers.append(msg.viewer)
+
+            # Find layer, add volume check to dictionary and add callback to volume changing and
+            # audible changing
+            msg.viewer.layer_volume[layer.layer.label] = layer.volume
+            msg.viewer.sonified_layers_enabled += ([layer.layer.label] if
+                                                   getattr(layer, 'audible', False) else [])  # noqa
+
+            layer.add_callback('volume', msg.viewer.recalculate_combined_sonified_grid)
+            layer.add_callback('audible', msg.viewer.recalculate_combined_sonified_grid)
+
+    def _data_removed_from_viewer(self, msg):
+        # Keep track of the volume attribute for each layer.
         for layer in msg.viewer.state.layers:
             if not isinstance(layer, SonifiedLayerState):
                 continue
 
             # Find layer, add volume check to dictionary and add callback to volume changing and
             # audible changing
-            msg.viewer.layer_volume[layer.layer.label] = layer.volume
-            msg.viewer.sonified_layers_enabled += ([layer.layer.label] if
+            msg.viewer.layer_volume[layer.layer.label] = 0
+            msg.viewer.sonified_layers_enabled = ([layer.layer.label] if
                                                    getattr(layer, 'audible', False) else [])  # noqa
 
             if 'volume' not in layer.callback_properties():
@@ -131,10 +152,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                 layer.add_callback('audible', msg.viewer.recalculate_combined_sonified_grid)
 
     def start_stream(self):
-        print("Starting stream in plugin")
         if self.stream and not self.stream.closed:
             self.stream.start()
-            print("Started the stream")
 
     def stop_stream(self):
         if self.stream and not self.stream.closed:
@@ -173,8 +192,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                                self.audfrqmax, self.eln,
                                                self.use_pccut, self.results_label)
         sonified_cube.meta['Sonified'] = True
-        self.add_results.add_results_from_plugin(sonified_cube, replace=False)
 
+        # For now, this still initially adds the sonified data to flux-viewer
+        self.add_results.add_results_from_plugin(sonified_cube, replace=False)
         self.flux_viewer.recalculate_combined_sonified_grid()
 
         t1 = time.time()
@@ -221,11 +241,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             clipped_arr = np.clip(clipped_arr, 0, np.inf)
 
         self.sonified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
-                                     samplerate=sample_rate, buffsize=buffer_size,
-                                     wl_unit=self.sonification_wl_unit,
-                                     audfrqmin=audfrqmin, audfrqmax=audfrqmax,
-                                     eln=eln, vol=self.volume,
-                                     spectral_axis_index=spectrum.spectral_axis_index)
+                                              samplerate=sample_rate, buffsize=buffer_size,
+                                              wl_unit=self.sonification_wl_unit,
+                                              audfrqmin=audfrqmin, audfrqmax=audfrqmax,
+                                              eln=eln, vol=self.volume,
+                                              spectral_axis_index=spectrum.spectral_axis_index)
 
         self.sonified_cube.sonify_cube()
         self.sonified_cube.sigcube = (
@@ -278,25 +298,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # flux viewer
         sonified_cube = CCDData(a * u.Unit(''), wcs=wcs)
         return sonified_cube
-
-    def recalculate_combined_sonified_grid(self, event=None):
-        self.layer_volume = {}
-        self.sonified_layers_enabled = []
-        # Keep track of the volume attribute for each layer.
-        for layer in self.state.layers:
-            if not isinstance(layer, SonifiedLayerState):
-                continue
-
-            self.sonified_layers_enabled += ([layer.layer.label] if
-                                             getattr(layer, 'audible', False) else [])
-
-        # Need to force an update of the layer icons since
-        # audible is a state attribute, not a layer artist attribute
-        self.jdaviz_app.state.layer_icons.notify_all()
-
-        if 'combined_sonified_grid' in self.__dict__:
-            del self.__dict__['combined_sonified_grid']
-        self.combined_sonified_grid
 
     def update_sonified_cube_with_coord(self, coord, vollim='buff'):
         # Set newsig to the combined sound array at coord
@@ -356,8 +357,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             # This was moved here from viewers.py now that the stream is handled here.
             self.stop_stream()
             self.stream = sd.OutputStream(samplerate=self.sample_rate, blocksize=self.buffer_size,
-                                            device=didx, channels=1, dtype='int16',
-                                            latency='low', callback=self.sonified_cube.player_callback)
+                                          device=didx, channels=1, dtype='int16', latency='low',
+                                          callback=self.sonified_cube.player_callback)
 
     def refresh_device_list(self):
         devices, indexes = self.build_device_lists()
