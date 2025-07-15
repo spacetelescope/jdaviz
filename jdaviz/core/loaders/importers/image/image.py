@@ -156,8 +156,10 @@ class ImageImporter(BaseImporterToDataCollection):
         elif isinstance(input, np.ndarray):
             return [_ndarray_to_glue_data(input)]
         # asdf
-        elif (isinstance(input, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)))):
+        elif (isinstance(input, asdf.AsdfFile)):
+            return [_roman_asdf_2d_to_glue_data(input, ext='data')]
+        # roman data models
+        elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
             return [_roman_asdf_2d_to_glue_data(input, ext=ext)
                     for ext in self.extension.selected_name]  # list of Data
         # fits
