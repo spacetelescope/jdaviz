@@ -211,7 +211,8 @@ class Imviz(ImageConfigHelper):
                                     and getattr(data, 'meta', {}).get('plugin', None) is None)
 
             # extensions for roman data models cannot be none, so switch default to 'data'
-            if isinstance(data, (rdd.ImageModel, rdd.DataModel)) and extensions is None:
+            if (HAS_ROMAN_DATAMODELS and isinstance(data, (rdd.ImageModel, rdd.DataModel))
+                    and extensions is None):
                 extensions = 'data'
 
             self._load(data,

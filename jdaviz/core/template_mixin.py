@@ -1236,7 +1236,8 @@ class SelectFileExtensionComponent(SelectPluginComponent):
 
     @property
     def selected_hdu(self):
-        if isinstance(self.manual_options, (rdd.ImageModel, rdd.DataModel)):
+        if (HAS_ROMAN_DATAMODELS and
+                isinstance(self.manual_options, (rdd.ImageModel, rdd.DataModel))):
             # in this case, self.manual_options is the model composed of many ndarrays,
             # with each ndarray corresponding to an hdu in FITS terms
             if self.is_multiselect:
