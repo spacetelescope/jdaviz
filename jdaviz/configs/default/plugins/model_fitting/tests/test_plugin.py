@@ -179,9 +179,11 @@ def test_fit_cube_no_wcs(cubeviz_helper):
     mf.cube_fit = True
     # Need to manually reestimate the parameters to update the units
     mf.reestimate_model_parameters()
+
+    n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Model is linear in parameters.*")
-        fitted_model, output_cube = mf.calculate_fit(add_data=True)
+        fitted_model, output_cube = mf.calculate_fit(add_data=True, n_cpu=n_cpu)
     assert len(fitted_model) == 56  # ny * nx
     # Make sure shapes are all self-consistent within Cubeviz instance.
     fitted_data = cubeviz_helper.app.data_collection["model"]
