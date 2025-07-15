@@ -32,7 +32,7 @@ from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index',
-           'get_subset_type', 'download_uri_to_path', 'layer_is_2d',
+           'get_subset_type', 'cached_uri', 'download_uri_to_path', 'layer_is_2d',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
@@ -612,6 +612,16 @@ def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, tim
         return file_obj
     # not s3 resource, return string as is
     return possible_uri
+
+
+def cached_uri(uri):
+    # return a filename if it exists in the working directory, otherwise return the URI
+    # this is used in CI tests where the MAST files are downloaded by a separate workflow,
+    # cached, and restored in the tox working directory to avoid downloading them again
+    fname = uri.split(':')[-1].split('/')[-1]
+    if os.path.isfile(fname):
+        return fname
+    return uri
 
 
 def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,

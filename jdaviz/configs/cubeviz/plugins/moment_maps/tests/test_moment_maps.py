@@ -10,6 +10,7 @@ from numpy.testing import assert_allclose
 from specutils import SpectralRegion
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.utils import cached_uri
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
@@ -279,7 +280,7 @@ def test_momentmap_nirspec_prism(cubeviz_helper):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(uri, cache=True)
+        cubeviz_helper.load_data(cached_uri(uri), cache=True)
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True

@@ -2,6 +2,7 @@ import pytest
 from astropy.utils.data import download_file
 
 from jdaviz.core.data_formats import identify_helper
+from jdaviz.utils import cached_uri
 
 
 # URIs to example JWST/HST files on MAST, and their corresponding jdaviz helpers.
@@ -14,8 +15,12 @@ from jdaviz.core.data_formats import identify_helper
     ('mast:JWST/product/jw02727-o002_t062_nircam_clear-f277w_i2d.fits', 'imviz'),
     ('mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_s3d.fits', 'cubeviz')])
 def test_auto_config_detection(uri, expected_helper):
-    url = f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}'
-    fn = download_file(url, timeout=100)
+    uri = cached_uri(uri)
+    if 'mast' in uri:
+        url = f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}'
+        fn = download_file(url, timeout=100)
+    else:
+        fn = uri
     helper_name, hdul = identify_helper(fn)
     hdul.close()
     assert len(helper_name) == 1 and helper_name[0] == expected_helper

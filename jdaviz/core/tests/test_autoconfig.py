@@ -10,6 +10,7 @@ from jdaviz import open as jdaviz_open
 from jdaviz.cli import ALL_JDAVIZ_CONFIGS
 from jdaviz.configs import Specviz2d, Cubeviz, Imviz, Specviz
 from jdaviz.core.launcher import Launcher, STATUS_HINTS
+from jdaviz.utils import cached_uri
 
 
 AUTOCONFIG_EXAMPLES = (
@@ -33,7 +34,7 @@ def test_autoconfig(uris):
 
     kwargs = dict(cache=True, show=False)
 
-    viz_helper = jdaviz_open(uri, **kwargs)
+    viz_helper = jdaviz_open(cached_uri(uri), **kwargs)
     assert isinstance(viz_helper, helper_class)
     assert len(viz_helper.app.data_collection) > 0
 
