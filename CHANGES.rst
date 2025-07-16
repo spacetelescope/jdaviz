@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- The Markers plugin now includes a Distance Tool to interactively measure and log pixel, on-sky, and axis-separated (dx, dy) 
+- The Markers plugin now includes a Distance Tool to interactively measure and log pixel, on-sky, and axis-separated (dx, dy)
   distances between points in any viewer. [#3609]
 
 - The Plot Options plugin now highlights the tab for the active (top-most) data layer
@@ -166,6 +166,8 @@ Bug Fixes
 - Fixed issue in ``compute_scale`` to handle the case when the wcs forward
   transform does not use units, which was previously causing issues when
   aligning by WCS. [#3658]
+
+- Fixed API hints for viewers in the data-menu. [#3695]
 
 Cubeviz
 ^^^^^^^
