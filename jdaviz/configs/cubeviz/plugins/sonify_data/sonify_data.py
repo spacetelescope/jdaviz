@@ -299,13 +299,13 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         sonified_cube = CCDData(a * u.Unit(''), wcs=wcs)
         return sonified_cube
 
-    def update_sonified_cube_with_coord(self, coord, vollim='buff'):
+    def update_sonified_cube_with_coord(self, viewer, coord, vollim='buff'):
         # Set newsig to the combined sound array at coord
-        if (int(coord[0]), int(coord[1])) not in self.flux_viewer.combined_sonified_grid:
+        if (int(coord[0]), int(coord[1])) not in viewer.combined_sonified_grid:
             return
 
         # use cached version of combined sonified grid
-        compsig = self.flux_viewer.combined_sonified_grid[int(coord[0]), int(coord[1])]
+        compsig = viewer.combined_sonified_grid[int(coord[0]), int(coord[1])]
 
         # Adjust volume to remove clipping
         if vollim == 'sig':
