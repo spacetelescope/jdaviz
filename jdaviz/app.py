@@ -780,19 +780,8 @@ class Application(VuetifyTemplate, HubListener):
                 # re-center the viewer on previous location.
                 viewer.center_on(sky_cen)
 
-    def _link_new_data_by_physical_type(self, new_data_label):
+    def _link_new_data_by_component_type(self, new_data_label):
         from glue.core.link_helpers import LinkSameWithUnits
-        import astropy.units as u
-
-        def _get_phys_type(data, comp_label):
-            comp = data.get_component(comp_label)
-            try:
-                comp_units = comp.units
-                if comp_units is None or comp_units == '':
-                    return None
-                return u.Unit(comp_units).physical_type
-            except (ValueError, TypeError, AttributeError):
-                return None
 
         new_data = self.data_collection[new_data_label]
 
@@ -808,17 +797,15 @@ class Application(VuetifyTemplate, HubListener):
                 continue
 
             for new_comp in new_data.components:
-                new_phys_type = _get_phys_type(new_data, new_comp)
-                if new_phys_type is None:
+                if new_comp._component_type is None:
                     continue
 
                 for existing_comp in existing_data.components:
-                    existing_phys_type = _get_phys_type(existing_data, existing_comp)
-                    if existing_phys_type is None:
+                    if existing_comp._component_type is None:
                         continue
 
-                    # Create link if physical types match
-                    if new_phys_type == existing_phys_type:
+                    # Create link if component-types match
+                    if new_comp._component_type == existing_comp._component_type:
                         link = LinkSameWithUnits(new_comp, existing_comp)
                         new_links.append(link)
                         # only need one link for the new component, reparenting will handle

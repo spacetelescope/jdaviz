@@ -978,7 +978,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
         bg_sub_spec = self.export_bg(**kwargs).sub_image()
 
         if add_data:
-            self.bg_sub_add_results.add_results_from_plugin(bg_sub_spec, replace=True)
+            self.bg_sub_add_results.add_results_from_plugin(bg_sub_spec,
+                                                            format='2D Spectrum',
+                                                            replace=True)
 
         return bg_sub_spec
 
@@ -1091,7 +1093,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                         open_data_menu_if_empty=False)
                 self.ext_add_results.viewer = viewer_ref
 
-            self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
+            self.ext_add_results.add_results_from_plugin(spectrum,
+                                                         format='1D Spectrum',
+                                                         replace=False)
 
         return spectrum
 
