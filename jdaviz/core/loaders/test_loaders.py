@@ -121,6 +121,12 @@ def test_resolver_url(deconfigged_helper):
     loader.url = 'not-valid-url'
     assert len(loader.format.choices) == 0
 
+    # s3 input
+    loader.url = "s3://stpubdata/jwst/public/jw02727/L3/t/o002/jw02727-o002_t062_nircam_clear-f277w_i2d.fits"  # noqa: E501
+    assert loader._obj.url_scheme == 's3'
+    assert len(loader.format.choices) > 0
+
+    # https valid input
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
     assert len(loader.format.choices) == 4  # may change with future importers
     assert loader.format.selected == 'Image'  # default may change with future importers
