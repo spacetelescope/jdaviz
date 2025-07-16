@@ -39,22 +39,6 @@ def test_plugin(specviz2d_helper):
     assert pext.marks['trace'].marks_list[0].visible is True
     assert len(pext.marks['trace'].marks_list[0].x) > 0
 
-    # test importing traces
-    img = specviz2d_helper.get_data('Spectrum 2D')
-    flat_trace = tracing.FlatTrace(img, trace_pos=25)
-    fit_trace = tracing.FitTrace(img)
-
-    for imported_trace in [flat_trace, fit_trace]:
-        pext.import_trace(imported_trace)
-        exported_trace = pext.export_trace(add_data=False)
-        assert isinstance(exported_trace, type(imported_trace))
-
-    # # array trace needs to go through loader, uncomment after JDAT-5518
-    # array_trace = tracing.ArrayTrace(img, np.arange(len(img.spectral_axis)))
-    # specviz2d_helper.load(array_trace)
-    # exported_trace = pext.export_trace(add_data=False)
-    # assert isinstance(exported_trace, tracing.ArrayTrace)
-
     # create FlatTrace
     pext.trace_type_selected = 'Flat'
     pext.trace_pixel = 28
@@ -175,6 +159,23 @@ def test_plugin(specviz2d_helper):
 
     with pytest.raises(ValueError):
         pext.export_extract(invalid_kwarg=5)
+
+    # test importing traces
+    img = specviz2d_helper.get_data('Spectrum 2D')
+    flat_trace = tracing.FlatTrace(img, trace_pos=25)
+    fit_trace = tracing.FitTrace(img)
+
+    for imported_trace in [flat_trace, fit_trace]:
+        pext.import_trace(imported_trace)
+        exported_trace = pext.export_trace(add_data=False)
+        assert isinstance(exported_trace, type(imported_trace))
+
+    # array trace needs to go through loader, uncomment after JDAT-5518
+    array_trace = tracing.ArrayTrace(img, np.arange(len(img.spectral_axis)))
+    specviz2d_helper.load(array_trace, data_label='array_trace')
+    pext.trace_trace.selected = 'array_trace'
+    exported_trace = pext.export_trace(add_data=False)
+    assert isinstance(exported_trace, tracing.ArrayTrace)
 
 
 @pytest.mark.remote_data

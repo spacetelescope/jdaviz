@@ -198,6 +198,8 @@ Specviz2d
 - Fixed an issue with default angle unit being set in unit conversion plugin, which fixed
   a bug when background data from the spectral extraction plugin is added to the viewer. [#3661]
 
+- Fixed a bug loading array traces into Specviz2d. [#3697]
+
 4.2.3 (2025-06-16)
 ==================
 
