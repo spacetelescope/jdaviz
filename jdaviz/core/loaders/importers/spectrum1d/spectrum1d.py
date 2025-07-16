@@ -3,7 +3,8 @@ from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
+                                           _spectrum_assign_component_type)
 
 
 __all__ = ['SpectrumImporter']
@@ -56,3 +57,6 @@ class SpectrumImporter(BaseImporterToDataCollection):
                     msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
                     self.app.hub.broadcast(SnackbarMessage(msg, color="warning", sender=self.app))
         return data
+
+    def assign_component_type(self, comp_id, comp, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, physical_type)
