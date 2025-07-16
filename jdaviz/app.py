@@ -821,7 +821,8 @@ class Application(VuetifyTemplate, HubListener):
                     if new_phys_type == existing_phys_type:
                         link = LinkSameWithUnits(new_comp, existing_comp)
                         new_links.append(link)
-                        # only need one link for the new component, reparenting will handle if that data entry is deleted
+                        # only need one link for the new component, reparenting will handle
+                        # if that data entry is deleted
                         break
 
         # Add all new links to the data collection
@@ -836,7 +837,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         if self.config == 'imviz':  # Imviz does its own thing
             return
-        elif self.config == 'deconfigged':
+        elif self.config in ('deconfigged', 'specviz', 'specviz2d'):
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:

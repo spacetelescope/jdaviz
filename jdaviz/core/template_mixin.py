@@ -4550,7 +4550,7 @@ class AddResults(BasePluginComponent):
             subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
             data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
-        if format is not None:
+        if self.app.config in ('deconfigged', 'specviz', 'specviz2d') and format is not None:
             self.app._jdaviz_helper.load(data_item,
                                          loader='object', format=format,
                                          data_label=label, show_in_viewer=False)

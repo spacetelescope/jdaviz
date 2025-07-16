@@ -820,7 +820,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
 
         if add_data:
-            self.trace_add_results.add_results_from_plugin(trace, replace=False)
+            self.trace_add_results.add_results_from_plugin(trace,
+                                                           format='Trace',
+                                                           replace=False)
 
         return trace
 
@@ -924,7 +926,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
         bg_spec = self.export_bg(**kwargs).bkg_image()
 
         if add_data:
-            self.bg_add_results.add_results_from_plugin(bg_spec, replace=True)
+            self.bg_add_results.add_results_from_plugin(bg_spec,
+                                                        format='2D Spectrum',
+                                                        replace=True)
 
         return bg_spec
 
@@ -951,7 +955,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
         spec = self.export_bg(**kwargs).bkg_spectrum()
 
         if add_data:
-            self.bg_spec_add_results.add_results_from_plugin(spec, replace=False)
+            self.bg_spec_add_results.add_results_from_plugin(spec,
+                                                             format='1D Spectrum',
+                                                             replace=False)
 
         return spec
 
