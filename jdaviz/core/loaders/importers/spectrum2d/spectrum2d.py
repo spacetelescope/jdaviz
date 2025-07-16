@@ -6,7 +6,8 @@ from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
+                                           _spectrum_assign_component_type)
 from jdaviz.core.template_mixin import AutoTextField, SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
@@ -170,6 +171,9 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             else:
                 # raising an error here will allow using specutils.Spectrum > Spectrum2D
                 raise
+
+    def assign_component_type(self, comp_id, comp, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, physical_type)
 
     def __call__(self, show_in_viewer=True):
         # get a copy of both of these before additional data entries changes defaults

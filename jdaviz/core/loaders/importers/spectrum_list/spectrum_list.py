@@ -9,7 +9,8 @@ from traitlets import List, Bool, Any, observe
 from jdaviz.core.unit_conversion_utils import (to_flux_density_unit,
                                                spectrum_ensure_flux_density_unit)
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
+                                           _spectrum_assign_component_type)
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 
@@ -223,6 +224,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'spectrum-1d-viewer'
+
+    def assign_component_type(self, comp_id, comp, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, physical_type)
 
     def __call__(self, show_in_viewer=True):
         if not self.sources.selected:
