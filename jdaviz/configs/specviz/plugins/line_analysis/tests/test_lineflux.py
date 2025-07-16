@@ -76,7 +76,9 @@ def test_cubeviz_collapse_fluxunits(
         cubeviz_helper,
         spectrum1d_cube_custom_fluxunit,
         function, spectra_fluxunit):
-    ''' Calculates line flux and checks the units for each collapse function '''
+    """
+    Calculates line flux and checks the units for each collapse function.
+    """
 
     data = spectrum1d_cube_custom_fluxunit(spectra_fluxunit)
 
