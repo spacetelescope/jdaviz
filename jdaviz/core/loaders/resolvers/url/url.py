@@ -7,7 +7,7 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
-from jdaviz.utils import download_uri_to_path
+from jdaviz.utils import download_uri_to_path, get_cloud_fits
 
 
 __all__ = ['URLResolver']
@@ -19,6 +19,7 @@ class URLResolver(BaseResolver):
     default_input = 'url'
 
     url = Unicode("").tag(sync=True)
+    url_scheme = Unicode("").tag(sync=True)
     cache = Bool(True).tag(sync=True)
     local_path = Unicode("").tag(sync=True)
     timeout = FloatHandleEmpty(10).tag(sync=True)
@@ -33,7 +34,7 @@ class URLResolver(BaseResolver):
 
     @property
     def is_valid(self):
-        return urlparse(self.url.strip()).scheme in ['http', 'https', 'mast', 'ftp']
+        return self.url_scheme in ['http', 'https', 'mast', 'ftp', 's3']
 
     @property
     def default_label(self):
@@ -45,6 +46,8 @@ class URLResolver(BaseResolver):
 
     @observe('url', 'cache', 'timeout')
     def _on_url_changed(self, change):
+        self.url_scheme = urlparse(self.url.strip()).scheme
+
         # Clear the cached property to force re-download
         # or otherwise read from local file cache.
         if '_uri_output_file' in self.__dict__ and change['name'] in ('url', 'cache'):
@@ -54,6 +57,8 @@ class URLResolver(BaseResolver):
 
     @cached_property
     def _uri_output_file(self):
+        if self.url_scheme == 's3':
+            return get_cloud_fits(self.url.strip())
         return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
 

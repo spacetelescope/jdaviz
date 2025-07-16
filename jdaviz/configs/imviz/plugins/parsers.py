@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from astropy.utils.data import cache_contents
+from urllib.parse import urlparse
 
 from glue.core.data import Component, Data
 from gwcs.wcs import WCS as GWCS
@@ -111,9 +112,9 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         transformations.
     """
     if isinstance(file_obj, str):
-        file_obj = get_cloud_fits(
-            file_obj, ext=ext, cache=cache, local_path=local_path, timeout=timeout)
-        if not isinstance(file_obj, str):
+        if urlparse(file_obj).scheme == 's3':
+            file_obj = get_cloud_fits(
+                file_obj, ext=ext)
             _parse_image(
                 app, file_obj, data_label, ext=ext, parent=parent,
                 try_gwcs_to_fits_sip=gwcs_to_fits_sip
