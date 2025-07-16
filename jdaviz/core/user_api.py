@@ -67,6 +67,10 @@ class UserApiWrapper:
             # .selected traitlet
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
+            elif value == '*' and hasattr(exp_obj, 'multiselect'):
+                exp_obj.multiselect = True
+                exp_obj.select_all()
+                return
             elif isinstance(exp_obj, SelectFileExtensionComponent):
                 def to_choice_single(value):
                     if isinstance(value, int):

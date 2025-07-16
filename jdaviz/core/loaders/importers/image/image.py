@@ -9,6 +9,7 @@ from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from traitlets import Bool, List, Any, observe
+from stdatamodels import asdf_in_fits
 
 
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect
@@ -164,6 +165,9 @@ class ImageImporter(BaseImporterToDataCollection):
         elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
             return [_roman_asdf_2d_to_glue_data(input, ext=ext)
                     for ext in self.extension.selected_name]  # list of Data
+        # JWST ASDF-in-FITS
+        if 'ASDF' in input:
+            return [_jwst2data(hdu, input) for hdu in self.extension.selected_hdu]
         # fits
         return [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
 
@@ -395,5 +399,63 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     data.meta.update(standardize_metadata(dict(meta)))
     if comp_label == 'DQ':
         prep_data_layer_as_dq(data)
+
+    return data
+
+
+def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
+    comp_label = hdu.name.lower()
+    if comp_label == 'sci':
+        comp_label = 'data'
+    data = Data()
+    unit_attr = f'bunit_{comp_label}'
+
+    try:
+        # This is very specific to JWST pipeline image output.
+        with asdf_in_fits.open(hdulist) as af:
+            dm = af.tree
+            dm_meta = af.tree["meta"]
+            data.meta.update(standardize_metadata(dm_meta))
+
+            if unit_attr in dm_meta:
+                bunit = _validate_bunit(dm_meta[unit_attr], raise_error=False)
+            else:
+                bunit = ''
+
+            # This is instance of gwcs.WCS, not astropy.wcs.WCS
+            if 'wcs' in dm_meta:
+                gwcs = dm_meta['wcs']
+
+                if try_gwcs_to_fits_sip:
+                    data.coords = _try_gwcs_to_fits_sip(gwcs)
+                else:
+                    data.coords = gwcs
+            # keys in the asdf tree are lower case
+            imdata = dm[comp_label]
+            component = Component.autotyped(imdata, units=bunit)
+
+            # Might have bad GWCS. If so, we exclude it.
+            try:
+                # we catch an astropy warning here for non-standard FITS
+                # keywords arising from the FITS SIP approximation. These
+                # warnings don't affect the result, and there's a pending
+                # glue PR with a fix: https://github.com/glue-viz/glue/pull/2540
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=AstropyWarning)
+                    data.add_component(component=component, label=comp_label)
+
+            except Exception:  # pragma: no cover
+                data.coords = None
+                data.add_component(component=component, label=comp_label)
+
+    # TODO: Do not need this when jwst.datamodels finally its own package.
+    # This might happen for grism image; fall back to FITS loader without WCS.
+    except Exception:
+        if comp_label == 'data':
+            new_ext = 'sci'
+        else:
+            new_ext = hdu.name
+        new_hdu = hdulist[new_ext]
+        return _hdu2data(new_hdu, hdulist, include_wcs=False)
 
     return data
