@@ -12,6 +12,8 @@ Bug Fixes
   transform does not use units, which was previously causing issues when
   aligning by WCS. [#3658]
 
+- Fixed API hints for viewers in the data-menu. [#3695]
+
 Cubeviz
 ^^^^^^^
 
