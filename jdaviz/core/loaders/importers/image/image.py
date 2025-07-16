@@ -100,7 +100,7 @@ class ImageImporter(BaseImporterToDataCollection):
         # flat image, not a cube
         # isinstance NDData
         return (isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                       NDData, np.ndarray, asdf.AsdfFile)) or
+                                        NDData, np.ndarray, asdf.AsdfFile)) or
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))))
 
     @property
