@@ -220,6 +220,17 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     loader.importer()
 
 
+def test_deconfigged_spectrum_and_image(deconfigged_helper, spectrum1d, image_hdu_wcs):
+    # Load a 1D spectrum and a 2D image
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+
+    # Check that both data types are loaded correctly
+    assert len(deconfigged_helper.app.data_collection) == 3
+    assert len(deconfigged_helper.viewers) == 2
+
+
 def test_load_image_mult_sci_extension(imviz_helper):
     # test loading an image with multiple SCI extensions and
     # ensure that automatic parenting logic is handled correctly
