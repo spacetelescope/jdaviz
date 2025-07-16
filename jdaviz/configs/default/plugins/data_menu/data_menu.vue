@@ -62,7 +62,7 @@
             <v-list-item v-if="api_hints_enabled" style="min-height: 12px"> 
               <v-list-item-content> 
                 <span class="api-hint"> 
-                  <b>dm = {{ config }}.viewers['{{viewer_id}}'].data_menu</b>
+                  <b>dm = {{ config }}.viewers['{{viewer_reference}}'].data_menu</b>
                 </span> 
               </v-list-item-content> 
             </v-list-item> 
