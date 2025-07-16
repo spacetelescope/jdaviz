@@ -13,7 +13,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SpectralSubsetSelectMixin, with_spinner,
                                         AddResultsMixin)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.core.events import SnackbarMessage, AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import SnackbarMessage, AddDataMessage
 from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, INT_MAX
 from jdaviz.core.sonified_layers import SonifiedLayerState
 
@@ -98,8 +98,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._data_added_to_viewer)
-        #self.hub.subscribe(self, RemoveDataMessage,
-        #                   handler=self._data_removed_from_viewer)
 
     @property
     def user_api(self):
