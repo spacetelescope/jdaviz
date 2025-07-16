@@ -129,7 +129,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         return compiled_coords
 
     def recalculate_combined_sonified_grid(self, event=None):
-        print("Recalculating combined sonified grid")
         self.layer_volume = {}
         self.sonified_layers_enabled = []
 
@@ -141,7 +140,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             self.sonified_layers_enabled += ([layer.layer.label] if
                                              getattr(layer, 'audible', False) else [])  # noqa
 
-        print(f"sonified layers enabled: {self.sonified_layers_enabled}")
         # Need to force an update of the layer icons since
         # audible is a state attribute, not a layer artist attribute
         self.jdaviz_app.state.layer_icons.notify_all()
@@ -180,7 +178,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 not hasattr(self._sonify_plugin.sonified_cube, 'sigcube')):
             return
         self._sonify_plugin.start_stream()
-        self._sonify_plugin.update_sonified_cube_with_coord((x, y))
+        self._sonify_plugin.update_sonified_cube_with_coord(self, (x, y))
 
     def get_data_layer_artist(self, layer=None, layer_state=None):
         if 'Sonified' in layer.meta:
