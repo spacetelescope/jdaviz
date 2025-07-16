@@ -3,7 +3,7 @@ import os
 import pytest
 from astropy.wcs import FITSFixedWarning
 
-from jdaviz.utils import alpha_index, download_uri_to_path, get_cloud_fits
+from jdaviz.utils import alpha_index, download_uri_to_path, get_cloud_fits, cached_uri
 from astropy.io import fits
 
 
@@ -31,6 +31,8 @@ def test_uri_to_download_nonexistent_mast_file(imviz_helper):
     # this validates as a mast uri but doesn't actually exist on mast:
     uri = "mast:JWST/product/jw00000-no-file-here.fits"
     with pytest.raises(ValueError, match='Failed query for URI'):
+        # NOTE: this test will attempt to reach out to MAST via astroquery
+        # even if cache is available.
         imviz_helper.load_data(uri, cache=False)
 
 
@@ -49,6 +51,7 @@ def test_url_to_download_imviz_local_path_warning(imviz_helper):
 
 
 def test_uri_to_download_specviz_local_path_check():
+    # NOTE: do not use cached_uri here since no download should occur
     uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
     local_path = download_uri_to_path(uri, cache=False, dryrun=True)  # No download
 
@@ -58,17 +61,15 @@ def test_uri_to_download_specviz_local_path_check():
 
 
 @pytest.mark.remote_data
-def test_uri_to_download_specviz(specviz_helper, tmp_path):
-    uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits"
-    local_path = str(tmp_path / uri.split('/')[-1])
-    specviz_helper.load_data(uri, cache=True, local_path=local_path)
+def test_uri_to_download_specviz(specviz_helper):
+    uri = cached_uri("mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits")
+    specviz_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data
-def test_uri_to_download_specviz2d(specviz2d_helper, tmp_path):
-    uri = "mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits"
-    local_path = str(tmp_path / uri.split('/')[-1])
-    specviz2d_helper.load_data(uri, cache=True, local_path=local_path)
+def test_uri_to_download_specviz2d(specviz2d_helper):
+    uri = cached_uri("mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
+    specviz2d_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data

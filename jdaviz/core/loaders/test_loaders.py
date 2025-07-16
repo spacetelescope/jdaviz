@@ -4,6 +4,7 @@ from astropy import units as u
 from specutils import SpectralRegion, Spectrum
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import find_matching_resolver
+from jdaviz.utils import cached_uri
 
 
 def test_loaders_registry(specviz_helper):
@@ -81,8 +82,14 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_fits_spectrum2d(deconfigged_helper):
-    ldr = deconfigged_helper.loaders['url']
-    ldr.url = 'mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits'
+    uri = cached_uri('mast:jwst/product/jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits')
+    if 'mast' in uri:
+        ldr = deconfigged_helper.loaders['url']
+        ldr.cache = True
+        ldr.url = uri
+    else:
+        ldr = deconfigged_helper.loaders['file']
+        ldr.filepath = uri
 
     # Default is Image but the test switches to 2D Spectrum
     # since this file type is not yet supported by the image loader
@@ -141,6 +148,8 @@ def test_resolver_url(deconfigged_helper):
     assert len(deconfigged_helper.viewers) == 2
 
     with pytest.raises(ValueError, match="Failed query for URI"):
+        # NOTE: this test will attempt to reach out to MAST via astroquery
+        # even if cache is available.
         deconfigged_helper.load('mast:invalid')
 
 

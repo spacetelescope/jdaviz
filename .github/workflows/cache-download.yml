@@ -1,37 +1,46 @@
 name: Download from Astroquery to Cache
 
+env:
+  # add any URIs from MAST used in remote tests here
+  # the cache can be updated by manual trigger after changes are merged into main
+  # or if you need the cache for the current PR, trigger the workflow manually
+  # and append to the previous cache with the new URI(s).
+  # NOTE: cached files are not currently accessible when using the _jail fixture (without manually copying them)
+  DEFAULT_URIS: 'HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst:hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits,
+                 hst:hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits,
+                 hst:hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits,
+                 hst:jclj01010_drz.fits,
+                 jwst:jw01050-o003_t005_miri_ch1-medium_s3d.fits,
+                 jwst:jw01524-o003_t002_miri_ch1-medium_s3d.fits,
+                 jwst:jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits,
+                 jwst:jw01538160001_16101_00004_nrs1_s2d.fits,
+                 jwst:jw01895001004_07101_00001_nrca3_cal.fits,
+                 jwst:jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits,
+                 jwst:jw02727-o002_t062_nircam_clear-f090w_i2d.fits,
+                 jwst:jw02727-o002_t062_nircam_clear-f277w_i2d.fits,
+                 jwst:jw02732-c1001_t004_miri_ch1-short_s3d.fits,
+                 jwst:jw02732-c1001_t004_miri_ch1-short_x1d.fits,
+                 jwst:jw02732-o003_t002_nirspec_prism-clear_s3d.fits,
+                 jwst:jw02732004001_02103_00004_mirifushort_s3d.fits,
+                 jwst:jw02732004001_02103_00004_mirifushort_x1d.fits'
+
 on:
   workflow_dispatch:
     inputs:
+      skip_cache:
+        description: 'Test downloading but skip creating cache'
+        required: false
+        default: false
+        type: boolean
       append_to_cache:
         description: 'Append to latest cache?'
         required: false
         default: false
         type: boolean
       uris:
-        description: 'List of files to download (comma-separated in format mission:filename)'
+        description: 'Override list of files to download (comma-separated in format mission:filename)'
         required: false
-        # add any URIs from MAST used in remote tests here
-        # the cache can be updated by manual trigger after changes are merged into main
-        # or if you need the cache for the current PR, trigger the workflow manually
-        # and append to the previous cache with the new URI(s)
-        default: 'HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst:hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits,
-                  hst:hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits,
-                  hst:hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits,
-                  hst:jclj01010_drz.fits,
-                  jwst:jw01050-o003_t005_miri_ch1-medium_s3d.fits,
-                  jwst:jw01524-o003_t002_miri_ch1-medium_s3d.fits,
-                  jwst:jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits,
-                  jwst:jw01538160001_16101_00004_nrs1_s2d.fits,
-                  jwst:jw01895001004_07101_00001_nrca3_cal.fits,
-                  jwst:jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits,
-                  jwst:jw02727-o002_t062_nircam_clear-f090w_i2d.fits,
-                  jwst:jw02727-o002_t062_nircam_clear-f277w_i2d.fits,
-                  jwst:jw02732-c1001_t004_miri_ch1-short_s3d.fits,
-                  jwst:jw02732-c1001_t004_miri_ch1-short_x1d.fits,
-                  jwst:jw02732-o003_t002_nirspec_prism-clear_s3d.fits,
-                  jwst:jw02732004001_02103_00004_mirifushort_s3d.fits,
-                  jwst:jw02732004001_02103_00004_mirifushort_x1d.fits'
+        # Default URIs are defined in the workflow env section and will be provided if not specified here
         type: string
   schedule:
     - cron: '0 6 * * 0'  # Every Sunday at 6 AM UTC
@@ -120,14 +129,15 @@ jobs:
       run: |
         python download_script.py
       env:
-        URIS: ${{ inputs.uris }}
+        URIS: ${{ inputs.uris || env.DEFAULT_URIS }}
 
     - name: List cached files
       run: |
         echo "All cached files:"
-        ls -ls *.fits || echo "No files found"
+        ls -ltr || echo "No files found"
 
     - name: Save updated cache (overwrite)
+      if: ${{ !inputs.skip_cache }}
       uses: actions/cache/save@v4
       with:
         key: mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-${{ github.run_number }}-${{ steps.date.outputs.trigger }}

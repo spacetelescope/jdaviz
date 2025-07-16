@@ -18,6 +18,7 @@ from specutils.manipulation import FluxConservingResampler
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                flux_conversion_general)
+from jdaviz.utils import cached_uri
 
 calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/"
 
@@ -575,7 +576,6 @@ def test_spectral_extraction_unit_conv_one_spec(
     assert spectrum_viewer.state.y_display_unit == "MJy"
 
 
-@pytest.mark.usefixtures('_jail')
 @pytest.mark.remote_data
 @pytest.mark.parametrize(
     "start_slice, aperture, expected_rtol, uri, calspec_url",
@@ -624,7 +624,7 @@ def test_spectral_extraction_scientific_validation(
     # load observations into Cubeviz
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        cubeviz_helper.load_data(uri, cache=True)
+        cubeviz_helper.load_data(cached_uri(uri), cache=True)
 
     # add a subset with an aperture centered on each source
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
