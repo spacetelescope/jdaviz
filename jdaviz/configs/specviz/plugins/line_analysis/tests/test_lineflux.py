@@ -5,8 +5,6 @@ import numpy as np
 import pytest
 from specutils import Spectrum
 
-from jdaviz import Cubeviz
-
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -74,8 +72,12 @@ def _calculate_line_flux(viz_helper):
 @pytest.mark.filterwarnings(r"ignore:.* apply_slider_redshift")
 @pytest.mark.parametrize('spectra_fluxunit', test_cases)
 @pytest.mark.parametrize('function', COLLAPSE_FUNCTIONS)
-def test_cubeviz_collapse_fluxunits(cubeviz_helper, spectrum1d_cube_custom_fluxunit, function, spectra_fluxunit):
+def test_cubeviz_collapse_fluxunits(
+        cubeviz_helper,
+        spectrum1d_cube_custom_fluxunit,
+        function, spectra_fluxunit):
     ''' Calculates line flux and checks the units for each collapse function '''
+
     data = spectrum1d_cube_custom_fluxunit(spectra_fluxunit)
 
     # Initialize Cubeviz with specific data and collapse function
