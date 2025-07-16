@@ -41,6 +41,8 @@ Cubeviz
 
 - Add sonified layer for each cube created by the Sonify Data plugin. [#3430, #3660]
 
+- Sonified data can now be added to any image viewer after initial sonification. [#3690]
+
 - Renamed ``Spectral Extraction`` plugin to ``3D Spectral Extraction``. [#3691]
 
 Imviz
