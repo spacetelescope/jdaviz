@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- The Markers plugin now includes a Distance Tool to interactively measure and log pixel, on-sky, and axis-separated (dx, dy) 
+- The Markers plugin now includes a Distance Tool to interactively measure and log pixel, on-sky, and axis-separated (dx, dy)
   distances between points in any viewer. [#3609]
 
 - The Plot Options plugin now highlights the tab for the active (top-most) data layer
@@ -40,6 +40,8 @@ Cubeviz
 - Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
 - Add sonified layer for each cube created by the Sonify Data plugin. [#3430, #3660]
+
+- Sonified data can now be added to any image viewer after initial sonification. [#3690]
 
 - Renamed ``Spectral Extraction`` plugin to ``3D Spectral Extraction``. [#3691]
 
