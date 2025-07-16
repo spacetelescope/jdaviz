@@ -9,7 +9,8 @@ from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
                                 AddDataMessage, RemoveDataMessage, MarkersPluginUpdate)
 from jdaviz.core.marks import MarkersMark, DistanceMeasurement
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin, Table
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, TableMixin,
+                                        Table, _is_image_viewer)
 from jdaviz.core.user_api import PluginUserApi
 
 
@@ -390,21 +391,47 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_mouse_move_while_drawing(self, event):
         """
-        Callback for 'mousemove' event to update the rubber band line.
+        Callback for 'mousemove' event to update the rubber band line to
+        follow the cursor AND continuously update the distance display.
         """
         if self._rubber_band_line is None or self._distance_first_point is None:
             return
-        cursor_x, cursor_y = event['domain']['x'], event['domain']['y']
-        m_marks = self._get_mark(self._viewer_for_drawing)
-        end_x, end_y = cursor_x, cursor_y
-        if len(m_marks.x) > 0:
-            distances_sq = (m_marks.x - cursor_x)**2 + (m_marks.y - cursor_y)**2
-            closest_index = np.argmin(distances_sq)
-            if distances_sq[closest_index] < self._snap_threshold**2:
-                end_x, end_y = m_marks.x[closest_index], m_marks.y[closest_index]
+
+        p1 = self._distance_first_point
+        p2 = self.coords_info.as_dict()
+        is_profile = 'spectrum' in self._viewer_for_drawing.__class__.__name__.lower() or \
+                     'profile' in self._viewer_for_drawing.__class__.__name__.lower()
+
+        if is_profile:
+            dx_val = p2.get('axes_x', 0) - p1.get('axes_x', 0)
+            dy_val = p2.get('axes_y', 0) - p1.get('axes_y', 0)
+            x_unit = p1.get('axes_x:unit', '')
+            y_unit = p1.get('axes_y:unit', '')
+            self.distance_display = f"Δx: {dx_val:.4g} {x_unit}, Δy: {dy_val:.4g} {y_unit}"
+        else:  # Assume image viewer
+            world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
+                           p1.get('world_ra') is not None and p2.get('world_ra') is not None and
+                           np.all(np.isfinite([p1['world_ra'], p1['world_dec'],
+                                               p2['world_ra'], p2['world_dec']])))
+            if self.config == 'imviz' and self.app._align_by.lower() == 'pixels':
+                dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
+                                   (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
+                self.distance_display = f"{dist_pix:.2f} pix"
+            elif world_avail:
+                c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
+                c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
+                self.distance_display = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
+            else:
+                dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
+                                   (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
+                self.distance_display = f"{dist_pix:.2f} pix"
 
         start_x = self._distance_first_point.get('axes_x')
         start_y = self._distance_first_point.get('axes_y')
+        end_x = event['domain']['x']
+        end_y = event['domain']['y']
+
+        # Update the line to follow the mouse cursor
         self._rubber_band_line.x = [start_x, end_x]
         self._rubber_band_line.y = [start_y, end_y]
 
@@ -462,8 +489,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 p2 = coords
                 self._distance_first_point = None
 
-                is_profile = 'spectrum' in viewer.__class__.__name__.lower() or \
-                             'profile' in viewer.__class__.__name__.lower()
+                is_profile = not _is_image_viewer(viewer)
 
                 if is_profile:
                     dx_val = p2.get('axes_x', 0) - p1.get('axes_x', 0)
