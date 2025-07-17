@@ -3,9 +3,8 @@
 
 New Features
 ------------
-
-- The Markers plugin now includes a Distance Tool to interactively measure and log pixel, on-sky, and axis-separated (dx, dy)
-  distances between points in any viewer. [#3609]
+- The Markers plugin now includes a Distance Tool to interactively measure pixel, on-sky, and axis-separated
+  (dx, dy) distances in any viewer. The tool features a real-time preview line that follows the cursor. [#3609, #3694]
 
 - The Plot Options plugin now highlights the tab for the active (top-most) data layer
   in the selected viewer. [#3514]
