@@ -787,6 +787,8 @@ class Application(VuetifyTemplate, HubListener):
                 'Orientation' in self._jdaviz_helper.plugins):
             # Orientation plugin alreadly listens for messages for added Data and handles linking
             # orientation_plugin._link_image_data()
+            # NOTE: eventually we may only want to skip for pixel/sky coordinates and allow
+            # flux, etc, to link to other data for custom histograms/scatter plots
             return
 
         new_links = []
