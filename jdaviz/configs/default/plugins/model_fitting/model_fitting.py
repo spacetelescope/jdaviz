@@ -46,7 +46,7 @@ class _EmptyParam:
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
                    NonFiniteUncertaintyMismatchMixin,
-                   AddResultsMixin, TableMixin): # ParallelMixin
+                   AddResultsMixin, TableMixin):  # ParallelMixin
     """
     See the :ref:`Model Fitting Plugin Documentation <specviz-model-fitting>` for more details.
 
