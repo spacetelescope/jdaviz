@@ -84,12 +84,17 @@ class AID:
             new_height = current_height
         else:
             if isinstance(fov, (u.Quantity, Angle)):
-                current_fov = self._get_current_fov('sky')
+                current_fov = self._get_current_fov('sky', image)
                 scale_factor = float(fov / current_fov)
 
             elif isinstance(fov, (float, int)):
-                current_fov = self._get_current_fov('pixel')
+                current_fov = self._get_current_fov('pixel', image)
                 scale_factor = float(fov / current_fov)
+
+            else:
+                raise ValueError(
+                    f"`fov` must be a Quantity or tuple of floats, got {type(fov)=}"
+                )
 
             new_width = current_width * scale_factor
             new_height = current_height * scale_factor
@@ -104,7 +109,11 @@ class AID:
             y_max=new_ymin + new_height
         )
 
-    def _get_current_fov(self, sky_or_pixel):
+    def _get_current_fov(self, sky_or_pixel, image):
+        # default to 'sky' if sky/pixel not specified and WCS is available:
+        if sky_or_pixel is None and data_has_valid_wcs(image):
+            sky_or_pixel = 'sky'
+
         x_min, x_max, y_min, y_max = self.viewer.get_limits()
 
         if sky_or_pixel == 'sky':
@@ -124,6 +133,29 @@ class AID:
             )
         else:
             return min(abs(x_max - x_min), abs(y_max - y_min))
+
+    def _get_current_center(self, sky_or_pixel, image=None):
+        reference_data = self.viewer.state.reference_data
+        reference_wcs = reference_data.coords
+
+        x_min, x_max, y_min, y_max = self.viewer.get_limits()
+        center_x = 0.5 * (x_min + x_max)
+        center_y = 0.5 * (y_min + y_max)
+
+        # default to 'sky' if sky/pixel not specified and WCS is available:
+        if sky_or_pixel is None and data_has_valid_wcs(image):
+            sky_or_pixel = 'sky'
+
+        # if the image data have WCS, get the center sky coordinate:
+        if sky_or_pixel == 'sky':
+            if self.app._align_by == 'wcs':
+                center = self.viewer._get_center_skycoord()
+            else:
+                center = reference_wcs.pixel_to_world(center_x, center_y)
+        else:
+            center = (center_x, center_y)
+
+        return center
 
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
@@ -148,34 +180,10 @@ class AID:
             - 'fov' is an `astropy.units.Quantity` object or a float.
             - 'image_label' is a string representing the label of the image.
         """
-        # viewer_aligned_by_wcs = self.app._align_by == 'wcs'
-
         image, image_label = self._get_image_glue_data(image_label)
-        reference_data = self.viewer.state.reference_data
-        reference_wcs = reference_data.coords
 
-        x_min, x_max, y_min, y_max = self.viewer.get_limits()
-        center_x = 0.5 * (x_min + x_max)
-        center_y = 0.5 * (y_min + y_max)
-
-        # default to 'sky' if sky/pixel not specified and WCS is available:
-        if sky_or_pixel is None and data_has_valid_wcs(image):
-            sky_or_pixel = 'sky'
-
-        # if the image data have WCS, get the center sky coordinate:
-        if sky_or_pixel == 'sky':
-            if self.app._align_by == 'wcs':
-                center = self.viewer._get_center_skycoord()
-            else:
-                center = reference_wcs.pixel_to_world(center_x, center_y)
-
-            fov = self._get_current_fov(sky_or_pixel)
-
-        else:
-            center = (center_x, center_y)
-            fov = min(
-                abs(x_max - x_min),
-                abs(y_max - y_min)
-            )
-
-        return dict(center=center, fov=fov, image_label=image_label)
+        return dict(
+            center=self._get_current_center(sky_or_pixel=sky_or_pixel, image=image),
+            fov=self._get_current_fov(sky_or_pixel=sky_or_pixel, image=image),
+            image_label=image_label
+        )
