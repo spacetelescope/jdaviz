@@ -1,9 +1,10 @@
+import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs import WCS
 from gwcs.wcs import WCS as GWCS
 
-from jdaviz.utils import data_has_valid_wcs, get_top_layer_index
+from jdaviz.utils import get_top_layer_index
 
 
 class AID:
@@ -32,7 +33,7 @@ class AID:
                 if image.label == image_label:
                     break
             else:
-                raise ValueError(f"No data with data_label {image_label}` found in viewer.")
+                raise ValueError(f"No data with data_label `{image_label}` found in viewer.")
 
         return image, image.label
 
@@ -84,11 +85,11 @@ class AID:
             new_height = current_height
         else:
             if isinstance(fov, (u.Quantity, Angle)):
-                current_fov = self._get_current_fov('sky', image)
+                current_fov = self._get_current_fov('sky', image_label)
                 scale_factor = float(fov / current_fov)
 
             elif isinstance(fov, (float, int)):
-                current_fov = self._get_current_fov('pixel', image)
+                current_fov = self._get_current_fov('pixel', image_label)
                 scale_factor = float(fov / current_fov)
 
             else:
@@ -109,44 +110,52 @@ class AID:
             y_max=new_ymin + new_height
         )
 
-    def _get_current_fov(self, sky_or_pixel, image):
+    def _mean_pixel_scale(self, data):
+        """get the mean of the x and y pixel scales from the low level wcs"""
+        wcs = data.coords
+
+        # for now, convert GWCS to FITS SIP so pixel to world
+        # transformations can be done outside of the bounding box
+        if isinstance(wcs, GWCS):
+            wcs = WCS(wcs.to_fits_sip())
+
+        abs_cdelts = u.Quantity([
+            abs(cdelt) * u.Unit(cunit)
+            for cdelt, cunit in zip(wcs.wcs.cdelt, wcs.wcs.cunit)
+        ])
+        return np.mean(abs_cdelts)
+
+    def _get_current_fov(self, sky_or_pixel, image_label):
+        imviz_aligned_by_wcs = self.app._align_by == 'wcs'
+
+        # `zoom_radius` is the distance from the center of the viewer
+        # to the nearest edge in units of pixels
+        zoom_radius = self.viewer.state.zoom_radius
+
         # default to 'sky' if sky/pixel not specified and WCS is available:
-        if sky_or_pixel is None and data_has_valid_wcs(image):
-            sky_or_pixel = 'sky'
+        if sky_or_pixel in (None, 'sky'):
+            if not imviz_aligned_by_wcs:
+                ref_data, _ = self._get_image_glue_data(image_label)
+                pixel_scale = self._mean_pixel_scale(ref_data)
+                return pixel_scale * 2 * zoom_radius * u.deg
+            else:
+                return 2 * zoom_radius * u.deg
 
-        x_min, x_max, y_min, y_max = self.viewer.get_limits()
+        return 2 * zoom_radius
 
-        if sky_or_pixel == 'sky':
-            wcs = self.viewer.state.reference_data.coords
+    def _get_current_center(self, sky_or_pixel, image_label=None):
+        # center pixel coordinates on the reference data:
+        center_x = self.viewer.state.zoom_center_x
+        center_y = self.viewer.state.zoom_center_y
 
-            # for now, convert GWCS to FITS SIP so pixel to world
-            # transformations can be done outside of the bounding box
-            if isinstance(wcs, GWCS):
-                wcs = WCS(wcs.to_fits_sip())
-
-            lower_left, lower_right, upper_left = wcs.pixel_to_world(
-                [x_min, x_max, x_min], [y_min, y_min, y_max]
-            )
-            return min(
-                lower_left.separation(lower_right),
-                lower_left.separation(upper_left),
-            )
+        if self.app._align_by == 'wcs':
+            reference_data = self.viewer.state.reference_data
         else:
-            return min(abs(x_max - x_min), abs(y_max - y_min))
+            reference_data, image_label = self._get_image_glue_data(image_label)
 
-    def _get_current_center(self, sky_or_pixel, image=None):
-        reference_data = self.viewer.state.reference_data
         reference_wcs = reference_data.coords
 
-        x_min, x_max, y_min, y_max = self.viewer.get_limits()
-        center_x = 0.5 * (x_min + x_max)
-        center_y = 0.5 * (y_min + y_max)
-
-        # default to 'sky' if sky/pixel not specified and WCS is available:
-        if sky_or_pixel is None and data_has_valid_wcs(image):
-            sky_or_pixel = 'sky'
-
-        # if the image data have WCS, get the center sky coordinate:
+        # # if the image data have WCS, get the center sky coordinate:
         if sky_or_pixel == 'sky':
             if self.app._align_by == 'wcs':
                 center = self.viewer._get_center_skycoord()
@@ -183,7 +192,7 @@ class AID:
         image, image_label = self._get_image_glue_data(image_label)
 
         return dict(
-            center=self._get_current_center(sky_or_pixel=sky_or_pixel, image=image),
-            fov=self._get_current_fov(sky_or_pixel=sky_or_pixel, image=image),
+            center=self._get_current_center(sky_or_pixel=sky_or_pixel, image_label=image_label),
+            fov=self._get_current_fov(sky_or_pixel=sky_or_pixel, image_label=image_label),
             image_label=image_label
         )
