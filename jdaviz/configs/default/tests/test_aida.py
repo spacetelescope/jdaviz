@@ -1,6 +1,5 @@
 import pytest
 import astropy.units as u
-import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from astropy.tests.helper import assert_quantity_allclose
@@ -31,11 +30,10 @@ def test_get_viewport(imviz_helper, image_hdu_wcs):
     # define the FOV parameter. Use the WCS to find what the actual
     # viewport dimensions are in the x-axis, which maps onto RA in this case:
     wcs = WCS(image_hdu_wcs.header)
-    ra_unit = wcs.wcs.cunit[1]
-    delta_ra = abs(wcs.wcs.cdelt[1])
+    dec_unit = u.Unit(wcs.wcs.cunit[1])
+    delta_dec = abs(wcs.wcs.cdelt[1]) * dec_unit
     expected_fov = (
-        abs(viewer.state.y_max - viewer.state.y_min) *
-        delta_ra * u.Unit(ra_unit)
+        abs(viewer.state.y_max - viewer.state.y_min) * delta_dec
     )
     assert_coordinate_close(viewport['center'], expected_center)
     assert_angle_close(viewport['fov'], expected_fov)
@@ -61,5 +59,4 @@ def test_set_viewport(imviz_helper, image_hdu_wcs):
     assert_angle_close(new_viewport['fov'], new_viewport_settings['fov'], atol=1 * u.arcsec)
 
     with pytest.raises(ValueError, match='The AID API supports `center` arguments as'):
-        viewer.aid.set_viewport(center=np.array([0, 1]))
-
+        viewer.aid.set_viewport(center=u.Quantity([0, 1]))
