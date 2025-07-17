@@ -558,8 +558,7 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, timeout=None,
-                   dryrun=False):
+def get_cloud_fits(possible_uri, ext=None):
     """
     Retrieve and open a FITS file from an S3 URI using fsspec. Return the input
     unchanged if it is not an S3 URI.
@@ -579,10 +578,6 @@ def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, tim
         Extension(s) to load from the FITS file. Can be an integer index (e.g., 0),
         a string name (e.g., "SCI"), or a list of such values. If `None`, all extensions
         are loaded.
-    cache : None, bool, or str, optional
-    local_path : str, optional
-    timeout : float, optional
-    dryrun : bool, optional
 
     Returns
     -------
@@ -594,24 +589,24 @@ def get_cloud_fits(possible_uri, ext=None, cache=None, local_path=os.curdir, tim
     parsed_uri = urlparse(possible_uri)
 
     # TODO: Add caching logic
-    if parsed_uri.scheme.lower() == 's3':
-        downloaded_hdus = []
-        # this loads the requested extensions into local memory:
-        with fits.open(possible_uri, fsspec_kwargs={"anon": True}) as hdul:
-            if ext is None:
-                ext_list = list(range(len(hdul)))
-            elif not isinstance(ext, list):
-                ext_list = [ext]
-            else:
-                ext_list = ext
-            for extension in ext_list:
-                hdu_obj = hdul[extension]
-                downloaded_hdus.append(hdu_obj.copy())
+    if not parsed_uri.scheme.lower() == 's3':
+        raise ValueError("Not an S3 URI: {}".format(possible_uri))
+
+    downloaded_hdus = []
+    # this loads the requested extensions into local memory:
+    with fits.open(possible_uri, fsspec_kwargs={"anon": True}) as hdul:
+        if ext is None:
+            ext_list = list(range(len(hdul)))
+        elif not isinstance(ext, list):
+            ext_list = [ext]
+        else:
+            ext_list = ext
+        for extension in ext_list:
+            hdu_obj = hdul[extension]
+            downloaded_hdus.append(hdu_obj.copy())
 
         file_obj = fits.HDUList(downloaded_hdus)
         return file_obj
-    # not s3 resource, return string as is
-    return possible_uri
 
 
 def cached_uri(uri):
