@@ -22,6 +22,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AutoTextField,
                                         AddResultsMixin,
                                         TableMixin,
+                                        ParallelMixin,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
@@ -44,7 +45,8 @@ class _EmptyParam:
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
                    NonFiniteUncertaintyMismatchMixin,
-                   AddResultsMixin, TableMixin):
+                   AddResultsMixin, TableMixin,
+                   ParallelMixin):
     """
     See the :ref:`Model Fitting Plugin Documentation <specviz-model-fitting>` for more details.
 
@@ -203,7 +205,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'equation', 'equation_components',
                    'add_results', 'residuals_calculate', 'residuals']
         expose += ['calculate_fit', 'clear_table', 'export_table',
-                   'fitted_models', 'get_models', 'get_model_parameters']
+                   'fitted_models', 'get_models', 'get_model_parameters',
+                   'parallel_n_cpu']
         return PluginUserApi(self, expose=expose)
 
     def _param_units(self, param, model_type=None):
@@ -1106,7 +1109,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.residuals_label_default = self.results_label+" residuals"
 
     @with_spinner()
-    def calculate_fit(self, add_data=True, n_cpu=None):
+    def calculate_fit(self, add_data=True):
         """
         Calculate the fit.
 
@@ -1115,9 +1118,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         add_data : bool
             Whether to add the resulting spectrum/cube to the app as a data entry according to
             ``add_results``.
-        n_cpu : int
-            Number of CPU cores to use. (Defaults to using all cores available via
-            ``multiprocessing``)
 
         Returns
         -------
@@ -1133,9 +1133,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             raise ValueError(f"model equation is invalid: {self.model_equation_invalid_msg}")
 
         if self.cube_fit:
-            ret = self._fit_model_to_cube(add_data=add_data, n_cpu=n_cpu)
+            ret = self._fit_model_to_cube(add_data=add_data)
         else:
-            ret = self._fit_model_to_spectrum(add_data=add_data, n_cpu=n_cpu)
+            ret = self._fit_model_to_spectrum(add_data=add_data)
 
         if ret is None:  # pragma: no cover
             # something went wrong in the fitting call and (hopefully) already raised a warning,
@@ -1167,7 +1167,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def vue_apply(self, event):
         self.calculate_fit()
 
-    def _fit_model_to_spectrum(self, add_data, n_cpu=None):
+    def _fit_model_to_spectrum(self, add_data):
         """
         Run fitting on the initialized models, fixing any parameters marked
         as such by the user, then update the displayed parameters with fit
@@ -1189,7 +1189,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.model_equation,
                 run_fitter=True,
                 window=None,
-                n_cpu=n_cpu
+                n_cpu=self.parallel_n_cpu,
             )
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
@@ -1231,7 +1231,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return fitted_model, fitted_spectrum, masked_spectrum-fitted_spectrum
         return fitted_model, fitted_spectrum
 
-    def _fit_model_to_cube(self, add_data, n_cpu=None):
+    def _fit_model_to_cube(self, add_data):
 
         if self._warn_if_no_equation():
             return
@@ -1304,7 +1304,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.model_equation,
                 run_fitter=True,
                 window=None,
-                n_cpu=n_cpu
+                n_cpu=self.parallel_n_cpu
             )
         except ValueError:
             snackbar_message = SnackbarMessage(

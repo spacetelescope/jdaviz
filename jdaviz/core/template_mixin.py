@@ -41,7 +41,7 @@ from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
-from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
@@ -92,6 +92,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'Plot', 'PlotMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
+           'ParallelMixin',
            'PlotOptionsSyncState',
            'SPATIAL_DEFAULT_TEXT']
 
@@ -5563,3 +5564,36 @@ class PlotMixin(VuetifyTemplate, HubListener):
         Clear all data from the current plot.
         """
         self.plot.clear_plot()
+
+
+class ParallelMixin(VuetifyTemplate, HubListener):
+    """
+    Parallel processing mixin.
+
+    To render in the plugin's vue file::
+
+      <jupyter-widget :widget="plot_widget"></jupyter-widget>
+
+    """
+
+    # NOTE: default to empty string because elsewhere (model_fitting)
+    # we default to using multiprocessing, e.g. max(n_cpu) - 1
+    # and use a string because I anticipate that'll be better for the UI
+    _parallel_n_cpu = Unicode('').tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def parallel_n_cpu(self):
+        if self._parallel_n_cpu is '':
+            return None
+
+        try:
+            # Attempting to convert to float first is safer
+            n_cpu = int(float(self._parallel_n_cpu.strip()))
+        except ValueError as ve:
+            raise ve
+
+        return n_cpu
+
