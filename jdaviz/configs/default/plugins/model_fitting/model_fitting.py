@@ -171,6 +171,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 
+        # TODO: delete once parallel framework is completed
         self.parallel_n_cpu = None
         self._set_relevant()
 
