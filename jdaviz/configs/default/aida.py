@@ -52,38 +52,38 @@ class AID:
             with the data label: ``image_label``.
         """
         image, image_label = self._get_image_glue_data(image_label)
+        imviz_aligned_by_wcs = self.app._align_by == 'wcs'
 
-        if center is None:
-            # get the current center in the pixel coords on reference data
-            x_min, x_max, y_min, y_max = self.viewer.get_limits()
-            center_x = 0.5 * (x_min + x_max)
-            center_y = 0.5 * (y_min + y_max)
-            center = (center_x, center_y)
+        if center is not None:
+            if isinstance(center, SkyCoord):
+                if imviz_aligned_by_wcs:
+                    (
+                        self.viewer.state.zoom_center_x,
+                        self.viewer.state.zoom_center_y
+                    ) = center.ra.degree, center.dec.degree
+                else:
+                    reference_wcs = self.viewer.state.reference_data.coords
 
-        if isinstance(center, SkyCoord):
-            reference_wcs = self.viewer.state.reference_data.coords
+                    if isinstance(reference_wcs, GWCS):
+                        reference_wcs = WCS(reference_wcs.to_fits_sip())
 
-            if isinstance(reference_wcs, GWCS):
-                reference_wcs = WCS(reference_wcs.to_fits_sip())
+                    (
+                        self.viewer.state.zoom_center_x,
+                        self.viewer.state.zoom_center_y
+                    ) = reference_wcs.world_to_pixel(center)
 
-            reference_center_pix = reference_wcs.world_to_pixel(center)
+            elif hasattr(center, '__len__') and isinstance(center[0], (float, int)):
+                (
+                    self.viewer.state.zoom_center_x,
+                    self.viewer.state.zoom_center_y
+                ) = center
+            else:
+                raise ValueError(
+                    "The AID API supports `center` arguments as SkyCoords or as "
+                    f"a tuple of floats in pixel coordinates, got {center=}."
+                )
 
-        elif hasattr(center, '__len__') and isinstance(center[0], (float, int)):
-            reference_center_pix = center
-
-        else:
-            raise ValueError(
-                "The AID API supports `center` arguments as SkyCoords or as "
-                f"a tuple of floats in pixel coordinates, got {type(center)=}."
-            )
-
-        current_width = self.viewer.state.x_max - self.viewer.state.x_min
-        current_height = self.viewer.state.y_max - self.viewer.state.y_min
-
-        if fov is None:
-            new_width = current_width
-            new_height = current_height
-        else:
+        if fov is not None:
             if isinstance(fov, (u.Quantity, Angle)):
                 current_fov = self._get_current_fov('sky', image_label)
                 scale_factor = float(fov / current_fov)
@@ -94,21 +94,10 @@ class AID:
 
             else:
                 raise ValueError(
-                    f"`fov` must be a Quantity or tuple of floats, got {type(fov)=}"
+                    f"`fov` must be a Quantity or tuple of floats, got {fov=}"
                 )
 
-            new_width = current_width * scale_factor
-            new_height = current_height * scale_factor
-
-        new_xmin = reference_center_pix[0] - (new_width * 0.5)
-        new_ymin = reference_center_pix[1] - (new_height * 0.5)
-
-        self.viewer.set_limits(
-            x_min=new_xmin,
-            x_max=new_xmin + new_width,
-            y_min=new_ymin,
-            y_max=new_ymin + new_height
-        )
+            self.viewer.state.zoom_radius = self.viewer.state.zoom_radius * scale_factor
 
     def _mean_pixel_scale(self, data):
         """get the mean of the x and y pixel scales from the low level wcs"""
