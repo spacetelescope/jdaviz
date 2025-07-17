@@ -101,11 +101,11 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     assert cubeviz_helper.app._get_display_unit('sb') == sb_unit
 
     plugin.create_model_component("Linear1D", "L")
-
+    # NOTE: Hardcoding n_cpu=1 to run in serial, it's slower to spool up
+    # multiprocessing for the size of the cube
+    plugin._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        # NOTE: Hardcoding n_cpu=1 so as to run in serial, it's slower to spool up
-        # multiprocessing for the size of the cube
         plugin.calculate_fit()
 
     params = cubeviz_helper.plugins['Model Fitting'].get_model_parameters()
