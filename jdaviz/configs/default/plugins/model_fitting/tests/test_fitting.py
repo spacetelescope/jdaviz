@@ -512,9 +512,10 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     # Check that the parameter is using the current units when initialized
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'MJy / {solid_angle_string}'
 
+    n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=1)
+        mf.calculate_fit(n_cpu=n_cpu)
 
     # It was easier to transpose this for new data shape than rewrite it
     expected_result_slice = np.array([[9.00e-05, 9.50e-05, 1.00e-04, 1.05e-04],
