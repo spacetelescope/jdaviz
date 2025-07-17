@@ -781,8 +781,6 @@ class Application(VuetifyTemplate, HubListener):
                 viewer.center_on(sky_cen)
 
     def _link_new_data_by_component_type(self, new_data_label):
-        from glue.core.link_helpers import LinkSameWithUnits
-
         new_data = self.data_collection[new_data_label]
 
         if (new_data._importer == 'ImageImporter' and
@@ -848,13 +846,7 @@ class Application(VuetifyTemplate, HubListener):
         ref_data = dc[reference_data] if reference_data else dc[default_refdata_index]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        if 'Trace' in linked_data.meta:
-            links = [LinkSame(linked_data.components[1], ref_data.components[0]),
-                     LinkSame(linked_data.components[0], ref_data.components[1])]
-            dc.add_link(links)
-            return
-
-        elif self.config == 'cubeviz' and linked_data.ndim == 1:
+        if self.config == 'cubeviz' and linked_data.ndim == 1:
             # Don't want to use negative indices in case there are extra components like a mask
             ref_wavelength_component = dc[0].components[spectral_axis_index]
             # May need to update this for specutils 2
@@ -868,21 +860,8 @@ class Application(VuetifyTemplate, HubListener):
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                  ref_data.ndim < 3)
               ):
-            if self.config == 'specviz2d':
-                links = []
-                if linked_data.ndim == 2:
-                    # extracted image added to data collection
-                    ref_wavelength_component = ref_data.components[1]
-                else:
-                    # extracted spectrum added to data collection
-                    ref_wavelength_component = ref_data.components[3]
-                    links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
-
-                links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[0]),
-                          LinkSameWithUnits(linked_data.components[1], ref_wavelength_component)]
-            else:
-                links = [LinkSame(linked_data.components[0], ref_data.components[0]),
-                         LinkSame(linked_data.components[1], ref_data.components[1])]
+            links = [LinkSame(linked_data.components[0], ref_data.components[0]),
+                     LinkSame(linked_data.components[1], ref_data.components[1])]
 
             dc.add_link(links)
             return
