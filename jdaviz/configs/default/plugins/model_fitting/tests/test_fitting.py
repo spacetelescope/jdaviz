@@ -106,7 +106,7 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         # NOTE: Hardcoding n_cpu=1 so as to run in serial, it's slower to spool up
         # multiprocessing for the size of the cube
-        plugin.calculate_fit(n_cpu=1)
+        plugin.calculate_fit()
 
     params = cubeviz_helper.plugins['Model Fitting'].get_model_parameters()
     slope_res = np.zeros((3, 4))
@@ -439,7 +439,7 @@ def test_cube_fit_with_nans(cubeviz_helper):
 
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=1)
+        mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
@@ -466,7 +466,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
 
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=1)
+        mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
@@ -486,7 +486,7 @@ def test_fit_with_count_units(cubeviz_helper):
     # PIX^2 unit
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=1)
+        mf.calculate_fit()
 
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'ct / pix2'
 
@@ -515,7 +515,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=n_cpu)
+        mf.calculate_fit()
 
     # It was easier to transpose this for new data shape than rewrite it
     expected_result_slice = np.array([[9.00e-05, 9.50e-05, 1.00e-04, 1.05e-04],
@@ -533,7 +533,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'MJy / {solid_angle_string}'
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=n_cpu)
+        mf.calculate_fit()
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == f'Jy / {solid_angle_string}'
@@ -558,7 +558,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     # for spectral axis conversions and scale factor translations
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=n_cpu)
+        mf.calculate_fit()
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == expected_unit_string
@@ -582,4 +582,4 @@ def test_deconf_mf_with_subset(deconfigged_helper):
 
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        mf.calculate_fit(n_cpu=1)
+        mf.calculate_fit()
