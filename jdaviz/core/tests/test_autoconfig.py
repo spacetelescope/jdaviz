@@ -60,7 +60,7 @@ def test_launcher(tmp_path):
 
     # Test with real files
     for uri, config in AUTOCONFIG_EXAMPLES:
-        uri_or_file = cached_uri(uri)
+        uri = cached_uri(uri)
         if uri.startswith("mast:"):
             download_path = str(tmp_path / Path(uri).name)
             Observations.download_file(uri, local_path=download_path)
