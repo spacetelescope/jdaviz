@@ -790,12 +790,13 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         new_links = []
-        for existing_data in self.data_collection:
-            if existing_data.label == new_data_label:
+        for new_comp in new_data.components:
+            if new_comp._component_type is None:
                 continue
 
-            for new_comp in new_data.components:
-                if new_comp._component_type is None:
+            found_match = False
+            for existing_data in self.data_collection:
+                if existing_data.label == new_data_label:
                     continue
 
                 for existing_comp in existing_data.components:
@@ -808,7 +809,11 @@ class Application(VuetifyTemplate, HubListener):
                         new_links.append(link)
                         # only need one link for the new component, reparenting will handle
                         # if that data entry is deleted
-                        break
+                        found_match = True
+                        break  # break out of existing_comp loop
+
+                if found_match:
+                    break  # break out of existing_data loop
 
         # Add all new links to the data collection
         if new_links:
