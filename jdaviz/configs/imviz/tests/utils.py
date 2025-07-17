@@ -270,11 +270,9 @@ def create_wfi_image_model(image_shape=(20, 10), **kwargs):
 
     """  # noqa: E501
     from roman_datamodels import datamodels as rdd
-    from roman_datamodels.maker_utils import mk_level2_image
 
-    wfi_image = mk_level2_image(shape=image_shape, **kwargs)
+    model = rdd.ImageModel.create_fake_data(shape=image_shape, defaults=kwargs)
 
     # introduce synthetic gwcs:
-    wfi_image["meta"]["wcs"] = create_example_gwcs(image_shape)
-
-    return rdd.ImageModel(wfi_image)
+    model.meta.wcs = create_example_gwcs(image_shape)
+    return model

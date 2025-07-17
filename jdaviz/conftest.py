@@ -65,12 +65,11 @@ def deconfigged_helper():
 
 @pytest.fixture
 def roman_level_1_ramp():
-    from roman_datamodels.maker_utils import mk_datamodel
     from roman_datamodels.datamodels import RampModel
     rng = np.random.default_rng(seed=42)
 
     shape = (10, 25, 25)
-    data_model = mk_datamodel(RampModel, shape=shape, dq=False)
+    data_model = RampModel.create_fake_data(shape=shape)
 
     data_model.data = 100 + 3 * np.cumsum(rng.uniform(size=shape), axis=0)
     return data_model
