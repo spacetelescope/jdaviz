@@ -70,6 +70,12 @@ class AID:
         elif hasattr(center, '__len__') and isinstance(center[0], (float, int)):
             reference_center_pix = center
 
+        else:
+            raise ValueError(
+                "The AID API supports `center` arguments as SkyCoords or as "
+                f"a tuple of floats in pixel coordinates, got {type(center)=}."
+            )
+
         current_width = self.viewer.state.x_max - self.viewer.state.x_min
         current_height = self.viewer.state.y_max - self.viewer.state.y_min
 
@@ -110,12 +116,14 @@ class AID:
                 wcs = WCS(wcs.to_fits_sip())
 
             lower_left, lower_right, upper_left = wcs.pixel_to_world(
-                [x_min, y_min, x_min], [x_max, y_min, y_max]
+                [x_min, x_max, x_min], [y_min, y_min, y_max]
             )
-
-            return lower_left.separation(lower_right)
+            return min(
+                lower_left.separation(lower_right),
+                lower_left.separation(upper_left),
+            )
         else:
-            return x_max - x_min
+            return min(abs(x_max - x_min), abs(y_max - y_min))
 
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
@@ -165,6 +173,9 @@ class AID:
 
         else:
             center = (center_x, center_y)
-            fov = x_max - x_min
+            fov = min(
+                abs(x_max - x_min),
+                abs(y_max - y_min)
+            )
 
         return dict(center=center, fov=fov, image_label=image_label)
