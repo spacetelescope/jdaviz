@@ -239,8 +239,12 @@ class ImageImporter(BaseImporterToDataCollection):
             else:
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
+            # For the purposes of the DQ plugin, only the DQ extension can set the
+            # SCI/DATA extension to be it's parent
+            set_parent = (parent if (parent and parent != data_label and ext.lower() == 'dq')
+                          else None)
             self.add_to_data_collection(output, data_label,
-                                        parent=parent if parent != data_label else None,
+                                        parent=set_parent,
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 
