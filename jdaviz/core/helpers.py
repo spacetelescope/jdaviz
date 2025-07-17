@@ -28,7 +28,7 @@ from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
-from jdaviz.utils import data_has_valid_wcs
+from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -130,7 +130,7 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not (self.app.state.dev_loaders or self.app.config in ('deconfigged', 'specviz', 'specviz2d', 'imviz')):  # noqa
+        if not (self.app.state.dev_loaders or self.app.config in CONFIGS_WITH_LOADERS):  # noqa
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}

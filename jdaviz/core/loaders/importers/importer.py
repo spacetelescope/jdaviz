@@ -6,7 +6,7 @@ from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import standardize_metadata
+from jdaviz.utils import standardize_metadata, CONFIGS_WITH_LOADERS
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
            '_spectrum_assign_component_type']
@@ -209,7 +209,7 @@ class BaseImporterToDataCollection(BaseImporter):
                                                                  new_dc_entry.get_component(comp_id),  # noqa
                                                                  physical_type)
 
-        if self.app.config in ('deconfigged', 'specviz', 'specviz2d'):
+        if self.app.config in CONFIGS_WITH_LOADERS:
             self.app._link_new_data_by_component_type(data_label)
 
         if show_in_viewer:

@@ -54,7 +54,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
                           layer_is_table_data, MultiMaskSubsetState,
-                          _wcs_only_label)
+                          _wcs_only_label, CONFIGS_WITH_LOADERS)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
@@ -829,7 +829,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         if self.config == 'imviz':  # Imviz does its own thing
             return
-        elif self.config in ('deconfigged', 'specviz', 'specviz2d'):
+        elif self.config in CONFIGS_WITH_LOADERS:
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -2941,7 +2941,7 @@ class Application(VuetifyTemplate, HubListener):
         self._viewer_store[vid] = viewer
 
         # Add viewer locally
-        if (self.config in ('deconfigged', 'specviz', 'specviz2d', 'lcviz')
+        if (self.config in CONFIGS_WITH_LOADERS
                 and len(self.state.stack_items)):
             # add to bottom (eventually will want more control in placement)
             self.state.stack_items[0]['children'].append(new_stack_item)
