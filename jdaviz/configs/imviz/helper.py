@@ -84,7 +84,8 @@ class Imviz(ImageConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
-    def load_data(self, data, data_label=None, show_in_viewer=True, **kwargs):
+    def load_data(self, data, data_label=None, show_in_viewer=True,
+                  gwcs_to_fits_sip=False, **kwargs):
         """Load data into Imviz.
 
         Parameters
@@ -146,8 +147,8 @@ class Imviz(ImageConfigHelper):
         """
         prev_data_labels = self.app.data_collection.labels
 
-        if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
-            kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
+        # to pass to parser
+        kwargs['gwcs_to_fits_sip'] = gwcs_to_fits_sip
 
         if isinstance(data, str):
             filelist = data.split(',')

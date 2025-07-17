@@ -11,6 +11,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
 from astropy.utils.data import download_file
+from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astroquery.mast import Observations, conf
 from gwcs import WCS as gwcs
@@ -242,6 +243,30 @@ def alpha_index(index):
     else:
         # aa-zz (26-701), then overflow strings like '{a'
         return chr(97 + index//26 - 1) + chr(97 + index % 26)
+
+
+def _try_gwcs_to_fits_sip(gw):
+    """
+    Try to convert this GWCS to FITS SIP. Some GWCS models
+    cannot be converted to FITS SIP. In that case, a warning
+    is raised and the GWCS is used, as is.
+    """
+    if isinstance(gw, gwcs):
+        try:
+            result = WCS(gw.to_fits_sip(), relax=True)
+
+        except ValueError as err:
+            warnings.warn(
+                "The GWCS coordinates could not be simplified to "
+                "a SIP-based FITS WCS, the following error was "
+                f"raised: {err}",
+                UserWarning
+            )
+            result = gw
+    else:
+        result = gw
+
+    return result
 
 
 def data_has_valid_wcs(data, ndim=None):
