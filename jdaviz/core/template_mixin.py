@@ -5578,7 +5578,7 @@ class ParallelMixin(VuetifyTemplate, HubListener):
 
     # NOTE: default to 0 because elsewhere (model_fitting)
     # we default to using multiprocessing with None, e.g. max(n_cpu) - 1
-    _parallel_n_cpu = IntHandleEmpty(0).tag(sync = True)
+    _parallel_n_cpu = IntHandleEmpty(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -5588,4 +5588,3 @@ class ParallelMixin(VuetifyTemplate, HubListener):
         if self._parallel_n_cpu == 0:
             return None
         return self._parallel_n_cpu
-
