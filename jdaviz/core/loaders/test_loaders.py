@@ -173,3 +173,14 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     assert len(loader.format.choices) > 0
 
     loader.importer()
+
+
+def test_deconfigged_spectrum_and_image(deconfigged_helper, spectrum1d, image_hdu_wcs):
+    # Load a 1D spectrum and a 2D image
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+
+    # Check that both data types are loaded correctly
+    assert len(deconfigged_helper.app.data_collection) == 3
+    assert len(deconfigged_helper.viewers) == 2
