@@ -167,9 +167,7 @@ def test_fitting_backend(unc):
         (1, "zeros"),
         (1, None),
         (None, "zeros"),
-        (None, None),
-    ]
-)
+        (None, None),])
 def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
     np.random.seed(42)
 
