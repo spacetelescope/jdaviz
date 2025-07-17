@@ -10,6 +10,7 @@ from jdaviz import open as jdaviz_open
 from jdaviz.cli import ALL_JDAVIZ_CONFIGS
 from jdaviz.configs import Specviz2d, Cubeviz, Imviz, Specviz
 from jdaviz.core.launcher import Launcher, STATUS_HINTS
+from jdaviz.utils import cached_uri
 
 
 AUTOCONFIG_EXAMPLES = (
@@ -27,17 +28,13 @@ AUTOCONFIG_EXAMPLES = (
 @pytest.mark.slow
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('uris', AUTOCONFIG_EXAMPLES)
-def test_autoconfig(uris, tmp_path):
+def test_autoconfig(uris):
     uri = uris[0]
     helper_class = uris[1]
 
-    local_path = str(tmp_path / Path(uri).name)
-
     kwargs = dict(cache=True, show=False)
-    if uri.startswith('mast'):
-        kwargs['local_path'] = local_path
 
-    viz_helper = jdaviz_open(uri, **kwargs)
+    viz_helper = jdaviz_open(cached_uri(uri), **kwargs)
     assert isinstance(viz_helper, helper_class)
     assert len(viz_helper.app.data_collection) > 0
 

@@ -23,7 +23,7 @@
       ></v-text-field>
     </v-row>
 
-    <v-row>
+    <v-row v-if="url_scheme !== 's3'">
       <v-text-field
         v-model.number='timeout'
         type="number"
@@ -35,6 +35,7 @@
     </v-row>
 
     <plugin-switch
+      v-if="url_scheme !== 's3'"
       :value.sync="cache"
       label="Cache File"
       api_hint="ldr.cache = "

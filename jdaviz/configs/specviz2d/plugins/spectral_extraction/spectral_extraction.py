@@ -26,7 +26,7 @@ from specreduce import tracing
 from specreduce import background
 from specreduce import extract
 
-__all__ = ['SpectralExtraction']
+__all__ = ['SpectralExtraction2D']
 
 _model_cls = {'Spline': models.Spline1D,
               'Polynomial': models.Polynomial1D,
@@ -34,13 +34,13 @@ _model_cls = {'Spline': models.Spline1D,
               'Chebyshev': models.Chebyshev1D}
 
 
-@tray_registry('spectral-extraction', label="Spectral Extraction",
+@tray_registry('spectral-extraction-2d', label="2D Spectral Extraction",
                category="data:reduction")
-class SpectralExtraction(PluginTemplateMixin):
+class SpectralExtraction2D(PluginTemplateMixin):
     """
-    The Spectral Extraction plugin exposes specreduce methods for tracing, background subtraction,
-    and spectral extraction from 2D spectra.
-    See the :ref:`Spectral Extraction Plugin Documentation <specviz2d-spectral-extraction>`
+    The Spectral Extraction 2D plugin exposes specreduce methods for tracing,
+    background subtraction, and spectral extraction from 2D spectra.
+    See the :ref:`2D Spectral Extraction Plugin Documentation <specviz2d-spectral-extraction>`
     for more details.
 
     Only the following attributes and methods are available through the
@@ -413,8 +413,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self._clear_default_inputs()
 
     def _extract_in_new_instance(self, dataset=None, add_data=False):
-        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
-        # the tray) and extract the entire cube with defaults.
+        # create a new instance of the 2D Spectral Extraction plugin (to not
+        # affect the instance in the tray) and extract the entire cube with defaults.
         plg = self.new()
         # all other settings remain at their plugin defaults
         plg._clear_default_inputs()

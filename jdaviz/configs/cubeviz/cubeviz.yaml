@@ -25,7 +25,7 @@ tray:
   - g-markers
   - cube-slice
   - g-unit-conversion
-  - cubeviz-spectral-extraction
+  - spectral-extraction-3d
   - g-gaussian-smooth
   - g-collapse
   - g-model-fitting

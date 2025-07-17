@@ -88,23 +88,23 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
-        if 'Spectral Extraction' not in self.plugins:  # pragma: no cover
+        if '3D Spectral Extraction' not in self.plugins:  # pragma: no cover
             msg = SnackbarMessage(
-                "Automatic spectral extraction requires the Spectral Extraction plugin to be enabled",  # noqa
+                "Automatic spectral extraction requires the 3D Spectral Extraction plugin to be enabled",  # noqa
                 color='error', sender=self, timeout=10000)
             self.app.hub.broadcast(msg)
         else:
             try:
-                self.plugins['Spectral Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
+                self.plugins['3D Spectral Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
             except Exception:
                 msg = SnackbarMessage(
                     "Automatic spectrum extraction for the entire cube failed."
-                    " See the spectral extraction plugin to perform a custom extraction",
+                    " See the 3D Spectral Extraction plugin to perform a custom extraction",
                     color='error', sender=self, timeout=10000)
             else:
                 msg = SnackbarMessage(
                     "The extracted 1D spectrum was generated automatically for the entire cube."
-                    " See the spectral extraction plugin for details or to"
+                    " See the 3D Spectral Extraction plugin for details or to"
                     " perform a custom extraction.",
                     color='warning', sender=self, timeout=10000)
             self.app.hub.broadcast(msg)
@@ -137,22 +137,24 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
     def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
                  cls=None, use_display_units=False):
         """
-        Returns data with name equal to ``data_label`` of type ``cls`` with subsets applied from
-        ``spectral_subset``, if applicable.
+        Returns data with name equal to ``data_label`` of type ``cls`` with
+        subsets applied from ``spectral_subset``, if applicable.
 
         Parameters
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
         spatial_subset : str, optional
-            Spatial subset applied to data.  Only applicable if ``data_label`` points to a cube or
-            image.  To extract a spectrum from a cube, use the spectral extraction plugin instead.
+            Spatial subset applied to data.  Only applicable if ``data_label``
+            points to a cube or image.  To extract a spectrum from a cube, use
+            the 3D Spectral Extraction plugin instead.
         spectral_subset : str, optional
             Spectral subset applied to data.
         cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
         use_display_units : bool, optional
-            Specify whether the returned data is in native units or the current display units.
+            Specify whether the returned data is in native units or the current
+            display units.
 
         Returns
         -------

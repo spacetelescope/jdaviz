@@ -287,13 +287,13 @@ spectral region of interest.
 
 .. _spectral-extraction:
 
-Spectral Extraction
-===================
+3D Spectral Extraction
+======================
 
 .. image:: ../img/cubeviz_spectral_extraction.png
 
 
-The Spectral Extraction plugin produces a 1D spectrum from a spectral
+The 3D Spectral Extraction plugin produces a 1D spectrum from a spectral
 cube. The 1D spectrum can be computed via the sum, mean, minimum, or
 maximum of the spatial dimensions in the spectral cube. Select an
 extraction operation from the :guilabel:`Function` dropdown, and
@@ -304,6 +304,12 @@ from the spectral cube, which has uncertainties propagated by
 By default, if a mask was loaded with the cube, it will be applied to the
 cube when extracting in addition to any subsets chosen as an aperture. This
 is not currently done for Data Quality arrays, e.g. the DQ extension in JWST files.
+
+To interact with the plugin via the API in a notebook, access the plugin object via:
+
+.. code-block:: python
+
+  sp_ext = cubeviz.plugins['3D Spectral Extraction']
 
 If using a simple subset (currently only works for a circular subset applied to data
 with spatial axis units in wavelength) for the spatial aperture, an option to

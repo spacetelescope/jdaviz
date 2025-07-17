@@ -32,12 +32,15 @@ New Features
 
 - Allow custom resolutions when exporting viewers to png or mp4. [#3478]
 
+
 Cubeviz
 ^^^^^^^
 
 - Ability to ingest and export ``SkyRegion`` objects. [#3502]
 
 - Add sonified layer for each cube created by the Sonify Data plugin. [#3430, #3660]
+
+- Renamed ``Spectral Extraction`` plugin to ``3D Spectral Extraction``. [#3691]
 
 Imviz
 ^^^^^
@@ -74,6 +77,8 @@ Specviz2d
   deprecated and will open the new sidebar.  [#3473]
 
 - New plugin to vizualize the cross-dispersion profile [#3552]
+
+- Renamed ``Spectral Extraction`` plugin to ``2D Spectral Extraction``. [#3691]
 
 API Changes
 -----------
@@ -161,6 +166,8 @@ Bug Fixes
   transform does not use units, which was previously causing issues when
   aligning by WCS. [#3658]
 
+- Fixed API hints for viewers in the data-menu. [#3695]
+
 Cubeviz
 ^^^^^^^
 
@@ -189,6 +196,8 @@ Specviz2d
 
 - Fixed an issue with default angle unit being set in unit conversion plugin, which fixed
   a bug when background data from the spectral extraction plugin is added to the viewer. [#3661]
+
+- Fixed a bug loading array traces into Specviz2d. [#3697]
 
 4.2.3 (2025-06-16)
 ==================

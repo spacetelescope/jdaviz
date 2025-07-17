@@ -6,7 +6,7 @@ from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import XRangeROI
 from specutils import Spectrum
 
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import PRIHDR_KEY, cached_uri
 from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 
 
@@ -51,7 +51,8 @@ def test_2d_parser_ext_hdulist(specviz2d_helper):
 
 @pytest.mark.remote_data
 def test_hlsp_goods_s2d(specviz2d_helper):
-    specviz2d_helper.load('mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits ',  # noqa
+    uri='mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits'  # noqa
+    specviz2d_helper.load(cached_uri(uri),
                           cache=True)
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
@@ -59,13 +60,14 @@ def test_hlsp_goods_s2d(specviz2d_helper):
 
 @pytest.mark.remote_data
 def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
-    deconfigged_helper.load('mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits ',  # noqa
+    uri = 'mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits'  # noqa
+    deconfigged_helper.load(cached_uri(uri),
                             format='2D Spectrum',
                             data_label='2D Spectrum',
                             cache=True)
     dc_0 = deconfigged_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
-    assert isinstance(deconfigged_helper.plugins['Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
+    assert isinstance(deconfigged_helper.plugins['2D Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
     # TODO: store expected class in data itself so get_data doesn't need to pass cls
     assert isinstance(deconfigged_helper.get_data('2D Spectrum', cls=Spectrum), Spectrum)
 
