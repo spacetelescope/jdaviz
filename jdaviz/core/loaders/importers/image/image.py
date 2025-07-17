@@ -240,11 +240,12 @@ class ImageImporter(BaseImporterToDataCollection):
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
             # For the purposes of the DQ plugin, only the DQ extension can set the
-            # SCI/DATA extension to be it's parent
-            set_parent = (parent if (parent and parent != data_label and ext.lower() == 'dq')
-                          else None)
+            # SCI/DATA extension to be it's parent. The exception to this is if the parent is
+            # explicitly set. The reason for only dq extensions being allowed as children is:
+            # https://github.com/spacetelescope/jdaviz/blob/77b09ce49ab86958e819f47ae85fcdead4d7109e/jdaviz/configs/default/plugins/data_quality/data_quality.py#L142  # noqa
+            set_parent = (self.parent.selected != 'Auto' and ext is None) or (isinstance(ext, str) and ext.lower() == 'dq')
             self.add_to_data_collection(output, data_label,
-                                        parent=set_parent,
+                                        parent=parent if (parent != data_label and set_parent) else None,
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 
