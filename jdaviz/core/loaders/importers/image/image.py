@@ -5,15 +5,18 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, CCDData
+from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
-from traitlets import Bool, List, Any
+from traitlets import Bool, List, Any, observe
+from stdatamodels import asdf_in_fits
 
 
-from jdaviz.core.template_mixin import SelectFileExtensionComponent
+from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
     standardize_metadata, standardize_roman_metadata, PRIHDR_KEY
@@ -40,32 +43,66 @@ class ImageImporter(BaseImporterToDataCollection):
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
 
+    # Data-association
+    parent_items = List().tag(sync=True)
+    parent_selected = Any().tag(sync=True)
+
+    # user-settable option to treat the data_label as prefix and append the extension later
+    data_label_as_prefix = Bool(False).tag(sync=True)
+    # whether the current data_label should be treated as a prefix
+    # either based on user-setting above or current extension selection
+    data_label_is_prefix = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
         elif self.app.config == 'imviz':
             self.data_label_default = 'Image'
 
-        self.input_hdulist = isinstance(self.input, fits.HDUList)
+        self.parent = DatasetSelect(self, 'parent_items', 'parent_selected',
+                                    multiselect=None, manual_options=['Auto'])
+        self.parent.add_filter('is_image', 'not_from_plugin')
+        self.parent.selected = 'Auto'
+
+        input = self.input
+        if isinstance(input, fits.hdu.image.ImageHDU):
+            input = fits.HDUList([input])
+
+        self.input_hdulist = (isinstance(input, fits.HDUList) or
+                              (HAS_ROMAN_DATAMODELS and
+                               isinstance(input, (rdd.ImageModel, rdd.DataModel))))
         if self.input_hdulist:
+            filters = ([_validate_fits_image2d] if isinstance(input, fits.HDUList)
+                       else [_validate_roman_ext])
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
                                                           multiselect='extension_multiselect',
-                                                          manual_options=self.input,
-                                                          filters=[_validate_fits_image2d])
+                                                          manual_options=input,
+                                                          filters=filters)
             self.extension.selected = [self.extension.choices[0]]
+        else:
+            self._set_default_data_label()
+
+    @property
+    def user_api(self):
+        expose = ['parent', 'data_label_as_prefix']
+        if self.input_hdulist:
+            expose += ['extension']
+        return ImporterUserApi(self, expose)
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube
         # isinstance NDData
-        return isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                       NDData, np.ndarray, asdf.AsdfFile))
+        return (isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
+                                        NDData, np.ndarray, asdf.AsdfFile)) or
+                (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))))
 
     @property
     def default_viewer_reference(self):
@@ -73,50 +110,146 @@ class ImageImporter(BaseImporterToDataCollection):
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'imviz-image-viewer'
 
+    def _get_label_with_extension(self, prefix, ext=None, ver=None):
+        full_ext = ",".join([str(e) for e in (ext, ver) if e is not None])
+        return f"{prefix}[{full_ext}]" if len(full_ext) else prefix
+
+    @observe('extension_selected', 'data_label_as_prefix')
+    def _set_default_data_label(self, *args):
+        if self.default_data_label_from_resolver:
+            prefix = self.default_data_label_from_resolver
+        else:
+            prefix = "Image"
+        if self.input_hdulist:
+            if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
+                # selected_hdu may be an ndarray object if input is a roman data model
+                ver = getattr(self.extension.selected_hdu[0], 'ver', None)
+                # only a single extension selected
+                self.data_label_default = self._get_label_with_extension(prefix,
+                                                                         ext=self.extension.selected_name[0],  # noqa
+                                                                         ver=ver)  # noqa
+                self.data_label_is_prefix = False
+            else:
+                # multiple extensions selected,
+                # only show the prefix and append the extension later during import
+                self.data_label_default = prefix
+                self.data_label_is_prefix = True
+        elif (self.data_label_as_prefix or
+              (isinstance(self.input, NDData) and
+               getattr(self.input, 'meta', {}).get('plugin', None) is None)):
+            # will append with [DATA]/[UNCERTAINTY]/[MASK] later
+            # TODO: allow user to select extensions and include in same logic as HDUList
+            self.data_label_default = prefix
+            self.data_label_is_prefix = True
+        else:
+            self.data_label_default = prefix
+            self.data_label_is_prefix = False
+
     @property
     def output(self):
-        # if nddata return it
-        if isinstance(self.input, NDData) or isinstance(self.input, np.ndarray):
-            return self.input
-        elif (isinstance(self.input, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(self.input, rdd.DataModel))):
-            return self.input
-        elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            return [_hdu2data(self.input, self.data_label_value, None, False)]
-        hdulist = self.input
-        return [_hdu2data(hdu, self.data_label_value, hdulist)[0]
-                for hdu in self.extension.selected_hdu]
+        # NOTE: this should ALWAYS return a list of objects able to be imported into DataCollection
+        # NDData or ndarray
+        # ImageHDU
+        input = self.input
+        if isinstance(input, fits.hdu.image.ImageHDU):
+            input = fits.HDUList([self.input])
+
+        if isinstance(input, NDData):
+            return _nddata_to_glue_data(input)  # list of Data
+        elif isinstance(input, np.ndarray):
+            return [_ndarray_to_glue_data(input)]
+        # asdf
+        elif (isinstance(input, asdf.AsdfFile)):
+            return [_roman_asdf_2d_to_glue_data(input, ext='data')]
+        # roman data models
+        elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
+            return [_roman_asdf_2d_to_glue_data(input, ext=ext)
+                    for ext in self.extension.selected_name]  # list of Data
+        # JWST ASDF-in-FITS
+        if 'ASDF' in input:
+            return [_jwst2data(hdu, input) for hdu in self.extension.selected_hdu]
+        # fits
+        return [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
 
     def __call__(self, show_in_viewer=True):
-        data_label = self.data_label_value
-        output = self.output
-        if isinstance(output, NDData):
-            data, data_label = _nddata_to_glue_data(output, data_label)
-            self.add_to_data_collection(data, f"{data_label}",
-                                        show_in_viewer=show_in_viewer,
-                                        cls=CCDData)
-        elif isinstance(output, np.ndarray):
-            data = _ndarray_to_glue_data(output, data_label)
-            self.add_to_data_collection(data, f"{data_label}",
-                                        show_in_viewer=show_in_viewer,
-                                        cls=CCDData)
-        elif (isinstance(output, asdf.AsdfFile) or
-              (HAS_ROMAN_DATAMODELS and isinstance(output, rdd.DataModel))):
-            data, data_label = _roman_asdf_2d_to_glue_data(output, data_label)
-            self.add_to_data_collection(data, f"{data_label}",
-                                        show_in_viewer=show_in_viewer,
-                                        cls=CCDData)
-        elif isinstance(self.input, fits.hdu.image.ImageHDU):
-            data, data_label = _hdu2data(self.input, self.data_label_value, None, True)
-            self.add_to_data_collection(data, f"{data_label}",
-                                        show_in_viewer=show_in_viewer,
-                                        cls=CCDData)
+        base_data_label = self.data_label_value
+        # self.output is always a list of Data objects
+        outputs = self.output
+
+        if self.input_hdulist:
+            exts = self.extension.selected_name
+            hdus = self.extension.selected_hdu
+        elif isinstance(self.input, NDData):
+            exts = ['DATA', 'MASK', 'UNCERTAINTY']  # must match order in _nddata_to_glue_data
+            hdus = [None] * len(outputs)
         else:
-            with self.app._jdaviz_helper.batch_load():
-                for ext, ext_output in zip(self.extension.selected_name, output):
-                    self.add_to_data_collection(ext_output, f"{data_label}[{ext}]",
-                                                show_in_viewer=show_in_viewer,
-                                                cls=CCDData)
+            exts = [None] * len(outputs)
+            hdus = [None] * len(outputs)
+
+        # If parent is set to 'Auto', use any present SCI/DATA extension as parent
+        # of any other extensions
+        if (self.parent.selected == 'Auto' and
+                len(exts) > 1 and
+                getattr(self.input, 'meta', {}).get('plugin', None) is None):
+            for ext in ('SCI', 'DATA'):
+                if ext in exts:
+                    parent_ext = ext
+                    break
+                # Roman data model extensions are lower case
+                elif ext.lower() in exts:
+                    parent_ext = ext.lower()
+                    break
+            else:
+                parent_ext = None
+                parent = None
+            if parent_ext is not None:
+                parent_index = exts.index(parent_ext)
+                sort_inds = [parent_index] + [i for i in range(len(exts)) if i != parent_index]
+                outputs = [outputs[i] for i in sort_inds]
+                exts = [exts[i] for i in sort_inds]
+                hdus = [hdus[i] for i in sort_inds]
+
+                parent_hdu = hdus[parent_index]
+                # Handle case for rdd.ImageModel where hdu is an ndarray
+                ver = getattr(parent_hdu, 'ver', None)
+
+                # assume self.data_label_is_prefix is True
+                parent = self._get_label_with_extension(base_data_label,
+                                                        parent_ext,
+                                                        ver=ver)
+        elif self.parent.selected == 'Auto':
+            parent = None
+        else:
+            parent = self.parent.selected
+
+        for output, ext, hdu in zip(outputs, exts, hdus):
+            if output is None:
+                # needed for NDData where one of the "extensions" might
+                # not be present.  Remove this once users can select
+                # which to import.
+                continue
+            if self.data_label_is_prefix:
+                # Handle case where hdu is an ndarray
+                ver = getattr(hdu, 'ver', None)
+                # If data_label is a prefix, we need to append the extension
+                # to the data label.
+                data_label = self._get_label_with_extension(base_data_label,
+                                                            ext,
+                                                            ver=ver)
+            else:
+                # If data_label is not a prefix, we use it as is.
+                data_label = base_data_label
+            # For the purposes of the DQ plugin, only the DQ extension can set the
+            # SCI/DATA extension to be it's parent. The exception to this is if the parent is
+            # explicitly set. The reason for only dq extensions being allowed as children is:
+            # https://github.com/spacetelescope/jdaviz/blob/77b09ce49ab86958e819f47ae85fcdead4d7109e/jdaviz/configs/default/plugins/data_quality/data_quality.py#L142  # noqa
+            set_parent = (((self.parent.selected != 'Auto' and ext is None)
+                           or (isinstance(ext, str) and ext.lower() == 'dq'))
+                          and parent != data_label)
+            self.add_to_data_collection(output, data_label,
+                                        parent=parent if set_parent else None,
+                                        show_in_viewer=show_in_viewer,
+                                        cls=CCDData)
 
 
 def _validate_fits_image2d(hdu, raise_error=False):
@@ -133,25 +266,31 @@ def _validate_fits_image2d(hdu, raise_error=False):
     return valid
 
 
-def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
+def _validate_roman_ext(ext):
+    valid = ext in ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
+    return valid
+
+
+def _hdu2data(hdu, hdulist, include_wcs=True):
     if 'BUNIT' in hdu.header:
         bunit = _validate_bunit(hdu.header['BUNIT'], raise_error=False)
     else:
         bunit = ''
 
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
-    new_data_label = f'{data_label}[{comp_label}]'
 
-    data = Data(label=new_data_label)
+    data = Data()
     if hdulist is not None and hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         data.meta[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
     data.meta.update(standardize_metadata(hdu.header))
     if include_wcs:
         data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
-    data.add_component(component=component, label=comp_label)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=AstropyWarning)
+        data.add_component(component=component, label=comp_label)
 
-    return data, new_data_label
+    return data
 
 
 def _validate_bunit(bunit, raise_error=False):
@@ -172,30 +311,28 @@ def _validate_bunit(bunit, raise_error=False):
     return valid
 
 
-def _ndarray_to_glue_data(arr, data_label):
+def _ndarray_to_glue_data(arr):
     if arr.ndim != 2:
         raise ValueError(f'Imviz cannot load this array with ndim={arr.ndim}')
 
-    data = Data(label=data_label)
+    data = Data()
     component = Component.autotyped(arr)
     data.add_component(component=component, label='DATA')
     return data
 
 
-def _nddata_to_glue_data(ndd, data_label):
+def _nddata_to_glue_data(ndd):
     if ndd.data.ndim != 2:
         raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
 
+    returned_data = []
     for attrib in ('data', 'mask', 'uncertainty'):
         arr = getattr(ndd, attrib)
         if arr is None:
+            returned_data.append(None)
             continue
         comp_label = attrib.upper()
-        if 'plugin' in ndd.meta.keys() and ndd.meta['plugin'] == 'orientation':
-            cur_label = f'{data_label}'
-        else:
-            cur_label = f'{data_label}[{comp_label}]'
-        cur_data = Data(label=cur_label)
+        cur_data = Data()
         cur_data.meta.update(standardize_metadata(ndd.meta))
         if ndd.wcs is not None:
             cur_data.coords = ndd.wcs
@@ -209,7 +346,8 @@ def _nddata_to_glue_data(ndd, data_label):
             bunit = ''
         component = Component.autotyped(raw_arr, units=bunit)
         cur_data.add_component(component=component, label=comp_label)
-        return cur_data, cur_label
+        returned_data.append(cur_data)
+    return returned_data
 
 
 def _try_gwcs_to_fits_sip(gwcs):
@@ -245,17 +383,7 @@ def prep_data_layer_as_dq(data):
     data.update_components({cid: data_arr})
 
 
-def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits_sip=False):
-    if ext == '*':
-        # NOTE: Update as needed. Should cover all the image extensions available.
-        ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
-    elif ext is None:
-        ext_list = ('data', )
-    elif isinstance(ext, (list, tuple)):
-        ext_list = ext
-    else:
-        ext_list = (ext, )
-
+def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     meta = standardize_roman_metadata(file_obj)
     gwcs = meta.get('wcs', None)
 
@@ -264,21 +392,77 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None, try_gwcs_to_fits
     else:
         coords = gwcs
 
-    for cur_ext in ext_list:
-        comp_label = cur_ext.upper()
-        new_data_label = f'{data_label}[{comp_label}]'
-        data = Data(coords=coords, label=new_data_label)
+    comp_label = ext.upper()
+    data = Data(coords=coords)
 
-        # This could be a quantity or a ndarray:
-        if HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
-            ext_values = getattr(file_obj, cur_ext)
+    # This could be a quantity or a ndarray:
+    if HAS_ROMAN_DATAMODELS and isinstance(file_obj, (rdd.DataModel, rdd.ImageModel)):
+        ext_values = getattr(file_obj, ext)
+    else:
+        ext_values = file_obj['roman'][ext]
+    bunit = getattr(ext_values, 'unit', '')
+    component = Component(np.array(ext_values), units=bunit)
+    data.add_component(component=component, label=comp_label)
+    data.meta.update(standardize_metadata(dict(meta)))
+    if comp_label == 'DQ':
+        prep_data_layer_as_dq(data)
+
+    return data
+
+
+def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
+    comp_label = hdu.name.lower()
+    if comp_label == 'sci':
+        comp_label = 'data'
+    data = Data()
+    unit_attr = f'bunit_{comp_label}'
+
+    try:
+        # This is very specific to JWST pipeline image output.
+        with asdf_in_fits.open(hdulist) as af:
+            dm = af.tree
+            dm_meta = af.tree["meta"]
+            data.meta.update(standardize_metadata(dm_meta))
+
+            if unit_attr in dm_meta:
+                bunit = _validate_bunit(dm_meta[unit_attr], raise_error=False)
+            else:
+                bunit = ''
+
+            # This is instance of gwcs.WCS, not astropy.wcs.WCS
+            if 'wcs' in dm_meta:
+                gwcs = dm_meta['wcs']
+
+                if try_gwcs_to_fits_sip:
+                    data.coords = _try_gwcs_to_fits_sip(gwcs)
+                else:
+                    data.coords = gwcs
+            # keys in the asdf tree are lower case
+            imdata = dm[comp_label]
+            component = Component.autotyped(imdata, units=bunit)
+
+            # Might have bad GWCS. If so, we exclude it.
+            try:
+                # we catch an astropy warning here for non-standard FITS
+                # keywords arising from the FITS SIP approximation. These
+                # warnings don't affect the result, and there's a pending
+                # glue PR with a fix: https://github.com/glue-viz/glue/pull/2540
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=AstropyWarning)
+                    data.add_component(component=component, label=comp_label)
+
+            except Exception:  # pragma: no cover
+                data.coords = None
+                data.add_component(component=component, label=comp_label)
+
+    # TODO: Do not need this when jwst.datamodels finally its own package.
+    # This might happen for grism image; fall back to FITS loader without WCS.
+    except Exception:
+        if comp_label == 'data':
+            new_ext = 'sci'
         else:
-            ext_values = file_obj['roman'][cur_ext]
-        bunit = getattr(ext_values, 'unit', '')
-        component = Component(np.array(ext_values), units=bunit)
-        data.add_component(component=component, label=comp_label)
-        data.meta.update(standardize_metadata(dict(meta)))
-        if comp_label == 'DQ':
-            prep_data_layer_as_dq(data)
+            new_ext = hdu.name
+        new_hdu = hdulist[new_ext]
+        return _hdu2data(new_hdu, hdulist, include_wcs=False)
 
-        return data, new_data_label
+    return data
