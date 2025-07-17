@@ -823,12 +823,6 @@ class SpectralExtraction(PluginTemplateMixin):
     def export_bg(self, **kwargs):
         """
         Create a specreduce Background object from the input parameters defined in the plugin.
-
-        Parameters
-        ----------
-        add_data : bool
-            Whether to add the resulting image to the application, according to the options
-            defined in the plugin.
         """
         self._set_create_kwargs(**kwargs)
         if len(kwargs) and self.active_step != 'bg':
