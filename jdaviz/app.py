@@ -2594,6 +2594,11 @@ class Application(VuetifyTemplate, HubListener):
 
         self.data_collection.remove(self.data_collection[data_label])
 
+        if self.config in CONFIGS_WITH_LOADERS and len(self.data_collection) > 1:
+            for data in self.data_collection[1:]:
+                self._link_new_data_by_component_type(data.label)
+            return
+
         # If there are two or more datasets left we need to link them back together if anything
         # was linked only through the removed data.
         if (len(self.data_collection) > 1 and
