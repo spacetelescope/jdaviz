@@ -22,8 +22,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AutoTextField,
                                         AddResultsMixin,
                                         TableMixin,
-                                        # TODO: Uncomment when parallel framework is completed
-                                        # ParallelMixin,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
@@ -46,7 +44,7 @@ class _EmptyParam:
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
                    NonFiniteUncertaintyMismatchMixin,
-                   AddResultsMixin, TableMixin):  # ParallelMixin
+                   AddResultsMixin, TableMixin):
     """
     See the :ref:`Model Fitting Plugin Documentation <specviz-model-fitting>` for more details.
 
