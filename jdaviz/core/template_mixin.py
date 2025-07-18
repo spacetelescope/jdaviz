@@ -41,7 +41,7 @@ from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
-from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
@@ -92,7 +92,6 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'Plot', 'PlotMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
-           'ParallelMixin',
            'PlotOptionsSyncState',
            'SPATIAL_DEFAULT_TEXT']
 
