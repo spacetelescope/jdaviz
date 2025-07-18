@@ -648,8 +648,8 @@ class PluginTemplateMixin(TemplateMixin):
     def _set_relevant(self, *args):
         for traitlet_name in self._non_empty_traitlets:
             if not getattr(self, traitlet_name, None):
-                self.irrelevant_msg = self.custom_irrelevant_message \
-                    if self.custom_irrelevant_message \
+                self.irrelevant_msg = self._custom_irrelevant_msg \
+                    if self._custom_irrelevant_msg \
                     else f'No {traitlet_name} available'
                 return
 
@@ -658,7 +658,7 @@ class PluginTemplateMixin(TemplateMixin):
     def setup_relevance(self, non_empty_traitlets: (list, tuple), irrelevant_msg='',
                         set_relevant=None):
         self._non_empty_traitlets = non_empty_traitlets
-        self.custom_irrelevant_message = irrelevant_msg
+        self._custom_irrelevant_msg = irrelevant_msg
 
         # NOTE: taking set_relevant in as a kwarg isn't STRICTLY necessary,
         # a plugin class could use its own _set_relevant and have it override
