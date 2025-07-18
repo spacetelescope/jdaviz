@@ -130,7 +130,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                        'orientation_layer_selected',
                                        'viewer_id',
                                        only_wcs_layers=True)
-        self.orientation_enabled = self.config == 'imviz'
+
+        self.orientation_enabled = (self.config in ('imviz', 'deconfigged')
+                                    and viewer.__class__.__name__ == 'ImvizImageView')
 
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
@@ -161,7 +163,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                   'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
         readonly = ['data_labels_loaded', 'data_labels_visible', 'data_labels_unloaded']
-        if self.app.config == 'imviz':
+        if self.app.config in ('imviz', 'deconfigged'):
             expose += ['orientation']
         return UserApiWrapper(self, expose=expose, readonly=readonly)
 
