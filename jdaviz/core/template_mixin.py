@@ -644,6 +644,19 @@ class PluginTemplateMixin(TemplateMixin):
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
 
+    def _set_relevant(self):
+        for traitlet_name in self._non_empty_traitlets:
+            if not len(getattr(self, traitlet_name, [])):
+                self.irrelevant_msg = f'No {traitlet_name} available'
+                return
+        self.irrelevant_msg = ''
+
+    def setup_relevance(self, non_empty_traitlets: (list, tuple)):
+        self._non_empty_traitlets = non_empty_traitlets
+        _ = [self.observe(self._set_relevant, traitlet_name)
+             for traitlet_name in self._non_empty_traitlets]
+        self._set_relevant()
+
     @observe('irrelevant_msg')
     def _irrelevant_msg_changed(self, *args):
         labels = [ti['label'] for ti in self.app.state.tray_items]
