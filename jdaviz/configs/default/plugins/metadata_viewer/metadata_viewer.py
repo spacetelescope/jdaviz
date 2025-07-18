@@ -46,16 +46,8 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'View metadata.'
 
-        self._set_relevant()
-
-    @observe('dataset_items')
-    def _set_relevant(self, *args):
-        if self.app.config != 'deconfigged':
-            return
-        if not len(self.dataset_items):
-            self.irrelevant_msg = 'No data loaded'
-        else:
-            self.irrelevant_msg = ''
+        if self.config == "deconfigged":
+            self.setup_relevance(non_empty_traitlets=['dataset_items'])
 
     @property
     def user_api(self):

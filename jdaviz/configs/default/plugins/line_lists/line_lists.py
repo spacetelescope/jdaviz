@@ -120,12 +120,12 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
             sv.state.add_callback("x_max",
                                   lambda x_max: self._on_spectrum_viewer_limits_changed())
 
-        self._set_relevant()
+        self.setup_relevance(non_empty_traitlets=['viewer_items'],
+                             set_relevant=self._set_relevant)
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot spectral lines from preset or custom line lists.'
 
-    @observe('viewer_items')
     def _set_relevant(self, *args):
         if not hasattr(self, 'viewer'):
             return

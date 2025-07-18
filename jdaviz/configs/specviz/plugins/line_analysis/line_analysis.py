@@ -151,9 +151,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         self.table.headers_avail = headers
         self.table.headers_visible = [h for h in headers if ':' not in h]
 
-        self._set_relevant()
+        self.setup_relevance(non_empty_traitlets=['dataset_items'],
+                             set_relevant=self._set_relevant)
 
-    @observe('dataset_items')
     def _set_relevant(self, *args):
         if self.app.config == 'deconfigged':
             if not len(self.dataset_items):
