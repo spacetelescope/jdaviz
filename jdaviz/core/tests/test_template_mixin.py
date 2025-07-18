@@ -84,7 +84,7 @@ def test_setup_relevance_basic(deconfigged_helper):
                                    irrelevant_msg='irrelevant_msg')
 
         assert p_obj._obj._non_empty_traitlets == traitlet_list
-        assert p_obj._obj.custom_irrelevant_msg == 'irrelevant_msg'
+        assert p_obj._obj._custom_irrelevant_msg == 'irrelevant_msg'
         assert p_obj._obj._set_relevant() is None
 
 
@@ -99,5 +99,5 @@ def test_setup_relevance_function(deconfigged_helper):
                                    set_relevant=fake_set_relevant)
 
         assert p_obj._obj._non_empty_traitlets == traitlet_list
-        assert p_obj._obj.custom_irrelevant_msg == 'irrelevant_msg'
+        assert p_obj._obj._custom_irrelevant_msg == 'irrelevant_msg'
         assert p_obj._obj.set_relevant() == 'useless return'
