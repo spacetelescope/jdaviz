@@ -180,7 +180,7 @@ def test_fit_cube_no_wcs(cubeviz_helper):
     # Need to manually reestimate the parameters to update the units
     mf.reestimate_model_parameters()
 
-    modelfit_plugin._obj.parallel_n_cpu = 1
+    mf._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Model is linear in parameters.*")
         fitted_model, output_cube = mf.calculate_fit(add_data=True)
