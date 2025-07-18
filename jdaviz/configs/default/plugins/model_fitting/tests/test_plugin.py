@@ -150,6 +150,8 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     modelfit_plugin.reestimate_model_parameters()
     assert modelfit_plugin._obj.results_label_default == 'model'
     assert modelfit_plugin._obj.results_label == test_label
+
+    modelfit_plugin._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='.*Model is linear in parameters.*')
         modelfit_plugin.calculate_fit()
@@ -177,6 +179,8 @@ def test_fit_cube_no_wcs(cubeviz_helper):
     mf.cube_fit = True
     # Need to manually reestimate the parameters to update the units
     mf.reestimate_model_parameters()
+
+    mf._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Model is linear in parameters.*")
         fitted_model, output_cube = mf.calculate_fit(add_data=True)

@@ -5,8 +5,6 @@ import numpy as np
 import pytest
 from specutils import Spectrum
 
-from jdaviz import Cubeviz
-
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -73,24 +71,30 @@ def _calculate_line_flux(viz_helper):
 @pytest.mark.filterwarnings(r"ignore:.* contains multiple slashes")
 @pytest.mark.filterwarnings(r"ignore:.* apply_slider_redshift")
 @pytest.mark.parametrize('spectra_fluxunit', test_cases)
-def test_cubeviz_collapse_fluxunits(spectrum1d_cube_custom_fluxunit, spectra_fluxunit):
-    ''' Calculates line flux and checks the units for each collapse function '''
-    data = spectrum1d_cube_custom_fluxunit(spectra_fluxunit)
-    for function in COLLAPSE_FUNCTIONS:
-        # Initialize Cubeviz with specific data and collapse function
-        cubeviz_helper = Cubeviz()
-        data_label = "Test Cube"
-        cubeviz_helper.load_data(data, data_label=data_label)
-        cubeviz_helper.app.get_viewer('spectrum-viewer').state.function = function
+@pytest.mark.parametrize('function', COLLAPSE_FUNCTIONS)
+def test_cubeviz_collapse_fluxunits(
+        cubeviz_helper,
+        spectrum1d_cube_custom_fluxunit,
+        function, spectra_fluxunit):
+    """
+    Calculates line flux and checks the units for each collapse function.
+    """
 
-        lineflux_result = _calculate_line_flux(cubeviz_helper)
-        autocollapsed_spectrum_unit = (cubeviz_helper.
-                                       specviz.get_spectra()["Spectrum (sum)"].flux.unit)
-        # Futureproofing: Eventually Cubeviz autocollapse will change the flux units of the
-        # spectra depending on whether the spectrum was collapsed OVER SPAXELS or not. Only
-        # do the assertion check if we KNOW what the expected lineflux results should be
-        if autocollapsed_spectrum_unit in expected_lineflux_results.keys():
-            assert u.Unit(lineflux_result['unit']) == expected_lineflux_results[spectra_fluxunit]
+    data = spectrum1d_cube_custom_fluxunit(spectra_fluxunit)
+
+    # Initialize Cubeviz with specific data and collapse function
+    data_label = "Test Cube"
+    cubeviz_helper.load_data(data, data_label=data_label)
+    cubeviz_helper.app.get_viewer('spectrum-viewer').state.function = function
+
+    lineflux_result = _calculate_line_flux(cubeviz_helper)
+    autocollapsed_spectrum_unit = (cubeviz_helper.
+                                   specviz.get_spectra()["Spectrum (sum)"].flux.unit)
+    # Futureproofing: Eventually Cubeviz autocollapse will change the flux units of the
+    # spectra depending on whether the spectrum was collapsed OVER SPAXELS or not. Only
+    # do the assertion check if we KNOW what the expected lineflux results should be
+    if autocollapsed_spectrum_unit in expected_lineflux_results.keys():
+        assert u.Unit(lineflux_result['unit']) == expected_lineflux_results[spectra_fluxunit]
 
 
 @pytest.mark.filterwarnings(r"ignore:.* contains multiple slashes")
