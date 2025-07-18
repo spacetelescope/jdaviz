@@ -389,7 +389,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                            'import_extract',
                                            'export_extract', 'export_extract_spectrum'))
 
-
     def _clear_default_inputs(self):
         self.trace_pixel = 0
         self.trace_window = 0

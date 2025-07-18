@@ -655,8 +655,8 @@ class PluginTemplateMixin(TemplateMixin):
 
         self.irrelevant_msg = ''
 
-    def setup_relevance(self, non_empty_traitlets: (list, tuple), irrelevant_msg = '',
-                        set_relevant = None):
+    def setup_relevance(self, non_empty_traitlets: (list, tuple), irrelevant_msg='',
+                        set_relevant=None):
         self._non_empty_traitlets = non_empty_traitlets
         self.custom_irrelevant_message = irrelevant_msg
 
