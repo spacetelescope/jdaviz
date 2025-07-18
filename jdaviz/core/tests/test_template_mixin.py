@@ -3,7 +3,6 @@ import numpy as np
 import astropy.units as u
 from specutils import SpectralRegion
 
-
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
     # apply mask to spectrum to check selected subset is masked:
     mask = spectrum1d.flux < spectrum1d.flux.mean()
@@ -76,3 +75,29 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     # try setting based on id instead of reference
     p.viewer = p.viewer.ids[0]
     assert p.viewer.selected == p.viewer.labels[0]
+
+def test_setup_relevance_basic(deconfigged_helper):
+    traitlet_list = ['traitlet_1', 'traitlet_2', 'traitlet_3']
+
+    for p_name, p_obj in deconfigged_helper.plugins.items():
+        p_obj._obj.setup_relevance(non_empty_traitlets=traitlet_list,
+                                   irrelevant_msg='irrelevant_msg')
+
+        assert p_obj._obj._non_empty_traitlets == traitlet_list
+        assert p_obj._obj.custom_irrelevant_msg == 'irrelevant_msg'
+        assert p_obj._obj._set_relevant() is None
+
+
+def test_setup_relevance_function(deconfigged_helper):
+    traitlet_list = ['traitlet_1', 'traitlet_2', 'traitlet_3']
+    def fake_set_relevant():
+        return 'useless return'
+
+    for p_name, p_obj in deconfigged_helper.plugins.items():
+        p_obj._obj.setup_relevance(non_empty_traitlets=traitlet_list,
+                                   irrelevant_msg='irrelevant_msg',
+                                   set_relevant=fake_set_relevant)
+
+        assert p_obj._obj._non_empty_traitlets == traitlet_list
+        assert p_obj._obj.custom_irrelevant_msg == 'irrelevant_msg'
+        assert p_obj._obj.set_relevant() == 'useless return'
