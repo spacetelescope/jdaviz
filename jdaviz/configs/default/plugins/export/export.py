@@ -213,8 +213,22 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.serverside_enabled = False
 
         if self.config == 'deconfigged':
-            self.setup_relevance(['viewer_items', 'dataset_items', 'subset_items',
-                                  'plugin_table_items', 'plugin_plot_items'])
+            self.setup_relevance(non_empty_traitlets=['viewer_items', 'dataset_items',
+                                                      'subset_items', 'plugin_table_items',
+                                                      'plugin_plot_items'],
+                                 set_relevant=self._set_relevant)
+
+    # Keep this _set_relevant because in the mixing, we use an implicit ANY
+    # i.e. if ANY of the non_empty_traitlets are in fact empty, the plugin is irrelevant
+    # whereas this uses ALL
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not (len(self.viewer_items) or len(self.dataset_items) or len(self.subset_items)
+                or len(self.plugin_table_items) or len(self.plugin_plot_items)):
+            self.irrelevant_msg = 'Nothing to export'
+        else:
+            self.irrelevant_msg = ''
 
     def _is_valid_item(self, item):
         return self._is_not_stcs(item) or self._is_stcs_region_supported(item)
