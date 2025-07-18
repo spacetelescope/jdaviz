@@ -132,23 +132,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             layer.add_callback('volume', msg.viewer.recalculate_combined_sonified_grid)
             layer.add_callback('audible', msg.viewer.recalculate_combined_sonified_grid)
 
-    def _data_removed_from_viewer(self, msg):
-        # Keep track of the volume attribute for each layer.
-        for layer in msg.viewer.state.layers:
-            if not isinstance(layer, SonifiedLayerState):
-                continue
-
-            # Find layer, add volume check to dictionary and add callback to volume changing and
-            # audible changing
-            msg.viewer.layer_volume[layer.layer.label] = 0
-            msg.viewer.sonified_layers_enabled = ([layer.layer.label] if
-                                                   getattr(layer, 'audible', False) else [])  # noqa
-
-            if 'volume' not in layer.callback_properties():
-                layer.add_callback('volume', msg.viewer.recalculate_combined_sonified_grid)
-            if 'audible' not in layer.callback_properties():
-                layer.add_callback('audible', msg.viewer.recalculate_combined_sonified_grid)
-
     def start_stream(self):
         if self.stream and not self.stream.closed:
             self.stream.start()
@@ -275,15 +258,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # Create a 2D array with coordinates starting at (0, 0) and going until (x_size, y_size)
         a = np.arange(1, x_size * y_size + 1).reshape((x_size, y_size))
 
-        # Create fake WCS so the sonified layer can be added to a CCDData object and
-        # then get added to the image viewer
-        """
-        wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
-                   'CRPIX1': 1, 'CRVAL1': 337.5202808,
-                   'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
-                   'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
-        """
-
+        # Attempt to copy the spatial WCS information from the cube
         if hasattr(spectrum.wcs, 'celestial'):
             wcs = spectrum.wcs.celestial
         elif hasattr(spectrum.wcs, 'to_fits_sip'):
