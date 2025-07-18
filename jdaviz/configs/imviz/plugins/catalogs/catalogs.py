@@ -128,14 +128,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.session.hub.subscribe(self, CatalogSelectClickEventMessage,
                                    self._on_catalog_select_click_event)
 
-        self._set_relevant()
-
-    @observe('viewer_items')
-    def _set_relevant(self, *args):
-        if not len(self.viewer_items):
-            self.irrelevant_msg = 'No image viewers'
-        else:
-            self.irrelevant_msg = ''
+        self.setup_relevance(non_empty_traitlets=['viewer_items'])
 
     @property
     def user_api(self):

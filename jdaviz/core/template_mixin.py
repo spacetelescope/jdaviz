@@ -644,6 +644,33 @@ class PluginTemplateMixin(TemplateMixin):
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
 
+    # *args to handle events from observe
+    def _set_relevant(self, *args):
+        for traitlet_name in self._non_empty_traitlets:
+            if not getattr(self, traitlet_name, None):
+                self.irrelevant_msg = self._custom_irrelevant_msg \
+                    if self._custom_irrelevant_msg \
+                    else f'No {traitlet_name} available'
+                return
+
+        self.irrelevant_msg = ''
+
+    def setup_relevance(self, non_empty_traitlets: (list, tuple), irrelevant_msg='',
+                        set_relevant=None):
+        self._non_empty_traitlets = non_empty_traitlets
+        self._custom_irrelevant_msg = irrelevant_msg
+
+        # NOTE: taking set_relevant in as a kwarg isn't STRICTLY necessary,
+        # a plugin class could use its own _set_relevant and have it override
+        # the one defined here by order of the initialization but explicitness
+        # should help with any issues that may arise in the future.
+        if set_relevant is None:
+            set_relevant = self._set_relevant
+
+        _ = [self.observe(set_relevant, traitlet_name)
+             for traitlet_name in self._non_empty_traitlets]
+        set_relevant()
+
     @observe('irrelevant_msg')
     def _irrelevant_msg_changed(self, *args):
         labels = [ti['label'] for ti in self.app.state.tray_items]
