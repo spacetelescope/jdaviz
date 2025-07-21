@@ -805,7 +805,7 @@ class DistanceMeasurement:
     dynamically rotated and offset label showing the distance.
 
     This class manages a collection of bqplot marks (a Line and two Labels
-    for text and shadow) to create a single, cohesive measurement indicator
+    for text and its halo) to create a single, cohesive measurement indicator
     in a viewer. The core logic in the `update_points` method handles the
     positioning, rotation, and offsetting of the label to ensure it remains
     parallel to the line while avoiding intersection.
@@ -823,12 +823,13 @@ class DistanceMeasurement:
             stroke_width=2
         )
 
-        anchor_x, anchor_y = (x0 + y0) / 2, (x1 + y1) / 2
+        anchor_x, anchor_y = (x0 + x1) / 2, (y0 + y1) / 2
 
         self.label_shadow = DistanceLabel(
             viewer, anchor_x, anchor_y, text,
-            colors=['black'],
-            stroke_width=12,
+            colors=['white'],
+            stroke='white',
+            stroke_width=5,
             font_weight='bold',
             default_size=15
         )
@@ -845,6 +846,7 @@ class DistanceMeasurement:
 
     @property
     def marks(self):
+        # The shadow must be listed before the text to be drawn underneath.
         return [self.line, self.label_shadow, self.label_text]
 
     @property
@@ -853,6 +855,7 @@ class DistanceMeasurement:
 
     @visible.setter
     def visible(self, visible):
+        # Update visibility for all marks.
         self.line.visible = visible
         self.label_shadow.visible = visible
         self.label_text.visible = visible
@@ -914,14 +917,12 @@ class DistanceMeasurement:
         x_offset_int = int(round(x_offset_float))
         y_offset_int = int(round(y_offset_float))
 
-        # Normalize the display angle for readability.
+        # Normalize the display angle for readability
         if abs(angle_deg) > 90:
             angle_deg -= 180 * np.sign(angle_deg)
 
         for label in (self.label_shadow, self.label_text):
-            label.x = [mid_x]
-            label.y = [mid_y]
-            label.text = [text]
+            label.update_position(mid_x, mid_y, text)
             label.rotate_angle = angle_deg
             label.x_offset = x_offset_int
             label.y_offset = -y_offset_int

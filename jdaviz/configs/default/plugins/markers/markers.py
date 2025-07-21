@@ -163,6 +163,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             self.distance_display = "N/A"
         self._recompute_mark_positions(msg.viewer)
 
+        if msg is not None:
+            self._recompute_mark_positions(msg.viewer)
+
     def _clear_markers_table_callback(self, *args):
         """
         Callback for the clear button on the main markers table.
@@ -301,13 +304,17 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             'Data Label': data_label
         })
 
-    def _add_profile_distance_row(self, dx, dy, x_unit, y_unit):
+    def _add_profile_distance_row(self, p1, viewer, dx, dy, x_unit, y_unit):
         """Adds a single row to the measurements table for a profile-based distance."""
+        viewer_id = viewer.reference or viewer.reference_id
+        data_label = p1.get('data_label', 'N/A')
         self.measurements_table.add_item({
             'Start RA': "N/A", 'Start Dec': "N/A",
             'End RA': "N/A", 'End Dec': "N/A",
             'Separation (arcsec)': "N/A", 'Distance (pix)': "N/A",
-            'Position Angle (deg)': "N/A", 'Viewer': "N/A", 'Data Label': "N/A",
+            'Position Angle (deg)': "N/A",
+            'Viewer': viewer_id,
+            'Data Label': data_label,
             'Δx': f"{dx:.4g} {x_unit}",
             'Δy': f"{dy:.4g} {y_unit}"
         })
@@ -317,12 +324,57 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         cursor_coords = self.coords_info.as_dict()
         cursor_x, cursor_y = cursor_coords.get('axes_x'), cursor_coords.get('axes_y')
 
-        if not len(viewer_mark.x) or cursor_x is None:
+        if not len(viewer_mark.x) or cursor_x is None or cursor_y is None:
             return cursor_coords
 
         marker_xs, marker_ys = viewer_mark.x, viewer_mark.y
-        distances_sq = (marker_xs - cursor_x)**2 + (marker_ys - cursor_y)**2
-        closest_marker_index_in_viewer = np.argmin(distances_sq)
+
+        try:
+            x_scale = viewer.scales['x']
+            y_scale = viewer.scales['y']
+
+            x_domain_span = x_scale.domain[1] - x_scale.domain[0]
+            x_pixel_span = abs(x_scale.range[1] - x_scale.range[0])
+            x_units_per_px = x_domain_span / x_pixel_span
+
+            y_domain_span = y_scale.domain[1] - y_scale.domain[0]
+            y_pixel_span = abs(y_scale.range[1] - y_scale.range[0])
+            y_units_per_px = y_domain_span / y_pixel_span
+
+            dx_pix = (marker_xs - cursor_x) / x_units_per_px
+            dy_pix = (marker_ys - cursor_y) / y_units_per_px
+
+            # Use 1D distance for spectrum viewers
+            if not _is_image_viewer(viewer):
+                # For spectrum viewers, only consider the distance along the spectral axis.
+                distances_sq = dx_pix**2
+            else:
+                # For image viewers, consider the 2D distance.
+                distances_sq = dx_pix**2 + dy_pix**2
+
+        except (AttributeError, TypeError, KeyError, ZeroDivisionError):
+            # Fallback method: Use data-range normalization
+            try:
+                x_data_range = viewer.state.x_max - viewer.state.x_min
+                y_data_range = viewer.state.y_max - viewer.state.y_min
+
+                if not x_data_range or not y_data_range:
+                    return cursor_coords
+
+                norm_dx = (marker_xs - cursor_x) / x_data_range
+                norm_dy = (marker_ys - cursor_y) / y_data_range
+
+                if not _is_image_viewer(viewer):
+                    distances_sq = norm_dx**2
+                else:
+                    distances_sq = norm_dx**2 + norm_dy**2
+
+            except Exception:
+                # If all else fails, do not snap.
+                return cursor_coords
+
+        # Find the closest marker using the calculated distances.
+        closest_marker_index_in_viewer = np.nanargmin(distances_sq)
         viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
         viewer_loaded_data = [lyr.layer.label for lyr in viewer.layers]
         all_items_table = self.table.export_table()
@@ -335,8 +387,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             if item.get('viewer') == viewer_id and item.get('data_label') in viewer_loaded_data
         ]
 
-        if not in_viewer_indices:
+        if not in_viewer_indices or closest_marker_index_in_viewer >= len(in_viewer_indices):
             return cursor_coords
+
         snapped_table_index = in_viewer_indices[closest_marker_index_in_viewer]
         snapped_row = all_items_table[snapped_table_index]
 
@@ -477,9 +530,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 self._temporary_dist_measure = DistanceMeasurement(
                     viewer, start_x, start_y, start_x, start_y, text=preview_text
                 )
-
+                self._temporary_dist_measure.label_shadow.visible = False
                 for mark in self._temporary_dist_measure.marks:
-                    mark.opacities = [0.7]
+                    mark.opacities = [0.9]
 
                 viewer.figure.marks = viewer.figure.marks + self._temporary_dist_measure.marks
                 viewer.add_event_callback(self._on_mouse_move_while_drawing,
@@ -507,7 +560,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                     y_unit = p1.get('axes_y:unit', '')
                     text_ui = f"Δx: {dx_val:.4g} {x_unit}, Δy: {dy_val:.4g} {y_unit}"
                     text_plot = ""
-                    self._add_profile_distance_row(dx_val, dy_val, x_unit, y_unit)
+                    self._add_profile_distance_row(p1, viewer, dx_val, dy_val, x_unit, y_unit)
                 else:  # Assume image viewer
                     world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
                                    p1.get('world_ra') is not None and p2.get('world_ra') is not
