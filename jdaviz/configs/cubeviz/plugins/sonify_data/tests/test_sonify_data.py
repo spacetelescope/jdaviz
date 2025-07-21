@@ -48,15 +48,12 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
     event_data = {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}}
     uncert_viewer._viewer_mouse_event(event_data)
 
-
     compsig = uncert_viewer.combined_sonified_grid[(1, 1)]
     sigmax = abs(compsig).max()
     INT_MAX = 2**15 - 1
     if sigmax > INT_MAX:
         compsig = ((INT_MAX/abs(compsig).max()) * compsig)
     assert_allclose(sonify_plg.sonified_cube.newsig, compsig)
-
-
 
 
 @pytest.mark.skipif(not IN_GITHUB_ACTIONS, reason="Plugin disabled only in CI")
