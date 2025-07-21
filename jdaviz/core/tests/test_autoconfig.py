@@ -60,11 +60,15 @@ def test_launcher(tmp_path):
 
     # Test with real files
     for uri, config in AUTOCONFIG_EXAMPLES:
+        uri = cached_uri(uri)
         if uri.startswith("mast:"):
             download_path = str(tmp_path / Path(uri).name)
             Observations.download_file(uri, local_path=download_path)
         elif uri.startswith("http"):
             download_path = download_file(uri, cache=True, timeout=100)
+        else:
+            # cached local file
+            download_path = uri
         launcher.filepath = download_path
         # In testing, setting the filepath will stall until identifying is complete
         # No need to be concerned for race condition here

@@ -168,6 +168,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 
+        self.parallel_n_cpu = None
         self._set_relevant()
 
     @observe('dataset_items')
@@ -1185,7 +1186,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 models_to_fit,
                 self.model_equation,
                 run_fitter=True,
-                window=None
+                window=None,
+                n_cpu=self.parallel_n_cpu,
             )
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
@@ -1299,7 +1301,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 models_to_fit,
                 self.model_equation,
                 run_fitter=True,
-                window=None
+                window=None,
+                n_cpu=self.parallel_n_cpu
             )
         except ValueError:
             snackbar_message = SnackbarMessage(
