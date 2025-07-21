@@ -3,6 +3,7 @@ import numpy as np
 import astropy.units as u
 from specutils import SpectralRegion
 
+
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
     # apply mask to spectrum to check selected subset is masked:
     mask = spectrum1d.flux < spectrum1d.flux.mean()
