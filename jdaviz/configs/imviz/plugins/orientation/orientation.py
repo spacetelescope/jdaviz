@@ -387,7 +387,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
         self.app._jdaviz_helper.load_data(
-            ndd, data_label=label
+            ndd, data_label=label,
+            show_in_viewer=False
         )
 
         # add orientation layer to all viewers:
@@ -701,7 +702,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             # Default rotation is the same orientation as the original reference data:
             rotation_angle = -degn * u.deg
             ndd = _get_rotated_nddata_from_label(app, default_reference_layer.label, rotation_angle)
-            app._jdaviz_helper.load_data(ndd, base_wcs_layer_label)
+            app._jdaviz_helper.load_data(ndd, base_wcs_layer_label, show_in_viewer=False)
 
         # set default layer to reference data in all viewers:
         for viewer_id in app.get_viewer_ids():
