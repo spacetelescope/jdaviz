@@ -168,7 +168,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 
-        # TODO: delete once parallel framework is completed
         self.parallel_n_cpu = None
         self._set_relevant()
 
@@ -204,7 +203,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'get_model_component', 'set_model_component', 'reestimate_model_parameters',
                    'equation', 'equation_components',
                    'add_results', 'residuals_calculate', 'residuals']
-        # TODO: Expose 'parallel_n_cpu' in the future
         expose += ['calculate_fit', 'clear_table', 'export_table',
                    'fitted_models', 'get_models', 'get_model_parameters']
         return PluginUserApi(self, expose=expose)
