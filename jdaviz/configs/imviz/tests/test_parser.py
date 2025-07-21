@@ -242,9 +242,7 @@ class TestParseImage:
         imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = False
 
         # Default behavior: Science image
-        with pytest.warns(DeprecationWarning, match='Passing unrecognized arguments to super'):
-            # if you don't pass a `cache` value, a warning should be raised:
-            imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100)
+        imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100)
 
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('data')
