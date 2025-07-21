@@ -76,28 +76,76 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     p.viewer = p.viewer.ids[0]
     assert p.viewer.selected == p.viewer.labels[0]
 
-def test_setup_relevance_basic(deconfigged_helper):
-    traitlet_list = ['traitlet_1', 'traitlet_2', 'traitlet_3']
 
-    for p_name, p_obj in deconfigged_helper.plugins.items():
-        p_obj._obj.setup_relevance(non_empty_traitlets=traitlet_list,
-                                   irrelevant_msg='irrelevant_msg')
+class TestSetupRelevance:
+    fake_traitlet = 'fake_traitlet1'
 
-        assert p_obj._obj._non_empty_traitlets == traitlet_list
-        assert p_obj._obj._custom_irrelevant_msg == 'irrelevant_msg'
-        assert p_obj._obj._set_relevant() is None
-
-
-def test_setup_relevance_function(deconfigged_helper):
-    traitlet_list = ['traitlet_1', 'traitlet_2', 'traitlet_3']
-    def fake_set_relevant():
+    def fake_set_relevant(self, *args):
+        self.bad_return = 'useless return'
         return 'useless return'
 
-    for p_name, p_obj in deconfigged_helper.plugins.items():
-        p_obj._obj.setup_relevance(non_empty_traitlets=traitlet_list,
-                                   irrelevant_msg='irrelevant_msg',
-                                   set_relevant=fake_set_relevant)
+    @pytest.mark.parametrize(
+        ('irrelevant_msg', 'result_msg'), [
+            ('', f'No {fake_traitlet} available'),
+            ('irrelevant message', 'irrelevant message')
+        ])
+    def test_setup_relevance_with_fake_traitlets(self,
+                                                 deconfigged_plugin, irrelevant_msg, result_msg):
+        # Starting with at least one fake traitlet to make sure the irrelevant message
+        # is set correctly when it can't find the attribute
+        real_traitlets = [traitlet for traitlet in dir(deconfigged_plugin)
+                          if getattr(deconfigged_plugin, traitlet, None)]
+        traitlets = real_traitlets + [self.fake_traitlet]
 
-        assert p_obj._obj._non_empty_traitlets == traitlet_list
-        assert p_obj._obj._custom_irrelevant_msg == 'irrelevant_msg'
-        assert p_obj._obj.set_relevant() == 'useless return'
+        deconfigged_plugin._obj.setup_relevance(non_empty_traitlets=traitlets,
+                                                irrelevant_msg=irrelevant_msg)
+
+        assert deconfigged_plugin._obj._non_empty_traitlets == traitlets
+        assert deconfigged_plugin._obj._custom_irrelevant_msg == irrelevant_msg
+        assert deconfigged_plugin._obj.irrelevant_msg == result_msg
+        assert deconfigged_plugin._obj._set_relevant() is None
+
+        # Now using our own set_relevant function
+        deconfigged_plugin._obj.setup_relevance(non_empty_traitlets=traitlets,
+                                                irrelevant_msg=irrelevant_msg,
+                                                set_relevant=self.fake_set_relevant)
+
+        assert deconfigged_plugin._obj._non_empty_traitlets == traitlets
+        assert deconfigged_plugin._obj._custom_irrelevant_msg == irrelevant_msg
+        assert deconfigged_plugin._obj._set_relevant() is None
+
+        # Set existing (real) traitlet to trigger observe
+        # and check that our custom function indeed runs.
+        for traitlet in real_traitlets:
+            self.bad_return = 'useful return?'
+            try:
+                setattr(deconfigged_plugin, traitlet, 'fake update')
+            # Some traitlets are callable/can't be set by this specific string
+            except (ValueError, AttributeError):
+                continue
+            else:
+                assert self.bad_return == self.fake_set_relevant()
+
+    # Using all real traitlets now and the default/existing set_relevant()
+    def test_setup_relevance_with_real_traitlets(self, deconfigged_plugin):
+        traitlets = [traitlet for traitlet in dir(deconfigged_plugin)
+                     if getattr(deconfigged_plugin, traitlet, None)]
+
+        deconfigged_plugin._obj.setup_relevance(non_empty_traitlets=traitlets)
+
+        assert deconfigged_plugin._obj._non_empty_traitlets == traitlets
+        assert deconfigged_plugin._obj._custom_irrelevant_msg == ''
+        assert deconfigged_plugin._obj.irrelevant_msg == ''
+        assert deconfigged_plugin._obj._set_relevant() is None
+
+        # Check that the traitlets are being observed
+        # by checking if irrelevant message is reset correctly
+        for traitlet in traitlets:
+            deconfigged_plugin._obj.irrelevant_msg = 'fake irrelevant message'
+            try:
+                setattr(deconfigged_plugin, traitlet, 'fake update')
+            # Some traitlets are callable/can't be set by this specific string
+            except (ValueError, AttributeError):
+                continue
+            else:
+                assert deconfigged_plugin._obj.irrelevant_msg == ''
