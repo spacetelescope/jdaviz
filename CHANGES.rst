@@ -33,8 +33,6 @@ New Features
 
 - Allow custom resolutions when exporting viewers to png or mp4. [#3478]
 
-- Add ``aid`` attribute to image viewers for compatibility with the Astro Image Display API. [#3622] 
-
 Cubeviz
 ^^^^^^^
 
