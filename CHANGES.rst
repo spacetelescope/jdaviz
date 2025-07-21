@@ -33,7 +33,6 @@ New Features
 
 - Allow custom resolutions when exporting viewers to png or mp4. [#3478]
 
-
 Cubeviz
 ^^^^^^^
 
