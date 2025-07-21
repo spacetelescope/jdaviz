@@ -129,6 +129,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             msg.viewer.sonified_layers_enabled += ([layer.layer.label] if
                                                    getattr(layer, 'audible', False) else [])  # noqa
 
+            layer.remove_callback('volume', msg.viewer.recalculate_combined_sonified_grid)
+            layer.remove_callback('audible', msg.viewer.recalculate_combined_sonified_grid)
             layer.add_callback('volume', msg.viewer.recalculate_combined_sonified_grid)
             layer.add_callback('audible', msg.viewer.recalculate_combined_sonified_grid)
 
