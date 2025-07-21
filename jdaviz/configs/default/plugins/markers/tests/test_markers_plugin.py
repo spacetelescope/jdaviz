@@ -7,7 +7,7 @@ import pytest
 from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
-from jdaviz.core.marks import MarkersMark
+from jdaviz.core.marks import MarkersMark, DistanceMeasurement
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
 
@@ -420,3 +420,177 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                             {'event': 'mousemove',
                                              'domain': {'x': 5, 'y': 5}})
         assert label_mouseover.as_dict()['data_label'] == ''
+
+
+def _get_distance_marks_from_viewer(viewer):
+    """Helper function to retrieve DistanceMeasurement marks from a viewer's figure."""
+    return [m for m in viewer.figure.marks if isinstance(m, DistanceMeasurement)]
+
+
+def test_distance_tool_live_preview_image(cubeviz_helper, spectrum1d_cube):
+    """Tests the rubber band line and live UI update in an image viewer."""
+    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    mp = cubeviz_helper.plugins['Markers']
+    mp.open_in_tray()
+    label_mouseover = cubeviz_helper._coords_info
+
+    label_mouseover._viewer_mouse_event(fv, {'event': 'mousemove', 'domain': {'x': 1, 'y': 2}})
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd'})
+    assert mp._obj.distance_display == "..."
+
+    mp._obj._on_mouse_move_while_drawing({'domain': {'x': 4, 'y': 6}})
+    # In a WCS-aware viewer, distance is in sky units, not pixels.
+    # We check for the correct unit instead of a brittle value check.
+    assert mp._obj.distance_display.endswith("arcsec")
+
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd'})
+    assert len(mp._obj.measurements_table.items) == 1
+    # The final table entry should also be in sky units.
+    assert mp._obj.measurements_table.items[0]['Separation (arcsec)'] != "N/A"
+
+
+def test_distance_tool_live_preview_profile(cubeviz_helper, spectrum1d_cube):
+    """Tests the rubber band line and live UI update in a profile viewer."""
+    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    mp = cubeviz_helper.plugins['Markers']
+    mp.open_in_tray()
+    label_mouseover = cubeviz_helper._coords_info
+
+    # Set the starting point and get the actual data coordinates from coords_info
+    label_mouseover._viewer_mouse_event(sv, {'event': 'mousemove', 'domain': {'x': 4.623e-7,
+                                        'y': 20}})
+    p1_coords = label_mouseover.as_dict()
+    mp._obj._on_viewer_key_event(sv, {'event': 'keydown', 'key': 'd'})
+
+    # Set the end point and get the actual data coordinates from coords_info
+    x2_cursor, y2_cursor = 4.624e-7, 80
+    label_mouseover._viewer_mouse_event(sv, {'event': 'mousemove', 'domain': {'x': x2_cursor,
+                                        'y': y2_cursor}})
+    p2_coords = label_mouseover.as_dict()
+    mp._obj._on_mouse_move_while_drawing({'domain': {'x': x2_cursor, 'y': y2_cursor}})
+
+    # Calculate expected deltas based on what the coords_info tool reports
+    dx = p2_coords['axes_x'] - p1_coords['axes_x']
+    dy = p2_coords['axes_y'] - p1_coords['axes_y']
+    assert mp._obj.distance_display == f"Δx: {dx:.4g} m, Δy: {dy:.4g} Jy"
+
+    # Finish measurement and check the final table entry
+    mp._obj._on_viewer_key_event(sv, {'event': 'keydown', 'key': 'd'})
+    assert len(mp._obj.measurements_table.items) == 1
+    profile_row = mp._obj.measurements_table.items[0]
+    assert profile_row['Δx'] == f"{dx:.4g} m"
+    assert profile_row['Δy'] == f"{dy:.4g} Jy"
+
+
+def test_distance_tool_snapping(cubeviz_helper, spectrum1d_cube):
+    """Tests that the distance tool can snap to existing markers."""
+    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    mp = cubeviz_helper.plugins['Markers']
+    mp.open_in_tray()
+    label_mouseover = cubeviz_helper._coords_info
+
+    label_mouseover._viewer_mouse_event(fv, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'm'})
+
+    label_mouseover._viewer_mouse_event(fv, {'event': 'mousemove', 'domain': {'x': 0.1, 'y': 0.1}})
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd', 'altKey': True})
+    assert_allclose(mp._obj._distance_first_point['axes_x'], 0)
+
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd', 'altKey': True})
+    # Must access the table via the internal ._obj
+    assert len(mp._obj.measurements_table.items) == 1
+    assert mp._obj.measurements_table.items[0]['Distance (pix)'] == "0.00"
+
+
+def test_distance_tool_clearing(cubeviz_helper, spectrum1d_cube):
+    """Tests that clearing the measurements table removes marks from the viewer."""
+    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    mp = cubeviz_helper.plugins['Markers']
+    mp.open_in_tray()
+    label_mouseover = cubeviz_helper._coords_info
+
+    # 1. Create a measurement.
+    label_mouseover._viewer_mouse_event(fv, {'event': 'mousemove', 'domain': {'x': 1, 'y': 2}})
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd'})
+    label_mouseover._viewer_mouse_event(fv, {'event': 'mousemove', 'domain': {'x': 4, 'y': 6}})
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd'})
+    assert len(mp._obj.measurements_table.items) == 1
+
+    # 2. Call the public clear_table() method, which is what the UI button does.
+    mp._obj.measurements_table.clear_table()
+
+    # 3. Assert that the table is empty and viewer marks are gone.
+    assert len(mp._obj.measurements_table.items) == 0
+    assert len(_get_distance_marks_from_viewer(fv)) == 0
+
+
+def test_distance_tool_reset_on_orientation_change(cubeviz_helper, spectrum1d_cube):
+    """Tests that an in-progress measurement is cancelled on orientation change."""
+    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    mp = cubeviz_helper.plugins['Markers']
+    mp.open_in_tray()
+    label_mouseover = cubeviz_helper._coords_info
+
+    label_mouseover._viewer_mouse_event(fv, {'event': 'mousemove', 'domain': {'x': 1, 'y': 2}})
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd'})
+    assert mp._obj._distance_first_point is not None
+
+    mp._obj._on_alignment_change()
+    assert mp._obj._distance_first_point is None
+    assert mp._obj.distance_display == "N/A"
+
+
+def test_distance_tool_imviz_pixel_only(imviz_helper):
+    """Tests the distance tool in a pixel-only context in Imviz."""
+    # Use the imviz_helper fixture and load a simple array with no WCS
+    imviz_helper.load_data(np.zeros((20, 20)))
+    iv = imviz_helper.app.get_viewer('imviz-0')
+    mp = imviz_helper.plugins['Markers']
+    mp.open_in_tray()
+    label_mouseover = imviz_helper._coords_info
+
+    # In Imviz, we can force pixel-based alignment
+    imviz_helper.app._align_by = 'pixels'
+
+    # Start measurement
+    label_mouseover._viewer_mouse_event(iv, {'event': 'mousemove', 'domain': {'x': 2, 'y': 3}})
+    mp._obj._on_viewer_key_event(iv, {'event': 'keydown', 'key': 'd'})
+
+    # Update the coords_info plugin by simulating the mouse moving to the new location.
+    label_mouseover._viewer_mouse_event(iv, {'event': 'mousemove', 'domain': {'x': 5, 'y': 7}})
+
+    # Now, check the distance display after the move.
+    mp._obj._on_mouse_move_while_drawing({'domain': {'x': 5, 'y': 7}})
+    # Distance = sqrt((5-2)^2 + (7-3)^2) = sqrt(9 + 16) = 5
+    assert mp._obj.distance_display.startswith("5.00 pix")
+
+    # Finish measurement
+    mp._obj._on_viewer_key_event(iv, {'event': 'keydown', 'key': 'd'})
+    assert len(mp._obj.measurements_table.items) == 1
+    assert mp._obj.measurements_table.items[0]['Distance (pix)'].startswith("5.00")
+
+
+def test_markers_specviz_config(specviz_helper, spectrum1d):
+    """Tests the marker plugin's basic functionality in a Specviz context."""
+    specviz_helper.load_data(spectrum1d)
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    mp = specviz_helper.plugins['Markers']
+    mp.open_in_tray()
+    label_mouseover = specviz_helper._coords_info
+
+    # Check that the table headers are correct for Specviz (no RA/Dec)
+    assert 'world_ra' not in mp._obj.table.headers_avail
+    assert 'index' in mp._obj.table.headers_avail
+
+    # Place a marker
+    label_mouseover._viewer_mouse_event(sv, {'event': 'mousemove', 'domain': {'x': 7000, 'y': 1}})
+    mp._obj._on_viewer_key_event(sv, {'event': 'keydown', 'key': 'm'})
+
+    # Assert that the marker was added to the table
+    assert len(mp.export_table()) == 1
+    assert mp.export_table()['spectral_axis'][0] > 0

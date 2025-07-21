@@ -126,8 +126,8 @@ jdaviz = [
 
 [tool.pytest.ini_options]
 testpaths = [
-    "\"jdaviz\"",
-    "\"docs\"",
+    "jdaviz",
+    "docs",
 ]
 astropy_header = true
 doctest_plus = "enabled"
@@ -136,6 +136,8 @@ addopts = "--doctest-rst --import-mode=append --ignore-glob='*/jdaviz/qt.py'"
 xfail_strict = true
 filterwarnings = [
     "error",
+    # This line handles the DeprecationWarning from jupyter_core
+    "ignore:Jupyter is migrating its paths.*:DeprecationWarning:jupyter_core.utils",
     "ignore:numpy\\.ufunc size changed:RuntimeWarning",
     "ignore:numpy\\.ndarray size changed:RuntimeWarning",
     "ignore:Passing unrecognized arguments to super:DeprecationWarning",
@@ -143,7 +145,7 @@ filterwarnings = [
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
-    "ignore:Parsing dates involving a day of month without a year:DeprecationWarning",  # ipykernel<7
+    "ignore:Parsing dates involving a day of month without a year:DeprecationWarning", # ipykernel<7
     "ignore::DeprecationWarning:glue",
     "ignore::DeprecationWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
@@ -161,6 +163,7 @@ filterwarnings = [
     # removing this in the future
     "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",
 ]
+
 
 [tool.coverage.run]
 omit = [

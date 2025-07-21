@@ -1,7 +1,6 @@
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from bqplot.marks import Lines
 from traitlets import Bool, Unicode, Instance, observe, default
 import ipywidgets as widgets
 
@@ -70,7 +69,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'index', 'value', 'value:unit']
+                       'index', 'value', 'value:unit', 'viewer']
 
         elif self.config in ('specviz2d'):
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
@@ -99,7 +98,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         self._distance_marks = {}
         self._distance_first_point = None
-        self._rubber_band_line = None
+        self._temporary_dist_measure = None
         self._viewer_for_drawing = None
         self._snap_threshold = 10  # Snap distance in screen pixels
 
@@ -122,13 +121,13 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                            handler=lambda msg: self._recompute_mark_positions(msg.viewer))
 
         self.docs_description = """Press 'm' with the cursor over a viewer to log
-                                the mouseover information. To change the
-                                selected layer, click the layer cycler in the
-                                mouseover information section of the app-level
-                                toolbar.
-                                Press 'd' twice to measure the distance between any two points.
-                                Hold the 'Option'(Mac) or 'Alt' key while pressing 'd' to snap
-                                measurement points to the nearest marker."""
+                                 the mouseover information. To change the
+                                 selected layer, click the layer cycler in the
+                                 mouseover information section of the app-level
+                                 toolbar.
+                                 Press 'd' twice to measure the distance between any two points.
+                                 Hold the 'Option'(Mac) or 'Alt' key while pressing 'd' to snap
+                                 measurement points to the nearest marker."""
         # description displayed under plugin title in tray
         self._plugin_description = 'Create markers on viewers.'
 
@@ -150,14 +149,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         while a measurement is in progress.
         """
         if self._distance_first_point is not None:
-            # If we are in the middle of drawing, clean up the temporary line
-            if self._rubber_band_line is not None and self._viewer_for_drawing is not None:
+            # If we are in the middle of drawing, clean up the temporary marks
+            if self._temporary_dist_measure is not None and self._viewer_for_drawing is not None:
                 self._viewer_for_drawing.remove_event_callback(self._on_mouse_move_while_drawing)
+                temp_marks = self._temporary_dist_measure.marks
                 self._viewer_for_drawing.figure.marks = [
-                    m for m in self._viewer_for_drawing.figure.marks
-                    if m is not self._rubber_band_line
+                    m for m in self._viewer_for_drawing.figure.marks if m not in temp_marks
                 ]
-                self._rubber_band_line = None
+                self._temporary_dist_measure = None
                 self._viewer_for_drawing = None
 
             self._distance_first_point = None
@@ -391,23 +390,22 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_mouse_move_while_drawing(self, event):
         """
-        Callback for 'mousemove' event to update the rubber band line to
-        follow the cursor AND continuously update the distance display.
+        Callback for 'mousemove' event. Updates the temporary DistanceMeasurement
+        mark to follow the cursor.
         """
-        if self._rubber_band_line is None or self._distance_first_point is None:
+        if self._temporary_dist_measure is None or self._distance_first_point is None:
             return
 
         p1 = self._distance_first_point
         p2 = self.coords_info.as_dict()
-        is_profile = 'spectrum' in self._viewer_for_drawing.__class__.__name__.lower() or \
-                     'profile' in self._viewer_for_drawing.__class__.__name__.lower()
+        is_profile = not _is_image_viewer(self._viewer_for_drawing)
 
         if is_profile:
             dx_val = p2.get('axes_x', 0) - p1.get('axes_x', 0)
             dy_val = p2.get('axes_y', 0) - p1.get('axes_y', 0)
             x_unit = p1.get('axes_x:unit', '')
             y_unit = p1.get('axes_y:unit', '')
-            self.distance_display = f"Δx: {dx_val:.4g} {x_unit}, Δy: {dy_val:.4g} {y_unit}"
+            distance_text = f"Δx: {dx_val:.4g} {x_unit}, Δy: {dy_val:.4g} {y_unit}"
         else:  # Assume image viewer
             world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
                            p1.get('world_ra') is not None and p2.get('world_ra') is not None and
@@ -416,24 +414,24 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             if self.config == 'imviz' and self.app._align_by.lower() == 'pixels':
                 dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
                                    (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
-                self.distance_display = f"{dist_pix:.2f} pix"
+                distance_text = f"{dist_pix:.2f} pix"
             elif world_avail:
                 c1 = SkyCoord(p1['world_ra'], p1['world_dec'], unit='deg', frame='icrs')
                 c2 = SkyCoord(p2['world_ra'], p2['world_dec'], unit='deg', frame='icrs')
-                self.distance_display = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
+                distance_text = f"{c1.separation(c2).to(u.arcsec).value:.2f} arcsec"
             else:
                 dist_pix = np.sqrt((p2.get('pixel_x', 0) - p1.get('pixel_x', 0))**2 +
                                    (p2.get('pixel_y', 0) - p1.get('pixel_y', 0))**2)
-                self.distance_display = f"{dist_pix:.2f} pix"
+                distance_text = f"{dist_pix:.2f} pix"
 
-        start_x = self._distance_first_point.get('axes_x')
-        start_y = self._distance_first_point.get('axes_y')
-        end_x = event['domain']['x']
-        end_y = event['domain']['y']
+        self.distance_display = distance_text
+        plot_text_on_move = "" if is_profile else distance_text
 
-        # Update the line to follow the mouse cursor
-        self._rubber_band_line.x = [start_x, end_x]
-        self._rubber_band_line.y = [start_y, end_y]
+        self._temporary_dist_measure.update_points(
+            p1.get('axes_x'), p1.get('axes_y'),
+            event['domain']['x'], event['domain']['y'],
+            text=plot_text_on_move
+        )
 
     # this is where items are being added to the table
     def _on_viewer_key_event(self, viewer, data):
@@ -472,18 +470,29 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 self.distance_display = "..."
                 self._viewer_for_drawing = viewer
                 start_x, start_y = coords.get('axes_x'), coords.get('axes_y')
-                self._rubber_band_line = Lines(x=[start_x, start_x], y=[start_y, start_y],
-                                               scales=viewer.scales, colors=['#c75d2c'],
-                                               line_style='solid', opacities=[0.5])
-                viewer.figure.marks = viewer.figure.marks + [self._rubber_band_line]
+
+                is_profile = not _is_image_viewer(viewer)
+                preview_text = "" if is_profile else "..."
+
+                self._temporary_dist_measure = DistanceMeasurement(
+                    viewer, start_x, start_y, start_x, start_y, text=preview_text
+                )
+
+                for mark in self._temporary_dist_measure.marks:
+                    mark.opacities = [0.7]
+
+                viewer.figure.marks = viewer.figure.marks + self._temporary_dist_measure.marks
                 viewer.add_event_callback(self._on_mouse_move_while_drawing,
                                           events=['mousemove'])
             else:
                 viewer.remove_event_callback(self._on_mouse_move_while_drawing)
-                viewer.figure.marks = [m for m in viewer.figure.marks
-                                       if m is not self._rubber_band_line]
-                self._rubber_band_line = None
-                self._viewer_for_drawing = None
+
+                if self._temporary_dist_measure:
+                    temp_marks = self._temporary_dist_measure.marks
+                    viewer.figure.marks = [
+                        m for m in viewer.figure.marks if m not in temp_marks
+                    ]
+                self._temporary_dist_measure = None
 
                 p1 = self._distance_first_point
                 p2 = coords
@@ -525,6 +534,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
                 if None in (plot_x0, plot_y0, plot_x1, plot_y1):
                     self.distance_display = "N/A"
+                    self._viewer_for_drawing = None
                     return
 
                 dist_measure = DistanceMeasurement(viewer, plot_x0, plot_y0,
@@ -533,3 +543,5 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 dist_measure.endpoints = {'p1': p1, 'p2': p2}
                 self._distance_marks.setdefault(viewer_id, []).append(dist_measure)
                 viewer.figure.marks = viewer.figure.marks + dist_measure.marks
+
+                self._viewer_for_drawing = None
