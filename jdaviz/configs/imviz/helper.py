@@ -215,6 +215,12 @@ class Imviz(ImageConfigHelper):
                     and extensions is None):
                 extensions = 'data'
 
+            if data_label is None:
+                # maintain previous default label behaviors
+                from astropy.nddata import NDData
+                if data.__class__ is NDData:
+                    data_label = 'NDData'
+
             self._load(data,
                        format='Image',
                        data_label=data_label,
