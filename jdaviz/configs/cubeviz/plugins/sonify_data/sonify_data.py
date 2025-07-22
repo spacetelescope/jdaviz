@@ -66,8 +66,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     sound_devices_items = List().tag(sync=True)
     sound_devices_selected = Unicode('').tag(sync=True)
 
-    add_to_viewer_enabled = Bool(False).tag(sync=True)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -83,6 +81,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_device_indexes = None
             self.refresh_device_list()
 
+        self.add_results.viewer.add_filter('is_image_viewer')
         self.add_to_viewer_selected = 'flux-viewer'
         self.sonified_cube = None
         self.sonified_viewers = []
@@ -178,7 +177,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         # For now, this still initially adds the sonified data to flux-viewer
         self.add_results.add_results_from_plugin(sonified_cube, replace=False)
-        self.flux_viewer.recalculate_combined_sonified_grid()
+        self.add_results.viewer.selected_obj.recalculate_combined_sonified_grid()
 
         t1 = time.time()
         msg = SnackbarMessage(f"'{previous_label}' sonified successfully in {t1-t0} seconds.",
@@ -188,7 +187,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label):
-        spectrum = self.flux_viewer.active_cube_layer.layer.get_object(statistic=None)
+        spectrum = self.dataset.selected_obj
         wlens = spectrum.wavelength.to('m').value
         flux = spectrum.flux.value
         self.sample_rate = sample_rate
@@ -269,8 +268,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         else:
             wcs = None
 
-        # Create add data with name results_label to data collection and then add it to the
-        # flux viewer
         sonified_cube = CCDData(a * u.Unit(''), wcs=wcs)
         return sonified_cube
 
