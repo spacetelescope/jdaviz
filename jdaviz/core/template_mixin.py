@@ -66,13 +66,6 @@ from jdaviz.utils import (
     _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global
 )
 
-try:
-    from roman_datamodels import datamodels as rdd
-except ImportError:
-    HAS_ROMAN_DATAMODELS = False
-else:
-    HAS_ROMAN_DATAMODELS = True
-
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
@@ -1234,20 +1227,15 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def selected_name(self):
         return self.selected_item.get('name', None)
 
-    @property
-    def selected_hdu(self):
-        if (HAS_ROMAN_DATAMODELS and
-                isinstance(self.manual_options, (rdd.ImageModel, rdd.DataModel))):
-            # in this case, self.manual_options is the model composed of many ndarrays,
-            # with each ndarray corresponding to an hdu in FITS terms
-            if self.is_multiselect:
-                return [self.manual_options[name] for name in self.manual_options
-                        if name in self.selected_name]
-            return self.manual_options[self.selected_name]
+    def _get_selected_obj(self, index):
+        return self.manual_options[index].get('obj', None)
 
+    @property
+    def selected_obj(self):
+        # returns HDU (for HDUList) or ndarray (for ImageModel/DataModel)
         if self.is_multiselect:
-            return [self.manual_options[ind] for ind in self.selected_index]
-        return self.manual_options[self.selected_index]
+            return [self._get_selected_obj(index) for index in self.selected_index]
+        return self._get_selected_obj(self.selected_index)
 
     @property
     def indices(self):
@@ -1257,19 +1245,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def names(self):
         return [item.get('name', None) for item in self.items]
 
-    def _to_item(self, hdu, index=None):
+    def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
-        # in the case of roman data models, hdu can be a string
-        elif isinstance(hdu, str):
-            return {'label': f"{index}: {hdu}", 'name': hdu, 'index': index}
-        return {'label': f"{index}: {hdu.name}", 'name': hdu.name, 'index': index}
+        return {k: manual_item[k] for k in ('label', 'name', 'index')}
 
     @observe('filters')
     def _update_items(self, msg={}):
-        self.items = [self._to_item(hdu, ind) for ind, hdu in enumerate(self.manual_options)
-                      if self._is_valid_item(hdu)]
+        self.items = [self._to_item(item, ind) for ind, item in enumerate(self.manual_options)
+                      if self._is_valid_item(item)]
         try:
             self._apply_default_selection()
         except (ValueError, TypeError):

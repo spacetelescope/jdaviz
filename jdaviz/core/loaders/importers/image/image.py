@@ -38,7 +38,7 @@ class ImageImporter(BaseImporterToDataCollection):
     template_file = __file__, "./image.vue"
 
     # HDUList-specific options
-    input_hdulist = Bool(False).tag(sync=True)
+    input_has_extensions = Bool(False).tag(sync=True)
     extension_items = List().tag(sync=True)
     extension_selected = Any().tag(sync=True)
     extension_multiselect = Bool(True).tag(sync=True)
@@ -65,18 +65,35 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([input])
 
-        self.input_hdulist = (isinstance(input, fits.HDUList) or
-                              (HAS_ROMAN_DATAMODELS and
-                               isinstance(input, (rdd.ImageModel, rdd.DataModel))))
-        if self.input_hdulist:
-            filters = ([_validate_fits_image2d] if isinstance(input, fits.HDUList)
-                       else [_validate_roman_ext])
+        input_is_roman = (HAS_ROMAN_DATAMODELS and
+                          isinstance(input, (rdd.ImageModel, rdd.DataModel)))
+        self.input_has_extensions = (isinstance(input, fits.HDUList) or
+                                     input_is_roman)
+        if self.input_has_extensions:
+            if isinstance(input, fits.HDUList):
+                filters = [_validate_fits_image2d]
+                ext_options = [{'label': f"{index}: {hdu.name}",
+                                'name': hdu.name,
+                                'index': index,
+                                'obj': hdu}
+                               for index, hdu in enumerate(input)]
+            elif input_is_roman:
+                filters = [_validate_roman_ext]
+                ext_options = [{'label': f"{index}: {key}",
+                                'name': key,
+                                'index': index,
+                                'obj': value}
+                               for index, (key, value) in enumerate(input.items())]
+            else:
+                raise NotImplementedError()
+
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
                                                           multiselect='extension_multiselect',
-                                                          manual_options=input,
+                                                          manual_options=ext_options,
                                                           filters=filters)
+
             # changing selected extension will call _set_default_data_label
             self.extension.selected = [self.extension.choices[0]]
         else:
@@ -85,7 +102,7 @@ class ImageImporter(BaseImporterToDataCollection):
     @property
     def user_api(self):
         expose = ['parent', 'data_label_as_prefix']
-        if self.input_hdulist:
+        if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose)
 
@@ -117,12 +134,12 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             prefix = "Image"
 
-        if self.input_hdulist:
+        if self.input_has_extensions:
             if self.extension.selected_name is None:
                 return
             if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
-                # selected_hdu may be an ndarray object if input is a roman data model
-                ver = getattr(self.extension.selected_hdu[0], 'ver', None)
+                # selected_obj may be an ndarray object if input is a roman data model
+                ver = getattr(self.extension.selected_obj[0], 'ver', None)
                 # only a single extension selected
                 self.data_label_default = self._get_label_with_extension(prefix,
                                                                          ext=self.extension.selected_name[0],  # noqa
@@ -166,10 +183,10 @@ class ImageImporter(BaseImporterToDataCollection):
                     for ext in self.extension.selected_name]  # list of Data
         # JWST ASDF-in-FITS
         elif 'ASDF' in input:
-            data = [_jwst2data(hdu, input) for hdu in self.extension.selected_hdu]
+            data = [_jwst2data(hdu, input) for hdu in self.extension.selected_obj]
         # FITS
         else:
-            data = [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
+            data = [_hdu2data(hdu, input) for hdu in self.extension.selected_obj]
 
         for d in data:
             if d is None:
@@ -190,15 +207,16 @@ class ImageImporter(BaseImporterToDataCollection):
         # self.output is always a list of Data objects
         outputs = self.output
 
-        if self.input_hdulist:
+        if self.input_has_extensions:
             exts = self.extension.selected_name
-            hdus = self.extension.selected_hdu
+            # ext_objs is a list of hdus or arrays from asdf
+            ext_objs = self.extension.selected_obj
         elif isinstance(self.input, NDData):
             exts = ['DATA', 'MASK', 'UNCERTAINTY']  # must match order in _nddata_to_glue_data
-            hdus = [None] * len(outputs)
+            ext_objs = [None] * len(outputs)
         else:
             exts = [None] * len(outputs)
-            hdus = [None] * len(outputs)
+            ext_objs = [None] * len(outputs)
 
         # If parent is set to 'Auto', use any present SCI/DATA extension as parent
         # of any other selected extensions
@@ -218,10 +236,10 @@ class ImageImporter(BaseImporterToDataCollection):
                 sort_inds = [parent_index] + [i for i in range(len(exts)) if i != parent_index]
                 outputs = [outputs[i] for i in sort_inds]
                 exts = [exts[i] for i in sort_inds]
-                hdus = [hdus[i] for i in sort_inds]
+                ext_objs = [ext_objs[i] for i in sort_inds]
 
-                parent_hdu = hdus[parent_index]
-                ver = getattr(parent_hdu, 'ver', None)
+                parent_ext_obj = ext_objs[parent_index]
+                ver = getattr(parent_ext_obj, 'ver', None)
 
                 # assume self.data_label_is_prefix is True
                 parent = self._get_label_with_extension(base_data_label,
@@ -232,15 +250,15 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             parent = self.parent.selected
 
-        for output, ext, hdu in zip(outputs, exts, hdus):
+        for output, ext, ext_obj in zip(outputs, exts, ext_objs):
             if output is None:
                 # needed for NDData where one of the "extensions" might
                 # not be present.  Remove this once users can select
                 # which to import.
                 continue
             if self.data_label_is_prefix:
-                # Handle case where hdu is an ndarray
-                ver = getattr(hdu, 'ver', None)
+                # Handle case where ext_obj is an ndarray
+                ver = getattr(ext_obj, 'ver', None)
                 # If data_label is a prefix, we need to append the extension
                 # to the data label.
                 data_label = self._get_label_with_extension(base_data_label,
@@ -255,23 +273,14 @@ class ImageImporter(BaseImporterToDataCollection):
                                         cls=CCDData)
 
 
-def _validate_fits_image2d(hdu, raise_error=False):
-    valid = hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
-    if not valid and raise_error:
-        if hdu.data is not None and hdu.is_image:
-            ndim = hdu.data.ndim
-        else:
-            ndim = None
-        raise ValueError(
-            f'Imviz cannot load this HDU ({hdu}): '
-            f'has_data={hdu.data is not None}, is_image={hdu.is_image}, '
-            f'name={hdu.name}, ver={hdu.ver}, ndim={ndim}')
-    return valid
+def _validate_fits_image2d(item):
+    hdu = item.get('obj')
+    return hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
 
 
-def _validate_roman_ext(ext):
-    valid = ext in ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
-    return valid
+def _validate_roman_ext(item):
+    name = item.get('name')
+    return name in ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
 
 
 def _hdu2data(hdu, hdulist, include_wcs=True):
@@ -385,9 +394,8 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     comp_label = ext.upper()
     data = Data(coords=coords)
 
-    # This could be a quantity or a ndarray:
     if HAS_ROMAN_DATAMODELS and isinstance(file_obj, (rdd.DataModel, rdd.ImageModel)):
-        ext_values = getattr(file_obj, ext)
+        ext_values = file_obj[ext]
     else:
         ext_values = file_obj['roman'][ext]
     bunit = getattr(ext_values, 'unit', '')
