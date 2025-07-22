@@ -152,8 +152,10 @@ def test_data_quality_plugin(imviz_helper):
     # check that a pixel without a DQ flag has no DQ mouseover label:
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1361, 'y': 684}})
+    dq_val = dq_data[684, 1361]
+    assert np.isnan(dq_val)
     label_mouseover_text = label_mouseover.as_text()[0]
-    assert 'DQ' in label_mouseover_text
+    assert 'DQ' not in label_mouseover_text
 
     # set a bit filter, then clear it:
     assert len(dq_plugin.flags_filter) == 0

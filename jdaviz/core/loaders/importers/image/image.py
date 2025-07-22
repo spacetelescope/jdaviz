@@ -155,21 +155,36 @@ class ImageImporter(BaseImporterToDataCollection):
             input = fits.HDUList([self.input])
 
         if isinstance(input, NDData):
-            return _nddata_to_glue_data(input)  # list of Data
+            data = _nddata_to_glue_data(input)  # list of Data
         elif isinstance(input, np.ndarray):
-            return [_ndarray_to_glue_data(input)]
+            data = [_ndarray_to_glue_data(input)]
         # asdf
         elif (isinstance(input, asdf.AsdfFile)):
-            return [_roman_asdf_2d_to_glue_data(input, ext='data')]
+            data = [_roman_asdf_2d_to_glue_data(input, ext='data')]
         # roman data models
         elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
-            return [_roman_asdf_2d_to_glue_data(input, ext=ext)
+            data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
                     for ext in self.extension.selected_name]  # list of Data
         # JWST ASDF-in-FITS
-        if 'ASDF' in input:
-            return [_jwst2data(hdu, input) for hdu in self.extension.selected_hdu]
-        # fits
-        return [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
+        elif 'ASDF' in input:
+            data = [_jwst2data(hdu, input) for hdu in self.extension.selected_hdu]
+        # FITS
+        else:
+            data = [_hdu2data(hdu, input) for hdu in self.extension.selected_hdu]
+
+        for d in data:
+            if d is None:
+                continue
+            for component_id in d.main_components:
+                if component_id.label.lower().startswith("dq"):
+                    # for DQ components, map zeros to nans
+                    # so that they are not displayed in the DQ colormap
+                    cid = d.get_component(component_id)
+                    data_arr = np.float32(cid.data)
+                    data_arr[data_arr == 0] = np.nan
+                    d.update_components({cid: data_arr})
+
+        return data
 
     def __call__(self, show_in_viewer=True):
         base_data_label = self.data_label_value
@@ -370,19 +385,6 @@ def _try_gwcs_to_fits_sip(gwcs):
     return result
 
 
-def prep_data_layer_as_dq(data):
-    # nans are used to mark "good" flags in the DQ colormap, so
-    # convert DQ array to float to support nans:
-    for component_id in data.main_components:
-        if component_id.label.startswith("DQ"):
-            break
-
-    cid = data.get_component(component_id)
-    data_arr = np.float32(cid.data)
-    data_arr[data_arr == 0] = np.nan
-    data.update_components({cid: data_arr})
-
-
 def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     meta = standardize_roman_metadata(file_obj)
     gwcs = meta.get('wcs', None)
@@ -404,8 +406,6 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     component = Component(np.array(ext_values), units=bunit)
     data.add_component(component=component, label=comp_label)
     data.meta.update(standardize_metadata(dict(meta)))
-    if comp_label == 'DQ':
-        prep_data_layer_as_dq(data)
 
     return data
 
