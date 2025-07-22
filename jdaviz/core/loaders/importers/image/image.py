@@ -204,19 +204,16 @@ class ImageImporter(BaseImporterToDataCollection):
             hdus = [None] * len(outputs)
 
         # If parent is set to 'Auto', use any present SCI/DATA extension as parent
-        # of any other extensions
+        # of any other selected extensions
         if (self.parent.selected == 'Auto' and
                 len(exts) > 1 and
                 getattr(self.input, 'meta', {}).get('plugin', None) is None):
-            for ext in ('SCI', 'DATA'):
+            for ext in ('SCI', 'sci', 'DATA', 'data'):
                 if ext in exts:
                     parent_ext = ext
                     break
-                # Roman data model extensions are lower case
-                elif ext.lower() in exts:
-                    parent_ext = ext.lower()
-                    break
             else:
+                # No SCI/DATA extension found, so no parent
                 parent_ext = None
                 parent = None
             if parent_ext is not None:
@@ -227,7 +224,6 @@ class ImageImporter(BaseImporterToDataCollection):
                 hdus = [hdus[i] for i in sort_inds]
 
                 parent_hdu = hdus[parent_index]
-                # Handle case for rdd.ImageModel where hdu is an ndarray
                 ver = getattr(parent_hdu, 'ver', None)
 
                 # assume self.data_label_is_prefix is True
@@ -256,15 +252,8 @@ class ImageImporter(BaseImporterToDataCollection):
             else:
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
-            # For the purposes of the DQ plugin, only the DQ extension can set the
-            # SCI/DATA extension to be it's parent. The exception to this is if the parent is
-            # explicitly set. The reason for only dq extensions being allowed as children is:
-            # https://github.com/spacetelescope/jdaviz/blob/77b09ce49ab86958e819f47ae85fcdead4d7109e/jdaviz/configs/default/plugins/data_quality/data_quality.py#L142  # noqa
-            set_parent = (((self.parent.selected != 'Auto' and ext is None)
-                           or (isinstance(ext, str) and ext.lower() == 'dq'))
-                          and parent != data_label)
             self.add_to_data_collection(output, data_label,
-                                        parent=parent if set_parent else None,
+                                        parent=parent if parent != data_label else None,
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 
