@@ -147,12 +147,11 @@
           label_hint="Label for the sonified data"
           :add_to_viewer_items="add_to_viewer_items"
           :add_to_viewer_selected.sync="add_to_viewer_selected"
-          :add_to_viewer_enabled="false"
+          add_to_viewer_hint="Add sonified layer to selected viewer. The sonified data will be available to add to all relevant viewers after creation."
           action_label="Sonify data"
-          action_tooltip="Create sonified data and add to flux viewer"
+          action_tooltip="Create sonified data and add to selected viewer"
           :action_spinner="spinner"
           action_api_hint='plg.sonify_cube()'
-          :add_to_viewer_disabled="true"
           @click:action="sonify_cube"
       ></plugin-add-results>
  </j-tray-plugin>

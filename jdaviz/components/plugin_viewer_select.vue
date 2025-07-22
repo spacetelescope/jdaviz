@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect"> 
+    <v-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect">
       <span :class="api_hints_enabled && api_hint_multiselect ? 'api-hint' : null">
         {{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}
       </span>
@@ -31,7 +31,6 @@
       :chips="multiselect && !api_hints_enabled"
       item-text="label"
       item-value="label"
-      :disabled="add_to_viewer_disabled"
       persistent-hint
     >
     <template v-slot:selection="{ item, index }">
@@ -91,7 +90,7 @@
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
           'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck',
-          'api_hint', 'api_hint_multiselect', 'api_hints_enabled', 'add_to_viewer_disabled']
+          'api_hint', 'api_hint_multiselect', 'api_hints_enabled']
 };
 </script>
 
