@@ -118,7 +118,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.orientation_layer_label = AutoTextField(
             self, 'new_layer_label', 'new_layer_label_default', 'new_layer_label_auto', None
         )
-
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_new_app_data)
 
@@ -401,11 +400,19 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 self.orientation.choices += [label]
             self.orientation.selected = label
 
+    def _ensure_layer_icon_exists(self, data_label):
+        if data_label in self.app.data_collection and data_label not in self.app.state.layer_icons:
+            # ensure layer icon is created for the orientation layer since we bypassed
+            # the viewer data menu
+            self.app._on_layers_changed(AddDataMessage(self.app.data_collection[data_label],
+                                                       viewer=None, sender=self))
+
     def _add_data_to_viewer(self, data_label, viewer_id):
         viewer = self.app.get_viewer_by_id(viewer_id)
 
         if data_label not in viewer.data_menu.orientation.choices:
             self.app.add_data_to_viewer(viewer_id, data_label)
+        self._ensure_layer_icon_exists(data_label)
 
     def _on_viewer_added(self, msg):
         self._send_wcs_layers_to_all_viewers(viewers_to_update=[msg._viewer_id])
@@ -431,6 +438,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                     self.align_by_selected == 'WCS'
             ):
                 viewer_dm.orientation.selected = base_wcs_layer_label
+        self._ensure_layer_icon_exists(base_wcs_layer_label)
 
     def _on_data_add_to_viewer(self, msg):
         all_wcs_only_layers = all(

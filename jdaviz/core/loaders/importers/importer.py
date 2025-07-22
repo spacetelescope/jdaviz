@@ -133,6 +133,9 @@ class BaseImporterToDataCollection(BaseImporter):
             if data_label in viewer.data_menu.data_labels_unloaded:
                 added += 1
                 viewer.data_menu.add_data(data_label)
+            elif data_label in viewer.data_menu.data_labels_loaded:
+                # was already loaded, increment count to avoid creating a new viewer
+                added += 1
         if added == 0:
             if self.app.config not in ('deconfigged', 'lcviz'):
                 # do not add additional viewers
