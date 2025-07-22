@@ -56,11 +56,6 @@ class ImageImporter(BaseImporterToDataCollection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.default_data_label_from_resolver:
-            self.data_label_default = self.default_data_label_from_resolver
-        elif self.app.config == 'imviz':
-            self.data_label_default = 'Image'
-
         self.parent = DatasetSelect(self, 'parent_items', 'parent_selected',
                                     multiselect=None, manual_options=['Auto'])
         self.parent.add_filter('is_image', 'not_from_plugin')
@@ -82,6 +77,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                                           multiselect='extension_multiselect',
                                                           manual_options=input,
                                                           filters=filters)
+            # changing selected extension will call _set_default_data_label
             self.extension.selected = [self.extension.choices[0]]
         else:
             self._set_default_data_label()
@@ -120,6 +116,7 @@ class ImageImporter(BaseImporterToDataCollection):
             prefix = self.default_data_label_from_resolver
         else:
             prefix = "Image"
+
         if self.input_hdulist:
             if self.extension.selected_name is None:
                 return
