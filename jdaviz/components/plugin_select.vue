@@ -42,7 +42,7 @@
         <v-list-item
         ripple
         @mousedown.prevent
-        @click="() => {if (selected.length < items.length) { $emit('update:selected', items.map((item) => {item.label || item.text}))} else {$emit('update:selected', [])}}"
+        @click="() => {if (selected.length < items.length) { $emit('update:selected', items.map((item) => {return item.label || item.text || item}))} else {$emit('update:selected', [])}}"
         >
         <v-list-item-action>
           <v-icon>

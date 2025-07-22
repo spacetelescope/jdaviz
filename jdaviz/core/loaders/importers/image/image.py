@@ -121,6 +121,8 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             prefix = "Image"
         if self.input_hdulist:
+            if self.extension.selected_name is None:
+                return
             if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
                 # selected_hdu may be an ndarray object if input is a roman data model
                 ver = getattr(self.extension.selected_hdu[0], 'ver', None)
