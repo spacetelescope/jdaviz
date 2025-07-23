@@ -96,12 +96,12 @@ class TestSetupRelevance:
 
     # NOTE: deconfigged_plugin *is* a custom parametrization (see conftest.py)
     # so these will run with all the plugins available at initialization.
-    def test_setup_relevance_with_real_traitlets(self, deconfigged_plugin):
+    def test_observe_relevant_traitlets_with_real_traitlets(self, deconfigged_plugin):
         deconfigged_plugin_obj = deconfigged_plugin._obj
         traitlets = self.setup_traitlets(deconfigged_plugin_obj)
 
         # Testing basic functionality
-        deconfigged_plugin_obj.setup_relevance(non_empty_traitlets=traitlets)
+        deconfigged_plugin_obj.observe_relevant_traitlets(non_empty_traitlets=traitlets)
 
         assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
         assert deconfigged_plugin_obj._custom_irrelevant_msg == ''
@@ -141,15 +141,15 @@ class TestSetupRelevance:
             ('', f'No {fake_traitlet} available'),
             ('irrelevant message', 'irrelevant message')
         ])
-    def test_setup_relevance_with_fake_traitlets(self,
+    def test_observe_relevant_traitlets_with_fake_traitlets(self,
                                                  deconfigged_plugin, irrelevant_msg, result_msg):
         # Starting with at least one fake traitlet to make sure the irrelevant message
         # is set correctly when it can't find the attribute
         deconfigged_plugin_obj = deconfigged_plugin._obj
         traitlets = self.setup_traitlets(deconfigged_plugin_obj) + [self.fake_traitlet]
 
-        deconfigged_plugin_obj.setup_relevance(non_empty_traitlets=traitlets,
-                                               irrelevant_msg=irrelevant_msg)
+        deconfigged_plugin_obj.observe_relevant_traitlets(non_empty_traitlets=traitlets,
+                                                          irrelevant_msg=irrelevant_msg)
 
         # Check that the fake traitlet is the only thing that triggers the irrelevant message
         assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
@@ -174,14 +174,14 @@ class TestSetupRelevance:
             assert deconfigged_plugin_obj.irrelevant_msg == result_msg
             assert deconfigged_plugin_obj._set_relevant() in all_results
 
-    def test_setup_relevance_with_custom_function(self, deconfigged_plugin):
+    def test_observe_relevant_traitlets_with_custom_function(self, deconfigged_plugin):
 
         deconfigged_plugin_obj = deconfigged_plugin._obj
         traitlets = self.setup_traitlets(deconfigged_plugin_obj)
 
         # Now using our own set_relevant function
-        deconfigged_plugin_obj.setup_relevance(non_empty_traitlets=traitlets,
-                                               set_relevant=self.fake_set_relevant)
+        deconfigged_plugin_obj.observe_relevant_traitlets(non_empty_traitlets=traitlets,
+                                                          set_relevant=self.fake_set_relevant)
 
         assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
         assert deconfigged_plugin_obj._custom_irrelevant_msg == ''

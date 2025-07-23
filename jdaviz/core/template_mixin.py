@@ -646,17 +646,45 @@ class PluginTemplateMixin(TemplateMixin):
 
     # *args to handle events from observe
     def _set_relevant(self, *args):
-        for traitlet_name in self._non_empty_traitlets:
-            if not getattr(self, traitlet_name, None):
-                self.irrelevant_msg = self._custom_irrelevant_msg \
-                    if self._custom_irrelevant_msg \
-                    else f'No {traitlet_name} available'
-                return
+        """
+        `_set_relevant` sets `irrelevant_msg` attribute used to determine
+        if relevance for a specific plugin in a configuration is required.
+        The default behavior is for traitlets to evaluate to False
+        (e.g. None, '', False) in which case  `irrelevant_msg` will indicate
+        the failure via the first traitlet found.
 
-        self.irrelevant_msg = ''
+        This method observes the traitlets in the `_non_empty_traitlets` iterable
+        and so updates the `irrelevant_msg` attribute whenever they are modified.
+        """
 
-    def setup_relevance(self, non_empty_traitlets: (list, tuple), irrelevant_msg='',
-                        set_relevant=None):
+        is_not_relevant = [''] + [self._custom_irrelevant_msg
+                                  if self._custom_irrelevant_msg
+                                  else f'No {traitlet_name} available'
+                                  for traitlet_name in self._non_empty_traitlets
+                                  if getattr(self, traitlet_name, None)]
+
+        self.irrelevant_msg = is_not_relevant[-1]
+
+        # For multiple `_non_empty_traitlets` (see `export.py` or `unit_conversion.py`),
+        # we assume that ALL traitlets must be unavailable in order to set
+        # `irrelevant_msg`. So we reset the message if there are fewer messages
+        # than traitlets.
+        if len(is_not_relevant[1:]) != len(self._non_empty_traitlets):
+            self.irrelevant_msg = ''
+
+    def observe_relevant_traitlets(self, non_empty_traitlets: (list, tuple), irrelevant_msg='',
+                                   set_relevant=None):
+        """
+        `observe_relevant_traitlets` enables the app to observe traitlets
+        necessary to determine configuration relevance for the plugins
+        that require it. It sets up the observe method and calls either
+        the user provided `set_relevant` method or the private method
+        `_set_relevant` provided here.
+
+        If a user does not provide the `set_relevant` kwarg or otherwise
+        sets it to None, `observe_relevant_traitlets` will call the private
+        `_set_relevant` method.
+        """
         self._non_empty_traitlets = non_empty_traitlets
         self._custom_irrelevant_msg = irrelevant_msg
 
