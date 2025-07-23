@@ -83,15 +83,14 @@ def viewer_flux_conversion_equivalencies(values, spec):
     """
 
     # if we are converting only 2 values, assume it is a viewer y limits case.
-    is_viewer_limits = len(values) == 2
+    is_viewer_limits = not np.isscalar(values) and len(values) == 2
 
-    # for viewer limits case, use only the 0th spectral axis value for spectral_density
     spectral_values = spec.spectral_axis
-    if not np.isscalar(values) and is_viewer_limits:
+    if is_viewer_limits:
+        # for viewer limits case, use only the 0th spectral axis value for spectral_density
         spectral_values = spectral_values[0]
-
-    # Need this for setting the y-limits but values from viewer might be downscaled
-    if len(values) != spectral_values.size:
+    elif not np.isscalar(values) and len(values) != spectral_values.size:
+        # Need this for setting the y-limits but values from viewer might be downscaled
         spectral_values = spec.spectral_axis[0]
 
     # Next, pixel scale factor
