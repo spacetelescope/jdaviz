@@ -11,8 +11,7 @@ from traitlets import Bool, Unicode, Any, List, Float, observe
 from jdaviz.core.events import (
     SnackbarMessage,
     AddDataMessage,
-    RemoveDataMessage,
-    LinkUpdatedMessage,
+    RemoveDataMessage
 )
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
@@ -106,7 +105,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
-        self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):

@@ -185,12 +185,18 @@ def test_link_type_autocoord(imviz_helper):
 
     imviz_helper.plugins["Orientation"].align_by = "WCS"
 
+    # coordinates have not updated to the new center
+    assert vo_plugin.coord_follow_viewer_pan is False
     ra_str, dec_str = vo_plugin.source.split()
+    np.testing.assert_allclose(float(ra_str), 284.2101962057667)
+    np.testing.assert_allclose(float(dec_str), 32.23616603681311)
 
-    # Large absolute tolerances due to WCS center coordinate bug (see issue 3225)
-    # Truth values may need to be reevaluated
-    np.testing.assert_allclose(float(ra_str), 326.7884142245305, atol=30)
-    np.testing.assert_allclose(float(dec_str), -9.905948925234416, atol=30)
+    vo_plugin.center_on_data()
+    ra_str, dec_str = vo_plugin.source.split()
+    # coordinates should now update based on the new alignment/zoom
+    np.testing.assert_allclose(float(ra_str), 239.18584957810944)
+    np.testing.assert_allclose(float(dec_str), 14.793145129887552)
+    assert vo_plugin.viewer_centered
 
 
 @pytest.mark.remote_data
