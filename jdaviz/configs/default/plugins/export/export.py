@@ -213,8 +213,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.serverside_enabled = False
 
         if self.config == 'deconfigged':
-            self.setup_relevance(['viewer_items', 'dataset_items', 'subset_items',
-                                  'plugin_table_items', 'plugin_plot_items'],
+            self.setup_relevance(non_empty_traitlets=['viewer_items', 'dataset_items',
+                                                      'subset_items', 'plugin_table_items',
+                                                      'plugin_plot_items'],
                                  set_relevant=self._set_relevant)
 
     def _set_relevant(self, *args):
