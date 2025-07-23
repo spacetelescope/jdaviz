@@ -80,6 +80,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
 
 class TestSetupRelevance:
 
+    fake_traitlet = 'fake_traitlet'
     set_relevant_msg = 'stale message'
     new_set_relevant_msg = 'fresh message'
     sad_msg = "I don't want to be made irrelevant"
@@ -137,7 +138,7 @@ class TestSetupRelevance:
     # Alternatively, a custom function could be used (but that's [currently] a separate test!)
     @pytest.mark.parametrize(
         ('irrelevant_msg', 'result_msg'), [
-            ('', f'No fake_traitlet available'),
+            ('', f'No {fake_traitlet} available'),
             ('irrelevant message', 'irrelevant message')
         ])
     def test_setup_relevance_with_fake_traitlets(self,
@@ -145,7 +146,7 @@ class TestSetupRelevance:
         # Starting with at least one fake traitlet to make sure the irrelevant message
         # is set correctly when it can't find the attribute
         deconfigged_plugin_obj = deconfigged_plugin._obj
-        traitlets = self.setup_traitlets(deconfigged_plugin_obj) + ['fake_traitlet']
+        traitlets = self.setup_traitlets(deconfigged_plugin_obj) + [self.fake_traitlet]
 
         deconfigged_plugin_obj.setup_relevance(non_empty_traitlets=traitlets,
                                                irrelevant_msg=irrelevant_msg)
