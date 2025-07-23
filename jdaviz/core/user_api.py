@@ -75,7 +75,7 @@ class UserApiWrapper:
                 def to_choice_single(value):
                     if isinstance(value, int):
                         # allow setting by index
-                        return exp_obj.choices[value]
+                        return exp_obj.choices[exp_obj.indices.index(value)]
                     elif isinstance(value, str):
                         # allow setting without index
                         if value not in exp_obj.choices:

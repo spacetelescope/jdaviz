@@ -154,7 +154,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                         wcs = None
                 else:
                     wcs = None
-            print(Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1))
             return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
