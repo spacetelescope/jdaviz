@@ -8,18 +8,19 @@ from astropy.nddata import NDData, CCDData
 from astropy.utils.exceptions import AstropyWarning
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
-from traitlets import Bool, List, Any, observe
+from gwcs import WCS as GWCS
 from stdatamodels import asdf_in_fits
-
+from traitlets import Bool, List, Any, observe
 
 from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect
 
-from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
-    standardize_metadata, standardize_roman_metadata, PRIHDR_KEY
+    PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
+    _try_gwcs_to_fits_sip
 )
 
 try:
@@ -46,6 +47,9 @@ class ImageImporter(BaseImporterToDataCollection):
     # Data-association
     parent_items = List().tag(sync=True)
     parent_selected = Any().tag(sync=True)
+
+    # Use FITS approximation instead of original image GWCS
+    gwcs_to_fits_sip = Bool(False).tag(sync=True)
 
     # user-settable option to treat the data_label as prefix and append the extension later
     data_label_as_prefix = Bool(False).tag(sync=True)
@@ -101,7 +105,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['parent', 'data_label_as_prefix']
+        expose = ['parent', 'data_label_as_prefix', 'gwcs_to_fits_sip']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose)
@@ -116,6 +120,17 @@ class ImageImporter(BaseImporterToDataCollection):
         return (isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
                                         NDData, np.ndarray, asdf.AsdfFile)) or
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))))
+
+    def _glue_data_wcs_to_fits(self, glue_data):
+        """
+        Re-set data.coords to a SIP approximation of the GWCS, if
+        gwcs_to_fits_sip is True and data.coords is a GWCS. If these conditions
+        are met but this approximation is not possible, a warning will be
+        emitted and the original GWCS will be used.
+        """
+        if isinstance(glue_data.coords, GWCS):
+            glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
+        return glue_data
 
     @property
     def default_viewer_reference(self):
@@ -203,6 +218,7 @@ class ImageImporter(BaseImporterToDataCollection):
         return data
 
     def __call__(self, show_in_viewer=True):
+
         base_data_label = self.data_label_value
         # self.output is always a list of Data objects
         outputs = self.output
@@ -267,6 +283,10 @@ class ImageImporter(BaseImporterToDataCollection):
             else:
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
+
+            if self.gwcs_to_fits_sip:
+                output = self._glue_data_wcs_to_fits(output)
+
             self.add_to_data_collection(output, data_label,
                                         parent=parent if parent != data_label else None,
                                         show_in_viewer=show_in_viewer,
@@ -360,26 +380,6 @@ def _nddata_to_glue_data(ndd):
         cur_data.add_component(component=component, label=comp_label)
         returned_data.append(cur_data)
     return returned_data
-
-
-def _try_gwcs_to_fits_sip(gwcs):
-    """
-    Try to convert this GWCS to FITS SIP. Some GWCS models
-    cannot be converted to FITS SIP. In that case, a warning
-    is raised and the GWCS is used, as is.
-    """
-    try:
-        result = WCS(gwcs.to_fits_sip())
-    except ValueError as err:
-        warnings.warn(
-            "The GWCS coordinates could not be simplified to "
-            "a SIP-based FITS WCS, the following error was "
-            f"raised: {err}",
-            UserWarning
-        )
-        result = gwcs
-
-    return result
 
 
 def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):

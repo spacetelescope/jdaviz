@@ -92,7 +92,8 @@ class Imviz(ImageConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
-    def load_data(self, data, data_label=None, show_in_viewer=True, **kwargs):
+    def load_data(self, data, data_label=None, show_in_viewer=True,
+                  gwcs_to_fits_sip=False, **kwargs):
         """Load data into Imviz.
 
         Parameters
@@ -134,8 +135,7 @@ class Imviz(ImageConfigHelper):
             Try to convert GWCS coordinates into an approximate FITS SIP solution. Typical
             precision loss due to this approximation is of order 0.1 pixels. This may
             improve image rendering performance for images with expensive GWCS
-            transformations. If this keyword argument isn't specified, the choice
-            will be taken from the Orientation plugin's ``gwcs_to_fits_sip`` traitlet.
+            transformations. (Default: False)
 
         kwargs : dict
             Extra keywords to be passed into app-level parser.
@@ -156,9 +156,6 @@ class Imviz(ImageConfigHelper):
 
         extensions = kwargs.pop('ext', None)
 
-        if 'gwcs_to_fits_sip' not in kwargs and 'Orientation' in self.plugins.keys():
-            kwargs['gwcs_to_fits_sip'] = self.plugins['Orientation'].gwcs_to_fits_sip
-
         if isinstance(data, str) and "," in data:
             data = data.split(',')
 
@@ -172,6 +169,7 @@ class Imviz(ImageConfigHelper):
                     self.load_data(data_i,
                                    data_label=data_label,
                                    show_in_viewer=show_in_viewer,
+                                   gwcs_to_fits_sip=gwcs_to_fits_sip,
                                    **kw)
             return
 
@@ -194,14 +192,16 @@ class Imviz(ImageConfigHelper):
                            data_label=data_label,
                            extension=extensions,
                            parent=kwargs.pop('parent', None),
-                           show_in_viewer=show_in_viewer)
+                           show_in_viewer=show_in_viewer,
+                           gwcs_to_fits_sip=gwcs_to_fits_sip)
         elif isinstance(data, str) and data.endswith('.reg'):
             self._load(data,
                        format='Subset',
                        data_label=data_label,
                        extension=extensions,
                        parent=kwargs.pop('parent', None),
-                       show_in_viewer=show_in_viewer)
+                       show_in_viewer=show_in_viewer,
+                       gwcs_to_fits_sip=gwcs_to_fits_sip)
         else:
             # if the data-label is provided but without an
             # extension in the label, maintain previous behavior of appending
@@ -227,7 +227,8 @@ class Imviz(ImageConfigHelper):
                        data_label_as_prefix=data_label_as_prefix,
                        extension=extensions,
                        parent=kwargs.pop('parent', None),
-                       show_in_viewer=show_in_viewer)
+                       show_in_viewer=show_in_viewer,
+                       gwcs_to_fits_sip=gwcs_to_fits_sip)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.

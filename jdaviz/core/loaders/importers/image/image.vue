@@ -32,6 +32,15 @@
         :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.' : 'Label to assign to the new data entry.'"
       ></plugin-auto-label>
     </v-row>
+    <v-row>
+      <plugin-switch
+        :value.sync="gwcs_to_fits_sip"
+        label="Approximate GWCS with FITS SIP"
+        api_hint="ldr.importer.gwcs_to_fits_sip = "
+        :api_hints_enabled="api_hints_enabled"
+        hint="If GWCS exists, try to convert into FITS SIP for better performance aligning images (typical precision <0.1 pixels)."
+      />
+    </v-row>
   </v-container>
 </template>
 <script setup lang="ts">
