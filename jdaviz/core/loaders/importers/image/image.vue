@@ -18,7 +18,7 @@
       label="Parent Dataset"
       api_hint="ldr.importer.parent ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Select a parent dataset to associate the new data with."
+      hint="Advanced: manually select a dataset to associate as the parent of the new data entry, 'Auto' will automatically associate non-science extensions with the science extension."
     ></plugin-dataset-select>
     <v-row>
       <plugin-auto-label
