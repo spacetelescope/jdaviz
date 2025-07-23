@@ -166,12 +166,12 @@ class UnitConversion(PluginTemplateMixin):
                                                      selected='spectral_y_type_selected')
 
         if self.app.config == 'deconfigged':
-            self.setup_relevance(non_empty_traitlets=['spectral_unit_selected',
-                                                      'flux_unit_selected',
-                                                      'angle_unit_selected',
-                                                      'time_unit_selected'],
-                                 irrelevant_msg='No datasets with valid units loaded',
-                                 set_relevant=self._set_relevant)
+            self.observe_relevant_traitlets(non_empty_traitlets=['spectral_unit_selected',
+                                                                 'flux_unit_selected',
+                                                                 'angle_unit_selected',
+                                                                 'time_unit_selected'],
+                                            irrelevant_msg='No datasets with valid units loaded',
+                                            set_relevant=self._set_relevant)
 
     # Keep this _set_relevant because in the mixing, we use an implicit ANY
     # i.e. if ANY of the non_empty_traitlets are in fact empty, the plugin is irrelevant

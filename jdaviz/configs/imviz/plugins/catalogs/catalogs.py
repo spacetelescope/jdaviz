@@ -128,7 +128,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.session.hub.subscribe(self, CatalogSelectClickEventMessage,
                                    self._on_catalog_select_click_event)
 
-        self.setup_relevance(non_empty_traitlets=['viewer_items'])
+        self.observe_relevant_traitlets(non_empty_traitlets=['viewer_items'])
 
     @property
     def user_api(self):

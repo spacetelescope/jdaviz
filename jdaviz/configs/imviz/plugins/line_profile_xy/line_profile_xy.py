@@ -51,7 +51,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
-        self.setup_relevance(non_empty_traitlets=['viewer_items'])
+        self.observe_relevant_traitlets(non_empty_traitlets=['viewer_items'])
 
     def reset_results(self):
         self.plot_available = False
