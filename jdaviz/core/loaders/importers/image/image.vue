@@ -13,7 +13,7 @@
     <plugin-dataset-select
       :items="parent_items"
       :selected.sync="parent_selected"
-      :show_if_single_entry="true"
+      :show_if_single_entry="false"
       :multiselect="false"
       label="Parent Dataset"
       api_hint="ldr.importer.parent ="
