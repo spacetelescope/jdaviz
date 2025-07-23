@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 import astropy.units as u
 from specutils import SpectralRegion
-from traitlets import Any, Instance
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
