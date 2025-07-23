@@ -18,7 +18,7 @@ vid_map = {'spectrum-1d-viewer': '1D Spectrum',
 
 
 def _spectrum_assign_component_type(comp_id, comp, physical_type):
-    if 'World' in str(comp_id) and physical_type == 'length':
+    if ('World' in str(comp_id) or str(comp_id) == 'Wave') and physical_type == 'length':
         return 'length:spectral_axis'
     return physical_type
 
