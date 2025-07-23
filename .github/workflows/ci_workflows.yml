@@ -22,7 +22,7 @@ jobs:
   ci_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failure }}
+    continue-on-error: ${{ matrix.allow_failure || contains(github.event.pull_request.labels.*.name, 'continue-on-error') }}
     strategy:
       matrix:
         include:
