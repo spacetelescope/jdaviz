@@ -42,7 +42,7 @@
     <v-alert v-if="viewer_items.length===0" type='warning' style="margin-left: -12px; margin-right: -12px">
       no valid viewers (with necessary WCS information) to show footprint overlay.
     </v-alert>
-  
+
     <div v-if="!is_pixel_linked && viewer_items.length > 0 && overlay_selected.length > 0">
       <j-plugin-section-header>Display Options</j-plugin-section-header>
 
@@ -189,7 +189,7 @@
             persistent-hint
           ></v-text-field>
         </v-row>
-        
+
         <v-row>
           <v-text-field
             v-model.number="v3_offset"
@@ -223,7 +223,7 @@
           return 'False'
         }
       },
-    } 
+    }
   }
 </script>
 
