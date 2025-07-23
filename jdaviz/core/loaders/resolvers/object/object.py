@@ -1,3 +1,4 @@
+from pathlib import Path
 from traitlets import Unicode
 
 from jdaviz.core.registries import loader_resolver_registry
@@ -23,7 +24,7 @@ class ObjectResolver(BaseResolver):
 
     @property
     def is_valid(self):
-        return not isinstance(self.object, str)
+        return not isinstance(self.object, (str, Path))
 
     @property
     def object(self):

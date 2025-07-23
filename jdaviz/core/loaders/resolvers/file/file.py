@@ -17,6 +17,7 @@ __all__ = ['FileResolver']
 class FileResolver(BaseResolver):
     template_file = __file__, "file.vue"
     default_input = 'filepath'
+    default_input_cast = str
 
     file_chooser_widget = Any().tag(sync=True, **widget_serialization)
     filepath = Unicode().tag(sync=True)
