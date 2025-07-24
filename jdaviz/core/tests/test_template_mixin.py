@@ -168,7 +168,7 @@ class TestObserveRelevantTraitlets:
         deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
         traitlets += [self.fake_traitlet1, self.fake_traitlet2]
 
-        # Sneaking another test in here because everything in a separate test
+        # Sneaking another test in here because a separate test
         # would be identical
         if irrelevant_msg == 'testing check_all':
             traitlets = traitlets[-2:]
