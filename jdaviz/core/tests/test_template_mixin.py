@@ -2,6 +2,12 @@ import pytest
 import numpy as np
 import astropy.units as u
 from specutils import SpectralRegion
+from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.registries import tray_registry
+from jdaviz.core.config import get_configuration
+from jdaviz.app import Application
+from jdaviz import App
+
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -78,7 +84,21 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     assert p.viewer.selected == p.viewer.labels[0]
 
 
-class TestSetupRelevance:
+@tray_registry('test-fake-plugin', label='Test Fake Plugin')
+class FakePlugin(PluginTemplateMixin):
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    # @property
+    # def user_api(self):
+    #     return PluginUserApi(
+    #         self,
+    #         expose = ['disabled_msg', 'irrelevant_msg', 'is_active'])
+
+
+class TestObserveRelevantTraitlets:
 
     fake_traitlet = 'fake_traitlet'
     set_relevant_msg = 'stale message'
@@ -94,10 +114,17 @@ class TestSetupRelevance:
         return [trait_name for trait_name in plugin_obj.traits()
                 if getattr(plugin_obj, trait_name, False)]
 
-    # NOTE: deconfigged_plugin *is* a custom parametrization (see conftest.py)
+    # NOTE: deconfigged_plugin *is* a custom parametrization (see `conftest.py`)
     # so these will run with all the plugins available at initialization.
-    def test_observe_relevant_traitlets_with_real_traitlets(self, deconfigged_plugin):
-        deconfigged_plugin_obj = deconfigged_plugin._obj
+    def test_observe_relevant_traitlets_with_real_traitlets(self):
+        config = get_configuration('deconfigged')
+        config['tray'] = ['test-fake-plugin']
+
+        deconfigged_app = Application(config)
+        deconfigged_helper = App(deconfigged_app)
+        print(deconfigged_helper.plugins)
+
+        deconfigged_plugin_obj = deconfigged_helper.plugins['Test Fake Plugin']._obj
         traitlets = self.setup_traitlets(deconfigged_plugin_obj)
 
         # Testing basic functionality
