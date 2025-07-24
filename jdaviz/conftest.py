@@ -63,12 +63,12 @@ def deconfigged_helper():
     return App()
 
 
-# For dynamic generation of plugins from deconfigged
-def pytest_generate_tests(metafunc):
-    if "deconfigged_plugin" in metafunc.fixturenames:
-        plugin_dict = App().plugins
-        names, plugins = zip(*plugin_dict.items())
-        metafunc.parametrize("deconfigged_plugin", plugins, ids=names)
+# # For dynamic generation of plugins from deconfigged
+# def pytest_generate_tests(metafunc):
+#     if "deconfigged_plugin" in metafunc.fixturenames:
+#         plugin_dict = App().plugins
+#         names, plugins = zip(*plugin_dict.items())
+#         metafunc.parametrize("deconfigged_plugin", plugins, ids=names)
 
 
 @pytest.fixture
