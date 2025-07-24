@@ -218,14 +218,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                                  'subset_items',
                                                                  'plugin_table_items',
                                                                  'plugin_plot_items'],
-                                            set_relevant=self._set_relevant)
-
-    def _set_relevant(self, *args):
-        if not (len(self.viewer_items) or len(self.dataset_items) or len(self.subset_items)
-                or len(self.plugin_table_items) or len(self.plugin_plot_items)):
-            self.irrelevant_msg = 'Nothing to export'
-        else:
-            self.irrelevant_msg = ''
+                                            check_all_for_relevance=True)
 
     def _is_valid_item(self, item):
         return self._is_not_stcs(item) or self._is_stcs_region_supported(item)

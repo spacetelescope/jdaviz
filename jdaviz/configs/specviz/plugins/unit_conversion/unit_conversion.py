@@ -171,19 +171,7 @@ class UnitConversion(PluginTemplateMixin):
                                                                  'angle_unit_selected',
                                                                  'time_unit_selected'],
                                             irrelevant_msg='No datasets with valid units loaded',
-                                            set_relevant=self._set_relevant)
-
-    # Keep this _set_relevant because in the mixing, we use an implicit ANY
-    # i.e. if ANY of the non_empty_traitlets are in fact empty, the plugin is irrelevant
-    # whereas this uses ALL
-    def _set_relevant(self, *args):
-        if self.app.config != 'deconfigged':
-            return
-        if (not self.spectral_unit_selected and not self.flux_unit_selected
-                and not self.angle_unit_selected and not self.time_unit_selected):
-            self.irrelevant_msg = 'No datasets with valid units loaded'
-        else:
-            self.irrelevant_msg = ''
+                                            check_all_for_relevance=True)
 
     @property
     def user_api(self):
