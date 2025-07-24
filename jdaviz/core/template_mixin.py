@@ -657,25 +657,25 @@ class PluginTemplateMixin(TemplateMixin):
         and so updates the `irrelevant_msg` attribute whenever they are modified.
         """
 
-        self.irrelevant_msg = ''
-
         is_not_relevant = [''] + [self._custom_irrelevant_msg
                                   if self._custom_irrelevant_msg
                                   else f'No {traitlet_name} available'
                                   for traitlet_name in self._non_empty_traitlets
                                   if not getattr(self, traitlet_name, None)]
 
+        self.irrelevant_msg = is_not_relevant[-1]
+
         # For multiple `_non_empty_traitlets` (see `export.py` or `unit_conversion.py`),
         # we assume that ALL traitlets must be unavailable in order to set
         # `irrelevant_msg`. So we reset the message if there are fewer messages
-        # than traitlets.
-        if (len(self._non_empty_traitlets) == 1 or
-                len(is_not_relevant) > len(self._non_empty_traitlets)):
-            self.irrelevant_msg = is_not_relevant[-1]
+        # than traitlets (since we initialize the list with an empty string).
+        if self._check_all_for_relevance and len(is_not_relevant) <= len(self._non_empty_traitlets):
+            self.irrelevant_msg = is_not_relevant[0]
 
 
-    def observe_relevant_traitlets(self, non_empty_traitlets: (list, tuple), irrelevant_msg='',
-                                   set_relevant=None):
+    def observe_relevant_traitlets(self,
+                                   non_empty_traitlets: (list, tuple), irrelevant_msg='',
+                                   check_all_for_relevance=False, set_relevant=None):
         """
         `observe_relevant_traitlets` enables the app to observe traitlets
         necessary to determine configuration relevance for the plugins
@@ -689,6 +689,7 @@ class PluginTemplateMixin(TemplateMixin):
         """
         self._non_empty_traitlets = non_empty_traitlets
         self._custom_irrelevant_msg = irrelevant_msg
+        self._check_all_for_relevance = check_all_for_relevance
 
         # NOTE: taking set_relevant in as a kwarg isn't STRICTLY necessary,
         # a plugin class could use its own _set_relevant and have it override
