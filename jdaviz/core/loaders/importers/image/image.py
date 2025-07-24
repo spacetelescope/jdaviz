@@ -76,8 +76,10 @@ class ImageImporter(BaseImporterToDataCollection):
         if self.input_has_extensions:
             if isinstance(input, fits.HDUList):
                 filters = [_validate_fits_image2d]
-                ext_options = [{'label': f"{index}: {hdu.name}",
+                ext_options = [{'label': f"{index}: [{hdu.name},{hdu.ver}]",
                                 'name': hdu.name,
+                                'ver': hdu.ver,
+                                'name_ver': f"{hdu.name},{hdu.ver}",
                                 'index': index,
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
@@ -85,6 +87,8 @@ class ImageImporter(BaseImporterToDataCollection):
                 filters = [_validate_roman_ext]
                 ext_options = [{'label': f"{index}: {key}",
                                 'name': key,
+                                'ver': None,
+                                'name_ver': key,
                                 'index': index,
                                 'obj': value}
                                for index, (key, value) in enumerate(input.items())]
@@ -180,8 +184,9 @@ class ImageImporter(BaseImporterToDataCollection):
     def output(self):
         # NOTE: this should ALWAYS return a list of objects able to be imported into DataCollection
         # NDData or ndarray
-        # ImageHDU
         input = self.input
+
+        # ImageHDU - treat as HDUList with single extension
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([self.input])
 
@@ -195,7 +200,7 @@ class ImageImporter(BaseImporterToDataCollection):
         # roman data models
         elif HAS_ROMAN_DATAMODELS and isinstance(input, (rdd.DataModel, rdd.ImageModel)):
             data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
-                    for ext in self.extension.selected_name]  # list of Data
+                    for ext in self.extension.selected_name]
         # JWST ASDF-in-FITS
         elif 'ASDF' in input:
             data = [_jwst2data(hdu, input) for hdu in self.extension.selected_obj]
@@ -224,71 +229,60 @@ class ImageImporter(BaseImporterToDataCollection):
         outputs = self.output
 
         if self.input_has_extensions:
-            exts = self.extension.selected_name
-            # ext_objs is a list of hdus or arrays from asdf
-            ext_objs = self.extension.selected_obj
+            ext_items = self.extension.selected_item_list
         elif isinstance(self.input, NDData):
-            exts = ['DATA', 'MASK', 'UNCERTAINTY']  # must match order in _nddata_to_glue_data
-            ext_objs = [None] * len(outputs)
+            ext_items = [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
         else:
-            exts = [None] * len(outputs)
-            ext_objs = [None] * len(outputs)
+            ext_items = [{}] * len(outputs)
 
-        # If parent is set to 'Auto', use any present SCI/DATA extension as parent
-        # of any other selected extensions
-        if (self.parent.selected == 'Auto' and
-                len(exts) > 1 and
-                getattr(self.input, 'meta', {}).get('plugin', None) is None):
-            for ext in ('SCI', 'sci', 'DATA', 'data'):
-                if ext in exts:
-                    parent_ext = ext
-                    break
-            else:
-                # No SCI/DATA extension found, so no parent
-                parent_ext = None
-                parent = None
-            if parent_ext is not None:
-                parent_index = exts.index(parent_ext)
-                sort_inds = [parent_index] + [i for i in range(len(exts)) if i != parent_index]
-                outputs = [outputs[i] for i in sort_inds]
-                exts = [exts[i] for i in sort_inds]
-                ext_objs = [ext_objs[i] for i in sort_inds]
-
-                parent_ext_obj = ext_objs[parent_index]
-                ver = getattr(parent_ext_obj, 'ver', None)
-
-                # assume self.data_label_is_prefix is True
-                parent = self._get_label_with_extension(base_data_label,
-                                                        parent_ext,
-                                                        ver=ver)
-        elif self.parent.selected == 'Auto':
-            parent = None
-        else:
-            parent = self.parent.selected
-
-        for output, ext, ext_obj in zip(outputs, exts, ext_objs):
+        for output, ext_item in zip(outputs, ext_items):
             if output is None:
                 # needed for NDData where one of the "extensions" might
                 # not be present.  Remove this once users can select
                 # which to import.
                 continue
+
+            # Determine data label
             if self.data_label_is_prefix:
-                # Handle case where ext_obj is an ndarray
-                ver = getattr(ext_obj, 'ver', None)
                 # If data_label is a prefix, we need to append the extension
                 # to the data label.
                 data_label = self._get_label_with_extension(base_data_label,
-                                                            ext,
-                                                            ver=ver)
+                                                            ext_item.get('name'),
+                                                            ver=ext_item.get('ver', None))
             else:
                 # If data_label is not a prefix, we use it as is.
                 data_label = base_data_label
+
+            # Determine parent
+            if (self.parent.selected == 'Auto' and
+                    len(ext_items) > 1 and
+                    getattr(self.input, 'meta', {}).get('plugin', None) is None):
+                # If parent is set to 'Auto', use SCI/DATA extension
+                # as parent of any other selected extensions with same ver (if applicable)
+                for other_ext_item in ext_items:
+                    if (other_ext_item.get('name') in ('SCI', 'sci', 'DATA', 'data')
+                            and other_ext_item.get('ver', None) == ext_item.get('ver', None)):
+                        parent_ext_item = other_ext_item
+                        break
+                else:
+                    # No SCI/DATA extension found, so default to no parent
+                    parent_ext_item = None
+                    parent_data_label = None
+                if parent_ext_item is not None:
+                    # assume self.data_label_is_prefix is True
+                    parent_data_label = self._get_label_with_extension(base_data_label,
+                                                                       parent_ext_item.get('name'),
+                                                                       ver=parent_ext_item.get('ver', None))  # noqa
+            elif self.parent.selected == 'Auto':
+                parent_data_label = None
+            else:
+                parent_data_label = self.parent.selected
 
             if self.gwcs_to_fits_sip:
                 output = self._glue_data_wcs_to_fits(output)
 
             self.add_to_data_collection(output, data_label,
-                                        parent=parent if parent != data_label else None,
+                                        parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 

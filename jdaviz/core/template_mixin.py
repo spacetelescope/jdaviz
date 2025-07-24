@@ -937,7 +937,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         super().__init__(*args, **kwargs)
         self._selected_previous = None
-        self._cached_properties = ["selected_obj", "selected_item"]
+        self._cached_properties = ["selected_obj", "selected_item", "selected_item_list"]
 
         self._default_mode = default_mode
         self._default_text = default_text
@@ -1125,9 +1125,15 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return {}
 
     @cached_property
+    def selected_item_list(self):
+        if self.is_multiselect:
+            return [self._get_selected_item(selected) for selected in self.selected]
+        return [self._get_selected_item(self.selected)]
+
+    @cached_property
     def selected_item(self):
         if self.is_multiselect:
-            items = [self._get_selected_item(selected) for selected in self.selected]
+            items = self.selected_item_list
             if not len(items):
                 return {}
             return {k: [item[k] for item in items] for k in items[0].keys()}
@@ -1245,11 +1251,15 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def names(self):
         return [item.get('name', None) for item in self.items]
 
+    @property
+    def name_vers(self):
+        return [item.get('name_ver', None) for item in self.items]
+
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
-        return {k: manual_item[k] for k in ('label', 'name', 'index')}
+        return {k: manual_item[k] for k in ('label', 'name', 'ver', 'name_ver', 'index')}
 
     @observe('filters')
     def _update_items(self, msg={}):

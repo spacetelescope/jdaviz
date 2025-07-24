@@ -77,9 +77,13 @@ class UserApiWrapper:
                         # allow setting by index
                         return exp_obj.choices[exp_obj.indices.index(value)]
                     elif isinstance(value, str):
-                        # allow setting without index
+                        # allow setting without index, by: name or name,ver or [name,ver]
                         if value not in exp_obj.choices:
-                            return exp_obj.choices[exp_obj.names.index(value)]
+                            value_no_brackets = value.strip('[]')
+                            for attr in ('names', 'name_vers'):
+                                if value_no_brackets in getattr(exp_obj, attr):
+                                    index = getattr(exp_obj, attr).index(value_no_brackets)
+                                    return exp_obj.choices[index]
                         return value
                     else:
                         raise ValueError(f"Invalid value type: {type(value)}")
