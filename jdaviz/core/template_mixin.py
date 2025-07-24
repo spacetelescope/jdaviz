@@ -659,18 +659,25 @@ class PluginTemplateMixin(TemplateMixin):
 
         is_not_relevant = [''] + [self._custom_irrelevant_msg
                                   if self._custom_irrelevant_msg
-                                  else f'No {traitlet_name} available'
+                                  else traitlet_name
                                   for traitlet_name in self._non_empty_traitlets
                                   if not getattr(self, traitlet_name, None)]
 
         self.irrelevant_msg = is_not_relevant[-1]
 
+        # If is_not_relevant is just the empty string then
+        # join will return an empty string
+        if not self._custom_irrelevant_msg and len(is_not_relevant) > 1:
+            all_irrelevant = ', '.join(is_not_relevant[1:])
+            self.irrelevant_msg = f'Traitlets {all_irrelevant} are not available.'
+
         # For multiple `_non_empty_traitlets` (see `export.py` or `unit_conversion.py`),
         # we assume that ALL traitlets must be unavailable in order to set
         # `irrelevant_msg`. So we reset the message if there are fewer messages
         # than traitlets (since we initialize the list with an empty string).
-        if self._check_all_for_relevance and len(is_not_relevant) <= len(self._non_empty_traitlets):
-            self.irrelevant_msg = is_not_relevant[0]
+        if (self._check_all_for_relevance and
+                len(is_not_relevant) <= len(self._non_empty_traitlets)):
+            self.irrelevant_msg = ''
 
 
     def observe_relevant_traitlets(self,
