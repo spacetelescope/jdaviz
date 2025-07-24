@@ -298,7 +298,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # NOTE: This needs revising if we allow loading more than one cube.
         if isinstance(msg.viewer, BqplotImageView):
             if len(msg.data.shape) == 3:
-                self.i_end = msg.data.shape[-1] - 1
+                self.i_end = msg.data.shape[msg.data.meta['spectral_axis_index']] - 1
 
     @observe('multiselect', 'viewer_multiselect')
     def _sync_multiselect_traitlets(self, event):
