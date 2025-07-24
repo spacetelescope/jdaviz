@@ -679,7 +679,6 @@ class PluginTemplateMixin(TemplateMixin):
                 len(is_not_relevant) <= len(self._non_empty_traitlets)):
             self.irrelevant_msg = ''
 
-
     def observe_relevant_traitlets(self,
                                    non_empty_traitlets: (list, tuple), irrelevant_msg='',
                                    check_all_for_relevance=False, set_relevant=None):

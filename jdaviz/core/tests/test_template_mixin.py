@@ -6,7 +6,6 @@ from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.registries import tray_registry
 
 
-
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
     # apply mask to spectrum to check selected subset is masked:
     mask = spectrum1d.flux < spectrum1d.flux.mean()
