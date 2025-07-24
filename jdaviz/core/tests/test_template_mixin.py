@@ -4,9 +4,6 @@ import astropy.units as u
 from specutils import SpectralRegion
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.config import get_configuration
-from jdaviz.app import Application
-from jdaviz import App
 
 
 
@@ -84,51 +81,42 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     assert p.viewer.selected == p.viewer.labels[0]
 
 
-@tray_registry('test-fake-plugin', label='Test Fake Plugin')
+@tray_registry('test-fake-plugin', label='Test Fake Plugin', category='core')
 class FakePlugin(PluginTemplateMixin):
     template = ''
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    # @property
-    # def user_api(self):
-    #     return PluginUserApi(
-    #         self,
-    #         expose = ['disabled_msg', 'irrelevant_msg', 'is_active'])
-
 
 class TestObserveRelevantTraitlets:
 
-    fake_traitlet = 'fake_traitlet'
+    fake_traitlet1 = 'fake_traitlet1'
+    fake_traitlet2 = 'fake_traitlet2'
+    fake_traitlet_join = ', '.join([fake_traitlet1, fake_traitlet2])
     set_relevant_msg = 'stale message'
     new_set_relevant_msg = 'fresh message'
-    sad_msg = "I don't want to be made irrelevant"
+    sad_msg = "I don't want to be made irrelevant :("
 
     def fake_set_relevant(self, *args):
         self.set_relevant_msg = self.new_set_relevant_msg
         return self.new_set_relevant_msg
 
     @staticmethod
-    def setup_traitlets(plugin_obj):
-        return [trait_name for trait_name in plugin_obj.traits()
-                if getattr(plugin_obj, trait_name, False)]
+    def setup_plugin_obj_and_traitlets(config_helper):
+        plugins = config_helper.plugins
 
-    # NOTE: deconfigged_plugin *is* a custom parametrization (see `conftest.py`)
-    # so these will run with all the plugins available at initialization.
-    def test_observe_relevant_traitlets_with_real_traitlets(self):
-        config = get_configuration('deconfigged')
-        config['tray'] = ['test-fake-plugin']
+        plugin_obj = plugins['Test Fake Plugin']._obj
+        return plugin_obj, [trait_name for trait_name in plugin_obj.traits()
+                            if getattr(plugin_obj, trait_name, False)]
 
-        deconfigged_app = Application(config)
-        deconfigged_helper = App(deconfigged_app)
-        print(deconfigged_helper.plugins)
-
-        deconfigged_plugin_obj = deconfigged_helper.plugins['Test Fake Plugin']._obj
-        traitlets = self.setup_traitlets(deconfigged_plugin_obj)
+    @pytest.mark.parametrize('check_all', [True, False])
+    def test_observe_relevant_traitlets_with_real_traitlets(self, deconfigged_helper, check_all):
+        deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
 
         # Testing basic functionality
-        deconfigged_plugin_obj.observe_relevant_traitlets(non_empty_traitlets=traitlets)
+        deconfigged_plugin_obj.observe_relevant_traitlets(non_empty_traitlets=traitlets,
+                                                          check_all_for_relevance=check_all)
 
         assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
         assert deconfigged_plugin_obj._custom_irrelevant_msg == ''
@@ -164,19 +152,30 @@ class TestObserveRelevantTraitlets:
     # The 'observes' stack otherwise this could be combined with the above test
     # Alternatively, a custom function could be used (but that's [currently] a separate test!)
     @pytest.mark.parametrize(
-        ('irrelevant_msg', 'result_msg'), [
-            ('', f'No {fake_traitlet} available'),
-            ('irrelevant message', 'irrelevant message')
+        ('irrelevant_msg', 'result_msg', 'check_all'), [
+            ('', f'Traitlets {fake_traitlet_join} are not available.', False),
+            ('irrelevant message', 'irrelevant message', False),
+            ('irrelevant message', '', True),
+            ('testing check_all', 'testing check_all', True),
         ])
     def test_observe_relevant_traitlets_with_fake_traitlets(self,
-                                                 deconfigged_plugin, irrelevant_msg, result_msg):
+                                                            deconfigged_helper,
+                                                            irrelevant_msg,
+                                                            result_msg,
+                                                            check_all):
         # Starting with at least one fake traitlet to make sure the irrelevant message
         # is set correctly when it can't find the attribute
-        deconfigged_plugin_obj = deconfigged_plugin._obj
-        traitlets = self.setup_traitlets(deconfigged_plugin_obj) + [self.fake_traitlet]
+        deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
+        traitlets += [self.fake_traitlet1, self.fake_traitlet2]
+
+        # Sneaking another test in here because everything in a separate test
+        # would be identical
+        if irrelevant_msg == 'testing check_all':
+            traitlets = traitlets[-2:]
 
         deconfigged_plugin_obj.observe_relevant_traitlets(non_empty_traitlets=traitlets,
-                                                          irrelevant_msg=irrelevant_msg)
+                                                          irrelevant_msg=irrelevant_msg,
+                                                          check_all_for_relevance=check_all)
 
         # Check that the fake traitlet is the only thing that triggers the irrelevant message
         assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
@@ -196,16 +195,13 @@ class TestObserveRelevantTraitlets:
             all_results = [method() for method in observe_methods
                            if getattr(method, '__name__', None) == '_set_relevant']
 
-            # Check that irrelevant_msg is indeed rewritten and
-            # due to the ordering of the list should be our result_msg
+            # Check that irrelevant_msg is indeed rewritten (unless check_all is set)
+            # and due to the ordering of the list should be our result_msg
             assert deconfigged_plugin_obj.irrelevant_msg == result_msg
             assert deconfigged_plugin_obj._set_relevant() in all_results
 
-    def test_observe_relevant_traitlets_with_custom_function(self, deconfigged_plugin):
-
-        deconfigged_plugin_obj = deconfigged_plugin._obj
-        traitlets = self.setup_traitlets(deconfigged_plugin_obj)
-
+    def test_observe_relevant_traitlets_with_custom_function(self, deconfigged_helper):
+        deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
         # Now using our own set_relevant function
         deconfigged_plugin_obj.observe_relevant_traitlets(non_empty_traitlets=traitlets,
                                                           set_relevant=self.fake_set_relevant)
