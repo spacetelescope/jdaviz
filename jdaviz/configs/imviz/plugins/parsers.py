@@ -14,11 +14,12 @@ from glue.core.data import Component, Data
 from gwcs.wcs import WCS as GWCS
 from stdatamodels import asdf_in_fits
 
-from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import (
-    standardize_metadata, standardize_roman_metadata,
-    PRIHDR_KEY, _wcs_only_label, download_uri_to_path, get_cloud_fits
+    PRIHDR_KEY, _try_gwcs_to_fits_sip, _wcs_only_label,
+    download_uri_to_path, get_cloud_fits,
+    standardize_metadata, standardize_roman_metadata
 )
 
 try:
@@ -32,27 +33,6 @@ __all__ = ['parse_data']
 
 INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
             " to the file name to load all of them.")
-
-
-def _try_gwcs_to_fits_sip(gwcs):
-    """
-    Try to convert this GWCS to FITS SIP. Some GWCS models
-    cannot be converted to FITS SIP. In that case, a warning
-    is raised and the GWCS is used, as is.
-    """
-    try:
-        result = WCS(gwcs.to_fits_sip(), relax=True)
-
-    except ValueError as err:
-        warnings.warn(
-            "The GWCS coordinates could not be simplified to "
-            "a SIP-based FITS WCS, the following error was "
-            f"raised: {err}",
-            UserWarning
-        )
-        result = gwcs
-
-    return result
 
 
 def prep_data_layer_as_dq(data):
@@ -111,6 +91,7 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         improve image rendering performance for images with expensive GWCS
         transformations.
     """
+
     if isinstance(file_obj, str):
         if urlparse(file_obj).scheme == 's3':
             file_obj = get_cloud_fits(

@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.wcs import WCS
+from gwcs import WCS as GWCS
 from specutils import SpectralRegion, Spectrum
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import find_matching_resolver
@@ -173,3 +175,20 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     assert len(loader.format.choices) > 0
 
     loader.importer()
+
+
+@pytest.mark.remote_data
+@pytest.mark.parametrize(
+    ('gwcs_to_fits_sip', 'expected_cls'),
+    ((True, WCS), (False, GWCS),), ids=('True-WCS', 'False-GWCS'))
+@pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
+def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
+    """Test gwcs_to_fits_sip through the importer API."""
+    ldr = deconfigged_helper.loaders['url']
+    ldr.url = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/imviz_test_data/jw00042001001_01101_00001_nrcb5_cal.fits'  # noqa
+    ldr.importer.gwcs_to_fits_sip = gwcs_to_fits_sip
+
+    ldr.importer()
+
+    data = deconfigged_helper.app.data_collection[0]
+    assert isinstance(data.coords, expected_cls)

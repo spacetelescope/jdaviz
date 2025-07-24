@@ -182,6 +182,7 @@ class ConfigHelper(HubListener):
         # TODO: deprecate show_in_viewer?
         show_in_viewer = kwargs.pop('show_in_viewer', True)
         importer = resolver.importer
+
         for k, v in kwargs.items():
             if hasattr(importer, k) and v is not None:
                 setattr(importer, k, v)
