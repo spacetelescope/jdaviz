@@ -185,6 +185,9 @@ Cubeviz
 
 - Broadcast snackbar message to user when sonification of a data cube completes. [#3647]
 
+- Fixes exporting an image viewer as a movie by starting the movie at the specified slice
+  and returning to the correct slice after exporting. [#3710]
+
 Imviz
 ^^^^^
 

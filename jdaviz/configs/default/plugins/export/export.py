@@ -298,7 +298,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # NOTE: This needs revising if we allow loading more than one cube.
         if isinstance(msg.viewer, BqplotImageView):
             if len(msg.data.shape) == 3:
-                self.i_end = msg.data.shape[-1] - 1
+                self.i_end = msg.data.shape[msg.data.meta['spectral_axis_index']] - 1
 
     @observe('multiselect', 'viewer_multiselect')
     def _sync_multiselect_traitlets(self, event):
@@ -714,6 +714,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         temp_png_files = []
         i = i_start
         video = None
+        slice_plg.value = slice_plg.valid_values_sorted[i_start]
 
         # TODO: Expose to users?
         i_step = 1  # Need n_frames check if we allow tweaking
@@ -750,7 +751,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             cv2.destroyAllWindows()
             if video:
                 video.release()
-            slice_plg._on_slider_updated({'new': orig_slice})
+            slice_plg.value = slice_plg.valid_values_sorted[orig_slice]
 
         if rm_temp_files or self.movie_interrupt:
             for cur_pngfile in temp_png_files:
