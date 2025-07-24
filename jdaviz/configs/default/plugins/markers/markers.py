@@ -161,8 +161,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
             self._distance_first_point = None
             self.distance_display = "N/A"
-        self._recompute_mark_positions(msg.viewer)
-
         if msg is not None:
             self._recompute_mark_positions(msg.viewer)
 
