@@ -1227,11 +1227,15 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def selected_name(self):
         return self.selected_item.get('name', None)
 
+    def _get_selected_obj(self, index):
+        return self.manual_options[index].get('obj', None)
+
     @property
-    def selected_hdu(self):
+    def selected_obj(self):
+        # returns HDU (for HDUList) or ndarray (for ImageModel/DataModel)
         if self.is_multiselect:
-            return [self.manual_options[ind] for ind in self.selected_index]
-        return self.manual_options[self.selected_index]
+            return [self._get_selected_obj(index) for index in self.selected_index]
+        return self._get_selected_obj(self.selected_index)
 
     @property
     def indices(self):
@@ -1241,17 +1245,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def names(self):
         return [item.get('name', None) for item in self.items]
 
-    def _to_item(self, hdu, index=None):
+    def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
-        return {'label': f"{index}: {hdu.name}", 'name': hdu.name, 'index': index}
+        return {k: manual_item[k] for k in ('label', 'name', 'index')}
 
     @observe('filters')
     def _update_items(self, msg={}):
-        self.items = [self._to_item(hdu, ind) for ind, hdu in enumerate(self.manual_options)
-                      if self._is_valid_item(hdu)]
-
+        self.items = [self._to_item(item, ind) for ind, item in enumerate(self.manual_options)
+                      if self._is_valid_item(item)]
         try:
             self._apply_default_selection()
         except (ValueError, TypeError):

@@ -242,13 +242,11 @@ class TestParseImage:
         imviz_helper.plugins['Orientation'].gwcs_to_fits_sip = False
 
         # Default behavior: Science image
-        with pytest.warns(UserWarning, match='You may be querying for a remote file'):
-            # if you don't pass a `cache` value, a warning should be raised:
-            imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100)
+        imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100)
 
         data = imviz_helper.app.data_collection[0]
-        comp = data.get_component('DATA')
-        expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_1))[0] + '[DATA]'
+        comp = data.get_component('data')
+        expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_1))[0] + '[SCI,1]'
         assert data.label == expected_label
         assert data.shape == (2048, 2048)
         assert isinstance(data.coords, GWCS)
@@ -325,12 +323,12 @@ class TestParseImage:
         # --- Back to parser testing below. ---
 
         # Request specific extension (name + ver, but ver is not used), use given label
-        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, ext=('DQ', 42),
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, ext='DQ',
                                data_label='jw01072001001_01101_00001_nrcb1_cal',
                                show_in_viewer=False)
         data = imviz_helper.app.data_collection[1]
-        comp = data.get_component('DQ')
-        assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ]'
+        comp = data.get_component('dq')
+        assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ,1]'
         assert data.meta['aperture']['name'] == 'NRCB5_FULL'
         assert comp.units == ''
 
@@ -341,8 +339,8 @@ class TestParseImage:
                                    data_label='jw01072001001_01101_00001_nrcb1_cal',
                                    show_in_viewer=False)
             data = imviz_helper.app.data_collection[2]
-            comp = data.get_component('DATA')  # SCI = DATA
-            assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DATA]'
+            comp = data.get_component('data')  # SCI = DATA
+            assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[SCI,1]'
             assert isinstance(data.coords, GWCS)
             assert comp.units == 'MJy/sr'
 
@@ -350,24 +348,24 @@ class TestParseImage:
             imviz_helper.app.data_collection.clear()
             imviz_helper.load_data(pf, ext='SCI', data_label='TEST', show_in_viewer=False)
             data = imviz_helper.app.data_collection[0]
-            assert data.label.endswith('[DATA]')
+            assert data.label.endswith('[SCI,1]')
 
             imviz_helper.load_data(pf, ext='SCI', data_label='TEST', show_in_viewer=False)
             data = imviz_helper.app.data_collection[1]
-            assert data.label.endswith('[DATA] (1)')
+            assert data.label.endswith('[SCI,1] (1)')
 
             # Load all extensions
             imviz_helper.app.data_collection.clear()
             imviz_helper.load_data(pf, ext='*', show_in_viewer=False)
             data = imviz_helper.app.data_collection
             assert len(data.labels) == 7
-            assert data.labels[0].endswith('[DATA]')
-            assert data.labels[1].endswith('[ERR]')
-            assert data.labels[2].endswith('[DQ]')
-            assert data.labels[3].endswith('[AREA]')
-            assert data.labels[4].endswith('[VAR_POISSON]')
-            assert data.labels[5].endswith('[VAR_RNOISE]')
-            assert data.labels[6].endswith('[VAR_FLAT]')
+            assert data.labels[0].endswith('[SCI,1]')
+            assert data.labels[1].endswith('[ERR,1]')
+            assert data.labels[2].endswith('[DQ,1]')
+            assert data.labels[3].endswith('[AREA,1]')
+            assert data.labels[4].endswith('[VAR_POISSON,1]')
+            assert data.labels[5].endswith('[VAR_RNOISE,1]')
+            assert data.labels[6].endswith('[VAR_FLAT,1]')
 
         # Invalid ASDF attribute (extension)
         with pytest.raises(KeyError, match='does_not_exist'):
@@ -377,8 +375,8 @@ class TestParseImage:
     def test_parse_jwst_niriss_grism(self, imviz_helper):
         imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
-        comp = data.get_component('DATA')
-        expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_2))[0] + '[DATA]'
+        comp = data.get_component('data')
+        expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_2))[0] + '[SCI,1]'
         assert data.label == expected_label
         assert data.shape == (2048, 2048)
         assert data.coords is None
@@ -477,8 +475,8 @@ class TestParseImage:
         assert data.meta['EXTNAME'] == 'CTX'
         assert comp.units == ''  # BUNIT is not set
 
-        # Request specific extension (name + ver), use given label
-        imviz_helper.load_data(filename, ext=('WHT', 1), data_label='jclj01010_drz',
+        # Request specific extension and use given label
+        imviz_helper.load_data(filename, ext='WHT', data_label='jclj01010_drz',
                                show_in_viewer=False)
         data = imviz_helper.app.data_collection[2]
         comp = data.get_component('WHT,1')
@@ -491,14 +489,14 @@ class TestParseImage:
             # Default behavior: Load first image
             imviz_helper.load_data(pf, show_in_viewer=False)
             data = imviz_helper.app.data_collection[3]
-            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[SCI,1]')
+            assert data.label.startswith('Image') and data.label.endswith('[SCI,1]')
             assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
             assert 'SCI,1' in data.components
 
             # Request specific extension (name only), use given label
             imviz_helper.load_data(pf, ext='CTX', show_in_viewer=False)
             data = imviz_helper.app.data_collection[4]
-            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[CTX,1]')
+            assert data.label.startswith('Image') and data.label.endswith('[CTX,1]')
             assert data.meta['EXTNAME'] == 'CTX'
             assert 'CTX,1' in data.components
 
@@ -558,7 +556,7 @@ def test_load_valid_not_valid(imviz_helper):
     imviz_helper.load_data(arr, data_label='valid', show_in_viewer=False)
 
     # Load something invalid.
-    with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
+    with pytest.raises(ValueError, match='no valid loaders found for input'):
         imviz_helper.load_data(np.zeros(2), show_in_viewer=False)
 
     # Make sure valid data is still there.

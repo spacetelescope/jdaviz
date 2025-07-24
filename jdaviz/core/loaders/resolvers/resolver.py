@@ -195,6 +195,7 @@ class TargetSelect(SelectPluginComponent):
 class BaseResolver(PluginTemplateMixin):
     _defer_update_format_items = False  # only use via defer_update_format_items contex manager
     default_input = None
+    default_input_cast = None
     requires_api_support = False
 
     importer_widget = Unicode().tag(sync=True)
@@ -244,7 +245,8 @@ class BaseResolver(PluginTemplateMixin):
         if self.default_input is None:
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
         with self.defer_update_format_items():
-            setattr(self, self.default_input, inp)
+            setattr(self, self.default_input,
+                    self.default_input_cast(inp) if self.default_input_cast else inp)
             user_api = self.user_api
             for k, v in kwargs.items():
                 if hasattr(user_api, k):

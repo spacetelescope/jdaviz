@@ -105,9 +105,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
         # account for image rotation due to a change in reference data
-        self.hub.subscribe(self, ChangeRefDataMessage,
-                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
-        # reset distance tool if orientation changes mid-measurement
+        # and reset distance tool if orientation changes mid-measurement
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_alignment_change)
 
@@ -148,6 +146,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         if self._distance_first_point is not None:
             self._distance_first_point = None
             self.distance_display = "N/A"
+        self._recompute_mark_positions(msg.viewer)
 
     def _clear_markers_table_callback(self, *args):
         """

@@ -94,7 +94,7 @@ def test_fits_spectrum2d(deconfigged_helper):
     # Default is Image but the test switches to 2D Spectrum
     # since this file type is not yet supported by the image loader
     assert ldr.format == 'Image'
-    assert ldr.importer._obj.input_hdulist is True
+    assert ldr.importer._obj.input_has_extensions is True
 
     ldr.format = '2D Spectrum'
 

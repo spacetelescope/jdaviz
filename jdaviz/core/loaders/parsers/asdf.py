@@ -1,5 +1,6 @@
 from functools import cached_property
 import asdf
+import warnings
 
 from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
@@ -34,4 +35,13 @@ class ASDFParser(BaseParser):
     def output(self):
         if HAS_ROMAN_DATAMODELS:
             return rdd.open(self.input)
+        else:
+            warnings.warn(
+                f"{self.input} should be opened with the `roman_datamodels` package, "
+                "which is not installed in this environment. To install optional "
+                "jdaviz dependencies for Roman, you can run:  \n\n"
+                "pip install -U jdaviz[roman]\n\n"
+                "This file will be loaded with the `asdf` package instead.\n\n",
+                UserWarning
+            )
         return asdf.open(self.input)

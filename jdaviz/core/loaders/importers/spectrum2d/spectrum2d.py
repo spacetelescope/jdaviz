@@ -15,7 +15,7 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 __all__ = ['Spectrum2DImporter']
 
 
-def hdu_is_valid(hdu):
+def hdu_is_valid(item):
     """
     Check if the HDU is valid to be imported as a 2D Spectrum.
 
@@ -29,6 +29,7 @@ def hdu_is_valid(hdu):
     bool
         True if the HDU is a valid light curve HDU, False otherwise.
     """
+    hdu = item.get('obj')
     return (len(getattr(hdu, 'shape', [])) == 2
             and ('DISPAXIS' in hdu.header
                  or hdu.header.get('CTYPE1', '') == 'WAVE'
@@ -68,10 +69,15 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
 
         self.input_hdulist = isinstance(self.input, fits.HDUList)
         if self.input_hdulist:
+            ext_options = [{'label': f"{index}: {hdu.name}",
+                            'name': hdu.name,
+                            'index': index,
+                            'obj': hdu}
+                           for index, hdu in enumerate(self.input)]
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
-                                                          manual_options=self.input,
+                                                          manual_options=ext_options,
                                                           filters=[hdu_is_valid])
 
     @property
@@ -89,7 +95,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if not ((isinstance(self.input, Spectrum)
                  and self.input.flux.ndim == 2) or
                 (isinstance(self.input, fits.HDUList)
-                 and len([hdu for hdu in self.input if hdu_is_valid(hdu)]))):  # noqa
+                 and len([hdu for hdu in self.input if hdu_is_valid({'obj': hdu})]))):  # noqa
             return False
         try:
             self.output
@@ -113,7 +119,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             return self.input
 
         hdulist = self.input
-        hdu = self.extension.selected_hdu
+        hdu = self.extension.selected_obj
         data = hdu.data
         header = hdu.header
         metadata = standardize_metadata(header)
@@ -148,7 +154,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                         wcs = None
                 else:
                     wcs = None
-            print(Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1))
             return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no

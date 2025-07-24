@@ -88,7 +88,7 @@ def test_data_quality_plugin(imviz_helper):
     assert len(imviz_helper.app.data_collection) == 2
 
     # this assumption is made in the DQ plugin (for now)
-    assert imviz_helper.app.data_collection[-1].label.endswith('[DQ]')
+    assert imviz_helper.app.data_collection[-1].label.endswith('[DQ,1]')
 
     dq_plugin = imviz_helper.plugins['Data Quality']._obj
 
@@ -152,6 +152,8 @@ def test_data_quality_plugin(imviz_helper):
     # check that a pixel without a DQ flag has no DQ mouseover label:
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1361, 'y': 684}})
+    dq_val = dq_data[684, 1361]
+    assert np.isnan(dq_val)
     label_mouseover_text = label_mouseover.as_text()[0]
     assert 'DQ' not in label_mouseover_text
 
