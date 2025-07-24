@@ -166,12 +166,13 @@ class UnitConversion(PluginTemplateMixin):
                                                      selected='spectral_y_type_selected')
 
         if self.app.config == 'deconfigged':
-            self.observe_relevant_traitlets(non_empty_traitlets=['spectral_unit_selected',
-                                                                 'flux_unit_selected',
-                                                                 'angle_unit_selected',
-                                                                 'time_unit_selected'],
-                                            irrelevant_msg='No datasets with valid units loaded',
-                                            check_all_for_relevance=True)
+            self.observe_traitlets_for_relevancy(
+                non_empty_traitlets=['spectral_unit_selected',
+                                     'flux_unit_selected',
+                                     'angle_unit_selected',
+                                     'time_unit_selected'],
+                irrelevant_msg='No datasets with valid units loaded',
+                check_all_for_relevance=True)
 
     @property
     def user_api(self):

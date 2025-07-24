@@ -679,18 +679,18 @@ class PluginTemplateMixin(TemplateMixin):
                 len(is_not_relevant) <= len(self._non_empty_traitlets)):
             self.irrelevant_msg = ''
 
-    def observe_relevant_traitlets(self,
-                                   non_empty_traitlets: (list, tuple), irrelevant_msg='',
-                                   check_all_for_relevance=False, set_relevant=None):
+    def observe_traitlets_for_relevancy(self,
+                                        non_empty_traitlets: (list, tuple), irrelevant_msg='',
+                                        check_all_for_relevance=False, set_relevant=None):
         """
-        `observe_relevant_traitlets` enables the app to observe traitlets
+        `observe_traitlets_for_relevancy` enables the app to observe traitlets
         necessary to determine configuration relevance for the plugins
         that require it. It sets up the observe method and calls either
         the user provided ``set_relevant`` method or the private method
         `_set_relevant` provided here.
 
         If a user does not provide the ``set_relevant`` kwarg or otherwise
-        sets it to ``None``, `observe_relevant_traitlets` will call the private
+        sets it to ``None``, `observe_traitlets_for_relevancy` will call the private
         `_set_relevant` method.
         """
         self._non_empty_traitlets = non_empty_traitlets

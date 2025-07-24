@@ -361,8 +361,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                lambda _: self._update_plugin_marks())
 
         if self.config == "deconfigged":
-            self.observe_relevant_traitlets(non_empty_traitlets=['trace_dataset_items'],
-                                            irrelevant_msg='Requires at least one 2D spectrum')
+            self.observe_traitlets_for_relevancy(non_empty_traitlets=['trace_dataset_items'],
+                                                 irrelevant_msg='Requires at least one 2D spectrum')
 
     @property
     def user_api(self):

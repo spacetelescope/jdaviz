@@ -170,7 +170,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.parallel_n_cpu = None
         if self.config == "deconfigged":
-            self.observe_relevant_traitlets(non_empty_traitlets=['dataset_items'])
+            self.observe_traitlets_for_relevancy(non_empty_traitlets=['dataset_items'])
 
     @property
     def _default_spectrum_viewer_reference_name(self):

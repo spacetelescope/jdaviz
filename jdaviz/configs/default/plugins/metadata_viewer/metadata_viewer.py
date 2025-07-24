@@ -47,7 +47,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         self._plugin_description = 'View metadata.'
 
         if self.config == "deconfigged":
-            self.observe_relevant_traitlets(non_empty_traitlets=['dataset_items'])
+            self.observe_traitlets_for_relevancy(non_empty_traitlets=['dataset_items'])
 
     @property
     def user_api(self):
