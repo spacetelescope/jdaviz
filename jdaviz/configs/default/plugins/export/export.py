@@ -714,7 +714,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         temp_png_files = []
         i = i_start
         video = None
-        slice_plg._on_value_updated({'new': slice_plg.valid_values_sorted[i_start]})
+        slice_plg.value = slice_plg.valid_values_sorted[i_start]
 
         # TODO: Expose to users?
         i_step = 1  # Need n_frames check if we allow tweaking
@@ -751,7 +751,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             cv2.destroyAllWindows()
             if video:
                 video.release()
-            slice_plg._on_value_updated({'new': slice_plg.valid_values_sorted[orig_slice]})
+            slice_plg.value = slice_plg.valid_values_sorted[orig_slice]
 
         if rm_temp_files or self.movie_interrupt:
             for cur_pngfile in temp_png_files:
