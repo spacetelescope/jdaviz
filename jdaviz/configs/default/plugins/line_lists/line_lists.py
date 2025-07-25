@@ -120,30 +120,32 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
             sv.state.add_callback("x_max",
                                   lambda x_max: self._on_spectrum_viewer_limits_changed())
 
-        self.observe_traitlets_for_relevancy(non_empty_traitlets=['viewer_items'],
-                                             set_relevant=self._set_relevant)
+        self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'],
+                                             irrelevant_msg_callback=self._irrelevant_msg_callback)
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot spectral lines from preset or custom line lists.'
 
-    def _set_relevant(self, *args):
+    def _irrelevant_msg_callback(self, *args):
         if not hasattr(self, 'viewer'):
-            return
+            return None
         if not len(self.viewer_items) or self.viewer.selected_obj is None:
-            self.irrelevant_msg = 'Line Lists unavailable without spectrum viewer'
+            irrelevant_msg = 'Line Lists unavailable without spectrum viewer'
         elif not len(self.viewer.selected_obj.layers):
             if self.app.config == 'deconfigged':
-                self.irrelevant_msg = 'No data in spectrum viewer'
+                irrelevant_msg = 'No data in spectrum viewer'
             else:
-                self.irrelevant_msg = ''
+                irrelevant_msg = ''
             self.disabled_msg = 'Line Lists unavailable without data loaded in spectrum viewer'
         else:
-            self.irrelevant_msg = ''
+            irrelevant_msg = ''
             self.disabled_msg = ''
 
             if not len(self.available_lists):
                 # TODO: move this logic within the plugin itself and out of the viewer
                 self.available_lists = self.viewer.selected_obj.available_linelists()
+
+        return irrelevant_msg
 
     @observe('viewer_selected')
     def _on_viewer_selected_changed(self, event):

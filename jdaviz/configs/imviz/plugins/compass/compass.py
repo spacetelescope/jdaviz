@@ -43,7 +43,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
 
-        self.observe_traitlets_for_relevancy(non_empty_traitlets=['viewer_items'])
+        self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
     def user_api(self):

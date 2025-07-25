@@ -632,7 +632,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                            handler=self._on_refdata_change)
 
         if self.config == 'deconfigged':
-            self.observe_traitlets_for_relevancy(non_empty_traitlets=['viewer_items'])
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
     def user_api(self):

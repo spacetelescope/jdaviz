@@ -151,25 +151,27 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         self.table.headers_avail = headers
         self.table.headers_visible = [h for h in headers if ':' not in h]
 
-        self.observe_traitlets_for_relevancy(non_empty_traitlets=['dataset_items'],
-                                             set_relevant=self._set_relevant)
+        self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'],
+                                             irrelevant_msg_callback=self._irrelevant_msg_callback)
 
-    def _set_relevant(self, *args):
+    def _irrelevant_msg_callback(self, *args):
         if self.app.config == 'deconfigged':
             if not len(self.dataset_items):
-                self.irrelevant_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'  # noqa
+                irrelevant_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'  # noqa
             else:
-                self.irrelevant_msg = ''
+                irrelevant_msg = ''
         else:
             sv = self.spectrum_viewer
             if sv is None:
-                self.irrelevant_msg = 'Line Analysis unavailable without spectrum viewer'
+                irrelevant_msg = 'Line Analysis unavailable without spectrum viewer'
             elif not len(sv.layers):
-                self.irrelevant_msg = ''
+                irrelevant_msg = ''
                 self.disabled_msg = 'Line Analysis unavailable without data loaded in spectrum viewer'  # noqa
             else:
-                self.irrelevant_msg = ''
+                irrelevant_msg = ''
                 self.disabled_msg = ''
+
+        return irrelevant_msg
 
     @property
     def user_api(self):

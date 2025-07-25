@@ -213,12 +213,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.serverside_enabled = False
 
         if self.config == 'deconfigged':
-            self.observe_traitlets_for_relevancy(non_empty_traitlets=['viewer_items',
-                                                                      'dataset_items',
-                                                                      'subset_items',
-                                                                      'plugin_table_items',
-                                                                      'plugin_plot_items'],
-                                                 check_all_for_relevance=True)
+            self.observe_traitlets_for_relevancy(
+                traitlets_to_observe=['viewer_items',
+                                      'dataset_items',
+                                      'subset_items',
+                                      'plugin_table_items',
+                                      'plugin_plot_items'],
+                irrelevant_msg_callback=self.relevant_if_any_truthy)
 
     def _is_valid_item(self, item):
         return self._is_not_stcs(item) or self._is_stcs_region_supported(item)
