@@ -9,6 +9,7 @@ from specutils import Spectrum
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.core.marks import MarkersMark, DistanceMeasurement
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
+from bqplot.scales import LinearScale
 
 
 def _get_markers_from_viewer(viewer):
@@ -616,49 +617,54 @@ def test_distance_tool_snapping_by_pixel_scale(cubeviz_helper, spectrum1d_cube):
     label_mouseover = cubeviz_helper._coords_info
 
     # --- Test 1: Image Viewer (2D distance snapping) ---
-    # Place a marker at a known pixel location.
+    # Manually attach real bqplot Scale objects with the necessary attributes
+    # to ensure the primary snapping logic is triggered.
+    mock_x_scale_img = LinearScale()
+    mock_x_scale_img.domain = (0, 10)
+    mock_x_scale_img.range = (0, 100)
+    mock_y_scale_img = LinearScale()
+    mock_y_scale_img.domain = (0, 10)
+    mock_y_scale_img.range = (0, 100)
+    fv.scales = {'x': mock_x_scale_img, 'y': mock_y_scale_img}
+
     marker_x_img, marker_y_img = 2, 3
     label_mouseover._viewer_mouse_event(
         fv, {'event': 'mousemove', 'domain': {'x': marker_x_img, 'y': marker_y_img}}
     )
     mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'm'})
-
-    # Move cursor slightly away from the marker to test snapping.
     label_mouseover._viewer_mouse_event(
         fv, {'event': 'mousemove', 'domain': {'x': marker_x_img + 0.1, 'y': marker_y_img + 0.1}}
     )
-
-    # Trigger a distance measurement with snapping enabled.
     mp._obj._on_viewer_key_event(fv, {'event': 'keydown', 'key': 'd', 'altKey': True})
 
-    # Check that the starting point of the measurement correctly snapped to the marker.
     assert mp._obj._distance_first_point is not None
     assert_allclose(mp._obj._distance_first_point['axes_x'], marker_x_img)
     assert_allclose(mp._obj._distance_first_point['axes_y'], marker_y_img)
 
-    # Clean up for the next test by clearing the table and resetting the tool.
     mp.clear_table()
     mp._obj._on_alignment_change()
 
     # --- Test 2: Profile Viewer (1D distance snapping) ---
-    # Place a marker at a known spectral coordinate.
+    # Manually attach scale properties to the spectrum viewer.
+    mock_x_scale_spec = LinearScale()
+    mock_x_scale_spec.domain = (4.6e-7, 4.7e-7)
+    mock_x_scale_spec.range = (0, 500)
+    mock_y_scale_spec = LinearScale()
+    mock_y_scale_spec.domain = (0, 100)
+    mock_y_scale_spec.range = (0, 300)
+    sv.scales = {'x': mock_x_scale_spec, 'y': mock_y_scale_spec}
+
     marker_x_spec = 4.6236e-07
     marker_y_spec = 50
     label_mouseover._viewer_mouse_event(
         sv, {'event': 'mousemove', 'domain': {'x': marker_x_spec, 'y': marker_y_spec}}
     )
-    # Store the exact coordinates reported by the mouseover tool for later comparison.
     marker_coords = label_mouseover.as_dict()
     mp._obj._on_viewer_key_event(sv, {'event': 'keydown', 'key': 'm'})
-
-    # Move cursor slightly away in x and far away in y to test 1D (x-axis only) snapping.
     label_mouseover._viewer_mouse_event(
         sv, {'event': 'mousemove', 'domain': {'x': marker_x_spec + 1e-9, 'y': marker_y_spec + 20}}
     )
-
-    # Trigger a distance measurement with snapping enabled.
     mp._obj._on_viewer_key_event(sv, {'event': 'keydown', 'key': 'd', 'altKey': True})
 
-    # Check that the starting point snapped to the marker's spectral axis coordinate.
     assert mp._obj._distance_first_point is not None
     assert_allclose(mp._obj._distance_first_point['axes_x'], marker_coords['axes_x'])
