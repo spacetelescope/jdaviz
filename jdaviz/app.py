@@ -802,7 +802,7 @@ class Application(VuetifyTemplate, HubListener):
                     continue
 
                 for existing_comp in existing_data.components:
-                    if existing_comp._component_type is None:
+                    if existing_comp._component_type in (None, 'unknown'):
                         continue
 
                     # Create link if component-types match
