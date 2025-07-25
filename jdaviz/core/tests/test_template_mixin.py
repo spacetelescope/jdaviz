@@ -1,3 +1,4 @@
+import re
 import pytest
 import numpy as np
 import astropy.units as u
@@ -91,19 +92,14 @@ class FakePlugin(PluginTemplateMixin):
 class TestObserveTraitletsForRelevancy:
 
     fake_traitlets = ['fake_traitlet1', 'fake_traitlet2']
-    # fake_traitlet_result_all = (f'At least one traitlet of '
-    #                             f'{', '.join(fake_traitlets)} '
-    #                             f'is not available')
+
     set_relevant_msg = 'stale message'
     new_set_relevant_msg = 'fresh message'
     sad_msg = "I don't want to be made irrelevant :("
 
-    if_all_truthy = PluginTemplateMixin.relevant_if_all_truthy
-    if_any_truthy = PluginTemplateMixin.relevant_if_any_truthy
-
-    def fake_set_relevant(self, *args):
+    def if_fake_truthy(self, *args):
         self.set_relevant_msg = self.new_set_relevant_msg
-        return self.new_set_relevant_msg
+        # return self.new_set_relevant_msg
 
     def setup_plugin_obj_and_traitlets(self, config_helper):
         plugins = config_helper.plugins
@@ -120,29 +116,35 @@ class TestObserveTraitletsForRelevancy:
         deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(
             deconfigged_helper)
 
-        default_irrelevant_msg_suffix = f'{', '.join(traitlets)} is not available'
+        default_irrelevant_msg = (f'At least one of or all of {', '.join(traitlets)} '
+                                  f'are not available')
 
         # Covers no _traitlets_to_observe set
-        with pytest.raises(AttributeError, match = '_traitlets_to_observe has not been set yet '
-                                                   '\\(by observe_traitlets_for_relevancy\\).'):
+        with pytest.raises(AttributeError,
+                           match=re.escape('_traitlets_to_observe has not been '
+                                           'set yet (by observe_traitlets_for_relevancy).')):
             deconfigged_plugin_obj._setup_relevant_if_truthy(None)
 
         # Covers _traitlets_to_observe set and default message
         deconfigged_plugin_obj._traitlets_to_observe = traitlets
-        truthy_traitlets, irrelevant_msg = deconfigged_plugin_obj._setup_relevant_if_truthy(None)
+        traitlets_from_setup, truthy_traitlets, irrelevant_msg = (
+            deconfigged_plugin_obj._setup_relevant_if_truthy(None))
+        assert traitlets_from_setup == traitlets
         assert truthy_traitlets == traitlets
-        assert irrelevant_msg == default_irrelevant_msg_suffix
+        assert irrelevant_msg == default_irrelevant_msg
 
         # Covers traitlets passed in as arg and default message
-        truthy_traitlets, irrelevant_msg = deconfigged_plugin_obj._setup_relevant_if_truthy(
-            traitlets)
+        traitlets_from_setup, truthy_traitlets, irrelevant_msg = (
+            deconfigged_plugin_obj._setup_relevant_if_truthy(traitlets))
+        assert traitlets_from_setup == traitlets
         assert truthy_traitlets == traitlets
-        assert irrelevant_msg == default_irrelevant_msg_suffix
+        assert irrelevant_msg == default_irrelevant_msg
 
         # Covers traitlets passed in as arg and custom message set
         deconfigged_plugin_obj._custom_irrelevant_msg = self.sad_msg
-        truthy_traitlets, irrelevant_msg = deconfigged_plugin_obj._setup_relevant_if_truthy(
-            traitlets)
+        traitlets_from_setup, truthy_traitlets, irrelevant_msg = (
+            deconfigged_plugin_obj._setup_relevant_if_truthy(traitlets))
+        assert traitlets_from_setup == traitlets
         assert truthy_traitlets == traitlets
         assert irrelevant_msg == self.sad_msg
 
@@ -151,12 +153,11 @@ class TestObserveTraitletsForRelevancy:
         deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(
             deconfigged_helper)
 
-
         method = getattr(self, f'if_{method_type}_truthy')
 
         # Checking the default argument (None) when nothing is observed yet
-        with pytest.raises(AttributeError, match='_traitlets_to_observe has not been set yet '
-                                                 '\\(by observe_traitlets_for_relevancy\\).'):
+        with pytest.raises(AttributeError, match=re.escape('_traitlets_to_observe has not been set yet '
+                                                 '(by observe_traitlets_for_relevancy).')):
             method()
 
         # Check that irrelevant message is set correctly for relevant traitlets
@@ -185,133 +186,137 @@ class TestObserveTraitletsForRelevancy:
             assert result_default_msg == ''
             assert result_custom_msg == ''
 
-    def test_default_set_relevant(self, deconfigged_helper):
+    @pytest.mark.parametrize('method_type', ['all', 'any', 'fake'])
+    def test_default_set_relevant(self, deconfigged_helper, method_type):
         deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
+        deconfigged_plugin_obj._irrelevant_msg_callback = getattr(self, f'if_{method_type}_truthy')
+        deconfigged_plugin_obj._traitlets_to_observe = traitlets
 
-    #
-    #
-    # def test_observe_traitlets_for_relevancy_real_traitlets(self, deconfigged_helper):
-    #     deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
-    #
-    #     # Testing basic functionality
-    #     deconfigged_plugin_obj.observe_traitlets_for_relevancy(non_empty_traitlets=traitlets,
-    #                                                            check_all_for_relevance=check_all)
-    #
-    #     assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
-    #     assert deconfigged_plugin_obj._custom_irrelevant_msg == ''
-    #     # Everything is real and _set_relevant() worked for all,
-    #     # i.e. irrelevant_msg is an empty string
-    #     assert deconfigged_plugin_obj.irrelevant_msg == ''
-    #
-    #     # Now to check that the traitlets are observed as expected
-    #     # and that _set_relevant() therefore runs as expected
-    #     observed_traitlets = deconfigged_plugin_obj._trait_notifiers
-    #     # 'Observed' as expected
-    #     assert set(traitlets).issubset(set(observed_traitlets.keys()))
-    #
-    #     # Keep trait_name around for future debugging if necessary
-    #     observed_traitlet_methods = {trait_name: observed_traitlets[trait_name]['change']
-    #                                  for trait_name in traitlets}
-    #
-    #     # Check to see if fake_set_relevant is available and runs
-    #     # when accessing the observed quantity.
-    #     # Using .items() for convenient debugging if necessary.
-    #     for _, observe_methods in observed_traitlet_methods.items():
-    #         deconfigged_plugin_obj.irrelevant_msg = self.sad_msg
-    #
-    #         # traits may be observed by more than one method
-    #         # traitlet ObserverHandlers don't have __name__ so we use getattr
-    #         all_results = [method() for method in observe_methods
-    #                        if getattr(method, '__name__', None) == '_set_relevant']
-    #
-    #         # _set_relevant() runs as expected
-    #         assert deconfigged_plugin_obj.irrelevant_msg == ''
-    #         # And double check that the function output what we expect (Nones in this case)
-    #         assert deconfigged_plugin_obj._set_relevant() in all_results
-    #
-    # # The 'observes' stack otherwise this could be combined with the above test
-    # # Alternatively, a custom function could be used (but that's [currently] a separate test!)
-    # @pytest.mark.parametrize(
-    #     ('irrelevant_msg', 'result_msg', 'check_all'), [
-    #         #('', f'Traitlets {fake_traitlet_join} are not available.', False),
-    #         ('irrelevant message', 'irrelevant message', False),
-    #         ('irrelevant message', '', True),
-    #         ('testing check_all', 'testing check_all', True),
-    #     ])
-    # def test_observe_traitlets_for_relevancy_fake_traitlets(self,
-    #                                                         deconfigged_helper,
-    #                                                         irrelevant_msg,
-    #                                                         result_msg,
-    #                                                         check_all):
-    #     # Starting with at least one fake traitlet to make sure the irrelevant message
-    #     # is set correctly when it can't find the attribute
-    #     deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
-    #     traitlets += [self.fake_traitlet1, self.fake_traitlet2]
-    #
-    #     # Sneaking another test in here because a separate test
-    #     # would be identical
-    #     if irrelevant_msg == 'testing check_all':
-    #         traitlets = traitlets[-2:]
-    #
-    #     deconfigged_plugin_obj.observe_traitlets_for_relevancy(non_empty_traitlets=traitlets,
-    #                                                            irrelevant_msg=irrelevant_msg,
-    #                                                            check_all_for_relevance=check_all)
-    #
-    #     # Check that the fake traitlet is the only thing that triggers the irrelevant message
-    #     assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
-    #     assert deconfigged_plugin_obj._custom_irrelevant_msg == irrelevant_msg
-    #     assert deconfigged_plugin_obj.irrelevant_msg == result_msg
-    #
-    #     # Following the same prescription as test..._with_real_traitlets...
-    #     observed_traitlets = deconfigged_plugin_obj._trait_notifiers
-    #     assert set(traitlets).issubset(set(observed_traitlets.keys()))
-    #
-    #     observed_traitlet_methods = {trait_name: observed_traitlets[trait_name]['change']
-    #                                  for trait_name in traitlets}
-    #
-    #     for _, observe_methods in observed_traitlet_methods.items():
-    #         deconfigged_plugin_obj.irrelevant_msg = self.sad_msg
-    #
-    #         all_results = [method() for method in observe_methods
-    #                        if getattr(method, '__name__', None) == '_set_relevant']
-    #
-    #         # Check that irrelevant_msg is indeed rewritten (unless check_all is set)
-    #         # and due to the ordering of the list should be our result_msg
-    #         assert deconfigged_plugin_obj.irrelevant_msg == result_msg
-    #         assert deconfigged_plugin_obj._set_relevant() in all_results
-    #
-    # def test_observe_traitlets_for_relevancy_custom_function(self, deconfigged_helper):
-    #     deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
-    #     # Now using our own set_relevant function
-    #     deconfigged_plugin_obj.observe_traitlets_for_relevancy(non_empty_traitlets=traitlets,
-    #                                                            set_relevant=self.fake_set_relevant)
-    #
-    #     assert deconfigged_plugin_obj._non_empty_traitlets == traitlets
-    #     assert deconfigged_plugin_obj._custom_irrelevant_msg == ''
-    #     # NOTE: deconfigged_plugin_obj.irrelevant_msg is not being set by this test
-    #     # since we're using a custom function
-    #
-    #     # Check that the default _set_relevant() still exists and
-    #     # isn't somehow miraculously overwritten
-    #     assert deconfigged_plugin_obj._set_relevant() is None
-    #     assert self.set_relevant_msg == self.new_set_relevant_msg
-    #
-    #     # Again, same as test...with_real/fake_traitlets
-    #     observed_traitlets = deconfigged_plugin_obj._trait_notifiers
-    #     assert set(traitlets).issubset(set(observed_traitlets.keys()))
-    #
-    #     observed_traitlet_methods = {trait_name: observed_traitlets[trait_name]['change']
-    #                                  for trait_name in traitlets}
-    #
-    #     for _, observe_methods in observed_traitlet_methods.items():
-    #         not_fresh_msg = 'less stale message but still not great'
-    #         self.set_relevant_msg = not_fresh_msg
-    #
-    #         all_results = [method() for method in observe_methods
-    #                        if getattr(method, '__name__', None) == 'fake_set_relevant']
-    #
-    #         # Check that self.set_relevant_msg is overwritten by our fake_set_relevant
-    #         assert self.set_relevant_msg in all_results
-    #         # Double check that it is indeed new_set_relevant_msg
-    #         assert self.new_set_relevant_msg in all_results
-    #         assert self.fake_set_relevant() in all_results
+        # Real traitlets
+        deconfigged_plugin_obj._set_relevant()
+        if deconfigged_plugin_obj.irrelevant_msg is None:
+            # i.e. when the fake method is used
+            assert self.set_relevant_msg == self.new_set_relevant_msg
+            self.set_relevant_msg = 'newly staled'
+        else:
+            assert deconfigged_plugin_obj.irrelevant_msg == ''
+
+        # Real + Fake Traitlets
+        # Thanks to mutability we shouldn't also have to update '_traitlets_to_observe'
+        traitlets += self.fake_traitlets
+        deconfigged_plugin_obj._set_relevant()
+        if deconfigged_plugin_obj.irrelevant_msg is None:
+            # i.e. when the fake method is used
+            assert self.set_relevant_msg == self.new_set_relevant_msg
+            self.set_relevant_msg = 'newly staled'
+
+        else:
+            if method_type == 'all':
+                assert deconfigged_plugin_obj.irrelevant_msg == (f'At least one of or all of '
+                                                                 f'{', '.join(traitlets)} '
+                                                                 f'are not available')
+            elif method_type == 'any':
+                assert deconfigged_plugin_obj.irrelevant_msg == ''
+
+    @pytest.mark.parametrize('additional_traitlets', [[], fake_traitlets])
+    def test_observe_traitlets_for_relevancy(self,
+                                             deconfigged_helper, additional_traitlets):
+        deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(deconfigged_helper)
+        traitlets += additional_traitlets
+
+        if len(additional_traitlets) == 0:
+            # Everything is real and _set_relevant() worked for all,
+            # i.e. irrelevant_msg is an empty string
+            expected_msg = ''
+        else:
+            # Real + fake so the default (if_all_truthy) is the observer
+            expected_msg = f'At least one of or all of {', '.join(traitlets)} are not available'
+
+        # Testing default functionality
+        deconfigged_plugin_obj.observe_traitlets_for_relevancy(traitlets)
+        assert deconfigged_plugin_obj._traitlets_to_observe == traitlets
+        assert not hasattr(deconfigged_plugin_obj, '_custom_irrelevant_msg')
+        assert (deconfigged_plugin_obj._irrelevant_msg_callback() ==
+                deconfigged_plugin_obj.relevant_if_all_truthy())
+
+        assert deconfigged_plugin_obj.irrelevant_msg == expected_msg
+
+        # Now to check that the traitlets are observed as expected
+        # and that _set_relevant() therefore runs as expected
+        observed_traitlets = deconfigged_plugin_obj._trait_notifiers
+        # 'Observed' as expected
+        assert set(traitlets).issubset(set(observed_traitlets.keys()))
+
+        # Keep trait_name around for future debugging if necessary
+        observed_traitlet_methods = {trait_name: observed_traitlets[trait_name]['change']
+                                     for trait_name in traitlets}
+
+        # Check to see if _set_relevant is available and runs
+        # when accessing the observed quantity
+        for _, observe_methods in observed_traitlet_methods.items():
+            deconfigged_plugin_obj.irrelevant_msg = self.sad_msg
+
+            # Run the method to update irrelevant_msg
+            # traits may be observed by more than one method
+            # traitlet ObserverHandlers don't have __name__ so we use getattr
+            all_results = [method() for method in observe_methods
+                           if getattr(method, '__name__', None) == '_set_relevant']
+
+            # _set_relevant() ran as expected
+            assert deconfigged_plugin_obj.irrelevant_msg == expected_msg
+            # And double check that the function output what we expect (Nones in this case)
+            assert deconfigged_plugin_obj._set_relevant() in all_results
+
+        # Some additional checks for coverage
+        with pytest.raises(ValueError, match=('The custom_irrelevant_msg cannot be set '
+                                              'to the empty string, doing so would '
+                                              'invalidate the checking process.')):
+            deconfigged_plugin_obj.observe_traitlets_for_relevancy(traitlets,
+                                                                   custom_irrelevant_msg='')
+
+        deconfigged_plugin_obj.observe_traitlets_for_relevancy(
+            traitlets, custom_irrelevant_msg=self.set_relevant_msg)
+        assert deconfigged_plugin_obj._custom_irrelevant_msg == self.set_relevant_msg
+
+    @pytest.mark.parametrize('additional_traitlets', [[], fake_traitlets])
+    def test_observe_traitlets_for_relevancy_with_fake_callback(self,
+                                             deconfigged_helper, additional_traitlets):
+        deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(
+            deconfigged_helper)
+        traitlets += additional_traitlets
+
+        deconfigged_plugin_obj.observe_traitlets_for_relevancy(
+            traitlets, irrelevant_msg_callback=self.if_fake_truthy)
+        assert deconfigged_plugin_obj._traitlets_to_observe == traitlets
+        assert not hasattr(deconfigged_plugin_obj, '_custom_irrelevant_msg')
+        assert (deconfigged_plugin_obj._irrelevant_msg_callback() ==
+                self.if_fake_truthy())
+
+        # Checking that _set_relevant ran and resetting the message
+        assert self.set_relevant_msg == self.new_set_relevant_msg
+
+        # Now to check that the traitlets are observed as expected
+        # and that _set_relevant() therefore runs as expected
+        observed_traitlets = deconfigged_plugin_obj._trait_notifiers
+        # 'Observed' as expected
+        assert set(traitlets).issubset(set(observed_traitlets.keys()))
+
+        # Keep trait_name around for future debugging if necessary
+        observed_traitlet_methods = {trait_name: observed_traitlets[trait_name]['change']
+                                     for trait_name in traitlets}
+
+        # Check to see if _set_relevant is available and runs
+        # when accessing the observed quantity
+        for _, observe_methods in observed_traitlet_methods.items():
+            not_fresh_msg = 'less stale message but still not great'
+            self.set_relevant_msg = not_fresh_msg
+
+            # Run the method to update irrelevant_msg
+            # traits may be observed by more than one method
+            # traitlet ObserverHandlers don't have __name__ so we use getattr
+            _ = [method() for method in observe_methods
+                           if getattr(method, '__name__', None) == '_set_relevant']
+
+            # Check that self.set_relevant_msg is overwritten by our if_fake_truthy
+            # behind the scenes
+            assert self.set_relevant_msg != not_fresh_msg
