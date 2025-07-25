@@ -134,6 +134,9 @@ Cubeviz
 
 - Renamed ``Spectral Extraction`` plugin to ``3D Spectral Extraction``. [#3691]
 
+- Use validator on subset layer visibility to ensure toggling visibility from data menu
+  and plot options updates accordingly. [#3708]
+
 Imviz
 ^^^^^
 
