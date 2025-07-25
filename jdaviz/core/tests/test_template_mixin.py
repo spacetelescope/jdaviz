@@ -134,7 +134,8 @@ class TestObserveTraitletsForRelevancy:
                                      for trait_name in traitlets}
 
         # Check to see if fake_set_relevant is available and runs
-        # when accessing the observed quantity
+        # when accessing the observed quantity.
+        # Using .items() for convenient debugging if necessary.
         for _, observe_methods in observed_traitlet_methods.items():
             deconfigged_plugin_obj.irrelevant_msg = self.sad_msg
 
