@@ -96,6 +96,7 @@ class Imviz(ImageConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
+    @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, show_in_viewer=True,
                   gwcs_to_fits_sip=False, **kwargs):
         """Load data into Imviz.
