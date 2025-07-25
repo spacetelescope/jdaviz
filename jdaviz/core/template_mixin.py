@@ -645,7 +645,9 @@ class PluginTemplateMixin(TemplateMixin):
         return PluginUserApi(self, expose=[])
 
     def _setup_relevant_if_truthy(self, traitlets):
-        # Setup traitlets to check
+        """
+        Sets up and returns some things used in both ``relevant_if_any/all_truthy`` methods.
+        """
         if traitlets is None:
             if hasattr(self, '_traitlets_to_observe'):
                 traitlets = self._traitlets_to_observe
@@ -698,10 +700,10 @@ class PluginTemplateMixin(TemplateMixin):
         `_set_relevant` sets `irrelevant_msg` attribute used to determine
         if relevance for a specific plugin in a configuration is required.
         The default behavior is for traitlets to evaluate to False
-        (e.g. None, '', False) in which case  `irrelevant_msg` will indicate
-        the failure via the first traitlet found.
+        (e.g. None, '', False) in which case `irrelevant_msg` will indicate
+        that the traitlet set to be observed are not available.
 
-        This method observes the traitlets in the `_non_empty_traitlets` iterable
+        This method observes the traitlets in the `_traitlets_to_observe` iterable
         and so updates the `irrelevant_msg` attribute whenever they are modified.
         """
         irrelevant_msg = self._irrelevant_msg_callback(self._traitlets_to_observe)
@@ -718,13 +720,10 @@ class PluginTemplateMixin(TemplateMixin):
         """
         `observe_traitlets_for_relevancy` enables the app to observe traitlets
         necessary to determine configuration relevance for the plugins
-        that require it. It sets up the observe method and calls either
-        the user provided ``set_relevant`` method or the private method
-        `_set_relevant` provided here.
-
-        If a user does not provide the ``set_relevant`` kwarg or otherwise
-        sets it to ``None``, `observe_traitlets_for_relevancy` will call the private
-        `_set_relevant` method.
+        that require it. It sets up the observe method and calls the private
+        method `_set_relevant` which relies on either a user-provided
+        ``irrelevant_msg_callback`` method or defaults to the
+        `relevant_if_all_truthy` method.
         """
         self._traitlets_to_observe = traitlets_to_observe
 
