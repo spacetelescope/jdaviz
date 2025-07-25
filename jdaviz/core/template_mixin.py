@@ -664,13 +664,13 @@ class PluginTemplateMixin(TemplateMixin):
                             for traitlet_name in traitlets
                             if getattr(self, traitlet_name, None)]
 
-        return truthy_traitlets, irrelevant_msg
+        return traitlets, truthy_traitlets, irrelevant_msg
 
     def relevant_if_all_truthy(self, traitlets=None):
         """
         Set relevance (via empty/non-empty string) if *all* traitlets are truthy.
         """
-        truthy_traitlets, irrelevant_msg = self._setup_relevant_if_truthy(traitlets)
+        traitlets, truthy_traitlets, irrelevant_msg = self._setup_relevant_if_truthy(traitlets)
 
         if len(truthy_traitlets) == len(traitlets):
             # relevant
@@ -683,7 +683,7 @@ class PluginTemplateMixin(TemplateMixin):
         """
         Set relevance (via empty/non-empty string) if *any* traitlet is truthy.
         """
-        truthy_traitlets, irrelevant_msg = self._setup_relevant_if_truthy(traitlets)
+        traitlets, truthy_traitlets, irrelevant_msg = self._setup_relevant_if_truthy(traitlets)
 
         if len(truthy_traitlets):
             # relevant
@@ -727,11 +727,13 @@ class PluginTemplateMixin(TemplateMixin):
         `_set_relevant` method.
         """
         self._traitlets_to_observe = traitlets_to_observe
-        if self.irrelevant_msg is None:
+
+        if custom_irrelevant_msg == '':
+            # Just in case!
+            raise ValueError('The custom_irrelevant_msg cannot be set to the empty string, '
+                             'doing so would invalidate the checking process.')
+        elif custom_irrelevant_msg is not None:
             self._custom_irrelevant_msg = custom_irrelevant_msg
-        elif custom_irrelevant_msg == '':
-            raise ValueError('The custom_irrelevant_msg cannot be set to the empty string, doing so'
-                             'would invalidate the checking process.')
 
         self._irrelevant_msg_callback = irrelevant_msg_callback
         if irrelevant_msg_callback is None:
