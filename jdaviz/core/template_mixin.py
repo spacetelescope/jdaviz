@@ -648,6 +648,7 @@ class PluginTemplateMixin(TemplateMixin):
         """
         Sets up and returns some things used in both ``relevant_if_any/all_truthy`` methods.
         """
+        # Setup traitlets to check
         if traitlets is None:
             if hasattr(self, '_traitlets_to_observe'):
                 traitlets = self._traitlets_to_observe
@@ -727,20 +728,24 @@ class PluginTemplateMixin(TemplateMixin):
         """
         self._traitlets_to_observe = traitlets_to_observe
 
+        # Set the irrelevant message to user-provided if given (and not invalid)
         if custom_irrelevant_msg == '':
-            # Just in case!
+            # Just in case! 
             raise ValueError('The custom_irrelevant_msg cannot be set to the empty string, '
                              'doing so would invalidate the checking process.')
         elif custom_irrelevant_msg is not None:
             self._custom_irrelevant_msg = custom_irrelevant_msg
 
+        # Set the callback function to the user-provided or default.
         self._irrelevant_msg_callback = irrelevant_msg_callback
         if irrelevant_msg_callback is None:
             self._irrelevant_msg_callback = self.relevant_if_all_truthy
 
+        # Set up the traitlets to be observed
         _ = [self.observe(self._set_relevant, traitlet_name)
              for traitlet_name in self._traitlets_to_observe]
 
+        # Perform an initial set_relevant
         self._set_relevant()
 
     @observe('irrelevant_msg')
