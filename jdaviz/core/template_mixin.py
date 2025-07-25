@@ -730,7 +730,7 @@ class PluginTemplateMixin(TemplateMixin):
 
         # Set the irrelevant message to user-provided if given (and not invalid)
         if custom_irrelevant_msg == '':
-            # Just in case! 
+            # Just in case!
             raise ValueError('The custom_irrelevant_msg cannot be set to the empty string, '
                              'doing so would invalidate the checking process.')
         elif custom_irrelevant_msg is not None:

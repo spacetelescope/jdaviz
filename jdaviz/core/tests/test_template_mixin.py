@@ -156,8 +156,9 @@ class TestObserveTraitletsForRelevancy:
         method = getattr(self, f'if_{method_type}_truthy')
 
         # Checking the default argument (None) when nothing is observed yet
-        with pytest.raises(AttributeError, match=re.escape('_traitlets_to_observe has not been set yet '
-                                                 '(by observe_traitlets_for_relevancy).')):
+        with pytest.raises(AttributeError,
+                           match=re.escape('_traitlets_to_observe has not been set yet '
+                                           '(by observe_traitlets_for_relevancy).')):
             method()
 
         # Check that irrelevant message is set correctly for relevant traitlets
@@ -279,8 +280,8 @@ class TestObserveTraitletsForRelevancy:
         assert deconfigged_plugin_obj._custom_irrelevant_msg == self.set_relevant_msg
 
     @pytest.mark.parametrize('additional_traitlets', [[], fake_traitlets])
-    def test_observe_traitlets_for_relevancy_with_fake_callback(self,
-                                             deconfigged_helper, additional_traitlets):
+    def test_observe_traitlets_for_relevancy_with_fake_callback(
+            self, deconfigged_helper, additional_traitlets):
         deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(
             deconfigged_helper)
         traitlets += additional_traitlets
@@ -315,7 +316,7 @@ class TestObserveTraitletsForRelevancy:
             # traits may be observed by more than one method
             # traitlet ObserverHandlers don't have __name__ so we use getattr
             _ = [method() for method in observe_methods
-                           if getattr(method, '__name__', None) == '_set_relevant']
+                 if getattr(method, '__name__', None) == '_set_relevant']
 
             # Check that self.set_relevant_msg is overwritten by our if_fake_truthy
             # behind the scenes
