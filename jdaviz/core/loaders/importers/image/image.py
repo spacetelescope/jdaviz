@@ -235,6 +235,7 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             ext_items = [{}] * len(outputs)
 
+        parent_selected = self.parent.selected
         for output, ext_item in zip(outputs, ext_items):
             if output is None:
                 # needed for NDData where one of the "extensions" might
@@ -254,7 +255,7 @@ class ImageImporter(BaseImporterToDataCollection):
                 data_label = base_data_label
 
             # Determine parent
-            if (self.parent.selected == 'Auto' and
+            if (parent_selected == 'Auto' and
                     len(ext_items) > 1 and
                     getattr(self.input, 'meta', {}).get('plugin', None) is None):
                 # If parent is set to 'Auto', use SCI/DATA extension
@@ -273,10 +274,10 @@ class ImageImporter(BaseImporterToDataCollection):
                     parent_data_label = self._get_label_with_extension(base_data_label,
                                                                        parent_ext_item.get('name'),
                                                                        ver=parent_ext_item.get('ver', None))  # noqa
-            elif self.parent.selected == 'Auto':
+            elif parent_selected == 'Auto':
                 parent_data_label = None
             else:
-                parent_data_label = self.parent.selected
+                parent_data_label = parent_selected
 
             if self.gwcs_to_fits_sip:
                 output = self._glue_data_wcs_to_fits(output)
