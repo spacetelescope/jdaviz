@@ -58,5 +58,5 @@ class SpectrumImporter(BaseImporterToDataCollection):
                     self.app.hub.broadcast(SnackbarMessage(msg, color="warning", sender=self.app))
         return data
 
-    def assign_component_type(self, comp_id, comp, physical_type):
-        return _spectrum_assign_component_type(comp_id, comp, physical_type)
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, units, physical_type)

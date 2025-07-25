@@ -17,9 +17,12 @@ vid_map = {'spectrum-1d-viewer': '1D Spectrum',
            'imviz-image-viewer': 'Image'}
 
 
-def _spectrum_assign_component_type(comp_id, comp, physical_type):
-    if ('World' in str(comp_id) or str(comp_id) == 'Wave') and physical_type == 'length':
-        return 'length:spectral_axis'
+def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
+    if ('World' in str(comp_id) or str(comp_id) == 'Wave'):
+        if physical_type == 'length':
+            return 'spectral_axis:length'
+        elif units == 'pix':
+            return 'spectral_axis:pix'
     return physical_type
 
 
@@ -169,7 +172,7 @@ class BaseImporterToDataCollection(BaseImporter):
             viewer = self.app._jdaviz_helper.viewers.get(default_viewer_label)
             viewer.data_menu.add_data(data_label)
 
-    def assign_component_type(self, comp_id, comp, physical_type):
+    def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type
 
     def add_to_data_collection(self, data, data_label=None,
@@ -197,17 +200,17 @@ class BaseImporterToDataCollection(BaseImporter):
             try:
                 comp_units = comp.units
                 if comp_units is None or comp_units == '':
-                    return None
-                return str(u.Unit(comp_units).physical_type)
+                    return comp_units, None
+                return comp_units, str(u.Unit(comp_units).physical_type)
             except (ValueError, TypeError, AttributeError):
-                return None
+                return comp_units, None
 
         for comp_id in new_dc_entry.components:
-            physical_type = _physical_type_from_component(comp_id,
-                                                          new_dc_entry.get_component(comp_id))
+            comp_units, physical_type = _physical_type_from_component(comp_id,
+                                                                      new_dc_entry.get_component(comp_id))  # noqa
             comp_id._component_type = self.assign_component_type(comp_id,
                                                                  new_dc_entry.get_component(comp_id),  # noqa
-                                                                 physical_type)
+                                                                 comp_units, physical_type)
 
         if self.app.config in CONFIGS_WITH_LOADERS:
             self.app._link_new_data_by_component_type(data_label)
