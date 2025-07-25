@@ -460,14 +460,14 @@ def test_distance_tool_live_preview_profile(cubeviz_helper, spectrum1d_cube):
 
     # Set the starting point and get the actual data coordinates from coords_info
     label_mouseover._viewer_mouse_event(sv, {'event': 'mousemove', 'domain': {'x': 4.623e-7,
-                                        'y': 20}})
+                                                                              'y': 20}})
     p1_coords = label_mouseover.as_dict()
     mp._obj._on_viewer_key_event(sv, {'event': 'keydown', 'key': 'd'})
 
     # Set the end point and get the actual data coordinates from coords_info
     x2_cursor, y2_cursor = 4.624e-7, 80
     label_mouseover._viewer_mouse_event(sv, {'event': 'mousemove', 'domain': {'x': x2_cursor,
-                                        'y': y2_cursor}})
+                                                                              'y': y2_cursor}})
     p2_coords = label_mouseover.as_dict()
     mp._obj._on_mouse_move_while_drawing({'domain': {'x': x2_cursor, 'y': y2_cursor}})
 
@@ -480,6 +480,13 @@ def test_distance_tool_live_preview_profile(cubeviz_helper, spectrum1d_cube):
     mp._obj._on_viewer_key_event(sv, {'event': 'keydown', 'key': 'd'})
     assert len(mp._obj.measurements_table.items) == 1
     profile_row = mp._obj.measurements_table.items[0]
+
+    # Assert that the new Start/End columns are populated correctly
+    assert profile_row['Start X'] == f"{p1_coords['axes_x']:.4g} m"
+    assert profile_row['End X'] == f"{p2_coords['axes_x']:.4g} m"
+    assert profile_row['Start Y'] == f"{p1_coords['axes_y']:.4g} Jy"
+    assert profile_row['End Y'] == f"{p2_coords['axes_y']:.4g} Jy"
+    # Assert that the delta columns are still correct
     assert profile_row['Δx'] == f"{dx:.4g} m"
     assert profile_row['Δy'] == f"{dy:.4g} Jy"
 

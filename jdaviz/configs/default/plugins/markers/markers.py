@@ -138,6 +138,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             title='Measurements',
             headers=['Start RA', 'Start Dec', 'End RA', 'End Dec',
                      'Separation (arcsec)', 'Distance (pix)', 'Position Angle (deg)',
+                     'Start X', 'End X', 'Start Y', 'End Y',
                      'Δx', 'Δy', 'Viewer', 'Data Label'],
         )
         return table
@@ -301,12 +302,22 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         }
         self.measurements_table.add_item(row_data)
 
-    def _add_profile_distance_row(self, p1, viewer, dx, dy, x_unit, y_unit):
+    def _add_profile_distance_row(self, p1, p2, viewer, dx, dy, x_unit, y_unit):
         """Adds a single row to the measurements table for a profile-based distance."""
         viewer_id = viewer.reference or viewer.reference_id
         data_label = p1.get('data_label', 'N/A')
 
+        # Get start/end coordinates from the point dictionaries
+        start_x = p1.get('axes_x', 0)
+        end_x = p2.get('axes_x', 0)
+        start_y = p1.get('axes_y', 0)
+        end_y = p2.get('axes_y', 0)
+
         row_data = {
+            'Start X': f"{start_x:.4g} {x_unit}",
+            'End X': f"{end_x:.4g} {x_unit}",
+            'Start Y': f"{start_y:.4g} {y_unit}",
+            'End Y': f"{end_y:.4g} {y_unit}",
             'Δx': f"{dx:.4g} {x_unit}",
             'Δy': f"{dy:.4g} {y_unit}",
             'Viewer': viewer_id,
@@ -330,7 +341,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             text_ui = f"Δx: {dx_val:.4g} {x_unit}, Δy: {dy_val:.4g} {y_unit}"
             text_plot = ""
             if add_row:
-                self._add_profile_distance_row(p1, viewer, dx_val, dy_val, x_unit, y_unit)
+                self._add_profile_distance_row(p1, p2, viewer, dx_val, dy_val, x_unit, y_unit)
         else:  # Assume image viewer
             world_avail = ('world_ra' in p1 and 'world_ra' in p2 and
                            p1.get('world_ra') is not None and p2.get('world_ra') is not None and
