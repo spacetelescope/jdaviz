@@ -41,6 +41,10 @@ class Imviz(ImageConfigHelper):
         global _current_app
         _current_app = self
 
+        # Temporary during deconfig process
+        self.load = self._load
+        self.app.state.dev_loaders = True
+
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
 
@@ -152,8 +156,6 @@ class Imviz(ImageConfigHelper):
         image as Numpy array and load the latter instead.
 
         """
-        self.app.state.dev_loaders = True
-
         extensions = kwargs.pop('ext', None)
 
         if isinstance(data, str) and "," in data:
