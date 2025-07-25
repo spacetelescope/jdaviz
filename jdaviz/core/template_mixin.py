@@ -1833,6 +1833,9 @@ class LayerSelect(SelectPluginComponent):
         def not_trace(lyr):
             return not is_trace(lyr)
 
+        def is_dq_layer(lyr):
+            return 'DQ' in getattr(getattr(lyr, 'data', None), 'label', '')
+
         return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
