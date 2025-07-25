@@ -95,6 +95,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             'viewer_selected', 'dq_layer_multiselect', is_root=False,
             is_child_of=self.science_layer.selected
         )
+        self.dq_layer.add_filter('is_dq_layer')
 
         self.load_default_flag_maps()
         self.init_decoding()

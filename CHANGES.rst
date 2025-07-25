@@ -49,10 +49,10 @@ Imviz
 
 - ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  Default data-labels
   from ``load_data`` may change in some cases, with the actual extension name used in place of ``[DATA]``
-  and the version number included along with the extension.  [#3662]
+  and the version number included along with the extension.  [#3662, #3709]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
-  deprecated and will open the new sidebar.  [#3662]
+  deprecated and will open the new sidebar.  [#3662, #3709]
 
 - Added ability to load remote data from a S3 URI to Imviz. [#3500]
 

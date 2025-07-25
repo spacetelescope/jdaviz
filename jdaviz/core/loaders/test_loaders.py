@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.io import fits
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from specutils import SpectralRegion, Spectrum
@@ -175,6 +176,57 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     assert len(loader.format.choices) > 0
 
     loader.importer()
+
+
+def test_load_image_mult_sci_extension(imviz_helper):
+    # test loading an image with multiple SCI extensions and
+    # ensure that automatic parenting logic is handled correctly
+    arr = np.zeros((2, 2), dtype=np.float32)
+    hdul = fits.HDUList([fits.PrimaryHDU(),
+                        fits.ImageHDU(arr, name='SCI', ver=1),
+                        fits.ImageHDU(arr, name='ERR', ver=1),
+                        fits.ImageHDU(arr, name='SCI', ver=2),
+                        fits.ImageHDU(arr, name='ERR', ver=2)
+                         ])
+
+    # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
+    imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
+
+    assert len(imviz_helper.app.data_collection) == 3
+    assert [d.label for d in imviz_helper.app.data_collection] == ['Image[SCI,1]', 'Image[SCI,2]', 'Image[ERR,2]']  # noqa
+
+    assert imviz_helper.app._get_assoc_data_children('Image[SCI,1]') == []
+    assert imviz_helper.app._get_assoc_data_children('Image[SCI,2]') == ['Image[ERR,2]']
+    assert imviz_helper.app._get_assoc_data_parent('Image[ERR,2]') == 'Image[SCI,2]'
+
+
+def test_loaders_extension_select(imviz_helper):
+    # tests internal logic of SelectFileExtensionComponent
+    arr = np.zeros((2, 2), dtype=np.float32)
+    hdul = fits.HDUList([fits.PrimaryHDU(),
+                        fits.ImageHDU(arr, name='SCI', ver=1),
+                        fits.ImageHDU(arr, name='ERR', ver=1),
+                        fits.ImageHDU(arr, name='SCI', ver=2),
+                        fits.ImageHDU(arr, name='ERR', ver=2)
+                         ])
+
+    ldr = imviz_helper.loaders['object']
+    ldr.object = hdul
+
+    # test setting extension by index: [name, ver], [name,ver], and name,ver
+    ldr.importer.extension = ['1: [SCI,1]', '[SCI,2]', 'ERR,2']
+    assert ldr.importer.extension.selected == ['1: [SCI,1]',
+                                               '3: [SCI,2]',
+                                               '4: [ERR,2]']
+    assert ldr.importer.extension.selected_index == [1, 3, 4]
+
+    # if not providing ver, first match will be used
+    ldr.importer.extension = 'SCI'
+    assert ldr.importer.extension.selected == ['1: [SCI,1]']
+
+    # case of providing index
+    ldr.importer.extension = [1, 3]
+    assert ldr.importer.extension.selected == ['1: [SCI,1]', '3: [SCI,2]']
 
 
 @pytest.mark.remote_data

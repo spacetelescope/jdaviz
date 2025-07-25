@@ -71,6 +71,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if self.input_hdulist:
             ext_options = [{'label': f"{index}: {hdu.name}",
                             'name': hdu.name,
+                            'ver': hdu.ver,
+                            'name_ver': f"{hdu.name},{hdu.ver}",
                             'index': index,
                             'obj': hdu}
                            for index, hdu in enumerate(self.input)]
