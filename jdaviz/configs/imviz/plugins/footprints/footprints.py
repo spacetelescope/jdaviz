@@ -256,7 +256,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self._on_link_type_updated()
 
         self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'],
-                                             irrelevant_msg='No WCS-linked image viewers')
+                                             custom_irrelevant_msg='No WCS-linked image viewers')
 
     def _highlight_overlay(self, overlay_label, viewers=None):
         """

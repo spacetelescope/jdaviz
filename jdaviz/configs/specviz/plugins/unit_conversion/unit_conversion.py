@@ -171,7 +171,7 @@ class UnitConversion(PluginTemplateMixin):
                                       'flux_unit_selected',
                                       'angle_unit_selected',
                                       'time_unit_selected'],
-                irrelevant_msg='No datasets with valid units loaded',
+                custom_irrelevant_msg='No datasets with valid units loaded',
                 irrelevant_msg_callback=self.relevant_if_any_truthy)
 
     @property
