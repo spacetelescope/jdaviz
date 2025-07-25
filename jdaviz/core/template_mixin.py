@@ -1834,7 +1834,7 @@ class LayerSelect(SelectPluginComponent):
             return not is_trace(lyr)
 
         def is_dq_layer(lyr):
-            return getattr(getattr(lyr, 'data', None), 'meta', '').get('EXTNAME', '') == 'DQ'
+            return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
         return super()._is_valid_item(lyr, locals())
 

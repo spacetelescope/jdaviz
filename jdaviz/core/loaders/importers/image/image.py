@@ -208,9 +208,11 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             data = [_hdu2data(hdu, input) for hdu in self.extension.selected_obj]
 
-        for d in data:
+        ext_names = self.extension.selected_name if self.input_has_extensions else [None] * len(data)  # noqa
+        for d, ext_name in zip(data, ext_names):
             if d is None:
                 continue
+            d.meta['_extname'] = ext_name
             for component_id in d.main_components:
                 if component_id.label.lower().startswith("dq"):
                     # for DQ components, map zeros to nans
