@@ -225,8 +225,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'spectrum-1d-viewer'
 
-    def assign_component_type(self, comp_id, comp, physical_type):
-        return _spectrum_assign_component_type(comp_id, comp, physical_type)
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
     def __call__(self, show_in_viewer=True):
         if not self.sources.selected:

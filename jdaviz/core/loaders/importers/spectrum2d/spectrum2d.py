@@ -172,8 +172,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                 # raising an error here will allow using specutils.Spectrum > Spectrum2D
                 raise
 
-    def assign_component_type(self, comp_id, comp, physical_type):
-        return _spectrum_assign_component_type(comp_id, comp, physical_type)
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
     def __call__(self, show_in_viewer=True):
         # get a copy of both of these before additional data entries changes defaults
