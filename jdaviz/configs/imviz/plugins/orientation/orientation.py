@@ -13,6 +13,7 @@ from traitlets import List, Unicode, Bool, Dict, observe
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
+from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (
     ExitBatchLoadMessage, ChangeRefDataMessage,
@@ -34,7 +35,8 @@ base_wcs_layer_label = 'Default orientation'
 align_by_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
-@tray_registry('imviz-orientation', label=orientation_plugin_label)
+@tray_registry('imviz-orientation', label=orientation_plugin_label,
+               category='app:options')
 class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Orientation Plugin Documentation <imviz-orientation>` for more details.
@@ -101,7 +103,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         # description displayed under plugin title in tray
-        self._plugin_description = 'Rotate viewer orientation and choose alignment (pixel or sky).'
+        self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'  # noqa
+
+        self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
@@ -146,6 +150,20 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         self._update_layer_label_default()
 
+        self._set_relevant()
+
+        if self.app.config == 'deconfigged':
+            self.disabled_msg = 'Orientation plugin not available in deconfigged until generalized linking is implemented'  # noqa
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if self.app.config != 'deconfigged':
+            return
+        if not len(self.viewer_items):
+            self.irrelevant_msg = 'No image viewers with WCS'
+        else:
+            self.irrelevant_msg = ''
+
     @property
     def user_api(self):
         return PluginUserApi(
@@ -159,6 +177,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
     def _link_image_data(self):
+        if len(self.irrelevant_msg):
+            return
         self.linking_in_progress = True
         try:
             align_by = self.align_by.selected.lower()
@@ -174,6 +194,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             # Only broadcast after success.
             self.app.hub.broadcast(LinkUpdatedMessage(
                 align_by, self.wcs_use_fallback, self.wcs_fast_approximation, sender=self.app))
+            self.orientation._update_items()
         finally:
             self.linking_in_progress = False
 
@@ -244,7 +265,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # incompatible:
         wcs_linked = self.align_by.selected == 'WCS'
         viewer_selected = self.app.get_viewer(self.viewer.selected)
-
+        if viewer_selected is None:
+            self.linking_in_progress = False
+            return
         data_in_viewer = self.app.get_viewer(viewer_selected.reference).data()
 
         for data in self.app.data_collection:
@@ -383,19 +406,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             target_wcs_north_up=True,
         )
 
-        self.app._jdaviz_helper.load_data(
-            ndd, data_label=label,
-            show_in_viewer=False
-        )
+        add_wcs_data_to_app(self.app, ndd, data_label=label)
+        self.orientation._update_items()
 
         # add orientation layer to all viewers:
         for viewer_ref in self.app._viewer_store:
             self._add_data_to_viewer(label, viewer_ref)
 
         if set_on_create:
-            # Not sure why this is sometimes missing, but we can add it here
-            if label not in self.orientation.choices:
-                self.orientation.choices += [label]
             self.orientation.selected = label
 
     def _ensure_layer_icon_exists(self, data_label):
@@ -407,21 +425,27 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _add_data_to_viewer(self, data_label, viewer_id):
         viewer = self.app.get_viewer_by_id(viewer_id)
+        if not isinstance(viewer, ImvizImageView):
+            return
 
         if data_label not in viewer.data_menu.orientation.choices:
             self.app.add_data_to_viewer(viewer_id, data_label)
         self._ensure_layer_icon_exists(data_label)
 
     def _on_viewer_added(self, msg):
-        self._send_wcs_layers_to_all_viewers(viewers_to_update=[msg._viewer_id])
+        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        if not isinstance(viewer, ImvizImageView):
+            return
+        self._send_wcs_layers_to_all_viewers(viewers_to_update=[msg.viewer_id])
 
     @observe('viewer_items')
     def _send_wcs_layers_to_all_viewers(self, *args, **kwargs):
-        if not hasattr(self, 'viewer'):
+        if not hasattr(self, 'viewer') or not getattr(self.app, '_jdaviz_helper', None):
             return
 
         wcs_only_layers = get_wcs_only_layer_labels(self.app)
 
+        # TODO: update to only image viewers
         viewers_to_update = kwargs.get(
             'viewers_to_update', self.app._viewer_store.keys()
         )
@@ -439,6 +463,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._ensure_layer_icon_exists(base_wcs_layer_label)
 
     def _on_data_add_to_viewer(self, msg):
+        if self.viewer.selected_obj is None:
+            return
         all_wcs_only_layers = all(
             layer.layer.meta.get(_wcs_only_label)
             for layer in self.viewer.selected_obj.layers
@@ -496,9 +522,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def ref_data(self):
-        if hasattr(self, 'viewer'):
-            return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
-        return None
+        if not hasattr(self, 'viewer'):
+            return None
+        viewer = self.app.get_viewer(self.viewer.selected)
+        if not hasattr(viewer, 'state'):
+            return None
+        return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
 
     @property
     def _refdata_change_available(self):
@@ -588,6 +617,17 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
 
+def add_wcs_data_to_app(app, data, data_label=None):
+    app._jdaviz_helper._load(data, format='Image',
+                             data_label=data_label, show_in_viewer=False)
+    # TODO: refactor logic to avoid having to send an AddDataMessage just to update icons
+    # ensure that icons are updated by forcing a call to app._on_layers_changed
+    image_viewer = app.get_viewers_of_cls(ImvizImageView)[0]
+    app.hub.broadcast(AddDataMessage(data=app.data_collection[data_label],
+                                     viewer=image_viewer, viewer_id=image_viewer.reference,
+                                     sender=app))
+
+
 def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True,
                     error_on_fail=False):
     """(Re)link loaded data in Imviz with the desired link type.
@@ -665,6 +705,9 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     #
     # data1 = reference, data2 = actual data
     data_already_linked = []
+    image_viewers = app.get_viewers_of_cls(ImvizImageView)
+    if not len(image_viewers):
+        return
     if (align_by == old_align_by and
             (align_by == "pixels" or wcs_fast_approximation == app._wcs_fast_approximation)):
         # We are only here to link new data with existing configuration,
@@ -673,7 +716,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             data_already_linked.append(link.data2)
     else:  # pragma: no cover
         # Everything has to be relinked.
-        for viewer in app._viewer_store.values():
+        for viewer in image_viewers:
             if len(viewer._marktags):
                 raise ValueError(f"cannot change align_by (from '{app._align_by}' to "
                                  f"'{align_by}') when markers are present. "
@@ -687,7 +730,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     # wcs -> pixels: First loaded real data will be reference.
     if align_by == 'pixels' and old_align_by == 'wcs':
         # default reference layer is the first-loaded image in default viewer:
-        refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
+        refdata = image_viewers[0].first_loaded_data
         if refdata is None:  # No data in viewer, just use first in collection  # pragma: no cover
             iref = 0
             refdata = app.data_collection[iref]
@@ -702,13 +745,13 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     elif align_by == 'wcs' and old_align_by == 'pixels':
         # Have to create the default orientation first.
         if base_wcs_layer_label not in app.data_collection.labels:
-            default_reference_layer = (app._jdaviz_helper.default_viewer._obj.first_loaded_data
+            default_reference_layer = (image_viewers[0].first_loaded_data
                                        or app.data_collection[0])
             degn = get_compass_info(default_reference_layer.coords, default_reference_layer.shape)[-3]  # noqa: E501
             # Default rotation is the same orientation as the original reference data:
             rotation_angle = -degn * u.deg
             ndd = _get_rotated_nddata_from_label(app, default_reference_layer.label, rotation_angle)
-            app._jdaviz_helper.load_data(ndd, base_wcs_layer_label, show_in_viewer=False)
+            add_wcs_data_to_app(app, ndd, data_label=base_wcs_layer_label)
 
         # set default layer to reference data in all viewers:
         for viewer_id in app.get_viewer_ids():
@@ -722,7 +765,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         refdata, iref = get_reference_image_data(app)
         # App just loaded, nothing yet, so take first image.
         if refdata is None:
-            refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
+            refdata = image_viewers[0].first_loaded_data
             if refdata is None:  # No data in viewer, just use first in collection
                 iref = 0
                 refdata = app.data_collection[iref]
@@ -792,7 +835,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
 
-    for viewer in app._viewer_store.values():
+    for viewer in image_viewers:
         wcs_linked = align_by == 'wcs'
         # viewer-state needs to know link type for reset_limits behavior
         viewer.state.linked_by_wcs = wcs_linked

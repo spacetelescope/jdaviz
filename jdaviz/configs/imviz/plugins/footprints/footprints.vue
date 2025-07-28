@@ -33,7 +33,7 @@
       style="margin-left: -12px; margin-right: -12px"
     >
       cannot plot footprint when aligned by pixels (see Orientation plugin).
-      <v-row v-if="config!=='deconfigged'" justify="end" style="margin-right: 2px; margin-top: 16px">
+      <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
         <v-btn @click="link_by_wcs">
           link by WCS
         </v-btn>

@@ -838,7 +838,10 @@ def get_reference_image_data(app, viewer_id=None):
     By default, the first viewer is used.
     """
     if viewer_id is None:
-        refdata = app._jdaviz_helper.default_viewer._obj.state.reference_data
+        if len(image_viewers := app.get_viewers_of_cls('ImvizImageView')) > 0:
+            refdata = image_viewers[0].state.reference_data
+        else:
+            refdata = None
     else:
         viewer = app.get_viewer_by_id(viewer_id)
         refdata = viewer.state.reference_data
