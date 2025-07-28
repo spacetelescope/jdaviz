@@ -54,6 +54,10 @@ def test_hlsp_goods_s2d(specviz2d_helper):
     uri='mast:HLSP/jades/dr3/goods-n/spectra/clear-prism/goods-n-mediumhst/hlsp_jades_jwst_nirspec_goods-n-mediumhst-00000804_clear-prism_v1.0_s2d.fits'  # noqa
     specviz2d_helper.load(cached_uri(uri),
                           cache=True)
+
+    # ensure uncalibrated 2d spectrum extraction works
+    assert len(specviz2d_helper.app.data_collection) == 2
+
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
 
@@ -65,6 +69,10 @@ def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
                             format='2D Spectrum',
                             data_label='2D Spectrum',
                             cache=True)
+
+    # ensure uncalibrated 2d spectrum extraction works
+    assert len(deconfigged_helper.app.data_collection) == 2
+
     dc_0 = deconfigged_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
     assert isinstance(deconfigged_helper.plugins['2D Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
