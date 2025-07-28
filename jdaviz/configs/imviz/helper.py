@@ -41,6 +41,10 @@ class Imviz(ImageConfigHelper):
         global _current_app
         _current_app = self
 
+        # Temporary during deconfig process
+        self.load = self._load
+        self.app.state.dev_loaders = True
+
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
 
@@ -92,6 +96,7 @@ class Imviz(ImageConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
+    @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, show_in_viewer=True,
                   gwcs_to_fits_sip=False, **kwargs):
         """Load data into Imviz.
@@ -152,8 +157,6 @@ class Imviz(ImageConfigHelper):
         image as Numpy array and load the latter instead.
 
         """
-        self.app.state.dev_loaders = True
-
         extensions = kwargs.pop('ext', None)
 
         if isinstance(data, str) and "," in data:

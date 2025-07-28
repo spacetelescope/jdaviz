@@ -618,8 +618,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
 
 def add_wcs_data_to_app(app, data, data_label=None):
-    app._jdaviz_helper._load(data, format='Image',
-                             data_label=data_label, show_in_viewer=False)
+    app._jdaviz_helper.load(data, format='Image',
+                            data_label=data_label, show_in_viewer=False)
     # TODO: refactor logic to avoid having to send an AddDataMessage just to update icons
     # ensure that icons are updated by forcing a call to app._on_layers_changed
     image_viewer = app.get_viewers_of_cls(ImvizImageView)[0]
