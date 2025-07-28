@@ -152,6 +152,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         self._set_relevant()
 
+        if self.app.config == 'deconfigged':
+            self.disabled_msg = 'Orientation plugin not available in deconfigged until generalized linking is implemented'  # noqa
+
     @observe('viewer_items')
     def _set_relevant(self, *args):
         if self.app.config != 'deconfigged':
