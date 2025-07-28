@@ -151,7 +151,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._update_layer_label_default()
 
         if self.app.config == 'deconfigged':
-            self.disabled_msg = 'Orientation plugin not available in deconfigged until generalized linking is implemented'  # noqa
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
