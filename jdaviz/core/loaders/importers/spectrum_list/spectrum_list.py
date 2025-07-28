@@ -4,7 +4,8 @@ from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
+                                           _spectrum_assign_component_type)
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -66,6 +67,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # returns the registry name of the default viewer
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'spectrum-1d-viewer'
+
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value

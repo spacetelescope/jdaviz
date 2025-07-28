@@ -828,7 +828,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
 
         if add_data:
-            self.trace_add_results.add_results_from_plugin(trace, replace=False)
+            self.trace_add_results.add_results_from_plugin(trace,
+                                                           format='Trace',
+                                                           replace=False)
 
         return trace
 
@@ -932,7 +934,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
         bg_spec = self.export_bg(**kwargs).bkg_image()
 
         if add_data:
-            self.bg_add_results.add_results_from_plugin(bg_spec, replace=True)
+            self.bg_add_results.add_results_from_plugin(bg_spec,
+                                                        format='2D Spectrum',
+                                                        replace=True)
 
         return bg_spec
 
@@ -959,7 +963,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
         spec = self.export_bg(**kwargs).bkg_spectrum()
 
         if add_data:
-            self.bg_spec_add_results.add_results_from_plugin(spec, replace=False)
+            self.bg_spec_add_results.add_results_from_plugin(spec,
+                                                             format='1D Spectrum',
+                                                             replace=False)
 
         return spec
 
@@ -980,7 +986,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
         bg_sub_spec = self.export_bg(**kwargs).sub_image()
 
         if add_data:
-            self.bg_sub_add_results.add_results_from_plugin(bg_sub_spec, replace=True)
+            self.bg_sub_add_results.add_results_from_plugin(bg_sub_spec,
+                                                            format='2D Spectrum',
+                                                            replace=True)
 
         return bg_sub_spec
 
@@ -1093,7 +1101,9 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                         open_data_menu_if_empty=False)
                 self.ext_add_results.viewer = viewer_ref
 
-            self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
+            self.ext_add_results.add_results_from_plugin(spectrum,
+                                                         format='1D Spectrum',
+                                                         replace=False)
 
         return spectrum
 
