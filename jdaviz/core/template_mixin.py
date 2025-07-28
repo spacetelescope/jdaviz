@@ -654,13 +654,10 @@ class PluginTemplateMixin(TemplateMixin):
                 traitlets = self._traitlets_to_observe
             else:
                 raise AttributeError('_traitlets_to_observe has not been set yet '
-                                     '(by observe_traitlets_for_relevancy).')
+                                     '(by `observe_traitlets_for_relevancy`).')
 
         # Setup irrelevant message
-        if hasattr(self, '_custom_irrelevant_msg') and self._custom_irrelevant_msg:
-            irrelevant_msg = self._custom_irrelevant_msg
-        else:
-            irrelevant_msg = f"At least one of or all of {', '.join(traitlets)} are not available"
+        irrelevant_msg = f"At least one of or all of {', '.join(traitlets)} are not available"
 
         # Prepare the list for the check
         truthy_traitlets = [traitlet_name
@@ -716,8 +713,7 @@ class PluginTemplateMixin(TemplateMixin):
 
     def observe_traitlets_for_relevancy(self,
                                         traitlets_to_observe,
-                                        irrelevant_msg_callback=None,
-                                        custom_irrelevant_msg=None):
+                                        irrelevant_msg_callback=None):
         """
         `observe_traitlets_for_relevancy` enables the app to observe traitlets
         necessary to determine configuration relevance for the plugins
@@ -735,22 +731,11 @@ class PluginTemplateMixin(TemplateMixin):
             A function that takes a list of traitlets and returns a msg to be set
             as the ``irrelevant_msg`` attribute.
 
-        custom_irrelevant_msg : string
-            A custom message to be set as the irrelevant msg attribute.
-
         """
         if not isinstance(traitlets_to_observe, (list, tuple)):
             raise TypeError('`traitlets_to_observe` must be a list or tuple.')
 
         self._traitlets_to_observe = traitlets_to_observe
-
-        # Set the irrelevant message to user-provided if given (and not invalid)
-        if custom_irrelevant_msg == '':
-            # Just in case!
-            raise ValueError('The custom_irrelevant_msg cannot be set to the empty string, '
-                             'doing so would invalidate the checking process.')
-        elif custom_irrelevant_msg is not None:
-            self._custom_irrelevant_msg = custom_irrelevant_msg
 
         # Set the callback function to the user-provided or default.
         self._irrelevant_msg_callback = irrelevant_msg_callback
