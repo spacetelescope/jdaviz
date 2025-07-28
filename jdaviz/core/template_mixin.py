@@ -730,7 +730,6 @@ class PluginTemplateMixin(TemplateMixin):
         irrelevant_msg_callback : function or None
             A function that takes a list of traitlets and returns a msg to be set
             as the ``irrelevant_msg`` attribute.
-
         """
         if not isinstance(traitlets_to_observe, (list, tuple)):
             raise TypeError('`traitlets_to_observe` must be a list or tuple.')
