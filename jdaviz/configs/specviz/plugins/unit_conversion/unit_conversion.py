@@ -165,18 +165,13 @@ class UnitConversion(PluginTemplateMixin):
                                                      items='spectral_y_type_items',
                                                      selected='spectral_y_type_selected')
 
-        self._set_relevant()
-
-    @observe('spectral_unit_selected', 'flux_unit_selected',
-             'angle_unit_selected', 'time_unit_selected')
-    def _set_relevant(self, *args):
-        if self.app.config != 'deconfigged':
-            return
-        if (not self.spectral_unit_selected and not self.flux_unit_selected
-                and not self.angle_unit_selected and not self.time_unit_selected):
-            self.irrelevant_msg = 'No datasets with valid units loaded'
-        else:
-            self.irrelevant_msg = ''
+        if self.app.config == 'deconfigged':
+            self.observe_traitlets_for_relevancy(
+                traitlets_to_observe=['spectral_unit_selected',
+                                      'flux_unit_selected',
+                                      'angle_unit_selected',
+                                      'time_unit_selected'],
+                irrelevant_msg_callback=self.relevant_if_any_truthy)
 
     @property
     def user_api(self):

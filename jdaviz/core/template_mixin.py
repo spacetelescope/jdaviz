@@ -644,6 +644,110 @@ class PluginTemplateMixin(TemplateMixin):
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
 
+    def _setup_relevant_if_truthy(self, traitlets):
+        """
+        Sets up and returns some things used in both ``relevant_if_any/all_truthy`` methods.
+        """
+        # Setup traitlets to check
+        if traitlets is None:
+            if hasattr(self, '_traitlets_to_observe'):
+                traitlets = self._traitlets_to_observe
+            else:
+                raise AttributeError('_traitlets_to_observe has not been set yet '
+                                     '(by `observe_traitlets_for_relevancy`).')
+
+        # Setup irrelevant message
+        irrelevant_msg = f"At least one of or all of {', '.join(traitlets)} are not available"
+
+        # Prepare the list for the check
+        truthy_traitlets = [traitlet_name
+                            for traitlet_name in traitlets
+                            if getattr(self, traitlet_name, None)]
+
+        return traitlets, truthy_traitlets, irrelevant_msg
+
+    def relevant_if_all_truthy(self, traitlets=None):
+        """
+        Set relevance (via empty/non-empty string) if *all* traitlets are truthy.
+        """
+        traitlets, truthy_traitlets, irrelevant_msg = self._setup_relevant_if_truthy(traitlets)
+
+        if len(truthy_traitlets) == len(traitlets):
+            # relevant
+            return ''
+        else:
+            # irrelevant
+            return irrelevant_msg
+
+    def relevant_if_any_truthy(self, traitlets=None):
+        """
+        Set relevance (via empty/non-empty string) if *any* traitlet is truthy.
+        """
+        traitlets, truthy_traitlets, irrelevant_msg = self._setup_relevant_if_truthy(traitlets)
+
+        if len(truthy_traitlets):
+            # relevant
+            return ''
+        else:
+            # irrelevant
+            return irrelevant_msg
+
+    # *args to handle events from observe
+    def _set_relevant(self, *args):
+        """
+        `_set_relevant` sets `irrelevant_msg` attribute used to determine
+        if relevance for a specific plugin in a configuration is required.
+        The default behavior is for traitlets to evaluate to False
+        (e.g. None, '', False) in which case `irrelevant_msg` will indicate
+        that the traitlet set to be observed are not available.
+
+        This method observes the traitlets in the `_traitlets_to_observe` iterable
+        and so updates the `irrelevant_msg` attribute whenever they are modified.
+        """
+        irrelevant_msg = self._irrelevant_msg_callback(self._traitlets_to_observe)
+
+        # In some scenarios, we don't want to touch irrelevant message
+        # (see `line_lists.py` for example)
+        if irrelevant_msg is not None:
+            self.irrelevant_msg = irrelevant_msg
+
+    def observe_traitlets_for_relevancy(self,
+                                        traitlets_to_observe,
+                                        irrelevant_msg_callback=None):
+        """
+        `observe_traitlets_for_relevancy` enables the app to observe traitlets
+        necessary to determine configuration relevance for the plugins
+        that require it. It sets up the observe method and calls the private
+        method `_set_relevant` which relies on either a user-provided
+        ``irrelevant_msg_callback`` method or defaults to the
+        `relevant_if_all_truthy` method.
+
+        Parameters
+        ----------
+        traitlets_to_observe : list or tuple
+            A list of the traitlets to be observed.
+
+        irrelevant_msg_callback : function or None
+            A function that takes a list of traitlets and returns a msg to be set
+            as the ``irrelevant_msg`` attribute.
+        """
+        if not isinstance(traitlets_to_observe, (list, tuple)):
+            raise TypeError('`traitlets_to_observe` must be a list or tuple.')
+
+        self._traitlets_to_observe = traitlets_to_observe
+
+        # Set the callback function to the user-provided or default.
+        self._irrelevant_msg_callback = irrelevant_msg_callback
+        if irrelevant_msg_callback is None:
+            self._irrelevant_msg_callback = self.relevant_if_all_truthy
+
+        # Set up the traitlets to be observed
+        _ = [self.observe(self._set_relevant, traitlet_name)
+             for traitlet_name in self._traitlets_to_observe]
+
+        # Perform an initial set_relevant
+        self._set_relevant()
+
     @observe('irrelevant_msg')
     def _irrelevant_msg_changed(self, *args):
         labels = [ti['label'] for ti in self.app.state.tray_items]

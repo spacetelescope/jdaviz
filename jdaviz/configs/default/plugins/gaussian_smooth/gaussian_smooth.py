@@ -72,16 +72,8 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Smooth data with a Gaussian kernel.'
 
-        self._set_relevant()
-
-    @observe('dataset_items')
-    def _set_relevant(self, *args):
-        if self.app.config != 'deconfigged':
-            return
-        if not len(self.dataset_items):
-            self.irrelevant_msg = 'No valid datasets loaded'
-        else:
-            self.irrelevant_msg = ''
+        if self.app.config == 'deconfigged':
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def _default_spectrum_viewer_reference_name(self):

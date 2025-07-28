@@ -184,16 +184,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.subscribe(self, GlobalDisplayUnitChanged,
                                handler=self._on_display_units_changed)
 
-        self._set_relevant()
-
-    @observe('dataset_items')
-    def _set_relevant(self, *args):
-        if self.config != "deconfigged":
-            return
-        if not len(self.dataset_items):
-            self.irrelevant_msg = 'No image layers'
-        else:
-            self.irrelevant_msg = ''
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def user_api(self):

@@ -43,14 +43,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
 
-        self._set_relevant()
-
-    @observe('viewer_items')
-    def _set_relevant(self, *args):
-        if not len(self.viewer_items):
-            self.irrelevant_msg = 'No image viewers'
-        else:
-            self.irrelevant_msg = ''
+        self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
     def user_api(self):

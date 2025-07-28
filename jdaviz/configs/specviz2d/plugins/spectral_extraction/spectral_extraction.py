@@ -360,7 +360,8 @@ class SpectralExtraction2D(PluginTemplateMixin):
         self.app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
                                lambda _: self._update_plugin_marks())
 
-        self._set_relevant()
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['trace_dataset_items'])
 
     @property
     def user_api(self):
@@ -386,15 +387,6 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                            'self_prof_interp_degree_y',
                                            'import_extract',
                                            'export_extract', 'export_extract_spectrum'))
-
-    @observe('trace_dataset_items')
-    def _set_relevant(self, *args):
-        if self.app.config != 'deconfigged':
-            return
-        if len(self.trace_dataset_items) < 1:
-            self.irrelevant_msg = 'Requires at least one 2D spectrum'
-        else:
-            self.irrelevant_msg = ''
 
     def _clear_default_inputs(self):
         self.trace_pixel = 0
