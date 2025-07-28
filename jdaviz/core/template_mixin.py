@@ -660,7 +660,7 @@ class PluginTemplateMixin(TemplateMixin):
         if hasattr(self, '_custom_irrelevant_msg') and self._custom_irrelevant_msg:
             irrelevant_msg = self._custom_irrelevant_msg
         else:
-            irrelevant_msg = f'At least one of or all of {', '.join(traitlets)} are not available'
+            irrelevant_msg = f"At least one of or all of {', '.join(traitlets)} are not available"
 
         # Prepare the list for the check
         truthy_traitlets = [traitlet_name
