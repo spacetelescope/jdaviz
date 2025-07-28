@@ -715,7 +715,7 @@ class PluginTemplateMixin(TemplateMixin):
             self.irrelevant_msg = irrelevant_msg
 
     def observe_traitlets_for_relevancy(self,
-                                        traitlets_to_observe: (list, tuple),
+                                        traitlets_to_observe,
                                         irrelevant_msg_callback=None,
                                         custom_irrelevant_msg=None):
         """
@@ -725,7 +725,23 @@ class PluginTemplateMixin(TemplateMixin):
         method `_set_relevant` which relies on either a user-provided
         ``irrelevant_msg_callback`` method or defaults to the
         `relevant_if_all_truthy` method.
+
+        Parameters
+        ----------
+        traitlets_to_observe : list or tuple
+            A list of the traitlets to be observed.
+
+        irrelevant_msg_callback : function or None
+            A function that takes a list of traitlets and returns a msg to be set
+            as the ``irrelevant_msg`` attribute.
+
+        custom_irrelevant_msg : string
+            A custom message to be set as the irrelevant msg attribute.
+
         """
+        if not isinstance(traitlets_to_observe, (list, tuple)):
+            raise TypeError(f"`traitlets_to_observe` must be a list or tuple.")
+
         self._traitlets_to_observe = traitlets_to_observe
 
         # Set the irrelevant message to user-provided if given (and not invalid)
