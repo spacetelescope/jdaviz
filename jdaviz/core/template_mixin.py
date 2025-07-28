@@ -679,7 +679,7 @@ class PluginTemplateMixin(TemplateMixin):
             # irrelevant
             return irrelevant_msg
 
-    def relevant_if_any_truthy(self, traitlets=None, _custom_msg=None):
+    def relevant_if_any_truthy(self, traitlets=None):
         """
         Set relevance (via empty/non-empty string) if *any* traitlet is truthy.
         """
