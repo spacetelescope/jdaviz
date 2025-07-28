@@ -116,8 +116,8 @@ class TestObserveTraitletsForRelevancy:
         deconfigged_plugin_obj, traitlets = self.setup_plugin_obj_and_traitlets(
             deconfigged_helper)
 
-        default_irrelevant_msg = (f'At least one of or all of {', '.join(traitlets)} '
-                                  f'are not available')
+        default_irrelevant_msg = (f"At least one of or all of {', '.join(traitlets)} "
+                                  f"are not available")
 
         # Covers no _traitlets_to_observe set
         with pytest.raises(AttributeError,
@@ -167,8 +167,8 @@ class TestObserveTraitletsForRelevancy:
 
         # Check that irrelevant message is set correctly for irrelevant traitlets
         result = deconfigged_plugin_obj.relevant_if_any_truthy(self.fake_traitlets)
-        assert result == (f'At least one of or all of {', '.join(self.fake_traitlets)} '
-                          f'are not available')
+        assert result == (f"At least one of or all of {', '.join(self.fake_traitlets)} "
+                          f"are not available")
 
         # Check that irrelevant message is set correctly for relevant + irrelevant traitlets
         traitlets += self.fake_traitlets
@@ -180,8 +180,8 @@ class TestObserveTraitletsForRelevancy:
         # Check that irrelevant message is set correctly for relevant + irrelevant traitlets and
         # a custom message.
         if method_type == 'all':
-            assert result_default_msg == (f'At least one of or all of {', '.join(traitlets)} '
-                                          f'are not available')
+            assert result_default_msg == (f"At least one of or all of {', '.join(traitlets)} "
+                                          f"are not available")
             assert result_custom_msg == self.sad_msg
         elif method_type == 'any':
             assert result_default_msg == ''
@@ -213,9 +213,9 @@ class TestObserveTraitletsForRelevancy:
 
         else:
             if method_type == 'all':
-                assert deconfigged_plugin_obj.irrelevant_msg == (f'At least one of or all of '
-                                                                 f'{', '.join(traitlets)} '
-                                                                 f'are not available')
+                assert deconfigged_plugin_obj.irrelevant_msg == (f"At least one of or all of "
+                                                                 f"{', '.join(traitlets)} "
+                                                                 f"are not available")
             elif method_type == 'any':
                 assert deconfigged_plugin_obj.irrelevant_msg == ''
 
@@ -231,7 +231,7 @@ class TestObserveTraitletsForRelevancy:
             expected_msg = ''
         else:
             # Real + fake so the default (if_all_truthy) is the observer
-            expected_msg = f'At least one of or all of {', '.join(traitlets)} are not available'
+            expected_msg = f"At least one of or all of {', '.join(traitlets)} are not available"
 
         # Testing default functionality
         deconfigged_plugin_obj.observe_traitlets_for_relevancy(traitlets)
