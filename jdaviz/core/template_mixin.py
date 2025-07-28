@@ -740,7 +740,7 @@ class PluginTemplateMixin(TemplateMixin):
 
         """
         if not isinstance(traitlets_to_observe, (list, tuple)):
-            raise TypeError(f"`traitlets_to_observe` must be a list or tuple.")
+            raise TypeError('`traitlets_to_observe` must be a list or tuple.')
 
         self._traitlets_to_observe = traitlets_to_observe
 
