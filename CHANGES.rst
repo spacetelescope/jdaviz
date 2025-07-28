@@ -1,8 +1,9 @@
-4.3 (unreleased)
+4.3 (2025-05-28)
 ================
 
 New Features
 ------------
+
 - The Markers plugin now includes a Distance Tool to interactively measure pixel, on-sky, and axis-separated
   (dx, dy) distances in any viewer. The tool features a real-time preview line that follows the cursor. [#3609, #3694]
 
@@ -65,9 +66,6 @@ Imviz
 
 - Improve performance by using FITS WCS for reference data layers when linked by WCS, rather than GWCS. [#3483, #3535, #3540, #3687]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
@@ -117,52 +115,6 @@ Imviz
 - User API for Catalog Search plugin (including ``catalog``,  ``max_sources``,``search``,
   ``table``, and ``table_selected``) is now public. [#3529]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-- Catalog Search: Fixed a bug where the plugin modifies the input table if
-  ``import_catalog`` is used on a table instance (not from file). [#3519]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-Other Changes and Additions
----------------------------
-
-- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
-
-- Bumped minimum version of ``specutils`` to 2.0. [#2922]
-
-- Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
-  dependencies installed with the ``[all]`` extra dependencies flag
-  (i.e., ``pip install jdaviz[all]``). [#3556]
-
-- Auto-update sonification label upon adding sonification to viewer. [#3430, #3656]
-
-4.2.4 (unreleased)
-==================
-
 Bug Fixes
 ---------
 
@@ -190,17 +142,14 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Catalog Search: Fixed a bug where the plugin modifies the input table if
+  ``import_catalog`` is used on a table instance (not from file). [#3519]
+
 - Fix dropdowns for overlay not showing in UI. [#3640]
 
 - Prevent image wrapping in Imviz with Roman L2 images with GWCS. [#2887]
 
 - Fix get_zoom_limits when WCS linked and out of image bounds. [#3654]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
@@ -209,6 +158,19 @@ Specviz2d
   a bug when background data from the spectral extraction plugin is added to the viewer. [#3661]
 
 - Fixed a bug loading array traces into Specviz2d. [#3697]
+
+Other Changes and Additions
+---------------------------
+
+- Bumped minimum version of ``photutils`` to v2.2 and Python to 3.11. [#3510]
+
+- Bumped minimum version of ``specutils`` to 2.0. [#2922]
+
+- Added ``strauss``, ``qtpy``, ``PySide6`` and ``roman_datamodels`` to the list of optional
+  dependencies installed with the ``[all]`` extra dependencies flag
+  (i.e., ``pip install jdaviz[all]``). [#3556]
+
+- Auto-update sonification label upon adding sonification to viewer. [#3430, #3656]
 
 4.2.3 (2025-06-16)
 ==================
