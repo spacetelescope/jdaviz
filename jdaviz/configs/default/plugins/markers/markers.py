@@ -5,7 +5,8 @@ from traitlets import Bool, Unicode, Instance, observe, default
 import ipywidgets as widgets
 
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
-                                AddDataMessage, RemoveDataMessage, MarkersPluginUpdate)
+                                AddDataMessage, RemoveDataMessage, MarkersPluginUpdate,
+                                GlobalDisplayUnitChanged)
 from jdaviz.core.marks import MarkersMark, DistanceMeasurement
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, TableMixin,
@@ -119,6 +120,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda msg: self._recompute_mark_positions(msg.viewer))
 
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_units_changed)
+
         self.docs_description = """Press 'm' with the cursor over a viewer to log
                                  the mouseover information. To change the
                                  selected layer, click the layer cycler in the
@@ -129,6 +133,17 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                                  measurement points to the nearest marker."""
         # description displayed under plugin title in tray
         self._plugin_description = 'Create markers on viewers.'
+
+    def _on_units_changed(self, msg=None):
+        """
+        Callback for when the global display units are changed.
+        This clears all distance measurements to prevent them from being
+        displayed in the wrong locations.
+        """
+        if len(self._distance_marks) > 0:
+            # The clear_table method handles clearing both the UI table
+            # and the marks from all viewers.
+            self.measurements_table.clear_table()
 
     @default('measurements_table')
     def _default_measurements_table(self):
