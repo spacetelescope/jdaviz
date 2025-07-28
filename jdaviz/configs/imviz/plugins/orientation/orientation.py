@@ -154,15 +154,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         if self.app.config == 'deconfigged':
             self.disabled_msg = 'Orientation plugin not available in deconfigged until generalized linking is implemented'  # noqa
-
-    @observe('viewer_items')
-    def _set_relevant(self, *args):
-        if self.app.config != 'deconfigged':
-            return
-        if not len(self.viewer_items):
-            self.irrelevant_msg = 'No image viewers with WCS'
-        else:
-            self.irrelevant_msg = ''
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
     def user_api(self):
