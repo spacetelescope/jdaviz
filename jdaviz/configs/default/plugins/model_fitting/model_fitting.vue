@@ -259,7 +259,17 @@
             Note: cube fit results are not logged to table.
         </span>
       </v-row>
-
+      <v-row v-if="fitter_items">
+        <v-select
+          attach
+          :items="fitter_items.map(i => i.label)"
+          v-model="fitter_selected"
+          :label="api_hints_enabled ? 'plg.fitter_component =' : 'Fitter Component'"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          hint="Select a fitter for the model."
+          persistent-hint
+        ></v-select>
+      </v-row>
       <plugin-add-results
         :label.sync="results_label"
         :label_default="results_label_default"

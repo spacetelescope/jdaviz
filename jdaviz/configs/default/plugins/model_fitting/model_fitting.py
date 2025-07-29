@@ -3,6 +3,7 @@ import numpy as np
 from copy import deepcopy
 
 import astropy.units as u
+from astropy.modeling import fitting
 from specutils import Spectrum
 from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
@@ -115,6 +116,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     residuals_label_auto = Bool(True).tag(sync=True)
     residuals_label_invalid_msg = Unicode('').tag(sync=True)
 
+    # fitter options
+    fitter_items = List().tag(sync=True)
+    fitter_selected = Unicode().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -138,6 +143,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                      items='model_comp_items',
                                                      selected='model_comp_selected',
                                                      manual_options=list(MODELS.keys()))
+        fitter_options = [fitter for fitter in fitting.__all__ if 'Fitter' in fitter]
+        self.fitter_component = SelectPluginComponent(self, items='fitter_items',
+                                                      selected='fitter_selected',
+                                                      manual_options=fitter_options)
 
         if self.config == 'cubeviz':
             # use mean whenever extracting the 1D spectrum of a cube to initialize model params
@@ -1177,6 +1186,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 masked_spectrum,
                 models_to_fit,
                 self.model_equation,
+                fitter=getattr(fitting, self.fitter_component.selected)(),
                 run_fitter=True,
                 window=None,
                 n_cpu=self.parallel_n_cpu,
@@ -1292,6 +1302,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 spec,
                 models_to_fit,
                 self.model_equation,
+                fitter=getattr(fitting, self.fitter_component.selected)(),
                 run_fitter=True,
                 window=None,
                 n_cpu=self.parallel_n_cpu

@@ -3,6 +3,7 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import numpy as np
 
+from astropy.modeling import fitting
 from specutils import Spectrum
 from specutils.fitting import fit_lines
 
@@ -10,7 +11,8 @@ __all__ = ['fit_model_to_spectrum', 'generate_spaxel_list']
 
 
 def fit_model_to_spectrum(spectrum, component_list, expression,
-                          run_fitter=False, window=None, n_cpu=None):
+                          run_fitter=False, fitter=fitting.TRFLSQFitter(calc_uncertainties=True),
+                          window=None, n_cpu=None):
     """Fits a `~astropy.modeling.CompoundModel` to a
     `~specutils.Spectrum` instance.
 
@@ -66,12 +68,12 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
     initial_model = _build_model(component_list, expression)
 
     if len(spectrum.shape) > 1:
-        return _fit_3D(initial_model, spectrum, window=window, n_cpu=n_cpu)
+        return _fit_3D(initial_model, spectrum, fitter=fitter, window=window, n_cpu=n_cpu)
     else:
-        return _fit_1D(initial_model, spectrum, run_fitter, window=window)
+        return _fit_1D(initial_model, spectrum, run_fitter, fitter=fitter, window=window)
 
 
-def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=None):
+def _fit_1D(initial_model, spectrum, run_fitter, fitter, filter_non_finite=True, window=None):
     """
     Fits an astropy CompoundModel to a Spectrum instance.
 
@@ -100,7 +102,7 @@ def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=
             weights = 'unc'
         else:
             weights = None
-        output_model = fit_lines(spectrum, initial_model, weights=weights,
+        output_model = fit_lines(spectrum, initial_model, fitter=fitter, weights=weights,
                                  filter_non_finite=filter_non_finite, window=window)
         output_values = output_model(spectrum.spectral_axis)
     else:
