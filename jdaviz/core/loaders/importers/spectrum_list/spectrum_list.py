@@ -1,5 +1,7 @@
 import itertools
 import numpy as np
+import warnings
+from astropy.units import UnitsWarning
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 
@@ -18,8 +20,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         super().__init__(*args, **kwargs)
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
-        elif self.app.config == 'specviz':
-            self.data_label_default = '1D Spectrum'
         else:
             self.data_label_default = '1D Spectrum'
 
@@ -31,8 +31,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # TODO: should this be split into two loaders?
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
-        return (isinstance(self.input, (SpectrumList, SpectrumCollection))
-                or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
+        return True #(isinstance(self.input, (SpectrumList, SpectrumCollection))
+               # or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
 
     @property
     def output(self):
@@ -41,6 +41,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         def this_row(field, i):
             if field is None:
+                print("is it None?")
                 return None
             return field[i, :]
 
@@ -60,6 +61,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 raise NotImplementedError(f"{inp} is not supported")
 
         return SpectrumList(input_to_list_of_spec(self.input))
+        # TODO: catch warnings from 'pixels' and 'degrees' units error from WFSS until fixed
+        # with warnings.catch_warnings():
+        #     warnings.simplefilter("ignore", category=UnitsWarning)
+        #     spec_list = SpectrumList.read(self.input)
+        #     if isinstance(masked_arr = x[0].spectral_axis)
 
     @property
     def default_viewer_reference(self):
@@ -70,10 +76,22 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
-            for i, spec in enumerate(self.output):
-                self.add_to_data_collection(spec, f"{data_label}_{i}",
-                                            show_in_viewer=show_in_viewer)
+            for i, spec in enumerate(self.output[29:]):
+                if all(spec.mask):
+                    # All values are masked
+                    continue
 
+                masked_spec = Spectrum(
+                    spectral_axis=spec.spectral_axis[~spec.mask],
+                    flux=spec.flux[~spec.mask],
+                    uncertainty=spec.uncertainty[~spec.mask],
+                    mask=spec.mask[~spec.mask],
+                    meta=spec.meta)
+
+                # TODO: with WFSS, there are too many to add to the collection
+                # Must select beforehand
+                self.add_to_data_collection(masked_spec, f"{data_label}_{i}",
+                                            show_in_viewer=show_in_viewer)
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     """
