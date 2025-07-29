@@ -113,6 +113,18 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert str(sp1d.spectral_axis.unit) == 'um'
 
 
+def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
+    filepath = '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits'
+    ldr = deconfigged_helper.loaders['file']
+    ldr.filepath = filepath
+
+    ldr.format = '1D Spectrum List'
+
+    ldr.importer()
+
+    wfss = deconfigged_helper.get_data(filepath)
+
+
 @pytest.mark.remote_data
 def test_resolver_url(deconfigged_helper):
     loader = deconfigged_helper.loaders['url']
