@@ -75,7 +75,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
-           'SelectFileExtensionComponent',
+           'SelectFileExtensionComponent', 'SelectSpectraComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SubsetSelectMixin',
            'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
@@ -1373,6 +1373,59 @@ class SelectFileExtensionComponent(SelectPluginComponent):
             self._apply_default_selection()
         except (ValueError, TypeError):
             pass
+
+
+class SelectSpectraComponent(SelectPluginComponent):
+    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
+        super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
+                         manual_options=manual_options, filters=filters)
+
+    @property
+    def selected_index(self):
+        return self.selected_item.get('index', None)
+
+    @property
+    def indices(self):
+        return [item.get('index', None) for item in self.items]
+
+    @property
+    def selected_source_id(self):
+        return self.selected_item.get('source_id', None)
+
+    @property
+    def source_ids(self):
+        return [item.get('source_id', None) for item in self.items]
+
+    @property
+    def selected_source_xpos(self):
+        return self.selected_item.get('source_xpos', None)
+
+    @property
+    def source_xpos(self):
+        return [item.get('source_xpos', None) for item in self.items]
+
+    @property
+    def selected_source_ypos(self):
+        return self.selected_item.get('source_ypos', None)
+
+    @property
+    def source_ypos(self):
+        return [item.get('source_ypos', None) for item in self.items]
+
+    def _to_item(self, manual_item, index=None):
+        if index is None:
+            # during init ignore
+            return {}
+        return {k: manual_item[k] for k in ('index', 'source_id', 'source_xpos', 'source_ypos')}
+
+    # @observe('filters')
+    # def _update_items(self, msg={}):
+    #     self.items = [self._to_item(item, ind) for ind, item in enumerate(self.manual_options)
+    #                   if self._is_valid_item(item)]
+    #     try:
+    #         self._apply_default_selection()
+    #     except (ValueError, TypeError):
+    #         pass
 
 
 class UnitSelectPluginComponent(SelectPluginComponent):
