@@ -55,8 +55,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                   multiselect='spectra_multiselect',
                                                   manual_options=spectra_options)
 
-            # changing selected spectra will call _set_default_data_label
             self.spectra.selected = [self.spectra.choices[0]]
+
+        # else:
+        #     self._set_default_data_label()
 
     @property
     def is_valid(self):
@@ -105,15 +107,19 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     #     index_source_id = ",".join([str(e) for e in (index, source_id) if e is not None])
     #     return f"{prefix}[{index_source_id}]" if len(index_source_id) else prefix
 
-    @observe('spectra_selected', 'data_label_as_prefix')
-    def _set_default_data_label(self, *args):
-        if self.default_data_label_from_resolver:
-            prefix = self.default_data_label_from_resolver
-        else:
-            prefix = "SpectrumList"
-
-        # only a single spectra selected
-        self.data_label_default = f"{prefix}_{self.targ_ra}_{self.targ_dec}"
+# TODO: FIX DATA LABEL ISSUES (see pytest)
+    # @observe('spectra_selected', 'data_label_as_prefix')
+    # def _set_default_data_label(self, *args):
+    #     if self.default_data_label_from_resolver:
+    #         prefix = self.default_data_label_from_resolver
+    #     else:
+    #         prefix = "SpectrumList"
+    #
+    #     # only a single spectra selected
+    #     if hasattr(self, 'targ_ra') and hasattr(self, 'targ_dec'):
+    #         self.data_label_default = f"{prefix}_{self.targ_ra}_{self.targ_dec}"
+    #     # else:
+    #     #     self.data_label_default = prefix
 
     @property
     def default_viewer_reference(self):
@@ -129,21 +135,30 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
-                if hasattr(spec, 'mask') and all(spec.mask):
-                    # All values are masked (True values == masked)
-                    masked_spectra.append(spec.meta['source_id'])
-                    continue
+                if spec.mask:
+                    if all(spec.mask):
+                        # All values are masked (True values == masked)
+                        masked_spectra.append(spec.meta['source_id'])
+                        continue
 
-                masked_spec = Spectrum(
-                    spectral_axis=spec.spectral_axis[~spec.mask],
-                    flux=spec.flux[~spec.mask],
-                    uncertainty=spec.uncertainty[~spec.mask],
-                    mask=spec.mask[~spec.mask],
-                    meta=spec.meta)
+                    spectrum = Spectrum(
+                        spectral_axis = spec.spectral_axis[~spec.mask],
+                        flux = spec.flux[~spec.mask],
+                        uncertainty = spec.uncertainty[~spec.mask],
+                        mask = spec.mask[~spec.mask],
+                        meta = spec.meta)
+
+                else:
+                    spectrum = Spectrum(
+                        spectral_axis=spec.spectral_axis,
+                        flux=spec.flux,
+                        uncertainty=spec.uncertainty,
+                        mask=spec.mask,
+                        meta=spec.meta)
 
                 # TODO: with WFSS, there are too many to add to the collection
                 # Must select beforehand
-                self.add_to_data_collection(masked_spec, f"{data_label}_{i}",
+                self.add_to_data_collection(spectrum, f"{data_label}_{i}",
                                             show_in_viewer=show_in_viewer)
 
         if masked_spectra:
