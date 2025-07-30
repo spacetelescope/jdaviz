@@ -66,6 +66,7 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Fixed issue with initial model components not using spectral y axis unit. [#3715]
 
 Imviz
 ^^^^^
