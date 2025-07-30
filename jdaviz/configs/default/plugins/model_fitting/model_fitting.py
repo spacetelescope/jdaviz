@@ -640,7 +640,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # The units have to be in surface brightness for a cube fit.
             uc = self.app._jdaviz_helper.plugins.get('Unit Conversion', None)
             if uc is None:
-                pass
+                return
             if not self.cube_fit:
                 # use spectrum viewer y axis units
                 if hasattr(uc, 'spectral_y_unit'):
