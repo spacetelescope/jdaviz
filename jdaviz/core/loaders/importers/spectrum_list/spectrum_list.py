@@ -4,11 +4,12 @@ import warnings
 from astropy.units import UnitsWarning
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
-from traitlets import List, Unicode
+from traitlets import List, Bool, Any, observe
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.template_mixin import SelectSpectraComponent
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -19,17 +20,43 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum_list.vue"
 
     # HDUList-specific options
-    spectra_items = List().tag(sync = True)
-    spectra_selected = Unicode().tag(sync = True)
+    spectra_items = List([]).tag(sync = True)
+    spectra_selected = Any().tag(sync = True)
+    spectra_multiselect = Bool(True).tag(sync = True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
+        elif self.app.config == 'specviz':
+            self.data_label_default = '1D Spectrum'
         else:
             self.data_label_default = '1D Spectrum'
 
-        self.spectra_items = self.output
+
+        if isinstance(self.input, SpectrumList):
+            spectra_options = [{'index': index,
+                                'source_id': spec.meta['source_id'],
+                                'source_xpos': spec.meta['header']['source_XPOS'],
+                                'source_ypos': spec.meta['header']['source_YPOS'],
+                                'is_masked': all(spec.mask)}
+                               for index, spec in enumerate(self.input)]
+
+            # Target RA and DEC are the (I believe) center of the WFSS pointing
+            # These are used for default label purposes
+            self.targ_ra = self.input[0].meta['header']['TARG_RA']
+            self.targ_dec = self.input[0].meta['header']['TARG_DEC']
+
+            # TODO: Do we want to filter by all_maksed or notify the user with a snackbar?
+            # filters=_check_for_all_masked)
+            self.spectra = SelectSpectraComponent(self,
+                                                  items='spectra_items',
+                                                  selected='spectra_selected',
+                                                  multiselect='spectra_multiselect',
+                                                  manual_options=spectra_options)
+
+            # changing selected spectra will call _set_default_data_label
+            self.spectra.selected = [self.spectra.choices[0]]
 
     @property
     def is_valid(self):
@@ -49,7 +76,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         def this_row(field, i):
             if field is None:
-                print("is it None?")
                 return None
             return field[i, :]
 
@@ -75,6 +101,20 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         #     spec_list = SpectrumList.read(self.input)
         #     if isinstance(masked_arr = x[0].spectral_axis)
 
+    # def _get_label_with_index_source_id(self, prefix, index=None, source_id=None):
+    #     index_source_id = ",".join([str(e) for e in (index, source_id) if e is not None])
+    #     return f"{prefix}[{index_source_id}]" if len(index_source_id) else prefix
+
+    @observe('spectra_selected', 'data_label_as_prefix')
+    def _set_default_data_label(self, *args):
+        if self.default_data_label_from_resolver:
+            prefix = self.default_data_label_from_resolver
+        else:
+            prefix = "SpectrumList"
+
+        # only a single spectra selected
+        self.data_label_default = f"{prefix}_{self.targ_ra}_{self.targ_dec}"
+
     @property
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
@@ -84,9 +124,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
         masked_spectra = []
+        # self.spectra_items = self.output
+        # self.spectra_selected = self.spectra_items
+
         with self.app._jdaviz_helper.batch_load():
-            for i, spec in enumerate(self.spectra_selected):
-                if all(spec.mask):
+            for i, spec in enumerate(self.output):
+                if hasattr(spec, 'mask') and all(spec.mask):
                     # All values are masked (True values == masked)
                     masked_spectra.append(spec.meta['source_id'])
                     continue
@@ -107,6 +150,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.app.hub.broadcast(SnackbarMessage(
                 f"Spectra with ID's {', '.join(masked_spectra)} are completely masked.",
                 sender = self, color = "warning"))
+
+# def _check_for_all_masked(item):
+#     return item.get('is_masked')
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
