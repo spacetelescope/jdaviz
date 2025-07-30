@@ -1,5 +1,15 @@
 <template>
   <v-container>
+  <plugin-select
+      :items="spectra_items.map(i => i.label)"
+      :selected.sync="spectra_selected"
+      :show_if_single_entry="true"
+      :multiselect="spectra_multiselect"
+      label="Source IDs"
+      api_hint="ldr.source_ids ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Source IDs to select from the BINtable."
+    ></plugin-select>
     <v-row>
       <plugin-auto-label
         :value.sync="data_label_value"
