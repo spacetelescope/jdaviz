@@ -640,13 +640,24 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # The units have to be in surface brightness for a cube fit.
             uc = self.app._jdaviz_helper.plugins.get('Unit Conversion', None)
             if uc is None:
-                pass
-            elif self.cube_fit and unit != uc._obj.sb_unit_selected:
-                self._units[axis] = uc._obj.sb_unit_selected
-                self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                 return
-            elif msg.axis == 'flux' and uc._obj.has_sb:
-                unit = u.Unit(self.app._get_display_unit('sb'))
+            if not self.cube_fit:
+                # use spectrum viewer y axis units
+                if hasattr(uc, 'spectral_y_unit'):
+                    # NOTE, spectral_y_unit should probably be set and exposed
+                    # in the unit conversion plugin for specviz2d
+                    # and specviz so this check doesn't have to be done
+                    unit = u.Unit(uc.spectral_y_unit)
+                else:
+                    unit = u.Unit(self.app._get_display_unit('spectral_y'))
+
+            else:
+                if unit != uc._obj.sb_unit_selected:
+                    self._units[axis] = uc._obj.sb_unit_selected
+                    self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
+                    return
+                elif msg.axis == 'flux' and uc._obj.has_sb:
+                    unit = u.Unit(self.app._get_display_unit('sb'))
 
         # update internal tracking of current units
         self._units[axis] = str(unit)
