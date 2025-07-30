@@ -27,6 +27,7 @@ def create_manga(n_dim=None, **kwargs):
 def _create_bintable(name, ver=1):
     return fits.BinTableHDU.from_columns(
                 [fits.Column(name='target', format='20A', array=np.ones(3)),
+                 fits.Column(name='WAVELENGTH', format='E', array=np.arange(3)),
                  fits.Column(name='V_mag', format='E', array=np.ones(3))],
                 name=name, ver=ver
             )
