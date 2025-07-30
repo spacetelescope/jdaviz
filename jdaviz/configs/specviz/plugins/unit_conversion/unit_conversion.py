@@ -429,6 +429,10 @@ class UnitConversion(PluginTemplateMixin):
 
         spectral_y_change = False
         for sv in self.spectrum_1d_viewers:
+
+            if self.spectral_unit.selected != yunit:
+                spectral_y_change = True
+
             if sv.state.y_display_unit == yunit:
                 sv.set_plot_axes()
                 continue

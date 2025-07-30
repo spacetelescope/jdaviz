@@ -648,11 +648,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     # in the unit conversion plugin for specviz2d
                     # and specviz so this check doesn't have to be done
                     unit = u.Unit(uc.spectral_y_unit)
-                elif msg.axis == 'flux' and uc._obj.has_sb:
-                    unit = u.Unit(self.app._get_display_unit('sb'))
-                # JDAT 5586
-                # else:
-                #     unit = u.Unit(self.app._get_display_unit('spectral_y'))
+                else:
+                    unit = u.Unit(self.app._get_display_unit('spectral_y'))
 
             else:
                 if unit != uc._obj.sb_unit_selected:
