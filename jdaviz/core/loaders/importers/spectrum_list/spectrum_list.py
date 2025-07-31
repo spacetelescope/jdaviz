@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 import warnings
+from time import time
 from astropy.units import UnitsWarning
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -33,14 +34,24 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
+        if (isinstance(self.input, SpectrumList) and
+                self.input[0].meta.get('header', {}).get('DATAMODL', None) == 'WFSSMultiSpecModel'):
 
-        if isinstance(self.input, SpectrumList):
-            spectra_options = [{'index': index,
-                                'source_id': spec.meta['source_id'],
-                                'source_xpos': spec.meta['header']['source_XPOS'],
-                                'source_ypos': spec.meta['header']['source_YPOS'],
-                                'is_masked': all(spec.mask)}
-                               for index, spec in enumerate(self.input)]
+            # for index, spec in enumerate(self.input):
+            #     spectra_options['index'] = index
+            #     spectra_options['source_id'] = spec.meta['source_id']
+            #     # spectra_options['source_xpos'] = spec.meta['header']['source_XPOS'],
+            #     # print("source_xpos done")
+            #     # spectra_options['source_ypos'] = spec.meta['header']['source_YPOS']
+            #     # print("source_ypos done")
+            #     spectra_options['is_masked'] = all(spec.mask)
+
+            # spectra_options = [{'index': index,
+            #                     'source_id': spec.meta['source_id'],
+            #                     #  'source_xpos': spec.meta['header']['source_XPOS'],
+            #                     #  'source_ypos': spec.meta['header']['source_YPOS'],
+            #                     'is_masked': all(spec.mask)}
+            #                    for index, spec in enumerate(self.input)]
 
             # Target RA and DEC are the (I believe) center of the WFSS pointing
             # These are used for default label purposes
@@ -52,10 +63,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.spectra = SelectSpectraComponent(self,
                                                   items='spectra_items',
                                                   selected='spectra_selected',
-                                                  multiselect='spectra_multiselect',
-                                                  manual_options=spectra_options)
+                                                  multiselect='spectra_multiselect')
 
-            self.spectra.selected = [self.spectra.choices[0]]
+            print("did it")  # self.spectra.choices)
+            #
+            # self.spectra.selected = [self.spectra.choices[0]]
+            # time(60)
 
         # else:
         #     self._set_default_data_label()
@@ -68,8 +81,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # TODO: should this be split into two loaders?
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
-        return True #(isinstance(self.input, (SpectrumList, SpectrumCollection))
-               # or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
+        return (isinstance(self.input, (SpectrumList, SpectrumCollection))
+                or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
 
     @property
     def output(self):
@@ -132,10 +145,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         masked_spectra = []
         # self.spectra_items = self.output
         # self.spectra_selected = self.spectra_items
-
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
-                if spec.mask:
+                if len(spec.mask):
                     if all(spec.mask):
                         # All values are masked (True values == masked)
                         masked_spectra.append(spec.meta['source_id'])
