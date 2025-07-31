@@ -64,6 +64,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Use validator on subset layer visibility and subset deletion to ensure toggling visibility and
+  deleting subsets from data menu and plot options updates accordingly. [#3708]
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
@@ -125,9 +128,6 @@ Cubeviz
 - Sonified data can now be added to any image viewer after initial sonification. [#3690]
 
 - Renamed ``Spectral Extraction`` plugin to ``3D Spectral Extraction``. [#3691]
-
-- Use validator on subset layer visibility to ensure toggling visibility from data menu
-  and plot options updates accordingly. [#3708]
 
 Imviz
 ^^^^^
