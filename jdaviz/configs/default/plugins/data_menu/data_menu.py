@@ -393,6 +393,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 self.subset_edit_tooltip = "Select a subset to edit"
             else:
                 self.subset_edit_tooltip = "Select a single subset to edit"
+        self.layer._update_items()
 
     def set_layer_visibility(self, layer_label, visible=True):
         """
@@ -426,6 +427,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
             self.set_layer_visibility(parent_label, visible=True)
+
+        self.layer._update_items()
 
         return self.visible_layers
 
@@ -573,6 +576,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 for sg in self.app.data_collection.subset_groups:
                     if sg.label == layer:
                         self.app.data_collection.remove_subset_group(sg)
+                        self.layer._update_items()
                         break
             else:
                 self.app.data_item_remove(layer)

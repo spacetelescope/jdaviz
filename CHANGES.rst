@@ -64,6 +64,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Use validator on subset layer visibility and subset deletion to ensure toggling visibility and
+  deleting subsets from data menu and plot options updates accordingly. [#3708]
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
