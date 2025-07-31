@@ -1379,7 +1379,7 @@ class SelectSpectraComponent(SelectPluginComponent):
     def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
         super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
                          manual_options=manual_options, filters=filters)
-
+        
     @property
     def selected_index(self):
         return self.selected_item.get('index', None)
@@ -1406,9 +1406,9 @@ class SelectSpectraComponent(SelectPluginComponent):
     def source_ids(self):
         return [item.get('source_id', None) for item in self.items]
 
-    @property
-    def is_masked(self):
-        return self.selected_item.get('is_masked', None)
+    # @property
+    # def is_not_masked(self):
+    #     return self.selected_item.get('is_not_masked', None)
 
     # @property
     # def selected_source_xpos(self):

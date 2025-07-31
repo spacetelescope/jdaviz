@@ -21,7 +21,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum_list.vue"
 
     # HDUList-specific options
-    spectra_items = List([]).tag(sync = True)
+    spectra_items = List().tag(sync = True)
     spectra_selected = Any().tag(sync = True)
     spectra_multiselect = Bool(True).tag(sync = True)
 
@@ -37,35 +37,52 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         if (isinstance(self.input, SpectrumList) and
                 self.input[0].meta.get('header', {}).get('DATAMODL', None) == 'WFSSMultiSpecModel'):
 
-            # for index, spec in enumerate(self.input):
-            #     spectra_options['index'] = index
-            #     spectra_options['source_id'] = spec.meta['source_id']
-            #     # spectra_options['source_xpos'] = spec.meta['header']['source_XPOS'],
-            #     # print("source_xpos done")
-            #     # spectra_options['source_ypos'] = spec.meta['header']['source_YPOS']
-            #     # print("source_ypos done")
-            #     spectra_options['is_masked'] = all(spec.mask)
+            #  'source_xpos': spec.meta['header']['source_XPOS'],
+            #  'source_ypos': spec.meta['header']['source_YPOS'],
+            #  'is_not_masked': ~all(spec.mask)}
 
-            # spectra_options = [{'index': index,
-            #                     'source_id': spec.meta['source_id'],
-            #                     #  'source_xpos': spec.meta['header']['source_XPOS'],
-            #                     #  'source_ypos': spec.meta['header']['source_YPOS'],
-            #                     'is_masked': all(spec.mask)}
-            #                    for index, spec in enumerate(self.input)]
+            spectra_options = []
+            masked_spectra = []
+            # Pre-emptive check for and application of mask to avoid issues down the line
+            for index, spec in enumerate(self.input):
+                source_id = spec.meta['source_id']
+                label = f"{index}: {source_id}"
+                mask = spec.mask
+
+                # all == True implies the entire array is masked and unusable
+                if all(mask):
+                    # TODO: Use label or source_id here?
+                    masked_spectra.append({source_id: spec})
+                    continue
+
+                # TODO: Maybe apply this masking a step before
+                # when it imports the data to avoid issues with
+                # concantenation below
+                self.input[index] = Spectrum(
+                    spectral_axis = spec.spectral_axis[~mask],
+                    flux = spec.flux[~mask],
+                    uncertainty = spec.uncertainty[~mask],
+                    mask = mask[~mask],
+                    meta = spec.meta)
+
+                spectra_options.append({'label': label,
+                                        'index': index,
+                                        'source_id': source_id})
+
+            print("options dict created")
 
             # Target RA and DEC are the (I believe) center of the WFSS pointing
             # These are used for default label purposes
             self.targ_ra = self.input[0].meta['header']['TARG_RA']
             self.targ_dec = self.input[0].meta['header']['TARG_DEC']
 
-            # TODO: Do we want to filter by all_maksed or notify the user with a snackbar?
-            # filters=_check_for_all_masked)
+            # TODO: Do we want to filter by all_masked or notify the user with a snackbar?
+            # TODO: Check that the filter works here
             self.spectra = SelectSpectraComponent(self,
                                                   items='spectra_items',
                                                   selected='spectra_selected',
-                                                  multiselect='spectra_multiselect')
-
-            print("did it")  # self.spectra.choices)
+                                                  multiselect='spectra_multiselect',
+                                                  manual_options=spectra_options)
             #
             # self.spectra.selected = [self.spectra.choices[0]]
             # time(60)
@@ -177,9 +194,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.app.hub.broadcast(SnackbarMessage(
                 f"Spectra with ID's {', '.join(masked_spectra)} are completely masked.",
                 sender = self, color = "warning"))
-
-# def _check_for_all_masked(item):
-#     return item.get('is_masked')
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
