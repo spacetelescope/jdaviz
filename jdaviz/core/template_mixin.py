@@ -1388,6 +1388,16 @@ class SelectSpectraComponent(SelectPluginComponent):
     def indices(self):
         return [item.get('index', None) for item in self.items]
 
+    # def _get_selected_spectra(self, index):
+    #     return self.manual_options[index].get('spectra', None)
+    #
+    # @property
+    # def selected_spectra(self):
+    #     # returns Spectrum object
+    #     if self.is_multiselect:
+    #         return [self._get_selected_obj(index) for index in self.selected_index]
+    #     return self._get_selected_spectra(self.selected_index)
+
     @property
     def selected_source_id(self):
         return self.selected_item.get('source_id', None)
@@ -1397,26 +1407,30 @@ class SelectSpectraComponent(SelectPluginComponent):
         return [item.get('source_id', None) for item in self.items]
 
     @property
-    def selected_source_xpos(self):
-        return self.selected_item.get('source_xpos', None)
+    def is_masked(self):
+        return self.selected_item.get('is_masked', None)
 
-    @property
-    def source_xpos(self):
-        return [item.get('source_xpos', None) for item in self.items]
-
-    @property
-    def selected_source_ypos(self):
-        return self.selected_item.get('source_ypos', None)
-
-    @property
-    def source_ypos(self):
-        return [item.get('source_ypos', None) for item in self.items]
+    # @property
+    # def selected_source_xpos(self):
+    #     return self.selected_item.get('source_xpos', None)
+    #
+    # @property
+    # def source_xpos(self):
+    #     return [item.get('source_xpos', None) for item in self.items]
+    #
+    # @property
+    # def selected_source_ypos(self):
+    #     return self.selected_item.get('source_ypos', None)
+    #
+    # @property
+    # def source_ypos(self):
+    #     return [item.get('source_ypos', None) for item in self.items]
 
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
-        return {k: manual_item[k] for k in ('index', 'source_id', 'source_xpos', 'source_ypos')}
+        return {k: manual_item[k] for k in ('index', 'source_id')}  #, 'source_xpos', 'source_ypos')}
 
     # @observe('filters')
     # def _update_items(self, msg={}):

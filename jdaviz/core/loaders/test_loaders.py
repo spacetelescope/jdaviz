@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import os
 from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -114,8 +115,8 @@ def test_fits_spectrum2d(deconfigged_helper):
 
 
 def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
-    # filepath = '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits'
-    filepath = '/Users/mportman/jdaviz/notebooks/det_image_seq5_MIRIMAGE_P750Lexp1_s2d.fits'
+    filepath = '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits'
+    # filepath = '/Users/mportman/jdaviz/notebooks/det_image_seq5_MIRIMAGE_P750Lexp1_s2d.fits'
     ldr = deconfigged_helper.loaders['file']
     ldr.filepath = filepath
 
@@ -123,7 +124,8 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
     ldr.importer()
 
-    wfss = deconfigged_helper.get_data(filepath)
+    wfss = deconfigged_helper.get_data('jw01076-o103_t001_nircam_grismr_x1d_0')
+    # wfss = deconfigged_helper.get_data('det_image_seq5_MIRIMAGE_P750Lexp1_s2d_0')
 
 
 @pytest.mark.remote_data
