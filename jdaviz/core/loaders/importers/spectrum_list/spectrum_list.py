@@ -1,8 +1,7 @@
 import itertools
 import numpy as np
-import warnings
-from time import time
-from astropy.units import UnitsWarning
+from time import sleep
+
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 from traitlets import List, Bool, Any, observe
@@ -34,58 +33,37 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
-        if (isinstance(self.input, SpectrumList) and
-                self.input[0].meta.get('header', {}).get('DATAMODL', None) == 'WFSSMultiSpecModel'):
-
-            #  'source_xpos': spec.meta['header']['source_XPOS'],
-            #  'source_ypos': spec.meta['header']['source_YPOS'],
-            #  'is_not_masked': ~all(spec.mask)}
-
+        self.fully_masked_spectra = {}
+        # NOTE: This 'if' statement is here because this class is sometimes instantiated
+        # with a str from self.input. Is that intended behavior?
+        if isinstance(self.input, SpectrumList):
             spectra_options = []
-            masked_spectra = []
             # Pre-emptive check for and application of mask to avoid issues down the line
             for index, spec in enumerate(self.input):
                 source_id = spec.meta['source_id']
-                label = f"{index}: {source_id}"
-                mask = spec.mask
-
-                # all == True implies the entire array is masked and unusable
-                if all(mask):
-                    # TODO: Use label or source_id here?
-                    masked_spectra.append({source_id: spec})
-                    continue
-
-                # TODO: Maybe apply this masking a step before
-                # when it imports the data to avoid issues with
-                # concantenation below
-                self.input[index] = Spectrum(
-                    spectral_axis = spec.spectral_axis[~mask],
-                    flux = spec.flux[~mask],
-                    uncertainty = spec.uncertainty[~mask],
-                    mask = mask[~mask],
-                    meta = spec.meta)
+                label = f"Source ID: {source_id}"
 
                 spectra_options.append({'label': label,
                                         'index': index,
                                         'source_id': source_id})
 
+                # all == True implies the entire array is masked and unusable
+                if self.is_fully_masked(spec):
+                    self.fully_masked_spectra[f'{source_id} at index {index}'] = spec
+
             print("options dict created")
 
-            # Target RA and DEC are the (I believe) center of the WFSS pointing
-            # These are used for default label purposes
-            self.targ_ra = self.input[0].meta['header']['TARG_RA']
-            self.targ_dec = self.input[0].meta['header']['TARG_DEC']
-
-            # TODO: Do we want to filter by all_masked or notify the user with a snackbar?
-            # TODO: Check that the filter works here
             self.spectra = SelectSpectraComponent(self,
                                                   items='spectra_items',
                                                   selected='spectra_selected',
                                                   multiselect='spectra_multiselect',
                                                   manual_options=spectra_options)
+
+            print("choices", self.spectra.choices)
+
             #
-            # self.spectra.selected = [self.spectra.choices[0]]
-            # time(60)
+            # self.spectra.selected = self.output #[self.spectra.choices[0]]
+            #sleep(60)
 
         # else:
         #     self._set_default_data_label()
@@ -114,24 +92,27 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         def input_to_list_of_spec(inp):
             if isinstance(inp, Spectrum):
                 if inp.flux.ndim == 1:
+                    # For now only applying masks to WFSS L3 spectra
+                    # just in case that behavior is not desired elsewhere
+                    if self.is_wfssmulti(inp):
+                        inp = self.apply_mask(inp)
                     return [inp]
+
                 return [Spectrum(spectral_axis=inp.spectral_axis,
                                  flux=this_row(inp.flux, i),
                                  uncertainty=this_row(inp.uncertainty, i),
                                  mask=this_row(inp.mask, i),
                                  meta=inp.meta)
                         for i in range(inp.flux.shape[0])]
+
             elif isinstance(inp, (SpectrumList, SpectrumCollection)):
-                return itertools.chain(*[input_to_list_of_spec(spec) for spec in inp])
+                return itertools.chain(*[input_to_list_of_spec(spec) for spec in inp
+                                       if not self.is_fully_masked(spec)])
+
             else:
                 raise NotImplementedError(f"{inp} is not supported")
 
         return SpectrumList(input_to_list_of_spec(self.input))
-        # TODO: catch warnings from 'pixels' and 'degrees' units error from WFSS until fixed
-        # with warnings.catch_warnings():
-        #     warnings.simplefilter("ignore", category=UnitsWarning)
-        #     spec_list = SpectrumList.read(self.input)
-        #     if isinstance(masked_arr = x[0].spectral_axis)
 
     # def _get_label_with_index_source_id(self, prefix, index=None, source_id=None):
     #     index_source_id = ",".join([str(e) for e in (index, source_id) if e is not None])
@@ -150,6 +131,50 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     #         self.data_label_default = f"{prefix}_{self.targ_ra}_{self.targ_dec}"
     #     # else:
     #     #     self.data_label_default = prefix
+    def is_wfssmulti(self, spec):
+        if spec.meta.get('header', {}).get('DATAMODL', '') == 'WFSSMultiSpecModel':
+            return True
+        return False
+
+    def parse_wfssmulti_header(self, spec):
+        header_info = {}
+        if self.is_wfssmulti(spec):
+            # Target RA and DEC are the (I believe) center of the WFSS pointing
+            # and are the same for all spectra in the list.
+            # These are used for default label purposes
+            header = spec.meta.get('header', {})
+            header_info.update({
+                'targ_ra': header.get('TARG_RA', ''),
+                'targ_dec': header.get('TARG_DEC', ''),
+                'source_xpos': header.get('source_XPOS', ''),
+                'source_ypos': header.get('source_YPOS', ''),
+            })
+        return header_info
+
+    def has_mask(self, spec):
+        if hasattr(spec, 'mask'):
+            if len(spec.mask):
+                return True
+        return False
+
+    def is_fully_masked(self, spec):
+        if self.has_mask(spec):
+            # all == True implies the entire array is masked and unusable
+            if all(spec.mask):
+                return True
+        return False
+
+    def apply_mask(self, spec):
+        if self.has_mask(spec) and not self.is_fully_masked(spec):
+            mask = spec.mask
+            return Spectrum(
+                spectral_axis = spec.spectral_axis[~mask],
+                flux = spec.flux[~mask],
+                uncertainty = spec.uncertainty[~mask],
+                mask = mask[~mask],
+                meta = spec.meta)
+
+        return spec
 
     @property
     def default_viewer_reference(self):
@@ -159,40 +184,21 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
-        masked_spectra = []
         # self.spectra_items = self.output
         # self.spectra_selected = self.spectra_items
         with self.app._jdaviz_helper.batch_load():
-            for i, spec in enumerate(self.output):
-                if len(spec.mask):
-                    if all(spec.mask):
-                        # All values are masked (True values == masked)
-                        masked_spectra.append(spec.meta['source_id'])
-                        continue
-
-                    spectrum = Spectrum(
-                        spectral_axis = spec.spectral_axis[~spec.mask],
-                        flux = spec.flux[~spec.mask],
-                        uncertainty = spec.uncertainty[~spec.mask],
-                        mask = spec.mask[~spec.mask],
-                        meta = spec.meta)
-
-                else:
-                    spectrum = Spectrum(
-                        spectral_axis=spec.spectral_axis,
-                        flux=spec.flux,
-                        uncertainty=spec.uncertainty,
-                        mask=spec.mask,
-                        meta=spec.meta)
-
+            for i, spec in enumerate(self.output[20:31]):
+                print('iterating')
                 # TODO: with WFSS, there are too many to add to the collection
                 # Must select beforehand
-                self.add_to_data_collection(spectrum, f"{data_label}_{i}",
+
+                self.add_to_data_collection(spec, f"{data_label}_{i}",
                                             show_in_viewer=show_in_viewer)
 
-        if masked_spectra:
+        if self.fully_masked_spectra:
             self.app.hub.broadcast(SnackbarMessage(
-                f"Spectra with ID's {', '.join(masked_spectra)} are completely masked.",
+                f"Spectra with Source ID's {', '.join(self.fully_masked_spectra.keys())} "
+                "are completely masked.",
                 sender = self, color = "warning"))
 
 
