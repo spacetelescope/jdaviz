@@ -122,7 +122,20 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
     ldr.format = '1D Spectrum List'
 
+    #117 is completely masked
+    # TODO: Something is happening with the mapping between source id and
+    # index... check this. Also 117 is not in the options so the source id
+    # at that index is not accurate...
+    source_ids = [2, 9, 17, 117]
+    spectra_obj = ldr.importer.spectra
+    indices = [spectra_obj._source_id_index_map[s_id] for s_id in source_ids]
+    ldr.importer.spectra.selected = [spectra_obj.choices[i] for i in indices]
+
+    print(ldr.importer.spectra.selected)
+
+    print("importing...")
     ldr.importer()
+    print("done importing")
 
     wfss = deconfigged_helper.get_data('jw01076-o103_t001_nircam_grismr_x1d_0')
     # wfss = deconfigged_helper.get_data('det_image_seq5_MIRIMAGE_P750Lexp1_s2d_0')
