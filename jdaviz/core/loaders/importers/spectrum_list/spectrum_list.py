@@ -10,6 +10,7 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import SelectSpectraComponent
+from jdaviz.core.user_api import ImporterUserApi
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -41,17 +42,18 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             # Pre-emptive check for and application of mask to avoid issues down the line
             for index, spec in enumerate(self.input):
                 source_id = spec.meta['source_id']
-                label = f"Source ID: {source_id}"
-
-                spectra_options.append({'label': label,
-                                        'index': index,
-                                        'source_id': source_id})
+                label = f'Source ID: {source_id}'
 
                 # all == True implies the entire array is masked and unusable
                 if self.is_fully_masked(spec):
                     self.fully_masked_spectra[f'{source_id} at index {index}'] = spec
+                    print('popped', source_id)
+                    continue
 
-            print("options dict created")
+                spectra_options.append({'label': label,
+                                        'index': index,
+                                        'source_id': source_id,
+                                        'obj': self.apply_mask(spec)})
 
             self.spectra = SelectSpectraComponent(self,
                                                   items='spectra_items',
@@ -59,14 +61,16 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                   multiselect='spectra_multiselect',
                                                   manual_options=spectra_options)
 
-            print("choices", self.spectra.choices)
-
             #
-            # self.spectra.selected = self.output #[self.spectra.choices[0]]
-            #sleep(60)
+            self.spectra.selected = [self.spectra.choices[0]]
 
         # else:
         #     self._set_default_data_label()
+
+    @property
+    def user_api(self):
+        expose = ['spectra']
+        return ImporterUserApi(self, expose)
 
     @property
     def is_valid(self):
@@ -184,11 +188,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
-        # self.spectra_items = self.output
-        # self.spectra_selected = self.spectra_items
+        selected_spectra = [spec for spec in self.spectra.selected_obj]
+
+        #if not selected_spectra:
+            #selected_spectra = self.output[20:31]
+
         with self.app._jdaviz_helper.batch_load():
-            for i, spec in enumerate(self.output[20:31]):
-                print('iterating')
+            for i, spec in enumerate(selected_spectra):
+                print('iterating', spec.meta['source_id'])
                 # TODO: with WFSS, there are too many to add to the collection
                 # Must select beforehand
 
