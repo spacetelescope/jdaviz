@@ -1389,33 +1389,35 @@ class SelectSpectraComponent(SelectPluginComponent):
         return [item.get('index', None) for item in self.items]
 
     @property
-    def selected_source_id(self):
-        return self.selected_item.get('source_id', None)
+    def selected_exposure_sourceid(self):
+        return self.selected_item.get('exposure_sourceid', None)
 
     @property
-    def source_ids(self):
-        return [item.get('source_id', None) for item in self.items]
+    # Bear with the ugly name, it reflects the value
+    def exposure_sourceids(self):
+        return [item.get('exposure_sourceid', None) for item in self.items]
 
     @property
-    def _source_id_index_map(self):
-        return {item.get('source_id'): item.get('index', None) for item in self.items
-                if item.get('source_id', None)}
+    def _exposure_source_id_index_map(self):
+        return {item.get('exposure_sourceid'): item.get('index', None) for item in self.items
+                if item.get('exposure_sourceid', None)}
 
-    def _get_selected_obj(self, index):
+    def _get_selected_obj(self, exposure_sourceid):
+        index = self._exposure_source_id_index_map[exposure_sourceid]
         return self.manual_options[index].get('obj', None)
 
     @property
     def selected_obj(self):
         # returns specutils.Spectrum
         if self.is_multiselect:
-            return [self._get_selected_obj(index) for index in self.selected_index]
-        return self._get_selected_obj(self.selected_index)
+            return [self._get_selected_obj(e_sid) for e_sid in self.selected_exposure_sourceid]
+        return self._get_selected_obj(self.selected_exposure_sourceid)
 
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
-        return {k: manual_item[k] for k in ('label', 'index', 'source_id', 'obj')}
+        return {k: manual_item[k] for k in ('label', 'index', 'exposure_sourceid')}
 
     @observe('filters')
     def _update_items(self, msg = {}):
