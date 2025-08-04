@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
 import os
+from itertools import product
+
 from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -126,19 +128,28 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
     # TODO: Something is happening with the mapping between source id and
     # index... check this. Also 117 is not in the options so the source id
     # at that index is not accurate...
-    source_ids = [2, 9, 17, 117]
     spectra_obj = ldr.importer.spectra
-    indices = [spectra_obj._source_id_index_map[s_id] for s_id in source_ids]
-    ldr.importer.spectra.selected = [spectra_obj.choices[i] for i in indices]
+    exposure_sourceids = [f'{e_num}_{s_id}' for e_num, s_id in product((1, 2), (2, 9, 17, 117))]
+    spectra_obj.selected = [item['label'] for item in spectra_obj.items
+                            if item['exposure_sourceid'] in exposure_sourceids]
 
-    print(ldr.importer.spectra.selected)
+    #print(*spectra_obj.selected, sep='\n')
 
     print("importing...")
     ldr.importer()
     print("done importing")
 
-    wfss = deconfigged_helper.get_data('jw01076-o103_t001_nircam_grismr_x1d_0')
+    # print(deconfigged_helper.data_labels)
+    # print()
+    assert len(deconfigged_helper.data_labels) == len(spectra_obj.selected)
+    dc = deconfigged_helper.app.data_collection
+    assert len(dc) == len(spectra_obj.selected)
+
+    wfss = deconfigged_helper.get_data('jw01076-o103_t001_nircam_grismr_x1d_3')
     # wfss = deconfigged_helper.get_data('det_image_seq5_MIRIMAGE_P750Lexp1_s2d_0')
+    #print(wfss.meta['source_id'])
+    #assert isinstance(wfss, Spectrum)
+    #assert str(sp1d.spectral_axis.unit) == 'um'
 
 
 @pytest.mark.remote_data

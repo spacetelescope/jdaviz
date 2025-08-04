@@ -39,20 +39,24 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # with a str from self.input. Is that intended behavior?
         if isinstance(self.input, SpectrumList):
             spectra_options = []
+            index_modifier = 0
             # Pre-emptive check for and application of mask to avoid issues down the line
             for index, spec in enumerate(self.input):
                 source_id = spec.meta['source_id']
-                label = f'Source ID: {source_id}'
+                # Exposure group ID
+                exposure_num = spec.meta['header']['EXPGRPID'].split('_')[-2]
+                exposure_sourceid = f'{exposure_num}_{source_id}'
+                label = f'Exposure {exposure_num}, Source ID: {source_id}'
 
                 # all == True implies the entire array is masked and unusable
                 if self.is_fully_masked(spec):
-                    self.fully_masked_spectra[f'{source_id} at index {index}'] = spec
-                    print('popped', source_id)
+                    self.fully_masked_spectra[f'{label} at index {index}'] = spec
+                    index_modifier += 1
                     continue
 
                 spectra_options.append({'label': label,
-                                        'index': index,
-                                        'source_id': source_id,
+                                        'index': index - index_modifier,
+                                        'exposure_sourceid': exposure_sourceid,
                                         'obj': self.apply_mask(spec)})
 
             self.spectra = SelectSpectraComponent(self,
@@ -61,7 +65,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                   multiselect='spectra_multiselect',
                                                   manual_options=spectra_options)
 
-            #
             self.spectra.selected = [self.spectra.choices[0]]
 
         # else:
@@ -116,7 +119,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             else:
                 raise NotImplementedError(f"{inp} is not supported")
 
-        return SpectrumList(input_to_list_of_spec(self.input))
+        if hasattr(self, 'spectra'):
+            selected_spectra = SpectrumList(self.spectra.selected_obj)
+        else:
+            selected_spectra = self.input
+
+        return SpectrumList(input_to_list_of_spec(selected_spectra))
 
     # def _get_label_with_index_source_id(self, prefix, index=None, source_id=None):
     #     index_source_id = ",".join([str(e) for e in (index, source_id) if e is not None])
@@ -188,14 +196,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     def __call__(self, show_in_viewer=True):
         data_label = self.data_label_value
-        selected_spectra = [spec for spec in self.spectra.selected_obj]
-
-        #if not selected_spectra:
-            #selected_spectra = self.output[20:31]
-
         with self.app._jdaviz_helper.batch_load():
-            for i, spec in enumerate(selected_spectra):
-                print('iterating', spec.meta['source_id'])
+            for i, spec in enumerate(self.output):
+                if hasattr(spec, 'meta'):
+                    print('iterating', spec.meta.get('source_id', None))
                 # TODO: with WFSS, there are too many to add to the collection
                 # Must select beforehand
 
@@ -261,7 +265,11 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         dfnuallorig = []  # and uncertanties (if present)
 
         for spec in spectrum_list:
-            for wlind in range(len(spec.spectral_axis)):
+            if self.has_mask(spec):
+                mask = spec.mask
+            else:
+                mask = [False] * len(spec.spectral_axis)
+            for wlind in range(len(spec.spectral_axis[~mask])):
                 wlallorig.append(spec.spectral_axis[wlind].value)
                 fnuallorig.append(spec.flux[wlind].value)
 
