@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import os
+from pathlib import Path
 from itertools import product
 
 from astropy import units as u
@@ -116,22 +117,25 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert str(sp1d.spectral_axis.unit) == 'um'
 
 
-def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
-    filepath = '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits'
+@pytest.mark.parametrize('filepath', (
+        '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits',
+        '/Users/mportman/jdaviz/notebooks/det_image_seq5_MIRIMAGE_P750Lexp1_s2d.fits'))
+def test_fits_spectrum_list_L3_wfss(deconfigged_helper, filepath):
+    # filepath = '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits'
     # filepath = '/Users/mportman/jdaviz/notebooks/det_image_seq5_MIRIMAGE_P750Lexp1_s2d.fits'
+
     ldr = deconfigged_helper.loaders['file']
     ldr.filepath = filepath
 
     ldr.format = '1D Spectrum List'
 
-    #117 is completely masked
-    # TODO: Something is happening with the mapping between source id and
-    # index... check this. Also 117 is not in the options so the source id
-    # at that index is not accurate...
+    # 1_117 is completely masked
     spectra_obj = ldr.importer.spectra
     exposure_sourceids = [f'{e_num}_{s_id}' for e_num, s_id in product((1, 2), (2, 9, 17, 117))]
-    spectra_obj.selected = [item['label'] for item in spectra_obj.items
-                            if item['exposure_sourceid'] in exposure_sourceids]
+    to_select = [item['label'] for item in spectra_obj.items
+                 if item['exposure_sourceid'] in exposure_sourceids]
+    if to_select:
+        spectra_obj.selected = to_select
 
     #print(*spectra_obj.selected, sep='\n')
 
@@ -140,12 +144,12 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
     print("done importing")
 
     # print(deconfigged_helper.data_labels)
-    # print()
+    # print(spectra_obj.selected)
     assert len(deconfigged_helper.data_labels) == len(spectra_obj.selected)
     dc = deconfigged_helper.app.data_collection
     assert len(dc) == len(spectra_obj.selected)
 
-    wfss = deconfigged_helper.get_data('jw01076-o103_t001_nircam_grismr_x1d_3')
+    wfss = deconfigged_helper.get_data(f'{Path(filepath).stem}_0')
     # wfss = deconfigged_helper.get_data('det_image_seq5_MIRIMAGE_P750Lexp1_s2d_0')
     #print(wfss.meta['source_id'])
     #assert isinstance(wfss, Spectrum)
