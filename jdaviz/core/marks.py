@@ -229,16 +229,20 @@ class PluginMark:
                 else:
                     wave = self.x * self.xunit
                 equivs = all_flux_unit_conversion_equivs(pixar_sr, wave)
+                print(f"Converting from {self.yunit} to {unit}")
                 y = flux_conversion_general(self.y, self.yunit, unit,
                                             equivs, with_unit=False)
 
+            print(f"setting self.y from {self.y} to {y}")
             self.y = y
 
         self.yunit = unit
 
     def _on_global_display_unit_changed(self, msg):
+
         if not self.auto_update_units:
             return
+        print(f"PluginMark handling unit change for {self.__class__.__name__}")
         unit = msg.unit
         if (msg.axis in ('spectral', 'spectral_y') and
                 self.viewer.__class__.__name__ in ('Spectrum2DViewer',
@@ -263,6 +267,7 @@ class PluginMark:
             if isinstance(scale, LinearScale) and (scale.min, scale.max) == (0, 1):
                 return
 
+            print(f"running set_{axis}_unit with {unit}")
             getattr(self, f'set_{axis}_unit')(unit)
 
     def clear(self):
@@ -786,13 +791,7 @@ class DistanceLabel(Label, PluginMark, HubListener):
         kwargs.setdefault('y_offset', 0)
 
         super().__init__(x=[x], y=[y], text=[text], scales=viewer.scales, **kwargs)
-        self.auto_update_units = False
-
-    def set_x_unit(self, unit=None):
-        pass
-
-    def set_y_unit(self, unit=None):
-        pass
+        self.auto_update_units = True
 
     def update_position(self, x, y, text):
         self.x = [x]
@@ -800,7 +799,7 @@ class DistanceLabel(Label, PluginMark, HubListener):
         self.text = [text]
 
 
-class DistanceMeasurement:
+class DistanceMeasurement(PluginLine):
     """A composite mark that displays a line between two points with a
     dynamically rotated and offset label showing the distance.
 
@@ -811,19 +810,21 @@ class DistanceMeasurement:
     parallel to the line while avoiding intersection.
     """
 
-    def __init__(self, viewer, x0, y0, x1, y1, text=""):
+    def __init__(self, viewer, x=[], y=[], text=""):
         self.viewer = viewer
+        self.scales=viewer.scales
         self.endpoints = None
+        self.auto_update_units = True
 
         self.line = Lines(
-            x=[],
-            y=[],
+            x=x,
+            y=y,
             scales=viewer.scales,
             colors=[accent_color],
             stroke_width=2
         )
 
-        anchor_x, anchor_y = (x0 + x1) / 2, (y0 + y1) / 2
+        anchor_x, anchor_y = (x[0] + x[1]) / 2, (y[0] + y[1]) / 2
 
         self.label_shadow = DistanceLabel(
             viewer, anchor_x, anchor_y, text,
@@ -842,7 +843,9 @@ class DistanceMeasurement:
         )
 
         self.visible = True
-        self.update_points(x0, y0, x1, y1, text)
+        self.update_points(x[0], y[0], x[1], y[1], text)
+        self.auto_update_units = True
+        super().__init__(viewer, x=x, y=y)
 
     @property
     def marks(self):
