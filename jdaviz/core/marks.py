@@ -808,7 +808,6 @@ class DistanceMeasurement:
 
     def __init__(self, viewer, x=[], y=[], text=""):
         self.viewer = viewer
-        self.scales=viewer.scales
         self.endpoints = None
         self.auto_update_units = True
 
@@ -842,7 +841,6 @@ class DistanceMeasurement:
         self.visible = True
         self.update_points(x[0], y[0], x[1], y[1], text)
         self.auto_update_units = True
-        #super().__init__(viewer, x=x, y=y)
 
     @property
     def marks(self):

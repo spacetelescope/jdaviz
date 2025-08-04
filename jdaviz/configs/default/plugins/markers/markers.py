@@ -5,8 +5,7 @@ from traitlets import Bool, Unicode, Instance, observe, default
 import ipywidgets as widgets
 
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
-                                AddDataMessage, RemoveDataMessage, MarkersPluginUpdate,
-                                GlobalDisplayUnitChanged)
+                                AddDataMessage, RemoveDataMessage, MarkersPluginUpdate)
 from jdaviz.core.marks import MarkersMark, DistanceMeasurement
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, TableMixin,
