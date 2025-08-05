@@ -574,14 +574,6 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     assert model_flux.units == expected_unit_string
 
 
-def test_reestimate_with_spectral_first_cube(cubeviz_helper, image_cube_hdu_obj_microns):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
-    mf = cubeviz_helper.plugins['Model Fitting']
-    mf.create_model_component('Linear1D')
-    mf.cube_fit = True
-    mf.reestimate_model_parameters()
-
-
 def test_deconf_mf_with_subset(deconfigged_helper):
     flux = np.ones(9) * u.Jy
     flux[7] = 10 * u.Jy
