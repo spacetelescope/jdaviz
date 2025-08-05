@@ -795,6 +795,12 @@ class DistanceLabel(Label, PluginMark, HubListener):
         self.text = [text]
 
 
+class DistanceLine(PluginLine):
+    # We just want to be able to check for this specific line
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class DistanceMeasurement:
     """A composite mark that displays a line between two points with a
     dynamically rotated and offset label showing the distance.
@@ -811,7 +817,7 @@ class DistanceMeasurement:
         self.endpoints = None
         self.auto_update_units = True
 
-        self.line = PluginLine(
+        self.line = DistanceLine(
             viewer,
             x=x,
             y=y,
