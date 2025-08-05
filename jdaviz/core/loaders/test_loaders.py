@@ -138,6 +138,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper, filepath):
         spectra_obj.selected = to_select
 
     #print(*spectra_obj.selected, sep='\n')
+    #assert False
 
     print("importing...")
     ldr.importer()
@@ -154,6 +155,9 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper, filepath):
     #print(wfss.meta['source_id'])
     #assert isinstance(wfss, Spectrum)
     #assert str(sp1d.spectral_axis.unit) == 'um'
+
+    assert len(deconfigged_helper.gca().app.data_collection) == 1
+    # assert len(deconfigged_helper.viewers) == 1
 
 
 @pytest.mark.remote_data
