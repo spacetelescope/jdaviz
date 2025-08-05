@@ -25,6 +25,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     spectra_items = List().tag(sync = True)
     spectra_selected = Any().tag(sync = True)
     spectra_multiselect = Bool(True).tag(sync = True)
+    # TODO: search + multiselect retains default selection
+    # i.e. search 9, select 9, still have two spectra in viewer
     spectra_search = Bool(True).tag(sync = True)
 
     def __init__(self, *args, **kwargs):
