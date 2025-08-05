@@ -12,6 +12,8 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import SelectSpectraComponent
 from jdaviz.core.user_api import ImporterUserApi
 
+from echo import CallbackProperty
+
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
 
@@ -20,10 +22,10 @@ __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
 class SpectrumListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum_list.vue"
 
-    # HDUList-specific options
     spectra_items = List().tag(sync = True)
     spectra_selected = Any().tag(sync = True)
     spectra_multiselect = Bool(True).tag(sync = True)
+    spectra_search = Bool(True).tag(sync = True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -133,20 +135,21 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     #     return f"{prefix}[{index_source_id}]" if len(index_source_id) else prefix
 
 # TODO: FIX DATA LABEL ISSUES (see pytest)
-    # @observe('spectra_selected', 'data_label_as_prefix')
-    # def _set_default_data_label(self, *args):
-    #     if self.default_data_label_from_resolver:
-    #         prefix = self.default_data_label_from_resolver
-    #     else:
-    #         prefix = "SpectrumList"
-    #
-    #     # only a single spectra selected
-    #     if hasattr(self, 'targ_ra') and hasattr(self, 'targ_dec'):
-    #         self.data_label_default = f"{prefix}_{self.targ_ra}_{self.targ_dec}"
-    #     # else:
-    #     #     self.data_label_default = prefix
+#     @observe('spectra_selected', 'data_label_as_prefix')
+#     def _set_default_data_label(self, *args):
+#         if self.default_data_label_from_resolver:
+#             prefix = self.default_data_label_from_resolver
+#         else:
+#             prefix = "SpectrumList"
+#
+#         if hasattr(self, 'spectra'):
+#             pass
+            #self.data_label_default = f"{prefix}_{self.targ_ra}_{self.targ_dec}"
+        # else:
+        #     self.data_label_default = prefix
+
     def is_wfssmulti(self, spec):
-        if spec.meta.get('header', {}).get('DATAMODL', '') == 'WFSSMultiSpecModel':
+        if 'WFSSMulti' in spec.meta.get('header', {}).get('DATAMODL', ''):
             return True
         return False
 
@@ -154,7 +157,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # These are used for label purposes
         header = spec.meta.get('header', {})
         return (spec.meta.get('source_id', ''),
-                header.get('EXPGRPID', '').split('_')[-2])
+                header.get('EXPGRPID', '__').split('_')[-2])
 
     def has_mask(self, spec):
         if hasattr(spec, 'mask'):
@@ -249,6 +252,13 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 @loader_importer_registry('1D Spectrum Concatenated')
 class SpectrumListConcatenatedImporter(SpectrumListImporter):
+
+    @property
+    def is_valid(self):
+        # TODO: Concantenation is currently too slow with WFSSmulti
+        # Assume output is a list of spectra
+        return False
+
     @property
     def output(self):
         spectrum_list = super().output
