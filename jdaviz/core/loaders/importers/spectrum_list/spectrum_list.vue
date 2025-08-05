@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <div style="margin-bottom: 8px;">
+    <div v-if="spectra_search" style="margin-bottom: 8px;">
       <input
         type="text"
         v-model="spectra_search_input"
