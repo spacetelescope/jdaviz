@@ -37,21 +37,25 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         self.fully_masked_spectra = []
         self.use_spectra_component = False
 
-        # NOTE: This 'if' statement is here because this class is sometimes instantiated
-        # with a str from self.input. Is that intended behavior?
-        if isinstance(self.input, (Spectrum, SpectrumList)):
+        if self.is_valid:
             self.use_spectra_component = True
             spectra_options = []
             index_modifier = 0
-            # Pre-emptive check for and application of mask to avoid issues down the line
-            for index, spec in enumerate(self.input):
+
+            if isinstance(self.input, Spectrum):
+                input = SpectrumList(self.input_to_list_of_spec(self.input))
+            else:
+                input = self.input
+
+            for index, spec in enumerate(input):
                 if self.is_wfssmulti(spec):
-                    exposure_sourceid, label = self.generate_wfssmulti_labels(spec)
+                    exposure_sourceid, label, suffix = self.generate_wfssmulti_labels(spec)
                 else:
                     # Note this would be the original index before 'popping'
                     # the unusable spectra out
                     exposure_sourceid = str(index)
-                    label = f'Spectrum at index: {index}'
+                    label = f"1D Spectrum at index: {index}"
+                    suffix = f"index-{index}"
 
                 # all == True implies the entire array is masked and unusable
                 if self.is_fully_masked(spec):
@@ -62,6 +66,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 spectra_options.append({'label': label,
                                         'index': index - index_modifier,
                                         'exposure_sourceid': exposure_sourceid,
+                                        'suffix': suffix,
                                         'obj': self.apply_spectral_mask(spec)})
 
             self.spectra = SelectSpectraComponent(self,
@@ -88,42 +93,38 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return (isinstance(self.input, (SpectrumList, SpectrumCollection))
                 or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
 
-    @property
-    def output(self):
-        if not self.is_valid:  # pragma: nocover
-            return None
+    def input_to_list_of_spec(self, inp):
 
         def this_row(field, i):
             if field is None:
                 return None
             return field[i, :]
 
-        def input_to_list_of_spec(inp):
-            if isinstance(inp, Spectrum):
-                if inp.flux.ndim == 1:
-                    # Note masks (currently) only applied when spectral_axis has missing values
-                    return [self.apply_spectral_mask(inp)]
+        if isinstance(inp, Spectrum):
+            if inp.flux.ndim == 1:
+                # Note masks (currently) only applied when spectral_axis has missing values
+                return [self.apply_spectral_mask(inp)]
 
-                return [Spectrum(spectral_axis=inp.spectral_axis,
-                                 flux=this_row(inp.flux, i),
-                                 uncertainty=this_row(inp.uncertainty, i),
-                                 mask=this_row(inp.mask, i),
-                                 meta=inp.meta)
-                        for i in range(inp.flux.shape[0])]
+            return [Spectrum(spectral_axis = inp.spectral_axis,
+                             flux = this_row(inp.flux, i),
+                             uncertainty = this_row(inp.uncertainty, i),
+                             mask = this_row(inp.mask, i),
+                             meta = inp.meta)
+                    for i in range(inp.flux.shape[0])]
 
-            elif isinstance(inp, (SpectrumList, SpectrumCollection)):
-                return itertools.chain(*[input_to_list_of_spec(spec) for spec in inp
-                                         if not self.is_fully_masked(spec)])
+        elif isinstance(inp, (SpectrumList, SpectrumCollection)):
+            return itertools.chain(*[self.input_to_list_of_spec(spec) for spec in inp
+                                     if not self.is_fully_masked(spec)])
 
-            else:
-                raise NotImplementedError(f"{inp} is not supported")
-
-        if self.use_spectra_component:
-            selected_spectra = SpectrumList(self.spectra.selected_obj)
         else:
-            selected_spectra = self.input
+            raise NotImplementedError(f"{inp} is not supported")
 
-        return SpectrumList(input_to_list_of_spec(selected_spectra))
+    @property
+    def output(self):
+        if not self.is_valid:  # pragma: nocover
+            return None
+
+        return self.spectra.selected_obj_dict
 
     def is_wfssmulti(self, spec):
         if 'WFSSMulti' in spec.meta.get('header', {}).get('DATAMODL', ''):
@@ -137,7 +138,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         header = spec.meta.get('header', {})
         exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
         source_id = spec.meta.get('source_id', '')
-        return f'{exp_num}_{source_id}', f'Exposure {exp_num}, Source ID: {source_id}'
+
+        # Returns exposure_sourceid, label, suffix
+        return (f'{exp_num}_{source_id}',
+                f'Exposure {exp_num}, Source ID: {source_id}',
+                f'EXP-{exp_num}_ID-{source_id}')
 
     def has_mask(self, spec):
         if hasattr(spec, 'mask'):
@@ -174,19 +179,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
+        # By setting data_label, we call the observer on self.data_label_value
+        data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
-            for i, spec in enumerate(self.output):
-                if self.is_wfssmulti(spec):
-                    exposure_sourceid, label = self.generate_wfssmulti_labels(spec)
-                    exp_num, source_id = exposure_sourceid.split('_')
-                    suffix = f'EXP-{exp_num}_ID-{source_id}'
-                else:
-                    suffix = i
-
-                # NOTE: On occasion, spectrum lists populate different viewers
-                # I have not been able to reproduce the issue consistently
-                self.add_to_data_collection(spec, f"{self.data_label_value}_{suffix}",
-                                            show_in_viewer=show_in_viewer)
+            _ = [self.add_to_data_collection(spec_dict['obj'],
+                                             f"{data_label}_{spec_dict['suffix']}",
+                                             show_in_viewer = show_in_viewer)
+                 for spec_dict in self.output]
 
         if self.fully_masked_spectra:
             self.app.hub.broadcast(SnackbarMessage(
@@ -238,13 +237,9 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
     # spectra_search = Bool(False).tag(sync = True)
     disable_dropdown = Bool(True).tag(sync = True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.use_spectra_component = False
-
     @property
     def output(self):
-        spectrum_list = super().output
+        spectrum_list = self.spectra.manual_options
         if spectrum_list is None:
             return
 
@@ -252,8 +247,8 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         wl_list = []
         fnu_list = []
         dfnu_list = []
-        for spec in spectrum_list:
-            spec = self.apply_spectral_mask(spec)
+        for spec_dict in spectrum_list:
+            spec = self.apply_spectral_mask(spec_dict['obj'])
             wl = spec.spectral_axis.value
             fnu = spec.flux.value
 
