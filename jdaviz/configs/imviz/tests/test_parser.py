@@ -439,7 +439,6 @@ class TestParseImage:
             assert_quantity_allclose(tbl[0]['max'], 4.021776 * data_unit, rtol=1e-3)
             assert_quantity_allclose(tbl[0]['mean'], 0.049325 * data_unit, rtol=1e-3)
 
-
         # Request specific extension (name only), use given label
         imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
                                show_in_viewer=False)
