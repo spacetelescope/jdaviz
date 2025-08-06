@@ -180,6 +180,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     def __call__(self, show_in_viewer=True):
         # By setting data_label, we call the observer on self.data_label_value
+        # TODO: Still have some data_label issues, especially when changing from default
         data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
             _ = [self.add_to_data_collection(spec_dict['obj'],
