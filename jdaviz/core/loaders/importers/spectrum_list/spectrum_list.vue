@@ -12,6 +12,7 @@
           single-line
       ></v-text-field>
     </div>
+
     <plugin-select
       :items="filtered_spectra_items"
       :selected.sync="spectra_selected"
@@ -22,7 +23,7 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Source IDs to select from the list of spectra."
     ></plugin-select>
-
+    <div style="height: 24px;"></div>
     <v-row>
       <plugin-auto-label
         :value.sync="data_label_value"
