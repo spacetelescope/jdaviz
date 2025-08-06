@@ -6,6 +6,7 @@
           :selected.sync="spectra_selected"
           :show_if_single_entry="true"
           :multiselect="spectra_multiselect"
+          :search="true"
           label="Source IDs"
           api_hint="ldr.source_ids ="
           :api_hints_enabled="api_hints_enabled"
