@@ -1402,15 +1402,26 @@ class SelectSpectraComponent(SelectPluginComponent):
         return {item.get('exposure_sourceid'): item.get('index', None) for item in self.items
                 if item.get('exposure_sourceid', None)}
 
-    def _get_selected_obj(self, exposure_sourceid):
+    # def _get_selected_obj(self, exposure_sourceid):
+    #     index = self._exposure_source_id_index_map[exposure_sourceid]
+    #     return self.manual_options[index].get('obj', None)
+    #
+    # @property
+    # def selected_obj(self):
+    #     # returns specutils.Spectrum
+    #     if self.is_multiselect:
+    #         return [self._get_selected_obj(e_sid) for e_sid in self.selected_exposure_sourceid]
+    #     return self._get_selected_obj(self.selected_exposure_sourceid)
+
+    def _get_selected_obj_dict(self, exposure_sourceid):
         index = self._exposure_source_id_index_map[exposure_sourceid]
-        return self.manual_options[index].get('obj', None)
+        return self.manual_options[index]
 
     @property
-    def selected_obj(self):
+    def selected_obj_dict(self):
         # returns specutils.Spectrum
         if self.is_multiselect:
-            return [self._get_selected_obj(e_sid) for e_sid in self.selected_exposure_sourceid]
+            return [self._get_selected_obj_dict(e_sid) for e_sid in self.selected_exposure_sourceid]
         return self._get_selected_obj(self.selected_exposure_sourceid)
 
     def _to_item(self, manual_item, index=None):
