@@ -74,7 +74,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                   multiselect='spectra_multiselect',
                                                   manual_options=spectra_options)
 
-            self.spectra.selected = [self.spectra.choices[0]]
+            self.spectra.selected = []  # [self.spectra.choices[0]]
 
         # else:
         #     self._set_default_data_label()

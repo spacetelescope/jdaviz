@@ -1,12 +1,16 @@
 <template>
   <v-container>
     <div v-if="spectra_search" style="margin-bottom: 8px;">
-      <input
-        type="text"
-        v-model="spectra_search_input"
-        placeholder="Search Source IDs..."
-        style="width: 200px;"
-      />
+      <v-text-field
+          v-model="spectra_search_input"
+          placeholder="Search Source IDs..."
+          append-icon='mdi-magnify'
+          style="width: 200px; margin-right: 8px; margin-top: 2px"
+          dense
+          clearable
+          hide-details
+          single-line
+      ></v-text-field>
     </div>
     <plugin-select
       :items="filtered_spectra_items"
@@ -43,14 +47,29 @@ export default {
   },
   computed: {
     filtered_spectra_items() {
-      if (!this.spectra_search_input) {
-        return this.spectra_items.map(i => i.label);
-      }
-      return this.spectra_items
-        .filter(i =>
-          (i.label || '').toLowerCase().includes(this.spectra_search_input.toLowerCase())
-        )
-        .map(i => i.label);
+      // Get selected as an array (handles both single and multi-select)
+      const selected = Array.isArray(this.spectra_selected)
+        ? this.spectra_selected
+        : [this.spectra_selected];
+
+      // Filter items by search
+      let filtered = this.spectra_items.filter(i =>
+        (i.label || '').toLowerCase().includes(this.spectra_search_input.toLowerCase())
+      );
+
+      // Add selected items not in filtered
+      selected.forEach(sel => {
+        if (
+          sel &&
+          !filtered.some(i => i.label === sel) &&
+          this.spectra_items.some(i => i.label === sel)
+        ) {
+          filtered.push(this.spectra_items.find(i => i.label === sel));
+        }
+      });
+
+      // Return as array of labels (if that's what your select expects)
+      return filtered.map(i => i.label);
     }
   },
   props: {
