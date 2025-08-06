@@ -1,29 +1,35 @@
 <template>
   <v-container>
-    <div v-if="spectra_search" style="margin-bottom: 8px;">
-      <v-text-field
-          v-model="spectra_search_input"
-          placeholder="Search Source IDs..."
-          append-icon='mdi-magnify'
-          style="width: 200px; margin-right: 8px; margin-top: 2px"
-          dense
-          clearable
-          hide-details
-          single-line
-      ></v-text-field>
+
+
+    <div v-if="!disable_dropdown">
+        <div style="margin-bottom: 8px;">
+          <v-text-field
+              v-model="spectra_search_input"
+              placeholder="Search Source IDs..."
+              append-icon='mdi-magnify'
+              style="width: 200px; margin-right: 8px; margin-top: 2px"
+              dense
+              clearable
+              hide-details
+              single-line
+          ></v-text-field>
+        </div>
+        <plugin-select
+          :items="filtered_spectra_items"
+          :selected.sync="spectra_selected"
+          :show_if_single_entry="true"
+          :multiselect="spectra_multiselect"
+          :disabled="disable_dropdown"
+          label="Source IDs"
+          api_hint="ldr.source_ids ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Source IDs to select from the list of spectra."
+        ></plugin-select>
     </div>
 
-    <plugin-select
-      :items="filtered_spectra_items"
-      :selected.sync="spectra_selected"
-      :show_if_single_entry="true"
-      :multiselect="spectra_multiselect"
-      label="Source IDs"
-      api_hint="ldr.source_ids ="
-      :api_hints_enabled="api_hints_enabled"
-      hint="Source IDs to select from the list of spectra."
-    ></plugin-select>
     <div style="height: 24px;"></div>
+
     <v-row>
       <plugin-auto-label
         :value.sync="data_label_value"
