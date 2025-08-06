@@ -28,7 +28,7 @@
         ></plugin-select>
     </div>
 
-    <div style="height: 24px;"></div>
+    <div style="height: 8px;"></div>
 
     <v-row>
       <plugin-auto-label
