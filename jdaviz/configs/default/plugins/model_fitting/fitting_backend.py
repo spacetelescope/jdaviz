@@ -247,8 +247,8 @@ class SpaxelWorker:
     instance. We need to use the current model instance while
     it still exists.
     """
-    def __init__(self, flux_cube, wave_array, initial_model, fitter, param_set, window=None, mask=None,
-                 spectral_axis_index=2, **kwargs):
+    def __init__(self, flux_cube, wave_array, initial_model, fitter, param_set, window=None,
+                 mask=None, spectral_axis_index=2, **kwargs):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
@@ -293,8 +293,8 @@ class SpaxelWorker:
                 weights = 'unc'
             else:
                 weights = None
-            fitted_model = fit_lines(sp, self.model, fitter=self.fitter, window=self.window, weights=weights,
-                                     **self.kw)
+            fitted_model = fit_lines(sp, self.model, fitter=self.fitter, window=self.window,
+                                     weights=weights, **self.kw)
 
             fitted_values = fitted_model(self.wave)
 
