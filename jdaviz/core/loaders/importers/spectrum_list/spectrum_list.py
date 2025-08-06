@@ -48,9 +48,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             for index, spec in enumerate(self.input):
                 # TODO: get this working for _c1d files as well.
                 if self.is_wfssmulti(spec):
-                    source_id, exposure_num = self.parse_wfssmulti_header(spec)
-                    exposure_sourceid = f'{exposure_num}_{source_id}'
-                    label = f'Exposure {exposure_num}, Source ID: {source_id}'
+                    exp_num, source_id = self.parse_wfssmulti_header(spec)
+                    exposure_sourceid = f'{exp_num}_{source_id}'
+                    label = f'Exposure {exp_num}, Source ID: {source_id}'
                 else:
                     # Note this would be the original index before 'popping'
                     # the unusable spectra out
@@ -142,11 +142,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 #         if self.default_data_label_from_resolver:
 #             prefix = self.default_data_label_from_resolver
 #         else:
-#             prefix = "SpectrumList"
+#             prefix = "Spectra"
 #
 #         if hasattr(self, 'spectra'):
-#             pass
-            #self.data_label_default = f"{prefix}_{self.targ_ra}_{self.targ_dec}"
+#             all_spectra = self.spectra
+#             self.data_label_default = f"{prefix}_"
         # else:
         #     self.data_label_default = prefix
 
@@ -158,8 +158,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def parse_wfssmulti_header(self, spec):
         # These are used for label purposes
         header = spec.meta.get('header', {})
-        return (spec.meta.get('source_id', ''),
-                header.get('EXPGRPID', '__').split('_')[-2])
+        return header.get('EXPGRPID', '0_0_0').split('_')[-2], spec.meta.get('source_id', '')
+
+    def generate_wfssmulti_labels(self, spec):
+        """
+        Generate a label for WFSSMulti spectra based on the header information.
+        """
+        exp_num, source_id = self.parse_wfssmulti_header(spec)
+        return f'{exp_num}_{source_id}', f'Exposure {exp_num}, Source ID: {source_id}'
 
     def has_mask(self, spec):
         if hasattr(spec, 'mask'):
@@ -199,11 +205,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
-                if hasattr(spec, 'meta'):
-                    print('iterating', spec.meta.get('source_id', None))
+                if self.is_wfssmulti(spec):
+                    exp_num, source_id = self.parse_wfssmulti_header(spec)
+                    suffix = f'EXP-{exp_num}_ID-{source_id}'
+                else:
+                    suffix = i
 
                 # TODO: Ensure WFSS populate the same viewer instead of multiple
-                self.add_to_data_collection(spec, f"{data_label}_{i}",
+                self.add_to_data_collection(spec, f"{data_label}_{suffix}",
                                             show_in_viewer=show_in_viewer)
 
         if self.fully_masked_spectra:
