@@ -12,7 +12,7 @@ __all__ = ['fit_model_to_spectrum', 'generate_spaxel_list']
 
 def fit_model_to_spectrum(spectrum, component_list, expression,
                           run_fitter=False, fitter=fitting.TRFLSQFitter(calc_uncertainties=True),
-                          window=None, n_cpu=None):
+                          window=None, n_cpu=None, **kwargs):
     """Fits a `~astropy.modeling.CompoundModel` to a
     `~specutils.Spectrum` instance.
 
@@ -68,12 +68,12 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
     initial_model = _build_model(component_list, expression)
 
     if len(spectrum.shape) > 1:
-        return _fit_3D(initial_model, spectrum, fitter=fitter, window=window, n_cpu=n_cpu)
+        return _fit_3D(initial_model, spectrum, fitter=fitter, window=window, n_cpu=n_cpu, **kwargs)
     else:
-        return _fit_1D(initial_model, spectrum, run_fitter, fitter=fitter, window=window)
+        return _fit_1D(initial_model, spectrum, run_fitter, fitter=fitter, window=window, **kwargs)
 
 
-def _fit_1D(initial_model, spectrum, run_fitter, fitter, filter_non_finite=True, window=None):
+def _fit_1D(initial_model, spectrum, run_fitter, fitter, window=None, **kwargs):
     """
     Fits an astropy CompoundModel to a Spectrum instance.
 
@@ -86,6 +86,8 @@ def _fit_1D(initial_model, spectrum, run_fitter, fitter, filter_non_finite=True,
     run_fitter : bool
         When False (the default), the function composes the compound
         model and returns it without fitting.
+    fitter : :class: `astropy.modeling.fitting` Object
+        Custom fitter for model.
     window : `None` or :class:`specutils.spectra.SpectralRegion`
         See :func:`specutils.fitting.fitmodels.fit_lines`.
 
@@ -103,7 +105,7 @@ def _fit_1D(initial_model, spectrum, run_fitter, fitter, filter_non_finite=True,
         else:
             weights = None
         output_model = fit_lines(spectrum, initial_model, fitter=fitter, weights=weights,
-                                 filter_non_finite=filter_non_finite, window=window)
+                                 window=window, **kwargs)
         output_values = output_model(spectrum.spectral_axis)
     else:
         # Return without fitting.
@@ -118,7 +120,7 @@ def _fit_1D(initial_model, spectrum, run_fitter, fitter, filter_non_finite=True,
     return output_model, output_spectrum
 
 
-def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
+def _fit_3D(initial_model, spectrum, fitter, window=None, n_cpu=None, **kwargs):
     """
     Fits an astropy CompoundModel to every spaxel in a cube
     using a multiprocessor pool running in parallel. Computes
@@ -130,6 +132,8 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
         Initial guess for the model to be fitted.
     spectrum : :class:`specutils.Spectrum`
         The spectrum that stores the cube in its 'flux' attribute.
+    fitter : :class: `astropy.modeling.fitting` Object
+        Custom fitter for model.
     window : `None` or :class:`specutils.spectra.SpectralRegion`
         See :func:`specutils.fitting.fitmodels.fit_lines`.
     n_cpu : `None` or int
@@ -193,10 +197,12 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
             worker = SpaxelWorker(spectrum.flux,
                                   spectrum.spectral_axis,
                                   initial_model,
+                                  fitter=fitter,
                                   param_set=spx,
                                   window=window,
                                   mask=spectrum.mask,
-                                  spectral_axis_index=spectrum.spectral_axis_index)
+                                  spectral_axis_index=spectrum.spectral_axis_index,
+                                  **kwargs)
             r = pool.apply_async(worker, callback=collect_result)
             results.append(r)
         for r in results:
@@ -210,10 +216,12 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
         worker = SpaxelWorker(spectrum.flux,
                               spectrum.spectral_axis,
                               initial_model,
+                              fitter=fitter,
                               param_set=spaxels,
                               window=window,
                               mask=spectrum.mask,
-                              spectral_axis_index=spectrum.spectral_axis_index)
+                              spectral_axis_index=spectrum.spectral_axis_index,
+                              **kwargs)
         collect_result(worker())
 
     # Build output 3D spectrum. Don't need spectral_axis_index because we use the WCS
@@ -239,15 +247,17 @@ class SpaxelWorker:
     instance. We need to use the current model instance while
     it still exists.
     """
-    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None, mask=None,
-                 spectral_axis_index=2):
+    def __init__(self, flux_cube, wave_array, initial_model, fitter, param_set, window=None, mask=None,
+                 spectral_axis_index=2, **kwargs):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
+        self.fitter = fitter
         self.param_set = param_set
         self.window = window
         self.mask = mask
         self.spectral_axis_index = spectral_axis_index
+        self.kw = kwargs
 
     def __call__(self):
         results = {'x': [], 'y': [], 'fitted_model': [], 'fitted_values': []}
@@ -283,7 +293,8 @@ class SpaxelWorker:
                 weights = 'unc'
             else:
                 weights = None
-            fitted_model = fit_lines(sp, self.model, window=self.window, weights=weights)
+            fitted_model = fit_lines(sp, self.model, fitter=self.fitter, window=self.window, weights=weights,
+                                     **self.kw)
 
             fitted_values = fitted_model(self.wave)
 

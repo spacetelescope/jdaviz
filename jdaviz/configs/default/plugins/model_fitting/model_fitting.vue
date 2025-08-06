@@ -270,6 +270,35 @@
           persistent-hint
         ></v-select>
       </v-row>
+      <v-row v-if="fitter_error">
+        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+            {{ fitter_error }}
+        </span>
+      </v-row>
+      <v-expansion-panels accordion v-if="fitter_parameters.parameters.length">
+         <v-expansion-panel>
+              <v-expansion-panel-header v-slot="{ open }">
+                <span style="padding: 6px">Fitter Parameters</span>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content class="plugin-expansion-panel-content">
+              <div v-for="item in fitter_parameters.parameters">
+                <v-switch v-if="isBoolean(item.value)" v-model="item.value">
+                    <template v-slot:label>
+                        <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
+                          {{ item.name }}
+                        </span>
+                     </template>
+                </v-switch>
+                <v-text-field v-else
+                    :label="item.name"
+                    v-model.number="item.value"
+                    type="number"
+                    style="padding-top: 0px; margin-top: 14px; margin-bottom: 10px;"
+                  ></v-text-field>
+              </div>
+              </v-expansion-panel-content>
+         </v-expansion-panel>
+      </v-expansion-panels accordion>
       <plugin-add-results
         :label.sync="results_label"
         :label_default="results_label_default"
@@ -353,6 +382,9 @@
       },
       roundUncertainty(uncertainty) {
         return uncertainty.toPrecision(2)
+      },
+      isBoolean(val) {
+        return val === false || val === true
       }
     }
   }

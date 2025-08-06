@@ -5,8 +5,9 @@ from copy import deepcopy
 import astropy.units as u
 from astropy.modeling import fitting
 from specutils import Spectrum
+from specutils.fitting import fit_lines
 from specutils.utils import QuantityModel
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Bool, List, Dict, Any, Unicode, observe
 
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
@@ -119,6 +120,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     # fitter options
     fitter_items = List().tag(sync=True)
     fitter_selected = Unicode().tag(sync=True)
+    fitter_parameters = Dict().tag(sync=True)
+    fitter_error = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,10 +146,24 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                      items='model_comp_items',
                                                      selected='model_comp_selected',
                                                      manual_options=list(MODELS.keys()))
-        fitter_options = [fitter for fitter in fitting.__all__ if 'Fitter' in fitter]
+
+        # All possible fitter options available with parameters for each
+        self.all_fitters = {
+            'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
+                                            {'name': 'filter_non_finite', 'value': False}]},
+            'DogBoxLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
+                                               {'name': 'filter_non_finite', 'value': False}]},
+            'LMLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
+                                           {'name': 'filter_non_finite', 'value': False}]},
+            'LevMarLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
+                                               {'name': 'filter_non_finite', 'value': False}]},
+            'LinearLSQFitter': {'parameters': []},
+            'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},]},
+            'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},]}
+        }
         self.fitter_component = SelectPluginComponent(self, items='fitter_items',
                                                       selected='fitter_selected',
-                                                      manual_options=fitter_options)
+                                                      manual_options=list(self.all_fitters.keys()))
 
         if self.config == 'cubeviz':
             # use mean whenever extracting the 1D spectrum of a cube to initialize model params
@@ -180,6 +197,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.parallel_n_cpu = None
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+        # Update error after all values are initialized
+        self._update_fitter_error()
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -411,6 +430,33 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         self.comp_label_invalid_msg = ''
 
+    @observe('fitter_selected')
+    def _update_fitter_component_msg(self, event={}):
+        self.fitter_parameters = self.all_fitters[event['new']]
+        self._update_fitter_error()
+
+    @observe('fitter_parameters')
+    def _update_fitter_parameters(self, event={}):
+        # Update values in all_fitters incase user wants to return to a model
+        # they edited previously
+        self.all_fitters[self.fitter_selected] = self.fitter_parameters
+        self._update_fitter_error()
+
+    def _update_fitter_error(self):
+        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']}
+
+        # Try to run specutils fit_lines with current values to see if an error appears
+        try:
+            models_to_fit = self._reinitialize_with_fixed()
+            spec = self.dataset.get_selected_spectrum(use_display_units=True)
+            masked_spectrum = self._apply_subset_masks(spec, self.spectral_subset)
+            fitter = getattr(fitting, self.fitter_component.selected)()
+            fit_lines(masked_spectrum, models_to_fit, fitter=fitter, weights=None,
+                      window=None, **kw)
+            self.fitter_error = None
+        except Exception as e:
+            self.fitter_error = str(e)
+
     def _update_model_equation_default(self):
         self.model_equation_default = '+'.join(cm['id'] for cm in self.component_models)
 
@@ -487,6 +533,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # update the default label (likely adding the suffix)
         self._update_comp_label_default()
         self._update_model_equation_default()
+        self._update_fitter_error()
 
     def _initialize_model_component(self, model_comp, comp_label, poly_order=None):
         new_model = {"id": comp_label, "model_type": model_comp,
@@ -581,7 +628,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
 
-        if init_y.unit != self._units['y']:
+        # do not need to adjust y units if cube_fit is not selected
+        if self.cube_fit and init_y.unit != self._units['y']:
             # equivs for spectral density and flux<>sb
             pixar_sr = masked_spectrum.meta.get('_pixel_scale_factor', 1.0)
             equivs = all_flux_unit_conversion_equivs(pixar_sr, init_x.mean())
@@ -1181,6 +1229,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)
 
+        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']}
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 masked_spectrum,
@@ -1190,6 +1240,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 run_fitter=True,
                 window=None,
                 n_cpu=self.parallel_n_cpu,
+                **kw
             )
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
@@ -1297,6 +1348,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             spec.mask = spec.mask | np.isnan(spec.flux)
 
+        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']}
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 spec,
@@ -1305,7 +1358,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 fitter=getattr(fitting, self.fitter_component.selected)(),
                 run_fitter=True,
                 window=None,
-                n_cpu=self.parallel_n_cpu
+                n_cpu=self.parallel_n_cpu,
+                **kw
             )
         except ValueError:
             snackbar_message = SnackbarMessage(
