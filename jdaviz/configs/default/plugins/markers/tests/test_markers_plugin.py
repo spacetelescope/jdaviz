@@ -7,7 +7,7 @@ import pytest
 from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
-from jdaviz.core.marks import MarkersMark, DistanceMeasurement
+from jdaviz.core.marks import MarkersMark, DistanceLine
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 from bqplot.scales import LinearScale
 
@@ -424,8 +424,8 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
 
 
 def _get_distance_marks_from_viewer(viewer):
-    """Helper function to retrieve DistanceMeasurement marks from a viewer's figure."""
-    return [m for m in viewer.figure.marks if isinstance(m, DistanceMeasurement)]
+    """Helper function to retrieve DistanceLine marks from a viewer's figure."""
+    return [m for m in viewer.figure.marks if isinstance(m, DistanceLine)]
 
 
 def test_distance_tool_live_preview_image(cubeviz_helper, spectrum1d_cube):
@@ -451,7 +451,7 @@ def test_distance_tool_live_preview_image(cubeviz_helper, spectrum1d_cube):
     assert mp._obj.measurements_table.items[0]['Separation (arcsec)'] != "N/A"
 
 
-def test_distance_tool_live_preview_profile(cubeviz_helper, spectrum1d_cube):
+def test_distance_tool_profile(cubeviz_helper, spectrum1d_cube):
     """Tests the rubber band line and live UI update in a profile viewer."""
     cubeviz_helper.load_data(spectrum1d_cube, "test")
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
@@ -490,6 +490,13 @@ def test_distance_tool_live_preview_profile(cubeviz_helper, spectrum1d_cube):
     # Assert that the delta columns are still correct
     assert profile_row['Δx'] == f"{dx:.4g} m"
     assert profile_row['Δy'] == f"{dy:.4g} Jy"
+
+    # Test distance mark location update after unit conversion
+    marks = _get_distance_marks_from_viewer(sv)
+    assert_allclose(marks[0].y, [28, 80])
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    uc.flux_unit.selected = 'MJy'
+    assert_allclose(marks[0].y, [2.8e-05, 8.0e-05])
 
 
 def test_distance_tool_snapping(cubeviz_helper, spectrum1d_cube):
