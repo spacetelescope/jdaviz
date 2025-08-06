@@ -1,18 +1,15 @@
 import itertools
 import numpy as np
-from time import sleep
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
-from traitlets import List, Bool, Any, observe
+from traitlets import List, Bool, Any
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import SelectSpectraComponent
 from jdaviz.core.user_api import ImporterUserApi
-
-from echo import CallbackProperty
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -25,9 +22,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     spectra_items = List().tag(sync = True)
     spectra_selected = Any().tag(sync = True)
     spectra_multiselect = Bool(True).tag(sync = True)
-    # TODO: search + multiselect retains default selection
-    # i.e. search 9, select 9, still have two spectra in viewer
-    spectra_search = Bool(True).tag(sync = True)
+    # spectra_search = Bool(True).tag(sync = True)
+    disable_dropdown = Bool(False).tag(sync = True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -38,19 +34,19 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
-        self.fully_masked_spectra = {}
+        self.fully_masked_spectra = []
+        self.use_spectra_component = False
+
         # NOTE: This 'if' statement is here because this class is sometimes instantiated
         # with a str from self.input. Is that intended behavior?
         if isinstance(self.input, (Spectrum, SpectrumList)):
+            self.use_spectra_component = True
             spectra_options = []
             index_modifier = 0
             # Pre-emptive check for and application of mask to avoid issues down the line
             for index, spec in enumerate(self.input):
-                # TODO: get this working for _c1d files as well.
                 if self.is_wfssmulti(spec):
-                    exp_num, source_id = self.parse_wfssmulti_header(spec)
-                    exposure_sourceid = f'{exp_num}_{source_id}'
-                    label = f'Exposure {exp_num}, Source ID: {source_id}'
+                    exposure_sourceid, label = self.generate_wfssmulti_labels(spec)
                 else:
                     # Note this would be the original index before 'popping'
                     # the unusable spectra out
@@ -59,7 +55,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
                 # all == True implies the entire array is masked and unusable
                 if self.is_fully_masked(spec):
-                    self.fully_masked_spectra[f'{label} at index {index}'] = spec
+                    self.fully_masked_spectra.append(label)
                     index_modifier += 1
                     continue
 
@@ -74,10 +70,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                   multiselect='spectra_multiselect',
                                                   manual_options=spectra_options)
 
-            self.spectra.selected = []  # [self.spectra.choices[0]]
-
-        # else:
-        #     self._set_default_data_label()
+            self.spectra.selected = []
 
     @property
     def user_api(self):
@@ -125,46 +118,25 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             else:
                 raise NotImplementedError(f"{inp} is not supported")
 
-        if hasattr(self, 'spectra'):
+        if self.use_spectra_component:
             selected_spectra = SpectrumList(self.spectra.selected_obj)
         else:
             selected_spectra = self.input
 
         return SpectrumList(input_to_list_of_spec(selected_spectra))
 
-    # def _get_label_with_index_source_id(self, prefix, index=None, source_id=None):
-    #     index_source_id = ",".join([str(e) for e in (index, source_id) if e is not None])
-    #     return f"{prefix}[{index_source_id}]" if len(index_source_id) else prefix
-
-# TODO: FIX DATA LABEL ISSUES (see pytest)
-#     @observe('spectra_selected', 'data_label_as_prefix')
-#     def _set_default_data_label(self, *args):
-#         if self.default_data_label_from_resolver:
-#             prefix = self.default_data_label_from_resolver
-#         else:
-#             prefix = "Spectra"
-#
-#         if hasattr(self, 'spectra'):
-#             all_spectra = self.spectra
-#             self.data_label_default = f"{prefix}_"
-        # else:
-        #     self.data_label_default = prefix
-
     def is_wfssmulti(self, spec):
         if 'WFSSMulti' in spec.meta.get('header', {}).get('DATAMODL', ''):
             return True
         return False
 
-    def parse_wfssmulti_header(self, spec):
-        # These are used for label purposes
-        header = spec.meta.get('header', {})
-        return header.get('EXPGRPID', '0_0_0').split('_')[-2], spec.meta.get('source_id', '')
-
     def generate_wfssmulti_labels(self, spec):
         """
         Generate a label for WFSSMulti spectra based on the header information.
         """
-        exp_num, source_id = self.parse_wfssmulti_header(spec)
+        header = spec.meta.get('header', {})
+        exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
+        source_id = spec.meta.get('source_id', '')
         return f'{exp_num}_{source_id}', f'Exposure {exp_num}, Source ID: {source_id}'
 
     def has_mask(self, spec):
@@ -202,24 +174,24 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
-        data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
                 if self.is_wfssmulti(spec):
-                    exp_num, source_id = self.parse_wfssmulti_header(spec)
+                    exposure_sourceid, label = self.generate_wfssmulti_labels(spec)
+                    exp_num, source_id = exposure_sourceid.split('_')
                     suffix = f'EXP-{exp_num}_ID-{source_id}'
                 else:
                     suffix = i
 
-                # TODO: Ensure WFSS populate the same viewer instead of multiple
-                self.add_to_data_collection(spec, f"{data_label}_{suffix}",
+                # NOTE: On occasion, spectrum lists populate different viewers
+                # I have not been able to reproduce the issue consistently
+                self.add_to_data_collection(spec, f"{self.data_label_value}_{suffix}",
                                             show_in_viewer=show_in_viewer)
 
         if self.fully_masked_spectra:
             self.app.hub.broadcast(SnackbarMessage(
-                f"Spectra with Source ID's {', '.join(self.fully_masked_spectra.keys())} "
-                "are completely masked.",
-                sender = self, color = "warning"))
+                f"Spectra {', '.join(self.fully_masked_spectra)} are completely masked.",
+                sender=self, color="warning"))
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
@@ -263,12 +235,12 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 @loader_importer_registry('1D Spectrum Concatenated')
 class SpectrumListConcatenatedImporter(SpectrumListImporter):
+    # spectra_search = Bool(False).tag(sync = True)
+    disable_dropdown = Bool(True).tag(sync = True)
 
-    @property
-    def is_valid(self):
-        # TODO: Concantenation is currently too slow with WFSSmulti
-        # Assume output is a list of spectra
-        return False
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.use_spectra_component = False
 
     @property
     def output(self):
@@ -276,26 +248,27 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         if spectrum_list is None:
             return
 
-        wlallorig = []  # to collect wavelengths
-        fnuallorig = []  # fluxes
-        dfnuallorig = []  # and uncertanties (if present)
-
-        # TODO: Speed this up!!! (likely with parallel framework or vectorization)
-        for i, spec in enumerate(spectrum_list):
+        # Vectorized collection of all wavelengths, fluxes, and uncertainties
+        wl_list = []
+        fnu_list = []
+        dfnu_list = []
+        for spec in spectrum_list:
             spec = self.apply_spectral_mask(spec)
-            for wlind in range(len(spec.spectral_axis)):
-                wlallorig.append(spec.spectral_axis[wlind].value)
-                fnuallorig.append(spec.flux[wlind].value)
+            wl = spec.spectral_axis.value
+            fnu = spec.flux.value
 
-                # because some spec in the list might have uncertainties and
-                # others may not, if uncert is None, set to list of NaN. later,
-                # if the concatenated list of uncertanties is all nan (meaning
-                # they were all nan to begin with, or all None), it will be set
-                # to None on the final Spectrum
-                if spec.uncertainty is not None and spec.uncertainty[wlind] is not None:
-                    dfnuallorig.append(spec.uncertainty[wlind].array)
-                else:
-                    dfnuallorig.append(np.nan)
+            if spec.uncertainty is not None:
+                dfnu = spec.uncertainty.array
+            else:
+                dfnu = np.full_like(fnu, np.nan)
+
+            wl_list.append(wl)
+            fnu_list.append(fnu)
+            dfnu_list.append(dfnu)
+
+        wlallorig = np.concatenate(wl_list)
+        fnuallorig = np.concatenate(fnu_list)
+        dfnuallorig = np.concatenate(dfnu_list)
 
         wave_units = spec.spectral_axis.unit
         flux_units = spec.flux.unit
