@@ -1,26 +1,11 @@
 <template>
   <v-container>
-
-
     <div v-if="!disable_dropdown">
-        <div style="margin-bottom: 8px;">
-          <v-text-field
-              v-model="spectra_search_input"
-              placeholder="Search Source IDs..."
-              append-icon='mdi-magnify'
-              style="width: 200px; margin-right: 8px; margin-top: 2px"
-              dense
-              clearable
-              hide-details
-              single-line
-          ></v-text-field>
-        </div>
         <plugin-select
-          :items="filtered_spectra_items"
+          :items="spectra_items.map(i => i.label)"
           :selected.sync="spectra_selected"
           :show_if_single_entry="true"
           :multiselect="spectra_multiselect"
-          :disabled="disable_dropdown"
           label="Source IDs"
           api_hint="ldr.source_ids ="
           :api_hints_enabled="api_hints_enabled"
@@ -28,7 +13,7 @@
         ></plugin-select>
     </div>
 
-    <div style="height: 8px;"></div>
+    <div style="height: 16px;"></div>
 
     <v-row>
       <plugin-auto-label
@@ -44,50 +29,3 @@
     </v-row>
   </v-container>
 </template>
-
-<script>
-export default {
-  data() {
-    return {
-      spectra_search_input: ''
-    };
-  },
-  computed: {
-    filtered_spectra_items() {
-      // Get selected as an array (handles both single and multi-select)
-      const selected = Array.isArray(this.spectra_selected)
-        ? this.spectra_selected
-        : [this.spectra_selected];
-
-      // Filter items by search
-      let filtered = this.spectra_items.filter(i =>
-        (i.label || '').toLowerCase().includes(this.spectra_search_input.toLowerCase())
-      );
-
-      // Add selected items not in filtered
-      selected.forEach(sel => {
-        if (
-          sel &&
-          !filtered.some(i => i.label === sel) &&
-          this.spectra_items.some(i => i.label === sel)
-        ) {
-          filtered.push(this.spectra_items.find(i => i.label === sel));
-        }
-      });
-
-      // Return as array of labels (if that's what your select expects)
-      return filtered.map(i => i.label);
-    }
-  },
-  props: {
-    spectra_items: Array,
-    spectra_selected: Array,
-    spectra_multiselect: Boolean,
-    api_hints_enabled: Boolean,
-    data_label_value: String,
-    data_label_default: String,
-    data_label_auto: Boolean,
-    data_label_invalid_msg: String
-  }
-};
-</script>
