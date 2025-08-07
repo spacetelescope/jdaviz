@@ -150,16 +150,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # All possible fitter options available with parameters for each
         self.all_fitters = {
             'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                            {'name': 'filter_non_finite', 'value': False}]},
+                                            {'name': 'filter_non_finite', 'value': True}]},
             'DogBoxLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                               {'name': 'filter_non_finite', 'value': False}]},
+                                               {'name': 'filter_non_finite', 'value': True}]},
             'LMLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                           {'name': 'filter_non_finite', 'value': False}]},
+                                           {'name': 'filter_non_finite', 'value': True}]},
             'LevMarLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                               {'name': 'filter_non_finite', 'value': False}]},
+                                               {'name': 'filter_non_finite', 'value': True}]},
             'LinearLSQFitter': {'parameters': []},
-            'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},]},
-            'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},]}
+            'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100}]},
+            'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100}]}
         }
         self.fitter_component = SelectPluginComponent(self, items='fitter_items',
                                                       selected='fitter_selected',
@@ -224,7 +224,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'equation', 'equation_components',
                    'add_results', 'residuals_calculate', 'residuals']
         expose += ['calculate_fit', 'clear_table', 'export_table',
-                   'fitted_models', 'get_models', 'get_model_parameters']
+                   'fitted_models', 'get_models', 'get_model_parameters', 'fitter_component']
         return PluginUserApi(self, expose=expose)
 
     def _param_units(self, param, model_type=None):
