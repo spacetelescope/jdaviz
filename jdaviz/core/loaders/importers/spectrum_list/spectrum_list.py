@@ -179,14 +179,26 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
-        # By setting data_label, we call the observer on self.data_label_value
-        # TODO: Still have some data_label issues, especially when changing from default
-        data_label = self.data_label_value
+        data_label_prefix = self.data_label_value
+        existing_data_labels = [data.label for data in self.app.data_collection]
+
         with self.app._jdaviz_helper.batch_load():
-            _ = [self.add_to_data_collection(spec_dict['obj'],
-                                             f"{data_label}_{spec_dict['suffix']}",
-                                             show_in_viewer = show_in_viewer)
-                 for spec_dict in self.output]
+            for spec_dict in self.output:
+                data_label = f"{data_label_prefix}_{spec_dict['suffix']}"
+
+                if data_label in existing_data_labels:
+                    # NOTE: may depend on the science use-case
+                    # It probably doesn't make sense to disable import entirely
+                    # since a user may want to import spectra after subsequent analysis
+                    self.app.hub.broadcast(SnackbarMessage(
+                        f"Spectrum with label '{data_label}' already exists in the viewer, "
+                        f"skipping.",
+                        sender=self, color="warning"))
+                    continue
+
+                self.add_to_data_collection(spec_dict['obj'],
+                                            data_label,
+                                            show_in_viewer=show_in_viewer)
 
         if self.fully_masked_spectra:
             self.app.hub.broadcast(SnackbarMessage(
