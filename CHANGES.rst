@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Distance measurement marks now update properly upon unit conversion. [#3716]
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]

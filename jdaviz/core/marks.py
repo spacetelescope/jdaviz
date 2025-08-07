@@ -237,6 +237,7 @@ class PluginMark:
         self.yunit = unit
 
     def _on_global_display_unit_changed(self, msg):
+
         if not self.auto_update_units:
             return
         unit = msg.unit
@@ -785,19 +786,19 @@ class DistanceLabel(Label, PluginMark, HubListener):
         kwargs.setdefault('x_offset', 0)
         kwargs.setdefault('y_offset', 0)
 
-        super().__init__(x=[x], y=[y], text=[text], scales=viewer.scales, **kwargs)
-        self.auto_update_units = False
-
-    def set_x_unit(self, unit=None):
-        pass
-
-    def set_y_unit(self, unit=None):
-        pass
+        super().__init__(x=x, y=y, text=[text], scales=viewer.scales, **kwargs)
+        self.auto_update_units = True
 
     def update_position(self, x, y, text):
-        self.x = [x]
-        self.y = [y]
+        self.x = x
+        self.y = y
         self.text = [text]
+
+
+class DistanceLine(PluginLine):
+    # We just want to be able to check for this specific line
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class DistanceMeasurement:
@@ -811,22 +812,24 @@ class DistanceMeasurement:
     parallel to the line while avoiding intersection.
     """
 
-    def __init__(self, viewer, x0, y0, x1, y1, text=""):
+    def __init__(self, viewer, x=[], y=[], text=""):
         self.viewer = viewer
         self.endpoints = None
+        self.auto_update_units = True
 
-        self.line = Lines(
-            x=[],
-            y=[],
+        self.line = DistanceLine(
+            viewer,
+            x=x,
+            y=y,
             scales=viewer.scales,
             colors=[accent_color],
             stroke_width=2
         )
 
-        anchor_x, anchor_y = (x0 + x1) / 2, (y0 + y1) / 2
+        anchor_x, anchor_y = (x[0] + x[1]) / 2, (y[0] + y[1]) / 2
 
         self.label_shadow = DistanceLabel(
-            viewer, anchor_x, anchor_y, text,
+            viewer, [anchor_x], [anchor_y], text,
             colors=['white'],
             stroke='white',
             stroke_width=5,
@@ -835,14 +838,15 @@ class DistanceMeasurement:
         )
 
         self.label_text = DistanceLabel(
-            viewer, anchor_x, anchor_y, text,
+            viewer, [anchor_x], [anchor_y], text,
             colors=[accent_color],
             font_weight='bold',
             default_size=15
         )
 
         self.visible = True
-        self.update_points(x0, y0, x1, y1, text)
+        self.update_points(x[0], y[0], x[1], y[1], text)
+        self.auto_update_units = True
 
     @property
     def marks(self):
@@ -922,7 +926,7 @@ class DistanceMeasurement:
             angle_deg -= 180 * np.sign(angle_deg)
 
         for label in (self.label_shadow, self.label_text):
-            label.update_position(mid_x, mid_y, text)
+            label.update_position([mid_x], [mid_y], text)
             label.rotate_angle = angle_deg
             label.x_offset = x_offset_int
             label.y_offset = -y_offset_int
