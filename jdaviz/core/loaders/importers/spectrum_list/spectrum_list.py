@@ -22,7 +22,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     spectra_items = List().tag(sync = True)
     spectra_selected = Any().tag(sync = True)
     spectra_multiselect = Bool(True).tag(sync = True)
-    # spectra_search = Bool(True).tag(sync = True)
+
     disable_dropdown = Bool(False).tag(sync = True)
 
     def __init__(self, *args, **kwargs):
@@ -161,7 +161,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # WFSS L3 may have a partially masked spectral axis
         # Specutils expects the spectral axis to be strictly increasing/decreasing
         # so without applying the mask, we would get an error for some spectra.
-        if self.has_mask(spec) and not self.is_fully_masked(spec):
+        if self.has_mask(spec.spectral_axis) and not self.is_fully_masked(spec):
             mask = spec.spectral_axis.mask
             return Spectrum(
                 spectral_axis = spec.spectral_axis[~mask],
@@ -251,7 +251,6 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 @loader_importer_registry('1D Spectrum Concatenated')
 class SpectrumListConcatenatedImporter(SpectrumListImporter):
-    # spectra_search = Bool(False).tag(sync = True)
     disable_dropdown = Bool(True).tag(sync = True)
 
     @property
