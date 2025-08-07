@@ -62,27 +62,44 @@ def unmasked_2d_spectrum():
     return Spectrum(flux=flux, spectral_axis=spectral_axis)
 
 
-@pytest.fixture
-def spectrum_list(unmasked_spectrum, masked_spectrum, wfss_spectrum,
-                  partially_masked_wfss_spectrum, fully_masked_wfss_spectrum):
-    return SpectrumList([unmasked_spectrum, masked_spectrum, wfss_spectrum,
-                         partially_masked_wfss_spectrum, fully_masked_wfss_spectrum])
+class TestSpectrumListImporter:
 
-# class TestSpectrumListImporter:
+    # def __init__(self):
+    #     pass
 
+    # TODO: make sure nothing is messed up with mutability
+    spectrum_list = SpectrumList([unmasked_spectrum, masked_spectrum,
+                                  wfss_spectrum, partially_masked_wfss_spectrum,
+                                  fully_masked_wfss_spectrum])
 
-def test_is_valid(deconfigged_helper, spectrum_list, unmasked_spectrum, unmasked_2d_spectrum):
-    ldr = deconfigged_helper.loaders['object']
-    ldr.object = spectrum_list
-    assert ldr.is_valid
+    def test_is_valid(self, deconfigged_helper, spectrum_list,
+                      unmasked_spectrum, unmasked_2d_spectrum):
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = spectrum_list
+        assert ldr.is_valid
 
-    ldr.object = unmasked_spectrum
-    assert not ldr.is_valid
+        ldr.object = unmasked_spectrum
+        assert not ldr.is_valid
 
-    ldr.object = unmasked_2d_spectrum
-    assert ldr.is_valid
+        ldr.object = unmasked_2d_spectrum
+        assert ldr.is_valid
 
-    ldr.object = make_spectrum(mask=False, collection=True)
-    assert ldr.is_valid
+        ldr.object = make_spectrum(mask=False, collection=True)
+        assert ldr.is_valid
 
+# TODO: May have to do dummy class as in template_mixin tests
+    @pytest.mark.parametrize('spec', spectrum_list)
+    def test_input_to_list_of_spec_1d(self, deconfigged_helper, spec):
+        importer = SpectrumListImporter(app=deconfigged_helper)
+        out = importer.input_to_list_of_spec(spec)
+        assert isinstance(out, list)
+        out = out[0]
+        assert isinstance(out, Spectrum)
 
+        spectral_axis = spec.spectral_axis
+        if hasattr(spectral_axis, 'mask'):
+            mask = spectral_axis.mask
+            assert np.all(out.flux == spec.flux[mask])
+            assert np.all(out.spectral_axis == spectral_axis[mask])
+            assert np.all(out.uncertainty == spec.uncertainty[mask])
+            assert np.all(out.mask == mask[mask])
