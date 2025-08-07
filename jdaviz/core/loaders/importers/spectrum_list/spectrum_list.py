@@ -181,6 +181,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def __call__(self, show_in_viewer=True):
         data_label_prefix = self.data_label_value
         existing_data_labels = [data.label for data in self.app.data_collection]
+        self.previous_data_label_messages = []
 
         with self.app._jdaviz_helper.batch_load():
             for spec_dict in self.output:
@@ -190,10 +191,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     # NOTE: may depend on the science use-case
                     # It probably doesn't make sense to disable import entirely
                     # since a user may want to import spectra after subsequent analysis
-                    self.app.hub.broadcast(SnackbarMessage(
-                        f"Spectrum with label '{data_label}' already exists in the viewer, "
-                        f"skipping.",
-                        sender=self, color="warning"))
+                    msg = (f"Spectrum with label '{data_label}' already exists in the viewer, "
+                           f"skipping. This message will only be shown once.")
+                    # Previously chosen spectra remain in the dropdown and will attempt to import
+                    # again, so only show the message once.
+                    if msg not in self.previous_data_label_messages:
+                        self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color="warning"))
+                    self.previous_data_label_messages.append(msg)
                     continue
 
                 self.add_to_data_collection(spec_dict['obj'],
