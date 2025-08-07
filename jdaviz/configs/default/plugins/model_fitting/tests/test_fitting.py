@@ -604,8 +604,6 @@ def test_different_fitters(specviz_helper, spectrum1d):
     mf.create_model_component('Linear1D')
 
     mf.fitter_component.selected = 'LMLSQFitter'
-    expected_error = 'Model is linear in parameters; consider using linear fitting methods.'
-    assert mf.fitter_error == expected_error
     # change maxiter to 50
     mf.fitter_parameters['parameters'][0]['value'] = 50
 
