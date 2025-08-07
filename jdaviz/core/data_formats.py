@@ -76,7 +76,9 @@ def get_valid_format(filename):
         The recommended application configuration
     """
 
-    valid_file_format = identify_spectrum_format(filename, SpectrumList)
+    valid_file_format = identify_spectrum_format(filename)
+    if valid_file_format == []:
+        valid_file_format = identify_spectrum_format(filename, SpectrumList)
     ndim = guess_dimensionality(filename)
 
     if valid_file_format:
