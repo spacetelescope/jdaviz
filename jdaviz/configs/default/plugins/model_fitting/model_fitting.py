@@ -152,18 +152,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # with type 'call' are used on call.
         self.all_fitters = {
             'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
-                                            {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
-                                            {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+                                            {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
+                                            {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},  # noqa
             'DogBoxLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
-                                               {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
-                                               {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+                                               {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
+                                               {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},  # noqa
             'LMLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
-                                           {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
-                                           {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+                                           {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
+                                           {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},  # noqa
             'LevMarLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
-                                               {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
-                                               {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
-            'LinearLSQFitter': {'parameters': [{'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+                                               {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
+                                               {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},  # noqa
+            'LinearLSQFitter': {'parameters': [{'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},  # noqa
             'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
             'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]}
         }
