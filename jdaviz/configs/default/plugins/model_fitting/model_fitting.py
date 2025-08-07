@@ -147,19 +147,25 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                      selected='model_comp_selected',
                                                      manual_options=list(MODELS.keys()))
 
-        # All possible fitter options available with parameters for each
+        # All possible fitter options available with parameters for each.
+        # Parameters with type 'init' are used on initialization and ones
+        # with type 'call' are used on call.
         self.all_fitters = {
-            'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                            {'name': 'filter_non_finite', 'value': True}]},
-            'DogBoxLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                               {'name': 'filter_non_finite', 'value': True}]},
-            'LMLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                           {'name': 'filter_non_finite', 'value': True}]},
-            'LevMarLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100},
-                                               {'name': 'filter_non_finite', 'value': True}]},
-            'LinearLSQFitter': {'parameters': []},
-            'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100}]},
-            'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100}]}
+            'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
+                                            {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
+                                            {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+            'DogBoxLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
+                                               {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
+                                               {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+            'LMLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
+                                           {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
+                                           {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+            'LevMarLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
+                                               {'name': 'filter_non_finite', 'value': True, 'type': 'call'},
+                                               {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+            'LinearLSQFitter': {'parameters': [{'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},
+            'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
+            'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]}
         }
         self.fitter_component = SelectPluginComponent(self, items='fitter_items',
                                                       selected='fitter_selected',
@@ -443,14 +449,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._update_fitter_error()
 
     def _update_fitter_error(self):
-        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']}
+        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
+              if param['type'] == 'call'}
+        init_kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
+                   if param['type'] == 'init'}
 
         # Try to run specutils fit_lines with current values to see if an error appears
         try:
             models_to_fit = self._reinitialize_with_fixed()
             spec = self.dataset.get_selected_spectrum(use_display_units=True)
             masked_spectrum = self._apply_subset_masks(spec, self.spectral_subset)
-            fitter = getattr(fitting, self.fitter_component.selected)()
+            fitter = getattr(fitting, self.fitter_component.selected)(**init_kw)
             fit_lines(masked_spectrum, models_to_fit, fitter=fitter, weights=None,
                       window=None, **kw)
             self.fitter_error = None
@@ -1229,14 +1238,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)
 
-        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']}
-
+        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
+              if param['type'] == 'call'}
+        init_kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
+                   if param['type'] == 'init'}
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 masked_spectrum,
                 models_to_fit,
                 self.model_equation,
-                fitter=getattr(fitting, self.fitter_component.selected)(),
+                fitter=getattr(fitting, self.fitter_component.selected)(**init_kw),
                 run_fitter=True,
                 window=None,
                 n_cpu=self.parallel_n_cpu,
@@ -1348,14 +1359,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             spec.mask = spec.mask | np.isnan(spec.flux)
 
-        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']}
-
+        kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
+              if param['type'] == 'call'}
+        init_kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
+                   if param['type'] == 'init'}
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 spec,
                 models_to_fit,
                 self.model_equation,
-                fitter=getattr(fitting, self.fitter_component.selected)(),
+                fitter=getattr(fitting, self.fitter_component.selected)(**init_kw),
                 run_fitter=True,
                 window=None,
                 n_cpu=self.parallel_n_cpu,
