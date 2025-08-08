@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- The Model Fitting plugin now allows the user to select a fitter from a dropdown menu, with the default being the
+  ``astropy.modeling.fitting.TRFLSQFitter``. [#3720]
+
 Cubeviz
 ^^^^^^^
 
