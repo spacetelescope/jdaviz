@@ -158,9 +158,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return False
 
     def apply_spectral_mask(self, spec):
-        # WFSS L3 may have a partially masked spectral axis
-        # Specutils expects the spectral axis to be strictly increasing/decreasing
-        # so without applying the mask, we would get an error for some spectra.
+        # The masks (spec.spectral_axis.mask and spec.mask) for WFSS L3 spectra
+        # may not be equivalent, so we only apply the spectral_axis mask to avoid
+        # a Specutils error. Specutils expects the spectral axis to be strictly
+        # increasing/decreasing so applying the 'full' mask may throw that error.
         if self.has_mask(spec.spectral_axis) and not self.is_fully_masked(spec):
             mask = spec.spectral_axis.mask
             return Spectrum(
