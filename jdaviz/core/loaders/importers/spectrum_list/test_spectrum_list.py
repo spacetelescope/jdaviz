@@ -3,7 +3,6 @@ import pytest
 from astropy import units as u
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 
-from jdaviz.conftest import deconfigged_helper
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListImporter,
     # combine_lists_to_1d_spectrum
@@ -194,7 +193,8 @@ class TestSpectrumListImporter:
     #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
     #     spec = spectrum_list[0]
     #     importer_obj.input = SpectrumList([spec])
-    #     importer_obj.spectra = type('Spectra', (), {'selected_obj_dict': [{'obj': spec, 'suffix': 'index-0'}]})()
+    #     importer_obj.spectra = type('Spectra', (),
+    #     {'selected_obj_dict': [{'obj': spec, 'suffix': 'index-0'}]})()
     #     importer_obj.data_label_value = 'testlabel'
     #     importer_obj.__call__()
     #
@@ -202,7 +202,8 @@ class TestSpectrumListImporter:
     #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
     #     spec = spectrum_list[0]
     #     importer_obj.input = SpectrumList([spec])
-    #     importer_obj.spectra = type('Spectra', (), {'selected_obj_dict': [{'obj': spec, 'suffix': 'index-0'}]})()
+    #     importer_obj.spectra = type('Spectra', (),
+    #     {'selected_obj_dict': [{'obj': spec, 'suffix': 'index-0'}]})()
     #     importer_obj.data_label_value = 'testlabel'
     #     importer_obj.__call__()
     #
