@@ -596,16 +596,23 @@ def test_deconf_mf_with_subset(deconfigged_helper):
         mf.calculate_fit()
 
 
-def test_different_fitters(specviz_helper, spectrum1d):
+@pytest.mark.parametrize('fitter', ['TRFLSQFitter', 'DogBoxLSQFitter', 'LMLSQFitter',
+                                    'LevMarLSQFitter', 'LinearLSQFitter', 'SLSQPLSQFitter',
+                                    'SimplexLSQFitter'])
+def test_different_fitters(specviz_helper, spectrum1d, fitter):
     data_label = 'test'
     specviz_helper.load_data(spectrum1d, data_label=data_label)
 
     mf = specviz_helper.plugins['Model Fitting']._obj
-    mf.create_model_component('Linear1D')
+    if fitter == 'SimplexLSQFitter':
+        mf.create_model_component('Const1D')
+    else:
+        mf.create_model_component('Linear1D')
 
-    mf.fitter_component.selected = 'LMLSQFitter'
+    mf.fitter_component.selected = fitter
     # change maxiter to 50
-    mf.fitter_parameters['parameters'][0]['value'] = 50
+    if fitter != 'LinearLSQFitter':
+        mf.fitter_parameters['parameters'][0]['value'] = 50
 
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
