@@ -164,6 +164,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # increasing/decreasing so applying the 'full' mask may throw that error.
         if self.has_mask(spec.spectral_axis) and not self.is_fully_masked(spec):
             mask = spec.spectral_axis.mask
+            # NOTE: Something breaks when the following is attempted instead
+            # of the current implementation
+            #
+            # spec.mask = spec.mask | spec.spectral_axis.mask
+            # return spec
             return Spectrum(
                 spectral_axis=spec.spectral_axis[~mask],
                 flux=spec.flux[~mask],
@@ -201,6 +206,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     self.previous_data_label_messages.append(msg)
                     continue
 
+                # TODO: there is a parenting issue when importing from different files, i.e.
+                # To replicate: import from 2D spectra then from WFSS L3 file
                 self.add_to_data_collection(spec_dict['obj'],
                                             data_label,
                                             show_in_viewer=show_in_viewer)
