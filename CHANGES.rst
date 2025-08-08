@@ -10,6 +10,9 @@ Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
 
+- Fixed reestimating model parameters when cube fitting in the case where the cube's
+  first axis is the spectral axis. [#3717]
+
 Imviz
 ^^^^^
 

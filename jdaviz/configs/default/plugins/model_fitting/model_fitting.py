@@ -1364,6 +1364,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             if subset_mask.ndim < spectrum.flux.ndim:
                 # correct the shape of spectral/spatial axes when they're different:
+                if spectrum.spectral_axis_index == 0:
+                    subset_mask = np.expand_dims(subset_mask, (1, 2))
                 subset_mask = np.broadcast_to(subset_mask, spectrum.flux.shape)
 
             elif (subset_mask.ndim == spectrum.flux.ndim and
