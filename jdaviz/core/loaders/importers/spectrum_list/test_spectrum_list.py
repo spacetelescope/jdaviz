@@ -1,6 +1,9 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.utils.masked import Masked
+from astropy.nddata import StdDevUncertainty
+
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
@@ -10,15 +13,27 @@ from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
 
 from jdaviz.core.registries import loader_importer_registry
 
+@pytest.fixture
+def make_empty_spectrum():
+    return Spectrum(spectral_axis=np.array([]) * u.Hz,
+                    flux=np.array([]) * u.Jy,
+                    uncertainty=StdDevUncertainty(np.array([])),
+                    mask=np.array([]),
+                    meta={})
 
-def make_spectrum(mask, wfss=False, collection=False):
+
+def make_spectrum(spectral_mask=None, wfss=False, collection=False):
     cls = Spectrum
-    flux = np.arange(5) * u.Jy
-    spectral_axis = np.arange(5) * u.nm
     meta = {}
+    spec_len = 5
+    # Flux is not a masked array, only spectral axis
+    flux = np.arange(spec_len) * u.Jy
 
-    if isinstance(mask, bool):
-        mask = np.array([mask] * 5)
+    if spectral_mask is None:
+        spectral_mask = np.array([False] * spec_len)
+
+    spectral_axis = Masked(np.arange(spec_len) * u.nm, mask=spectral_mask)
+    uncertainty = StdDevUncertainty(flux)
 
     if wfss:
         meta = {'header': {'DATAMODL': 'WFSSMulti', 'EXPGRPID': '0_0_0_1'}, 'source_id': '1111'}
@@ -26,34 +41,31 @@ def make_spectrum(mask, wfss=False, collection=False):
     if collection:
         cls = SpectrumCollection
 
-    return cls(flux=flux, spectral_axis=spectral_axis, mask=mask, meta=meta)
+    return cls(flux=flux, spectral_axis=spectral_axis,
+               uncertainty=uncertainty, mask=spectral_mask,
+               meta=meta)
 
 
 @pytest.fixture
 def unmasked_spectrum():
-    return make_spectrum(mask=False)
+    return make_spectrum()
 
 
 @pytest.fixture
-def masked_spectrum():
-    return make_spectrum(mask=True)
+def partially_masked_spectrum():
+    return make_spectrum(spectral_mask=np.array([False, False, False, True, True]))
 
 
 @pytest.fixture
 def wfss_spectrum():
-    return make_spectrum(mask=False, wfss=True)
+    return make_spectrum(wfss=True)
 
 
 # WFSS may have spectral axes that are partially masked
 # and this is not allowed in specutils
 @pytest.fixture
 def partially_masked_wfss_spectrum():
-    return make_spectrum(mask=np.array([False, True, False, True, False]), wfss=True)
-
-
-@pytest.fixture
-def fully_masked_wfss_spectrum():
-    return make_spectrum(mask=True, wfss=True)
+    return make_spectrum(spectral_mask=np.array([False, False, False, True, True]), wfss=True)
 
 
 @pytest.fixture
@@ -64,14 +76,13 @@ def unmasked_2d_spectrum():
 
 
 @pytest.fixture
-def spectrum_list(unmasked_spectrum, masked_spectrum, wfss_spectrum,
-                  partially_masked_wfss_spectrum, fully_masked_wfss_spectrum):
+def spectrum_list(unmasked_spectrum, partially_masked_spectrum,
+                  wfss_spectrum, partially_masked_wfss_spectrum):
     return SpectrumList([
         unmasked_spectrum,
-        masked_spectrum,
+        partially_masked_spectrum,
         wfss_spectrum,
-        partially_masked_wfss_spectrum,
-        fully_masked_wfss_spectrum])
+        partially_masked_wfss_spectrum])
 
 
 @loader_importer_registry('Fake 1D Spectrum List')
@@ -105,9 +116,13 @@ class TestSpectrumListImporter:
                             input=input_obj)
 
     def test_is_valid(self, deconfigged_helper, spectrum_list,
-                      unmasked_spectrum, unmasked_2d_spectrum):
+                      unmasked_spectrum, unmasked_2d_spectrum,
+                      make_empty_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         assert importer_obj.is_valid
+
+        importer_obj.input = make_empty_spectrum
+        assert not importer_obj.is_valid
 
         importer_obj.input = unmasked_spectrum
         assert not importer_obj.is_valid
@@ -115,80 +130,94 @@ class TestSpectrumListImporter:
         importer_obj.input = unmasked_2d_spectrum
         assert importer_obj.is_valid
 
-        importer_obj.input = make_spectrum(mask=False, wfss=False)
-        assert not importer_obj.is_valid
-
-        importer_obj.input = make_spectrum(mask=False, collection=True)
+        importer_obj.input = make_spectrum(collection=True)
         assert importer_obj.is_valid
 
-    def test_input_to_list_of_spec_1d(self, deconfigged_helper, spectrum_list):
+    def test_input_to_list_of_spec(self, deconfigged_helper, spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
 
-        for spec in spectrum_list:
-            out = importer_obj.input_to_list_of_spec(spec)
-            assert isinstance(out, list)
-            out = out[0]
-            assert isinstance(out, Spectrum)
+        # Test the whole list
+        list_results = list(importer_obj.input_to_list_of_spec(spectrum_list))
+        assert len(list_results) == len(spectrum_list)
+        assert all(isinstance(spec, Spectrum) for spec in list_results)
+
+        # Test individual spectra
+        for i, spec in enumerate(spectrum_list):
+            results = importer_obj.input_to_list_of_spec(spec)
+            assert isinstance(results, list)
+
+            result = results[0]
+            assert isinstance(result, Spectrum)
 
             spectral_axis = spec.spectral_axis
-            if hasattr(spectral_axis, 'mask'):
-                mask = spectral_axis.mask
-                assert np.all(out.flux == spec.flux[mask])
-                assert np.all(out.spectral_axis == spectral_axis[mask])
-                assert np.all(out.uncertainty == spec.uncertainty[mask])
-                assert np.all(out.mask == mask[mask])
+            mask = spectral_axis.mask
+            assert np.all(result.flux == spec.flux[~mask])
+            assert np.all(result.spectral_axis == spectral_axis[~mask])
+            assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
+            assert np.all(result.mask == mask[~mask])
 
-    # def test_input_to_list_of_spec_1d_masked(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     partially_masked_wfss_spectrum = spectrum_list[3]
-    #     out = importer_obj.input_to_list_of_spec(partially_masked_wfss_spectrum)
-    #     assert isinstance(out, list)
-    #     assert isinstance(out[0], Spectrum)
-    #
-    # def test_input_to_list_of_spec_2d(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     flux = np.ones((2, 5)) * u.Jy
-    #     spectral_axis = np.arange(5) * u.nm
-    #     spec = Spectrum(flux=flux, spectral_axis=spectral_axis)
-    #     out = importer_obj.input_to_list_of_spec(spec)
-    #     assert isinstance(out, list)
-    #     assert len(out) == 2
-    #
-    # def test_input_to_list_of_spec_collection(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     spec1 = spectrum_list[0]
-    #     spec2 = spectrum_list[1]
-    #     inp = SpectrumCollection([spec1, spec2])
-    #     out = importer_obj.input_to_list_of_spec(inp)
-    #     assert all(isinstance(s, Spectrum) for s in out)
-    #
-    # def test_input_to_list_of_spec_not_supported(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     with pytest.raises(NotImplementedError):
-    #         importer_obj.input_to_list_of_spec('not_a_spectrum')
-    #
-    # def test_is_wfssmulti_and_labels(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     spec = spectrum_list[2]  # wfss_spectrum
-    #     assert importer_obj.is_wfssmulti(spec)
-    #     expid, label, suffix = importer_obj.generate_wfssmulti_labels(spec)
-    #     assert 'Exposure' in label
-    #     assert 'EXP-' in suffix
-    #
-    # def test_has_mask_and_is_fully_masked(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     spec = spectrum_list[1]  # masked_spectrum
-    #     assert importer_obj.has_mask(spec)
-    #     assert importer_obj.is_fully_masked(spec)
-    #     spec2 = spectrum_list[0]  # unmasked_spectrum
-    #     assert not importer_obj.is_fully_masked(spec2)
-    #
-    # def test_apply_spectral_mask(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     spec = spectrum_list[0]  # unmasked_spectrum
-    #     out = importer_obj.apply_spectral_mask(spec)
-    #     assert isinstance(out, Spectrum)
-    #
+            list_result = list_results[i]
+            assert np.all(list_result.flux == spec.flux[~mask])
+            assert np.all(list_result.spectral_axis == spectral_axis[~mask])
+            assert np.all(list_result.uncertainty.array == spec.uncertainty[~mask].array)
+            assert np.all(list_result.mask == mask[~mask])
+
+    def test_input_to_list_of_spec_not_supported(self, deconfigged_helper, spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        with pytest.raises(NotImplementedError):
+            importer_obj.input_to_list_of_spec('not_a_spectrum')
+
+    def test_is_wfss(self, deconfigged_helper, spectrum_list, wfss_spectrum):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        assert importer_obj.is_wfssmulti(wfss_spectrum)
+
+    def test_generate_wfss_labels(self, deconfigged_helper, spectrum_list, wfss_spectrum):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        exp_sid, label, suffix = importer_obj.generate_wfssmulti_labels(wfss_spectrum)
+        assert exp_sid == '0_1111'
+        assert label == 'Exposure 0, Source ID: 1111'
+        assert suffix == 'EXP-0_ID-1111'
+
+    def test_has_mask(self, deconfigged_helper, spectrum_list, make_empty_spectrum):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+
+        # Even unmasked spectra still *have* a mask, it's just all False
+        for spec in spectrum_list:
+            assert importer_obj.has_mask(spec)
+
+        assert not importer_obj.has_mask(make_empty_spectrum)
+
+        make_empty_spectrum.mask = None
+        assert not importer_obj.has_mask(make_empty_spectrum)
+
+    def test_is_fully_masked(self, deconfigged_helper, spectrum_list, unmasked_spectrum):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+
+        assert not importer_obj.is_fully_masked(unmasked_spectrum)
+        unmasked_spectrum.mask[:] = True
+        assert importer_obj.is_fully_masked(unmasked_spectrum)
+
+    def test_apply_spectral_mask(self, deconfigged_helper, spectrum_list,
+                                 make_empty_spectrum, unmasked_spectrum,
+                                 partially_masked_wfss_spectrum):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        # This does not have a spectral axis mask so it should return as is
+        result = importer_obj.apply_spectral_mask(make_empty_spectrum)
+        assert result is make_empty_spectrum
+
+        with pytest.raises(ValueError,
+                           match='Spectral axis must be strictly increasing or decreasing.'):
+            unmasked_spectrum.spectral_axis.mask[:] = True
+            _ = importer_obj.apply_spectral_mask(unmasked_spectrum)
+
+        spec = partially_masked_wfss_spectrum
+        mask = spec.spectral_axis.mask
+        result = importer_obj.apply_spectral_mask(spec)
+        assert np.all(result.flux == spec.flux[~mask])
+        assert np.all(result.spectral_axis == spec.spectral_axis[~mask])
+        assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
+        assert np.all(result.mask == mask[~mask])
+
     # def test_default_viewer_reference(self, deconfigged_helper, spectrum_list):
     #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
     #     spec = spectrum_list[0]
