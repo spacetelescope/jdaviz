@@ -19,11 +19,11 @@ __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
 class SpectrumListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum_list.vue"
 
-    spectra_items = List().tag(sync = True)
-    spectra_selected = Any().tag(sync = True)
-    spectra_multiselect = Bool(True).tag(sync = True)
+    spectra_items = List().tag(sync=True)
+    spectra_selected = Any().tag(sync=True)
+    spectra_multiselect = Bool(True).tag(sync=True)
 
-    disable_dropdown = Bool(False).tag(sync = True)
+    disable_dropdown = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -105,11 +105,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 # Note masks (currently) only applied when spectral_axis has missing values
                 return [self.apply_spectral_mask(inp)]
 
-            return [Spectrum(spectral_axis = inp.spectral_axis,
-                             flux = this_row(inp.flux, i),
-                             uncertainty = this_row(inp.uncertainty, i),
-                             mask = this_row(inp.mask, i),
-                             meta = inp.meta)
+            return [Spectrum(spectral_axis=inp.spectral_axis,
+                             flux=this_row(inp.flux, i),
+                             uncertainty=this_row(inp.uncertainty, i),
+                             mask=this_row(inp.mask, i),
+                             meta=inp.meta)
                     for i in range(inp.flux.shape[0])]
 
         elif isinstance(inp, (SpectrumList, SpectrumCollection)):
@@ -164,11 +164,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         if self.has_mask(spec.spectral_axis) and not self.is_fully_masked(spec):
             mask = spec.spectral_axis.mask
             return Spectrum(
-                spectral_axis = spec.spectral_axis[~mask],
-                flux = spec.flux[~mask],
-                uncertainty = spec.uncertainty[~mask],
-                mask = mask[~mask],
-                meta = spec.meta)
+                spectral_axis=spec.spectral_axis[~mask],
+                flux=spec.flux[~mask],
+                uncertainty=spec.uncertainty[~mask],
+                mask=mask[~mask],
+                meta=spec.meta)
 
         return spec
 
@@ -251,7 +251,7 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 @loader_importer_registry('1D Spectrum Concatenated')
 class SpectrumListConcatenatedImporter(SpectrumListImporter):
-    disable_dropdown = Bool(True).tag(sync = True)
+    disable_dropdown = Bool(True).tag(sync=True)
 
     @property
     def output(self):
