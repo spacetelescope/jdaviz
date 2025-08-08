@@ -594,3 +594,31 @@ def test_deconf_mf_with_subset(deconfigged_helper):
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit()
+
+
+@pytest.mark.parametrize('fitter', ['TRFLSQFitter', 'DogBoxLSQFitter', 'LMLSQFitter',
+                                    'LevMarLSQFitter', 'LinearLSQFitter', 'SLSQPLSQFitter',
+                                    'SimplexLSQFitter'])
+def test_different_fitters(specviz_helper, spectrum1d, fitter):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+
+    mf = specviz_helper.plugins['Model Fitting']._obj
+    if fitter == 'SimplexLSQFitter':
+        mf.create_model_component('Const1D')
+    else:
+        mf.create_model_component('Linear1D')
+
+    mf.fitter_component.selected = fitter
+    # change maxiter to 50
+    if fitter != 'LinearLSQFitter':
+        mf.fitter_parameters['parameters'][0]['value'] = 50
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit(add_data=True)
+
+    result = specviz_helper.app.data_collection['model']
+    expected_result = [6000., 6222.22222222, 6444.44444444, 6666.66666667, 6888.88888889,
+                       7111.11111111, 7333.33333333, 7555.55555556, 7777.77777778, 8000.] * u.AA
+    assert_allclose(result.get_object().spectral_axis, expected_result)

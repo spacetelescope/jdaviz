@@ -97,7 +97,13 @@ This is also necessary even if there is only one model component.
 The model components are specified by their labels and the equation
 defaults to the sum of all created components, but can be modified to
 exclude some of components without needing to delete them entirely
-or to change to subtraction, for example.
+or to change to subtraction, for example. The user can also select
+a different fitter to use for the model and adjust the corresponding
+parameters that appear in the :guilabel:`Fitter Parameters`
+accordion menu. The default fitter used is
+`astropy.modeling.fitting.TRFLSQFitter <https://docs.astropy.org/en/latest/api/astropy.modeling.fitting.TRFLSQFitter.html#astropy.modeling.fitting.TRFLSQFitter>`_.
+The fitter can be changed to any of the available Astropy fitters,
+which can be found here `<https://docs.astropy.org/en/latest/modeling/reference_api.html#id6>`_.
 
 After fitting, the expandable menu for each component model will update to
 show the fitted value of each parameter rather than the initial value, and
@@ -128,6 +134,8 @@ The model fitting plugin can be run from the API:
     plugin_mf.set_model_component('G', 'mean', 2.2729)
     # Model equation gets populated automatically, but can be overwritten
     plugin_mf.equation = 'L+G'
+    # Set fitter
+    plugin_mf.fitter_component.selected = 'TRFLSQFitter'
     # Calculate fit
     plugin_mf.calculate_fit()
 
