@@ -1431,7 +1431,7 @@ class SelectSpectraComponent(SelectPluginComponent):
         return {k: manual_item[k] for k in ('label', 'index', 'exposure_sourceid')}
 
     @observe('filters')
-    def _update_items(self, msg = {}):
+    def _update_items(self, msg={}):
         self.items = [self._to_item(item, ind) for ind, item in enumerate(self.manual_options)
                       if self._is_valid_item(item)]
         try:
@@ -1439,25 +1439,6 @@ class SelectSpectraComponent(SelectPluginComponent):
         except (ValueError, TypeError):
             pass
 
-    # @property
-    # def is_not_masked(self):
-    #     return self.selected_item.get('is_not_masked', None)
-
-    # @property
-    # def selected_source_xpos(self):
-    #     return self.selected_item.get('source_xpos', None)
-    #
-    # @property
-    # def source_xpos(self):
-    #     return [item.get('source_xpos', None) for item in self.items]
-    #
-    # @property
-    # def selected_source_ypos(self):
-    #     return self.selected_item.get('source_ypos', None)
-    #
-    # @property
-    # def source_ypos(self):
-    #     return [item.get('source_ypos', None) for item in self.items]
 
 class UnitSelectPluginComponent(SelectPluginComponent):
     def __init__(self, *args, **kwargs):
