@@ -1,9 +1,5 @@
 import numpy as np
 import pytest
-import os
-from pathlib import Path
-from itertools import product
-
 from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -115,49 +111,6 @@ def test_fits_spectrum2d(deconfigged_helper):
     sp1d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d (auto-ext)')  # noqa
     assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'um'
-
-
-@pytest.mark.parametrize('filepath', (
-        '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits',
-        '/Users/mportman/jdaviz/notebooks/det_image_seq5_MIRIMAGE_P750Lexp1_s2d.fits'))
-def test_fits_spectrum_list_L3_wfss(deconfigged_helper, filepath):
-    # filepath = '/Users/mportman/jdaviz/notebooks/WFSS_fits/jw01076-o103_t001_nircam_grismr_x1d.fits'
-    # filepath = '/Users/mportman/jdaviz/notebooks/det_image_seq5_MIRIMAGE_P750Lexp1_s2d.fits'
-
-    ldr = deconfigged_helper.loaders['file']
-    ldr.filepath = filepath
-
-    ldr.format = '1D Spectrum List'
-
-    # 1_117 is completely masked
-    spectra_obj = ldr.importer.spectra
-    exposure_sourceids = [f'{e_num}_{s_id}' for e_num, s_id in product((1, 2), (2, 9, 17, 117))]
-    to_select = [item['label'] for item in spectra_obj.items
-                 if item['exposure_sourceid'] in exposure_sourceids]
-    if to_select:
-        spectra_obj.selected = to_select
-
-    #print(*spectra_obj.selected, sep='\n')
-    #assert False
-
-    print("importing...")
-    ldr.importer()
-    print("done importing")
-
-    # print(deconfigged_helper.data_labels)
-    # print(spectra_obj.selected)
-    assert len(deconfigged_helper.data_labels) == len(spectra_obj.selected)
-    dc = deconfigged_helper.app.data_collection
-    assert len(dc) == len(spectra_obj.selected)
-
-    wfss = deconfigged_helper.get_data(f'{Path(filepath).stem}_0')
-    # wfss = deconfigged_helper.get_data('det_image_seq5_MIRIMAGE_P750Lexp1_s2d_0')
-    #print(wfss.meta['source_id'])
-    #assert isinstance(wfss, Spectrum)
-    #assert str(sp1d.spectral_axis.unit) == 'um'
-
-    assert len(deconfigged_helper.gca().app.data_collection) == 1
-    # assert len(deconfigged_helper.viewers) == 1
 
 
 @pytest.mark.remote_data
