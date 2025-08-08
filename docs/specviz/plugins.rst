@@ -103,7 +103,7 @@ parameters that appear in the :guilabel:`Fitter Parameters`
 accordion menu. The default fitter used is
 `astropy.modeling.fitting.TRFLSQFitter <https://docs.astropy.org/en/latest/api/astropy.modeling.fitting.TRFLSQFitter.html#astropy.modeling.fitting.TRFLSQFitter>`_.
 The fitter can be changed to any of the available Astropy fitters,
-which can be found here `https://docs.astropy.org/en/latest/modeling/reference_api.html#id6`_.
+which can be found here `<https://docs.astropy.org/en/latest/modeling/reference_api.html#id6>`_.
 
 After fitting, the expandable menu for each component model will update to
 show the fitted value of each parameter rather than the initial value, and
