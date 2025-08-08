@@ -436,13 +436,7 @@ def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
 
             # Might have bad GWCS. If so, we exclude it.
             try:
-                # we catch an astropy warning here for non-standard FITS
-                # keywords arising from the FITS SIP approximation. These
-                # warnings don't affect the result, and there's a pending
-                # glue PR with a fix: https://github.com/glue-viz/glue/pull/2540
-                with warnings.catch_warnings():
-                    warnings.simplefilter('ignore', category=AstropyWarning)
-                    data.add_component(component=component, label=comp_label)
+                data.add_component(component=component, label=comp_label)
 
             except Exception:  # pragma: no cover
                 data.coords = None
