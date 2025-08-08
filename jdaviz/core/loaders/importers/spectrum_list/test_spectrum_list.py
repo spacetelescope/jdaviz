@@ -6,13 +6,13 @@ from specutils import Spectrum, SpectrumList, SpectrumCollection
 from jdaviz.conftest import deconfigged_helper
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListImporter,
-    combine_lists_to_1d_spectrum
+    # combine_lists_to_1d_spectrum
 )
 
 from jdaviz.core.registries import loader_importer_registry
 
 
-def make_spectrum(mask, wfss = False, collection = False):
+def make_spectrum(mask, wfss=False, collection=False):
     cls = Spectrum
     flux = np.arange(5) * u.Jy
     spectral_axis = np.arange(5) * u.nm
@@ -63,6 +63,7 @@ def unmasked_2d_spectrum():
     spectral_axis = np.arange(5) * u.nm
     return Spectrum(flux=flux, spectral_axis=spectral_axis)
 
+
 @pytest.fixture
 def spectrum_list(unmasked_spectrum, masked_spectrum, wfss_spectrum,
                   partially_masked_wfss_spectrum, fully_masked_wfss_spectrum):
@@ -79,7 +80,6 @@ class FakeImporter(SpectrumListImporter):
     """A fake importer for testing/convenience purposes only.
     Mostly used to hot-update input for clean code/speed purposes."""
     template = ''
-    # parser_preference = ['specutils.Spectrum', 'specutils.SpectrumList']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -95,11 +95,8 @@ class FakeImporter(SpectrumListImporter):
 
 class TestSpectrumListImporter:
 
-    #  def __init__(self, deconfigged_helper):
-    #importers = deconfigged_helper.importers
-    #self.importer_obj = importers['Test Fake Importer']._obj
-
-    def setup_importer_obj(self, config_helper, input_obj):
+    @staticmethod
+    def setup_importer_obj(config_helper, input_obj):
         # ldr = config_helper.loaders['object']
         # # The resolver is ldr._obj. Set the restriction before loading the object.
         # ldr.object = ldr_object
@@ -107,7 +104,6 @@ class TestSpectrumListImporter:
         return FakeImporter(app=config_helper.app,
                             resolver=config_helper.loaders['object']._obj,
                             input=input_obj)
-
 
     def test_is_valid(self, deconfigged_helper, spectrum_list,
                       unmasked_spectrum, unmasked_2d_spectrum):
