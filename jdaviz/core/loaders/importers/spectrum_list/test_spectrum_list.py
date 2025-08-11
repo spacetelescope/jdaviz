@@ -171,12 +171,11 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         assert importer_obj.is_wfssmulti(wfss_spectrum)
 
-    def test_generate_wfss_labels(self, deconfigged_helper, spectrum_list, wfss_spectrum):
+    def test_extract_exposure_sourceid(self, deconfigged_helper, spectrum_list, wfss_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-        exp_sid, label, suffix = importer_obj.generate_wfssmulti_labels(wfss_spectrum)
-        assert exp_sid == '0_1111'
-        assert label == 'Exposure 0, Source ID: 1111'
-        assert suffix == 'EXP-0_ID-1111'
+        exposure, source_id = importer_obj.extract_exposure_sourceid(wfss_spectrum)
+        assert exposure == '0'
+        assert source_id == '1111'
 
     def test_has_mask(self, deconfigged_helper, spectrum_list, make_empty_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
