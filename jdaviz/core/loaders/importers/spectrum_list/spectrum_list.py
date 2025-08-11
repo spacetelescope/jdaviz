@@ -8,7 +8,7 @@ from traitlets import List, Bool, Any
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.core.template_mixin import SelectSpectraComponent
+from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 
 
@@ -49,13 +49,22 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
             for index, spec in enumerate(input):
                 if self.is_wfssmulti(spec):
-                    exposure_sourceid, label, suffix = self.generate_wfssmulti_labels(spec)
+                    # ver, name are standins for exposure and source_id
+                    # ver == exposure, name == source_id
+                    ver, name = self.extract_exposure_sourceid(spec)
+                    label = f'Exposure {ver}, Source ID: {name}'
+                    # Flipping the two from the variable naming convention
+                    name_ver = f'{ver}_{name}'
+                    _suffix = f'EXP-{ver}_ID-{name}'
+
                 else:
                     # Note this would be the original index before 'popping'
                     # the unusable spectra out
-                    exposure_sourceid = str(index)
+                    name_ver = str(index)
+                    name = str(index)
+                    ver = str(index)
                     label = f"1D Spectrum at index: {index}"
-                    suffix = f"index-{index}"
+                    _suffix = f"index-{index}"
 
                 # all == True implies the entire array is masked and unusable
                 if self.is_fully_masked(spec):
@@ -65,15 +74,17 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
                 spectra_options.append({'label': label,
                                         'index': index - index_modifier,
-                                        'exposure_sourceid': exposure_sourceid,
-                                        'suffix': suffix,
+                                        'name': name,
+                                        'ver': ver,
+                                        'name_ver': name_ver,
+                                        '_suffix': _suffix,
                                         'obj': self.apply_spectral_mask(spec)})
 
-            self.spectra = SelectSpectraComponent(self,
-                                                  items='spectra_items',
-                                                  selected='spectra_selected',
-                                                  multiselect='spectra_multiselect',
-                                                  manual_options=spectra_options)
+            self.spectra = SelectFileExtensionComponent(self,
+                                                        items='spectra_items',
+                                                        selected='spectra_selected',
+                                                        multiselect='spectra_multiselect',
+                                                        manual_options=spectra_options)
 
             self.spectra.selected = []
 
@@ -131,7 +142,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             return True
         return False
 
-    def generate_wfssmulti_labels(self, spec):
+    def extract_exposure_sourceid(self, spec):
         """
         Generate a label for WFSSMulti spectra based on the header information.
         """
@@ -139,10 +150,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
         source_id = spec.meta.get('source_id', '')
 
-        # Returns exposure_sourceid, label, suffix
-        return (f'{exp_num}_{source_id}',
-                f'Exposure {exp_num}, Source ID: {source_id}',
-                f'EXP-{exp_num}_ID-{source_id}')
+        return exp_num, source_id
 
     def has_mask(self, spec):
         if hasattr(spec, 'mask'):
@@ -191,7 +199,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         with self.app._jdaviz_helper.batch_load():
             for spec_dict in self.output:
-                data_label = f"{data_label_prefix}_{spec_dict['suffix']}"
+                data_label = f"{data_label_prefix}_{spec_dict['_suffix']}"
 
                 if data_label in existing_data_labels:
                     # NOTE: may depend on the science use-case

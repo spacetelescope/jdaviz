@@ -75,7 +75,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
-           'SelectFileExtensionComponent', 'SelectSpectraComponent',
+           'SelectFileExtensionComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SubsetSelectMixin',
            'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
@@ -1347,6 +1347,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
             return [self._get_selected_obj(index) for index in self.selected_index]
         return self._get_selected_obj(self.selected_index)
 
+    def _get_selected_obj_dict(self, index):
+        return self.manual_options[index]
+
+    @property
+    def selected_obj_dict(self):
+        # returns HDU (for HDUList) or ndarray (for ImageModel/DataModel)
+        if self.is_multiselect:
+            return [self._get_selected_obj_dict(index) for index in self.selected_index]
+        return self._get_selected_obj_dict(self.selected_index)
+
     @property
     def indices(self):
         return [item.get('index', None) for item in self.items]
@@ -1364,60 +1374,6 @@ class SelectFileExtensionComponent(SelectPluginComponent):
             # during init ignore
             return {}
         return {k: manual_item[k] for k in ('label', 'name', 'ver', 'name_ver', 'index')}
-
-    @observe('filters')
-    def _update_items(self, msg={}):
-        self.items = [self._to_item(item, ind) for ind, item in enumerate(self.manual_options)
-                      if self._is_valid_item(item)]
-        try:
-            self._apply_default_selection()
-        except (ValueError, TypeError):
-            pass
-
-
-class SelectSpectraComponent(SelectPluginComponent):
-    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
-        super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
-                         manual_options=manual_options, filters=filters)
-
-    @property
-    def selected_index(self):
-        return self.selected_item.get('index', None)
-
-    @property
-    def indices(self):
-        return [item.get('index', None) for item in self.items]
-
-    @property
-    def selected_exposure_sourceid(self):
-        return self.selected_item.get('exposure_sourceid', None)
-
-    @property
-    # Bear with the ugly name, it reflects the value
-    def exposure_sourceids(self):
-        return [item.get('exposure_sourceid', None) for item in self.items]
-
-    @property
-    def _exposure_source_id_index_map(self):
-        return {item.get('exposure_sourceid'): item.get('index', None) for item in self.items
-                if item.get('exposure_sourceid', None)}
-
-    def _get_selected_obj_dict(self, exposure_sourceid):
-        index = self._exposure_source_id_index_map[exposure_sourceid]
-        return self.manual_options[index]
-
-    @property
-    def selected_obj_dict(self):
-        # returns specutils.Spectrum
-        if self.is_multiselect:
-            return [self._get_selected_obj_dict(e_sid) for e_sid in self.selected_exposure_sourceid]
-        return self._get_selected_obj(self.selected_exposure_sourceid)
-
-    def _to_item(self, manual_item, index=None):
-        if index is None:
-            # during init ignore
-            return {}
-        return {k: manual_item[k] for k in ('label', 'index', 'exposure_sourceid')}
 
     @observe('filters')
     def _update_items(self, msg={}):
