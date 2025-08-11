@@ -8,7 +8,7 @@ from specutils import Spectrum, SpectrumList, SpectrumCollection
 
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListImporter,
-    # combine_lists_to_1d_spectrum
+    combine_lists_to_1d_spectrum
 )
 
 from jdaviz.core.registries import loader_importer_registry
@@ -115,6 +115,7 @@ class TestSpectrumListImporter:
                             resolver=config_helper.loaders['object']._obj,
                             input=input_obj)
 
+    # Method tests
     def test_is_valid(self, deconfigged_helper, spectrum_list,
                       unmasked_spectrum, unmasked_2d_spectrum,
                       make_empty_spectrum):
@@ -167,7 +168,7 @@ class TestSpectrumListImporter:
         with pytest.raises(NotImplementedError):
             importer_obj.input_to_list_of_spec('not_a_spectrum')
 
-    def test_is_wfss(self, deconfigged_helper, spectrum_list, wfss_spectrum):
+    def test_is_wfssmulti(self, deconfigged_helper, spectrum_list, wfss_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         assert importer_obj.is_wfssmulti(wfss_spectrum)
 
@@ -204,6 +205,8 @@ class TestSpectrumListImporter:
         result = importer_obj.apply_spectral_mask(make_empty_spectrum)
         assert result is make_empty_spectrum
 
+        # This doesn't necessarily test something in the spectrum_list code,
+        # but it's an error that we should be aware of.
         with pytest.raises(ValueError,
                            match='Spectral axis must be strictly increasing or decreasing.'):
             unmasked_spectrum.spectral_axis.mask[:] = True
@@ -216,6 +219,43 @@ class TestSpectrumListImporter:
         assert np.all(result.spectral_axis == spec.spectral_axis[~mask])
         assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
         assert np.all(result.mask == mask[~mask])
+
+    def test_combine_lists_to_1d_spectrum(self):
+        wl = [1, 2, 3] * u.nm
+        fnu = [10, 20, 30] * u.Jy
+        dfnu = [4, 5, 6] * u.Jy
+        spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+        assert isinstance(spec, Spectrum)
+        assert isinstance(spec.flux, u.Quantity)
+        assert isinstance(spec.spectral_axis, u.Quantity)
+        assert isinstance(spec.uncertainty, StdDevUncertainty)
+        assert np.all(spec.flux.value == np.array([10, 20, 30]))
+        assert np.all(spec.spectral_axis.value == np.array([1, 2, 3]))
+        assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
+
+    def test_combine_lists_to_1d_spectrum_no_uncertainty(self):
+        wl = [1, 2, 3] * u.nm
+        fnu = [10, 20, 30] * u.Jy
+        spec = combine_lists_to_1d_spectrum(wl, fnu, None, u.nm, u.Jy)
+        assert spec.uncertainty is None
+
+    def test_output(self, deconfigged_helper, spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        # Must make a selection for output to work
+        importer_obj.spectra.selected = '1D Spectrum at index: 0'
+        assert isinstance(importer_obj.output, list)
+
+        single_spectrum_dict = importer_obj.output[0]
+        assert isinstance(single_spectrum_dict, dict)
+        assert all(single_spectrum_dict['obj'].flux == spectrum_list[0].flux)
+        assert all(single_spectrum_dict['obj'].spectral_axis == spectrum_list[0].spectral_axis)
+
+        keys = {'label', 'name', 'ver', 'name_ver', 'index', '_suffix', 'obj'}
+        assert keys.issubset(set(single_spectrum_dict.keys()))
+        assert isinstance(single_spectrum_dict['obj'], Spectrum)
+
+        # TODO: This triggers the strictly increasing/decreasing error
+        # assert SpectrumList(single_spectrum_dict['obj']) == spectrum_list
 
     # def test_default_viewer_reference(self, deconfigged_helper, spectrum_list):
     #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
@@ -235,20 +275,7 @@ class TestSpectrumListImporter:
     #     importer_obj.data_label_value = 'testlabel'
     #     importer_obj.__call__()
     #
-    # def test_combine_lists_to_1d_spectrum(self):
-    #     wl = [1, 2, 3] * u.nm
-    #     fnu = [10, 20, 30] * u.Jy
-    #     dfnu = [1, 2, 3] * u.Jy
-    #     spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
-    #     assert isinstance(spec, Spectrum)
-    #     assert np.all(spec.flux.value == np.array([10, 20, 30]))
-    #
-    # def test_combine_lists_to_1d_spectrum_no_uncertainty(self):
-    #     wl = [1, 2, 3] * u.nm
-    #     fnu = [10, 20, 30] * u.Jy
-    #     spec = combine_lists_to_1d_spectrum(wl, fnu, None, u.nm, u.Jy)
-    #     assert isinstance(spec, Spectrum)
-    #     assert spec.uncertainty is None
+
     #
     # def test_spectrum_list_importer_init(self, deconfigged_helper):
     #     importer = SpectrumListImporter(app=deconfigged_helper.app)
