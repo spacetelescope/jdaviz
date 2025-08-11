@@ -68,7 +68,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
                 # all == True implies the entire array is masked and unusable
                 if self.is_fully_masked(spec):
-                    self.fully_masked_spectra.append(label)
+                    data_label_prefix = self.data_label_value
+                    self.fully_masked_spectra.append(f"{data_label_prefix}_{_suffix}")
                     index_modifier += 1
                     continue
 
@@ -134,7 +135,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def output(self):
         if not self.is_valid:  # pragma: nocover
             return None
-
         return self.spectra.selected_obj_dict
 
     def is_wfssmulti(self, spec):
@@ -193,8 +193,16 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
+        parent_data_label = None
         data_label_prefix = self.data_label_value
-        existing_data_labels = [data.label for data in self.app.data_collection]
+
+        # Only concerned about data labels from the same file/prefix
+        existing_data_labels = [data.label for data in self.app.data_collection
+                                if data_label_prefix == data.label.split('_EXP-')[0]]
+
+        if len(existing_data_labels):
+            parent_data_label = existing_data_labels[0]
+
         self.previous_data_label_messages = []
 
         with self.app._jdaviz_helper.batch_load():
@@ -214,17 +222,30 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     self.previous_data_label_messages.append(msg)
                     continue
 
-                # TODO: there is a parenting issue when importing from different files, i.e.
-                # To replicate: import from 2D spectra then from WFSS L3 file
+                # NOTE: uses naive parenting, i.e. parent according to the first
+                # data loaded in. This could be made more sophisticated if needed.
+                # TODO: two WFSS datasets load into the same viewer
+                #  but they should load into different viewers.
                 self.add_to_data_collection(spec_dict['obj'],
                                             data_label,
-                                            show_in_viewer=show_in_viewer)
+                                            parent=parent_data_label,
+                                            show_in_viewer=False)
+
+                if parent_data_label is None:
+                    parent_data_label = data_label
+
+        if show_in_viewer:
+            # TODO: the data *has* to be loaded into the viewer after the fact, otherwise
+            # we get an error when attempting to load different datasets, i.e. non-WFSS + WFSS.
+            # This should be avoidable and needs further investigation.
+            for spec_dict in self.output:
+                data_label = f"{data_label_prefix}_{spec_dict['_suffix']}"
+                self.load_into_viewer(data_label, "spectrum-1d-viewer")
 
         if self.fully_masked_spectra:
             self.app.hub.broadcast(SnackbarMessage(
                 f"Spectra {', '.join(self.fully_masked_spectra)} are completely masked.",
                 sender=self, color="warning"))
-
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     """
