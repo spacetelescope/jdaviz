@@ -8,6 +8,7 @@ from jdaviz.core.template_mixin import (TemplateMixin, LayerSelect,
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
                                 ChangeRefDataMessage, ViewerRenamedMessage)
+from glue.core.message import SubsetDeleteMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
@@ -138,6 +139,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._update_items(msg.subset))  # noqa
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
@@ -195,6 +197,17 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def data_labels_unloaded(self):
         return self.dataset.choices
+
+    def _update_items(self, msg={}):
+        if not hasattr(self, 'layer'):
+            return
+
+        # on SubsetDeleteMessage, message is sent before self.layer is updated, so update
+        # layer visible to ensure icon is updated in data menu
+        if msg.label not in self.existing_subset_labels:
+            for layer in self._viewer.layers:
+                if layer.layer.label == msg.label:
+                    layer.visible = False
 
     def _set_viewer_id(self):
         # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
@@ -395,7 +408,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 self.subset_edit_tooltip = "Select a single subset to edit"
         self.layer._update_items()
 
-    def set_layer_visibility(self, layer_label, visible=True):
+    def set_layer_visibility(self, layer_label, visible=False):
         """
         Set the visibility of a layer in the viewer.
 
@@ -424,11 +437,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 # so also hide the child-layer
                 layer.visible = False
 
+            if layer.state.visible != layer.visible:
+                layer.state.visible = layer.visible
+
         if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
             self.set_layer_visibility(parent_label, visible=True)
-
-        self.layer._update_items()
 
         return self.visible_layers
 
