@@ -139,7 +139,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._update_items(msg.subset))  # noqa
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
@@ -198,7 +198,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def data_labels_unloaded(self):
         return self.dataset.choices
 
-    def _update_items(self, msg={}):
+    def _remove_subset_from_layers(self, msg={}):
         if not hasattr(self, 'layer'):
             return
 
@@ -207,7 +207,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if msg.label not in self.existing_subset_labels:
             for layer in self._viewer.layers:
                 if layer.layer.label == msg.label:
-                    layer.visible = False
+                    self.layer._update_items(remove_subset=msg.label)
 
     def _set_viewer_id(self):
         # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
@@ -408,7 +408,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 self.subset_edit_tooltip = "Select a single subset to edit"
         self.layer._update_items()
 
-    def set_layer_visibility(self, layer_label, visible=False):
+    def set_layer_visibility(self, layer_label, visible=True):
         """
         Set the visibility of a layer in the viewer.
 
