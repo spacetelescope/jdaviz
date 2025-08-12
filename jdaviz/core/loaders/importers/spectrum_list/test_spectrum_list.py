@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+from unittest.mock import patch
+
 from astropy import units as u
 from astropy.utils.masked import Masked
 from astropy.nddata import StdDevUncertainty
@@ -8,9 +10,9 @@ from specutils import Spectrum, SpectrumList, SpectrumCollection
 
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListImporter,
+    SpectrumListConcatenatedImporter,
     combine_lists_to_1d_spectrum
 )
-
 from jdaviz.core.registries import loader_importer_registry
 
 @pytest.fixture
@@ -22,7 +24,8 @@ def make_empty_spectrum():
                     meta={})
 
 
-def make_spectrum(spectral_mask=None, wfss=False, collection=False):
+def make_spectrum(spectral_mask=None, wfss=False, collection=False,
+                  exposure='0_0_0_1', source_id='0000'):
     cls = Spectrum
     meta = {}
     spec_len = 5
@@ -36,7 +39,7 @@ def make_spectrum(spectral_mask=None, wfss=False, collection=False):
     uncertainty = StdDevUncertainty(flux)
 
     if wfss:
-        meta = {'header': {'DATAMODL': 'WFSSMulti', 'EXPGRPID': '0_0_0_1'}, 'source_id': '1111'}
+        meta = {'header': {'DATAMODL': 'WFSSMulti', 'EXPGRPID': exposure}, 'source_id': source_id}
 
     if collection:
         cls = SpectrumCollection
@@ -65,13 +68,15 @@ def wfss_spectrum():
 # and this is not allowed in specutils
 @pytest.fixture
 def partially_masked_wfss_spectrum():
-    return make_spectrum(spectral_mask=np.array([False, False, False, True, True]), wfss=True)
+    return make_spectrum(spectral_mask=np.array([False, False, False, True, True]), wfss=True,
+                         source_id='1111')
 
 
 @pytest.fixture
 def unmasked_2d_spectrum():
-    flux = np.ones((2, 5)) * u.Jy
-    spectral_axis = np.arange(5) * u.nm
+    spec_len = 10
+    flux = np.ones((2, spec_len)) * u.Jy
+    spectral_axis = np.arange(spec_len) * u.nm
     return Spectrum(flux=flux, spectral_axis=spectral_axis)
 
 
@@ -93,6 +98,7 @@ class FakeImporter(SpectrumListImporter):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.new_default_data_label = None
 
     @property
     def input(self):
@@ -102,20 +108,23 @@ class FakeImporter(SpectrumListImporter):
     def input(self, value):
         self._input = value
 
+    @property
+    def default_data_label_from_resolver(self):
+        if hasattr(self, 'new_default_data_label'):
+            return self.new_default_data_label
+        return None
+
 
 class TestSpectrumListImporter:
 
     @staticmethod
     def setup_importer_obj(config_helper, input_obj):
-        # ldr = config_helper.loaders['object']
-        # # The resolver is ldr._obj. Set the restriction before loading the object.
-        # ldr.object = ldr_object
-        # return ldr, ldr.importer
         return FakeImporter(app=config_helper.app,
                             resolver=config_helper.loaders['object']._obj,
                             input=input_obj)
 
-    def test_spectrum_list_importer_attributes(self, specviz_helper, deconfigged_helper, spectrum_list):
+    def test_spectrum_list_importer_init_attributes(self, specviz_helper, deconfigged_helper,
+                                                    spectrum_list):
         importer_obj = self.setup_importer_obj(specviz_helper, spectrum_list[0])
         assert importer_obj.data_label_default == '1D Spectrum'
 
@@ -129,7 +138,7 @@ class TestSpectrumListImporter:
 
         assert importer_obj.fully_masked_spectra == []
         assert importer_obj.spectra.selected == []
-
+        assert importer_obj.previous_data_label_messages == []
 
     # Method tests
     def test_is_valid(self, deconfigged_helper, spectrum_list,
@@ -192,7 +201,7 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         exposure, source_id = importer_obj.extract_exposure_sourceid(wfss_spectrum)
         assert exposure == '0'
-        assert source_id == '1111'
+        assert source_id == '0000'
 
     def test_has_mask(self, deconfigged_helper, spectrum_list, make_empty_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
@@ -236,29 +245,10 @@ class TestSpectrumListImporter:
         assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
         assert np.all(result.mask == mask[~mask])
 
-    def test_combine_lists_to_1d_spectrum(self):
-        wl = [1, 2, 3] * u.nm
-        fnu = [10, 20, 30] * u.Jy
-        dfnu = [4, 5, 6] * u.Jy
-        spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
-        assert isinstance(spec, Spectrum)
-        assert isinstance(spec.flux, u.Quantity)
-        assert isinstance(spec.spectral_axis, u.Quantity)
-        assert isinstance(spec.uncertainty, StdDevUncertainty)
-        assert np.all(spec.flux.value == np.array([10, 20, 30]))
-        assert np.all(spec.spectral_axis.value == np.array([1, 2, 3]))
-        assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
-
-    def test_combine_lists_to_1d_spectrum_no_uncertainty(self):
-        wl = [1, 2, 3] * u.nm
-        fnu = [10, 20, 30] * u.Jy
-        spec = combine_lists_to_1d_spectrum(wl, fnu, None, u.nm, u.Jy)
-        assert spec.uncertainty is None
-
     def test_output(self, deconfigged_helper, spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         # Must make a selection for output to work
-        importer_obj.spectra.selected = '1D Spectrum at index: 0'
+        importer_obj.spectra.selected = '1D Spectrum at file index: 0'
         assert isinstance(importer_obj.output, list)
 
         single_spectrum_dict = importer_obj.output[0]
@@ -280,11 +270,10 @@ class TestSpectrumListImporter:
     def test_call_method_basic(self, deconfigged_helper, spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         importer_obj.input = spectrum_list
-        spectra_selected = ['1D Spectrum at index: 0',
-                            '1D Spectrum at index: 1',
-                            'Exposure 0, Source ID: 1111',
-                            'Exposure 0, Source ID: 1111']
-        importer_obj.spectra.selected = spectra_selected
+        importer_obj.spectra.selected = ['1D Spectrum at file index: 0',
+                                         '1D Spectrum at file index: 1',
+                                         'Exposure 0, Source ID: 0000',
+                                         'Exposure 0, Source ID: 1111']
         importer_obj.__call__()
 
         assert importer_obj.previous_data_label_messages == []
@@ -293,12 +282,12 @@ class TestSpectrumListImporter:
         dc = deconfigged_helper.app.data_collection
         assert len(dc) == 4  # 4 spectra loaded
 
-        labels = ['1D Spectrum_index-0',
-                  '1D Spectrum_index-1',
-                  '1D Spectrum_EXP-0_ID-1111',
-                  '1D Spectrum_EXP-0_ID-1111 (1)']
+        spectra_labels = ['1D Spectrum_file_index-0',
+                          '1D Spectrum_file_index-1',
+                          '1D Spectrum_EXP-0_ID-0000',
+                          '1D Spectrum_EXP-0_ID-1111']
 
-        assert all([label in labels for label in dc.labels])
+        assert all([label in spectra_labels for label in dc.labels])
 
         # Viewer items
         viewers = deconfigged_helper.viewers
@@ -309,29 +298,197 @@ class TestSpectrumListImporter:
         viewer_dm = viewer.data_menu
 
         for v in (viewer, viewer_dm):
-            # TODO: should this be the case?
+            # TODO: should these be in sync with data collection?
             # Repeated label name gets overwritten
-            assert len(v.data_labels_loaded) == 3
-            assert all([label in labels for label in v.data_labels_loaded])
-            assert len(v.data_labels_visible) == 3
-            assert all([label in labels for label in v.data_labels_visible])
+            assert len(v.data_labels_loaded) == len(spectra_labels)
+            assert all([label in spectra_labels for label in v.data_labels_loaded])
+            assert len(v.data_labels_visible) == len(spectra_labels)
+            assert all([label in spectra_labels for label in v.data_labels_visible])
 
-#
-#
-# def test_spectrum_list_concatenated_importer_init(deconfigged_helper):
-#     importer = SpectrumListConcatenatedImporter(app=deconfigged_helper)
-#     assert hasattr(importer, 'output')
-#     # output property should not fail if spectra is not set
-#     try:
-#         _ = importer.output
-#     except Exception:
-#         pass
-#
-#
-# def test_spectrum_list_importer_methods(deconfigged_helper):
-#     importer = SpectrumListImporter(app=deconfigged_helper)
-#     # Call some methods if available for coverage
-#     if hasattr(importer, 'is_valid'):
-#         assert isinstance(importer.is_valid, bool) or callable(importer.is_valid)
-#     if hasattr(importer, 'use_spectra_component'):
-#         assert isinstance(importer.use_spectra_component, bool)
+    def test_call_method_repeat_call(self, deconfigged_helper, spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        importer_obj.input = spectrum_list
+        importer_obj.spectra.selected = ['1D Spectrum at file index: 0',
+                                         '1D Spectrum at file index: 1',
+                                         'Exposure 0, Source ID: 0000',
+                                         'Exposure 0, Source ID: 1111']
+        importer_obj.__call__()
+
+        spectra_labels = ['1D Spectrum_file_index-0',
+                          '1D Spectrum_file_index-1',
+                          '1D Spectrum_EXP-0_ID-0000',
+                          '1D Spectrum_EXP-0_ID-1111']
+
+        # Mock the broadcast method to catch the snackbar messages
+        with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
+            assert len(importer_obj.previous_data_label_messages) == 0
+            importer_obj.__call__()
+            assert len(importer_obj.previous_data_label_messages) == 4
+
+            expected_messages = [(f"Spectrum with label '{label}' "
+                                  f"already exists in the viewer, skipping. "
+                                  f"This message will only be shown once.")
+                                 for label in spectra_labels]
+            broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
+                              if hasattr(arg[0][0], 'text')]
+            assert all([msg in broadcast_msgs for msg in expected_messages])
+
+            # One more time to verify that no more messages are added
+            importer_obj.__call__()
+            assert len(importer_obj.previous_data_label_messages) == 4
+
+            broadcast_msgs_final = set([arg[0][0].text for arg in mock_broadcast.call_args_list
+                                        if hasattr(arg[0][0], 'text')])
+            assert len(broadcast_msgs_final) == len(broadcast_msgs)
+
+        # Viewer items
+        # This implicitly tests the parenting logic but since that logic may change,
+        # it is not worth making that explicit here.
+        viewers = deconfigged_helper.viewers
+        assert len(viewers) == 1
+        assert '1D Spectrum' in viewers
+
+        viewer = viewers['1D Spectrum']
+        viewer_dm = viewer.data_menu
+
+        for v in (viewer, viewer_dm):
+            assert len(v.data_labels_loaded) == len(spectra_labels)
+            assert all([label in spectra_labels for label in v.data_labels_loaded])
+            assert len(v.data_labels_visible) == len(spectra_labels)
+            assert all([label in spectra_labels for label in v.data_labels_visible])
+
+    def test_call_method_different_data(self, deconfigged_helper,
+                                        spectrum_list, unmasked_2d_spectrum):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        importer_obj.input = spectrum_list
+        importer_obj.spectra.selected = ['1D Spectrum at file index: 0',
+                                         '1D Spectrum at file index: 1',
+                                         'Exposure 0, Source ID: 0000',
+                                         'Exposure 0, Source ID: 1111']
+        importer_obj.__call__()
+
+        importer_obj.new_default_data_label = '2D Spectrum'
+        importer_obj.__init__(app=deconfigged_helper.app,
+                              resolver=deconfigged_helper.loaders['object']._obj,
+                              input=unmasked_2d_spectrum)
+
+        assert importer_obj.data_label_default == '2D Spectrum'
+
+        importer_obj.data_label_value = '2D_Spectrum'
+        importer_obj.spectra.selected = ['2D Spectrum at file index: 0',
+                                         '2D Spectrum at file index: 1']
+        importer_obj.__call__()
+
+        spectra_labels = ['1D Spectrum_file_index-0',
+                          '1D Spectrum_file_index-1',
+                          '1D Spectrum_EXP-0_ID-0000',
+                          '1D Spectrum_EXP-0_ID-1111',
+                          '2D_Spectrum_file_index-0',
+                          '2D_Spectrum_file_index-1']
+
+        assert all([label in deconfigged_helper.app.data_collection.labels
+                    for label in spectra_labels])
+
+        # Viewer items
+        viewers = deconfigged_helper.viewers
+        # TODO: Two viewers is the intended behavior but this will need a future update to work
+        # assert len(viewers) == 2
+        for viewer in viewers.values():
+            viewer_dm = viewer.data_menu
+
+            for v in (viewer, viewer_dm):
+                assert len(v.data_labels_loaded) == len(spectra_labels)
+                assert all([label in spectra_labels for label in v.data_labels_loaded])
+                assert len(v.data_labels_visible) == len(spectra_labels)
+                assert all([label in spectra_labels for label in v.data_labels_visible])
+
+
+def test_combine_lists_to_1d_spectrum():
+    wl = [1, 2, 3] * u.nm
+    fnu = [10, 20, 30] * u.Jy
+    dfnu = [4, 5, 6] * u.Jy
+    spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+    assert isinstance(spec, Spectrum)
+    assert isinstance(spec.flux, u.Quantity)
+    assert isinstance(spec.spectral_axis, u.Quantity)
+    assert isinstance(spec.uncertainty, StdDevUncertainty)
+    assert np.all(spec.flux.value == np.array([10, 20, 30]))
+    assert np.all(spec.spectral_axis.value == np.array([1, 2, 3]))
+    assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
+
+
+def test_combine_lists_to_1d_spectrum_no_uncertainty():
+    wl = [1, 2, 3] * u.nm
+    fnu = [10, 20, 30] * u.Jy
+    spec = combine_lists_to_1d_spectrum(wl, fnu, None, u.nm, u.Jy)
+    assert spec.uncertainty is None
+
+
+@loader_importer_registry('Fake 1D Spectrum List Concatenated')
+class FakeConcatenatedImporter(SpectrumListConcatenatedImporter):
+    """A fake importer for testing/convenience purposes only.
+    Mostly used to hot-update input for clean code/speed purposes."""
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.new_default_data_label = None
+
+    @property
+    def input(self):
+        return super().input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
+
+    @property
+    def default_data_label_from_resolver(self):
+        if hasattr(self, 'new_default_data_label'):
+            return self.new_default_data_label
+        return None
+
+class TestSpectrumListConcatenatedImporterr:
+
+    @staticmethod
+    def setup_importer_obj(config_helper, input_obj):
+        return FakeConcatenatedImporter(app=config_helper.app,
+                                        resolver=config_helper.loaders['object']._obj,
+                                        input=input_obj)
+
+    def test_spectrum_list_concatenated_importer_init(self, deconfigged_helper, unmasked_2d_spectrum):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, unmasked_2d_spectrum)
+        assert isinstance(importer_obj, SpectrumListImporter)
+        assert importer_obj.disable_dropdown
+
+    def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper):
+        wl = [1, 2, 3] * u.nm
+        fnu = [10, 20, 30] * u.Jy
+        dfnu = [4, 5, 6] * u.Jy
+        spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+
+        importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
+        result = importer_obj.output
+        assert np.all(result.flux == spec.flux)
+        assert np.all(result.spectral_axis == spec.spectral_axis)
+        assert np.all(result.uncertainty.array == spec.uncertainty.array)
+
+    def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper,
+                                                      unmasked_2d_spectrum):
+        wl = [1, 2, 3] * u.nm
+        fnu = [10, 20, 30] * u.Jy
+        dfnu = [4, 5, 6] * u.Jy
+        spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+
+        importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
+        importer_obj.__call__()
+
+        dc = deconfigged_helper.app.data_collection
+        assert len(dc) == 1  # 1 concatenated spectrum loaded
+        result = dc[0].get_object()
+
+        assert np.all(result.flux == spec.flux)
+        assert np.all(result.spectral_axis == spec.spectral_axis)
+        assert np.all(result.uncertainty.array == spec.uncertainty.array)
+
+
