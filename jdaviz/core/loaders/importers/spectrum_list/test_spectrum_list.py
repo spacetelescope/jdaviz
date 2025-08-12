@@ -115,6 +115,22 @@ class TestSpectrumListImporter:
                             resolver=config_helper.loaders['object']._obj,
                             input=input_obj)
 
+    def test_spectrum_list_importer_attributes(self, specviz_helper, deconfigged_helper, spectrum_list):
+        importer_obj = self.setup_importer_obj(specviz_helper, spectrum_list[0])
+        assert importer_obj.data_label_default == '1D Spectrum'
+
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        assert importer_obj.data_label_default == '1D Spectrum'
+        assert hasattr(importer_obj, 'spectra_items')
+        assert hasattr(importer_obj, 'spectra_selected')
+        assert hasattr(importer_obj, 'spectra_multiselect')
+        assert hasattr(importer_obj, 'disable_dropdown')
+        assert hasattr(importer_obj, 'spectra')
+
+        assert importer_obj.fully_masked_spectra == []
+        assert importer_obj.spectra.selected == []
+
+
     # Method tests
     def test_is_valid(self, deconfigged_helper, spectrum_list,
                       unmasked_spectrum, unmasked_2d_spectrum,
@@ -257,33 +273,49 @@ class TestSpectrumListImporter:
         # TODO: This triggers the strictly increasing/decreasing error
         # assert SpectrumList(single_spectrum_dict['obj']) == spectrum_list
 
-    # def test_default_viewer_reference(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     spec = spectrum_list[0]
-    #     importer_obj.input = SpectrumList([spec])
-    #     importer_obj.spectra = type('Spectra', (),
-    #     {'selected_obj_dict': [{'obj': spec, 'suffix': 'index-0'}]})()
-    #     importer_obj.data_label_value = 'testlabel'
-    #     importer_obj.__call__()
-    #
-    # def test_call_method(self, deconfigged_helper, spectrum_list):
-    #     importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
-    #     spec = spectrum_list[0]
-    #     importer_obj.input = SpectrumList([spec])
-    #     importer_obj.spectra = type('Spectra', (),
-    #     {'selected_obj_dict': [{'obj': spec, 'suffix': 'index-0'}]})()
-    #     importer_obj.data_label_value = 'testlabel'
-    #     importer_obj.__call__()
-    #
+    def test_default_viewer_reference(self, deconfigged_helper, spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
 
-    #
-    # def test_spectrum_list_importer_init(self, deconfigged_helper):
-    #     importer = SpectrumListImporter(app=deconfigged_helper.app)
-    #     assert importer.data_label_default == '1D Spectrum'
-    #     assert hasattr(importer, 'spectra_items')
-    #     assert hasattr(importer, 'spectra_selected')
-    #     assert hasattr(importer, 'spectra_multiselect')
-    #     assert hasattr(importer, 'disable_dropdown')
+    def test_call_method_basic(self, deconfigged_helper, spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        importer_obj.input = spectrum_list
+        spectra_selected = ['1D Spectrum at index: 0',
+                            '1D Spectrum at index: 1',
+                            'Exposure 0, Source ID: 1111',
+                            'Exposure 0, Source ID: 1111']
+        importer_obj.spectra.selected = spectra_selected
+        importer_obj.__call__()
+
+        assert importer_obj.previous_data_label_messages == []
+
+        # Data collection items
+        dc = deconfigged_helper.app.data_collection
+        assert len(dc) == 4  # 4 spectra loaded
+
+        labels = ['1D Spectrum_index-0',
+                  '1D Spectrum_index-1',
+                  '1D Spectrum_EXP-0_ID-1111',
+                  '1D Spectrum_EXP-0_ID-1111 (1)']
+
+        assert all([label in labels for label in dc.labels])
+
+        # Viewer items
+        viewers = deconfigged_helper.viewers
+        assert len(viewers) == 1
+        assert '1D Spectrum' in viewers
+
+        viewer = viewers['1D Spectrum']
+        viewer_dm = viewer.data_menu
+
+        for v in (viewer, viewer_dm):
+            # TODO: should this be the case?
+            # Repeated label name gets overwritten
+            assert len(v.data_labels_loaded) == 3
+            assert all([label in labels for label in v.data_labels_loaded])
+            assert len(v.data_labels_visible) == 3
+            assert all([label in labels for label in v.data_labels_visible])
+
 #
 #
 # def test_spectrum_list_concatenated_importer_init(deconfigged_helper):
