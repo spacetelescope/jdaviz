@@ -35,10 +35,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
         self.fully_masked_spectra = []
-        self.use_spectra_component = False
 
         if self.is_valid:
-            self.use_spectra_component = True
             spectra_options = []
             index_modifier = 0
 
@@ -222,10 +220,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     self.previous_data_label_messages.append(msg)
                     continue
 
-                # NOTE: uses naive parenting, i.e. parent according to the first
-                # data loaded in. This could be made more sophisticated if needed.
-                # TODO: two WFSS datasets load into the same viewer
-                #  but they should load into different viewers.
+                # TODO: Parenting is a temporary solution to the problem of grouping spectra when
+                #  loading from different files, i.e. if the user loads a WFSS file and then
+                #  a non-WFSS file, the spectra from the WFSS file will be grouped
+                #  under the first data label, and the non-WFSS spectra will be split into a bunch
+                #  of different viewers, one for each spectrum.
+                #  This is not the intent of the 'parenting' kwarg, but it'll have to do.
                 self.add_to_data_collection(spec_dict['obj'],
                                             data_label,
                                             parent=parent_data_label,
@@ -235,9 +235,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     parent_data_label = data_label
 
         if show_in_viewer:
-            # TODO: the data *has* to be loaded into the viewer after the fact, otherwise
-            # we get an error when attempting to load different datasets, i.e. non-WFSS + WFSS.
-            # This should be avoidable and needs further investigation.
+            # TODO: the data *has* to be loaded into the viewer after the fact with parenting,
+            #  otherwise we get an error when attempting to load different datasets,
+            #  i.e. non-WFSS + WFSS with parenting. See above.
             for spec_dict in self.output:
                 data_label = f"{data_label_prefix}_{spec_dict['_suffix']}"
                 self.load_into_viewer(data_label, "spectrum-1d-viewer")
