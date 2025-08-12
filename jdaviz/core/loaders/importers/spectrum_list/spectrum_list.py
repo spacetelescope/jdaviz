@@ -35,6 +35,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
         self.fully_masked_spectra = []
+        self.previous_data_label_messages = []
 
         if self.is_valid:
             spectra_options = []
@@ -47,7 +48,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
             for index, spec in enumerate(input):
                 if self.is_wfssmulti(spec):
-                    # ver, name are standins for exposure and source_id
+                    # ver, name are stand-ins for exposure and source_id
                     # ver == exposure, name == source_id
                     ver, name = self.extract_exposure_sourceid(spec)
                     label = f'Exposure {ver}, Source ID: {name}'
@@ -56,13 +57,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     _suffix = f'EXP-{ver}_ID-{name}'
 
                 else:
-                    # Note this would be the original index before 'popping'
-                    # the unusable spectra out
                     name_ver = str(index)
                     name = str(index)
                     ver = str(index)
-                    label = f"1D Spectrum at index: {index}"
-                    _suffix = f"index-{index}"
+                    label = f"{self.data_label_default} at file index: {index}"
+                    _suffix = f"file_index-{index}"
 
                 # all == True implies the entire array is masked and unusable
                 if self.is_fully_masked(spec):
@@ -71,6 +70,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     index_modifier += 1
                     continue
 
+                # Use modified index here to access the spectrum properly
+                # per ``selected_obj_dict`` in SelectFileExtensionComponent.
+                # Attempt to indicate to the user (via label and suffix) that
+                # the index is not the same as the file index.
                 spectra_options.append({'label': label,
                                         'index': index - index_modifier,
                                         'name': name,
@@ -196,12 +199,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         # Only concerned about data labels from the same file/prefix
         existing_data_labels = [data.label for data in self.app.data_collection
-                                if data_label_prefix == data.label.split('_EXP-')[0]]
+                                if data_label_prefix == data.label.split('_EXP-')[0] or
+                                data_label_prefix == data.label.split('_file_index-')[0]]
 
         if len(existing_data_labels):
             parent_data_label = existing_data_labels[0]
-
-        self.previous_data_label_messages = []
 
         with self.app._jdaviz_helper.batch_load():
             for spec_dict in self.output:
@@ -217,7 +219,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     # again, so only show the message once.
                     if msg not in self.previous_data_label_messages:
                         self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color="warning"))
-                    self.previous_data_label_messages.append(msg)
+                        self.previous_data_label_messages.append(msg)
+
                     continue
 
                 # TODO: Parenting is a temporary solution to the problem of grouping spectra when
@@ -240,12 +243,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             #  i.e. non-WFSS + WFSS with parenting. See above.
             for spec_dict in self.output:
                 data_label = f"{data_label_prefix}_{spec_dict['_suffix']}"
-                self.load_into_viewer(data_label, "spectrum-1d-viewer")
+                self.load_into_viewer(data_label, self.default_viewer_reference)
 
         if self.fully_masked_spectra:
             self.app.hub.broadcast(SnackbarMessage(
                 f"Spectra {', '.join(self.fully_masked_spectra)} are completely masked.",
                 sender=self, color="warning"))
+
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     """
