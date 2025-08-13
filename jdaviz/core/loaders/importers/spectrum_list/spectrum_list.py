@@ -205,6 +205,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def __call__(self, show_in_viewer=True):
         # This is used when config.load is called via API.
         if not self.spectra.selected:
+            # TODO: this may take awhile if done accidentally... do we have a selection option
+            #   in load for multiselect scenarios? Or some other framework to suggest to the
+            #   user?
             warnings.warn('No spectra selected, defaulting to loading all spectra in the list.')
             self.spectra.selected = deepcopy(self.spectra.choices)
 
