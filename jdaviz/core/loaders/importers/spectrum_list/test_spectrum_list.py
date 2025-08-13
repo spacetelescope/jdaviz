@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 from unittest.mock import patch
-import warnings
 
 from astropy import units as u
 from astropy.utils.masked import Masked
@@ -40,6 +39,7 @@ def make_spectrum(spectral_mask=None, wfss=False, collection=False,
     return cls(flux=flux, spectral_axis=spectral_axis,
                uncertainty=uncertainty, mask=spectral_mask,
                meta=meta)
+
 
 def extract_wfss_info(spec):
     """
@@ -284,7 +284,8 @@ class TestSpectrumListImporter:
         assert exposure == '0'
         assert source_id == '0000'
 
-        exposure, source_id = importer_obj._extract_exposure_sourceid(partially_masked_wfss_spectrum)
+        exposure, source_id = importer_obj._extract_exposure_sourceid(
+            partially_masked_wfss_spectrum)
         assert exposure == '0'
         assert source_id == '1111'
 
@@ -350,9 +351,9 @@ class TestSpectrumListImporter:
         assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
 
     @pytest.mark.parametrize('selection', [[], ['1D Spectrum at file index: 0',
-                                                  '1D Spectrum at file index: 1',
-                                                  'Exposure 0, Source ID: 0000',
-                                                  'Exposure 0, Source ID: 1111']])
+                                                '1D Spectrum at file index: 1',
+                                                'Exposure 0, Source ID: 0000',
+                                                'Exposure 0, Source ID: 1111']])
     def test_call_method_basic(self, deconfigged_helper, spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         importer_obj.input = spectrum_list
@@ -402,7 +403,7 @@ class TestSpectrumListImporter:
         importer_obj.input = spectrum_list
         with pytest.warns(
                 UserWarning,
-                match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+                match='No spectra selected, defaulting to loading all spectra in the list.'):
             importer_obj.__call__()
 
         spectra_labels = ['1D Spectrum_file_index-0',
@@ -454,7 +455,7 @@ class TestSpectrumListImporter:
         importer_obj.input = spectrum_list
         with pytest.warns(
                 UserWarning,
-                match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+                match='No spectra selected, defaulting to loading all spectra in the list.'):
             importer_obj.__call__()
 
         importer_obj.new_default_data_label = '2D Spectrum'
@@ -513,6 +514,7 @@ def test_combine_lists_to_1d_spectrum(with_uncertainty):
         assert isinstance(spec.uncertainty, StdDevUncertainty)
         assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
 
+
 @loader_importer_registry('Test Fake 1D Spectrum List Concatenated')
 class FakeConcatenatedImporter(SpectrumListConcatenatedImporter):
     """A fake importer for testing/convenience purposes only.
@@ -537,7 +539,8 @@ class FakeConcatenatedImporter(SpectrumListConcatenatedImporter):
             return self.new_default_data_label
         return None
 
-class TestSpectrumListConcatenatedImporterr:
+
+class TestSpectrumListConcatenatedImporter:
 
     @staticmethod
     def setup_importer_obj(config_helper, input_obj):
@@ -545,7 +548,8 @@ class TestSpectrumListConcatenatedImporterr:
                                         resolver=config_helper.loaders['object']._obj,
                                         input=input_obj)
 
-    def test_spectrum_list_concatenated_importer_init(self, deconfigged_helper, unmasked_2d_spectrum):
+    def test_spectrum_list_concatenated_importer_init(self, deconfigged_helper,
+                                                      unmasked_2d_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, unmasked_2d_spectrum)
         assert isinstance(importer_obj, SpectrumListImporter)
         assert importer_obj.disable_dropdown
@@ -584,5 +588,3 @@ class TestSpectrumListConcatenatedImporterr:
         assert np.all(result.flux == spec.flux)
         assert np.all(result.spectral_axis == spec.spectral_axis)
         assert np.all(result.uncertainty.array == spec.uncertainty.array)
-
-

@@ -7,7 +7,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
-from specutils import SpectralRegion, Spectrum, SpectrumList
+from specutils import SpectralRegion, Spectrum
 
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import find_matching_resolver
@@ -116,6 +116,7 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert isinstance(sp1d, Spectrum)
     assert str(sp1d.spectral_axis.unit) == 'um'
 
+
 # Skip until file is uploaded to box
 @pytest.mark.skip
 def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
@@ -169,14 +170,17 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     # https valid input
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
-    assert len(ignore_custom_loaders(loader.format.choices)) == 4  # may change with future importers
+    # may change with future importers
+    assert len(ignore_custom_loaders(loader.format.choices)) == 4
     assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
     assert loader.target.selected == 'Any'
     loader.target = '1D Spectrum'
-    assert len(ignore_custom_loaders(loader.format.choices)) == 2  # may change with future importers
+
+    # may change with future importers
+    assert len(ignore_custom_loaders(loader.format.choices)) == 2
     assert loader.format == '1D Spectrum List'  # default may change with future importers
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
