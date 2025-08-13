@@ -52,7 +52,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 if self.is_wfssmulti(spec):
                     # ver, name are stand-ins for exposure and source_id
                     # ver == exposure, name == source_id
-                    ver, name = self.extract_exposure_sourceid(spec)
+                    ver, name = self._extract_exposure_sourceid(spec)
                     label = f"Exposure {ver}, Source ID: {name}"
                     # Flipping the two from the variable naming convention
                     name_ver = f"{ver}_{name}"
@@ -66,7 +66,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     _suffix = f"file_index-{index}"
 
                 # all == True implies the entire array is masked and unusable
-                if self.is_fully_masked(spec):
+                if self._is_fully_masked(spec):
                     data_label_prefix = self.data_label_value
                     self.fully_masked_spectra.append(f"{data_label_prefix}_{_suffix}")
                     index_modifier += 1
@@ -82,7 +82,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                         'ver': str(ver),
                                         'name_ver': str(name_ver),
                                         '_suffix': _suffix,
-                                        'obj': self.apply_spectral_mask(spec)})
+                                        'obj': self._apply_spectral_mask(spec)})
 
             self.spectra = SelectFileExtensionComponent(self,
                                                         items='spectra_items',
@@ -125,7 +125,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         if isinstance(inp, Spectrum):
             if inp.flux.ndim == 1:
                 # Note masks (currently) only applied when spectral_axis has missing values
-                return [self.apply_spectral_mask(inp)]
+                return [self._apply_spectral_mask(inp)]
 
             return [Spectrum(spectral_axis=inp.spectral_axis,
                              flux=this_row(inp.flux, i),
@@ -136,7 +136,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         elif isinstance(inp, (SpectrumList, SpectrumCollection)):
             return itertools.chain(*[self.input_to_list_of_spec(spec) for spec in inp
-                                     if not self.is_fully_masked(spec)])
+                                     if not self._is_fully_masked(spec)])
 
         else:
             raise NotImplementedError(f"{inp} is not supported")
@@ -152,7 +152,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             return True
         return False
 
-    def extract_exposure_sourceid(self, spec):
+    def _extract_exposure_sourceid(self, spec):
         """
         Generate a label for WFSSMulti spectra based on the header information.
         """
@@ -162,25 +162,25 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return exp_num, source_id
 
-    def has_mask(self, spec):
+    def _has_mask(self, spec):
         if hasattr(spec, 'mask'):
             if spec.mask is not None and len(spec.mask):
                 return True
         return False
 
-    def is_fully_masked(self, spec):
-        if self.has_mask(spec):
+    def _is_fully_masked(self, spec):
+        if self._has_mask(spec):
             # all == True implies the entire array is masked and unusable
             if all(spec.mask):
                 return True
         return False
 
-    def apply_spectral_mask(self, spec):
+    def _apply_spectral_mask(self, spec):
         # The masks (spec.spectral_axis.mask and spec.mask) for WFSS L3 spectra
         # may not be equivalent, so we only apply the spectral_axis mask to avoid
         # a Specutils error. Specutils expects the spectral axis to be strictly
         # increasing/decreasing so applying the 'full' mask may throw that error.
-        if self.has_mask(spec.spectral_axis) and not self.is_fully_masked(spec):
+        if self._has_mask(spec.spectral_axis) and not self._is_fully_masked(spec):
             mask = spec.spectral_axis.mask
             # NOTE: Something breaks when the following is attempted instead
             # of the current implementation
@@ -322,7 +322,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         fnu_list = []
         dfnu_list = []
         for spec_dict in spectrum_list:
-            spec = self.apply_spectral_mask(spec_dict['obj'])
+            spec = self._apply_spectral_mask(spec_dict['obj'])
             wl = spec.spectral_axis.value
             fnu = spec.flux.value
 
