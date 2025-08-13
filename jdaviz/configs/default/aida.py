@@ -1,5 +1,4 @@
-from echo import delay_callback
-
+from echo import delay_callback, ignore_callback
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
@@ -77,13 +76,9 @@ class AID:
             return
 
         if isinstance(fov, (u.Quantity, Angle)):
-            current_fov = self._get_current_fov('sky', image_label)
-            scale_factor = float(fov / current_fov)
-
+            current_fov = self._get_current_fov('sky')
         elif isinstance(fov, (float, int)):
-            current_fov = self._get_current_fov('pixel', image_label)
-            scale_factor = float(fov / current_fov)
-
+            current_fov = self._get_current_fov('pixel')
         else:
             raise ValueError(
                 f"`fov` must be a Quantity or tuple of floats, got {fov=}"
@@ -92,7 +87,33 @@ class AID:
         scale_factor = float(fov / current_fov)
         self.viewer.state.zoom_radius = self.viewer.state.zoom_radius * scale_factor
 
-    def set_viewport(self, center=None, fov=None, image_label=None, **kwargs):
+    def _set_rotation(self, rotation):
+        if rotation is None:
+            return
+
+        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
+
+        if orientation is None:
+            rotation = rotation.to_value(u.deg)
+
+        degn = orientation._obj._get_wcs_angles()[-3]
+        rotation_angle = (degn + rotation) % 360
+
+        label = f"{rotation}"
+
+        if label == orientation._obj.orientation.selected:
+            return
+        elif label in orientation._obj.orientation.choices:
+            orientation._obj.orientation.selected = label
+        else:
+            orientation.add_orientation(
+                rotation_angle=rotation_angle,
+                east_left=True,
+                set_on_create=True,
+                label=label
+            )
+
+    def set_viewport(self, center=None, fov=None, rotation=None, image_label=None, **kwargs):
         """
         Parameters
         ----------
@@ -102,23 +123,21 @@ class AID:
         fov : `~astropy.units.Quantity` or tuple of floats
             Set the width of the viewport to span `field_of_view`.
 
-        image_label : str
             Set the viewport with respect to the image
             with the data label: ``image_label``.
         """
-
-        image, image_label = self._get_image_glue_data(image_label)
-
-        with delay_callback(
+        with ignore_callback(
             self.viewer.state,
             'x_min', 'x_max', 'y_min', 'y_max',
             'zoom_center_x', 'zoom_center_y', 'zoom_radius'
         ):
+            self._set_rotation(rotation)
             self._set_center(center)
+
+        with delay_callback(
             self._set_fov(fov, image_label)
 
     def _mean_pixel_scale(self, data):
-        """get the mean of the x and y pixel scales from the low level wcs"""
         wcs = data.coords
 
         # for now, convert GWCS to FITS SIP so pixel to world
@@ -132,23 +151,34 @@ class AID:
         ])
         return np.mean(abs_cdelts)
 
-    def _get_current_fov(self, sky_or_pixel, image_label):
-        imviz_aligned_by_wcs = self.app._align_by == 'wcs'
+    def _get_current_fov(self, sky_or_pixel):
+        state = self.viewer.state
+        wcs = state.reference_data.coords
 
-        # `zoom_radius` is the distance from the center of the viewer
-        # to the nearest edge in units of pixels
-        zoom_radius = self.viewer.state.zoom_radius
+        if self.viewer.jdaviz_app._align_by != "wcs" or wcs is None:
+            zoom_radius = state.zoom_radius
+            return 2 * zoom_radius
 
-        # default to 'sky' if sky/pixel not specified and WCS is available:
-        if sky_or_pixel in (None, 'sky'):
-            if not imviz_aligned_by_wcs:
-                ref_data, _ = self._get_image_glue_data(image_label)
-                pixel_scale = self._mean_pixel_scale(ref_data)
-                return pixel_scale * 2 * zoom_radius * u.deg
-            else:
-                return 2 * zoom_radius * u.deg
+        # compute the mean of the height and width of the
+        # viewer's FOV on ``data`` in world units:
+        x_corners = [
+            state.x_min,
+            state.x_max,
+            state.x_min
+        ]
+        y_corners = [
+            state.y_min,
+            state.y_min,
+            state.y_max
+        ]
 
-        return 2 * zoom_radius
+        sky_corners = wcs.pixel_to_world(x_corners, y_corners)
+        height_sky = abs(sky_corners[0].separation(sky_corners[2]))
+        width_sky = abs(sky_corners[0].separation(sky_corners[1]))
+
+        current_fov = min([width_sky, height_sky])
+
+        return current_fov if (sky_or_pixel in ("sky", None)) else current_fov.value
 
     def _get_current_center(self, sky_or_pixel, image_label=None):
         # center pixel coordinates on the reference data:
@@ -163,7 +193,7 @@ class AID:
         reference_wcs = reference_data.coords
 
         # # if the image data have WCS, get the center sky coordinate:
-        if sky_or_pixel == 'sky':
+        if sky_or_pixel in ('sky', None):
             if self.app._align_by == 'wcs':
                 center = self.viewer._get_center_skycoord()
             else:
@@ -172,6 +202,17 @@ class AID:
             center = (center_x, center_y)
 
         return center
+
+    def _get_current_rotation(self, sky_or_pixel):
+        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        # rotation angle from pixel y
+        rotation_angle = orientation.rotation_angle
+
+        # rotation angle of pixel y from north
+        degn = orientation._obj._get_wcs_angles()[-3]
+
+        rotation = rotation_angle - degn
+        return rotation * u.deg if (sky_or_pixel in ("sky", None)) else rotation
 
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
@@ -200,6 +241,7 @@ class AID:
 
         return dict(
             center=self._get_current_center(sky_or_pixel=sky_or_pixel, image_label=image_label),
-            fov=self._get_current_fov(sky_or_pixel=sky_or_pixel, image_label=image_label),
+            fov=self._get_current_fov(sky_or_pixel=sky_or_pixel),
+            rotation=self._get_current_rotation(sky_or_pixel=sky_or_pixel),
             image_label=image_label
         )
