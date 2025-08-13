@@ -137,6 +137,64 @@ class AID:
         self._set_center(center)
         self._set_fov(fov)
 
+    def _set_rotation(self, rotation):
+        if rotation is None:
+            return
+
+        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
+
+        if orientation is None:
+            return
+
+        if isinstance(rotation, (u.Quantity, Angle)):
+            rotation = rotation.to_value(u.deg)
+
+        degn = orientation._obj._get_wcs_angles()[-3]
+        rotation_angle = (degn + rotation) % 360
+
+        label = f"{rotation}"
+
+        if label == orientation._obj.orientation.selected:
+            return
+        elif label in orientation._obj.orientation.choices:
+            orientation._obj.orientation.selected = label
+        else:
+            orientation.add_orientation(
+                rotation_angle=rotation_angle,
+                east_left=True,
+                set_on_create=True,
+                label=label
+            )
+
+    def set_viewport(self, center=None, fov=None, rotation=None, image_label=None, **kwargs):
+        """
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord` or tuple of floats
+            Center the viewer on this coordinate.
+
+        fov : `~astropy.units.Quantity` or tuple of floats
+            Set the width of the viewport to span `field_of_view`.
+
+        image_label : str
+            Set the viewport with respect to the image
+            with the data label: ``image_label``.
+        """
+        with ignore_callback(
+            self.viewer.state,
+            'x_min', 'x_max', 'y_min', 'y_max',
+            'zoom_center_x', 'zoom_center_y', 'zoom_radius'
+        ):
+            self._set_rotation(rotation)
+            self._set_center(center)
+
+        with delay_callback(
+            self.viewer.state,
+            'x_min', 'x_max', 'y_min', 'y_max',
+            'zoom_center_x', 'zoom_center_y', 'zoom_radius'
+        ):
+            self._set_fov(fov, image_label)
+
     def _mean_pixel_scale(self, data):
         wcs = data.coords
 
