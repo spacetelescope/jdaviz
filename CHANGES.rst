@@ -76,6 +76,9 @@ Cubeviz
 - Fixed reestimating model parameters when cube fitting in the case where the cube's
   first axis is the spectral axis. [#3717]
 
+- Fixed issue with initializing model components when a spectral subset is selected and
+  Cube Fit is toggled on. [#3727]
+
 Imviz
 ^^^^^
 
