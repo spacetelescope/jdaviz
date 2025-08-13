@@ -1,5 +1,6 @@
 import itertools
 import numpy as np
+from copy import deepcopy
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -51,15 +52,15 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     # ver, name are stand-ins for exposure and source_id
                     # ver == exposure, name == source_id
                     ver, name = self.extract_exposure_sourceid(spec)
-                    label = f'Exposure {ver}, Source ID: {name}'
+                    label = f"Exposure {ver}, Source ID: {name}"
                     # Flipping the two from the variable naming convention
-                    name_ver = f'{ver}_{name}'
-                    _suffix = f'EXP-{ver}_ID-{name}'
+                    name_ver = f"{ver}_{name}"
+                    _suffix = f"EXP-{ver}_ID-{name}"
 
                 else:
-                    name_ver = str(index)
-                    name = str(index)
-                    ver = str(index)
+                    name_ver = index
+                    name = index
+                    ver = index
                     label = f"{self.data_label_default} at file index: {index}"
                     _suffix = f"file_index-{index}"
 
@@ -76,9 +77,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 # the index is not the same as the file index.
                 spectra_options.append({'label': label,
                                         'index': index - index_modifier,
-                                        'name': name,
-                                        'ver': ver,
-                                        'name_ver': name_ver,
+                                        'name': str(name),
+                                        'ver': str(ver),
+                                        'name_ver': str(name_ver),
                                         '_suffix': _suffix,
                                         'obj': self.apply_spectral_mask(spec)})
 
@@ -298,7 +299,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
     def output(self):
         spectrum_list = self.spectra.manual_options
         if spectrum_list is None:
-            return
+            return None
 
         # Vectorized collection of all wavelengths, fluxes, and uncertainties
         wl_list = []
