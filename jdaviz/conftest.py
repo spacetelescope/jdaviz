@@ -20,12 +20,20 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
                                               _image_hdu_wcs,
                                               _image_nddata_wcs)
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
+from jdaviz.core.loaders.importers.spectrum_list.test_spectrum_list import FakeConcatenatedImporter
 from jdaviz.utils import NUMPY_LT_2_0
 
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
 
 SPECTRUM_SIZE = 10  # length of spectrum
+
+
+@pytest.fixture
+def fake_classes_in_registries():
+     return ('Test Fake 1D Spectrum List',
+             'Test Fake 1D Spectrum List Concatenated',
+             'Test Fake Plugin')
 
 
 @pytest.fixture
