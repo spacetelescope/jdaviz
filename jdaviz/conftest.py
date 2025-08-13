@@ -238,6 +238,7 @@ def _create_spectrum1d_with_spectral_unit(spectralunit=u.AA, spectral_mask=None,
     return Spectrum(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty,
                     mask=spectral_mask, meta=meta)
 
+
 @pytest.fixture
 def make_empty_spectrum():
     return Spectrum(spectral_axis=np.array([]) * u.Hz,

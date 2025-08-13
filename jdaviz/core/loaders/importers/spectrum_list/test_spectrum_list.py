@@ -27,6 +27,7 @@ def extract_wfss_info(spec):
 
     return exp_num, source_id
 
+
 @loader_importer_registry('Test Fake 1D Spectrum List')
 class FakeImporter(SpectrumListImporter):
     """A fake importer for testing/convenience purposes only.
