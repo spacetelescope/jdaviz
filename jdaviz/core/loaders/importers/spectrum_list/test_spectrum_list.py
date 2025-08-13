@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from unittest.mock import patch
+import warnings
 
 from astropy import units as u
 from astropy.utils.masked import Masked
@@ -14,14 +15,6 @@ from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     combine_lists_to_1d_spectrum
 )
 from jdaviz.core.registries import loader_importer_registry
-
-@pytest.fixture
-def make_empty_spectrum():
-    return Spectrum(spectral_axis=np.array([]) * u.Hz,
-                    flux=np.array([]) * u.Jy,
-                    uncertainty=StdDevUncertainty(np.array([])),
-                    mask=np.array([]),
-                    meta={})
 
 
 def make_spectrum(spectral_mask=None, wfss=False, collection=False,
@@ -47,6 +40,26 @@ def make_spectrum(spectral_mask=None, wfss=False, collection=False,
     return cls(flux=flux, spectral_axis=spectral_axis,
                uncertainty=uncertainty, mask=spectral_mask,
                meta=meta)
+
+def extract_wfss_info(spec):
+    """
+    Copied and pasted from spectrum_list.py for testing purposes. If the parsing changes
+    then this will need to be updated.
+    """
+    header = spec.meta.get('header', {})
+    exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
+    source_id = spec.meta.get('source_id', '')
+
+    return exp_num, source_id
+
+
+@pytest.fixture
+def make_empty_spectrum():
+    return Spectrum(spectral_axis=np.array([]) * u.Hz,
+                    flux=np.array([]) * u.Jy,
+                    uncertainty=StdDevUncertainty(np.array([])),
+                    mask=np.array([]),
+                    meta={})
 
 
 @pytest.fixture
@@ -90,7 +103,7 @@ def spectrum_list(unmasked_spectrum, partially_masked_spectrum,
         partially_masked_wfss_spectrum])
 
 
-@loader_importer_registry('Fake 1D Spectrum List')
+@loader_importer_registry('Test Fake 1D Spectrum List')
 class FakeImporter(SpectrumListImporter):
     """A fake importer for testing/convenience purposes only.
     Mostly used to hot-update input for clean code/speed purposes."""
@@ -140,6 +153,69 @@ class TestSpectrumListImporter:
         assert importer_obj.spectra.selected == []
         assert importer_obj.previous_data_label_messages == []
 
+    # Parameterize to test both single and multiple selection
+    @pytest.mark.parametrize('to_select', [['1D Spectrum at file index: 1'],
+                                           ['1D Spectrum at file index: 1',
+                                            '1D Spectrum at file index: 2',
+                                            'Exposure 0, Source ID: 0000',
+                                            'Exposure 0, Source ID: 1111']])
+    def test_spectrum_list_importer_init_select(self, deconfigged_helper, spectrum_list,
+                                                to_select):
+        # Set up a fully masked spectrum
+        new_spectra = make_spectrum()
+        new_spectra.mask[:] = True
+        # This will help us to confirm that masked spectra are skipped
+        # and that the indices are correct per the modifier
+        new_spectrum_list = SpectrumList([new_spectra] + spectrum_list)
+
+        importer_obj = self.setup_importer_obj(deconfigged_helper, new_spectrum_list)
+        importer_obj.spectra.selected = to_select
+
+        assert importer_obj.fully_masked_spectra == ['1D Spectrum_file_index-0']
+        assert hasattr(importer_obj.spectra, 'items')
+        assert hasattr(importer_obj.spectra, 'selected')
+        assert hasattr(importer_obj.spectra, 'multiselect')
+        assert hasattr(importer_obj.spectra, 'manual_options')
+
+        for index, (spec_dict, spec) in enumerate(
+                zip(importer_obj.spectra.manual_options, new_spectrum_list[1:])):
+
+            # offset to account for the fully masked spectrum at the start
+            file_index = str(index + 1)
+
+            # ver, name are stand-ins for exposure and source_id
+            # ver == exposure, name == source_id
+            if len(spec.meta):
+                ver, name = extract_wfss_info(spec)
+            else:
+                ver, name = str(index), str(index)
+
+            keys = {
+                'label': [f"Exposure {ver}, Source ID: {name}",
+                          f"1D Spectrum at file index: {file_index}"],
+                'name': [name, file_index],
+                'ver': [ver, file_index],
+                'name_ver': [f"{ver}_{name}", file_index],
+                'index': [index, index],
+                '_suffix': [f"EXP-{ver}_ID-{name}", f"file_index-{file_index}"],
+                'obj': None}
+
+            assert isinstance(spec_dict, dict)
+            assert set(keys.keys()).issubset(set(spec_dict.keys()))
+            for key in keys:
+                if key != 'obj':
+                    assert spec_dict[key] in keys[key]
+
+            assert isinstance(spec_dict['obj'], Spectrum)
+            mask = spectrum_list[index].spectral_axis.mask
+            assert np.all(spec_dict['obj'].flux ==
+                          spectrum_list[index].flux[~mask])
+            assert np.all(spec_dict['obj'].spectral_axis ==
+                          spectrum_list[index].spectral_axis[~mask])
+
+        # TODO: This triggers the strictly increasing/decreasing error
+        # assert SpectrumList(spec_dict['obj']) == spectrum_list
+
     # Method tests
     def test_is_valid(self, deconfigged_helper, spectrum_list,
                       unmasked_spectrum, unmasked_2d_spectrum,
@@ -159,6 +235,13 @@ class TestSpectrumListImporter:
         importer_obj.input = make_spectrum(collection=True)
         assert importer_obj.is_valid
 
+    def test_on_spectra_selected(self, deconfigged_helper, spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
+        # Nothing has been selected yet
+        assert importer_obj.resolver.import_disabled is True
+        importer_obj.spectra.selected = importer_obj.spectra.choices[0]
+        assert importer_obj.resolver.import_disabled is False
+
     def test_input_to_list_of_spec(self, deconfigged_helper, spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
 
@@ -172,21 +255,18 @@ class TestSpectrumListImporter:
             results = importer_obj.input_to_list_of_spec(spec)
             assert isinstance(results, list)
 
-            result = results[0]
-            assert isinstance(result, Spectrum)
+            result_spec = results[0]
+            assert isinstance(result_spec, Spectrum)
 
             spectral_axis = spec.spectral_axis
             mask = spectral_axis.mask
-            assert np.all(result.flux == spec.flux[~mask])
-            assert np.all(result.spectral_axis == spectral_axis[~mask])
-            assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
-            assert np.all(result.mask == mask[~mask])
-
-            list_result = list_results[i]
-            assert np.all(list_result.flux == spec.flux[~mask])
-            assert np.all(list_result.spectral_axis == spectral_axis[~mask])
-            assert np.all(list_result.uncertainty.array == spec.uncertainty[~mask].array)
-            assert np.all(list_result.mask == mask[~mask])
+            # Check both the individual spectra and the results from performing
+            # the operation on the whole list
+            for result in (result_spec, list_results[i]):
+                assert np.all(result.flux == spec.flux[~mask])
+                assert np.all(result.spectral_axis == spectral_axis[~mask])
+                assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
+                assert np.all(result.mask == mask[~mask])
 
     def test_input_to_list_of_spec_not_supported(self, deconfigged_helper, spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
@@ -197,11 +277,16 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         assert importer_obj.is_wfssmulti(wfss_spectrum)
 
-    def test_extract_exposure_sourceid(self, deconfigged_helper, spectrum_list, wfss_spectrum):
+    def test_extract_exposure_sourceid(self, deconfigged_helper, spectrum_list,
+                                       wfss_spectrum, partially_masked_wfss_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         exposure, source_id = importer_obj.extract_exposure_sourceid(wfss_spectrum)
         assert exposure == '0'
         assert source_id == '0000'
+
+        exposure, source_id = importer_obj.extract_exposure_sourceid(partially_masked_wfss_spectrum)
+        assert exposure == '0'
+        assert source_id == '1111'
 
     def test_has_mask(self, deconfigged_helper, spectrum_list, make_empty_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
@@ -245,36 +330,41 @@ class TestSpectrumListImporter:
         assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
         assert np.all(result.mask == mask[~mask])
 
-    def test_output(self, deconfigged_helper, spectrum_list):
+    def test_output(self, deconfigged_helper, spectrum_list, unmasked_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         # Must make a selection for output to work
         importer_obj.spectra.selected = '1D Spectrum at file index: 0'
         assert isinstance(importer_obj.output, list)
 
-        single_spectrum_dict = importer_obj.output[0]
-        assert isinstance(single_spectrum_dict, dict)
-        assert all(single_spectrum_dict['obj'].flux == spectrum_list[0].flux)
-        assert all(single_spectrum_dict['obj'].spectral_axis == spectrum_list[0].spectral_axis)
+        # Check that these are indeed the same
+        spec_dict = importer_obj.spectra.manual_options[0]
+        for k, v in importer_obj.output[0].items():
+            assert v == spec_dict[k]
 
-        keys = {'label', 'name', 'ver', 'name_ver', 'index', '_suffix', 'obj'}
-        assert keys.issubset(set(single_spectrum_dict.keys()))
-        assert isinstance(single_spectrum_dict['obj'], Spectrum)
-
-        # TODO: This triggers the strictly increasing/decreasing error
-        # assert SpectrumList(single_spectrum_dict['obj']) == spectrum_list
+        # Check that is_valid is enforced in the output
+        importer_obj.input = unmasked_spectrum
+        assert importer_obj.output is None
 
     def test_default_viewer_reference(self, deconfigged_helper, spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
 
-    def test_call_method_basic(self, deconfigged_helper, spectrum_list):
+    @pytest.mark.parametrize('selection', [[], ['1D Spectrum at file index: 0',
+                                                  '1D Spectrum at file index: 1',
+                                                  'Exposure 0, Source ID: 0000',
+                                                  'Exposure 0, Source ID: 1111']])
+    def test_call_method_basic(self, deconfigged_helper, spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         importer_obj.input = spectrum_list
-        importer_obj.spectra.selected = ['1D Spectrum at file index: 0',
-                                         '1D Spectrum at file index: 1',
-                                         'Exposure 0, Source ID: 0000',
-                                         'Exposure 0, Source ID: 1111']
-        importer_obj.__call__()
+        importer_obj.spectra.selected = selection
+        if not selection:
+            # Checking with no selection yet, defaults to importing all spectra
+            with pytest.warns(
+                    UserWarning,
+                    match='No spectra selected, defaulting to loading all spectra in the list.'):
+                importer_obj.__call__()
+        else:
+            importer_obj.__call__()
 
         assert importer_obj.previous_data_label_messages == []
 
@@ -298,8 +388,10 @@ class TestSpectrumListImporter:
         viewer_dm = viewer.data_menu
 
         for v in (viewer, viewer_dm):
+            # Note: in a previous version of this test, spectra object had a duplicate label hence->
             # TODO: should these be in sync with data collection?
-            # Repeated label name gets overwritten
+            #  If there is a duplicate data label, it gets overwritten in the viewer
+            #  but the data collection will have both.
             assert len(v.data_labels_loaded) == len(spectra_labels)
             assert all([label in spectra_labels for label in v.data_labels_loaded])
             assert len(v.data_labels_visible) == len(spectra_labels)
@@ -308,11 +400,10 @@ class TestSpectrumListImporter:
     def test_call_method_repeat_call(self, deconfigged_helper, spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         importer_obj.input = spectrum_list
-        importer_obj.spectra.selected = ['1D Spectrum at file index: 0',
-                                         '1D Spectrum at file index: 1',
-                                         'Exposure 0, Source ID: 0000',
-                                         'Exposure 0, Source ID: 1111']
-        importer_obj.__call__()
+        with pytest.warns(
+                UserWarning,
+                match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+            importer_obj.__call__()
 
         spectra_labels = ['1D Spectrum_file_index-0',
                           '1D Spectrum_file_index-1',
@@ -361,11 +452,10 @@ class TestSpectrumListImporter:
                                         spectrum_list, unmasked_2d_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum_list)
         importer_obj.input = spectrum_list
-        importer_obj.spectra.selected = ['1D Spectrum at file index: 0',
-                                         '1D Spectrum at file index: 1',
-                                         'Exposure 0, Source ID: 0000',
-                                         'Exposure 0, Source ID: 1111']
-        importer_obj.__call__()
+        with pytest.warns(
+                UserWarning,
+                match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+            importer_obj.__call__()
 
         importer_obj.new_default_data_label = '2D Spectrum'
         importer_obj.__init__(app=deconfigged_helper.app,
@@ -403,28 +493,27 @@ class TestSpectrumListImporter:
                 assert all([label in spectra_labels for label in v.data_labels_visible])
 
 
-def test_combine_lists_to_1d_spectrum():
+@pytest.mark.parametrize('with_uncertainty', [True, False])
+def test_combine_lists_to_1d_spectrum(with_uncertainty):
     wl = [1, 2, 3] * u.nm
     fnu = [10, 20, 30] * u.Jy
-    dfnu = [4, 5, 6] * u.Jy
+    if with_uncertainty:
+        dfnu = [4, 5, 6] * u.Jy
+    else:
+        dfnu = None
+
     spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
     assert isinstance(spec, Spectrum)
     assert isinstance(spec.flux, u.Quantity)
     assert isinstance(spec.spectral_axis, u.Quantity)
-    assert isinstance(spec.uncertainty, StdDevUncertainty)
     assert np.all(spec.flux.value == np.array([10, 20, 30]))
     assert np.all(spec.spectral_axis.value == np.array([1, 2, 3]))
-    assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
 
+    if with_uncertainty:
+        assert isinstance(spec.uncertainty, StdDevUncertainty)
+        assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
 
-def test_combine_lists_to_1d_spectrum_no_uncertainty():
-    wl = [1, 2, 3] * u.nm
-    fnu = [10, 20, 30] * u.Jy
-    spec = combine_lists_to_1d_spectrum(wl, fnu, None, u.nm, u.Jy)
-    assert spec.uncertainty is None
-
-
-@loader_importer_registry('Fake 1D Spectrum List Concatenated')
+@loader_importer_registry('Test Fake 1D Spectrum List Concatenated')
 class FakeConcatenatedImporter(SpectrumListConcatenatedImporter):
     """A fake importer for testing/convenience purposes only.
     Mostly used to hot-update input for clean code/speed purposes."""
@@ -461,17 +550,22 @@ class TestSpectrumListConcatenatedImporterr:
         assert isinstance(importer_obj, SpectrumListImporter)
         assert importer_obj.disable_dropdown
 
-    def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper):
+    @pytest.mark.parametrize('with_uncertainty', [True, False])
+    def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
         wl = [1, 2, 3] * u.nm
         fnu = [10, 20, 30] * u.Jy
-        dfnu = [4, 5, 6] * u.Jy
+        if with_uncertainty:
+            dfnu = [4, 5, 6] * u.Jy
+        else:
+            dfnu = None
         spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
         result = importer_obj.output
         assert np.all(result.flux == spec.flux)
         assert np.all(result.spectral_axis == spec.spectral_axis)
-        assert np.all(result.uncertainty.array == spec.uncertainty.array)
+        if with_uncertainty:
+            assert np.all(result.uncertainty.array == spec.uncertainty.array)
 
     def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper,
                                                       unmasked_2d_spectrum):
