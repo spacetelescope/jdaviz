@@ -2534,8 +2534,15 @@ class SubsetSelect(SelectPluginComponent):
 
         # uses jdaviz_helper's _get_data so we can pass subset args
         # as, get_data from core helper doesn't support subset args
-        subset = self.app._jdaviz_helper._get_data(**get_data_kwargs)
-        return subset.mask
+
+        for sg in self.app.data_collection.subset_groups:
+            if sg.label == subset:
+                print(f"Found subset group for {subset}")
+                data = [s.data for s in sg.subsets if s.data.label == dataset][0]
+                glue_mask = ~sg.subset_state.to_mask(data)
+                break
+
+        return glue_mask
 
     @cached_property
     def selected_subset_mask(self):
