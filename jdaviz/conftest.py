@@ -31,6 +31,12 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 @pytest.fixture
 def fake_classes_in_registries():
+    """
+    This fixture is meant to be used in cases where a test
+    needs to check items in the registry. It provides a
+    list of fake items in the various registries that could
+    potentially throw off those tests if not accounted for.
+    """
     return ('Test Fake 1D Spectrum List',
             'Test Fake 1D Spectrum List Concatenated',
             'Test Fake Plugin')
