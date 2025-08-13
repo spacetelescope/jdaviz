@@ -1,10 +1,11 @@
 import itertools
 import numpy as np
+import warnings
 from copy import deepcopy
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
-from traitlets import List, Bool, Any
+from traitlets import List, Bool, Any, observe
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -107,6 +108,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return (isinstance(self.input, (SpectrumList, SpectrumCollection))
                 or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
 
+    @observe('spectra_selected')
+    def _on_spectra_selected_change(self, change):
+        if not len(self.spectra_selected):
+            self.resolver.import_disabled = True
+        else:
+            self.resolver.import_disabled = False
+
     def input_to_list_of_spec(self, inp):
 
         def this_row(field, i):
@@ -195,6 +203,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
+        # This is used when config.load is called via API.
+        if not self.spectra.selected:
+            warnings.warn('No spectra selected, defaulting to loading all spectra in the list.')
+            self.spectra.selected = deepcopy(self.spectra.choices)
+
         parent_data_label = None
         data_label_prefix = self.data_label_value
 
