@@ -13,6 +13,7 @@ from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum, SpectrumCollection, SpectrumList
+from astropy.utils.masked import Masked
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
@@ -207,27 +208,69 @@ def spectrum1d_cube_wcs():
     return wcs
 
 
-def _create_spectrum1d_with_spectral_unit(spectralunit=u.AA):
+def _create_spectrum1d_with_spectral_unit(spectralunit=u.AA, spectral_mask=None, wfss=False,
+                                          exposure='0_0_0_1', source_id='0000'):
     np.random.seed(42)
 
+    if spectral_mask is None:
+        spectral_mask = np.array([False] * SPECTRUM_SIZE)
+
     # We make this first so we don't have to worry about inputting different bounds
-    spec_axis = np.linspace(6000, 8000, SPECTRUM_SIZE) * u.AA
+    spec_axis = Masked(np.linspace(6000, 8000, SPECTRUM_SIZE) * u.AA,
+                       mask=spectral_mask)
     if spectralunit != u.AA:
         spec_axis = spec_axis.to(spectralunit)
 
     flux = (np.random.randn(len(spec_axis.value)) +
             10*np.exp(-0.001*(spec_axis.value-6563)**2) +
             spec_axis.value/500) * u.Jy
+
     uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
 
     meta = dict(header=dict(FILENAME="jdaviz-test-file.fits"))
+    if wfss:
+        meta['header'].update(dict(DATAMODL='WFSSMulti', EXPGRPID=exposure))
+        meta.update(dict(source_id=source_id))
 
-    return Spectrum(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty, meta=meta)
+    # Note, an INFO message pops up informing the user
+    # 'overwriting Masked Quantity's current mask with specified mask. [astropy.nddata.nddata]'
+    # This is expected behavior albeit a nuisance. Is it possible to suppress this message?
+    return Spectrum(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty,
+                    mask=spectral_mask, meta=meta)
+
+@pytest.fixture
+def make_empty_spectrum():
+    return Spectrum(spectral_axis=np.array([]) * u.Hz,
+                    flux=np.array([]) * u.Jy,
+                    uncertainty=StdDevUncertainty(np.array([])),
+                    mask=np.array([]),
+                    meta={})
 
 
 @pytest.fixture
 def spectrum1d():
     return _create_spectrum1d_with_spectral_unit()
+
+
+@pytest.fixture
+def partially_masked_spectrum1d():
+    mask = np.array([False] * SPECTRUM_SIZE)
+    mask[-3:] = True
+    return _create_spectrum1d_with_spectral_unit(spectral_mask=mask)
+
+
+@pytest.fixture
+def wfss_spectrum1d():
+    return _create_spectrum1d_with_spectral_unit(wfss=True)
+
+
+# WFSS may have spectral axes that are partially masked
+# and this is not allowed in specutils
+@pytest.fixture
+def partially_masked_wfss_spectrum1d():
+    mask = np.array([False] * SPECTRUM_SIZE)
+    mask[-3:] = True
+    return _create_spectrum1d_with_spectral_unit(spectral_mask=mask, wfss=True, source_id='1111')
 
 
 @pytest.fixture
@@ -243,6 +286,16 @@ def spectrum_collection(spectrum1d):
         warnings.simplefilter('ignore')
         result = SpectrumCollection.from_spectra(sc)
     return result
+
+
+@pytest.fixture
+def premade_spectrum_list(spectrum1d, partially_masked_spectrum1d,
+                          wfss_spectrum1d, partially_masked_wfss_spectrum1d):
+    return SpectrumList([
+        spectrum1d,
+        partially_masked_spectrum1d,
+        wfss_spectrum1d,
+        partially_masked_wfss_spectrum1d])
 
 
 @pytest.fixture
