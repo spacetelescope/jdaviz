@@ -440,6 +440,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if layer.state.visible != layer.visible:
                 layer.state.visible = layer.visible
 
+            self.layer._update_items()
+
         if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
             self.set_layer_visibility(parent_label, visible=True)
