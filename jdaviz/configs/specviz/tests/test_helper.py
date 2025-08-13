@@ -420,7 +420,7 @@ def test_load_2d_flux(specviz_helper):
     specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test_0"
+    assert specviz_helper.app.data_collection[0].label == "test_file_index-0"
 
     spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                      flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
@@ -429,8 +429,8 @@ def test_load_2d_flux(specviz_helper):
     spec_list = SpectrumList([spec, spec2])
     specviz_helper.load_data(spec_list, data_label="second test")
 
-    assert len(specviz_helper.app.data_collection) == 10
-    assert specviz_helper.app.data_collection[-1].label == "second test_5"
+    assert len(specviz_helper.app.data_collection) == 6
+    assert specviz_helper.app.data_collection[-1].label == "second test_file_index-1"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
