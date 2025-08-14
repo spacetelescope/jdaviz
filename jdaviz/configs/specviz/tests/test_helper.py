@@ -437,7 +437,10 @@ def test_load_2d_flux(specviz_helper):
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    specviz_helper.load_data(spec_list, data_label="second test")
+    with pytest.warns(
+            UserWarning,
+            match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+        specviz_helper.load_data(spec_list, data_label="second test")
 
     assert len(specviz_helper.app.data_collection) == 6
     assert specviz_helper.app.data_collection[-1].label == "second test_file_index-1"
