@@ -5,7 +5,7 @@ from copy import deepcopy
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
-from traitlets import List, Bool, Any, observe
+from traitlets import List, Bool, Any
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
