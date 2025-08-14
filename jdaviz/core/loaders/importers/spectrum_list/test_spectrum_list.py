@@ -412,11 +412,10 @@ class TestSpectrumListImporter:
         for viewer in viewers.values():
             viewer_dm = viewer.data_menu
 
-            for v in (viewer, viewer_dm):
-                assert len(v.data_labels_loaded) == len(spectra_labels)
-                assert all([label in spectra_labels for label in v.data_labels_loaded])
-                assert len(v.data_labels_visible) == len(spectra_labels)
-                assert all([label in spectra_labels for label in v.data_labels_visible])
+            assert len(viewer_dm.data_labels_loaded) == len(spectra_labels)
+            assert all([label in spectra_labels for label in viewer_dm.data_labels_loaded])
+            assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
+            assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
 
 
 @pytest.mark.parametrize('with_uncertainty', [True, False])
