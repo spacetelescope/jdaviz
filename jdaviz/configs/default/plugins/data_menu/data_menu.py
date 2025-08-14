@@ -587,7 +587,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         Remove the selected layers from the entire app and all viewers.
         """
         # future improvement: allow overriding layer.selected via *args, with pre-validation
-        for layer in self.layer.selected:
+        for layer in (self.layer.selected if isinstance(self.layer.selected,
+                                                        (list, tuple)) else [self.layer.selected]):
             if layer in self.existing_subset_labels:
                 for sg in self.app.data_collection.subset_groups:
                     if sg.label == layer:
