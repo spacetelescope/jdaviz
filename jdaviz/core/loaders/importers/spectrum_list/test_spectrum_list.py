@@ -162,9 +162,30 @@ class TestSpectrumListImporter:
 
     def test_on_spectra_selected(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        # Nothing has been selected yet
+        # Baseline, no spectra selected
         assert importer_obj.resolver.import_disabled is True
+
         importer_obj.spectra.selected = importer_obj.spectra.choices[0]
+        assert importer_obj.resolver.import_disabled is False
+
+        importer_obj.spectra.selected = []
+        assert importer_obj.resolver.import_disabled is True
+
+    def test_on_format_selected(self, deconfigged_helper, premade_spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
+
+        # Baseline, no spectra selected
+        assert importer_obj.resolver.import_disabled is True
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+
+        # Still no selection
+        assert importer_obj.resolver.import_disabled is True
+
+        importer_obj.spectra.selected = importer_obj.spectra.choices[0]
+        importer_obj._on_format_selected_change(change = {'new': '1D Spectrum List'})
+        assert importer_obj.resolver.import_disabled is False
+
+        importer_obj._on_format_selected_change(change = {'new': 'Not a 1D Spectrum List'})
         assert importer_obj.resolver.import_disabled is False
 
     def test_input_to_list_of_spec(self, deconfigged_helper, premade_spectrum_list):
