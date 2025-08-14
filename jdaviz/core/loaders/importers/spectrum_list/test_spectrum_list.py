@@ -182,10 +182,10 @@ class TestSpectrumListImporter:
         assert importer_obj.resolver.import_disabled is True
 
         importer_obj.spectra.selected = importer_obj.spectra.choices[0]
-        importer_obj._on_format_selected_change(change = {'new': '1D Spectrum List'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
         assert importer_obj.resolver.import_disabled is False
 
-        importer_obj._on_format_selected_change(change = {'new': 'Not a 1D Spectrum List'})
+        importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
         assert importer_obj.resolver.import_disabled is False
 
     def test_input_to_list_of_spec(self, deconfigged_helper, premade_spectrum_list):
@@ -376,10 +376,10 @@ class TestSpectrumListImporter:
             expected_label_messages = [(f"Spectrum with label '{label}' "
                                         f"already exists in the viewer, skipping. "
                                         f"This message will be shown only once.")
-                                        for label in spectra_labels]
+                                       for label in spectra_labels]
 
-            expected_masked_message = (f"Spectra '1D Spectrum_file_index-0', "
-                                       f"'1D Spectrum_file_index-1' are completely masked.")
+            expected_masked_message = ("Spectra '1D Spectrum_file_index-0', "
+                                       "'1D Spectrum_file_index-1' are completely masked.")
 
             broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                               if hasattr(arg[0][0], 'text')]
