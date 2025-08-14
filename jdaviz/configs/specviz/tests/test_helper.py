@@ -59,7 +59,7 @@ class TestSpecvizHelper:
         # now load three more spectra from a SpectrumList, without labels
         with pytest.warns(
                 UserWarning,
-                match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+                match='No spectra selected, defaulting to loading all spectra in the list.'):
             self.spec_app.load_data(self.spec_list)
         assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
@@ -77,7 +77,7 @@ class TestSpecvizHelper:
         # now load ten spectral orders from a SpectrumList:
         with pytest.warns(
                 UserWarning,
-                match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+                match='No spectra selected, defaulting to loading all spectra in the list.'):
             self.spec_app.load_data(self.multi_order_spectrum_list)
         assert len(self.spec_app.app.data_collection) == 11
 
@@ -426,7 +426,7 @@ def test_load_2d_flux(specviz_helper):
 
     with pytest.warns(
             UserWarning,
-            match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+            match='No spectra selected, defaulting to loading all spectra in the list.'):
         specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
