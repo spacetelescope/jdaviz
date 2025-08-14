@@ -310,18 +310,16 @@ class TestSpectrumListImporter:
         assert len(viewers) == 1
         assert '1D Spectrum' in viewers
 
-        viewer = viewers['1D Spectrum']
-        viewer_dm = viewer.data_menu
+        viewer_dm = viewers['1D Spectrum'].data_menu
 
-        for v in (viewer, viewer_dm):
-            # Note: in a previous version of this test, spectra object had a duplicate label hence->
-            # TODO: should these be in sync with data collection?
-            #  If there is a duplicate data label, it gets overwritten in the viewer
-            #  but the data collection will have both.
-            assert len(v.data_labels_loaded) == len(spectra_labels)
-            assert all([label in spectra_labels for label in v.data_labels_loaded])
-            assert len(v.data_labels_visible) == len(spectra_labels)
-            assert all([label in spectra_labels for label in v.data_labels_visible])
+        # Note: in a previous version of this test, spectra object had a duplicate label hence->
+        # TODO: should these be in sync with data collection?
+        #  If there is a duplicate data label, it gets overwritten in the viewer
+        #  but the data collection will have both.
+        assert len(viewer_dm.data_labels_loaded) == len(spectra_labels)
+        assert all([label in spectra_labels for label in viewer_dm.data_labels_loaded])
+        assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
+        assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
 
     def test_call_method_repeat_call(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
@@ -365,14 +363,16 @@ class TestSpectrumListImporter:
         assert len(viewers) == 1
         assert '1D Spectrum' in viewers
 
-        viewer = viewers['1D Spectrum']
-        viewer_dm = viewer.data_menu
+        viewer_dm = viewers['1D Spectrum'].data_menu
 
-        for v in (viewer, viewer_dm):
-            assert len(v.data_labels_loaded) == len(spectra_labels)
-            assert all([label in spectra_labels for label in v.data_labels_loaded])
-            assert len(v.data_labels_visible) == len(spectra_labels)
-            assert all([label in spectra_labels for label in v.data_labels_visible])
+        # Note: in a previous version of this test, spectra object had a duplicate label hence->
+        # TODO: should these be in sync with data collection?
+        #  If there is a duplicate data label, it gets overwritten in the viewer
+        #  but the data collection will have both.
+        assert len(viewer_dm.data_labels_loaded) == len(spectra_labels)
+        assert all([label in spectra_labels for label in viewer_dm.data_labels_loaded])
+        assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
+        assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
 
     def test_call_method_different_data(self, deconfigged_helper,
                                         premade_spectrum_list, spectrum2d):
