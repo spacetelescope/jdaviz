@@ -96,7 +96,7 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, new_spectrum_list)
         importer_obj.spectra.selected = to_select
 
-        assert importer_obj.fully_masked_spectra == ['1D Spectrum_file_index-0']
+        assert importer_obj.fully_masked_spectra == ["'1D Spectrum_file_index-0'"]
         assert hasattr(importer_obj.spectra, 'items')
         assert hasattr(importer_obj.spectra, 'selected')
         assert hasattr(importer_obj.spectra, 'multiselect')
@@ -216,7 +216,7 @@ class TestSpectrumListImporter:
 
     def test_input_to_list_of_spec_not_supported(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(NotImplementedError, match='not_a_spectrum is not supported'):
             importer_obj.input_to_list_of_spec('not_a_spectrum')
 
     def test_is_wfssmulti(self, deconfigged_helper, premade_spectrum_list, wfss_spectrum1d):
@@ -240,19 +240,19 @@ class TestSpectrumListImporter:
 
         # Even unmasked spectra still *have* a mask, it's just all False
         for spec in premade_spectrum_list:
-            assert importer_obj._has_mask(spec)
+            assert importer_obj._has_mask(spec) is True
 
-        assert not importer_obj._has_mask(make_empty_spectrum)
+        assert importer_obj._has_mask(make_empty_spectrum) is False
 
         make_empty_spectrum.mask = None
-        assert not importer_obj._has_mask(make_empty_spectrum)
+        assert importer_obj._has_mask(make_empty_spectrum) is False
 
     def test_is_fully_masked(self, deconfigged_helper, premade_spectrum_list, spectrum1d):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
-        assert not importer_obj._is_fully_masked(spectrum1d)
+        assert importer_obj._is_fully_masked(spectrum1d) is False
         spectrum1d.mask[:] = True
-        assert importer_obj._is_fully_masked(spectrum1d)
+        assert importer_obj._is_fully_masked(spectrum1d) is True
 
     def test_apply_spectral_mask(self, deconfigged_helper, premade_spectrum_list,
                                  make_empty_spectrum, spectrum1d,
@@ -302,7 +302,6 @@ class TestSpectrumListImporter:
                                                 'Exposure 0, Source ID: 1111']])
     def test_call_method_basic(self, deconfigged_helper, premade_spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        importer_obj.input = premade_spectrum_list
         importer_obj.spectra.selected = selection
         if not selection:
             # Checking with no selection yet, defaults to importing all spectra
@@ -342,36 +341,54 @@ class TestSpectrumListImporter:
         assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
         assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
 
-    def test_call_method_repeat_call(self, deconfigged_helper, premade_spectrum_list):
+    def test_call_method_repeat_call_snackbars(self, deconfigged_helper, premade_spectrum_list):
+        """
+        This tests that the snackbar messages are shown when expected for:
+        - Fully masked spectra
+        - Duplicate data labels
+
+        It also tests that the messages are only shown once per label even if the
+        call method is called multiple times.
+
+        These are combined into one test both because they are both snackbar related and
+        because mocking the broadcast method requires the __call__ method to have already been
+        used --- the error was something about being unable to identify the viewer from reference.
+        """
+        # Fully mask two spectra to test so that they are skipped upon init
+        premade_spectrum_list[0].mask[:] = True
+        premade_spectrum_list[1].mask[:] = True
+
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        importer_obj.input = premade_spectrum_list
         with pytest.warns(
                 UserWarning,
                 match='No spectra selected, defaulting to loading all spectra in the list.'):
             importer_obj.__call__()
 
-        spectra_labels = ['1D Spectrum_file_index-0',
-                          '1D Spectrum_file_index-1',
-                          '1D Spectrum_EXP-0_ID-0000',
+        spectra_labels = ['1D Spectrum_EXP-0_ID-0000',
                           '1D Spectrum_EXP-0_ID-1111']
 
         # Mock the broadcast method to catch the snackbar messages
         with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
             assert len(importer_obj.previous_data_label_messages) == 0
             importer_obj.__call__()
-            assert len(importer_obj.previous_data_label_messages) == 4
+            assert len(importer_obj.previous_data_label_messages) == 2
 
-            expected_messages = [(f"Spectrum with label '{label}' "
-                                  f"already exists in the viewer, skipping. "
-                                  f"This message will only be shown once.")
-                                 for label in spectra_labels]
+            expected_label_messages = [(f"Spectrum with label '{label}' "
+                                        f"already exists in the viewer, skipping. "
+                                        f"This message will be shown only once.")
+                                        for label in spectra_labels]
+
+            expected_masked_message = (f"Spectra '1D Spectrum_file_index-0', "
+                                       f"'1D Spectrum_file_index-1' are completely masked.")
+
             broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                               if hasattr(arg[0][0], 'text')]
-            assert all([msg in broadcast_msgs for msg in expected_messages])
+            assert all([msg in broadcast_msgs for msg in expected_label_messages])
+            assert expected_masked_message in broadcast_msgs
 
             # One more time to verify that no more messages are added
             importer_obj.__call__()
-            assert len(importer_obj.previous_data_label_messages) == 4
+            assert len(importer_obj.previous_data_label_messages) == 2
 
             broadcast_msgs_final = set([arg[0][0].text for arg in mock_broadcast.call_args_list
                                         if hasattr(arg[0][0], 'text')])
@@ -398,7 +415,6 @@ class TestSpectrumListImporter:
     def test_call_method_different_data(self, deconfigged_helper,
                                         premade_spectrum_list, spectrum2d):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        importer_obj.input = premade_spectrum_list
         with pytest.warns(
                 UserWarning,
                 match='No spectra selected, defaulting to loading all spectra in the list.'):
