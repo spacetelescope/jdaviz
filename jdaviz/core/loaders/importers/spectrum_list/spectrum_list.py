@@ -76,7 +76,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 # all == True implies the entire array is masked and unusable
                 if self._is_fully_masked(spec):
                     data_label_prefix = self.data_label_value
-                    self.fully_masked_spectra.append(f"{data_label_prefix}_{_suffix}")
+                    self.fully_masked_spectra.append(f"'{data_label_prefix}_{_suffix}'")
                     index_modifier += 1
                     continue
 
@@ -244,7 +244,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     # It probably doesn't make sense to disable import entirely
                     # since a user may want to import spectra after subsequent analysis
                     msg = (f"Spectrum with label '{data_label}' already exists in the viewer, "
-                           f"skipping. This message will only be shown once.")
+                           f"skipping. This message will be shown only once.")
                     # Previously chosen spectra remain in the dropdown and will attempt to import
                     # again, so only show the message once.
                     if msg not in self.previous_data_label_messages:
