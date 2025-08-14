@@ -439,7 +439,7 @@ def test_load_2d_flux(specviz_helper):
     spec_list = SpectrumList([spec, spec2])
     with pytest.warns(
             UserWarning,
-            match = 'No spectra selected, defaulting to loading all spectra in the list.'):
+            match='No spectra selected, defaulting to loading all spectra in the list.'):
         specviz_helper.load_data(spec_list, data_label="second test")
 
     assert len(specviz_helper.app.data_collection) == 6
