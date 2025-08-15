@@ -570,7 +570,7 @@ class ConfigHelper(HubListener):
 
         if temporal_subset:
             if mask_subset is not None:
-                raise ValueError("cannot use both mask_subset and spectral_subset")
+                raise ValueError("cannot use both mask_subset and temporal_subset")
             mask_subset = temporal_subset
 
         # End validity checks and start data retrieval

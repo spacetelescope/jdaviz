@@ -2529,16 +2529,26 @@ class SubsetSelect(SelectPluginComponent):
             if getattr(self.plugin, 'dataset', None) is None:  # pragma: no cover
                 raise ValueError("Retrieving subset mask requires associated dataset")
             dataset = self.plugin.dataset.selected
-        get_data_kwargs = {'data_label': dataset}
-        if 'is_spectral' in self.filters:
-            get_data_kwargs['spectral_subset'] = subset
-        elif 'is_spatial' in self.filters:
-            get_data_kwargs['spatial_subset'] = subset
 
-        # uses jdaviz_helper's _get_data so we can pass subset args
-        # as, get_data from core helper doesn't support subset args
-        subset = self.app._jdaviz_helper._get_data(**get_data_kwargs)
-        return subset.mask
+        # Use Glue's to_mask method directly rather than translating the whole Data object to
+        # output class (e.g., Spectrum)
+        for sg in self.app.data_collection.subset_groups:
+            if sg.label == subset:
+                if hasattr(self.plugin, "cube_fit") and self.plugin.cube_fit:
+                    # In this case we hack around an issue by using the 1D mask
+                    data = [d for d in self.app.data_collection if d.ndim == 1][0]
+                else:
+                    data = self.app.data_collection[dataset]
+                glue_mask = ~sg.subset_state.to_mask(data)
+                break
+
+        if self.app.data_collection[dataset].ndim == 3 and glue_mask.ndim == 1:
+            data = self.app.data_collection[dataset]
+            if data.meta['spectral_axis_index'] == 0:
+                glue_mask = np.expand_dims(glue_mask, (1, 2))
+            glue_mask = np.broadcast_to(glue_mask, data.shape)
+
+        return glue_mask
 
     @cached_property
     def selected_subset_mask(self):
