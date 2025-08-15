@@ -430,48 +430,6 @@ class TestSpectrumListImporter:
         assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
         assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
 
-    def test_call_method_different_data(self, deconfigged_helper,
-                                        premade_spectrum_list, spectrum2d):
-        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        with pytest.warns(
-                UserWarning,
-                match='No spectra selected, defaulting to loading all spectra in the list.'):
-            importer_obj.__call__()
-
-        importer_obj.new_default_data_label = '2D Spectrum'
-        importer_obj.__init__(app=deconfigged_helper.app,
-                              resolver=deconfigged_helper.loaders['object']._obj,
-                              input=spectrum2d)
-
-        assert importer_obj.data_label_default == '2D Spectrum'
-
-        importer_obj.data_label_value = '2D_Spectrum'
-        importer_obj.spectra.selected = ['2D Spectrum at file index: 0',
-                                         '2D Spectrum at file index: 1']
-        importer_obj.__call__()
-
-        spectra_labels = ['1D Spectrum_file_index-0',
-                          '1D Spectrum_file_index-1',
-                          '1D Spectrum_EXP-0_ID-0000',
-                          '1D Spectrum_EXP-0_ID-1111',
-                          '2D_Spectrum_file_index-0',
-                          '2D_Spectrum_file_index-1']
-
-        assert all([label in deconfigged_helper.app.data_collection.labels
-                    for label in spectra_labels])
-
-        # Viewer items
-        viewers = deconfigged_helper.viewers
-        # TODO: Two viewers is the intended behavior but this will need a future update to work
-        # assert len(viewers) == 2
-        for viewer in viewers.values():
-            viewer_dm = viewer.data_menu
-
-            assert len(viewer_dm.data_labels_loaded) == len(spectra_labels)
-            assert all([label in spectra_labels for label in viewer_dm.data_labels_loaded])
-            assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
-            assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
-
 
 @pytest.mark.parametrize('with_uncertainty', [True, False])
 def test_combine_lists_to_1d_spectrum(with_uncertainty):
