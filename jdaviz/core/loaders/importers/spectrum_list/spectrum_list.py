@@ -70,7 +70,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     name_ver = index
                     name = index
                     ver = index
-                    label = f"{self.data_label_default} at file index: {index}"
+                    label = f"1D Spectrum at file index: {index}"
                     _suffix = f"file_index-{index}"
 
                 # all == True implies the entire array is masked and unusable
