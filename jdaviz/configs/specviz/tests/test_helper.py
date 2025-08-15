@@ -57,7 +57,10 @@ class TestSpecvizHelper:
 
     def test_load_spectrum_list_no_labels(self):
         # now load three more spectra from a SpectrumList, without labels
-        self.spec_app.load_data(self.spec_list)
+        with pytest.warns(
+                UserWarning,
+                match='No spectra selected, defaulting to loading all spectra in the list.'):
+            self.spec_app.load_data(self.spec_list)
         assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
             assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
@@ -72,7 +75,10 @@ class TestSpecvizHelper:
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_data(self.multi_order_spectrum_list)
+        with pytest.warns(
+                UserWarning,
+                match='No spectra selected, defaulting to loading all spectra in the list.'):
+            self.spec_app.load_data(self.multi_order_spectrum_list)
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
@@ -417,20 +423,27 @@ def test_load_2d_flux(specviz_helper):
     # 1D Spectrum objects to load in Specviz.
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
-    specviz_helper.load_data(spec, data_label="test")
+
+    with pytest.warns(
+            UserWarning,
+            match='No spectra selected, defaulting to loading all spectra in the list.'):
+        specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test_0"
+    assert specviz_helper.app.data_collection[0].label == "test_file_index-0"
 
     spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                      flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    specviz_helper.load_data(spec_list, data_label="second test")
+    with pytest.warns(
+            UserWarning,
+            match='No spectra selected, defaulting to loading all spectra in the list.'):
+        specviz_helper.load_data(spec_list, data_label="second test")
 
-    assert len(specviz_helper.app.data_collection) == 10
-    assert specviz_helper.app.data_collection[-1].label == "second test_5"
+    assert len(specviz_helper.app.data_collection) == 6
+    assert specviz_helper.app.data_collection[-1].label == "second test_file_index-1"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):

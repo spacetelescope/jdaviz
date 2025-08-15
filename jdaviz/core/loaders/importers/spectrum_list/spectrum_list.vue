@@ -1,5 +1,20 @@
 <template>
   <v-container>
+    <div v-if="!disable_dropdown">
+        <plugin-select
+          :items="spectra_items.map(i => i.label)"
+          :selected.sync="spectra_selected"
+          :show_if_single_entry="true"
+          :multiselect="spectra_multiselect"
+          label="Source IDs"
+          api_hint="ldr.spectra.selected ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Source IDs to select from the list of spectra."
+        ></plugin-select>
+    </div>
+
+    <div style="height: 16px;"></div>
+
     <v-row>
       <plugin-auto-label
         :value.sync="data_label_value"

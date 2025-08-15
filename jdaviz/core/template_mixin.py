@@ -1347,6 +1347,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
             return [self._get_selected_obj(index) for index in self.selected_index]
         return self._get_selected_obj(self.selected_index)
 
+    def _get_selected_obj_dict(self, index):
+        return self.manual_options[index]
+
+    @property
+    def selected_obj_dict(self):
+        # returns HDU (for HDUList) or ndarray (for ImageModel/DataModel)
+        if self.is_multiselect:
+            return [self._get_selected_obj_dict(index) for index in self.selected_index]
+        return self._get_selected_obj_dict(self.selected_index)
+
     @property
     def indices(self):
         return [item.get('index', None) for item in self.items]
