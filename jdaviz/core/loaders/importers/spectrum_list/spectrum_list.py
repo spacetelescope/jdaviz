@@ -21,6 +21,10 @@ __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
 class SpectrumListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum_list.vue"
 
+    exposures_items = List().tag(sync=True)
+    exposures_selected = Any().tag(sync=True)
+    exposures_multiselect = Bool(True).tag(sync=True)
+
     spectra_items = List().tag(sync=True)
     spectra_selected = Any().tag(sync=True)
     spectra_multiselect = Bool(True).tag(sync=True)
@@ -48,7 +52,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             # Separately observe changes to the selected spectra
             self.observe(self._on_spectra_selected_change, names='spectra_selected')
 
+            exposures = []
             spectra_options = []
+
             index_modifier = 0
 
             if isinstance(self.input, Spectrum):
@@ -61,7 +67,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     # ver, name are stand-ins for exposure and source_id
                     # ver == exposure, name == source_id
                     ver, name = self._extract_exposure_sourceid(spec)
-                    label = f"Exposure {ver}, Source ID: {name}"
+                    exposure_label = f"Exposure {ver}"
+                    exposures.append(exposure_label)
+
+                    label = f"{exposure_label}, Source ID: {name}"
                     # Flipping the two from the variable naming convention
                     name_ver = f"{ver}_{name}"
                     _suffix = f"EXP-{ver}_ID-{name}"
@@ -91,6 +100,17 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                         'name_ver': str(name_ver),
                                         '_suffix': _suffix,
                                         'obj': self._apply_spectral_mask(spec)})
+
+            if exposures:
+                exposures_options = [{'label': exp, 'index': i, 'ver': exp,
+                                      'name': exp, 'name_ver': exp}
+                                     for i, exp in enumerate(sorted(set(exposures)))]
+                self.exposures = SelectFileExtensionComponent(self,
+                                                              items='exposures_items',
+                                                              selected='exposures_selected',
+                                                              multiselect='exposures_multiselect',
+                                                              manual_options=exposures_options)
+                self.exposures.selected = []
 
             self.spectra = SelectFileExtensionComponent(self,
                                                         items='spectra_items',
