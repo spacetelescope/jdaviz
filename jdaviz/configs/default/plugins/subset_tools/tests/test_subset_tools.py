@@ -597,3 +597,47 @@ def test_update_subset(cubeviz_helper, spectrum1d_cube):
     assert plg._obj.subset_definitions[0][2]['value'] == 1
     # Check radius
     assert plg._obj.subset_definitions[0][3]['value'] == 1
+
+
+def test_data_menu_subset_delete(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    dm = cubeviz_helper.viewers['spectrum-viewer'].data_menu
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    dm.layer.multiselect = False
+
+    # load one spectral region
+    plg.import_region(SpectralRegion(1 * u.um, 1.5 * u.um))
+
+    # load a spatial region
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    plg.import_region(spatial_reg, combination_mode='new')
+
+    # load a second spectral region after spatial region
+    plg.import_region(SpectralRegion(1.6 * u.um, 2 * u.um))
+
+    print(cubeviz_helper.app.data_collection)
+    expected_dm_layer_len = 4
+
+    assert (len(cubeviz_helper.viewers['spectrum-viewer'].data_menu.layer.choices) ==
+            expected_dm_layer_len)
+
+    # select the spectral subset created after the spatial subset
+    dm.layer = 'Subset 3'
+    dm.remove_from_app()
+    expected_dm_layer_len = 3
+
+    # ensure removing from app removes it from LayerSelect and is no longer a data label
+    # within the data menu
+    assert (len(cubeviz_helper.viewers['spectrum-viewer'].data_menu.layer.choices) ==
+            expected_dm_layer_len)
+    assert dm.layer not in cubeviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded
+
+    # select the spectral subset created before the spatial subset
+    dm.layer = 'Subset 1'
+    dm.remove_from_app()
+    expected_dm_layer_len = 2
+
+    assert (len(cubeviz_helper.viewers['spectrum-viewer'].data_menu.layer.choices) ==
+            expected_dm_layer_len)
+    assert dm.layer not in cubeviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded
