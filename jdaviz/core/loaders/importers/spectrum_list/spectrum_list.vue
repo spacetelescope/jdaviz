@@ -10,7 +10,7 @@
         :multiselect="exposures_multiselect"
         :search="true"
         label="Exposure"
-        api_hint="ldr.exposures ="
+        api_hint="ldr.exposures.selected ="
         :api_hints_enabled="api_hints_enabled"
         hint="Exposures to select from."
       ></plugin-select>
@@ -26,7 +26,7 @@
         :multiselect="spectra_multiselect"
         :search="true"
         label="Source IDs"
-        api_hint="ldr.source_ids ="
+        api_hint="ldr.spectra.selected ="
         :api_hints_enabled="api_hints_enabled"
         hint="Source IDs to select from the list of spectra."
       ></plugin-select>
