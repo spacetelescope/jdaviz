@@ -75,6 +75,7 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'spectra')
 
         assert importer_obj.fully_masked_spectra == []
+        assert importer_obj.exposures.selected == []
         assert importer_obj.spectra.selected == []
         assert importer_obj.previous_data_label_messages == []
 
@@ -112,10 +113,26 @@ class TestSpectrumListImporter:
             # ver == exposure, name == source_id
             if len(spec.meta):
                 ver, name = extract_wfss_info(spec)
+
+                exposure_label = f"Exposure {ver}"
+                exposures_keys = {
+                    'label': exposure_label,
+                    'name': exposure_label,
+                    'ver': exposure_label,
+                    'name_ver': exposure_label,
+                    'index': 0}
+
+                # Only have 1 exposure in this test case, exposure 0
+                exposures_dict = importer_obj.exposures.manual_options[0]
+                assert isinstance(exposures_dict, dict)
+                assert len(exposures_dict) == len(exposures_keys)
+                for key in exposures_keys:
+                    assert key in exposures_dict
+                    assert exposures_dict[key] == exposures_keys[key]
             else:
                 ver, name = str(index), str(index)
 
-            keys = {
+            spec_keys = {
                 'label': [f"Exposure {ver}, Source ID: {name}",
                           f"1D Spectrum at file index: {file_index}"],
                 'name': [name, file_index],
@@ -126,10 +143,11 @@ class TestSpectrumListImporter:
                 'obj': None}
 
             assert isinstance(spec_dict, dict)
-            assert set(keys.keys()).issubset(set(spec_dict.keys()))
-            for key in keys:
+            assert len(spec_keys) == len(spec_dict)
+            for key in spec_keys:
+                assert key in spec_dict
                 if key != 'obj':
-                    assert spec_dict[key] in keys[key]
+                    assert spec_dict[key] in spec_keys[key]
 
             assert isinstance(spec_dict['obj'], Spectrum)
             mask = premade_spectrum_list[index].spectral_axis.mask
