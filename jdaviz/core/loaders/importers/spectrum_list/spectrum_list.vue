@@ -70,7 +70,7 @@ export default {
         return this.spectra_items;
       }
       // Extract exposure numbers from selected ver
-      const selectedExposures = this.exposures_selected.map(label => {
+      const selected_exposures = this.exposures_selected.map(label => {
         // Assumes label format: "Exposure N"
         const match = label.match(/Exposure (\d+)/);
         return match ? match[1] : null;
@@ -78,15 +78,15 @@ export default {
       // Filter spectra_items by ver (exposure number)
       return this.spectra_items.filter(item => {
         // Assumes item.ver is a string or number representing exposure number
-        return selectedExposures.includes(String(item.ver));
+        return selected_exposures.includes(String(item.ver));
       });
     },
     source_id_dropdown_items() {
       // Union of filtered source IDs and currently selected source IDs
-      const filteredLabels = this.filtered_spectra_items.map(i => i.label);
-      const selectedLabels = Array.isArray(this.spectra_selected) ? this.spectra_selected : [];
+      const filtered_labels = this.filtered_spectra_items.map(i => i.label);
+      const selected_labels = Array.isArray(this.spectra_selected) ? this.spectra_selected : [];
       // Merge and deduplicate
-      return Array.from(new Set([...filteredLabels, ...selectedLabels]));
+      return Array.from(new Set([...filtered_labels, ...selected_labels]));
     }
   }
 }

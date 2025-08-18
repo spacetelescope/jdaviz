@@ -3,7 +3,7 @@
     <v-select
       :menu-props="{ left: true }"
       attach
-      :items="filteredItems"
+      :items="filtered_items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
       :label="api_hints_enabled && api_hint ? api_hint : label"
@@ -18,13 +18,13 @@
       item-value="label"
       persistent-hint
       style="width: 100%"
-      :search-input="searchEnabled ? searchQuery : undefined"
-      @update:search-input="onSearchInput"
+      :search-input="search_enabled ? search_query : undefined"
+      @update:search-input="on_search_input"
     >
       <template #prepend-item>
-        <div v-if="searchEnabled">
+        <div v-if="search_enabled">
           <v-text-field
-            v-model="searchQuery"
+            v-model="search_query"
             prepend-inner-icon="mdi-magnify"
             label="Search"
             single-line
@@ -38,7 +38,7 @@
           <v-list-item
             ripple
             @mousedown.prevent
-            @click="toggleSelectAll"
+            @click="toggle_select_all"
           >
             <v-list-item-action>
               <v-icon>
@@ -81,20 +81,20 @@ module.exports = {
           'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search'],
   data() {
     return {
-      searchQuery: '',
+      search_query: '',
     }
   },
   computed: {
-    searchEnabled() {
+    search_enabled() {
       return !!this.search;
     },
-    filteredItems() {
-      if (!this.searchEnabled || !this.searchQuery) {
+    filtered_items() {
+      if (!this.search_enabled || !this.search_query) {
         return this.items;
       }
-      const query = this.searchQuery.toLowerCase();
+      const query = this.search_query.toLowerCase();
       // Get selected items (as objects or strings)
-      const selectedSet = new Set(
+      const selected_set = new Set(
         Array.isArray(this.selected) ? this.selected.map(sel => (typeof sel === 'string' ? sel : sel.label || sel.text || sel)) : [this.selected]
       );
       // Filter items by search
@@ -103,10 +103,10 @@ module.exports = {
         return label.toLowerCase().includes(query);
       });
       // Add back any selected items not in filtered
-      const allLabels = new Set(filtered.map(item => (typeof item === 'string' ? item : item.label || item.text || '')));
+      const all_labels = new Set(filtered.map(item => (typeof item === 'string' ? item : item.label || item.text || '')));
       this.items.forEach(item => {
         const label = (typeof item === 'string') ? item : (item.label || item.text || '');
-        if (selectedSet.has(label) && !allLabels.has(label)) {
+        if (selected_set.has(label) && !all_labels.has(label)) {
           filtered.push(item);
         }
       });
@@ -114,10 +114,10 @@ module.exports = {
     },
   },
   methods: {
-    onSearchInput(value) {
-      this.searchQuery = value;
+    on_search_input(value) {
+      this.search_query = value;
     },
-    toggleSelectAll() {
+    toggle_select_all() {
       if (this.selected.length < this.items.length) {
         this.$emit('update:selected', this.items.map(item => item.label || item.text || item));
       } else {
