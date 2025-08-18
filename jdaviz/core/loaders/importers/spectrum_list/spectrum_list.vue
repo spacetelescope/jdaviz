@@ -1,7 +1,5 @@
 <template>
   <v-container>
-    <!-- TODO: FIX THE HINT -->
-    <!-- api_hint="ldr.exposure_nums =" -->
     <div v-if="!disable_dropdown && exposures_items.length > 0">
       <plugin-select
         :items="exposures_items.map(i => i.label)"
