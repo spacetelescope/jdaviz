@@ -72,7 +72,6 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'spectra_items')
         assert hasattr(importer_obj, 'spectra_selected')
         assert hasattr(importer_obj, 'spectra_multiselect')
-        assert hasattr(importer_obj, 'disable_dropdown')
         assert hasattr(importer_obj, 'spectra')
 
         assert importer_obj.fully_masked_spectra == []
@@ -499,37 +498,45 @@ class TestSpectrumListConcatenatedImporter:
                                         resolver=config_helper.loaders['object']._obj,
                                         input=input_obj)
 
-    def test_spectrum_list_concatenated_importer_init(self, deconfigged_helper,
-                                                      spectrum2d):
-        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
-        assert isinstance(importer_obj, SpectrumListImporter)
-        assert importer_obj.disable_dropdown
-
-    @pytest.mark.parametrize('with_uncertainty', [True, False])
-    def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
+    def setup_combined_spectrum(self, with_uncertainty):
         wl = [1, 2, 3] * u.nm
         fnu = [10, 20, 30] * u.Jy
         if with_uncertainty:
             dfnu = [4, 5, 6] * u.Jy
         else:
             dfnu = None
-        spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+        return combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+
+    def test_spectrum_list_concatenated_importer_init(self, deconfigged_helper,
+                                                      spectrum2d):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+        assert isinstance(importer_obj, SpectrumListImporter)
+
+    @pytest.mark.parametrize('with_uncertainty', [True, False])
+    def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
+        spec = self.setup_combined_spectrum(with_uncertainty)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
+        importer_obj.load_selected = '*'
+
         result = importer_obj.output
         assert np.all(result.flux == spec.flux)
         assert np.all(result.spectral_axis == spec.spectral_axis)
         if with_uncertainty:
             assert np.all(result.uncertainty.array == spec.uncertainty.array)
 
-    def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper,
-                                                      spectrum2d):
-        wl = [1, 2, 3] * u.nm
-        fnu = [10, 20, 30] * u.Jy
-        dfnu = [4, 5, 6] * u.Jy
-        spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+    def test_spectrum_list_concatenated_importer_output_empty(self, deconfigged_helper):
+        spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
+        assert importer_obj.output is None
+
+    def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper,
+                                                      spectrum2d):
+        spec = self.setup_combined_spectrum(with_uncertainty=True)
+
+        importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
+        importer_obj.load_selected = '*'
         importer_obj.__call__()
 
         dc = deconfigged_helper.app.data_collection

@@ -235,6 +235,23 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return spec
 
+    def _load_selected_helper(self):
+        """
+        This method is used to load the selected spectra based on the
+        `load_selected` attribute. It handles both single string inputs
+        and lists of strings, allowing for wildcard matching.
+        """
+        selected = self.load_selected
+        if isinstance(self.load_selected, str):
+            if '*' in self.load_selected:
+                # fnmatch filter handles Unix style wildcards
+                selected = fnmatch.filter(self.spectra.choices, self.load_selected)
+            else:
+                # Assume it is a single data label and convert to a list
+                selected = [self.load_selected]
+
+        self.spectra.selected = selected
+
     @property
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
@@ -244,16 +261,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def __call__(self, show_in_viewer=True):
         # For using the loader via API
         if self.load_selected:
-            selected = self.load_selected
-            if isinstance(self.load_selected, str):
-                if '*' in self.load_selected:
-                    # fnmatch filter handles Unix style wildcards
-                    selected = fnmatch.filter(self.spectra.choices, self.load_selected)
-                else:
-                    # Assume it is a single data label and convert to a list
-                    selected = [self.load_selected]
-
-            self.spectra.selected = selected
+            self._load_selected_helper()
 
         elif not self.spectra.selected:
             raise ValueError("No spectra selected. Please specify the desired spectra "
@@ -335,20 +343,20 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 @loader_importer_registry('1D Spectrum Concatenated')
 class SpectrumListConcatenatedImporter(SpectrumListImporter):
-    disable_dropdown = Bool(True).tag(sync=True)
-
     @property
     def output(self):
-        spectrum_list = self.spectra.manual_options
-        if spectrum_list is None:
+        if self.load_selected:
+            self._load_selected_helper()
+
+        spectrum_list = self.spectra.selected
+        if spectrum_list is None or not len(spectrum_list):
             return None
 
         # Vectorized collection of all wavelengths, fluxes, and uncertainties
         wl_list = []
         fnu_list = []
         dfnu_list = []
-        for spec_dict in spectrum_list:
-            spec = self._apply_spectral_mask(spec_dict['obj'])
+        for spec in self.spectra.selected_obj:
             wl = spec.spectral_axis.value
             fnu = spec.flux.value
 

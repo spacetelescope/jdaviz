@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <div v-if="!disable_dropdown && exposures_items.length > 0">
+    <div v-if="exposures_items.length > 0">
       <plugin-select
         :items="exposures_items.map(i => i.label)"
         :selected.sync="exposures_selected"
@@ -16,19 +16,17 @@
 
     <div style="height: 8px;"></div>
 
-    <div v-if="!disable_dropdown">
-      <plugin-select
-        :items="source_id_dropdown_items"
-        :selected.sync="spectra_selected"
-        :show_if_single_entry="true"
-        :multiselect="spectra_multiselect"
-        :search="true"
-        label="Source IDs"
-        api_hint="ldr.spectra.selected ="
-        :api_hints_enabled="api_hints_enabled"
-        hint="Source IDs to select from the list of spectra."
-      ></plugin-select>
-    </div>
+    <plugin-select
+      :items="source_id_dropdown_items"
+      :selected.sync="spectra_selected"
+      :show_if_single_entry="true"
+      :multiselect="spectra_multiselect"
+      :search="true"
+      label="Source IDs"
+      api_hint="ldr.spectra.selected ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Source IDs to select from the list of spectra."
+    ></plugin-select>
 
     <div style="height: 16px;"></div>
 
