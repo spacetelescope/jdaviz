@@ -1,7 +1,5 @@
 import itertools
 import numpy as np
-import warnings
-from copy import deepcopy
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -238,22 +236,15 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def __call__(self, show_in_viewer=True):
         # This is used when config.load is called via API.
         if not self.spectra.selected:
-            # TODO: this may take awhile if done accidentally... do we have a selection option
-            #   in load for multiselect scenarios? Or some other framework to suggest to the
-            #   user?
-            warnings.warn('No spectra selected, defaulting to loading all spectra in the list.')
-            self.spectra.selected = deepcopy(self.spectra.choices)
+            # TODO: Update error message upon completion of spectrum_list viewer work
+            raise ValueError('No spectra selected. Cannot proceed with loading.')
 
-        parent_data_label = None
         data_label_prefix = self.data_label_value
 
         # Only concerned about data labels from the same file/prefix
         existing_data_labels = [data.label for data in self.app.data_collection
                                 if data_label_prefix == data.label.split('_EXP-')[0] or
                                 data_label_prefix == data.label.split('_file_index-')[0]]
-
-        if len(existing_data_labels):
-            parent_data_label = existing_data_labels[0]
 
         with self.app._jdaviz_helper.batch_load():
             for spec_dict in self.output:
@@ -273,27 +264,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
                     continue
 
-                # TODO: Parenting is a temporary solution to the problem of grouping spectra when
-                #  loading from different files, i.e. if the user loads a WFSS file and then
-                #  a non-WFSS file, the spectra from the WFSS file will be grouped
-                #  under the first data label, and the non-WFSS spectra will be split into a bunch
-                #  of different viewers, one for each spectrum.
-                #  This is not the intent of the 'parenting' kwarg, but it'll have to do.
                 self.add_to_data_collection(spec_dict['obj'],
                                             data_label,
-                                            parent=parent_data_label,
-                                            show_in_viewer=False)
-
-                if parent_data_label is None:
-                    parent_data_label = data_label
-
-        if show_in_viewer:
-            # TODO: the data *has* to be loaded into the viewer after the fact with parenting,
-            #  otherwise we get an error when attempting to load different datasets,
-            #  i.e. non-WFSS + WFSS with parenting. See above.
-            for spec_dict in self.output:
-                data_label = f"{data_label_prefix}_{spec_dict['_suffix']}"
-                self.load_into_viewer(data_label, self.default_viewer_reference)
+                                            show_in_viewer=True)
 
         if self.fully_masked_spectra:
             self.app.hub.broadcast(SnackbarMessage(
