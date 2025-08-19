@@ -345,6 +345,10 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 class SpectrumListConcatenatedImporter(SpectrumListImporter):
     @property
     def output(self):
+        if isinstance(self.input, Spectrum) and self.input.flux.ndim == 2:
+            self.disable_dropdown = True
+            self.load_selected = '*'
+
         if self.load_selected:
             self._load_selected_helper()
 

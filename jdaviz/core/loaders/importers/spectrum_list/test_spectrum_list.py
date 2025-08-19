@@ -72,6 +72,7 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'spectra_items')
         assert hasattr(importer_obj, 'spectra_selected')
         assert hasattr(importer_obj, 'spectra_multiselect')
+        assert hasattr(importer_obj, 'disable_dropdown')
         assert hasattr(importer_obj, 'spectra')
 
         assert importer_obj.fully_masked_spectra == []
@@ -507,10 +508,20 @@ class TestSpectrumListConcatenatedImporter:
             dfnu = None
         return combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
 
+    @pytest.mark.parametrize('use_list', [True, False])
     def test_spectrum_list_concatenated_importer_init(self, deconfigged_helper,
-                                                      spectrum2d):
-        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+                                                      spectrum2d, premade_spectrum_list,
+                                                      use_list):
+        if use_list:
+            importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
+        else:
+            importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+
         assert isinstance(importer_obj, SpectrumListImporter)
+        # Only the traitlets retain their state after initializing the framework
+        # Otherwise we would expect load_selected == '*' for the 2d spectrum
+        assert importer_obj.disable_dropdown is not use_list
+        assert importer_obj.load_selected == []
 
     @pytest.mark.parametrize('with_uncertainty', [True, False])
     def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
@@ -531,8 +542,17 @@ class TestSpectrumListConcatenatedImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
         assert importer_obj.output is None
 
-    def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper,
-                                                      spectrum2d):
+    def test_spectrum_list_concatenated_importer_output_2d(self, deconfigged_helper, spectrum2d):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+        _ = importer_obj.output
+        assert importer_obj.disable_dropdown is True
+        assert importer_obj.load_selected == '*'
+        for selected in importer_obj.spectra.selected:
+            assert isinstance(selected, str)
+            assert selected.startswith('2D Spectrum')
+            assert selected in importer_obj.spectra.choices
+
+    def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper):
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
