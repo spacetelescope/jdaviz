@@ -311,6 +311,43 @@ class TestSpectrumListImporter:
         importer_obj.input = spectrum1d
         assert importer_obj.output is None
 
+    def test_load_selected_helper(self, deconfigged_helper, premade_spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
+        assert importer_obj.spectra.selected == []
+        
+        run_method = importer_obj._load_selected_helper
+
+        spectra_labels = ['1D Spectrum at file index: 0',
+                          '1D Spectrum at file index: 1',
+                          'Exposure 0, Source ID: 0000',
+                          'Exposure 0, Source ID: 1111']
+
+        # No selection
+        importer_obj.load_selected = []
+        run_method()
+        assert importer_obj.spectra.selected == []
+
+        # Single selection str
+        importer_obj.load_selected = spectra_labels[0]
+        run_method()
+        assert importer_obj.spectra.selected == [spectra_labels[0]]
+
+        # Multiple selections as list
+        importer_obj.load_selected = spectra_labels[:2]
+        run_method()
+        assert importer_obj.spectra.selected == spectra_labels[:2]
+
+        # Wildcard selection all
+        importer_obj.load_selected = '*'
+        run_method()
+        assert importer_obj.spectra.selected == spectra_labels
+
+        # Wildcard selection with space
+        importer_obj.load_selected = 'Exposure 0, Source ID: *'
+        run_method()
+        assert importer_obj.spectra.selected == spectra_labels[2:]
+
+
     def test_default_viewer_reference(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
