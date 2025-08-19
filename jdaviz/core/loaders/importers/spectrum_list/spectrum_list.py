@@ -1,5 +1,6 @@
 import itertools
 import numpy as np
+from copy import deepcopy
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -40,6 +41,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         self.fully_masked_spectra = []
         self.previous_data_label_messages = []
+        # These need to be set via attribute to work through
+        # the loaders infrastructure (via ``helpers.py``)
+        self.load_selected = kwargs.pop('load_selected', [])
+        self.load_all = kwargs.pop('load_all', False)
 
         if self.is_valid:
             # If the resolver format is set to "1D Spectrum List", then we
@@ -120,7 +125,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['spectra']
+        expose = ['spectra', 'load_selected', 'load_all']
         return ImporterUserApi(self, expose)
 
     @property
@@ -237,9 +242,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
-        # This is used when config.load is called via API.
-        if not self.spectra.selected:
+        # For using the loader via API
+        if self.load_all:
+            self.spectra.selected = deepcopy(self.spectra.choices)
+        elif self.load_selected:
+            self.spectra.selected = deepcopy(self.load_selected)
+        elif not self.spectra.selected:
             # TODO: Update error message upon completion of spectrum_list viewer work
+            #  with selecting spectra via kwarg
             raise ValueError('No spectra selected. Cannot proceed with loading.')
 
         data_label_prefix = self.data_label_value

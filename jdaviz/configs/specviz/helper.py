@@ -46,7 +46,7 @@ class Specviz(ConfigHelper, LineListMixin):
     @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
                   concat_by_file=False, cache=None, local_path=None, timeout=None,
-                  load_as_list=False, load_all=False):
+                  load_as_list=False, load_selected=None, load_all=False):
         """
         Load data into Specviz.
 
@@ -90,6 +90,8 @@ class Specviz(ConfigHelper, LineListMixin):
             load_kwargs['timeout'] = timeout
         if local_path is not None:
             load_kwargs['local_path'] = local_path
+        if load_selected is not None:
+            load_kwargs['load_selected'] = load_selected
         if load_all:
             load_kwargs['load_all'] = load_all
 

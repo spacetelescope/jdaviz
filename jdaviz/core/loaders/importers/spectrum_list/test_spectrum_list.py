@@ -322,11 +322,15 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         importer_obj.spectra.selected = selection
         if not selection:
-            # Checking with no selection yet, defaults to importing all spectra
-            with pytest.warns(
-                    UserWarning,
-                    match='No spectra selected, defaulting to loading all spectra in the list.'):
+            # Checking with no selection yet, raises error
+            with pytest.raises(
+                    ValueError,
+                    match='No spectra selected. Cannot proceed with loading.'):
                 importer_obj.__call__()
+
+            # Load all anyway
+            importer_obj.load_all = True
+            importer_obj.__call__()
         else:
             importer_obj.__call__()
 
@@ -377,10 +381,15 @@ class TestSpectrumListImporter:
         premade_spectrum_list[1].mask[:] = True
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        with pytest.warns(
-                UserWarning,
-                match='No spectra selected, defaulting to loading all spectra in the list.'):
+        # Checking with no selection yet, raises error
+        with pytest.raises(
+                ValueError,
+                match = 'No spectra selected. Cannot proceed with loading.'):
             importer_obj.__call__()
+
+        # Load all anyway
+        importer_obj.load_all = True
+        importer_obj.__call__()
 
         spectra_labels = ['1D Spectrum_EXP-0_ID-0000',
                           '1D Spectrum_EXP-0_ID-1111']
