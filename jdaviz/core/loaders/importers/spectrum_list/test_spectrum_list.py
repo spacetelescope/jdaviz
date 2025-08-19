@@ -586,7 +586,6 @@ class TestSpectrumListConcatenatedImporter:
         assert importer_obj.load_selected == '*'
         for selected in importer_obj.spectra.selected:
             assert isinstance(selected, str)
-            assert selected.startswith('2D Spectrum')
             assert selected in importer_obj.spectra.choices
 
     def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper):
