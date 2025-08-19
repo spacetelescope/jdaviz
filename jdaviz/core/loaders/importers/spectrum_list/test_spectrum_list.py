@@ -320,7 +320,6 @@ class TestSpectrumListImporter:
                                                 'Exposure 0, Source ID: 1111']])
     def test_call_method_basic(self, deconfigged_helper, premade_spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        importer_obj.spectra.selected = selection
         if not selection:
             # Checking with no selection yet, raises error
             with pytest.raises(
@@ -332,6 +331,7 @@ class TestSpectrumListImporter:
             importer_obj.load_all = True
             importer_obj.__call__()
         else:
+            importer_obj.load_selected = selection
             importer_obj.__call__()
 
         assert importer_obj.previous_data_label_messages == []
