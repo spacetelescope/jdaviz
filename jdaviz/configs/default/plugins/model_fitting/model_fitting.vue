@@ -320,6 +320,7 @@
         add_results_api_hint='plg.add_results'
         action_api_hint='plg.calculate_fit(add_data=True)'
         :api_hints_enabled="api_hints_enabled"
+        :disabled = "dataset_selected === ''"
         @click:action="apply"
       >
         <div v-if="config!=='cubeviz' || !cube_fit">
