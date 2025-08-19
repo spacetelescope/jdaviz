@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 from unittest.mock import patch
-from copy import deepcopy
 import re
 
 from astropy import units as u
@@ -298,7 +297,7 @@ class TestSpectrumListImporter:
     def test_load_selected_helper(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         assert importer_obj.spectra.selected == []
-        
+
         run_method = importer_obj._load_selected_helper
 
         spectra_labels = ['1D Spectrum at file index: 0',
@@ -330,7 +329,6 @@ class TestSpectrumListImporter:
         importer_obj.load_selected = 'Exposure 0, Source ID: *'
         run_method()
         assert importer_obj.spectra.selected == spectra_labels[2:]
-
 
     def test_default_viewer_reference(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
@@ -375,7 +373,7 @@ class TestSpectrumListImporter:
 
         # Data collection items
         dc = deconfigged_helper.app.data_collection
-        assert len(dc) == dc_len # dc_len spectra loaded
+        assert len(dc) == dc_len  # number of spectra loaded
 
         assert all([label in spectra_labels for label in dc.labels])
 
