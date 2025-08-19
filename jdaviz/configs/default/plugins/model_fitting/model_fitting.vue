@@ -31,7 +31,7 @@
       hint="Select the data set to be fitted."
     />
 
-    <plugin-subset-select 
+    <plugin-subset-select
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
       :show_if_single_entry="true"
@@ -88,7 +88,7 @@
       <v-row justify="end">
         <j-tooltip tipid='plugin-model-fitting-add-model'>
           <plugin-action-button
-            :disabled="!form_valid_model_component || comp_label_invalid_msg.length > 0"
+            :disabled="!form_valid_model_component || comp_label_invalid_msg.length > 0 || dataset_items.length === 0"
             :results_isolated_to_plugin="true"
             :api_hints_enabled="api_hints_enabled"
             @click="add_model"
@@ -101,6 +101,11 @@
           </plugin-action-button>
         </j-tooltip>
       </v-row>
+      <v-row v-if="dataset_items.length === 0">
+        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          Compatible data must be loaded to add a model component.
+        </span>
+      </v-row>
     </v-form>
 
     <div v-if="component_models.length">
@@ -111,7 +116,7 @@
             tile
             :elevation=0
             x-small
-            dense 
+            dense
             color="turquoise"
             dark
             style="padding-left: 8px; padding-right: 6px;"
@@ -139,7 +144,7 @@
                   </v-row>
                   <v-row v-for="param in item.parameters">
                     <span style="white-space: nowrap; overflow-x: clip; width: calc(100% - 24px); margin-right: -48px">
-                      {{ param.name }} = {{ param.value }}                      
+                      {{ param.name }} = {{ param.value }}
                     </span>
                   </v-row>
                 </v-col>
@@ -159,7 +164,7 @@
                         tile
                         :elevation=0
                         x-small
-                        dense 
+                        dense
                         color="turquoise"
                         dark
                         style="padding-left: 8px; padding-right: 6px;"
@@ -185,7 +190,7 @@
                     tile
                     :elevation=0
                     x-small
-                    dense 
+                    dense
                     color="turquoise"
                     dark
                     style="padding-left: 8px; padding-right: 6px;"
@@ -363,7 +368,7 @@
       </v-row>
 
       <j-plugin-section-header>Results History</j-plugin-section-header>
-      <jupyter-widget :widget="table_widget"></jupyter-widget> 
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
     </div>
   </j-tray-plugin>
 </template>
