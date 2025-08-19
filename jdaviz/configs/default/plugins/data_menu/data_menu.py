@@ -340,9 +340,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         # layer info rules
         if self.selected_n_layers == 1:
-            if max(self.dm_layer_selected) >= len(self.layer_items):  # pragma: no cover
-                # can happen during state transition but should immediately be followed up
-                # with an update
+            if self.dm_layer_selected == [] or max(self.dm_layer_selected) >= len(self.layer_items):  # noqa pragma: no cover
+                # Can happen during state transition but should immediately be followed up
+                # with an update. Also get here when unloading all data.
                 self.info_enabled = False
                 self.info_tooltip = ''
             elif self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
