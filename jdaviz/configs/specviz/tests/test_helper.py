@@ -55,24 +55,24 @@ class TestSpecvizHelper:
         # HDUList should load as Spectrum
         assert isinstance(data, Spectrum)
 
-    def test_load_spectrum_list_load_all(self):
-        # now load three more spectra from a SpectrumList, without labels
+    @pytest.mark.parametrize(
+        'kwargs',
+        ({'data_label': [f"List test {i}" for i in (1, 2, 3)]},
+         {'load_selected': [f"1D Spectrum at file index: {i}" for i in (0, 1, 2)]},
+         {'load_all': 'True'}))
+    def test_load_spectrum_list_with_kwargs(self, kwargs):
         with pytest.raises(
                 ValueError,
                 match='No spectra selected. Cannot proceed with loading.'):
             self.spec_app.load_data(self.spec_list)
-
-        self.spec_app.load_data(self.spec_list, load_all=True)
-        assert len(self.spec_app.app.data_collection) == 4
-        for i in (1, 2, 3):
-            assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
-
-    def test_load_spectrum_list_with_labels(self):
-        # NOTE: will be removed after load_data deprecation is removed
         # now load three more spectra from a SpectrumList, with labels:
-        labels = ["List test 1", "List test 2", "List test 3"]
-        self.spec_app.load_data(self.spec_list, data_label=labels)
+        # TODO: data_label is a method that we can be used to 'load selected'
+        #  but it is confusing. Should we keep both?
+        self.spec_app.load_data(self.spec_list, **kwargs)
         assert len(self.spec_app.app.data_collection) == 4
+        if 'load' in list(kwargs.keys())[0]:
+            for i in (1, 2, 3):
+                assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
 
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
