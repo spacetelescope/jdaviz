@@ -178,12 +178,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             return None
         return self.spectra.selected_obj_dict
 
-    def is_wfssmulti(self, spec):
+    @staticmethod
+    def is_wfssmulti(spec):
         if 'WFSSMulti' in spec.meta.get('header', {}).get('DATAMODL', ''):
             return True
         return False
 
-    def _extract_exposure_sourceid(self, spec):
+    @staticmethod
+    def _extract_exposure_sourceid(spec):
         """
         Generate a label for WFSSMulti spectra based on the header information.
         """
@@ -193,7 +195,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return exp_num, source_id
 
-    def _has_mask(self, spec):
+    @staticmethod
+    def _has_mask(spec):
         if hasattr(spec, 'mask'):
             if spec.mask is not None and len(spec.mask):
                 return True
