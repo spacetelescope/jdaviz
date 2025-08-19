@@ -22,6 +22,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Added support for WFSS Level 3 data. [#3729]
+
 Specviz2d
 ^^^^^^^^^
 
