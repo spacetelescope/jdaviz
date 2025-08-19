@@ -2,6 +2,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import pytest
+import re
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
@@ -61,13 +62,16 @@ class TestSpecvizHelper:
          {'load_selected': [f"1D Spectrum at file index: {i}" for i in (0, 1, 2)]},
          {'load_all': 'True'}))
     def test_load_spectrum_list_with_kwargs(self, kwargs):
+        error_msg = ("No spectra selected. Please specify the desired spectra "
+                     "via the keyword argument 'load_selected' or by 'load_all' (warning "
+                     "loading all spectra may take a very long time).")
         with pytest.raises(
                 ValueError,
-                match='No spectra selected. Cannot proceed with loading.'):
+                match=re.escape(error_msg)):
             self.spec_app.load_data(self.spec_list)
-        # now load three more spectra from a SpectrumList, with labels:
-        # TODO: data_label is a method that we can be used to 'load selected'
-        #  but it is confusing. Should we keep both?
+
+        # When loading via the ``data_label`` argument, the length of the
+        # list must match the number of spectra in the SpectrumList.
         self.spec_app.load_data(self.spec_list, **kwargs)
         assert len(self.spec_app.app.data_collection) == 4
         if 'load' in list(kwargs.keys())[0]:
@@ -423,10 +427,7 @@ def test_load_2d_flux(specviz_helper):
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
-    with pytest.warns(
-            UserWarning,
-            match='No spectra selected, defaulting to loading all spectra in the list.'):
-        specviz_helper.load_data(spec, data_label="test")
+    specviz_helper.load_data(spec, data_label="test", load_all=True)
 
     assert len(specviz_helper.app.data_collection) == 4
     assert specviz_helper.app.data_collection[0].label == "test_file_index-0"
@@ -436,10 +437,7 @@ def test_load_2d_flux(specviz_helper):
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    with pytest.warns(
-            UserWarning,
-            match='No spectra selected, defaulting to loading all spectra in the list.'):
-        specviz_helper.load_data(spec_list, data_label="second test")
+    specviz_helper.load_data(spec_list, data_label="second test", load_all=True)
 
     assert len(specviz_helper.app.data_collection) == 6
     assert specviz_helper.app.data_collection[-1].label == "second test_file_index-1"

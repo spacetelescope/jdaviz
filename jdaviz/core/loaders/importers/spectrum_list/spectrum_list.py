@@ -248,9 +248,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         elif self.load_selected:
             self.spectra.selected = deepcopy(self.load_selected)
         elif not self.spectra.selected:
-            # TODO: Update error message upon completion of spectrum_list viewer work
-            #  with selecting spectra via kwarg
-            raise ValueError('No spectra selected. Cannot proceed with loading.')
+            raise ValueError("No spectra selected. Please specify the desired spectra "
+                             "via the keyword argument 'load_selected' or by 'load_all' (warning "
+                             "loading all spectra may take a very long time).")
 
         data_label_prefix = self.data_label_value
 

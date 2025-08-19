@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from unittest.mock import patch
 from copy import deepcopy
+import re
 
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty
@@ -316,34 +317,39 @@ class TestSpectrumListImporter:
 
     @pytest.mark.parametrize('selection', [[], ['1D Spectrum at file index: 0',
                                                 '1D Spectrum at file index: 1',
-                                                'Exposure 0, Source ID: 0000',
                                                 'Exposure 0, Source ID: 1111']])
     def test_call_method_basic(self, deconfigged_helper, premade_spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        if not selection:
-            # Checking with no selection yet, raises error
-            with pytest.raises(
-                    ValueError,
-                    match='No spectra selected. Cannot proceed with loading.'):
-                importer_obj.__call__()
-
-            # Load all anyway
-            importer_obj.load_all = True
-            importer_obj.__call__()
-        else:
-            importer_obj.load_selected = selection
-            importer_obj.__call__()
-
-        assert importer_obj.previous_data_label_messages == []
-
-        # Data collection items
-        dc = deconfigged_helper.app.data_collection
-        assert len(dc) == 4  # 4 spectra loaded
 
         spectra_labels = ['1D Spectrum_file_index-0',
                           '1D Spectrum_file_index-1',
                           '1D Spectrum_EXP-0_ID-0000',
                           '1D Spectrum_EXP-0_ID-1111']
+        if not selection:
+            error_msg = ("No spectra selected. Please specify the desired spectra "
+                         "via the keyword argument 'load_selected' or by 'load_all' (warning "
+                         "loading all spectra may take a very long time).")
+            # Checking with no selection yet, raises error
+            with pytest.raises(
+                    ValueError,
+                    match=re.escape(error_msg)):
+                importer_obj.__call__()
+
+            # Load all anyway
+            importer_obj.load_all = True
+            importer_obj.__call__()
+            dc_len = 4
+        else:
+            importer_obj.load_selected = selection
+            importer_obj.__call__()
+            dc_len = 3
+            spectra_labels = spectra_labels[:2] + [spectra_labels[-1]]
+
+        assert importer_obj.previous_data_label_messages == []
+
+        # Data collection items
+        dc = deconfigged_helper.app.data_collection
+        assert len(dc) == dc_len # dc_len spectra loaded
 
         assert all([label in spectra_labels for label in dc.labels])
 
@@ -381,13 +387,7 @@ class TestSpectrumListImporter:
         premade_spectrum_list[1].mask[:] = True
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        # Checking with no selection yet, raises error
-        with pytest.raises(
-                ValueError,
-                match = 'No spectra selected. Cannot proceed with loading.'):
-            importer_obj.__call__()
-
-        # Load all anyway
+        # Load all
         importer_obj.load_all = True
         importer_obj.__call__()
 
