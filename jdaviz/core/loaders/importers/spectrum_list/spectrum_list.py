@@ -56,11 +56,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             index_modifier = 0
 
             if isinstance(self.input, Spectrum):
-                input = SpectrumList(self.input_to_list_of_spec(self.input))
+                speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
             else:
-                input = self.input
+                speclist_input = self.input
 
-            for index, spec in enumerate(input):
+            for index, spec in enumerate(speclist_input):
                 if self.is_wfssmulti(spec):
                     # ver, name are stand-ins for exposure and source_id
                     # ver == exposure, name == source_id
