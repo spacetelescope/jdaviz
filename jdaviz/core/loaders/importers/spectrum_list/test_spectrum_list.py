@@ -315,9 +315,11 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
 
-    @pytest.mark.parametrize('selection', [[], ['1D Spectrum at file index: 0',
-                                                '1D Spectrum at file index: 1',
-                                                'Exposure 0, Source ID: 1111']])
+    @pytest.mark.parametrize('selection', [[],
+                                           ['1D Spectrum at file index: 0',
+                                            '1D Spectrum at file index: 1',
+                                            'Exposure 0, Source ID: 1111'],
+                                           '1D Spectrum at file index: *'])
     def test_call_method_basic(self, deconfigged_helper, premade_spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
@@ -327,8 +329,7 @@ class TestSpectrumListImporter:
                           '1D Spectrum_EXP-0_ID-1111']
         if not selection:
             error_msg = ("No spectra selected. Please specify the desired spectra "
-                         "via the keyword argument 'load_selected' or by 'load_all' (warning "
-                         "loading all spectra may take a very long time).")
+                         "via the keyword argument 'load_selected'.")
             # Checking with no selection yet, raises error
             with pytest.raises(
                     ValueError,
@@ -336,14 +337,18 @@ class TestSpectrumListImporter:
                 importer_obj.__call__()
 
             # Load all anyway
-            importer_obj.load_all = True
+            importer_obj.load_selected = '*'
             importer_obj.__call__()
             dc_len = 4
         else:
             importer_obj.load_selected = selection
             importer_obj.__call__()
-            dc_len = 3
-            spectra_labels = spectra_labels[:2] + [spectra_labels[-1]]
+            if isinstance(selection, str):
+                dc_len = 2
+                spectra_labels = spectra_labels[:2]
+            elif isinstance(selection, list):
+                dc_len = len(selection)
+                spectra_labels = spectra_labels[:2] + [spectra_labels[-1]]
 
         assert importer_obj.previous_data_label_messages == []
 
@@ -388,7 +393,7 @@ class TestSpectrumListImporter:
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Load all
-        importer_obj.load_all = True
+        importer_obj.load_selected = '*'
         importer_obj.__call__()
 
         spectra_labels = ['1D Spectrum_EXP-0_ID-0000',

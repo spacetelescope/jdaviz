@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from copy import deepcopy
+import fnmatch
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -44,7 +45,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # These need to be set via attribute to work through
         # the loaders infrastructure (via ``helpers.py``)
         self.load_selected = kwargs.pop('load_selected', [])
-        self.load_all = kwargs.pop('load_all', False)
 
         if self.is_valid:
             # If the resolver format is set to "1D Spectrum List", then we
@@ -125,7 +125,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['spectra', 'load_selected', 'load_all']
+        expose = ['spectra', 'load_selected']
         return ImporterUserApi(self, expose)
 
     @property
@@ -243,14 +243,21 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     def __call__(self, show_in_viewer=True):
         # For using the loader via API
-        if self.load_all:
-            self.spectra.selected = deepcopy(self.spectra.choices)
-        elif self.load_selected:
-            self.spectra.selected = deepcopy(self.load_selected)
+        if self.load_selected:
+            selected = self.load_selected
+            if isinstance(self.load_selected, str):
+                if '*' in self.load_selected:
+                    # fnmatch filter handles Unix style wildcards
+                    selected = fnmatch.filter(self.spectra.choices, self.load_selected)
+                else:
+                    # Assume it is a single data label and convert to a list
+                    selected = [self.load_selected]
+
+            self.spectra.selected = selected
+
         elif not self.spectra.selected:
             raise ValueError("No spectra selected. Please specify the desired spectra "
-                             "via the keyword argument 'load_selected' or by 'load_all' (warning "
-                             "loading all spectra may take a very long time).")
+                             "via the keyword argument 'load_selected'.")
 
         data_label_prefix = self.data_label_value
 

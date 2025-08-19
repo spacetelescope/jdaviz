@@ -92,8 +92,6 @@ class Specviz(ConfigHelper, LineListMixin):
             load_kwargs['local_path'] = local_path
         if load_selected is not None:
             load_kwargs['load_selected'] = load_selected
-        if load_all:
-            load_kwargs['load_all'] = load_all
 
         if isinstance(data, (SpectrumList, SpectrumCollection)) and isinstance(data_label, list):
             if len(data_label) != len(data):
