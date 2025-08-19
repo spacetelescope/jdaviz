@@ -1,6 +1,5 @@
 import itertools
 import numpy as np
-from copy import deepcopy
 import fnmatch
 
 from astropy.nddata import StdDevUncertainty
@@ -56,8 +55,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
             exposures = []
             spectra_options = []
-
-            index_modifier = 0
 
             if isinstance(self.input, Spectrum):
                 speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
