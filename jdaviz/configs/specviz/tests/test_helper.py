@@ -55,12 +55,14 @@ class TestSpecvizHelper:
         # HDUList should load as Spectrum
         assert isinstance(data, Spectrum)
 
-    def test_load_spectrum_list_no_labels(self):
+    def test_load_spectrum_list_load_all(self):
         # now load three more spectra from a SpectrumList, without labels
-        with pytest.warns(
-                UserWarning,
-                match='No spectra selected, defaulting to loading all spectra in the list.'):
+        with pytest.raises(
+                ValueError,
+                match='No spectra selected. Cannot proceed with loading.'):
             self.spec_app.load_data(self.spec_list)
+
+        self.spec_app.load_data(self.spec_list, load_all=True)
         assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
             assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
@@ -75,10 +77,7 @@ class TestSpecvizHelper:
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        with pytest.warns(
-                UserWarning,
-                match='No spectra selected, defaulting to loading all spectra in the list.'):
-            self.spec_app.load_data(self.multi_order_spectrum_list)
+        self.spec_app.load_data(self.multi_order_spectrum_list, load_all=True)
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
