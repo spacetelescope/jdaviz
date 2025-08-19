@@ -75,40 +75,31 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'disable_dropdown')
         assert hasattr(importer_obj, 'spectra')
 
-        assert importer_obj.fully_masked_spectra == []
         assert importer_obj.exposures.selected == []
         assert importer_obj.spectra.selected == []
         assert importer_obj.previous_data_label_messages == []
 
     # Parameterize to test both single and multiple selection
     @pytest.mark.parametrize('to_select', [['1D Spectrum at file index: 1'],
-                                           ['1D Spectrum at file index: 1',
-                                            '1D Spectrum at file index: 2',
+                                           ['1D Spectrum at file index: 0',
+                                            '1D Spectrum at file index: 1',
                                             'Exposure 0, Source ID: 0000',
                                             'Exposure 0, Source ID: 1111']])
     def test_spectrum_list_importer_init_select(self, deconfigged_helper, premade_spectrum_list,
                                                 spectrum1d, to_select):
-        # Set up a fully masked spectrum
-        new_spectra = deepcopy(spectrum1d)
-        new_spectra.mask[:] = True
-        # This will help us to confirm that masked spectra are skipped
-        # and that the indices are correct per the modifier
-        new_spectrum_list = SpectrumList([new_spectra] + premade_spectrum_list)
-
-        importer_obj = self.setup_importer_obj(deconfigged_helper, new_spectrum_list)
+        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         importer_obj.spectra.selected = to_select
 
-        assert importer_obj.fully_masked_spectra == ["'1D Spectrum_file_index-0'"]
         assert hasattr(importer_obj.spectra, 'items')
         assert hasattr(importer_obj.spectra, 'selected')
         assert hasattr(importer_obj.spectra, 'multiselect')
         assert hasattr(importer_obj.spectra, 'manual_options')
 
         for index, (spec_dict, spec) in enumerate(
-                zip(importer_obj.spectra.manual_options, new_spectrum_list[1:])):
+                zip(importer_obj.spectra.manual_options, premade_spectrum_list)):
 
-            # offset to account for the fully masked spectrum at the start
-            file_index = str(index + 1)
+            # offset to account for 0 based indexing
+            file_index = str(index)
 
             # ver, name are stand-ins for exposure and source_id
             # ver == exposure, name == source_id
@@ -266,13 +257,6 @@ class TestSpectrumListImporter:
         make_empty_spectrum.mask = None
         assert importer_obj._has_mask(make_empty_spectrum) is False
 
-    def test_is_fully_masked(self, deconfigged_helper, premade_spectrum_list, spectrum1d):
-        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-
-        assert importer_obj._is_fully_masked(spectrum1d) is False
-        spectrum1d.mask[:] = True
-        assert importer_obj._is_fully_masked(spectrum1d) is True
-
     def test_apply_spectral_mask(self, deconfigged_helper, premade_spectrum_list,
                                  make_empty_spectrum, spectrum1d,
                                  partially_masked_wfss_spectrum1d):
@@ -424,40 +408,35 @@ class TestSpectrumListImporter:
         because mocking the broadcast method requires the __call__ method to have already been
         used --- the error was something about being unable to identify the viewer from reference.
         """
-        # Fully mask two spectra to test so that they are skipped upon init
-        premade_spectrum_list[0].mask[:] = True
-        premade_spectrum_list[1].mask[:] = True
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Load all
         importer_obj.load_selected = '*'
         importer_obj.__call__()
 
-        spectra_labels = ['1D Spectrum_EXP-0_ID-0000',
+        spectra_labels = ['1D Spectrum_file_index-0',
+                          '1D Spectrum_file_index-1',
+                          '1D Spectrum_EXP-0_ID-0000',
                           '1D Spectrum_EXP-0_ID-1111']
 
         # Mock the broadcast method to catch the snackbar messages
         with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
             assert len(importer_obj.previous_data_label_messages) == 0
             importer_obj.__call__()
-            assert len(importer_obj.previous_data_label_messages) == 2
+            assert len(importer_obj.previous_data_label_messages) == 4
 
             expected_label_messages = [(f"Spectrum with label '{label}' "
                                         f"already exists in the viewer, skipping. "
                                         f"This message will be shown only once.")
                                        for label in spectra_labels]
 
-            expected_masked_message = ("Spectra '1D Spectrum_file_index-0', "
-                                       "'1D Spectrum_file_index-1' are completely masked.")
-
             broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                               if hasattr(arg[0][0], 'text')]
             assert all([msg in broadcast_msgs for msg in expected_label_messages])
-            assert expected_masked_message in broadcast_msgs
 
             # One more time to verify that no more messages are added
             importer_obj.__call__()
-            assert len(importer_obj.previous_data_label_messages) == 2
+            assert len(importer_obj.previous_data_label_messages) == 4
 
             broadcast_msgs_final = set([arg[0][0].text for arg in mock_broadcast.call_args_list
                                         if hasattr(arg[0][0], 'text')])

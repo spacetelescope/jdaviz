@@ -40,7 +40,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
-        self.fully_masked_spectra = []
         self.previous_data_label_messages = []
         # These need to be set via attribute to work through
         # the loaders infrastructure (via ``helpers.py``)
@@ -85,19 +84,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     label = f"1D Spectrum at file index: {index}"
                     _suffix = f"file_index-{index}"
 
-                # all == True implies the entire array is masked and unusable
-                if self._is_fully_masked(spec):
-                    data_label_prefix = self.data_label_value
-                    self.fully_masked_spectra.append(f"'{data_label_prefix}_{_suffix}'")
-                    index_modifier += 1
-                    continue
-
                 # Use modified index here to access the spectrum properly
                 # per ``selected_obj_dict`` in SelectFileExtensionComponent.
                 # Attempt to indicate to the user (via label and suffix) that
                 # the index is not the same as the file index.
                 spectra_options.append({'label': label,
-                                        'index': index - index_modifier,
+                                        'index': index,
                                         'name': str(name),
                                         'ver': str(ver),
                                         'name_ver': str(name_ver),
@@ -171,8 +163,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     for i in range(inp.flux.shape[0])]
 
         elif isinstance(inp, (SpectrumList, SpectrumCollection)):
-            return itertools.chain(*[self.input_to_list_of_spec(spec) for spec in inp
-                                     if not self._is_fully_masked(spec)])
+            return itertools.chain(*[self.input_to_list_of_spec(spec) for spec in inp])
 
         else:
             raise NotImplementedError(f"{inp} is not supported")
@@ -295,11 +286,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 self.add_to_data_collection(spec_dict['obj'],
                                             data_label,
                                             show_in_viewer=True)
-
-        if self.fully_masked_spectra:
-            self.app.hub.broadcast(SnackbarMessage(
-                f"Spectra {', '.join(self.fully_masked_spectra)} are completely masked.",
-                sender=self, color="warning"))
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
