@@ -117,7 +117,7 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert str(sp1d.spectral_axis.unit) == 'um'
 
 
-# Skip until file is uploaded to box
+# TODO: Skip until file is uploaded to box
 @pytest.mark.skip
 def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
     ldr = deconfigged_helper.loaders['url']
