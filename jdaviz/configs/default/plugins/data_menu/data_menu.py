@@ -289,12 +289,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         with self.during_select_sync():
             # map index in dm_layer_selected (inverse order of layer_items)
             # to set self.layer.selected
-            selected = [self.layer_items[i]['label']
-                        for i in self.dm_layer_selected]
-            if self.layer.multiselect:
-                self.layer.selected = selected
+            if len(self.layer_items):
+                selected = [self.layer_items[i]['label']
+                            for i in self.dm_layer_selected]
+                if self.layer.multiselect:
+                    self.layer.selected = selected
+                else:
+                    self.layer.selected = selected[0] if len(selected) else ''
             else:
-                self.layer.selected = selected[0] if len(selected) else ''
+                self.layer.selected = ''
 
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
@@ -380,6 +383,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             # forbid deleting non-plugin generated data
             selected_items = self.layer.selected_item
             for i, layer in enumerate(self.layer.selected):
+                if layer == '':
+                    # In this case we removed everything from the viewer
+                    continue
                 if isinstance(self.layer.selected_obj[0][0], SonifiedDataLayerArtist):
                     self.delete_app_enabled = False
                     self.delete_app_tooltip = "Cannot delete sonified data from app"
