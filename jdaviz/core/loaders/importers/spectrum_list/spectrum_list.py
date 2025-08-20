@@ -74,14 +74,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     label = f"{exposure_label}, Source ID: {name}"
                     # Flipping the two from the variable naming convention
                     name_ver = f"{ver}_{name}"
-                    _suffix = f"EXP-{ver}_ID-{name}"
+                    suffix = f"EXP-{ver}_ID-{name}"
 
                 else:
                     name_ver = index
                     name = index
                     ver = index
                     label = f"1D Spectrum at file index: {index}"
-                    _suffix = f"file_index-{index}"
+                    suffix = f"file_index-{index}"
 
                 # Use modified index here to access the spectrum properly
                 # per ``selected_obj_dict`` in SelectFileExtensionComponent.
@@ -92,7 +92,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                         'name': str(name),
                                         'ver': str(ver),
                                         'name_ver': str(name_ver),
-                                        '_suffix': _suffix,
+                                        'suffix': suffix,
                                         'obj': self._apply_spectral_mask(spec)})
 
             self.spectra = SelectFileExtensionComponent(self,
@@ -106,7 +106,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
             if len(exposures) > 0:
                 exposures_options = [{'label': exp, 'index': i, 'ver': exp,
-                                      'name': exp, 'name_ver': exp}
+                                      'name': exp, 'name_ver': exp, 'suffix': None}
                                      for i, exp in enumerate(sorted(set(exposures)))]
                 self.exposures = SelectFileExtensionComponent(self,
                                                               items='exposures_items',
@@ -198,13 +198,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def output(self):
         if not self.is_valid:  # pragma: nocover
             return None
-        return self.spectra.selected_obj_dict
+        return self.spectra.selected_obj
 
     @staticmethod
     def is_wfssmulti(spec):
-        if 'WFSSMulti' in spec.meta.get('header', {}).get('DATAMODL', ''):
-            return True
-        return False
+        return 'WFSSMulti' in spec.meta.get('header', {}).get('DATAMODL', '')
 
     @staticmethod
     def _extract_exposure_sourceid(spec):
@@ -292,8 +290,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                 data_label_prefix == data.label.split('_file_index-')[0]]
 
         with self.app._jdaviz_helper.batch_load():
-            for spec_dict in self.output:
-                data_label = f"{data_label_prefix}_{spec_dict['_suffix']}"
+            for spec_obj, item_dict in zip(self.output, self.spectra.selected_item_list):
+                data_label = f"{data_label_prefix}_{item_dict['suffix']}"
 
                 if data_label in existing_data_labels:
                     # NOTE: may depend on the science use-case
@@ -309,7 +307,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
                     continue
 
-                self.add_to_data_collection(spec_dict['obj'],
+                self.add_to_data_collection(spec_obj,
                                             data_label,
                                             show_in_viewer=True)
 

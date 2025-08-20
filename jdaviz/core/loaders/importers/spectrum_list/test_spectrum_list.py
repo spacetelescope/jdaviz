@@ -133,7 +133,8 @@ class TestSpectrumListImporter:
                     'ver': exposure_label,
                     'name_ver': exposure_label,
                     # ver (exposure #) as proxy for index since our exposures are 0 and 1
-                    'index': int(ver)}
+                    'index': int(ver),
+                    'suffix': None}
 
                 exposures_dict = importer_obj.exposures.items[int(ver)]
                 assert isinstance(exposures_dict, dict)
@@ -151,7 +152,7 @@ class TestSpectrumListImporter:
                 'ver': [ver, file_index],
                 'name_ver': [f"{ver}_{name}", file_index],
                 'index': [index, index],
-                '_suffix': [f"EXP-{ver}_ID-{name}", f"file_index-{file_index}"],
+                'suffix': [f"EXP-{ver}_ID-{name}", f"file_index-{file_index}"],
                 'obj': None}
 
             assert isinstance(spec_dict, dict)
@@ -338,8 +339,7 @@ class TestSpectrumListImporter:
 
         # Check that these are indeed the same
         spec_dict = importer_obj.spectra.manual_options[0]
-        for k, v in importer_obj.output[0].items():
-            assert v == spec_dict[k]
+        assert importer_obj.output[0] == spec_dict['obj']
 
         # Check that is_valid is enforced in the output
         importer_obj.input = spectrum1d

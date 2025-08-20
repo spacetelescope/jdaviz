@@ -1347,16 +1347,6 @@ class SelectFileExtensionComponent(SelectPluginComponent):
             return [self._get_selected_obj(index) for index in self.selected_index]
         return self._get_selected_obj(self.selected_index)
 
-    def _get_selected_obj_dict(self, index):
-        return self.manual_options[index]
-
-    @property
-    def selected_obj_dict(self):
-        # returns HDU (for HDUList) or ndarray (for ImageModel/DataModel)
-        if self.is_multiselect:
-            return [self._get_selected_obj_dict(index) for index in self.selected_index]
-        return self._get_selected_obj_dict(self.selected_index)
-
     @property
     def indices(self):
         return [item.get('index', None) for item in self.items]
@@ -1369,11 +1359,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def name_vers(self):
         return [item.get('name_ver', None) for item in self.items]
 
+    @property
+    def suffixes(self):
+        return [item.get('suffix', None) for item in self.items]
+
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
-        return {k: manual_item[k] for k in ('label', 'name', 'ver', 'name_ver', 'index')}
+        return {k: manual_item.get(k, None)
+                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'suffix')}
 
     @observe('filters')
     def _update_items(self, msg={}):
