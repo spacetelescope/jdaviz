@@ -151,7 +151,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         if self.linked_by_wcs:
             image, i_ref = get_reference_image_data(self._viewer.jdaviz_app, self._viewer.reference)
             ref_wcs = image.coords
-            if ( self.zoom_center_y+abs(self.zoom_radius) < 0):
+            if self.zoom_center_y < 0:
                 cr = ref_wcs.world_to_pixel_values((self.zoom_center_x, self.zoom_center_x),  # noqa: E501
                                                    (self.zoom_center_y, self.zoom_center_y+abs(self.zoom_radius)))  # noqa: E501
             else:
