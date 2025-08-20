@@ -1,6 +1,5 @@
 import itertools
 import numpy as np
-import fnmatch
 from copy import deepcopy
 from collections import defaultdict
 
@@ -254,18 +253,20 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         """
         This method is used to load the selected spectra based on the
         `load_selected` attribute. It handles both single string inputs
-        and lists of strings, allowing for wildcard matching.
+        and lists of strings, (and will) allow for wildcard matching.
         """
-        selected = self.load_selected
+        selected_spectra = self.load_selected
         if isinstance(self.load_selected, str):
             if '*' in self.load_selected:
-                # fnmatch filter handles Unix style wildcards
-                selected = fnmatch.filter(self.spectra.choices, self.load_selected)
+                # Make use of the user_api's __setattr__ logic
+                # to get all via wildcard
+                self.user_api.spectra = self.load_selected
+                return
             else:
                 # Assume it is a single data label and convert to a list
-                selected = [self.load_selected]
+                selected_spectra = [self.load_selected]
 
-        self.spectra.selected = selected
+        self.spectra.selected = selected_spectra
 
     @property
     def default_viewer_reference(self):
