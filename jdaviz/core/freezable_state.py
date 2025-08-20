@@ -152,9 +152,9 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             image, i_ref = get_reference_image_data(self._viewer.jdaviz_app, self._viewer.reference)
             ref_wcs = image.coords
 
-            # zoom_center_y represents the declination which goes from -90 to +90, we want to ensure
-            # that we don't cross over the poles and get a weird value, so we always calculate the
-            # zoom radius towards the equator
+            # zoom_center_y represents the declination of the image center, bounded on (-90, 90) deg
+            # We want to ensure that we always calculate the zoom radius towards the equator to
+            # prevent issues near the poles.
             if self.zoom_center_y < 0:
                 cr = ref_wcs.world_to_pixel_values((self.zoom_center_x, self.zoom_center_x),  # noqa: E501
                                                    (self.zoom_center_y, self.zoom_center_y+abs(self.zoom_radius)))  # noqa: E501

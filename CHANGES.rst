@@ -72,6 +72,8 @@ Bug Fixes
 - Use validator on subset layer visibility and subset deletion to ensure toggling visibility and
   deleting subsets from data menu and plot options updates accordingly. [#3708]
 
+- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731] 
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
@@ -307,8 +309,6 @@ Bug Fixes
 - Fixed bug on MOSVIZ where an exception was raised when loading JWST S2D file from a directory.
 
 - Improved error messaging when passing invalid URL to ``load``. [#3580]
-
-- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731] 
 
 Cubeviz
 ^^^^^^^
