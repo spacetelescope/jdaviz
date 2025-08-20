@@ -3,6 +3,7 @@ import numpy as np
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 
+from jdaviz.core.unit_conversion_utils import sb_to_flux_unit, spectrum_ensure_flux_unit
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
@@ -48,11 +49,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             if isinstance(inp, Spectrum):
                 if inp.flux.ndim == 1:
                     return [inp]
-                return [Spectrum(spectral_axis=inp.spectral_axis,
-                                 flux=this_row(inp.flux, i),
-                                 uncertainty=this_row(inp.uncertainty, i),
-                                 mask=this_row(inp.mask, i),
-                                 meta=inp.meta)
+                return [spectrum_ensure_flux_unit(Spectrum(spectral_axis=inp.spectral_axis,
+                                                           flux=this_row(inp.flux, i),
+                                                           uncertainty=this_row(inp.uncertainty, i),
+                                                           mask=this_row(inp.mask, i),
+                                                           meta=inp.meta))
                         for i in range(inp.flux.shape[0])]
             elif isinstance(inp, (SpectrumList, SpectrumCollection)):
                 return itertools.chain(*[input_to_list_of_spec(spec) for spec in inp])
@@ -142,7 +143,8 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
                     dfnuallorig.append(np.nan)
 
         wave_units = spec.spectral_axis.unit
-        flux_units = spec.flux.unit
+        pixar_sr = getattr(spec, 'meta', {}).get('PIXAR_SR', 1.0)
+        flux_units = sb_to_flux_unit(spec.flux.unit, pixar_sr)
 
         return combine_lists_to_1d_spectrum(wlallorig,
                                             fnuallorig,

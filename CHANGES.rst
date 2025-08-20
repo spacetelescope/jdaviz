@@ -61,6 +61,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- When importing a 2D spectrum file into a SpectrumList, surface brightness units are automatically converted to flux units. [#3732]
+
 4.3.1 (unreleased)
 ==================
 
