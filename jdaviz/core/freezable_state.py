@@ -149,15 +149,12 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         # When WCS-linked (displayed on the sky): zoom_center_x/y and zoom_radius are in sky units,
         # x/y_min/max are in pixels of the WCS-only layer
         if self.linked_by_wcs:
-            image, i_ref = get_reference_image_data(
-                self._viewer.jdaviz_app,
-                self._viewer.reference
-            )
+            image, i_ref = get_reference_image_data(self._viewer.jdaviz_app, self._viewer.reference)
             ref_wcs = image.coords
 
-            # zoom_center_y represents the declination which goes from -90 to +90, we want to ensure that
-            # we don't cross over the poles and get a weird value, so we always calculate the zoom radius
-            # towards the equator
+            # zoom_center_y represents the declination which goes from -90 to +90, we want to ensure
+            # that we don't cross over the poles and get a weird value, so we always calculate the
+            # zoom radius towards the equator
             if self.zoom_center_y < 0:
                 cr = ref_wcs.world_to_pixel_values((self.zoom_center_x, self.zoom_center_x),  # noqa: E501
                                                    (self.zoom_center_y, self.zoom_center_y+abs(self.zoom_radius)))  # noqa: E501
