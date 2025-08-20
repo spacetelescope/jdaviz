@@ -308,6 +308,8 @@ Bug Fixes
 
 - Improved error messaging when passing invalid URL to ``load``. [#3580]
 
+- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731] 
+
 Cubeviz
 ^^^^^^^
 - Replace file and fix label in example notebook. [#3537]
