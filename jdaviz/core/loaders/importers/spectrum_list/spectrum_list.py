@@ -1,10 +1,12 @@
 import itertools
 import numpy as np
 import fnmatch
+from copy import deepcopy
+from collections import defaultdict
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
-from traitlets import List, Bool, Any
+from traitlets import List, Bool, Any, observe
 
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -93,7 +95,16 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                         '_suffix': _suffix,
                                         'obj': self._apply_spectral_mask(spec)})
 
-            if exposures:
+            self.spectra = SelectFileExtensionComponent(self,
+                                                        items='spectra_items',
+                                                        selected='spectra_selected',
+                                                        multiselect='spectra_multiselect',
+                                                        manual_options=spectra_options)
+
+            self.spectra.selected = []
+            self._spectra_items_helper = deepcopy(self.spectra.items)
+
+            if len(exposures) > 0:
                 exposures_options = [{'label': exp, 'index': i, 'ver': exp,
                                       'name': exp, 'name_ver': exp}
                                      for i, exp in enumerate(sorted(set(exposures)))]
@@ -104,13 +115,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                               manual_options=exposures_options)
                 self.exposures.selected = []
 
-            self.spectra = SelectFileExtensionComponent(self,
-                                                        items='spectra_items',
-                                                        selected='spectra_selected',
-                                                        multiselect='spectra_multiselect',
-                                                        manual_options=spectra_options)
-
-            self.spectra.selected = []
+                self._exposures_helper = defaultdict(list)
+                for item in self.spectra.items:
+                    if 'Exposure' in item['label']:
+                        # For grouping items by exposure
+                        key = f"Exposure {item['ver']}"
+                        self._exposures_helper[key].append(item)
 
     @property
     def user_api(self):
@@ -139,6 +149,25 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self._on_spectra_selected_change()
         else:
             self.resolver.import_disabled = False
+
+    @observe('exposures_selected')
+    def _on_exposure_selection_change(self, change={}):
+        """
+        This method is called when the exposure selection changes.
+        It updates the spectra shown to the user based on the selected exposure.
+        """
+        if len(self.exposures_selected) == 0:
+            self.spectra.items = self._spectra_items_helper
+            return
+
+        # Populated with already selected items
+        result = [item for item in self.spectra.items
+                  if item['label'] in self.spectra.selected]
+        # Filter spectra based on the selected exposure
+        for exposure in self.exposures.selected:
+            result.extend(self._exposures_helper.get(exposure, self._spectra_items_helper))
+
+        self.spectra.items = result
 
     def input_to_list_of_spec(self, inp):
 
@@ -184,7 +213,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         """
         header = spec.meta.get('header', {})
         exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
-        source_id = spec.meta.get('source_id', '')
+        source_id = str(spec.meta.get('source_id', ''))
 
         return exp_num, source_id
 

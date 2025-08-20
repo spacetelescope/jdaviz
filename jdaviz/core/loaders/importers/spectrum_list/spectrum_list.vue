@@ -18,7 +18,7 @@
 
     <div v-if="!disable_dropdown">
       <plugin-select
-        :items="source_id_dropdown_items"
+        :items="spectra_items.map(i => i.label)"
         :selected.sync="spectra_selected"
         :show_if_single_entry="true"
         :multiselect="spectra_multiselect"
@@ -46,48 +46,3 @@
     </v-row>
   </v-container>
 </template>
-
-<script>
-export default {
-  props: {
-    exposure_items: Array,
-    spectra_items: Array,
-    exposure_selected: Array,
-    exposure_multiselect: Boolean,
-    spectra_selected: Array,
-    spectra_multiselect: Boolean,
-    disable_dropdown: Boolean,
-    api_hints_enabled: Boolean,
-    data_label_value: String,
-    data_label_default: String,
-    data_label_auto: Boolean,
-    data_label_invalid_msg: String
-  },
-  computed: {
-    filtered_spectra_items() {
-      // If no exposure selected, show all
-      if (!this.exposures_selected || this.exposures_selected.length === 0) {
-        return this.spectra_items;
-      }
-      // Extract exposure numbers from selected ver
-      const selected_exposures = this.exposures_selected.map(label => {
-        // Assumes label format: "Exposure N"
-        const match = label.match(/Exposure (\d+)/);
-        return match ? match[1] : null;
-      }).filter(Boolean);
-      // Filter spectra_items by ver (exposure number)
-      return this.spectra_items.filter(item => {
-        // Assumes item.ver is a string or number representing exposure number
-        return selected_exposures.includes(String(item.ver));
-      });
-    },
-    source_id_dropdown_items() {
-      // Union of filtered source IDs and currently selected source IDs
-      const filtered_labels = this.filtered_spectra_items.map(i => i.label);
-      const selected_labels = Array.isArray(this.spectra_selected) ? this.spectra_selected : [];
-      // Merge and deduplicate
-      return Array.from(new Set([...filtered_labels, ...selected_labels]));
-    }
-  }
-}
-</script>

@@ -281,6 +281,14 @@ def partially_masked_wfss_spectrum1d():
 
 
 @pytest.fixture
+def partially_masked_wfss_spectrum1d_exp1():
+    mask = np.array([False] * SPECTRUM_SIZE)
+    mask[-3:] = True
+    return _create_spectrum1d_with_spectral_unit(spectral_mask=mask, wfss=True,
+                                                 exposure='1_1_1', source_id='1111')
+
+
+@pytest.fixture
 def spectrum1d_nm():
     return _create_spectrum1d_with_spectral_unit(u.nm)
 
@@ -297,12 +305,14 @@ def spectrum_collection(spectrum1d):
 
 @pytest.fixture
 def premade_spectrum_list(spectrum1d, partially_masked_spectrum1d,
-                          wfss_spectrum1d, partially_masked_wfss_spectrum1d):
+                          wfss_spectrum1d, partially_masked_wfss_spectrum1d,
+                          partially_masked_wfss_spectrum1d_exp1):
     return SpectrumList([
         spectrum1d,
         partially_masked_spectrum1d,
         wfss_spectrum1d,
-        partially_masked_wfss_spectrum1d])
+        partially_masked_wfss_spectrum1d,
+        partially_masked_wfss_spectrum1d_exp1])
 
 
 @pytest.fixture

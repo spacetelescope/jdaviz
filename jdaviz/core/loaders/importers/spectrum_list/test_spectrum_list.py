@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from unittest.mock import patch
 import re
+from copy import deepcopy
 
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty
@@ -23,8 +24,7 @@ def extract_wfss_info(spec):
     """
     header = spec.meta.get('header', {})
     exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
-    source_id = spec.meta.get('source_id', '')
-
+    source_id = str(spec.meta.get('source_id', ''))
     return exp_num, source_id
 
 
@@ -55,8 +55,19 @@ class FakeImporter(SpectrumListImporter):
 
 class TestSpectrumListImporter:
 
-    @staticmethod
-    def setup_importer_obj(config_helper, input_obj):
+    def setup_importer_obj(self, config_helper, input_obj):
+        self.spectra_labels = ['1D Spectrum at file index: 0',
+                               '1D Spectrum at file index: 1',
+                               'Exposure 0, Source ID: 0000',
+                               'Exposure 0, Source ID: 1111',
+                               'Exposure 1, Source ID: 1111']
+
+        self.spectra_data_labels = ['1D Spectrum_file_index-0',
+                                    '1D Spectrum_file_index-1',
+                                    '1D Spectrum_EXP-0_ID-0000',
+                                    '1D Spectrum_EXP-0_ID-1111',
+                                    '1D Spectrum_EXP-1_ID-1111']
+
         return FakeImporter(app=config_helper.app,
                             resolver=config_helper.loaders['object']._obj,
                             input=input_obj)
@@ -78,12 +89,22 @@ class TestSpectrumListImporter:
         assert importer_obj.spectra.selected == []
         assert importer_obj.previous_data_label_messages == []
 
+        assert importer_obj._spectra_items_helper == importer_obj.spectra.items
+
+        exposures_helper_checker = {'Exposure 0': [],
+                                    'Exposure 1': []}
+        for item in importer_obj.spectra.items:
+            if 'Exposure' in item['label']:
+                key = f"Exposure {item['ver']}"
+                exposures_helper_checker[key].append(item)
+        assert importer_obj._exposures_helper == exposures_helper_checker
+
     # Parameterize to test both single and multiple selection
     @pytest.mark.parametrize('to_select', [['1D Spectrum at file index: 1'],
                                            ['1D Spectrum at file index: 0',
                                             '1D Spectrum at file index: 1',
                                             'Exposure 0, Source ID: 0000',
-                                            'Exposure 0, Source ID: 1111']])
+                                            'Exposure 1, Source ID: 1111']])
     def test_spectrum_list_importer_init_select(self, deconfigged_helper, premade_spectrum_list,
                                                 spectrum1d, to_select):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
@@ -111,10 +132,10 @@ class TestSpectrumListImporter:
                     'name': exposure_label,
                     'ver': exposure_label,
                     'name_ver': exposure_label,
-                    'index': 0}
+                    # ver (exposure #) as proxy for index since our exposures are 0 and 1
+                    'index': int(ver)}
 
-                # Only have 1 exposure in this test case, exposure 0
-                exposures_dict = importer_obj.exposures.manual_options[0]
+                exposures_dict = importer_obj.exposures.items[int(ver)]
                 assert isinstance(exposures_dict, dict)
                 assert len(exposures_dict) == len(exposures_keys)
                 for key in exposures_keys:
@@ -197,6 +218,30 @@ class TestSpectrumListImporter:
         importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
         assert importer_obj.resolver.import_disabled is False
 
+    def test_on_exposure_selection_change(self, deconfigged_helper, premade_spectrum_list):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
+        # Baseline, no exposures selected
+        assert len(importer_obj.exposures.selected) == 0
+        spectra_items_before = deepcopy(importer_obj.spectra.items)
+
+        # Run function as is
+        result = importer_obj._on_exposure_selection_change()
+        assert result is None
+        assert spectra_items_before == importer_obj.spectra.items
+
+        exposure_choices = importer_obj.exposures.choices + [importer_obj.exposures.choices]
+        for exposure_selected in exposure_choices:
+            # Select an exposure and trigger function
+            if isinstance(exposure_selected, str):
+                exposure_selected = [exposure_selected]
+
+            importer_obj.exposures.selected = exposure_selected
+            assert len(importer_obj.exposures.selected) == len(exposure_selected)
+
+            # Check that the spectra items are updated correctly
+            for item in importer_obj.spectra.items:
+                assert f"Exposure {item['ver']}" in exposure_selected
+
     def test_input_to_list_of_spec(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
@@ -233,7 +278,8 @@ class TestSpectrumListImporter:
         assert importer_obj.is_wfssmulti(wfss_spectrum1d)
 
     def test_extract_exposure_sourceid(self, deconfigged_helper, premade_spectrum_list,
-                                       wfss_spectrum1d, partially_masked_wfss_spectrum1d):
+                                       wfss_spectrum1d, partially_masked_wfss_spectrum1d,
+                                       partially_masked_wfss_spectrum1d_exp1):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         exposure, source_id = importer_obj._extract_exposure_sourceid(wfss_spectrum1d)
         assert exposure == '0'
@@ -242,6 +288,11 @@ class TestSpectrumListImporter:
         exposure, source_id = importer_obj._extract_exposure_sourceid(
             partially_masked_wfss_spectrum1d)
         assert exposure == '0'
+        assert source_id == '1111'
+
+        exposure, source_id = importer_obj._extract_exposure_sourceid(
+            partially_masked_wfss_spectrum1d_exp1)
+        assert exposure == '1'
         assert source_id == '1111'
 
     def test_has_mask(self, deconfigged_helper, premade_spectrum_list, make_empty_spectrum):
@@ -300,35 +351,30 @@ class TestSpectrumListImporter:
 
         run_method = importer_obj._load_selected_helper
 
-        spectra_labels = ['1D Spectrum at file index: 0',
-                          '1D Spectrum at file index: 1',
-                          'Exposure 0, Source ID: 0000',
-                          'Exposure 0, Source ID: 1111']
-
         # No selection
         importer_obj.load_selected = []
         run_method()
         assert importer_obj.spectra.selected == []
 
         # Single selection str
-        importer_obj.load_selected = spectra_labels[0]
+        importer_obj.load_selected = self.spectra_labels[0]
         run_method()
-        assert importer_obj.spectra.selected == [spectra_labels[0]]
+        assert importer_obj.spectra.selected == [self.spectra_labels[0]]
 
         # Multiple selections as list
-        importer_obj.load_selected = spectra_labels[:2]
+        importer_obj.load_selected = self.spectra_labels[:2]
         run_method()
-        assert importer_obj.spectra.selected == spectra_labels[:2]
+        assert importer_obj.spectra.selected == self.spectra_labels[:2]
 
         # Wildcard selection all
         importer_obj.load_selected = '*'
         run_method()
-        assert importer_obj.spectra.selected == spectra_labels
+        assert importer_obj.spectra.selected == self.spectra_labels
 
         # Wildcard selection with space
-        importer_obj.load_selected = 'Exposure 0, Source ID: *'
+        importer_obj.load_selected = 'Exposure *, Source ID: *'
         run_method()
-        assert importer_obj.spectra.selected == spectra_labels[2:]
+        assert importer_obj.spectra.selected == self.spectra_labels[2:]
 
     def test_default_viewer_reference(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
@@ -337,15 +383,13 @@ class TestSpectrumListImporter:
     @pytest.mark.parametrize('selection', [[],
                                            ['1D Spectrum at file index: 0',
                                             '1D Spectrum at file index: 1',
-                                            'Exposure 0, Source ID: 1111'],
+                                            'Exposure 0, Source ID: 1111',
+                                            'Exposure 1, Source ID: 1111'],
                                            '1D Spectrum at file index: *'])
     def test_call_method_basic(self, deconfigged_helper, premade_spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
+        spectra_data_labels = self.spectra_data_labels
 
-        spectra_labels = ['1D Spectrum_file_index-0',
-                          '1D Spectrum_file_index-1',
-                          '1D Spectrum_EXP-0_ID-0000',
-                          '1D Spectrum_EXP-0_ID-1111']
         if not selection:
             error_msg = ("No spectra selected. Please specify the desired spectra "
                          "via the keyword argument 'load_selected'.")
@@ -358,16 +402,16 @@ class TestSpectrumListImporter:
             # Load all anyway
             importer_obj.load_selected = '*'
             importer_obj.__call__()
-            dc_len = 4
+            dc_len = 5
         else:
             importer_obj.load_selected = selection
             importer_obj.__call__()
             if isinstance(selection, str):
                 dc_len = 2
-                spectra_labels = spectra_labels[:2]
+                spectra_data_labels = spectra_data_labels[:2]
             elif isinstance(selection, list):
                 dc_len = len(selection)
-                spectra_labels = spectra_labels[:2] + [spectra_labels[-1]]
+                spectra_data_labels = spectra_data_labels[:2] + spectra_data_labels[-2:]
 
         assert importer_obj.previous_data_label_messages == []
 
@@ -375,7 +419,7 @@ class TestSpectrumListImporter:
         dc = deconfigged_helper.app.data_collection
         assert len(dc) == dc_len  # number of spectra loaded
 
-        assert all([label in spectra_labels for label in dc.labels])
+        assert all([label in spectra_data_labels for label in dc.labels])
 
         # Viewer items
         viewers = deconfigged_helper.viewers
@@ -388,10 +432,10 @@ class TestSpectrumListImporter:
         # TODO: should these be in sync with data collection?
         #  If there is a duplicate data label, it gets overwritten in the viewer
         #  but the data collection will have both.
-        assert len(viewer_dm.data_labels_loaded) == len(spectra_labels)
-        assert all([label in spectra_labels for label in viewer_dm.data_labels_loaded])
-        assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
-        assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
+        assert len(viewer_dm.data_labels_loaded) == len(spectra_data_labels)
+        assert all([label in spectra_data_labels for label in viewer_dm.data_labels_loaded])
+        assert len(viewer_dm.data_labels_visible) == len(spectra_data_labels)
+        assert all([label in spectra_data_labels for label in viewer_dm.data_labels_visible])
 
     def test_call_method_repeat_call_snackbars(self, deconfigged_helper, premade_spectrum_list):
         """
@@ -412,21 +456,16 @@ class TestSpectrumListImporter:
         importer_obj.load_selected = '*'
         importer_obj.__call__()
 
-        spectra_labels = ['1D Spectrum_file_index-0',
-                          '1D Spectrum_file_index-1',
-                          '1D Spectrum_EXP-0_ID-0000',
-                          '1D Spectrum_EXP-0_ID-1111']
-
         # Mock the broadcast method to catch the snackbar messages
         with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
             assert len(importer_obj.previous_data_label_messages) == 0
             importer_obj.__call__()
-            assert len(importer_obj.previous_data_label_messages) == 4
+            assert len(importer_obj.previous_data_label_messages) == len(self.spectra_labels)
 
             expected_label_messages = [(f"Spectrum with label '{label}' "
                                         f"already exists in the viewer, skipping. "
                                         f"This message will be shown only once.")
-                                       for label in spectra_labels]
+                                       for label in self.spectra_data_labels]
 
             broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                               if hasattr(arg[0][0], 'text')]
@@ -434,7 +473,7 @@ class TestSpectrumListImporter:
 
             # One more time to verify that no more messages are added
             importer_obj.__call__()
-            assert len(importer_obj.previous_data_label_messages) == 4
+            assert len(importer_obj.previous_data_label_messages) == len(self.spectra_labels)
 
             broadcast_msgs_final = set([arg[0][0].text for arg in mock_broadcast.call_args_list
                                         if hasattr(arg[0][0], 'text')])
@@ -453,10 +492,10 @@ class TestSpectrumListImporter:
         # TODO: should these be in sync with data collection?
         #  If there is a duplicate data label, it gets overwritten in the viewer
         #  but the data collection will have both.
-        assert len(viewer_dm.data_labels_loaded) == len(spectra_labels)
-        assert all([label in spectra_labels for label in viewer_dm.data_labels_loaded])
-        assert len(viewer_dm.data_labels_visible) == len(spectra_labels)
-        assert all([label in spectra_labels for label in viewer_dm.data_labels_visible])
+        assert len(viewer_dm.data_labels_loaded) == len(self.spectra_data_labels)
+        assert all([label in self.spectra_data_labels for label in viewer_dm.data_labels_loaded])
+        assert len(viewer_dm.data_labels_visible) == len(self.spectra_data_labels)
+        assert all([label in self.spectra_data_labels for label in viewer_dm.data_labels_visible])
 
 
 @pytest.mark.parametrize('with_uncertainty', [True, False])
