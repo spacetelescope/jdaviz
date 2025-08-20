@@ -159,7 +159,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                                                    (self.zoom_center_y, self.zoom_center_y-abs(self.zoom_radius)))  # noqa: E501
             center_x, center_xr = cr[0]
             center_y, center_yr = cr[1]
-            radius = ((center_xr - center_x)**2 + (center_yr - center_y)**2)**(1/2)
+            radius = np.sqrt((center_xr - center_x) ** 2 + (center_yr - center_y) ** 2)
         else:
             center_x, center_y = self.zoom_center_x, self.zoom_center_y
             radius = abs(self.zoom_radius)
