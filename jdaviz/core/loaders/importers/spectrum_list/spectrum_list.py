@@ -79,10 +79,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     label = f"1D Spectrum at file index: {index}"
                     suffix = f"file_index-{index}"
 
-                # Use modified index here to access the spectrum properly
-                # per ``selected_obj_dict`` in SelectFileExtensionComponent.
-                # Attempt to indicate to the user (via label and suffix) that
-                # the index is not the same as the file index.
                 spectra_options.append({'label': label,
                                         'index': index,
                                         'name': str(name),
@@ -109,7 +105,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                               selected='exposures_selected',
                                                               multiselect='exposures_multiselect',
                                                               manual_options=exposures_options)
-                self.exposures.selected = []
 
                 self._exposures_helper = defaultdict(list)
                 for item in self.spectra.items:
@@ -120,7 +115,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['spectra']
+        expose = ['spectra', 'exposures']
         return ImporterUserApi(self, expose)
 
     @property
@@ -152,7 +147,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         This method is called when the exposure selection changes.
         It updates the spectra shown to the user based on the selected exposure.
         """
-        if len(self.exposures_selected) == 0:
+        if self.exposures_selected is None or len(self.exposures_selected) == 0:
             self.spectra.items = self._spectra_items_helper
             return
 
@@ -327,15 +322,19 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 @loader_importer_registry('1D Spectrum Concatenated')
 class SpectrumListConcatenatedImporter(SpectrumListImporter):
-    @property
-    def output(self):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         if isinstance(self.input, Spectrum) and self.input.flux.ndim == 2:
             self.disable_dropdown = True
-            self.user_api.spectra = '*'
+            self.spectra.select_all()
 
+    @property
+    def output(self):
         spectrum_list = self.spectra.selected
-        if spectrum_list is None or not len(spectrum_list):
-            return None
+        if len(spectrum_list) == 0:
+            return []
 
         # Vectorized collection of all wavelengths, fluxes, and uncertainties
         wl_list = []

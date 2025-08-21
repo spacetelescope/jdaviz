@@ -368,7 +368,7 @@ class TestSpectrumListImporter:
                 importer_obj.__call__()
 
             # Load all anyway
-            importer_obj.user_api.spectra = '*'
+            importer_obj.spectra.select_all()
             importer_obj.__call__()
             dc_len = 5
         else:
@@ -421,7 +421,7 @@ class TestSpectrumListImporter:
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Load all
-        importer_obj.user_api.spectra = '*'
+        importer_obj.spectra.select_all()
         importer_obj.__call__()
 
         # Mock the broadcast method to catch the snackbar messages
@@ -535,21 +535,21 @@ class TestSpectrumListConcatenatedImporter:
                                                       use_list):
         if use_list:
             importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
+            assert importer_obj.user_api.spectra == []
         else:
             importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+            assert importer_obj.user_api.spectra == importer_obj.spectra.choices
 
         assert isinstance(importer_obj, SpectrumListImporter)
-        # Only the traitlets retain their state after initializing the framework
-        # Otherwise we would expect user_api.spectra == '*' for the 2d spectrum
+        # Sneaky negation of boolean to test the disable_dropdown attribute
         assert importer_obj.disable_dropdown is not use_list
-        assert importer_obj.user_api.spectra == []
 
     @pytest.mark.parametrize('with_uncertainty', [True, False])
     def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
         spec = self.setup_combined_spectrum(with_uncertainty)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.user_api.spectra = '*'
+        importer_obj.spectra.select_all()
 
         result = importer_obj.output
         assert np.all(result.flux == spec.flux)
@@ -561,7 +561,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        assert importer_obj.output is None
+        assert len(importer_obj.output) == 0
 
     def test_spectrum_list_concatenated_importer_output_2d(self, deconfigged_helper, spectrum2d):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
@@ -575,7 +575,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.user_api.spectra = '*'
+        importer_obj.spectra.select_all()
         importer_obj.__call__()
 
         dc = deconfigged_helper.app.data_collection
