@@ -55,14 +55,14 @@ class FakeImporter(SpectrumListImporter):
 class TestSpectrumListImporter:
 
     def setup_importer_obj(self, config_helper, input_obj):
-        self.spectra_labels = ['1D Spectrum at file index: 0',
-                               '1D Spectrum at file index: 1',
+        self.spectra_labels = ['1D Spectrum at index: 0',
+                               '1D Spectrum at index: 1',
                                'Exposure 0, Source ID: 0000',
                                'Exposure 0, Source ID: 1111',
                                'Exposure 1, Source ID: 1111']
 
-        self.spectra_data_labels = ['1D Spectrum_file_index-0',
-                                    '1D Spectrum_file_index-1',
+        self.spectra_data_labels = ['1D Spectrum_index-0',
+                                    '1D Spectrum_index-1',
                                     '1D Spectrum_EXP-0_ID-0000',
                                     '1D Spectrum_EXP-0_ID-1111',
                                     '1D Spectrum_EXP-1_ID-1111']
@@ -101,9 +101,9 @@ class TestSpectrumListImporter:
         assert importer_obj._exposures_helper == exposures_helper_checker
 
     # Parameterize to test both single and multiple selection
-    @pytest.mark.parametrize('to_select', [['1D Spectrum at file index: 1'],
-                                           ['1D Spectrum at file index: 0',
-                                            '1D Spectrum at file index: 1',
+    @pytest.mark.parametrize('to_select', [['1D Spectrum at index: 1'],
+                                           ['1D Spectrum at index: 0',
+                                            '1D Spectrum at index: 1',
                                             'Exposure 0, Source ID: 0000',
                                             'Exposure 1, Source ID: 1111']])
     def test_spectrum_list_importer_init_select(self, deconfigged_helper, premade_spectrum_list,
@@ -148,12 +148,12 @@ class TestSpectrumListImporter:
 
             spec_keys = {
                 'label': [f"Exposure {ver}, Source ID: {name}",
-                          f"1D Spectrum at file index: {file_index}"],
+                          f"1D Spectrum at index: {file_index}"],
                 'name': [name, file_index],
                 'ver': [ver, file_index],
                 'name_ver': [f"{ver}_{name}", file_index],
                 'index': [index, index],
-                'suffix': [f"EXP-{ver}_ID-{name}", f"file_index-{file_index}"],
+                'suffix': [f"EXP-{ver}_ID-{name}", f"index-{file_index}"],
                 'obj': None}
 
             assert isinstance(spec_dict, dict)
@@ -337,7 +337,7 @@ class TestSpectrumListImporter:
     def test_output(self, deconfigged_helper, premade_spectrum_list, spectrum1d):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Must make a selection for output to work
-        importer_obj.spectra.selected = '1D Spectrum at file index: 0'
+        importer_obj.spectra.selected = '1D Spectrum at index: 0'
         assert isinstance(importer_obj.output, list)
 
         # Check that these are indeed the same
@@ -353,12 +353,12 @@ class TestSpectrumListImporter:
         assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
 
     @pytest.mark.parametrize('selection', [[],
-                                           ['1D Spectrum at file index: 0',
-                                            '1D Spectrum at file index: 1',
+                                           ['1D Spectrum at index: 0',
+                                            '1D Spectrum at index: 1',
                                             'Exposure 0, Source ID: 1111',
                                             'Exposure 1, Source ID: 1111']])
     # TODO: Uncomment when generalized wild card matching is implemented:
-    #  '1D Spectrum at file index: *']) # noqa
+    #  '1D Spectrum at index: *']) # noqa
     def test_call_method_basic(self, deconfigged_helper, premade_spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         spectra_data_labels = self.spectra_data_labels

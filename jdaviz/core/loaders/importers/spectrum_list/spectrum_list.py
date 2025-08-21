@@ -44,8 +44,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         if self.is_valid:
             # If the resolver format is set to "1D Spectrum List", then we
             # only enable the import button if at least one spectrum is selected.
-            # This is to avoid a user accidentally importing all spectra (API default)
-            # when none are selected
             self.resolver.observe(self._on_format_selected_change, names='format_selected')
             # Separately observe changes to the selected spectra
             self.observe(self._on_spectra_selected_change, names='spectra_selected')
@@ -75,8 +73,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     name_ver = index
                     name = index
                     ver = index
-                    label = f"1D Spectrum at file index: {index}"
-                    suffix = f"file_index-{index}"
+                    label = f"1D Spectrum at index: {index}"
+                    suffix = f"index-{index}"
 
                 spectra_options.append({'label': label,
                                         'index': index,
