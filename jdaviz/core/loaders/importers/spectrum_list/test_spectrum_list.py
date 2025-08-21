@@ -345,39 +345,6 @@ class TestSpectrumListImporter:
         importer_obj.input = spectrum1d
         assert importer_obj.output is None
 
-    def test_load_selected_helper(self, deconfigged_helper, premade_spectrum_list):
-        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        assert importer_obj.spectra.selected == []
-
-        run_method = importer_obj._load_selected_helper
-
-        # No selection
-        importer_obj.load_selected = []
-        run_method()
-        assert importer_obj.spectra.selected == []
-
-        # Single selection str
-        importer_obj.load_selected = self.spectra_labels[0]
-        run_method()
-        assert importer_obj.spectra.selected == [self.spectra_labels[0]]
-
-        # Multiple selections as list
-        importer_obj.load_selected = self.spectra_labels[:2]
-        run_method()
-        assert importer_obj.spectra.selected == self.spectra_labels[:2]
-
-        # Wildcard selection all
-        importer_obj.load_selected = '*'
-        run_method()
-        assert importer_obj.spectra.selected == self.spectra_labels
-
-        # Wildcard selection with space
-        # TODO: Add this and the one in parametrize below back
-        #  once wildcard matching is implemented
-        # importer_obj.load_selected = 'Exposure *, Source ID: *'
-        # run_method()
-        # assert importer_obj.spectra.selected == self.spectra_labels[2:]
-
     def test_default_viewer_reference(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
@@ -393,8 +360,7 @@ class TestSpectrumListImporter:
         spectra_data_labels = self.spectra_data_labels
 
         if not selection:
-            error_msg = ("No spectra selected. Please specify the desired spectra "
-                         "via the keyword argument 'load_selected'.")
+            error_msg = "No spectra selected."
             # Checking with no selection yet, raises error
             with pytest.raises(
                     ValueError,
@@ -402,11 +368,11 @@ class TestSpectrumListImporter:
                 importer_obj.__call__()
 
             # Load all anyway
-            importer_obj.load_selected = '*'
+            importer_obj.user_api.spectra = '*'
             importer_obj.__call__()
             dc_len = 5
         else:
-            importer_obj.load_selected = selection
+            importer_obj.user_api.spectra = selection
             importer_obj.__call__()
             if isinstance(selection, str):
                 dc_len = 2
@@ -455,7 +421,7 @@ class TestSpectrumListImporter:
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Load all
-        importer_obj.load_selected = '*'
+        importer_obj.user_api.spectra = '*'
         importer_obj.__call__()
 
         # Mock the broadcast method to catch the snackbar messages
@@ -574,16 +540,16 @@ class TestSpectrumListConcatenatedImporter:
 
         assert isinstance(importer_obj, SpectrumListImporter)
         # Only the traitlets retain their state after initializing the framework
-        # Otherwise we would expect load_selected == '*' for the 2d spectrum
+        # Otherwise we would expect user_api.spectra == '*' for the 2d spectrum
         assert importer_obj.disable_dropdown is not use_list
-        assert importer_obj.load_selected == []
+        assert importer_obj.user_api.spectra == []
 
     @pytest.mark.parametrize('with_uncertainty', [True, False])
     def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
         spec = self.setup_combined_spectrum(with_uncertainty)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.load_selected = '*'
+        importer_obj.user_api.spectra = '*'
 
         result = importer_obj.output
         assert np.all(result.flux == spec.flux)
@@ -601,7 +567,6 @@ class TestSpectrumListConcatenatedImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
         _ = importer_obj.output
         assert importer_obj.disable_dropdown is True
-        assert importer_obj.load_selected == '*'
         for selected in importer_obj.spectra.selected:
             assert isinstance(selected, str)
             assert selected in importer_obj.spectra.choices
@@ -610,7 +575,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.load_selected = '*'
+        importer_obj.user_api.spectra = '*'
         importer_obj.__call__()
 
         dc = deconfigged_helper.app.data_collection

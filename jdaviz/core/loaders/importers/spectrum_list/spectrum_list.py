@@ -41,9 +41,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
         self.previous_data_label_messages = []
-        # These need to be set via attribute to work through
-        # the loaders infrastructure (via ``helpers.py``)
-        self.load_selected = kwargs.pop('load_selected', [])
 
         if self.is_valid:
             # If the resolver format is set to "1D Spectrum List", then we
@@ -123,7 +120,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['spectra', 'load_selected']
+        expose = ['spectra']
         return ImporterUserApi(self, expose)
 
     @property
@@ -249,25 +246,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return spec
 
-    def _load_selected_helper(self):
-        """
-        This method is used to load the selected spectra based on the
-        `load_selected` attribute. It handles both single string inputs
-        and lists of strings, (and will) allow for wildcard matching.
-        """
-        selected_spectra = self.load_selected
-        if isinstance(self.load_selected, str):
-            if '*' in self.load_selected:
-                # Make use of the user_api's __setattr__ logic
-                # to get all via wildcard
-                self.user_api.spectra = self.load_selected
-                return
-            else:
-                # Assume it is a single data label and convert to a list
-                selected_spectra = [self.load_selected]
-
-        self.spectra.selected = selected_spectra
-
     @property
     def default_viewer_reference(self):
         # returns the registry name of the default viewer
@@ -275,13 +253,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
-        # For using the loader via API
-        if self.load_selected:
-            self._load_selected_helper()
-
-        elif not self.spectra.selected:
-            raise ValueError("No spectra selected. Please specify the desired spectra "
-                             "via the keyword argument 'load_selected'.")
+        if not self.spectra.selected:
+            raise ValueError("No spectra selected.")
 
         data_label_prefix = self.data_label_value
 
@@ -358,10 +331,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
     def output(self):
         if isinstance(self.input, Spectrum) and self.input.flux.ndim == 2:
             self.disable_dropdown = True
-            self.load_selected = '*'
-
-        if self.load_selected:
-            self._load_selected_helper()
+            self.user_api.spectra = '*'
 
         spectrum_list = self.spectra.selected
         if spectrum_list is None or not len(spectrum_list):

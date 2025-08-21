@@ -59,11 +59,10 @@ class TestSpecvizHelper:
     @pytest.mark.parametrize(
         'kwargs',
         ({'data_label': [f"List test {i}" for i in (1, 2, 3)]},
-         {'load_selected': [f"1D Spectrum at file index: {i}" for i in (0, 1, 2)]},
-         {'load_selected': '*'}))
+         {'spectra': [f"1D Spectrum at file index: {i}" for i in (0, 1, 2)]},
+         {'spectra': '*'}))
     def test_load_spectrum_list_with_kwargs(self, kwargs):
-        error_msg = ("No spectra selected. Please specify the desired spectra "
-                     "via the keyword argument 'load_selected'.")
+        error_msg = "No spectra selected."
         with pytest.raises(
                 ValueError,
                 match=re.escape(error_msg)):
@@ -80,7 +79,7 @@ class TestSpecvizHelper:
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_data(self.multi_order_spectrum_list, load_selected='*')
+        self.spec_app.load_data(self.multi_order_spectrum_list, spectra='*')
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
@@ -426,7 +425,7 @@ def test_load_2d_flux(specviz_helper):
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
-    specviz_helper.load_data(spec, data_label="test", load_selected='*')
+    specviz_helper.load_data(spec, data_label="test", spectra='*')
 
     assert len(specviz_helper.app.data_collection) == 4
     assert specviz_helper.app.data_collection[0].label == "test_file_index-0"
@@ -436,7 +435,7 @@ def test_load_2d_flux(specviz_helper):
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    specviz_helper.load_data(spec_list, data_label="second test", load_selected='*')
+    specviz_helper.load_data(spec_list, data_label="second test", spectra='*')
 
     assert len(specviz_helper.app.data_collection) == 6
     assert specviz_helper.app.data_collection[-1].label == "second test_file_index-1"
