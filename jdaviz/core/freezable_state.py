@@ -151,11 +151,19 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         if self.linked_by_wcs:
             image, i_ref = get_reference_image_data(self._viewer.jdaviz_app, self._viewer.reference)
             ref_wcs = image.coords
-            cr = ref_wcs.world_to_pixel_values((self.zoom_center_x, self.zoom_center_x+abs(self.zoom_radius)),  # noqa
-                                               (self.zoom_center_y, self.zoom_center_y))
+
+            # zoom_center_y represents the declination of the image center, bounded on (-90, 90) deg
+            # We want to ensure that we always calculate the zoom radius towards the equator to
+            # prevent issues near the poles.
+            if self.zoom_center_y < 0:
+                cr = ref_wcs.world_to_pixel_values((self.zoom_center_x, self.zoom_center_x),  # noqa: E501
+                                                   (self.zoom_center_y, self.zoom_center_y+abs(self.zoom_radius)))  # noqa: E501
+            else:
+                cr = ref_wcs.world_to_pixel_values((self.zoom_center_x, self.zoom_center_x),  # noqa: E501
+                                                   (self.zoom_center_y, self.zoom_center_y-abs(self.zoom_radius)))  # noqa: E501
             center_x, center_xr = cr[0]
-            center_y, _ = cr[1]
-            radius = abs(center_xr - center_x)
+            center_y, center_yr = cr[1]
+            radius = np.sqrt((center_xr - center_x) ** 2 + (center_yr - center_y) ** 2)
         else:
             center_x, center_y = self.zoom_center_x, self.zoom_center_y
             radius = abs(self.zoom_radius)
