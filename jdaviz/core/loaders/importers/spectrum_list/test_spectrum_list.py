@@ -84,9 +84,7 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'disable_dropdown')
         assert hasattr(importer_obj, 'sources')
 
-        # TODO: exposures.selected will default to a list upon bug fixing multiselect logic
-        #  assert importer_obj.exposures.selected == []
-        assert importer_obj.exposures.selected is None
+        assert importer_obj.exposures.selected == []
         assert importer_obj.sources.selected == []
         assert importer_obj.previous_data_label_messages == []
 
@@ -223,9 +221,7 @@ class TestSpectrumListImporter:
     def test_on_exposure_selection_change(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Baseline, no exposures selected
-        # TODO: Uncomment when multiselect is fixed
-        #   assert len(importer_obj.exposures.selected) == 0
-        assert importer_obj.exposures.selected is None
+        assert len(importer_obj.exposures.selected) == 0
         sources_items_before = deepcopy(importer_obj.sources.items)
 
         # Run function as is
