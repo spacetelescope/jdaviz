@@ -251,34 +251,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         if not self.spectra.selected:
             raise ValueError("No spectra selected.")
 
-        data_label_prefix = self.data_label_value
-
-        # Only concerned about data labels from the same file/prefix
-        existing_data_labels = [data.label for data in self.app.data_collection
-                                if data_label_prefix == data.label.split('_EXP-')[0] or
-                                data_label_prefix == data.label.split('_file_index-')[0]]
-
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.spectra.selected_item_list):
-                data_label = f"{data_label_prefix}_{item_dict['suffix']}"
-
-                if data_label in existing_data_labels:
-                    # NOTE: may depend on the science use-case
-                    # It probably doesn't make sense to disable import entirely
-                    # since a user may want to import spectra after subsequent analysis
-                    msg = (f"Spectrum with label '{data_label}' already exists in the viewer, "
-                           f"skipping. This message will be shown only once.")
-                    # Previously chosen spectra remain in the dropdown and will attempt to import
-                    # again, so only show the message once.
-                    if msg not in self.previous_data_label_messages:
-                        self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color="warning"))
-                        self.previous_data_label_messages.append(msg)
-
-                    continue
-
-                self.add_to_data_collection(spec_obj,
-                                            data_label,
-                                            show_in_viewer=True)
+                data_label = f"{self.data_label_value}_{item_dict['suffix']}"
+                self.add_to_data_collection(spec_obj, data_label, show_in_viewer=True)
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
