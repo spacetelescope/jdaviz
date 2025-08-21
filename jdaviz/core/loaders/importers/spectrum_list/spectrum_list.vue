@@ -18,15 +18,15 @@
 
     <div v-if="!disable_dropdown">
       <plugin-select
-        :items="spectra_items.map(i => i.label)"
-        :selected.sync="spectra_selected"
+        :items="sources_items.map(i => i.label)"
+        :selected.sync="sources_selected"
         :show_if_single_entry="true"
-        :multiselect="spectra_multiselect"
+        :multiselect="sources_multiselect"
         :search="true"
         label="Source IDs"
-        api_hint="ldr.importer.spectra ="
+        api_hint="ldr.importer.sources ="
         :api_hints_enabled="api_hints_enabled"
-        hint="Source IDs to select from the list of spectra."
+        hint="Source IDs to select from the list of sources."
       ></plugin-select>
     </div>
 
