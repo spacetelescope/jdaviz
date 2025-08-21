@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from unittest.mock import patch
 import re
 from copy import deepcopy
 
