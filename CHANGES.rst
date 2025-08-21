@@ -6,6 +6,11 @@ Bug Fixes
 
 - Distance measurement marks now update properly upon unit conversion. [#3716]
 
+- Use validator on subset layer visibility and subset deletion to ensure toggling visibility and
+  deleting subsets from data menu and plot options updates accordingly. [#3708]
+
+- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731] 
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
