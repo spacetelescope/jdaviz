@@ -102,6 +102,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                               selected='exposures_selected',
                                                               multiselect='exposures_multiselect',
                                                               manual_options=exposures_options)
+                self.exposures.selected = []
 
                 self._exposures_helper = defaultdict(list)
                 for item in self.sources.items:
@@ -144,7 +145,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         This method is called when the exposure selection changes.
         It updates the sources shown to the user based on the selected exposure.
         """
-        if self.exposures_selected is None or len(self.exposures_selected) == 0:
+        if len(self.exposures_selected) == 0:
             self.sources.items = self._sources_items_helper
             return
 
