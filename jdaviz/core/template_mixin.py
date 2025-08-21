@@ -2098,7 +2098,7 @@ class LayerSelect(SelectPluginComponent):
         self._update_items({'source': 'data_added'})
 
     @observe('filters', 'sort_by')
-    def _update_items(self, msg={}):
+    def _update_items(self, msg={}, remove_subset=None):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: if the message is a SubsetUpdateMessage, only act on those that require
         # an update
@@ -2120,7 +2120,10 @@ class LayerSelect(SelectPluginComponent):
             if self.app.state.layer_icons.get(layer.layer.label) or
             self.only_wcs_layers
         ]
-        unique_layer_labels = list(set(layer_labels))
+
+        # if remove_subset provided, subset has already been removed, enforcing the removal here
+        # so data menu updates accordingly
+        unique_layer_labels = list(set(layer_labels) - {remove_subset})
         layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
