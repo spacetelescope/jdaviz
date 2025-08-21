@@ -326,7 +326,7 @@ def test_reestimate_parameters(specviz_helper, spectrum1d):
     assert mc['parameters']['stddev']['fixed'] is True
 
 
-def test_reestimate_with_spectral_first_cube(cubeviz_helper, image_cube_hdu_obj_microns):
+def test_spectral_first_cube(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
 
     subset = cubeviz_helper.plugins['Subset Tools']
@@ -336,6 +336,8 @@ def test_reestimate_with_spectral_first_cube(cubeviz_helper, image_cube_hdu_obj_
     mf.spectral_subset.selected = 'Subset 1'
     mf.create_model_component('Linear1D')
     mf.cube_fit = True
+    # Test that we can create a component with spectral subset and cube_fit
+    mf.create_model_component('Const1D')
     # This call used to error due to a broadcasting failure
     mf.reestimate_model_parameters()
 
