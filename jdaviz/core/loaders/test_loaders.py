@@ -129,15 +129,15 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
     ldr.format = '1D Spectrum List'
 
     # 1_117 is completely masked
-    spectra_obj = ldr.importer.spectra
+    sources_obj = ldr.importer.sources
     number_combos = product((1, 2), (9, 17, 23))
-    spectra_obj.selected = [f'Exposure {e_num}, Source ID: {s_id}'
+    sources_obj.selected = [f'Exposure {e_num}, Source ID: {s_id}'
                             for e_num, s_id in number_combos]
     ldr.importer()
 
-    assert len(deconfigged_helper.data_labels) == len(spectra_obj.selected)
+    assert len(deconfigged_helper.data_labels) == len(sources_obj.selected)
     dc = deconfigged_helper.app.data_collection
-    assert len(dc) == len(spectra_obj.selected)
+    assert len(dc) == len(sources_obj.selected)
     assert len(deconfigged_helper.viewers) == 1
 
     filestem = Path(ldr.filepath).stem

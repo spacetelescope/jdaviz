@@ -24,9 +24,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     exposures_selected = Any().tag(sync=True)
     exposures_multiselect = Bool(True).tag(sync=True)
 
-    spectra_items = List().tag(sync=True)
-    spectra_selected = Any().tag(sync=True)
-    spectra_multiselect = Bool(True).tag(sync=True)
+    sources_items = List().tag(sync=True)
+    sources_selected = Any().tag(sync=True)
+    sources_multiselect = Bool(True).tag(sync=True)
 
     disable_dropdown = Bool(False).tag(sync=True)
 
@@ -45,11 +45,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             # If the resolver format is set to "1D Spectrum List", then we
             # only enable the import button if at least one spectrum is selected.
             self.resolver.observe(self._on_format_selected_change, names='format_selected')
-            # Separately observe changes to the selected spectra
-            self.observe(self._on_spectra_selected_change, names='spectra_selected')
+            # Separately observe changes to the selected sources
+            self.observe(self._on_sources_selected_change, names='sources_selected')
 
             exposures = []
-            spectra_options = []
+            sources_options = []
 
             if isinstance(self.input, Spectrum):
                 speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
@@ -76,7 +76,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                     label = f"1D Spectrum at index: {index}"
                     suffix = f"index-{index}"
 
-                spectra_options.append({'label': label,
+                sources_options.append({'label': label,
                                         'index': index,
                                         'name': str(name),
                                         'ver': str(ver),
@@ -84,14 +84,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                         'suffix': suffix,
                                         'obj': self._apply_spectral_mask(spec)})
 
-            self.spectra = SelectFileExtensionComponent(self,
-                                                        items='spectra_items',
-                                                        selected='spectra_selected',
-                                                        multiselect='spectra_multiselect',
-                                                        manual_options=spectra_options)
+            self.sources = SelectFileExtensionComponent(self,
+                                                        items='sources_items',
+                                                        selected='sources_selected',
+                                                        multiselect='sources_multiselect',
+                                                        manual_options=sources_options)
 
-            self.spectra.selected = []
-            self._spectra_items_helper = deepcopy(self.spectra.items)
+            self.sources.selected = []
+            self._sources_items_helper = deepcopy(self.sources.items)
 
             if len(exposures) > 0:
                 exposures_options = [{'label': exp, 'index': i, 'ver': exp,
@@ -104,7 +104,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                               manual_options=exposures_options)
 
                 self._exposures_helper = defaultdict(list)
-                for item in self.spectra.items:
+                for item in self.sources.items:
                     if 'Exposure' in item['label']:
                         # For grouping items by exposure
                         key = f"Exposure {item['ver']}"
@@ -112,7 +112,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['spectra', 'exposures']
+        expose = ['sources', 'exposures']
         return ImporterUserApi(self, expose)
 
     @property
@@ -126,15 +126,15 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return (isinstance(self.input, (SpectrumList, SpectrumCollection))
                 or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
 
-    def _on_spectra_selected_change(self, change={}):
-        if not len(self.spectra_selected):
+    def _on_sources_selected_change(self, change={}):
+        if not len(self.sources_selected):
             self.resolver.import_disabled = True
         else:
             self.resolver.import_disabled = False
 
     def _on_format_selected_change(self, change={}):
         if change['new'] == '1D Spectrum List':
-            self._on_spectra_selected_change()
+            self._on_sources_selected_change()
         else:
             self.resolver.import_disabled = False
 
@@ -142,20 +142,20 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def _on_exposure_selection_change(self, change={}):
         """
         This method is called when the exposure selection changes.
-        It updates the spectra shown to the user based on the selected exposure.
+        It updates the sources shown to the user based on the selected exposure.
         """
         if self.exposures_selected is None or len(self.exposures_selected) == 0:
-            self.spectra.items = self._spectra_items_helper
+            self.sources.items = self._sources_items_helper
             return
 
         # Populated with already selected items
-        result = [item for item in self.spectra.items
-                  if item['label'] in self.spectra.selected]
-        # Filter spectra based on the selected exposure
+        result = [item for item in self.sources.items
+                  if item['label'] in self.sources.selected]
+        # Filter sources based on the selected exposure
         for exposure in self.exposures.selected:
-            result.extend(self._exposures_helper.get(exposure, self._spectra_items_helper))
+            result.extend(self._exposures_helper.get(exposure, self._sources_items_helper))
 
-        self.spectra.items = result
+        self.sources.items = result
 
     def input_to_list_of_spec(self, inp):
 
@@ -186,7 +186,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def output(self):
         if not self.is_valid:  # pragma: nocover
             return None
-        return self.spectra.selected_obj
+        return self.sources.selected_obj
 
     @staticmethod
     def is_wfssmulti(spec):
@@ -195,7 +195,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     @staticmethod
     def _extract_exposure_sourceid(spec):
         """
-        Generate a label for WFSSMulti spectra based on the header information.
+        Generate a label for WFSSMulti sources based on the header information.
         """
         header = spec.meta.get('header', {})
         exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
@@ -245,11 +245,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return 'spectrum-1d-viewer'
 
     def __call__(self, show_in_viewer=True):
-        if not self.spectra.selected:
-            raise ValueError("No spectra selected.")
+        if not self.sources.selected:
+            raise ValueError("No sources selected.")
 
         with self.app._jdaviz_helper.batch_load():
-            for spec_obj, item_dict in zip(self.output, self.spectra.selected_item_list):
+            for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
                 data_label = f"{self.data_label_value}_{item_dict['suffix']}"
                 self.add_to_data_collection(spec_obj, data_label, show_in_viewer=True)
 
@@ -301,11 +301,11 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
 
         if isinstance(self.input, Spectrum) and self.input.flux.ndim == 2:
             self.disable_dropdown = True
-            self.spectra.select_all()
+            self.sources.select_all()
 
     @property
     def output(self):
-        spectrum_list = self.spectra.selected
+        spectrum_list = self.sources.selected
         if len(spectrum_list) == 0:
             return []
 
@@ -313,7 +313,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         wl_list = []
         fnu_list = []
         dfnu_list = []
-        for spec in self.spectra.selected_obj:
+        for spec in self.sources.selected_obj:
             wl = spec.spectral_axis.value
             fnu = spec.flux.value
 

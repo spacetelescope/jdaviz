@@ -59,17 +59,17 @@ class TestSpecvizHelper:
     @pytest.mark.parametrize(
         'kwargs',
         ({'data_label': [f"List test {i}" for i in (1, 2, 3)]},
-         {'spectra': [f"1D Spectrum at file index: {i}" for i in (0, 1, 2)]},
-         {'spectra': '*'}))
+         {'sources': [f"1D Spectrum at index: {i}" for i in (0, 1, 2)]},
+         {'sources': '*'}))
     def test_load_spectrum_list_with_kwargs(self, kwargs):
-        error_msg = "No spectra selected."
+        error_msg = "No sources selected."
         with pytest.raises(
                 ValueError,
                 match=re.escape(error_msg)):
             self.spec_app.load_data(self.spec_list)
 
         # When loading via the ``data_label`` argument, the length of the
-        # list must match the number of spectra in the SpectrumList.
+        # list must match the number of sources in the SpectrumList.
         self.spec_app.load_data(self.spec_list, **kwargs)
         assert len(self.spec_app.app.data_collection) == 4
         if 'load' in list(kwargs.keys())[0]:
@@ -79,7 +79,7 @@ class TestSpecvizHelper:
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_data(self.multi_order_spectrum_list, spectra='*')
+        self.spec_app.load_data(self.multi_order_spectrum_list, sources='*')
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
@@ -425,20 +425,20 @@ def test_load_2d_flux(specviz_helper):
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
-    specviz_helper.load_data(spec, data_label="test", spectra='*')
+    specviz_helper.load_data(spec, data_label="test", sources='*')
 
     assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test_file_index-0"
+    assert specviz_helper.app.data_collection[0].label == "test_index-0"
 
     spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                      flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    specviz_helper.load_data(spec_list, data_label="second test", spectra='*')
+    specviz_helper.load_data(spec_list, data_label="second test", sources='*')
 
     assert len(specviz_helper.app.data_collection) == 6
-    assert specviz_helper.app.data_collection[-1].label == "second test_file_index-1"
+    assert specviz_helper.app.data_collection[-1].label == "second test_index-1"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):

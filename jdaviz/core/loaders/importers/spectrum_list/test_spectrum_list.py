@@ -55,13 +55,13 @@ class FakeImporter(SpectrumListImporter):
 class TestSpectrumListImporter:
 
     def setup_importer_obj(self, config_helper, input_obj):
-        self.spectra_labels = ['1D Spectrum at index: 0',
+        self.sources_labels = ['1D Spectrum at index: 0',
                                '1D Spectrum at index: 1',
                                'Exposure 0, Source ID: 0000',
                                'Exposure 0, Source ID: 1111',
                                'Exposure 1, Source ID: 1111']
 
-        self.spectra_data_labels = ['1D Spectrum_index-0',
+        self.sources_data_labels = ['1D Spectrum_index-0',
                                     '1D Spectrum_index-1',
                                     '1D Spectrum_EXP-0_ID-0000',
                                     '1D Spectrum_EXP-0_ID-1111',
@@ -78,23 +78,23 @@ class TestSpectrumListImporter:
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         assert importer_obj.data_label_default == '1D Spectrum'
-        assert hasattr(importer_obj, 'spectra_items')
-        assert hasattr(importer_obj, 'spectra_selected')
-        assert hasattr(importer_obj, 'spectra_multiselect')
+        assert hasattr(importer_obj, 'sources_items')
+        assert hasattr(importer_obj, 'sources_selected')
+        assert hasattr(importer_obj, 'sources_multiselect')
         assert hasattr(importer_obj, 'disable_dropdown')
-        assert hasattr(importer_obj, 'spectra')
+        assert hasattr(importer_obj, 'sources')
 
         # TODO: exposures.selected will default to a list upon bug fixing multiselect logic
         #  assert importer_obj.exposures.selected == []
         assert importer_obj.exposures.selected is None
-        assert importer_obj.spectra.selected == []
+        assert importer_obj.sources.selected == []
         assert importer_obj.previous_data_label_messages == []
 
-        assert importer_obj._spectra_items_helper == importer_obj.spectra.items
+        assert importer_obj._sources_items_helper == importer_obj.sources.items
 
         exposures_helper_checker = {'Exposure 0': [],
                                     'Exposure 1': []}
-        for item in importer_obj.spectra.items:
+        for item in importer_obj.sources.items:
             if 'Exposure' in item['label']:
                 key = f"Exposure {item['ver']}"
                 exposures_helper_checker[key].append(item)
@@ -109,15 +109,15 @@ class TestSpectrumListImporter:
     def test_spectrum_list_importer_init_select(self, deconfigged_helper, premade_spectrum_list,
                                                 spectrum1d, to_select):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        importer_obj.spectra.selected = to_select
+        importer_obj.sources.selected = to_select
 
-        assert hasattr(importer_obj.spectra, 'items')
-        assert hasattr(importer_obj.spectra, 'selected')
-        assert hasattr(importer_obj.spectra, 'multiselect')
-        assert hasattr(importer_obj.spectra, 'manual_options')
+        assert hasattr(importer_obj.sources, 'items')
+        assert hasattr(importer_obj.sources, 'selected')
+        assert hasattr(importer_obj.sources, 'multiselect')
+        assert hasattr(importer_obj.sources, 'manual_options')
 
         for index, (spec_dict, spec) in enumerate(
-                zip(importer_obj.spectra.manual_options, premade_spectrum_list)):
+                zip(importer_obj.sources.manual_options, premade_spectrum_list)):
 
             # offset to account for 0 based indexing
             file_index = str(index)
@@ -192,28 +192,28 @@ class TestSpectrumListImporter:
         importer_obj.input = spectrum_collection
         assert importer_obj.is_valid
 
-    def test_on_spectra_selected(self, deconfigged_helper, premade_spectrum_list):
+    def test_on_sources_selected(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        # Baseline, no spectra selected
+        # Baseline, no sources selected
         assert importer_obj.resolver.import_disabled is True
 
-        importer_obj.spectra.selected = importer_obj.spectra.choices[0]
+        importer_obj.sources.selected = importer_obj.sources.choices[0]
         assert importer_obj.resolver.import_disabled is False
 
-        importer_obj.spectra.selected = []
+        importer_obj.sources.selected = []
         assert importer_obj.resolver.import_disabled is True
 
     def test_on_format_selected(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
-        # Baseline, no spectra selected
+        # Baseline, no sources selected
         assert importer_obj.resolver.import_disabled is True
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
 
         # Still no selection
         assert importer_obj.resolver.import_disabled is True
 
-        importer_obj.spectra.selected = importer_obj.spectra.choices[0]
+        importer_obj.sources.selected = importer_obj.sources.choices[0]
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
         assert importer_obj.resolver.import_disabled is False
 
@@ -226,12 +226,12 @@ class TestSpectrumListImporter:
         # TODO: Uncomment when multiselect is fixed
         #   assert len(importer_obj.exposures.selected) == 0
         assert importer_obj.exposures.selected is None
-        spectra_items_before = deepcopy(importer_obj.spectra.items)
+        sources_items_before = deepcopy(importer_obj.sources.items)
 
         # Run function as is
         result = importer_obj._on_exposure_selection_change()
         assert result is None
-        assert spectra_items_before == importer_obj.spectra.items
+        assert sources_items_before == importer_obj.sources.items
 
         exposure_choices = importer_obj.exposures.choices + [importer_obj.exposures.choices]
         for exposure_selected in exposure_choices:
@@ -242,8 +242,8 @@ class TestSpectrumListImporter:
             importer_obj.exposures.selected = exposure_selected
             assert len(importer_obj.exposures.selected) == len(exposure_selected)
 
-            # Check that the spectra items are updated correctly
-            for item in importer_obj.spectra.items:
+            # Check that the sources items are updated correctly
+            for item in importer_obj.sources.items:
                 assert f"Exposure {item['ver']}" in exposure_selected
 
     def test_input_to_list_of_spec(self, deconfigged_helper, premade_spectrum_list):
@@ -254,7 +254,7 @@ class TestSpectrumListImporter:
         assert len(list_results) == len(premade_spectrum_list)
         assert all(isinstance(spec, Spectrum) for spec in list_results)
 
-        # Test individual spectra
+        # Test individual sources
         for i, spec in enumerate(premade_spectrum_list):
             results = importer_obj.input_to_list_of_spec(spec)
             assert isinstance(results, list)
@@ -302,7 +302,7 @@ class TestSpectrumListImporter:
     def test_has_mask(self, deconfigged_helper, premade_spectrum_list, make_empty_spectrum):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
-        # Even unmasked spectra still *have* a mask, it's just all False
+        # Even unmasked sources still *have* a mask, it's just all False
         for spec in premade_spectrum_list:
             assert importer_obj._has_mask(spec) is True
 
@@ -337,11 +337,11 @@ class TestSpectrumListImporter:
     def test_output(self, deconfigged_helper, premade_spectrum_list, spectrum1d):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Must make a selection for output to work
-        importer_obj.spectra.selected = '1D Spectrum at index: 0'
+        importer_obj.sources.selected = '1D Spectrum at index: 0'
         assert isinstance(importer_obj.output, list)
 
         # Check that these are indeed the same
-        spec_dict = importer_obj.spectra.manual_options[0]
+        spec_dict = importer_obj.sources.manual_options[0]
         assert importer_obj.output[0] == spec_dict['obj']
 
         # Check that is_valid is enforced in the output
@@ -361,10 +361,10 @@ class TestSpectrumListImporter:
     #  '1D Spectrum at index: *']) # noqa
     def test_call_method_basic(self, deconfigged_helper, premade_spectrum_list, selection):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        spectra_data_labels = self.spectra_data_labels
+        sources_data_labels = self.sources_data_labels
 
         if not selection:
-            error_msg = "No spectra selected."
+            error_msg = "No sources selected."
             # Checking with no selection yet, raises error
             with pytest.raises(
                     ValueError,
@@ -372,26 +372,26 @@ class TestSpectrumListImporter:
                 importer_obj.__call__()
 
             # Load all anyway
-            importer_obj.spectra.select_all()
+            importer_obj.sources.select_all()
             importer_obj.__call__()
             dc_len = 5
         else:
-            importer_obj.user_api.spectra = selection
+            importer_obj.user_api.sources = selection
             importer_obj.__call__()
             if isinstance(selection, str):
                 dc_len = 2
-                spectra_data_labels = spectra_data_labels[:2]
+                sources_data_labels = sources_data_labels[:2]
             elif isinstance(selection, list):
                 dc_len = len(selection)
-                spectra_data_labels = spectra_data_labels[:2] + spectra_data_labels[-2:]
+                sources_data_labels = sources_data_labels[:2] + sources_data_labels[-2:]
 
         assert importer_obj.previous_data_label_messages == []
 
         # Data collection items
         dc = deconfigged_helper.app.data_collection
-        assert len(dc) == dc_len  # number of spectra loaded
+        assert len(dc) == dc_len  # number of sources loaded
 
-        assert all([label in spectra_data_labels for label in dc.labels])
+        assert all([label in sources_data_labels for label in dc.labels])
 
         # Viewer items
         viewers = deconfigged_helper.viewers
@@ -400,14 +400,14 @@ class TestSpectrumListImporter:
 
         viewer_dm = viewers['1D Spectrum'].data_menu
 
-        # Note: in a previous version of this test, spectra object had a duplicate label hence->
+        # Note: in a previous version of this test, sources object had a duplicate label hence->
         # TODO: should these be in sync with data collection?
         #  If there is a duplicate data label, it gets overwritten in the viewer
         #  but the data collection will have both.
-        assert len(viewer_dm.data_labels_loaded) == len(spectra_data_labels)
-        assert all([label in spectra_data_labels for label in viewer_dm.data_labels_loaded])
-        assert len(viewer_dm.data_labels_visible) == len(spectra_data_labels)
-        assert all([label in spectra_data_labels for label in viewer_dm.data_labels_visible])
+        assert len(viewer_dm.data_labels_loaded) == len(sources_data_labels)
+        assert all([label in sources_data_labels for label in viewer_dm.data_labels_loaded])
+        assert len(viewer_dm.data_labels_visible) == len(sources_data_labels)
+        assert all([label in sources_data_labels for label in viewer_dm.data_labels_visible])
 
 
 @pytest.mark.parametrize('with_uncertainty', [True, False])
@@ -479,10 +479,10 @@ class TestSpectrumListConcatenatedImporter:
                                                       use_list):
         if use_list:
             importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-            assert importer_obj.user_api.spectra == []
+            assert importer_obj.user_api.sources == []
         else:
             importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
-            assert importer_obj.user_api.spectra == importer_obj.spectra.choices
+            assert importer_obj.user_api.sources == importer_obj.sources.choices
 
         assert isinstance(importer_obj, SpectrumListImporter)
         # Sneaky negation of boolean to test the disable_dropdown attribute
@@ -493,7 +493,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.spectra.select_all()
+        importer_obj.sources.select_all()
 
         result = importer_obj.output
         assert np.all(result.flux == spec.flux)
@@ -511,15 +511,15 @@ class TestSpectrumListConcatenatedImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
         _ = importer_obj.output
         assert importer_obj.disable_dropdown is True
-        for selected in importer_obj.spectra.selected:
+        for selected in importer_obj.sources.selected:
             assert isinstance(selected, str)
-            assert selected in importer_obj.spectra.choices
+            assert selected in importer_obj.sources.choices
 
     def test_spectrum_list_concatenated_importer_call(self, deconfigged_helper):
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.spectra.select_all()
+        importer_obj.sources.select_all()
         importer_obj.__call__()
 
         dc = deconfigged_helper.app.data_collection
