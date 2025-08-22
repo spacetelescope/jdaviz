@@ -159,7 +159,10 @@ class WithSliceSelection:
 
     @property
     def slice_value(self):
-        return self.slice_values[self.slice]
+        if len(self.slice_values):
+            return self.slice_values[self.slice]
+        else:
+            return None
 
     @slice_value.setter
     def slice_value(self, slice_value):

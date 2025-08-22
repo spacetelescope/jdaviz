@@ -212,12 +212,10 @@ class UnitConversion(PluginTemplateMixin):
 
     def _on_remove_data_from_viewer(self, msg):
         viewer = msg.viewer
-        if not len(viewer.layers):
+        if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
             self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
 
     def _on_add_data_to_viewer(self, msg):
-        # If we were disabled due to having no data loaded, undo that
-        self.disabled_msg = ''
 
         # toggle warning message for cubes without PIXAR_SR defined
         if self.config == 'cubeviz':
@@ -229,6 +227,9 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
+        # If we were disabled due to having no data loaded, undo that
+        if viewer.reference == 'spectrum-viewer':
+            self.disabled_msg = ''
         if isinstance(msg.data, glue_core_data):
             data_obj = None
 
