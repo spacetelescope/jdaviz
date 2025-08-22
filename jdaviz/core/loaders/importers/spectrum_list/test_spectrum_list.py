@@ -521,6 +521,7 @@ class TestSpectrumListConcatenatedImporter:
         assert isinstance(importer_obj, SpectrumListImporter)
         # Sneaky negation of boolean to test the disable_dropdown attribute
         assert importer_obj.disable_dropdown is not use_list
+        assert importer_obj.resolver.import_disabled is False
 
     @pytest.mark.parametrize('with_uncertainty', [True, False])
     def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):

@@ -151,7 +151,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.resolver.import_disabled = False
 
-
     @observe('exposures_selected')
     def _on_exposure_selection_change(self, change={}):
         """
@@ -322,6 +321,8 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
             # If we select_all() here, then if the user switches back to Spectrum List
             # all items will be selected, which is not the desired behavior.
             self.select_all_for_concatenation = True
+            # Enable the import button upon initialization because otherwise having
+            # no sources selected will disable it for other valid importers (e.g. Image).
             self.resolver.import_disabled = False
 
     @property
