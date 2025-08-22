@@ -7,6 +7,7 @@ from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 from traitlets import List, Bool, Any, observe
 
+from jdaviz.core.unit_conversion_utils import sb_to_flux_unit, spectrum_ensure_flux_unit
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
@@ -180,13 +181,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         if isinstance(inp, Spectrum):
             if inp.flux.ndim == 1:
                 # Note masks (currently) only applied when spectral_axis has missing values
-                return [self._apply_spectral_mask(inp)]
+                return [spectrum_ensure_flux_unit(self._apply_spectral_mask(inp))]
 
-            return [Spectrum(spectral_axis=inp.spectral_axis,
-                             flux=this_row(inp.flux, i),
-                             uncertainty=this_row(inp.uncertainty, i),
-                             mask=this_row(inp.mask, i),
-                             meta=inp.meta)
+            return [spectrum_ensure_flux_unit(Spectrum(spectral_axis=inp.spectral_axis,
+                                                       flux=this_row(inp.flux, i),
+                                                       uncertainty=this_row(inp.uncertainty, i),
+                                                       mask=this_row(inp.mask, i),
+                                                       meta=inp.meta))
                     for i in range(inp.flux.shape[0])]
 
         elif isinstance(inp, (SpectrumList, SpectrumCollection)):
@@ -356,7 +357,8 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         dfnuallorig = np.concatenate(dfnu_list)
 
         wave_units = spec.spectral_axis.unit
-        flux_units = spec.flux.unit
+        pixar_sr = getattr(spec, 'meta', {}).get('PIXAR_SR', 1.0)
+        flux_units = sb_to_flux_unit(spec.flux.unit, pixar_sr)
 
         return combine_lists_to_1d_spectrum(wlallorig,
                                             fnuallorig,
