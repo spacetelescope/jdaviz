@@ -529,7 +529,7 @@ class TestSpectrumListConcatenatedImporter:
                            for sp in importer_obj.output])
         else:
             assert spectrum2d.flux.unit.physical_type == 'spectral flux density'
-            assert u.Unit(importer_obj.output.flux.unit.to_string()).physical_type == 'spectral flux density'  # noa
+            assert u.Unit(importer_obj.output.flux.unit.to_string()).physical_type == 'spectral flux density' # noqa
 
     @pytest.mark.parametrize('with_uncertainty', [True, False])
     def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
