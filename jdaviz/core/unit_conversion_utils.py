@@ -18,8 +18,8 @@ __all__ = ["all_flux_unit_conversion_equivs", "check_if_unit_is_per_solid_angle"
            "create_equivalent_spectral_axis_units_list",
            "flux_conversion_general", "handle_squared_flux_unit_conversions",
            "supported_sq_angle_units", "spectral_axis_conversion",
-           "units_to_strings", "flux_to_sb_unit", "sb_to_flux_unit",
-           "spectrum_ensure_sb_unit", "spectrum_ensure_flux_unit"]
+           "units_to_strings", "flux_to_sb_unit", "to_flux_density_unit",
+           "spectrum_ensure_flux_density_unit"]
 
 
 def all_flux_unit_conversion_equivs(pixar_sr=None, cube_wave=None):
@@ -548,71 +548,91 @@ def flux_to_sb_unit(flux_unit, angle_unit):
     return sb_unit
 
 
-def sb_to_flux_unit(sb_unit, pixar_sr=1.0):
-    if sb_unit.physical_type == 'flux':
-        return sb_unit
+def to_flux_density_unit(input_unit, pixar_sr=1.0):
+    """
+    Convert input unit to flux density unit.
 
-    # Extract the angle/pixel unit from the surface brightness unit
-    angle_unit = check_if_unit_is_per_solid_angle(sb_unit, return_unit=True)
+    Parameters
+    ----------
+    input_unit : astropy.units.Unit
+        Input unit that could be either surface brightness or flux
+    pixar_sr : float, optional
+        Pixel scale factor in steradians, used for pixel-based surface brightness units
 
-    # Default behavior: extract angle unit or fallback to steradian
-    if angle_unit is None:
-        angle_unit = u.sr
-    return sb_unit * pixar_sr * angle_unit
+    Returns
+    -------
+    astropy.units.Unit
+        Flux density unit
+    """
+    # If already spectral flux density, return as-is
+    if input_unit.physical_type == 'spectral flux density':
+        return input_unit
+
+    # If it's surface brightness, convert to flux density
+    elif input_unit.physical_type == 'surface brightness':
+        # Extract the angle/pixel unit from the surface brightness unit
+        angle_unit = check_if_unit_is_per_solid_angle(input_unit, return_unit=True)
+
+        # Use pixar_sr for pixel-based units, otherwise use the extracted angle unit
+        if angle_unit == PIX2:
+            return input_unit * pixar_sr * u.sr
+        elif angle_unit is not None:
+            return input_unit * angle_unit
+        else:
+            # Fallback to steradian if no angle unit found
+            return input_unit * u.sr
+
+    # If it's a general flux unit, check if it can be converted to spectral flux density
+    elif input_unit.physical_type == 'flux':
+        # Check if it's already equivalent to spectral flux density units
+        # (some flux units might have physical_type='flux' but are actually spectral flux density)
+        try:
+            # Try to see if it's equivalent to a known spectral flux density unit
+            if input_unit.is_equivalent(u.Jy, u.spectral_density(1*u.m)):
+                return input_unit  # It's already a spectral flux density unit
+            else:
+                # It's a non-spectral flux unit, can't convert without more info
+                raise ValueError(f"Cannot convert flux unit {input_unit} to spectral flux density "
+                                 "without spectral axis information")
+        except Exception:
+            # If equivalency check fails, assume it needs spectral conversion
+            raise ValueError(f"Cannot convert flux unit {input_unit} to spectral flux density "
+                             "without spectral axis information")
+
+    else:
+        # Unknown physical type
+        raise ValueError(f"Cannot convert unit {input_unit} with physical type "
+                         f"'{input_unit.physical_type}' to spectral flux density")
 
 
-def spectrum_ensure_sb_unit(spectrum, angle_unit):
-    if spectrum.flux.unit.physical_type == 'surface brightness':
+def spectrum_ensure_flux_density_unit(spectrum):
+    if (spectrum.flux.unit.physical_type == 'spectral flux density'
+            or spectrum.flux.unit.is_equivalent(u.Jy, u.spectral_density(1*u.m))):
         return spectrum
 
-    sb_unit = u.Unit(flux_to_sb_unit(spectrum.flux.unit, angle_unit))
+    elif spectrum.flux.unit.physical_type in ('surface brightness', 'flux'):
+        pixar_sr = getattr(spectrum, 'meta', {}).get('PIXAR_SR', 1.0)
+        flux_unit = u.Unit(to_flux_density_unit(spectrum.flux.unit, pixar_sr))
 
-    # Handle uncertainty conversion based on type
-    if spectrum.uncertainty is not None:
-        if hasattr(spectrum.uncertainty, 'quantity'):
-            # StdDevUncertainty or similar - use quantity for proper unit handling
-            # Preserve the original uncertainty class
-            uncertainty_class = spectrum.uncertainty.__class__
-            new_uncertainty = uncertainty_class(spectrum.uncertainty.quantity.value * sb_unit)
+        # Handle uncertainty conversion based on type
+        if spectrum.uncertainty is not None:
+            if hasattr(spectrum.uncertainty, 'quantity'):
+                # StdDevUncertainty or similar - use quantity for proper unit handling
+                # Preserve the original uncertainty class
+                uncertainty_class = spectrum.uncertainty.__class__
+                new_uncertainty = uncertainty_class(spectrum.uncertainty.quantity.value * flux_unit)
+            else:
+                # Simple array-like uncertainty
+                new_uncertainty = spectrum.uncertainty.value * flux_unit
         else:
-            # Simple array-like uncertainty
-            new_uncertainty = spectrum.uncertainty.value * sb_unit
+            new_uncertainty = None
+
+        return Spectrum(
+            spectral_axis=spectrum.spectral_axis,
+            flux=spectrum.flux.value * flux_unit,
+            uncertainty=new_uncertainty,
+            mask=spectrum.mask,
+            meta=spectrum.meta
+        )
     else:
-        new_uncertainty = None
-
-    return Spectrum(
-        spectral_axis=spectrum.spectral_axis,
-        flux=spectrum.flux.value * sb_unit,
-        uncertainty=new_uncertainty,
-        mask=spectrum.mask,
-        meta=spectrum.meta
-    )
-
-
-def spectrum_ensure_flux_unit(spectrum):
-    if spectrum.flux.unit.physical_type == 'flux':
-        return spectrum
-
-    pixar_sr = getattr(spectrum, 'meta', {}).get('PIXAR_SR', 1.0)
-    flux_unit = u.Unit(sb_to_flux_unit(spectrum.flux.unit, pixar_sr))
-
-    # Handle uncertainty conversion based on type
-    if spectrum.uncertainty is not None:
-        if hasattr(spectrum.uncertainty, 'quantity'):
-            # StdDevUncertainty or similar - use quantity for proper unit handling
-            # Preserve the original uncertainty class
-            uncertainty_class = spectrum.uncertainty.__class__
-            new_uncertainty = uncertainty_class(spectrum.uncertainty.quantity.value * flux_unit)
-        else:
-            # Simple array-like uncertainty
-            new_uncertainty = spectrum.uncertainty.value * flux_unit
-    else:
-        new_uncertainty = None
-
-    return Spectrum(
-        spectral_axis=spectrum.spectral_axis,
-        flux=spectrum.flux.value * flux_unit,
-        uncertainty=new_uncertainty,
-        mask=spectrum.mask,
-        meta=spectrum.meta
-    )
+        return NotImplementedError(f"Cannot convert from {spectrum.flux.unit} to flux density")
