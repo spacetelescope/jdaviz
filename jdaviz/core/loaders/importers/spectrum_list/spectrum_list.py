@@ -105,7 +105,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
         # only enable the import button if at least one spectrum is selected.
-        self.resolver.observe(self._on_format_selected_change, names = 'format_selected')
+        self.resolver.observe(self._on_format_selected_change, names='format_selected')
 
     @property
     def user_api(self):
