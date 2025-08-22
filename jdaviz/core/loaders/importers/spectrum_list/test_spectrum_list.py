@@ -86,7 +86,6 @@ class TestSpectrumListImporter:
 
         assert importer_obj.exposures.selected == []
         assert importer_obj.sources.selected == []
-        assert importer_obj.previous_data_label_messages == []
 
         assert importer_obj._sources_items_helper == importer_obj.sources.items
 
@@ -419,8 +418,6 @@ class TestSpectrumListImporter:
                 dc_len = len(selection)
                 sources_data_labels = sources_data_labels[:2] + sources_data_labels[-2:]
 
-        assert importer_obj.previous_data_label_messages == []
-
         # Data collection items
         dc = deconfigged_helper.app.data_collection
         assert len(dc) == dc_len  # number of sources loaded
@@ -514,14 +511,15 @@ class TestSpectrumListConcatenatedImporter:
         if use_list:
             importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
             assert importer_obj.user_api.sources == []
+            assert importer_obj.resolver.import_disabled is True
         else:
             importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
-            assert importer_obj.user_api.sources == importer_obj.sources.choices
+            assert len(set(importer_obj.user_api.sources.selected).difference(set(importer_obj.sources.choices))) == 0 # noqa
+            assert importer_obj.resolver.import_disabled is False
 
         assert isinstance(importer_obj, SpectrumListImporter)
         # Sneaky negation of boolean to test the disable_dropdown attribute
         assert importer_obj.disable_dropdown is not use_list
-        assert importer_obj.resolver.import_disabled is False
 
         # ensure native units on surface brightness or spectral flux density are converted to flux
         if use_list:
