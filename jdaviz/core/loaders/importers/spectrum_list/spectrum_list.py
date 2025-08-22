@@ -29,6 +29,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     sources_selected = Any().tag(sync=True)
     sources_multiselect = Bool(True).tag(sync=True)
 
+    input_in_sb = Bool(False).tag(sync=True)
+    convert_to_flux_density = Bool(True).tag(sync=True)
+
     disable_dropdown = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -46,8 +49,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             # If the resolver format is set to "1D Spectrum List", then we
             # only enable the import button if at least one spectrum is selected.
             self.resolver.observe(self._on_format_selected_change, names='format_selected')
-            # Separately observe changes to the selected sources
-            self.observe(self._on_sources_selected_change, names='sources_selected')
 
             exposures = []
             sources_options = []
@@ -114,7 +115,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['sources', 'exposures']
+        expose = ['sources', 'exposures', 'convert_to_flux_density']
         return ImporterUserApi(self, expose)
 
     @property
@@ -128,11 +129,15 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return (isinstance(self.input, (SpectrumList, SpectrumCollection))
                 or self._is_2d_spectrum)
 
+    @observe('sources_selected')
     def _on_sources_selected_change(self, change={}):
-        if len(self.sources.selected) == 0:
+        if len(self.sources_selected) == 0:
             self.resolver.import_disabled = True
         else:
             self.resolver.import_disabled = False
+
+            self.input_in_sb = bool(np.any([sp.flux.unit.physical_type == 'surface brightness'
+                                            for sp in self.sources.selected_obj]))
 
     def _on_format_selected_change(self, change={}):
         if change['new'] == '1D Spectrum List':
@@ -180,14 +185,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         if isinstance(inp, Spectrum):
             if inp.flux.ndim == 1:
-                # Note masks (currently) only applied when spectral_axis has missing values
-                return [spectrum_ensure_flux_density_unit(self._apply_spectral_mask(inp))]
+                return [self._apply_spectral_mask(inp)]
 
-            return [spectrum_ensure_flux_density_unit(Spectrum(spectral_axis=inp.spectral_axis,
-                                                      flux=this_row(inp.flux, i),
-                                                      uncertainty=this_row(inp.uncertainty, i),
-                                                      mask=this_row(inp.mask, i),
-                                                      meta=inp.meta))
+            return [Spectrum(spectral_axis=inp.spectral_axis,
+                             flux=this_row(inp.flux, i),
+                             uncertainty=this_row(inp.uncertainty, i),
+                             mask=this_row(inp.mask, i),
+                             meta=inp.meta)
                     for i in range(inp.flux.shape[0])]
 
         elif isinstance(inp, (SpectrumList, SpectrumCollection)):
@@ -200,7 +204,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def output(self):
         if not self.is_valid:  # pragma: nocover
             return None
-        return self.sources.selected_obj
+        if self.input_in_sb and self.convert_to_flux_density:
+            return [spectrum_ensure_flux_density_unit(sp) for sp in self.sources.selected_obj]
+        else:
+            return self.sources.selected_obj
 
     @staticmethod
     def is_wfssmulti(spec):
