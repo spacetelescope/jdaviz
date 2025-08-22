@@ -39,77 +39,73 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
-        self.previous_data_label_messages = []
+        exposures = []
+        sources_options = []
 
-        if self.is_valid:
-            # If the resolver format is set to "1D Spectrum List", then we
-            # only enable the import button if at least one spectrum is selected.
-            self.resolver.observe(self._on_format_selected_change, names='format_selected')
-            # Separately observe changes to the selected sources
-            self.observe(self._on_sources_selected_change, names='sources_selected')
+        if isinstance(self.input, Spectrum):
+            speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
+        else:
+            speclist_input = self.input
 
-            exposures = []
-            sources_options = []
+        for index, spec in enumerate(speclist_input):
+            if self.is_wfssmulti(spec):
+                # ver, name are stand-ins for exposure and source_id
+                # ver == exposure, name == source_id
+                ver, name = self._extract_exposure_sourceid(spec)
+                exposure_label = f"Exposure {ver}"
+                exposures.append(exposure_label)
 
-            if isinstance(self.input, Spectrum):
-                speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
+                label = f"{exposure_label}, Source ID: {name}"
+                # Flipping the two from the variable naming convention
+                name_ver = f"{ver}_{name}"
+                suffix = f"EXP-{ver}_ID-{name}"
+
             else:
-                speclist_input = self.input
+                name_ver = index
+                name = index
+                ver = index
+                label = f"1D Spectrum at index: {index}"
+                suffix = f"index-{index}"
 
-            for index, spec in enumerate(speclist_input):
-                if self.is_wfssmulti(spec):
-                    # ver, name are stand-ins for exposure and source_id
-                    # ver == exposure, name == source_id
-                    ver, name = self._extract_exposure_sourceid(spec)
-                    exposure_label = f"Exposure {ver}"
-                    exposures.append(exposure_label)
+            sources_options.append({'label': label,
+                                    'index': index,
+                                    'name': str(name),
+                                    'ver': str(ver),
+                                    'name_ver': str(name_ver),
+                                    'suffix': suffix,
+                                    'obj': self._apply_spectral_mask(spec)})
 
-                    label = f"{exposure_label}, Source ID: {name}"
-                    # Flipping the two from the variable naming convention
-                    name_ver = f"{ver}_{name}"
-                    suffix = f"EXP-{ver}_ID-{name}"
+        self.sources = SelectFileExtensionComponent(self,
+                                                    items='sources_items',
+                                                    selected='sources_selected',
+                                                    multiselect='sources_multiselect',
+                                                    manual_options=sources_options)
 
-                else:
-                    name_ver = index
-                    name = index
-                    ver = index
-                    label = f"1D Spectrum at index: {index}"
-                    suffix = f"index-{index}"
+        self.sources.selected = []
+        self._sources_items_helper = deepcopy(self.sources.items)
 
-                sources_options.append({'label': label,
-                                        'index': index,
-                                        'name': str(name),
-                                        'ver': str(ver),
-                                        'name_ver': str(name_ver),
-                                        'suffix': suffix,
-                                        'obj': self._apply_spectral_mask(spec)})
+        if len(exposures) > 0:
+            exposures_options = [{'label': exp, 'index': i, 'ver': exp,
+                                  'name': exp, 'name_ver': exp, 'suffix': None}
+                                 for i, exp in enumerate(sorted(set(exposures)))]
+            self.exposures = SelectFileExtensionComponent(self,
+                                                          items='exposures_items',
+                                                          selected='exposures_selected',
+                                                          multiselect='exposures_multiselect',
+                                                          manual_options=exposures_options)
+            self.exposures.selected = []
 
-            self.sources = SelectFileExtensionComponent(self,
-                                                        items='sources_items',
-                                                        selected='sources_selected',
-                                                        multiselect='sources_multiselect',
-                                                        manual_options=sources_options)
+            self._exposures_helper = defaultdict(list)
+            for item in self.sources.items:
+                if 'Exposure' in item['label']:
+                    # For grouping items by exposure
+                    key = f"Exposure {item['ver']}"
+                    self._exposures_helper[key].append(item)
 
-            self.sources.selected = []
-            self._sources_items_helper = deepcopy(self.sources.items)
-
-            if len(exposures) > 0:
-                exposures_options = [{'label': exp, 'index': i, 'ver': exp,
-                                      'name': exp, 'name_ver': exp, 'suffix': None}
-                                     for i, exp in enumerate(sorted(set(exposures)))]
-                self.exposures = SelectFileExtensionComponent(self,
-                                                              items='exposures_items',
-                                                              selected='exposures_selected',
-                                                              multiselect='exposures_multiselect',
-                                                              manual_options=exposures_options)
-                self.exposures.selected = []
-
-                self._exposures_helper = defaultdict(list)
-                for item in self.sources.items:
-                    if 'Exposure' in item['label']:
-                        # For grouping items by exposure
-                        key = f"Exposure {item['ver']}"
-                        self._exposures_helper[key].append(item)
+        # TODO: This observer will likely be removed in follow-up effort
+        # If the resolver format is set to "1D Spectrum List", then we
+        # only enable the import button if at least one spectrum is selected.
+        self.resolver.observe(self._on_format_selected_change, names = 'format_selected')
 
     @property
     def user_api(self):
@@ -127,6 +123,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         return (isinstance(self.input, (SpectrumList, SpectrumCollection))
                 or self._is_2d_spectrum)
 
+    @observe('sources_selected')
     def _on_sources_selected_change(self, change={}):
         if len(self.sources.selected) == 0:
             self.resolver.import_disabled = True
