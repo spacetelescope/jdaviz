@@ -211,8 +211,32 @@ class TestSpectrumListImporter:
         # Still no selection
         assert importer_obj.resolver.import_disabled is True
 
+        # Still no selection
+        importer_obj._on_format_selected_change(change = {'new': '1D Spectrum Concatenated'})
+        assert importer_obj.resolver.import_disabled is True
+
         importer_obj.sources.selected = importer_obj.sources.choices[0]
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        assert importer_obj.resolver.import_disabled is False
+
+        # Still no selection
+        importer_obj._on_format_selected_change(change = {'new': '1D Spectrum Concatenated'})
+        assert importer_obj.resolver.import_disabled is False
+
+        importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
+        assert importer_obj.resolver.import_disabled is False
+
+    def test_on_format_selected_2d(self, deconfigged_helper, spectrum2d):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+
+        # Baseline, no sources selected
+        assert importer_obj.resolver.import_disabled is True
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+
+        # Still no selection
+        assert importer_obj.resolver.import_disabled is True
+
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
         assert importer_obj.resolver.import_disabled is False
 
         importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
@@ -306,6 +330,20 @@ class TestSpectrumListImporter:
 
         make_empty_spectrum.mask = None
         assert importer_obj._has_mask(make_empty_spectrum) is False
+
+    def test_is_fully_masked(self, deconfigged_helper, premade_spectrum_list, spectrum1d):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
+
+        assert importer_obj._is_fully_masked(spectrum1d) is False
+        spectrum1d.mask[:] = True
+        assert importer_obj._is_fully_masked(spectrum1d) is True
+
+    def test_is_2d_spectrum(self, deconfigged_helper, spectrum1d, spectrum2d):
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+        assert importer_obj._is_2d_spectrum is True
+
+        importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum1d)
+        assert importer_obj._is_2d_spectrum is False
 
     def test_apply_spectral_mask(self, deconfigged_helper, premade_spectrum_list,
                                  make_empty_spectrum, spectrum1d,
