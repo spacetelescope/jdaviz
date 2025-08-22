@@ -125,19 +125,32 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
         return (isinstance(self.input, (SpectrumList, SpectrumCollection))
-                or (isinstance(self.input, Spectrum) and self.input.flux.ndim == 2))
+                or self._is_2d_spectrum)
 
     def _on_sources_selected_change(self, change={}):
-        if not len(self.sources_selected):
+        if len(self.sources.selected) == 0:
             self.resolver.import_disabled = True
         else:
             self.resolver.import_disabled = False
 
     def _on_format_selected_change(self, change={}):
         if change['new'] == '1D Spectrum List':
-            self._on_sources_selected_change()
+            # Only perform this check if the selected importer is SpectrumListImporter
+            # Otherwise other valid importers (in the case of Spectrum2D)
+            # will also run and reset import_disabled
+            if 'SpectrumListImporter' in str(type(self)).split('.')[-1]:
+                self._on_sources_selected_change()
+
+        elif change['new'] == '1D Spectrum Concatenated':
+            # 2D Spectra load all for concatenated
+            if self._is_2d_spectrum:
+                self.resolver.import_disabled = False
+            else:
+                self._on_sources_selected_change()
+
         else:
             self.resolver.import_disabled = False
+
 
     @observe('exposures_selected')
     def _on_exposure_selection_change(self, change={}):
@@ -217,6 +230,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             if all(spec.mask):
                 return True
         return False
+
+    @property
+    def _is_2d_spectrum(self):
+        return isinstance(self.input, Spectrum) and self.input.flux.ndim == 2
 
     def _apply_spectral_mask(self, spec):
         # The masks (spec.spectral_axis.mask and spec.mask) for WFSS L3 spectra
@@ -300,12 +317,18 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if isinstance(self.input, Spectrum) and self.input.flux.ndim == 2:
+        if self._is_2d_spectrum:
             self.disable_dropdown = True
-            self.sources.select_all()
+            # If we select_all() here, then if the user switches back to Spectrum List
+            # all items will be selected, which is not the desired behavior.
+            self.select_all_for_concatenation = True
+            self.resolver.import_disabled = False
 
     @property
     def output(self):
+        if self.select_all_for_concatenation:
+            self.sources.select_all()
+
         spectrum_list = self.sources.selected
         if len(spectrum_list) == 0:
             return []
@@ -344,3 +367,6 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         data_label = self.data_label_value
         self.add_to_data_collection(self.output, f"{data_label}",
                                     show_in_viewer=show_in_viewer)
+
+        # Do we need to reset in case user switches back to Spectrum List?
+        # self.sources.selected = []
