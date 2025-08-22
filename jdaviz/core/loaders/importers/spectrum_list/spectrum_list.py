@@ -316,6 +316,8 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.select_all_for_concatenation = False
+
         if self._is_2d_spectrum:
             self.disable_dropdown = True
             # If we select_all() here, then if the user switches back to Spectrum List
