@@ -7,7 +7,8 @@ from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 from traitlets import List, Bool, Any, observe
 
-from jdaviz.core.unit_conversion_utils import to_flux_density_unit, spectrum_ensure_flux_density_unit
+from jdaviz.core.unit_conversion_utils import (to_flux_density_unit,
+                                               spectrum_ensure_flux_density_unit)
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
