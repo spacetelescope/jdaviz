@@ -86,7 +86,6 @@ class TestSpectrumListImporter:
 
         assert importer_obj.exposures.selected == []
         assert importer_obj.sources.selected == []
-        assert importer_obj.previous_data_label_messages == []
 
         assert importer_obj._sources_items_helper == importer_obj.sources.items
 
@@ -418,8 +417,6 @@ class TestSpectrumListImporter:
             elif isinstance(selection, list):
                 dc_len = len(selection)
                 sources_data_labels = sources_data_labels[:2] + sources_data_labels[-2:]
-
-        assert importer_obj.previous_data_label_messages == []
 
         # Data collection items
         dc = deconfigged_helper.app.data_collection
