@@ -212,7 +212,7 @@ class TestSpectrumListImporter:
         assert importer_obj.resolver.import_disabled is True
 
         # Still no selection
-        importer_obj._on_format_selected_change(change = {'new': '1D Spectrum Concatenated'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
         assert importer_obj.resolver.import_disabled is True
 
         importer_obj.sources.selected = importer_obj.sources.choices[0]
@@ -220,7 +220,7 @@ class TestSpectrumListImporter:
         assert importer_obj.resolver.import_disabled is False
 
         # Still no selection
-        importer_obj._on_format_selected_change(change = {'new': '1D Spectrum Concatenated'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
         assert importer_obj.resolver.import_disabled is False
 
         importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
