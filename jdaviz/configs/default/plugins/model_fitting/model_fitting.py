@@ -741,7 +741,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             return
 
+        print(msg)
         unit = msg.unit
+
+        # We store the original values of the parameters from before the units changed
+        for m in self.component_models:
+            for param in m["parameters"]:
+                if "original_unit" not in param:
+                    param["original_unit"] = str(param["unit"])
+                    param["original_value"] = param["value"]
 
         if axis == 'y':
             # The units have to be in surface brightness for a cube fit.
