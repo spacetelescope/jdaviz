@@ -159,6 +159,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @observe("dataset_selected", "dataset_items", "n_moment")
     def _set_default_results_label(self, event={}):
+        # Also handle disabling the plugin if there is no dataset available
+        if self.dataset_items == []:
+            self.disabled_msg = "Moment Maps are unavailable without data loaded"
+        else:
+            self.disabled_msg = ""
         label_comps = []
         if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
             label_comps += [self.dataset_selected]

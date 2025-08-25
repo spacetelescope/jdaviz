@@ -9,6 +9,7 @@
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
     :popout_button="popout_button"
+    :disabled_msg="disabled_msg"
     :scroll_to.sync="scroll_to">
 
     <j-plugin-section-header>Cube</j-plugin-section-header>

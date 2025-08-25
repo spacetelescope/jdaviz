@@ -118,6 +118,14 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                   'profile', 'measure_cross_dispersion_profile')
         return PluginUserApi(self, expose=expose)
 
+    @observe("dataset_items")
+    def _set_disabled(self, event={}):
+        if self.dataset_items == []:
+            self.disabled_msg = ('Cross Dispersion Profiles are unavailable when no data'
+                                 ' is loaded in the 2D viewer')
+        else:
+            self.disabled_msg = ''
+
     @observe("dataset_selected")
     def _set_defaults(self, event={}):
         """
