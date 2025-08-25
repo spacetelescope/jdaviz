@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 import re
-from copy import deepcopy
 
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty

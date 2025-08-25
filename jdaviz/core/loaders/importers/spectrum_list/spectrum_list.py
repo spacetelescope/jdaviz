@@ -1,7 +1,6 @@
 import itertools
 import numpy as np
 from copy import deepcopy
-from collections import defaultdict
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
