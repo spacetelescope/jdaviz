@@ -22,10 +22,6 @@ __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
 class SpectrumListImporter(BaseImporterToDataCollection):
     template_file = __file__, "spectrum_list.vue"
 
-    exposures_items = List().tag(sync=True)
-    exposures_selected = Any().tag(sync=True)
-    exposures_multiselect = Bool(True).tag(sync=True)
-
     sources_items = List().tag(sync=True)
     sources_selected = Any().tag(sync=True)
     sources_multiselect = Bool(True).tag(sync=True)
@@ -44,7 +40,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
-        exposures = []
         sources_options = []
 
         if isinstance(self.input, Spectrum):
@@ -58,7 +53,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 # ver == exposure, name == source_id
                 ver, name = self._extract_exposure_sourceid(spec)
                 exposure_label = f"Exposure {ver}"
-                exposures.append(exposure_label)
 
                 label = f"{exposure_label}, Source ID: {name}"
                 # Flipping the two from the variable naming convention
@@ -89,24 +83,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         self.sources.selected = []
         self._sources_items_helper = deepcopy(self.sources.items)
 
-        if len(exposures) > 0:
-            exposures_options = [{'label': exp, 'index': i, 'ver': exp,
-                                  'name': exp, 'name_ver': exp, 'suffix': None}
-                                 for i, exp in enumerate(sorted(set(exposures)))]
-            self.exposures = SelectFileExtensionComponent(self,
-                                                          items='exposures_items',
-                                                          selected='exposures_selected',
-                                                          multiselect='exposures_multiselect',
-                                                          manual_options=exposures_options)
-            self.exposures.selected = []
-
-            self._exposures_helper = defaultdict(list)
-            for item in self.sources.items:
-                if 'Exposure' in item['label']:
-                    # For grouping items by exposure
-                    key = f"Exposure {item['ver']}"
-                    self._exposures_helper[key].append(item)
-
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
         # only enable the import button if at least one spectrum is selected.
@@ -114,7 +90,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['sources', 'exposures', 'convert_to_flux_density']
+        expose = ['sources', 'convert_to_flux_density']
         return ImporterUserApi(self, expose)
 
     @property
@@ -155,25 +131,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         else:
             self.resolver.import_disabled = False
-
-    @observe('exposures_selected')
-    def _on_exposure_selection_change(self, change={}):
-        """
-        This method is called when the exposure selection changes.
-        It updates the sources shown to the user based on the selected exposure.
-        """
-        if len(self.exposures_selected) == 0:
-            self.sources.items = self._sources_items_helper
-            return
-
-        # Populated with already selected items
-        result = [item for item in self.sources.items
-                  if item['label'] in self.sources.selected]
-        # Filter sources based on the selected exposure
-        for exposure in self.exposures.selected:
-            result.extend(self._exposures_helper.get(exposure, self._sources_items_helper))
-
-        self.sources.items = result
 
     def input_to_list_of_spec(self, inp):
 

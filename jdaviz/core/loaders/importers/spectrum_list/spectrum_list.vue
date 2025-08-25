@@ -1,21 +1,5 @@
 <template>
   <v-container>
-    <div v-if="!disable_dropdown && exposures_items.length > 0">
-      <plugin-select
-        :items="exposures_items.map(i => i.label)"
-        :selected.sync="exposures_selected"
-        :show_if_single_entry="true"
-        :multiselect="exposures_multiselect"
-        :search="true"
-        label="Exposure"
-        api_hint="ldr.importer.exposures ="
-        :api_hints_enabled="api_hints_enabled"
-        hint="Exposures to select from."
-      ></plugin-select>
-    </div>
-
-    <div style="height: 8px;"></div>
-
     <div v-if="!disable_dropdown">
       <plugin-select
         :items="sources_items.map(i => i.label)"

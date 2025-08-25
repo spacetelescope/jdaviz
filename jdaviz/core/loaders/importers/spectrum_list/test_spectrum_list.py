@@ -84,18 +84,9 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'disable_dropdown')
         assert hasattr(importer_obj, 'sources')
 
-        assert importer_obj.exposures.selected == []
         assert importer_obj.sources.selected == []
 
         assert importer_obj._sources_items_helper == importer_obj.sources.items
-
-        exposures_helper_checker = {'Exposure 0': [],
-                                    'Exposure 1': []}
-        for item in importer_obj.sources.items:
-            if 'Exposure' in item['label']:
-                key = f"Exposure {item['ver']}"
-                exposures_helper_checker[key].append(item)
-        assert importer_obj._exposures_helper == exposures_helper_checker
 
     # Parameterize to test both single and multiple selection
     @pytest.mark.parametrize('to_select', [['1D Spectrum at index: 1'],
@@ -123,23 +114,6 @@ class TestSpectrumListImporter:
             # ver == exposure, name == source_id
             if len(spec.meta):
                 ver, name = extract_wfss_info(spec)
-
-                exposure_label = f"Exposure {ver}"
-                exposures_keys = {
-                    'label': exposure_label,
-                    'name': exposure_label,
-                    'ver': exposure_label,
-                    'name_ver': exposure_label,
-                    # ver (exposure #) as proxy for index since our exposures are 0 and 1
-                    'index': int(ver),
-                    'suffix': None}
-
-                exposures_dict = importer_obj.exposures.items[int(ver)]
-                assert isinstance(exposures_dict, dict)
-                assert len(exposures_dict) == len(exposures_keys)
-                for key in exposures_keys:
-                    assert key in exposures_dict
-                    assert exposures_dict[key] == exposures_keys[key]
             else:
                 ver, name = str(index), str(index)
 
@@ -240,30 +214,6 @@ class TestSpectrumListImporter:
 
         importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
         assert importer_obj.resolver.import_disabled is False
-
-    def test_on_exposure_selection_change(self, deconfigged_helper, premade_spectrum_list):
-        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        # Baseline, no exposures selected
-        assert len(importer_obj.exposures.selected) == 0
-        sources_items_before = deepcopy(importer_obj.sources.items)
-
-        # Run function as is
-        result = importer_obj._on_exposure_selection_change()
-        assert result is None
-        assert sources_items_before == importer_obj.sources.items
-
-        exposure_choices = importer_obj.exposures.choices + [importer_obj.exposures.choices]
-        for exposure_selected in exposure_choices:
-            # Select an exposure and trigger function
-            if isinstance(exposure_selected, str):
-                exposure_selected = [exposure_selected]
-
-            importer_obj.exposures.selected = exposure_selected
-            assert len(importer_obj.exposures.selected) == len(exposure_selected)
-
-            # Check that the sources items are updated correctly
-            for item in importer_obj.sources.items:
-                assert f"Exposure {item['ver']}" in exposure_selected
 
     def test_input_to_list_of_spec(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
