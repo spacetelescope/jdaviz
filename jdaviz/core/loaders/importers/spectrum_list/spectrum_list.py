@@ -6,8 +6,6 @@ from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 from traitlets import List, Bool, Any, observe
 
-from jdaviz.core.unit_conversion_utils import (to_flux_density_unit,
-                                               spectrum_ensure_flux_density_unit)
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
@@ -24,9 +22,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     sources_items = List().tag(sync=True)
     sources_selected = Any().tag(sync=True)
     sources_multiselect = Bool(True).tag(sync=True)
-
-    input_in_sb = Bool(False).tag(sync=True)
-    convert_to_flux_density = Bool(True).tag(sync=True)
 
     disable_dropdown = Bool(False).tag(sync=True)
 
@@ -89,7 +84,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['sources', 'convert_to_flux_density']
+        expose = ['sources']
         return ImporterUserApi(self, expose)
 
     @property
@@ -109,9 +104,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.resolver.import_disabled = True
         else:
             self.resolver.import_disabled = False
-
-            self.input_in_sb = bool(np.any([sp.flux.unit.physical_type == 'surface brightness'
-                                            for sp in self.sources.selected_obj]))
 
     def _on_format_selected_change(self, change={}):
         if change['new'] == '1D Spectrum List':
@@ -159,10 +151,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def output(self):
         if not self.is_valid:  # pragma: nocover
             return None
-        if self.input_in_sb and self.convert_to_flux_density:
-            return [spectrum_ensure_flux_density_unit(sp) for sp in self.sources.selected_obj]
-        else:
-            return self.sources.selected_obj
+        return self.sources.selected_obj
 
     @staticmethod
     def is_wfssmulti(spec):
@@ -321,8 +310,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         dfnuallorig = np.concatenate(dfnu_list)
 
         wave_units = spec.spectral_axis.unit
-        pixar_sr = getattr(spec, 'meta', {}).get('PIXAR_SR', 1.0)
-        flux_units = to_flux_density_unit(spec.flux.unit, pixar_sr)
+        flux_units = spec.flux.unit
 
         return combine_lists_to_1d_spectrum(wlallorig,
                                             fnuallorig,
