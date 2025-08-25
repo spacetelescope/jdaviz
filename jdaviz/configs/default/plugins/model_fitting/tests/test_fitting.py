@@ -71,9 +71,11 @@ def test_check_poly_order_function(specviz_helper, spectrum1d):
     assert result is None
 
     result = plugin._check_poly_order(poly_order=-1.5)
+    assert plugin.poly_order_invalid_msg == ""
     assert result is None
 
     result = plugin._check_poly_order(model_comp='fake', poly_order=-1.5)
+    assert plugin.poly_order_invalid_msg == ""
     assert result is None
 
     poly_order_default = 2
@@ -99,8 +101,9 @@ def test_check_poly_order_function(specviz_helper, spectrum1d):
     assert plugin.poly_order == poly_order_default
 
     for poly_order in [-1, 0, 1, 2.5]:
-        plugin._check_poly_order(poly_order=poly_order)
+        result = plugin._check_poly_order(poly_order=poly_order)
         assert plugin.poly_order_invalid_msg == "Order must be an integer > 1"
+        assert result is None
 
 
 def test_check_poly_order_observer(specviz_helper, spectrum1d):

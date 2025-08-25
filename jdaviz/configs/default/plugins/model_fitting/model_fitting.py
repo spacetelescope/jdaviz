@@ -431,14 +431,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     @observe('poly_order')
     def _check_poly_order(self, event={}, model_comp=None, poly_order=None):
+        self.poly_order_invalid_msg = ""
+
         model_comp = model_comp if model_comp is not None else self.model_comp_selected
         if model_comp != 'Polynomial1D':
             return None
 
         poly_order = poly_order if poly_order is not None else self.poly_order
-        self.poly_order_invalid_msg = ""
         if not isinstance(poly_order, int) or poly_order <= 1:
             self.poly_order_invalid_msg = "Order must be an integer > 1"
+            return None
 
         return poly_order
 
