@@ -64,13 +64,13 @@
       <v-row v-if="display_order">
         <v-text-field
           type="number"
-          v-model.number="poly_order"
+          v-model.number="poly_order_input"
           :label="api_hints_enabled ? 'plg.poly_order' : 'Order'"
           :class="api_hints_enabled ? 'api-hint' : null"
           :rules="[
-            () => poly_order!=='' || 'This field is required',
-            () => Number.isInteger(poly_order) || 'Order must be an integer',
-            () => poly_order > 1 || 'Order must be greater than 1'
+            () => poly_order_input!=='' || 'This field is required',
+            () => Number.isInteger(poly_order_input) || 'Order must be an integer',
+            () => poly_order_input > 1 || 'Order must be greater than 1'
           ]"
           hint="Order of polynomial to fit."
           persistent-hint
@@ -384,6 +384,23 @@
       this.sanitizeCompLabel = (v) => {
         // strip non-word character entries
         this.comp_label = v.replace(/[\W]+/g, '');
+      }
+    },
+    data() {
+      return {
+        poly_order_input: this.poly_order,
+      }
+    },
+    watch: {
+      poly_order_input(newVal) {
+        if (
+          newVal !== '' &&
+          Number.isInteger(newVal) &&
+          newVal > 1
+        ) {
+          this.poly_order = newVal;
+        }
+        // If invalid, do not update poly_order
       }
     },
     methods: {
