@@ -1359,11 +1359,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def name_vers(self):
         return [item.get('name_ver', None) for item in self.items]
 
+    @property
+    def suffixes(self):
+        return [item.get('suffix', None) for item in self.items]
+
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
-        return {k: manual_item[k] for k in ('label', 'name', 'ver', 'name_ver', 'index')}
+        return {k: manual_item.get(k, None)
+                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'suffix')}
 
     @observe('filters')
     def _update_items(self, msg={}):

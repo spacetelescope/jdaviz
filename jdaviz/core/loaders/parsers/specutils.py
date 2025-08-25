@@ -38,3 +38,7 @@ class SpecutilsSpectrumListParser(SpecutilsSpectrumParser):
             # NOTE: temporary during deconfig process
             return False
         return super().is_valid and len(self.output) > 1
+
+    @cached_property
+    def output(self):
+        return self.SpecutilsCls.read(self.input, flux_col='flux')

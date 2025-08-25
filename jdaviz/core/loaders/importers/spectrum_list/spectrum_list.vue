@@ -1,5 +1,33 @@
 <template>
   <v-container>
+    <div v-if="!disable_dropdown">
+      <plugin-select
+        :items="sources_items.map(i => i.label)"
+        :selected.sync="sources_selected"
+        :show_if_single_entry="true"
+        :multiselect="sources_multiselect"
+        :search="true"
+        label="Source IDs"
+        api_hint="ldr.importer.sources ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Source IDs to select from the list of sources."
+      ></plugin-select>
+    </div>
+
+<!-- TODO: Re-enable this when viewer logic is corrected for
+           spectrum list with both SB and flux units
+    <v-row v-if="input_in_sb">
+      <plugin-switch
+        :value.sync="convert_to_flux_density"
+        label="Convert to flux density units"
+        api_hint="ldr.importer.convert_to_flux_density = "
+        :api_hints_enabled="api_hints_enabled"
+        hint="Whether to convert any input surface brightness units to flux density."
+      ></plugin-switch>
+    </v-row>
+-->
+    <div style="height: 16px;"></div>
+
     <v-row>
       <plugin-auto-label
         :value.sync="data_label_value"

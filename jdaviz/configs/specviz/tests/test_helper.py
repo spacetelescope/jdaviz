@@ -2,6 +2,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import pytest
+import re
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
@@ -55,24 +56,30 @@ class TestSpecvizHelper:
         # HDUList should load as Spectrum
         assert isinstance(data, Spectrum)
 
-    def test_load_spectrum_list_no_labels(self):
-        # now load three more spectra from a SpectrumList, without labels
-        self.spec_app.load_data(self.spec_list)
-        assert len(self.spec_app.app.data_collection) == 4
-        for i in (1, 2, 3):
-            assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
+    @pytest.mark.parametrize(
+        'kwargs',
+        ({'data_label': [f"List test {i}" for i in (1, 2, 3)]},
+         {'sources': [f"1D Spectrum at index: {i}" for i in (0, 1, 2)]},
+         {'sources': '*'}))
+    def test_load_spectrum_list_with_kwargs(self, kwargs):
+        error_msg = "No sources selected."
+        with pytest.raises(
+                ValueError,
+                match=re.escape(error_msg)):
+            self.spec_app.load_data(self.spec_list)
 
-    def test_load_spectrum_list_with_labels(self):
-        # NOTE: will be removed after load_data deprecation is removed
-        # now load three more spectra from a SpectrumList, with labels:
-        labels = ["List test 1", "List test 2", "List test 3"]
-        self.spec_app.load_data(self.spec_list, data_label=labels)
+        # When loading via the ``data_label`` argument, the length of the
+        # list must match the number of sources in the SpectrumList.
+        self.spec_app.load_data(self.spec_list, **kwargs)
         assert len(self.spec_app.app.data_collection) == 4
+        if 'load' in list(kwargs.keys())[0]:
+            for i in (1, 2, 3):
+                assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
 
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_data(self.multi_order_spectrum_list)
+        self.spec_app.load_data(self.multi_order_spectrum_list, sources='*')
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
@@ -417,20 +424,21 @@ def test_load_2d_flux(specviz_helper):
     # 1D Spectrum objects to load in Specviz.
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
-    specviz_helper.load_data(spec, data_label="test")
+
+    specviz_helper.load_data(spec, data_label="test", sources='*')
 
     assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test_0"
+    assert specviz_helper.app.data_collection[0].label == "test_index-0"
 
     spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                      flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    specviz_helper.load_data(spec_list, data_label="second test")
+    specviz_helper.load_data(spec_list, data_label="second test", sources='*')
 
-    assert len(specviz_helper.app.data_collection) == 10
-    assert specviz_helper.app.data_collection[-1].label == "second test_5"
+    assert len(specviz_helper.app.data_collection) == 6
+    assert specviz_helper.app.data_collection[-1].label == "second test_index-1"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):

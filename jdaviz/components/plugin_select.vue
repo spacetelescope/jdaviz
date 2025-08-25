@@ -3,7 +3,7 @@
     <v-select
       :menu-props="{ left: true }"
       attach
-      :items="items"
+      :items="filtered_items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
       :label="api_hints_enabled && api_hint ? api_hint : label"
@@ -18,48 +18,56 @@
       item-value="label"
       persistent-hint
       style="width: 100%"
+      :search-input="search_enabled ? search_query : undefined"
+      @update:search-input="on_search_input"
     >
-      <template v-slot:selection="{ item, index }">
-        <div class="single-line" style="width: 100%">
-          <span v-if="api_hints_enabled" class="api-hint" :style="index > 0 ? 'display: none' : null">
-            {{ multiselect ?
-              selected
-              :
-              '\'' + selected + '\''
-            }}
-          </span>
-          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px)">
-            <span>
-              {{ item }}
-            </span>
-          </v-chip>
-          <span v-else>
-            {{ item }}
-          </span>
+      <template #prepend-item>
+        <div v-if="search_enabled">
+          <v-text-field
+            v-model="search_query"
+            prepend-inner-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+            autofocus
+            style="margin: 8px;"
+          />
+          <v-divider class="mt-2"></v-divider>
+        </div>
+        <div v-if="multiselect">
+          <v-list-item
+            ripple
+            @mousedown.prevent
+            @click="toggle_select_all"
+          >
+            <v-list-item-action>
+              <v-icon>
+                {{ selected.length === items.length ? 'mdi-close-box' : selected.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
+              </v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>
+                {{ selected.length < items.length ? 'Select All' : 'Clear All' }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-divider class="mt-2"></v-divider>
         </div>
       </template>
-      <template v-slot:prepend-item v-if="multiselect">
-        <v-list-item
-        ripple
-        @mousedown.prevent
-        @click="() => {if (selected.length < items.length) { $emit('update:selected', items.map((item) => {return item.label || item.text || item}))} else {$emit('update:selected', [])}}"
-        >
-        <v-list-item-action>
-          <v-icon>
-            {{ selected.length == items.length ? 'mdi-close-box' : selected.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
-          </v-icon>
-        </v-list-item-action>
-        <v-list-item-content>
-          <v-list-item-title>
-            {{ selected.length < items.length ? "Select All" : "Clear All" }}
-          </v-list-item-title>
-        </v-list-item-content>
-        </v-list-item>
-        <v-divider class="mt-2"></v-divider>
+      <template #selection="{ item, index }">
+        <div class="single-line" style="width: 100%">
+          <span v-if="api_hints_enabled && index === 0" class="api-hint">
+            {{ multiselect ? selected : `'${selected}'` }}
+          </span>
+          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px)">
+            <span>{{ item }}</span>
+          </v-chip>
+          <span v-else>{{ item }}</span>
+        </div>
       </template>
-      <template v-slot:item="{ item }">
+      <template #item="{ item }">
         <span style="margin-top: 8px; margin-bottom: 0px">
-          {{ item }}
+          {{ typeof item === 'string' ? item : (item.label || item.text) }}
         </span>
       </template>
     </v-select>
@@ -70,7 +78,53 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'dense', 'disabled']
+          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search'],
+  data() {
+    return {
+      search_query: '',
+    }
+  },
+  computed: {
+    search_enabled() {
+      return !!this.search;
+    },
+    filtered_items() {
+      if (!this.search_enabled || !this.search_query) {
+        return this.items;
+      }
+      const query = this.search_query.toLowerCase();
+      // Get selected items (as objects or strings)
+      const selected_set = new Set(
+        Array.isArray(this.selected) ? this.selected.map(sel => (typeof sel === 'string' ? sel : sel.label || sel.text || sel)) : [this.selected]
+      );
+      // Filter items by search
+      const filtered = this.items.filter(item => {
+        const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+        return label.toLowerCase().includes(query);
+      });
+      // Add back any selected items not in filtered
+      const all_labels = new Set(filtered.map(item => (typeof item === 'string' ? item : item.label || item.text || '')));
+      this.items.forEach(item => {
+        const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+        if (selected_set.has(label) && !all_labels.has(label)) {
+          filtered.push(item);
+        }
+      });
+      return filtered;
+    },
+  },
+  methods: {
+    on_search_input(value) {
+      this.search_query = value;
+    },
+    toggle_select_all() {
+      if (this.selected.length < this.items.length) {
+        this.$emit('update:selected', this.items.map(item => item.label || item.text || item));
+      } else {
+        this.$emit('update:selected', []);
+      }
+    },
+  },
 };
 </script>
 
