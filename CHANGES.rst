@@ -4,6 +4,9 @@
 Bug Fixes
 ---------
 
+- Disable some plugins when there is no data loaded into any relevant viewer, and fix tracebacks
+  when unloading all data. [#3730]
+
 - Distance measurement marks now update properly upon unit conversion. [#3716]
 
 - Use validator on subset layer visibility and subset deletion to ensure toggling visibility and

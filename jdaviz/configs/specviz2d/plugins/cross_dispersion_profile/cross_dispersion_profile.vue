@@ -6,6 +6,7 @@
     :keep_active.sync="keep_active"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button"
+    :disabled_msg="disabled_msg"
     :scroll_to.sync="scroll_to">
 
     <v-row v-if="plot_available" style="padding: 0px"

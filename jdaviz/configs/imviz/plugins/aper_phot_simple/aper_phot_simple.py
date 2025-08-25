@@ -213,7 +213,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config != "cubeviz":
             return
         # self.dataset might not exist when app is setting itself up.
-        if hasattr(self, "dataset"):
+        if hasattr(self, "dataset") and self.dataset.choices != []:
             if isinstance(self.dataset.selected_dc_item, list):
                 datasets = self.dataset.selected_dc_item
             else:
