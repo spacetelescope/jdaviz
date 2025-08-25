@@ -11,7 +11,8 @@ from specreduce import tracing
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
 from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
-from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage, SliceValueUpdatedMessage
+from jdaviz.core.events import (GlobalDisplayUnitChanged, AddDataMessage,
+                                RemoveDataMessage, SliceValueUpdatedMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -126,6 +127,8 @@ class UnitConversion(PluginTemplateMixin):
 
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_add_data_to_viewer)
+        self.session.hub.subscribe(self, RemoveDataMessage,
+                                   handler=self._on_remove_data_from_viewer)
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
@@ -207,7 +210,13 @@ class UnitConversion(PluginTemplateMixin):
                 for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)  # noqa
                 for layer in viewer.layers]
 
+    def _on_remove_data_from_viewer(self, msg):
+        viewer = msg.viewer
+        if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
+            self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
+
     def _on_add_data_to_viewer(self, msg):
+
         # toggle warning message for cubes without PIXAR_SR defined
         if self.config == 'cubeviz':
             # NOTE: this assumes data_collection[0] is the science (flux/sb) cube
@@ -218,6 +227,9 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
+        # If we were disabled due to having no data loaded, undo that
+        if viewer.reference == 'spectrum-viewer':
+            self.disabled_msg = ''
         if isinstance(msg.data, glue_core_data):
             data_obj = None
 

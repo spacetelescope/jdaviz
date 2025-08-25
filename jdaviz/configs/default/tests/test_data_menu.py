@@ -1,4 +1,5 @@
 from astropy.io import fits
+import astropy.units as u
 import pytest
 import numpy as np
 from specutils import SpectralRegion
@@ -100,6 +101,30 @@ def test_data_menu_add_remove_data(imviz_helper):
     dm.remove_from_app()
     assert len(dm.layer.choices) == 1
     assert len(dm._obj.dataset.choices) == 1
+
+
+def test_remove_all_data_cubeviz(cubeviz_helper, image_cube_hdu_obj_microns):
+    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+    dm1 = cubeviz_helper.viewers['flux-viewer']._obj.data_menu
+    dm2 = cubeviz_helper.viewers['uncert-viewer']._obj.data_menu
+    dm3 = cubeviz_helper.viewers['spectrum-viewer']._obj.data_menu
+
+    sp = cubeviz_helper.plugins['Subset Tools']
+    sp.import_region(SpectralRegion(4.8 * u.um,
+                                    5 * u.um),
+                     combination_mode='new')
+
+    # Remove all data from all viewers to make sure plugins respond appropriately
+    # This would previously raise a traceback from the data menu and/or aperture photometry
+    dm1.layer.selected = ['test[FLUX]']
+    dm1.remove_from_viewer()
+    dm2.layer.selected = ['test[ERR]']
+    dm2.remove_from_viewer()
+    dm3.layer.selected = ['Spectrum (sum)', 'Subset 1']
+    dm3.remove_from_viewer()
+
+    for plg in ('Moment Maps', 'Line Analysis', 'Line Lists'):
+        assert "unavailable" in cubeviz_helper.plugins[plg]._obj.disabled_msg
 
 
 def test_data_menu_create_subset(imviz_helper):
