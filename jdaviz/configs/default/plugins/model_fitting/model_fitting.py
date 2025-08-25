@@ -425,6 +425,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.comp_label_default = self._default_comp_label(self.model_comp_selected,
                                                            self.poly_order)
 
+    @observe('poly_order')
+    def _check_poly_order(self, event={}, model_comp=None, poly_order=None):
+        model_comp = model_comp if model_comp is not None else self.model_comp_selected
+        if model_comp != 'Polynomial1D':
+            return None
+
+        poly_order = poly_order if poly_order is not None else self.poly_order
+        if not isinstance(poly_order, int) or poly_order <= 1:
+            raise ValueError("poly_order must be an integer > 1")
+
+        return poly_order
+
     @observe('comp_label')
     def _comp_label_changed(self, event={}):
         if not len(self.comp_label.strip()):
@@ -494,15 +506,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         return temp_models
 
-    def _check_poly_order(self, poly_order=None):
-        poly_order = poly_order if poly_order is not None else self.poly_order
-
-        if poly_order <= 1 or not isinstance(poly_order, int):
-            raise ValueError("Polynomial order must be an integer > 1")
-
-        return poly_order
-
-
     def create_model_component(self, model_component=None, model_component_label=None,
                                poly_order=None):
         """
@@ -528,7 +531,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if model_comp != "Polynomial1D" and poly_order is not None:
             raise ValueError("poly_order should only be passed if model_component is Polynomial1D")
 
-        poly_order = self._check_poly_order(poly_order)
+        poly_order = self._check_poly_order(model_comp=model_comp, poly_order=poly_order)
 
         # if model_component was passed and different than the one set in the traitlet, AND
         # model_component_label is not passed, AND the auto is enabled on the label, then
