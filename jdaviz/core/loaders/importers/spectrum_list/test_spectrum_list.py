@@ -521,6 +521,16 @@ class TestSpectrumListConcatenatedImporter:
         # Sneaky negation of boolean to test the disable_dropdown attribute
         assert importer_obj.disable_dropdown is not use_list
 
+        # ensure native units on surface brightness or spectral flux density are converted to flux
+        if use_list:
+            assert np.all([sp.flux.unit.physical_type == 'spectral flux density'
+                           for sp in premade_spectrum_list])
+            assert np.all([sp.flux.unit.physical_type == 'spectral flux density'
+                           for sp in importer_obj.output])
+        else:
+            assert spectrum2d.flux.unit.physical_type == 'spectral flux density'
+            assert u.Unit(importer_obj.output.flux.unit.to_string()).physical_type == 'spectral flux density'  # noa
+
     @pytest.mark.parametrize('with_uncertainty', [True, False])
     def test_spectrum_list_concatenated_importer_output(self, deconfigged_helper, with_uncertainty):
         spec = self.setup_combined_spectrum(with_uncertainty)

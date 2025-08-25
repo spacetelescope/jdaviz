@@ -30,6 +30,16 @@
       ></plugin-select>
     </div>
 
+    <v-row v-if="input_in_sb">
+      <plugin-switch
+        :value.sync="convert_to_flux_density"
+        label="Convert to flux density units"
+        api_hint="ldr.importer.convert_to_flux_density = "
+        :api_hints_enabled="api_hints_enabled"
+        hint="Whether to convert any input surface brightness units to flux density."
+      ></plugin-switch>
+    </v-row>
+
     <div style="height: 16px;"></div>
 
     <v-row>

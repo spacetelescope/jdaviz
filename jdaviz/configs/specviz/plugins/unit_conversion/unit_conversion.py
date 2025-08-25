@@ -19,7 +19,7 @@ from jdaviz.core.unit_conversion_utils import (create_equivalent_spectral_axis_u
                                                create_equivalent_flux_units_list,
                                                check_if_unit_is_per_solid_angle,
                                                create_equivalent_angle_units_list,
-                                               supported_sq_angle_units)
+                                               flux_to_sb_unit)
 
 __all__ = ['UnitConversion']
 
@@ -40,16 +40,6 @@ def _valid_glue_display_unit(unit_str, viewer, axis='x'):
         raise ValueError(f"{unit_str} could not find match in valid {axis} display units {choices_str}")  # noqa
     ind = choices_u.index(unit_u)
     return choices_str[ind]
-
-
-def _flux_to_sb_unit(flux_unit, angle_unit):
-    if angle_unit not in supported_sq_angle_units(as_strings=True):
-        sb_unit = flux_unit
-    else:
-        # str > unit > str to remove formatting inconsistencies with
-        # parentheses/order of units/etc
-        sb_unit = (u.Unit(flux_unit) / u.Unit(angle_unit)).to_string()
-    return sb_unit
 
 
 @tray_registry('g-unit-conversion', label="Unit Conversion",
@@ -383,8 +373,8 @@ class UnitConversion(PluginTemplateMixin):
                 # which in turn will call _handle_attribute_display_unit,
                 # _handle_spectral_y_unit (if spectral_y_type_selected == 'Surface Brightness'),
                 #  and send a second GlobalDisplayUnitChanged message for sb
-                self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected,
-                                                         self.angle_unit.selected)
+                self.sb_unit_selected = flux_to_sb_unit(self.flux_unit.selected,
+                                                        self.angle_unit.selected)
 
         elif axis == 'angle':
             if len(self.flux_unit_selected):
@@ -392,8 +382,8 @@ class UnitConversion(PluginTemplateMixin):
                 # which in turn will call _handle_attribute_display_unit,
                 # _handle_spectral_y_unit (if spectral_y_type_selected == 'Surface Brightness'),
                 #  and send a second GlobalDisplayUnitChanged message for sb
-                self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected,
-                                                         self.angle_unit.selected)
+                self.sb_unit_selected = flux_to_sb_unit(self.flux_unit.selected,
+                                                        self.angle_unit.selected)
 
         elif axis == 'sb':
             # handle spectral y-unit first since that is a more apparent change to the user
