@@ -30,6 +30,8 @@
       ></plugin-select>
     </div>
 
+<!-- TODO: Re-enable this when viewer logic is corrected for
+           spectrum list with both SB and flux units
     <v-row v-if="input_in_sb">
       <plugin-switch
         :value.sync="convert_to_flux_density"
@@ -39,7 +41,7 @@
         hint="Whether to convert any input surface brightness units to flux density."
       ></plugin-switch>
     </v-row>
-
+-->
     <div style="height: 16px;"></div>
 
     <v-row>
