@@ -1279,13 +1279,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if add_data:
             self._fitted_models[self.results_label] = fitted_model
-            self.add_results.add_results_from_plugin(fitted_spectrum)
+            self.add_results.add_results_from_plugin(fitted_spectrum,
+                                                     format='1D Spectrum')
 
             if self.residuals_calculate:
                 # NOTE: this will NOT load into the viewer since we have already called
                 # add_results_from_plugin above.
                 self.add_results.add_results_from_plugin(masked_spectrum-fitted_spectrum,
                                                          label=self.residuals.value,
+                                                         format='1D Spectrum',
                                                          replace=False)
 
         self._set_default_results_label()

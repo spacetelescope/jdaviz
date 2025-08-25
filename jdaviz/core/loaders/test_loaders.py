@@ -94,11 +94,9 @@ def test_fits_spectrum2d(deconfigged_helper):
         ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
-    # Default is Image but the test switches to 2D Spectrum
-    # since this file type is not yet supported by the image loader
+    # Default format is Image, manually set to 2D Spectrum
     assert ldr.format == 'Image'
     assert ldr.importer._obj.input_has_extensions is True
-
     ldr.format = '2D Spectrum'
 
     ldr.importer()
@@ -176,6 +174,17 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     assert len(loader.format.choices) > 0
 
     loader.importer()
+
+
+def test_deconfigged_spectrum_and_image(deconfigged_helper, spectrum1d, image_hdu_wcs):
+    # Load a 1D spectrum and a 2D image
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+    deconfigged_helper.load(image_hdu_wcs, format='Image')
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+
+    # Check that both data types are loaded correctly
+    assert len(deconfigged_helper.app.data_collection) == 3
+    assert len(deconfigged_helper.viewers) == 2
 
 
 def test_load_image_mult_sci_extension(imviz_helper):
