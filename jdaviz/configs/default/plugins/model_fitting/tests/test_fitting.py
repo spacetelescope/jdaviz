@@ -1,5 +1,5 @@
 import warnings
-
+import itertools
 import numpy as np
 import pytest
 from astropy import units as u
@@ -12,6 +12,7 @@ from glue.core.roi import XRangeROI
 from numpy.testing import assert_allclose, assert_array_equal
 from specutils.spectra import Spectrum
 from specutils import SpectralRegion
+from traitlets import TraitError
 
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
@@ -56,6 +57,86 @@ def test_model_params():
         params = initializers.get_model_parameters(model_name)
         assert len(params) == len(expected_params)
         assert np.all([p in expected_params for p in params])
+
+
+def test_check_poly_order_function(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]._obj
+    plugin.dataset_selected = '1D Spectrum'
+
+    result = plugin._check_poly_order()
+    assert result is None
+
+    result = plugin._check_poly_order(model_comp='fake')
+    assert result is None
+
+    result = plugin._check_poly_order(poly_order=-1.5)
+    assert result is None
+
+    result = plugin._check_poly_order(model_comp='fake', poly_order=-1.5)
+    assert result is None
+
+    assert plugin.poly_order == 0  # stays default
+
+    plugin.poly_order = 2
+    plugin.model_comp_selected = 'Polynomial1D'
+
+    result = plugin._check_poly_order()
+    assert result == 2
+
+    result = plugin._check_poly_order(model_comp='Polynomial1D')
+    assert result == 2
+
+    result = plugin._check_poly_order(poly_order=3)
+    assert result == 3
+    assert plugin.poly_order == 2  # doesn't change actual value of plugin.poly_order
+
+    result = plugin._check_poly_order(model_comp='Polynomial1D', poly_order=4)
+    assert result == 4
+    assert plugin.poly_order == 2  # doesn't change actual value of plugin.poly_order
+
+    with pytest.raises(ValueError, match="poly_order must be an integer > 1"):
+        _ = plugin._check_poly_order(poly_order=2.5)
+
+
+def test_check_poly_order_observer(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]._obj
+    plugin.dataset_selected = '1D Spectrum'
+
+    # poly_order default
+    assert plugin.poly_order == 0
+    # No model components added yet
+    assert len(plugin.model_components) == 0
+
+    # Make sure that the observer doesn't interfere with the other models
+    non_poly_model_comps = [m for m in initializers.MODELS.keys() if m != "Polynomial1D"]
+    for i, model_comp in enumerate(non_poly_model_comps):
+        plugin.model_comp_selected = model_comp
+        # Run the observer by setting poly_order
+        plugin.poly_order -= 1
+        plugin.vue_add_model({})
+        # Check that the model component exists (i.e. was added successfully)
+        assert len(plugin.model_components) == i + 1
+        assert plugin.model_components[i]
+
+    plugin.model_comp_selected = "Polynomial1D"
+
+    err_msg = "poly_order must be an integer > 1"
+    with pytest.raises(ValueError, match=err_msg):
+        plugin.vue_add_model({})
+
+    for poly_order in range(-1, 1):
+        with pytest.raises(ValueError, match=err_msg):
+            plugin.poly_order = poly_order
+
+    with pytest.raises(TraitError, match="The 'poly_order' trait of a ModelFitting instance expected an int, not the float 2.5."): # noqa
+        plugin.poly_order = 2.5
+
+    plugin.poly_order = 3
+    plugin.model_comp_selected = "Polynomial1D"
+    plugin.vue_add_model({})
+    assert plugin.model_components[-1] == 'P3'
 
 
 def test_model_ids(cubeviz_helper, spectral_cube_wcs):
