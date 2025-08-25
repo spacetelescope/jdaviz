@@ -213,8 +213,9 @@ class ImporterUserApi(UserApiWrapper):
     """
     def __init__(self, importer, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
         expose = list(set(list(expose) + ['input', 'output', 'target', 'show']))
-        if hasattr(importer, 'data_label'):
-            expose += ['data_label']
+        for attr in ('viewer', 'viewer_label', 'data_label'):
+            if hasattr(importer, attr):
+                expose += [attr]
         super().__init__(importer, expose, readonly, excl_from_dict, deprecated)
 
     def __call__(self, *args, **kwargs):

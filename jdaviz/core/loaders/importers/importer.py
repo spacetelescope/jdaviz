@@ -1,10 +1,12 @@
-from traitlets import Bool, Unicode, observe
+from traitlets import Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
 from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
+from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        AutoTextField,
+                                        ViewerSelect)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata
 
@@ -68,6 +70,14 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
 
+    viewer_items = List([]).tag(sync=True)
+    viewer_selected = Unicode('Auto').tag(sync=True)
+
+    viewer_label_value = Unicode().tag(sync=True)
+    viewer_label_default = Unicode().tag(sync=True)
+    viewer_label_auto = Bool(True).tag(sync=True)
+    viewer_label_invalid_msg = Unicode().tag(sync=True)
+
     def __init__(self, app, resolver, input, **kwargs):
         super().__init__(app, resolver, input, **kwargs)
         self.data_label_default = self._registry_label
@@ -75,6 +85,15 @@ class BaseImporterToDataCollection(BaseImporter):
                                         'data_label_default',
                                         'data_label_auto',
                                         'data_label_invalid_msg')
+
+        # maybe we can make this an actual ViewerSelect by relying on information in the importer
+        self.viewer = ViewerSelect(self, 'viewer_items',
+                                   'viewer_selected',
+                                   manual_options=['Create New...', 'None'])
+        self.viewer_label = AutoTextField(self, 'viewer_label_value',
+                                          'viewer_label_default',
+                                          'viewer_label_auto',
+                                          'viewer_label_invalid_msg')
 
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=lambda _: self._on_label_changed())
@@ -97,6 +116,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @property
     def default_viewer_label(self):
+        # TODO: replace this with setting default on the viewer_label AutoLabel
         return vid_map.get(self.default_viewer_reference, self.default_viewer_reference)
 
     @property
@@ -163,7 +183,7 @@ class BaseImporterToDataCollection(BaseImporter):
             viewer.data_menu.add_data(data_label)
 
     def add_to_data_collection(self, data, data_label=None,
-                               parent=None, show_in_viewer=True, cls=None):
+                               parent=None, viewer=None, cls=None):
         if data_label is None:
             data_label = self.data_label_value.strip()
         if hasattr(data, 'meta'):
@@ -179,13 +199,36 @@ class BaseImporterToDataCollection(BaseImporter):
         cls = cls if cls is not None else data.__class__
         self.app.data_collection[data_label]._native_data_cls = cls
         self.app.data_collection[data_label]._importer = self.__class__.__name__
-        if show_in_viewer:
-            self.load_into_viewer(data_label)
 
-    def __call__(self, show_in_viewer=True):
+        viewer_selected = viewer if viewer is not None else self.viewer.selected
+        if viewer_selected == 'Create New...':
+            default_viewer_reference = None  # TODO: allow passing this or storing in self.viewer?
+            default_viewer_label = self.viewer_label.value.strip()
+            if default_viewer_reference is None:
+                default_viewer_reference = self.default_viewer_reference
+            else:
+                default_viewer_label = vid_map.get(default_viewer_reference,
+                                                   default_viewer_reference)
+            default_viewer_label = self.app.return_unique_name(default_viewer_label,
+                                                               typ='viewer')
+
+            viewer_dict = viewer_registry.members.get(default_viewer_reference)
+            viewer_cls = viewer_dict.get('cls')
+            self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                    vid=default_viewer_label,
+                                    name=default_viewer_label,
+                                    open_data_menu_if_empty=False)
+            viewer = self.app._jdaviz_helper.viewers.get(default_viewer_label)
+            viewer.data_menu.add_data(data_label)
+
+        elif viewer_selected != 'None':
+            viewer = self.app._jdaviz_helper.viewers.get(viewer_selected)
+            viewer.data_menu.add_data(data_label)
+
+    def __call__(self):
         if self.data_label_invalid_msg:
             raise ValueError(self.data_label_invalid_msg)
-        self.add_to_data_collection(self.output, show_in_viewer=show_in_viewer)
+        self.add_to_data_collection(self.output)
 
 
 class BaseImporterToPlugin(BaseImporter):
