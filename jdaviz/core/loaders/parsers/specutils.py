@@ -25,7 +25,7 @@ class SpecutilsSpectrumParser(BaseParser):
 
     @cached_property
     def output(self):
-        return self.SpecutilsCls.read(self.input)
+        return self.SpecutilsCls.read(self.input, flux_column='flux')
 
 
 @loader_parser_registry('specutils.SpectrumList')
