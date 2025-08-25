@@ -92,7 +92,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     # model components:
     model_comp_items = List().tag(sync=True)
     model_comp_selected = Unicode().tag(sync=True)
-    poly_order = IntHandleEmpty(0).tag(sync=True)
+    poly_order = IntHandleEmpty(2).tag(sync=True)
+    poly_order_invalid_msg = Unicode().tag(sync=True)
 
     comp_label = Unicode().tag(sync=True)
     comp_label_default = Unicode().tag(sync=True)
@@ -223,12 +224,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose = ['dataset']
         if self.config == "cubeviz":
             expose += ['cube_fit']
-        expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
-                   'model_components', 'valid_model_components',
-                   'create_model_component', 'remove_model_component',
-                   'get_model_component', 'set_model_component', 'reestimate_model_parameters',
+        expose += ['spectral_subset', 'model_component',
+                   'poly_order', 'poly_order_invalid_msg'
+                   'model_component_label', 'model_components',
+                   'valid_model_components', 'create_model_component',
+                   'remove_model_component', 'get_model_component',
+                   'set_model_component', 'reestimate_model_parameters',
                    'equation', 'equation_components',
-                   'add_results', 'residuals_calculate', 'residuals']
+                   'add_results', 'residuals_calculate',
+                   'residuals']
         expose += ['calculate_fit', 'clear_table', 'export_table',
                    'fitted_models', 'get_models', 'get_model_parameters', 'fitter_component']
         return PluginUserApi(self, expose=expose)
@@ -432,8 +436,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return None
 
         poly_order = poly_order if poly_order is not None else self.poly_order
+        self.poly_order_invalid_msg = ""
         if not isinstance(poly_order, int) or poly_order <= 1:
-            raise ValueError("poly_order must be an integer > 1")
+            self.poly_order_invalid_msg = "Order must be an integer > 1"
 
         return poly_order
 
@@ -532,6 +537,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             raise ValueError("poly_order should only be passed if model_component is Polynomial1D")
 
         poly_order = self._check_poly_order(model_comp=model_comp, poly_order=poly_order)
+        if self.poly_order_invalid_msg:
+            raise ValueError(f"poly_{self.poly_order_invalid_msg.lower()}")
 
         # if model_component was passed and different than the one set in the traitlet, AND
         # model_component_label is not passed, AND the auto is enabled on the label, then
