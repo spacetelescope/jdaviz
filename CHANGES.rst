@@ -7,6 +7,8 @@ New Features
 - The Model Fitting plugin now allows the user to select a fitter from a dropdown menu, with the default being the
   ``astropy.modeling.fitting.TRFLSQFitter``. [#3720]
 
+- Loaders now allow selecting which viewer(s) to show the data or whether to create a new viewer. [#3739]
+
 Cubeviz
 ^^^^^^^
 
@@ -75,7 +77,7 @@ Bug Fixes
 - Use validator on subset layer visibility and subset deletion to ensure toggling visibility and
   deleting subsets from data menu and plot options updates accordingly. [#3708]
 
-- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731] 
+- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731]
 
 Cubeviz
 ^^^^^^^
