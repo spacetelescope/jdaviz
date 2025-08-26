@@ -107,6 +107,10 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             self._set_default_data_label()
 
+    @staticmethod
+    def _viewer_create_new_items():
+        return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
+
     @property
     def user_api(self):
         expose = ['parent', 'data_label_as_prefix', 'gwcs_to_fits_sip']
@@ -135,12 +139,6 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(glue_data.coords, GWCS):
             glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
         return glue_data
-
-    @property
-    def default_viewer_reference(self):
-        # returns the registry name of the default viewer
-        # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'imviz-image-viewer'
 
     def _get_label_with_extension(self, prefix, ext=None, ver=None):
         full_ext = ",".join([str(e) for e in (ext, ver) if e is not None])
@@ -224,7 +222,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
         return data
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
 
         base_data_label = self.data_label_value
         # self.output is always a list of Data objects
@@ -286,7 +284,6 @@ class ImageImporter(BaseImporterToDataCollection):
 
             self.add_to_data_collection(output, data_label,
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
-                                        show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 
 

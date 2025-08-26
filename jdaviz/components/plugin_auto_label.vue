@@ -13,6 +13,9 @@
         :rules="[(e) => invalid_msg || true]"
         persistent-hint
       >
+        <template v-slot:prepend-inner>
+          <slot></slot>
+        </template>
         <template v-slot:append>
           <j-tooltip v-if="!auto || showIcon" :tooltipcontent="auto ? 'Using default (click to use custom)' : 'Using custom (click to use default)'">
             <v-btn icon small @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px" @mouseenter="showIcon = true" @mouseleave="showIcon = false">
@@ -20,7 +23,7 @@
             </v-btn>
           </j-tooltip>
         </template>
-      </v-text-field>   
+      </v-text-field>
     </v-form>
   </v-row>
 </template>
@@ -37,7 +40,7 @@ module.exports = {
        // watching of label_default and label_auto are handled in python
        value() {
           if(this.$props.auto && this.displayValue != this.$props.value && this.$props.value != this.$props.default) {
-            // then the label traitlet itself was changed (perhaps by the user), so we need to 
+            // then the label traitlet itself was changed (perhaps by the user), so we need to
             // disable the auto-syncing between label_default -> label
             this.$emit('update:auto', false);
           }

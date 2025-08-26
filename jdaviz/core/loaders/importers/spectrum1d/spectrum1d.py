@@ -24,6 +24,10 @@ class SpectrumImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
+    @staticmethod
+    def _viewer_create_new_items():
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
+
     @property
     def is_valid(self):
         if self.app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
@@ -31,12 +35,6 @@ class SpectrumImporter(BaseImporterToDataCollection):
             # NOTE: temporary during deconfig process
             return False
         return isinstance(self.input, Spectrum) and self.input.flux.ndim == 1
-
-    @property
-    def default_viewer_reference(self):
-        # returns the registry name of the default viewer
-        # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'spectrum-1d-viewer'
 
     @property
     def output(self):

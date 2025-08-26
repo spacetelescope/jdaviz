@@ -23,6 +23,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
+    @staticmethod
+    def _viewer_create_new_items():
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
+
     @property
     def is_valid(self):
         if self.app.config not in ('deconfigged', 'specviz'):
@@ -61,18 +65,11 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return SpectrumList(input_to_list_of_spec(self.input))
 
-    @property
-    def default_viewer_reference(self):
-        # returns the registry name of the default viewer
-        # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'spectrum-1d-viewer'
-
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         data_label = self.data_label_value
         with self.app._jdaviz_helper.batch_load():
             for i, spec in enumerate(self.output):
-                self.add_to_data_collection(spec, f"{data_label}_{i}",
-                                            show_in_viewer=show_in_viewer)
+                self.add_to_data_collection(spec, f"{data_label}_{i}")
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
