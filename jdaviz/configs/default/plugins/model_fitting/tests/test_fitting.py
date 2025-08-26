@@ -1,5 +1,4 @@
 import warnings
-import itertools
 import numpy as np
 import pytest
 from astropy import units as u
