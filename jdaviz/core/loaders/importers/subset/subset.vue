@@ -1,5 +1,5 @@
 <template>
-  <v-row>
+  <v-container>
     <plugin-auto-label
       :value.sync="subset_label_value"
       :default="subset_label_default"
@@ -10,5 +10,5 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Label to assign to the new subset."
     ></plugin-auto-label>
-  </v-row>
+  </v-container>
 </template>
