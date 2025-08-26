@@ -136,6 +136,23 @@ class ConfigHelper(HubListener):
                    for item in self.app.state.loader_items}
         return loaders
 
+    def _get_importer(self, loader_name, parser_name, importer_name):
+        """
+        Attempt to retrieve an importer that is showing as invalid because of an internal error.
+        Useful for debugging purposes.
+        """
+        ldr = self.loaders.get(loader_name)
+        resolver = ldr._obj
+
+        orig_debug = ldr.format.debug
+        ldr.format.debug = True
+        input = ldr.format._dbg_parsers[parser_name].output
+        ldr.format.debug = orig_debug
+
+        from jdaviz.core.registries import loader_importer_registry
+        ImporterCls = loader_importer_registry.members.get(importer_name)
+        return ImporterCls(app=self.app, resolver=resolver, input=input)
+
     @property
     def new_viewers(self):
         """
