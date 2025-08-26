@@ -92,7 +92,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     # model components:
     model_comp_items = List().tag(sync=True)
     model_comp_selected = Unicode().tag(sync=True)
-    poly_order = IntHandleEmpty(2).tag(sync=True)
+    poly_order = IntHandleEmpty(0).tag(sync=True)
     poly_order_invalid_msg = Unicode().tag(sync=True)
 
     comp_label = Unicode().tag(sync=True)
@@ -438,8 +438,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return None
 
         poly_order = poly_order if poly_order is not None else self.poly_order
-        if not isinstance(poly_order, int) or poly_order <= 1:
-            self.poly_order_invalid_msg = "Order must be an integer > 1"
+        if not isinstance(poly_order, int) or poly_order < 0:
+            self.poly_order_invalid_msg = "Order must be an integer >= 0"
             return None
 
         return poly_order

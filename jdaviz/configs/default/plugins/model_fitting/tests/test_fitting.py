@@ -78,7 +78,7 @@ def test_check_poly_order_function(specviz_helper, spectrum1d):
     assert plugin.poly_order_invalid_msg == ""
     assert result is None
 
-    poly_order_default = 2
+    poly_order_default = 0
     assert plugin.poly_order == poly_order_default  # stays default
 
     plugin.poly_order = poly_order_default
@@ -100,9 +100,9 @@ def test_check_poly_order_function(specviz_helper, spectrum1d):
     # doesn't change actual value of plugin.poly_order
     assert plugin.poly_order == poly_order_default
 
-    for poly_order in [-1, 0, 1, 2.5]:
+    for poly_order in [-2, -1, 2.5]:
         result = plugin._check_poly_order(poly_order=poly_order)
-        assert plugin.poly_order_invalid_msg == "Order must be an integer > 1"
+        assert plugin.poly_order_invalid_msg == "Order must be an integer >= 0"
         assert result is None
 
 
@@ -112,7 +112,7 @@ def test_check_poly_order_observer(specviz_helper, spectrum1d):
     plugin.dataset_selected = '1D Spectrum'
 
     # poly_order default
-    assert plugin.poly_order == 2
+    assert plugin.poly_order == 0
     # No model components added yet
     assert len(plugin.model_components) == 0
 
@@ -129,12 +129,12 @@ def test_check_poly_order_observer(specviz_helper, spectrum1d):
 
     plugin.model_comp_selected = "Polynomial1D"
 
-    vue_err_msg = "Order must be an integer > 1"
+    vue_err_msg = "Order must be an integer >= 0"
     err_msg = f"poly_{vue_err_msg.lower()}"
     with pytest.raises(ValueError, match=err_msg):
         plugin.vue_add_model({})
 
-    for poly_order in range(-1, 1):
+    for poly_order in range(-3, 0):
         plugin.poly_order = poly_order
         assert plugin.poly_order_invalid_msg == vue_err_msg
         with pytest.raises(ValueError, match=err_msg):
