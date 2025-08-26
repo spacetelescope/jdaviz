@@ -25,7 +25,7 @@ class SpectrumImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
     @staticmethod
-    def _viewer_create_new_items():
+    def _get_supported_viewers():
         return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     @property

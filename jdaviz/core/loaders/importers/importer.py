@@ -102,11 +102,24 @@ class BaseImporterToDataCollection(BaseImporter):
                            handler=lambda _: self._on_label_changed())
         self._on_label_changed()
 
-        self.viewer_create_new_items = self._viewer_create_new_items()
+        supported_viewers = self._get_supported_viewers()
+        self.viewer_create_new_items = supported_viewers
+
+        # for now, we'll use the same list of viewers that can be created
+        # as the filter on existing viewers.  Eventually we may want this
+        # to be more flexible so that custom viewers can show up in this
+        # list (or both lists) without having to modify the importer - perhaps
+        # by both viewers and importers describing their supported data shapes
+        # and physical types
+        def viewer_in_registry_names(viewer):
+            classes = [viewer_registry.members.get(item.get('reference')).get('cls')
+                       for item in supported_viewers]
+            return viewer.__class__ in classes
+        self.viewer.add_filter(viewer_in_registry_names)
         self.viewer.select_default()
 
     @staticmethod
-    def _viewer_create_new_items():
+    def _get_supported_viewers():
         raise NotImplementedError("Importer subclass must implement viewer_create_new_items")  # noqa pragma: nocover
 
     @property

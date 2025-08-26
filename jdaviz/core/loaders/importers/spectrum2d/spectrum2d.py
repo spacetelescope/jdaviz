@@ -112,7 +112,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                                           filters=[hdu_is_valid])
 
     @staticmethod
-    def _viewer_create_new_items():
+    def _get_supported_viewers():
         return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
 
     @property
