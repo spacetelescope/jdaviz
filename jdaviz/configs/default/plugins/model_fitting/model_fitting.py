@@ -432,6 +432,26 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     @observe('poly_order')
     def _check_poly_order(self, event={}, model_comp=None, poly_order=None):
+        """
+        Check that the polynomial order is valid if the model component is
+        Polynomial1D.  If not, set the invalid message and return None.
+
+        Parameters
+        ----------
+        event : dict
+            IPyWidget callback event object.
+        model_comp : str
+            Type of model component to check.  If not provided, will default
+            to the object attribute ``model_comp_selected``.
+        poly_order : int
+            Order of the polynomial to check.  If not provided, will default
+            to the object attribute ``poly_order``.
+
+        Returns
+        -------
+        int or None
+            The polynomial order if valid, otherwise None.
+        """
         self.poly_order_invalid_msg = ""
 
         model_comp = model_comp if model_comp is not None else self.model_comp_selected
