@@ -7,7 +7,7 @@ __all__ = ['UserApiWrapper', 'PluginUserApi',
            'ViewerUserApi']
 
 _internal_attrs = ('_obj', '_expose', '_items', '_readonly', '_exclude_from_dict',
-                   '__doc__', '_deprecation_msg', '_deprecated')
+                   '__doc__', '_deprecation_msg', '_deprecated', '_repr_callable')
 
 
 class UserApiWrapper:
@@ -15,13 +15,14 @@ class UserApiWrapper:
     This is an API wrapper around an internal object.  For a full list of attributes/methods,
     call dir(object).
     """
-    def __init__(self, obj, expose=[], readonly=[], exclude_from_dict=[], deprecated=[]):
+    def __init__(self, obj, expose=[], readonly=[], exclude_from_dict=[], deprecated=[], repr_callable=None):
         self._obj = obj
         self._expose = list(expose) + list(readonly)
         self._readonly = readonly
         self._exclude_from_dict = exclude_from_dict
         self._deprecation_msg = None
         self._deprecated = deprecated
+        self._repr_callable = repr_callable
         if obj.__doc__ is not None:
             self.__doc__ = self.__doc__ + "\n\n\n" + obj.__doc__
 
@@ -29,6 +30,8 @@ class UserApiWrapper:
         return self._expose
 
     def __repr__(self):
+        if self._repr_callable is not None:
+            return self._repr_callable()
         return f'<{self._obj.__class__.__name__} API>'
 
     def __eq__(self, other):

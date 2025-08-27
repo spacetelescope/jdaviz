@@ -3879,6 +3879,13 @@ class ViewerSelectCreateNew(ViewerSelect):
             return f"<create_new='{self.create_new.selected}' create_new.choices={self.create_new.choices} new_label={self.new_label.value} new_label.auto={self.new_label.auto}>"  # noqa
         return f"<selected={self.selected} choices={self.choices} create_new.choices={self.create_new.choices}>"  # noqa
 
+    @property
+    def user_api(self):
+        return UserApiWrapper(self,
+                              expose=('create_new', 'new_label', 'selected'),
+                              readonly=('choices'),
+                              repr_callable=self.__repr__)
+
     def _on_viewer_create_new_selected(self, msg={}):
         if self.create_new.selected == '':
             return

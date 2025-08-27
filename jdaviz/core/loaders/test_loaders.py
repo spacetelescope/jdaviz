@@ -89,13 +89,13 @@ def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = spectrum2d
 
-    assert ldr.importer.viewer.create_new.selected == '2D Spectrum'
-    assert ldr.importer.viewer.new_label.value == '2D Spectrum'
-    assert ldr.importer.ext_viewer.create_new.selected == '1D Spectrum'
-    assert ldr.importer.ext_viewer.new_label.value == '1D Spectrum'
+    assert ldr.importer.viewer.create_new == '2D Spectrum'
+    assert ldr.importer.viewer.new_label == '2D Spectrum'
+    assert ldr.importer.ext_viewer.create_new == '1D Spectrum'
+    assert ldr.importer.ext_viewer.new_label == '1D Spectrum'
 
-    ldr.importer.ext_viewer.create_new.selected = ''
-    assert ldr.importer.ext_viewer.selected == []
+    ldr.importer.ext_viewer.create_new = ''
+    assert ldr.importer.ext_viewer == []
 
     assert ldr.importer.auto_extract
     ldr.importer()
