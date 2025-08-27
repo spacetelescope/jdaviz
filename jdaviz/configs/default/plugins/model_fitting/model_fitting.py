@@ -64,6 +64,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
     * ``model_component`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``poly_order``
+    * ``poly_order_invalid_msg``
     * ``model_component_label`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
     * :meth:`create_model_component`
     * :meth:`remove_model_component`
@@ -225,7 +226,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.config == "cubeviz":
             expose += ['cube_fit']
         expose += ['spectral_subset', 'model_component',
-                   'poly_order', 'poly_order_invalid_msg'
+                   'poly_order', 'poly_order_invalid_msg',
                    'model_component_label', 'model_components',
                    'valid_model_components', 'create_model_component',
                    'remove_model_component', 'get_model_component',
