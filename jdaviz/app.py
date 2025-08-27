@@ -827,9 +827,7 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config == 'imviz':  # Imviz does its own thing
-            return
-        elif self.config in CONFIGS_WITH_LOADERS:
+        if self.config in CONFIGS_WITH_LOADERS:
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -2597,13 +2595,12 @@ class Application(VuetifyTemplate, HubListener):
         if self.config in CONFIGS_WITH_LOADERS and len(self.data_collection) > 1:
             for data in self.data_collection[1:]:
                 self._link_new_data_by_component_type(data.label)
-            return
 
         # If there are two or more datasets left we need to link them back together if anything
         # was linked only through the removed data.
-        if (len(self.data_collection) > 1 and
-                len(self.data_collection.external_links) < len(self.data_collection) - 1):
-            if orientation_plugin is not None:
+        if orientation_plugin is not None:
+            if (len(self.data_collection) > 1 and
+                    len(self.data_collection.external_links) < len(self.data_collection) - 1):
                 orientation_plugin._obj._link_image_data()
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
@@ -2614,9 +2611,6 @@ class Application(VuetifyTemplate, HubListener):
                     if len(loaded_layers):
                         self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
                         self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
-            else:
-                for i in range(1, len(self.data_collection)):
-                    self._link_new_data(data_to_be_linked=i)
 
     def vue_close_snackbar_message(self, event):
         """

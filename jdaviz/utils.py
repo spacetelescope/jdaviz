@@ -45,7 +45,7 @@ NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 PRIHDR_KEY = '_primary_header'
 COMMENTCARD_KEY = '_fits_comment_card'
 
-CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz', 'specviz', 'specviz2d')
+CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz', 'specviz', 'specviz2d', 'imviz')
 
 
 class SnackbarQueue:
