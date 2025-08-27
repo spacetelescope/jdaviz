@@ -226,8 +226,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.config == "cubeviz":
             expose += ['cube_fit']
         expose += ['spectral_subset', 'model_component',
-                   'poly_order', 'poly_order_invalid_msg',
-                   'model_component_label', 'model_components',
+                   'poly_order', 'model_component_label', 'model_components',
                    'valid_model_components', 'create_model_component',
                    'remove_model_component', 'get_model_component',
                    'set_model_component', 'reestimate_model_parameters',
