@@ -53,6 +53,16 @@ def test_resolver_matching(specviz_helper):
     assert len(specviz_helper.app.data_collection) == 1
 
 
+def test_dbg_access(deconfigged_helper):
+    test_data = np.array([1, 2, 3])
+    deconfigged_helper.loaders['object'].object = test_data
+
+    # test that _get_importer is successful to grab the object
+    # and expose the underlying error
+    with pytest.raises(ValueError, match="Imviz cannot load this array with ndim=1"):  # noqa
+        deconfigged_helper._get_importer('object', 'object', 'Image')
+
+
 def test_trace_importer(specviz2d_helper, spectrum2d):
     specviz2d_helper._load(spectrum2d, format='2D Spectrum')
 
