@@ -147,7 +147,6 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
                                             wave_units,
                                             flux_units)
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         data_label = self.data_label_value
-        self.add_to_data_collection(self.output, f"{data_label}",
-                                    show_in_viewer=show_in_viewer)
+        self.add_to_data_collection(self.output, f"{data_label}")

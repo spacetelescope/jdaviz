@@ -2,7 +2,7 @@ from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
-from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AutoTextField,
@@ -202,9 +202,16 @@ class BaseImporterToDataCollection(BaseImporter):
             viewer_select.select_all()
 
         else:
+            failed_viewers = []
             for viewer_label in viewer_select.selected:
                 viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
-                viewer.data_menu.add_data(data_label)
+                try:
+                    viewer.data_menu.add_data(data_label)
+                except Exception:
+                    failed_viewers.append(viewer_label)
+            if len(failed_viewers) > 0:
+                msg = f"Failed to add data to viewers: {', '.join(failed_viewers)}"
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error'))
 
     def __call__(self):
         if self.data_label_invalid_msg:

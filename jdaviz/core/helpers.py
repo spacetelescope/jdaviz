@@ -197,13 +197,17 @@ class ConfigHelper(HubListener):
                                           **kwargs)
 
         # TODO: deprecate show_in_viewer?
-        show_in_viewer = kwargs.pop('show_in_viewer', True)
-        importer = resolver.importer
+        if 'show_in_viewer' in kwargs.keys():
+            if 'viewer' in kwargs.keys():
+                raise ValueError('Cannot specify both "show_in_viewer" and "viewer".')
+            warnings.warn('The "show_in_viewer" argument is deprecated and will be removed in a future version. Use "viewer" instead.', DeprecationWarning)  # noqa
+            kwargs['viewer'] = '*' if kwargs.pop('show_in_viewer') else []
 
+        importer = resolver.importer
         for k, v in kwargs.items():
             if hasattr(importer, k) and v is not None:
                 setattr(importer, k, v)
-        return importer(show_in_viewer=show_in_viewer)
+        return importer()
 
     @property
     def data_labels(self):
