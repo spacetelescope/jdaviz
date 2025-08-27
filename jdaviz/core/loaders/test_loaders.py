@@ -59,7 +59,7 @@ def test_dbg_access(deconfigged_helper):
 
     # test that _get_importer is successful to grab the object
     # and expose the underlying error
-    with pytest.raises(ValueError, match="Imviz cannot load this array with ndim=1"):  # noqa
+    with pytest.raises(ValueError, match="Cannot load as image with ndim=1"):  # noqa
         deconfigged_helper._get_importer('object', 'object', 'Image')
 
 

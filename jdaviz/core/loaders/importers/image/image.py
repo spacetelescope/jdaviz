@@ -339,7 +339,7 @@ def _validate_bunit(bunit, raise_error=False):
 
 def _ndarray_to_glue_data(arr):
     if arr.ndim != 2:
-        raise ValueError(f'Imviz cannot load this array with ndim={arr.ndim}')
+        raise ValueError(f'Cannot load as image with ndim={arr.ndim}')
 
     data = Data()
     component = Component.autotyped(arr)
@@ -349,7 +349,7 @@ def _ndarray_to_glue_data(arr):
 
 def _nddata_to_glue_data(ndd):
     if ndd.data.ndim != 2:
-        raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
+        raise ValueError(f'Cannot load as image with ndim={ndd.data.ndim}')
 
     returned_data = []
     for attrib in ('data', 'mask', 'uncertainty'):
