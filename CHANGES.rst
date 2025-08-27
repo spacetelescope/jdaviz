@@ -7,6 +7,9 @@ New Features
 - The Model Fitting plugin now allows the user to select a fitter from a dropdown menu, with the default being the
   ``astropy.modeling.fitting.TRFLSQFitter``. [#3720]
 
+- Initialized model components in Model Fitting now update when units are changed by the
+  Unit Conversion plugin. [#3742]
+
 Cubeviz
 ^^^^^^^
 
