@@ -780,8 +780,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 current_quant = param['value']*u.Unit(param['unit'])
                 new_quant = None
                 if ((axis == 'y' and param['unit'] == previous_y) or
-                    (axis == 'x' and param['unit'] == previous_x)):
-                        new_quant = current_quant.to(self._units[axis])
+                        (axis == 'x' and param['unit'] == previous_x)):
+                    new_quant = current_quant.to(self._units[axis])
                 elif param['name'] in ('slope', 'c1'):
                     new_quant = current_quant.to(u.Unit(self._units['y']) /
                                                  u.Unit(self._units['x']))

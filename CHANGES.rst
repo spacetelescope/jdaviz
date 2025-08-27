@@ -12,6 +12,9 @@ New Features
 
 - Ability to change the logger levels and clear the logger history from the UI. [#3745]
 
+- Initialized model components in Model Fitting now update when units are changed by the
+  Unit Conversion plugin. [#3742]
+
 Cubeviz
 ^^^^^^^
 
