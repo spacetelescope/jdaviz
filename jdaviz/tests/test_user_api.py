@@ -1,5 +1,8 @@
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+import warnings
 
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+import pytest
+import re
 
 # This applies to all viz but testing with Imviz should be enough.
 class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
@@ -59,13 +62,32 @@ def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
                                      '3: [ERR,1]',
                                      '4: [DQ,1]']
 
+    extension_obj.multiselect = False
+
     # Test all
     ldr.importer._obj.user_api.extension = '*'
+    assert extension_obj.multiselect is True
     assert extension_obj.selected == extension_obj.choices
 
+    extension_obj.multiselect = False
     # Test for repeats
     ldr.importer._obj.user_api.extension = ['*', '*:*']
+    assert extension_obj.multiselect is True
     assert extension_obj.selected == extension_obj.choices
+
+    with warnings.catch_warnings():
+        # It's not too important what the warning message is, just that one is raised
+        warnings.filterwarnings("ignore", message="No wildcard matches found for *")
+
+        ldr.importer._obj.user_api.extension = 'bad * result'
+        assert len(extension_obj.selected) == 0
+
+        ldr.importer._obj.user_api.extension = ['another *', 'bad * result']
+        assert len(extension_obj.selected) == 0
+
+        with pytest.raises(ValueError, match=
+                           re.escape(f"not all items in ['another'] are one of {extension_obj.choices}, reverting selection to []")):  # noqa
+            ldr.importer._obj.user_api.extension = ['another', 'bad * result']
 
     ldr.importer._obj.user_api.extension = '1:*'
     assert extension_obj.selected == [extension_obj.choices[0]]

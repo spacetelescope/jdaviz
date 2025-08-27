@@ -67,14 +67,19 @@ class UserApiWrapper:
                                                 AutoTextField)
 
         def wildcard_match_str(value):
-            return fnmatch.filter(exp_obj.choices, value)
+            matched = fnmatch.filter(exp_obj.choices, value)
+            if len(matched) == 0:
+                warnings.warn(f"No wildcard matches found for '{value}'.")
+            return matched
 
         def wildcard_match_list_of_str(value):
             matched = []
             for v in value:
                 if isinstance(v, str) and '*' in v:
+                    # Check for wildcard matches
                     matched.extend(wildcard_match_str(v))
                 else:
+                    # Append as-is
                     matched.append(v)
 
             # Remove duplicates while preserving order
