@@ -5,7 +5,7 @@ from astropy.wcs import WCS
 from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.core.registries import loader_importer_registry
+from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectFileExtensionComponent,
@@ -92,8 +92,15 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                                 'ext_viewer_label_invalid_msg',
                                                 multiselect='ext_viewer_multiselect',
                                                 default_mode='empty')
-        self.ext_viewer_create_new_items = [{'label': '1D Spectrum',
-                                             'reference': 'spectrum-1d-viewer'}]
+        supported_viewers = [{'label': '1D Spectrum',
+                              'reference': 'spectrum-1d-viewer'}]
+        self.ext_viewer_create_new_items = supported_viewers
+
+        def viewer_in_registry_names(viewer):
+            classes = [viewer_registry.members.get(item.get('reference')).get('cls')
+                       for item in supported_viewers]
+            return isinstance(viewer, tuple(classes))
+        self.ext_viewer.add_filter(viewer_in_registry_names)
         self.ext_viewer.select_default()
 
         self.input_hdulist = isinstance(self.input, fits.HDUList)

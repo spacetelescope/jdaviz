@@ -114,7 +114,7 @@ class BaseImporterToDataCollection(BaseImporter):
         def viewer_in_registry_names(viewer):
             classes = [viewer_registry.members.get(item.get('reference')).get('cls')
                        for item in supported_viewers]
-            return viewer.__class__ in classes
+            return isinstance(viewer, tuple(classes))
         self.viewer.add_filter(viewer_in_registry_names)
         self.viewer.select_default()
 
@@ -210,7 +210,7 @@ class BaseImporterToDataCollection(BaseImporter):
                 except Exception:
                     failed_viewers.append(viewer_label)
             if len(failed_viewers) > 0:
-                msg = f"Failed to add data to viewers: {', '.join(failed_viewers)}"
+                msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
                 self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error'))
 
     def __call__(self):
