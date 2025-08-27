@@ -47,3 +47,31 @@ def test_toggle_api_hints(specviz_helper):
     assert specviz_helper.app.state.show_api_hints is True
     specviz_helper.toggle_api_hints()
     assert specviz_helper.app.state.show_api_hints is False
+
+def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
+    ldr = imviz_helper.loaders['object']
+    ldr.object = multi_extension_image_hdu_wcs
+    extension_obj = ldr.importer.extension
+
+    # Leaving this here for future reference
+    assert extension_obj.choices == ['1: [SCI,1]',
+                                     '2: [MASK,1]',
+                                     '3: [ERR,1]',
+                                     '4: [DQ,1]']
+
+    # Test all
+    ldr.importer._obj.user_api.extension = '*'
+    assert extension_obj.selected == extension_obj.choices
+
+    # Test for repeats
+    ldr.importer._obj.user_api.extension = ['*', '*:*']
+    assert extension_obj.selected == extension_obj.choices
+
+    ldr.importer._obj.user_api.extension = '1:*'
+    assert extension_obj.selected == [extension_obj.choices[0]]
+
+    ldr.importer._obj.user_api.extension = '*S*'
+    assert extension_obj.selected == extension_obj.choices[:2]
+
+    ldr.importer._obj.user_api.extension = ['*ERR*', '*DQ*']
+    assert extension_obj.selected == extension_obj.choices[2:]
