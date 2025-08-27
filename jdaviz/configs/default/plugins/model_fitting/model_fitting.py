@@ -93,6 +93,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     model_comp_items = List().tag(sync=True)
     model_comp_selected = Unicode().tag(sync=True)
     poly_order = IntHandleEmpty(0).tag(sync=True)
+    poly_order_invalid_msg = Unicode().tag(sync=True)
 
     comp_label = Unicode().tag(sync=True)
     comp_label_default = Unicode().tag(sync=True)
@@ -223,12 +224,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose = ['dataset']
         if self.config == "cubeviz":
             expose += ['cube_fit']
-        expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
-                   'model_components', 'valid_model_components',
-                   'create_model_component', 'remove_model_component',
-                   'get_model_component', 'set_model_component', 'reestimate_model_parameters',
+        expose += ['spectral_subset', 'model_component',
+                   'poly_order', 'model_component_label', 'model_components',
+                   'valid_model_components', 'create_model_component',
+                   'remove_model_component', 'get_model_component',
+                   'set_model_component', 'reestimate_model_parameters',
                    'equation', 'equation_components',
-                   'add_results', 'residuals_calculate', 'residuals']
+                   'add_results', 'residuals_calculate',
+                   'residuals']
         expose += ['calculate_fit', 'clear_table', 'export_table',
                    'fitted_models', 'get_models', 'get_model_parameters', 'fitter_component']
         return PluginUserApi(self, expose=expose)
@@ -425,6 +428,41 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.comp_label_default = self._default_comp_label(self.model_comp_selected,
                                                            self.poly_order)
 
+    @observe('poly_order')
+    def _check_poly_order(self, event={}, model_comp=None, poly_order=None):
+        """
+        Check that the polynomial order is valid if the model component is
+        Polynomial1D.  If not, set the invalid message and return None.
+
+        Parameters
+        ----------
+        event : dict
+            IPyWidget callback event object.
+        model_comp : str
+            Type of model component to check.  If not provided, will default
+            to the object attribute ``model_comp_selected``.
+        poly_order : int
+            Order of the polynomial to check.  If not provided, will default
+            to the object attribute ``poly_order``.
+
+        Returns
+        -------
+        int or None
+            The polynomial order if valid, otherwise None.
+        """
+        self.poly_order_invalid_msg = ""
+
+        model_comp = model_comp if model_comp is not None else self.model_comp_selected
+        if model_comp != 'Polynomial1D':
+            return None
+
+        poly_order = poly_order if poly_order is not None else self.poly_order
+        if not isinstance(poly_order, int) or poly_order < 0:
+            self.poly_order_invalid_msg = "Order must be an integer >= 0"
+            return None
+
+        return poly_order
+
     @observe('comp_label')
     def _comp_label_changed(self, event={}):
         if not len(self.comp_label.strip()):
@@ -518,7 +556,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if model_comp != "Polynomial1D" and poly_order is not None:
             raise ValueError("poly_order should only be passed if model_component is Polynomial1D")
-        poly_order = poly_order if poly_order is not None else self.poly_order
+
+        poly_order = self._check_poly_order(model_comp=model_comp, poly_order=poly_order)
+        if self.poly_order_invalid_msg:
+            raise ValueError(f"poly_{self.poly_order_invalid_msg.lower()}")
 
         # if model_component was passed and different than the one set in the traitlet, AND
         # model_component_label is not passed, AND the auto is enabled on the label, then
