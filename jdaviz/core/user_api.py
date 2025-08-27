@@ -92,13 +92,13 @@ class UserApiWrapper:
                     exp_obj.selected = wildcard_match_str(value)
                     return
 
-                elif isinstance(value, (list, tuple)) and any(
-                        '*' in v for v in value if isinstance(v, str)):
+                elif (isinstance(value, (list, tuple)) and
+                      any('*' in v for v in value if isinstance(v, str))):
                     exp_obj.multiselect = True
                     exp_obj.selected = wildcard_match_list_of_str(value)
                     return
 
-            elif isinstance(exp_obj, SelectFileExtensionComponent):
+            if isinstance(exp_obj, SelectFileExtensionComponent):
                 def to_choice_single(value):
                     if isinstance(value, int):
                         # allow setting by index
