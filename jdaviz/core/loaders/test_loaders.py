@@ -85,6 +85,27 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     assert specviz2d_helper.app.data_collection[-1].label == 'Trace 2'
 
 
+def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum2d
+
+    assert ldr.importer.viewer.create_new.selected == '2D Spectrum'
+    assert ldr.importer.viewer.new_label.value == '2D Spectrum'
+    assert ldr.importer.ext_viewer.create_new.selected == '1D Spectrum'
+    assert ldr.importer.ext_viewer.new_label.value == '1D Spectrum'
+
+    ldr.importer.ext_viewer.create_new.selected = ''
+    assert ldr.importer.ext_viewer.selected == []
+
+    assert ldr.importer.auto_extract
+    ldr.importer()
+
+    # created 2D Spectrum viewer, did auto-extract,
+    # but did not create 1D Spectrum viewer
+    assert len(deconfigged_helper.viewers) == 1
+    assert len(deconfigged_helper.app.data_collection) == 2
+
+
 def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
