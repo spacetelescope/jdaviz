@@ -64,7 +64,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
     * ``model_component`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``poly_order``
-    * ``poly_order_invalid_msg``
     * ``model_component_label`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
     * :meth:`create_model_component`
     * :meth:`remove_model_component`
