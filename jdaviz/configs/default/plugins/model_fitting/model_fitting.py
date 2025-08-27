@@ -741,15 +741,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             return
 
-        print(msg)
         unit = msg.unit
-
-        # We store the original values of the parameters from before the units changed
-        for m in self.component_models:
-            for param in m["parameters"]:
-                if "original_unit" not in param:
-                    param["original_unit"] = str(param["unit"])
-                    param["original_value"] = param["value"]
 
         if axis == 'y':
             # The units have to be in surface brightness for a cube fit.
@@ -768,16 +760,42 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             else:
                 if unit != uc._obj.sb_unit_selected:
-                    self._units[axis] = uc._obj.sb_unit_selected
+                    unit = uc._obj.sb_unit_selected
                     self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                     return
                 elif msg.axis == 'flux' and uc._obj.has_sb:
                     unit = u.Unit(self.app._get_display_unit('sb'))
 
+        if 'x' in self._units and 'y' in self._units:
+            # Not populated yet on startup
+            previous_x = self._units['x']
+            previous_y = self._units['y']
+
         # update internal tracking of current units
         self._units[axis] = str(unit)
 
+        # Update model component values and units
+        for model in self.component_models:
+            for param in model['parameters']:
+                current_quant = param['value']*u.Unit(param['unit'])
+                new_quant = None
+                if ((axis == 'y' and param['unit'] == previous_y) or
+                    (axis == 'x' and param['unit'] == previous_x)):
+                        new_quant = current_quant.to(self._units[axis])
+                elif param['name'] in ('slope', 'c1'):
+                    new_quant = current_quant.to(u.Unit(self._units['y']) /
+                                                 u.Unit(self._units['x']))
+                elif param['name'][0] == 'c':
+                    order = int(param['name'][1:])
+                    new_quant = current_quant.to(u.Unit(self._units['y']) /
+                                                 u.Unit(self._units['x'])**order)
+                # Some parameters have units that aren't related to x or y
+                if new_quant is not None:
+                    param['value'] = new_quant.value
+                    param['unit'] = str(new_quant.unit)
+
         self._check_model_component_compat([axis], [unit])
+        self._update_initialized_parameters()
 
     def remove_model_component(self, model_component_label):
         """
@@ -1292,8 +1310,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self._warn_if_no_equation():
             return
         models_to_fit = self._reinitialize_with_fixed()
+        print(models_to_fit)
 
         spec = self.dataset.get_selected_spectrum(use_display_units=True)
+        print(spec)
 
         masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)
