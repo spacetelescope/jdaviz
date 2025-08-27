@@ -12,7 +12,9 @@ Bug Fixes
 - Use validator on subset layer visibility and subset deletion to ensure toggling visibility and
   deleting subsets from data menu and plot options updates accordingly. [#3708]
 
-- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731] 
+- Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731]
+
+- Fixed issue in Rampviz where new loader infrastructure was unintentionally exposed. [#3740]
 
 Cubeviz
 ^^^^^^^
