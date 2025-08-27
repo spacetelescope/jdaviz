@@ -94,7 +94,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                                 default_mode='empty')
         supported_viewers = [{'label': '1D Spectrum',
                               'reference': 'spectrum-1d-viewer'}]
-        self.ext_viewer_create_new_items = supported_viewers
+        if self.app.config == 'deconfigged':
+            self.ext_viewer_create_new_items = supported_viewers
 
         def viewer_in_registry_names(viewer):
             classes = [viewer_registry.members.get(item.get('reference')).get('cls')

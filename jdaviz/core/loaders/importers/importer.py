@@ -103,7 +103,8 @@ class BaseImporterToDataCollection(BaseImporter):
         self._on_label_changed()
 
         supported_viewers = self._get_supported_viewers()
-        self.viewer_create_new_items = supported_viewers
+        if self.app.config == 'deconfigged':
+            self.viewer_create_new_items = supported_viewers
 
         # for now, we'll use the same list of viewers that can be created
         # as the filter on existing viewers.  Eventually we may want this
