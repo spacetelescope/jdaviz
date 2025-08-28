@@ -51,7 +51,7 @@ def test_toggle_api_hints(specviz_helper):
     assert specviz_helper.app.state.show_api_hints is False
 
 
-def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
+def test_wildcard_matching_selected(imviz_helper, multi_extension_image_hdu_wcs):
     default_choices = ['1: [SCI,1]',
                        '2: [MASK,1]',
                        '3: [ERR,1]',
@@ -99,19 +99,29 @@ def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
         # Test multi-selection
         ('*ERR*', '*DQ*'): extension_obj.choices[2:]}
 
-    # Check both direct and through load
     for selection, expected in test_selections.items():
-        # Direct
         ldr.importer._obj.user_api.extension = selection
         assert extension_obj.multiselect is True
         assert extension_obj.selected == expected
         # Reset
         extension_obj.selected = []
+        extension_obj.multiselect = False
 
-        # Through load
-        imviz_helper.load(multi_extension_image_hdu_wcs, extension=selection)
-        #print(imviz_helper.app.data_collection.labels)# == expected
-        #raise Exception()
 
-        # Reset
-        extension_obj.selected = []
+@pytest.mark.parametrize(
+    ("selection", "matches"), [
+        ('*', (0, 1, 2, 3)),
+        (('*', '*:*'), (0, 1, 2, 3)),
+        ('1:*', (0,)),
+        ('*S*', (0, 1)),
+        (('*ERR*', '*DQ*'), (2, 3))])
+def test_wildcard_matching_through_load(imviz_helper, multi_extension_image_hdu_wcs,
+                                        selection, matches):
+    data_labels = ['Image[SCI,1]',
+                   'Image[MASK,1]',
+                   'Image[ERR,1]',
+                   'Image[DQ,1]']
+
+    # Through load
+    imviz_helper.load(multi_extension_image_hdu_wcs, extension=selection)
+    assert imviz_helper.data_labels == [data_labels[i] for i in matches]
