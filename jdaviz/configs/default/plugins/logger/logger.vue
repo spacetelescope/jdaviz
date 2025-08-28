@@ -38,7 +38,9 @@
       }}
     </plugin-action-button>
 
-    <span v-if="api_hints_enabled" class="api-hint">plg.history</span>
+    <v-row v-if="api_hints_enabled">
+      <span class="api-hint">plg.history</span>
+    </v-row>
     <v-alert v-if="history.length === 0" dense type="info">No logger messages</v-alert>
     <v-row
         dense
