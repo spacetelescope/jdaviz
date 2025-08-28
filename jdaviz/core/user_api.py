@@ -15,7 +15,8 @@ class UserApiWrapper:
     This is an API wrapper around an internal object.  For a full list of attributes/methods,
     call dir(object).
     """
-    def __init__(self, obj, expose=[], readonly=[], exclude_from_dict=[], deprecated=[], repr_callable=None):
+    def __init__(self, obj, expose=[], readonly=[], exclude_from_dict=[], deprecated=[],
+                 repr_callable=None):
         self._obj = obj
         self._expose = list(expose) + list(readonly)
         self._readonly = readonly
