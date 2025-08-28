@@ -124,19 +124,20 @@ class UserApiWrapper:
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
 
-            elif hasattr(exp_obj, 'multiselect'):
-                if isinstance(value, str) and '*' in value:
+            # any works to check both str and list/tuple
+            elif (hasattr(exp_obj, 'multiselect') and
+                  any('*' in v for v in value if isinstance(v, str))):
+                if isinstance(value, str):
                     exp_obj.multiselect = True
                     exp_obj.selected = wildcard_match_str(value)
                     return
 
-                elif (isinstance(value, (list, tuple)) and
-                      any('*' in v for v in value if isinstance(v, str))):
+                elif isinstance(value, (list, tuple)):
                     exp_obj.multiselect = True
                     exp_obj.selected = wildcard_match_list_of_str(value)
                     return
 
-            if isinstance(exp_obj, SelectFileExtensionComponent):
+            elif isinstance(exp_obj, SelectFileExtensionComponent):
                 def to_choice_single(value):
                     if isinstance(value, int):
                         # allow setting by index
