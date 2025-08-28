@@ -13,6 +13,7 @@ __all__ = ['Logger', '_verbosity_levels']
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 
+
 @tray_registry('logger', label="Logger",
                category='core', sidebar='info', subtab=2)
 class Logger(PluginTemplateMixin):
