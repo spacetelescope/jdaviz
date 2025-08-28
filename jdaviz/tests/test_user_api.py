@@ -75,19 +75,24 @@ def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
     assert extension_obj.multiselect is True
     assert extension_obj.selected == extension_obj.choices
 
-    with warnings.catch_warnings():
-        # It's not too important what the warning message is, just that one is raised
-        warnings.filterwarnings("ignore", message="No wildcard matches found for *")
+    # Resetting
+    extension_obj.selected = []
+    err_str1 = "not all items in"
+    err_str2 = f"are one of {extension_obj.choices}, reverting selection to []"
+    with pytest.raises(ValueError,
+                       match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
+        ldr.importer._obj.user_api.extension = 'bad *'
 
-        ldr.importer._obj.user_api.extension = 'bad * result'
-        assert len(extension_obj.selected) == 0
+    with pytest.raises(ValueError,
+                       match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
+        ldr.importer._obj.user_api.extension = ['bad *', '* result']
 
-        ldr.importer._obj.user_api.extension = ['another *', 'bad * result']
-        assert len(extension_obj.selected) == 0
+    with pytest.raises(ValueError,
+                       match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
+        ldr.importer._obj.user_api.extension = ['another', 'bad * result']
 
-        with pytest.raises(ValueError, match=
-                           re.escape(f"not all items in ['another'] are one of {extension_obj.choices}, reverting selection to []")):  # noqa
-            ldr.importer._obj.user_api.extension = ['another', 'bad * result']
+    # Check that selected is still/reverted successfully to []
+    assert extension_obj.selected == []
 
     ldr.importer._obj.user_api.extension = '1:*'
     assert extension_obj.selected == [extension_obj.choices[0]]

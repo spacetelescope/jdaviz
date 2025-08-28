@@ -69,7 +69,7 @@ class UserApiWrapper:
         def wildcard_match_str(value):
             matched = fnmatch.filter(exp_obj.choices, value)
             if len(matched) == 0:
-                warnings.warn(f"No wildcard matches found for '{value}'.")
+                matched = [value]
             return matched
 
         def wildcard_match_list_of_str(value):
