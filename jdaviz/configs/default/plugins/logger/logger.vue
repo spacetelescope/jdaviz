@@ -7,6 +7,36 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <plugin-select
+      :items="popup_verbosity_items.map(i => i.label)"
+      :selected.sync="popup_verbosity_selected"
+      label="Popup Verbosity Level"
+      api_hint="plg.popup_verbosity ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Minimum verbosity level to show a popup message."
+    ></plugin-select>
+
+    <plugin-select
+      :items="history_verbosity_items.map(i => i.label)"
+      :selected.sync="history_verbosity_selected"
+      label="History Verbosity Level"
+      api_hint="plg.history_verbosity ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Minimum verbosity level to show in the log below."
+    ></plugin-select>
+
+    <plugin-action-button
+      :disabled="history.length == 0"
+      :results_isolated_to_plugin="true"
+      :api_hints_enabled="api_hints_enabled"
+
+      @click="clear_history">
+      {{ api_hints_enabled ?
+        'plg.clear_history()'
+        :
+        'Clear History'
+      }}
+    </plugin-action-button>
 
     <span v-if="api_hints_enabled" class="api-hint">plg.history</span>
     <v-alert v-if="history.length === 0" dense type="info">No logger messages</v-alert>
