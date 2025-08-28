@@ -213,7 +213,7 @@ class BaseImporterToDataCollection(BaseImporter):
     def __call__(self):
         if self.data_label_invalid_msg:
             raise ValueError(self.data_label_invalid_msg)
-        if self.viewer_label_invalid_msg:
+        if self.viewer.create_new.selected != '' and self.viewer_label_invalid_msg:
             raise ValueError(self.viewer_label_invalid_msg)
         self.add_to_data_collection(self.output)
 
