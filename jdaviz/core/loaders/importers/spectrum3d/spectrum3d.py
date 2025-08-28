@@ -14,12 +14,12 @@ from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 
-__all__ = ['Spectrum2DImporter']
+__all__ = ['Spectrum3DImporter']
 
 
 def hdu_is_valid(item):
     """
-    Check if the HDU is valid to be imported as a 2D Spectrum.
+    Check if the HDU is valid to be imported as a 3D Spectrum.
 
     Parameters
     ----------
@@ -32,15 +32,15 @@ def hdu_is_valid(item):
         True if the HDU is a valid light curve HDU, False otherwise.
     """
     hdu = item.get('obj')
-    return (len(getattr(hdu, 'shape', [])) == 2
+    return (len(getattr(hdu, 'shape', [])) == 3
             and ('DISPAXIS' in hdu.header
                  or hdu.header.get('CTYPE1', '') == 'WAVE'
                  or hdu.header.get('EXTNAME', '') == 'FLUX'))
 
 
-@loader_importer_registry('2D Spectrum')
-class Spectrum2DImporter(BaseImporterToDataCollection):
-    template_file = __file__, "./spectrum2d.vue"
+@loader_importer_registry('3D Spectrum')
+class Spectrum3DImporter(BaseImporterToDataCollection):
+    template_file = __file__, "./spectrum3d.vue"
     parser_preference = ['fits', 'specutils.Spectrum']
 
     auto_extract = Bool(True).tag(sync=True)
@@ -72,8 +72,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
 
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
-        elif self.app.config == 'specviz2d':
-            self.data_label_default = '2D Spectrum'
+        else:
+            self.data_label_default = '3D Spectrum'
 
         self.ext_data_label = AutoTextField(self,
                                             'ext_data_label_value',
@@ -113,6 +113,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                             'index': index,
                             'obj': hdu}
                            for index, hdu in enumerate(self.input)]
+            # TODO: make this multiselect and automatically assign roles or have
+            # separate flux_extension, unc_extension, mask_extension, etc?
             self.extension = SelectFileExtensionComponent(self,
                                                           items='extension_items',
                                                           selected='extension_selected',
@@ -121,7 +123,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
 
     @staticmethod
     def _get_supported_viewers():
-        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
+        return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
 
     @property
     def user_api(self):
@@ -132,11 +134,11 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz2d'):
+        if self.app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         if not ((isinstance(self.input, Spectrum)
-                 and self.input.flux.ndim == 2) or
+                 and self.input.flux.ndim == 3) or
                 (isinstance(self.input, fits.HDUList)
                  and len([hdu for hdu in self.input if hdu_is_valid({'obj': hdu})]))):  # noqa
             return False
@@ -163,13 +165,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         wcs = WCS(header, hdulist)
-        if data.shape[0] > data.shape[1]:
-            data = data.T
-            self.app.hub.broadcast(SnackbarMessage(
-                f"Transposed input data to {data.shape}",
-                sender=self, color="warning"))
-        if wcs.array_shape[0] > wcs.array_shape[1]:
-            wcs = wcs.swapaxes(0, 1)
 
         try:
             data_unit = u.Unit(header['BUNIT'])
@@ -217,19 +212,20 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             return
 
         try:
-            spext = self.app.get_tray_item_from_name('spectral-extraction-2d')
+            spext = self.app.get_tray_item_from_name('spectral-extraction-3d')
             ext = spext._extract_in_new_instance(dataset=data_label,
+                                                 auto_update=False,
                                                  add_data=False)
         except Exception:
             ext = None
             msg = SnackbarMessage(
-                "Automatic spectrum extraction failed. See the 2D spectral extraction"
+                "Automatic spectrum extraction failed. See the 3D spectral extraction"
                 " plugin to perform a custom extraction",
                 color='error', sender=self, timeout=10000)
         else:
             msg = SnackbarMessage(
                 "The extracted 1D spectrum was generated automatically."
-                " See the 2D spectral extraction plugin for details or to"
+                " See the 3D spectral extraction plugin for details or to"
                 " perform a custom extraction.",
                 color='warning', sender=self, timeout=10000)
         self.app.hub.broadcast(msg)

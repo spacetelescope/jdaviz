@@ -3805,6 +3805,9 @@ class ViewerSelect(SelectPluginComponent):
         def is_image_viewer(viewer):
             return _is_image_viewer(viewer)
 
+        def is_imviz_image_viewer(viewer):
+            return viewer.__class__.__name__ == 'ImvizImageView'
+
         def is_slice_indicator_viewer(viewer):
             return isinstance(viewer, WithSliceIndicator)
 
