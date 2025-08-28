@@ -44,9 +44,10 @@
       label="Extract 1D Spectrum"
       api_hint="ldr.importer.auto_extract ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extract a 1D spectrum from the 2D data (use the 2D Spectral Extraction Plugin after importing to extract with custom aperture/options)."
+      hint="Extract a 1D spectrum from the entire cube (use the 3D Spectral Extraction Plugin after importing to extract for a particular spatial subset)."
     ></plugin-switch>
     <div v-if="auto_extract">
+      <span><b>TODO:</b> allow selecting function</span>
       <plugin-auto-label
         :value.sync="ext_data_label_value"
         :default="ext_data_label_default"
@@ -76,20 +77,5 @@
         hint="Select the viewer to use for the new extracted 1D Spectrum data entry."
       ></plugin-viewer-create-new>
     </div>
-
-    <v-row justify="end">
-      <plugin-action-button
-        :spinner="import_spinner"
-        :disabled="import_disabled"
-        :results_isolated_to_plugin="false"
-        :api_hints_enabled="api_hints_enabled"
-        @click="import_clicked">
-        {{ api_hints_enabled ?
-          'ldr.importer()'
-          :
-          'Import'
-        }}
-      </plugin-action-button>
-    </v-row>
   </v-container>
 </template>
