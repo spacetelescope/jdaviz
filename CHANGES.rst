@@ -30,7 +30,7 @@ Specviz2d
 API Changes
 -----------
 
-- Extend unix style wildcard matching in ``user_api`` for ``SelectPluginComponent`` objects. [#3744]
+- Extend unix style wildcard matching for select objects supporting multiselect. [#3744]
 
 Cubeviz
 ^^^^^^^
