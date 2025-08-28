@@ -1,4 +1,5 @@
 import warnings
+import fnmatch
 
 import astropy.units as u
 
@@ -47,6 +48,7 @@ class UserApiWrapper:
     def __setattr__(self, attr, value):
         if attr in _internal_attrs:
             return super().__setattr__(attr, value)
+
         if attr not in self._expose:
             raise ValueError(f"{attr} is not a valid attribute and cannot be set")
 
@@ -56,21 +58,85 @@ class UserApiWrapper:
         exp_obj = getattr(self._obj, attr)
         if hasattr(exp_obj, '__call__'):
             raise AttributeError(f"{attr} is a callable, cannot set to a value.  See help({attr}) for input arguments.")  # noqa
+
         from jdaviz.core.template_mixin import (SelectPluginComponent,
                                                 UnitSelectPluginComponent,
                                                 SelectFileExtensionComponent,
                                                 PlotOptionsSyncState,
                                                 AddResults,
                                                 AutoTextField)
+
+        def wildcard_match_str(value):
+            """
+            Return a list of strings from exp_obj.choices that match the wildcard pattern
+            in 'value'. If no matches are found, return a list containing 'value' itself.
+
+            Note: fnmatch provides support for *all* Unix style wildcards
+            including ?, [seq], and [!seq]. If we want to exclude those to
+            only allow *, then we'd have to sanitize 'value'.
+
+            Parameters
+            ----------
+            value : str
+                The wildcard pattern to match against exp_obj.choices.
+
+            Returns
+            -------
+            list of str
+                A list of matched strings or [value] if no matches found.
+            """
+            matched = fnmatch.filter(exp_obj.choices, value)
+            if len(matched) == 0:
+                matched = [value]
+            return matched
+
+        def wildcard_match_list_of_str(value):
+            """
+            Return a list of strings from exp_obj.choices that match any of the wildcard
+            patterns in the 'value' iterable. If no matches are found for a particular pattern,
+            include the pattern itself in the output list.
+
+            Parameters
+            ----------
+            value : list or tuple of str
+                An iterable containing wildcard patterns to match against exp_obj.choices.
+
+            Returns
+            -------
+            list of str
+                A list of matched strings or the original patterns if no matches found.
+            """
+            matched = []
+            for v in value:
+                if isinstance(v, str) and '*' in v:
+                    # Check for wildcard matches
+                    matched.extend(wildcard_match_str(v))
+                else:
+                    # Append as-is
+                    matched.append(v)
+
+            # Remove duplicates while preserving order
+            return list(dict.fromkeys(matched))
+
         if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
-            elif value == '*' and hasattr(exp_obj, 'multiselect'):
-                exp_obj.multiselect = True
-                exp_obj.select_all()
-                return
+
+            # any works to check both str and list/tuple
+            elif (hasattr(exp_obj, 'multiselect') and
+                  any('*' in v for v in value if isinstance(v, str))):
+                if isinstance(value, str):
+                    exp_obj.multiselect = True
+                    exp_obj.selected = wildcard_match_str(value)
+                    return
+
+                elif isinstance(value, (list, tuple)):
+                    exp_obj.multiselect = True
+                    exp_obj.selected = wildcard_match_list_of_str(value)
+                    return
+
             elif isinstance(exp_obj, SelectFileExtensionComponent):
                 def to_choice_single(value):
                     if isinstance(value, int):
