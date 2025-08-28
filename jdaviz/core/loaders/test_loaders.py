@@ -218,15 +218,19 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     loader.importer()
 
 
-def test_deconfigged_spectrum_and_image(deconfigged_helper, spectrum1d, image_hdu_wcs):
-    # Load a 1D spectrum and a 2D image
-    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
-    deconfigged_helper.load(image_hdu_wcs, format='Image')
-    deconfigged_helper.load(spectrum1d, format='1D Spectrum')
+@pytest.mark.parametrize('order', ([0, 1, 2], [0, 2, 1], [2, 0, 1], [2, 1, 0], [1, 2, 0]))
+def test_mult_data_types(deconfigged_helper, image_nddata_wcs, spectrum2d, spectrum1d, order):
+    datas = [image_nddata_wcs, spectrum2d, spectrum1d]
+    load_kwargs = [{'format': 'Image'},
+                   {'format': '2D Spectrum', 'auto_extract': True},
+                   {'format': '1D Spectrum'}]
 
-    # Check that both data types are loaded correctly
-    assert len(deconfigged_helper.app.data_collection) == 3
-    assert len(deconfigged_helper.viewers) == 2
+    for i in order:
+        deconfigged_helper.load(datas[i], **load_kwargs[i])
+
+    # NOTE: 2D Spectrum will also result in auto-extracted 1D Spectrum
+    assert len(deconfigged_helper.app.data_collection) == 4
+    assert len(deconfigged_helper.viewers) == 3
 
 
 def test_load_image_mult_sci_extension(imviz_helper):
