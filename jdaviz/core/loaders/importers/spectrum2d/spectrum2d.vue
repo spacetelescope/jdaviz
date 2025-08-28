@@ -76,8 +76,5 @@
         hint="Select the viewer to use for the new extracted 1D Spectrum data entry."
       ></plugin-viewer-create-new>
     </div>
-
-
-    <!-- TODO: options for auto-extracted viewer -->
   </v-container>
 </template>

@@ -182,20 +182,16 @@ class BaseImporterToDataCollection(BaseImporter):
 
         viewer_select = viewer_select if viewer_select is not None else self.viewer
         if viewer_select.create_new.selected:
-            # TODO: allow passing this or storing in self.viewer?
             viewer_reference = viewer_select.create_new.selected_item.get('reference')
-
-            # TODO: remove the need for this by handling in default
-            default_viewer_label = self.app.return_unique_name(viewer_select.new_label.value,
-                                                               typ='viewer')
+            viewer_label = viewer_select.new_label.value
 
             viewer_dict = viewer_registry.members.get(viewer_reference)
             viewer_cls = viewer_dict.get('cls')
             self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
-                                    vid=default_viewer_label,
-                                    name=default_viewer_label,
+                                    vid=viewer_label,
+                                    name=viewer_label,
                                     open_data_menu_if_empty=False)
-            viewer = self.app._jdaviz_helper.viewers.get(default_viewer_label)
+            viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
             viewer.data_menu.add_data(data_label)
 
             # default to selecting the new viewer for next import
@@ -217,6 +213,8 @@ class BaseImporterToDataCollection(BaseImporter):
     def __call__(self):
         if self.data_label_invalid_msg:
             raise ValueError(self.data_label_invalid_msg)
+        if self.viewer_label_invalid_msg:
+            raise ValueError(self.viewer_label_invalid_msg)
         self.add_to_data_collection(self.output)
 
 

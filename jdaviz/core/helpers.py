@@ -196,7 +196,6 @@ class ConfigHelper(HubListener):
                                           target=target,
                                           **kwargs)
 
-        # TODO: deprecate show_in_viewer?
         if 'show_in_viewer' in kwargs.keys():
             if 'viewer' in kwargs.keys():
                 raise ValueError('Cannot specify both "show_in_viewer" and "viewer".')
