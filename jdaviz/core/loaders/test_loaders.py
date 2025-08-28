@@ -1,10 +1,14 @@
 import numpy as np
 import pytest
+from pathlib import Path
+from itertools import product
+
 from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from specutils import SpectralRegion, Spectrum
+
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.utils import cached_uri
@@ -113,8 +117,42 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert str(sp1d.spectral_axis.unit) == 'um'
 
 
+# TODO: Skip until file is uploaded to box
+@pytest.mark.skip
+def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['url']
+    # placeholder for WFSS L3 URI
+    ldr.url = None
+
+    # ldr = deconfigged_helper.loaders['file']
+    # ldr.filepath = './jdaviz/notebooks/WFSS_fits/jw01076-o103_t0000_nircam_f356w-grismr_x1d.fits'  # noqa
+    ldr.format = '1D Spectrum List'
+
+    # 1_117 is completely masked
+    sources_obj = ldr.importer.sources
+    number_combos = product((1, 2), (9, 17, 23))
+    sources_obj.selected = [f'Exposure {e_num}, Source ID: {s_id}'
+                            for e_num, s_id in number_combos]
+    ldr.importer()
+
+    assert len(deconfigged_helper.data_labels) == len(sources_obj.selected)
+    dc = deconfigged_helper.app.data_collection
+    assert len(dc) == len(sources_obj.selected)
+    assert len(deconfigged_helper.viewers) == 1
+
+    filestem = Path(ldr.filepath).stem
+    for e_num, s_id in number_combos:
+        spec = deconfigged_helper.get_data(f'{filestem}_EXP-{e_num}_ID-{s_id}')
+        assert isinstance(spec, Spectrum)
+        assert str(spec.spectral_axis.unit) == 'um'
+
+
 @pytest.mark.remote_data
-def test_resolver_url(deconfigged_helper):
+def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
+
+    def ignore_custom_loaders(existing_choices):
+        return [choice for choice in existing_choices if choice not in fake_classes_in_registries]
+
     loader = deconfigged_helper.loaders['url']
 
     # no url, no valid formats
@@ -131,19 +169,23 @@ def test_resolver_url(deconfigged_helper):
 
     # https valid input
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
-    assert len(loader.format.choices) == 4  # may change with future importers
+
+    # may change with future importers
+    assert len(ignore_custom_loaders(loader.format.choices)) == 4
     assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering
     assert len(loader.target.choices) > 1
     assert loader.target.selected == 'Any'
     loader.target = '1D Spectrum'
-    assert len(loader.format.choices) == 2  # may change with future importers
+
+    # may change with future importers
+    assert len(ignore_custom_loaders(loader.format.choices)) == 2
     assert loader.format == '1D Spectrum List'  # default may change with future importers
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
     loader.target = 'Any'
-    assert len(loader.format.choices) == 4
+    assert len(ignore_custom_loaders(loader.format.choices)) == 4
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
