@@ -79,6 +79,8 @@ Bug Fixes
 
 - Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731]
 
+- Fixed issue in Rampviz where new loader infrastructure was unintentionally exposed. [#3740]
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
