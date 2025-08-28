@@ -4089,8 +4089,10 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 2
 
         def is_image_not_spectrum(data):
+            if not hasattr(data, 'coords'):
+                return False
             return (is_image(data)
-                    and not getattr(data.coords, 'is_spectral', True))
+                    and not getattr(data.coords, 'has_spectral', False))
 
         def is_cube(data):
             return len(data.shape) == 3
@@ -4101,7 +4103,7 @@ class DatasetSelect(SelectPluginComponent):
         def is_spectrum(data):
             return (len(data.shape) == 1
                     and data.coords is not None
-                    and getattr(data.coords, 'is_spectral', True))
+                    and getattr(data.coords, 'has_spectral', True))
 
         def is_2d_spectrum_or_trace(data):
             return (data.ndim == 2
