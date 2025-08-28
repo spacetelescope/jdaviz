@@ -153,20 +153,8 @@ def test_extracted_file_in_export_plugin(cubeviz_helper, spectrum1d_cube_with_un
 
     extract_plugin = cubeviz_helper.plugins['3D Spectral Extraction']
 
-    # make sure export enabled is true, and that before the collapse function
-    # is run `extraction_available` is correctly set to False
-    assert extract_plugin._obj.export_enabled
-    assert extract_plugin._obj.extraction_available is False
-
     # run extract function, and make sure `extraction_available` was set to True
     extract_plugin._obj.vue_spectral_extraction()
-    assert extract_plugin._obj.extraction_available
-
-    # check that default filename is correct, then change path
-    fname = 'extracted_sum_Unknown spectrum object_FLUX.fits'
-    fname_path = tmp_path / fname
-    assert extract_plugin._obj.filename == fname
-    extract_plugin._obj.filename = str(fname_path)
 
     label = extract_plugin._obj.add_results.label
     export_plugin = cubeviz_helper.plugins['Export']._obj

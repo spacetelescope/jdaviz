@@ -264,7 +264,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=24.27156066879736, y=22.183517455582475), radius=4.7523674964904785))  # noqa E501
         >>> type(plg.get_regions()['Subset 1'])
         <class 'regions.shapes.circle.CircleSkyRegion'>
-        >>> type(plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')['Subset 1'])
+        >>> type(plg.get_regions(wrt_data='3D Spectrum [FLUX]')['Subset 1'])
         <class 'regions.shapes.circle.CirclePixelRegion'>
         """
 

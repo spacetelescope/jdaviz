@@ -2,7 +2,7 @@ from astropy.utils.decorators import deprecated
 
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
-from jdaviz.core.events import AddDataMessage, SnackbarMessage
+from jdaviz.core.events import AddDataMessage
 from jdaviz.core.helpers import CubeConfigHelper
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 
@@ -29,6 +29,8 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.load = self._load
 
         self.app.hub.subscribe(self, AddDataMessage,
                                handler=self._set_spectrum_x_axis)
@@ -59,6 +61,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                 viewer.state.x_att = ref_data.id["Pixel Axis 2 [x]"]
                 viewer.state.reset_limits()
 
+    @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, override_cube_limit=False, **kwargs):
         """
         Load and parse a data cube with Cubeviz.
@@ -83,32 +86,18 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         """
         if not override_cube_limit and len(self.app.state.data_items) != 0:
             raise RuntimeError('Only one cube may be loaded per Cubeviz instance')
-        if data_label:
-            kwargs['data_label'] = data_label
 
-        super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
-
-        if '3D Spectral Extraction' not in self.plugins:  # pragma: no cover
-            msg = SnackbarMessage(
-                "Automatic spectral extraction requires the 3D Spectral Extraction plugin to be enabled",  # noqa
-                color='error', sender=self, timeout=10000)
-            self.app.hub.broadcast(msg)
-        else:
-            try:
-                self.plugins['3D Spectral Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
-            except Exception as e:
-                msg = SnackbarMessage(
-                    "Automatic spectrum extraction for the entire cube failed."
-                    " See the 3D Spectral Extraction plugin to perform a custom extraction",
-                    color='error', sender=self, timeout=10000,
-                    traceback=e)
-            else:
-                msg = SnackbarMessage(
-                    "The extracted 1D spectrum was generated automatically for the entire cube."
-                    " See the 3D Spectral Extraction plugin for details or to"
-                    " perform a custom extraction.",
-                    color='warning', sender=self, timeout=10000)
-            self.app.hub.broadcast(msg)
+        format = kwargs.pop('format', ['1D Spectrum', '3D Spectrum'])
+        if data_label is not None:
+            if data_label[-6:] != "[FLUX]":
+                data_label = data_label.strip()+"[FLUX]"
+            kwargs.setdefault('unc_data_label', data_label.strip('[FLUX]').strip()+'[ERR]')
+        self.load(data,
+                  data_label=data_label,
+                  ext_data_label=f'Spectrum ({kwargs.get("function", "sum").lower()})',
+                  format=format,
+                  **kwargs)
+        return
 
     @deprecated(since="4.2", alternative="plugins['Slice'].value")
     def select_wavelength(self, wavelength):

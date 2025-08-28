@@ -161,7 +161,7 @@ class ConfigHelper(HubListener):
 
         from jdaviz.core.registries import loader_importer_registry
         ImporterCls = loader_importer_registry.members.get(importer_name)
-        return ImporterCls(app=self.app, resolver=resolver, input=input)
+        return ImporterCls(app=self.app, resolver=resolver, parser=parser, input=input)
 
     @property
     def new_viewers(self):
@@ -448,7 +448,7 @@ class ConfigHelper(HubListener):
             self.app.layout.height = height
             self.app.state.settings['context']['notebook']['max_height'] = height
 
-        if self.app.config in ('specviz', 'specviz2d', 'lcviz') or self.app.state.dev_loaders:
+        if self.app.config in CONFIGS_WITH_LOADERS or self.app.state.dev_loaders:  # noqa
             if not len(self.viewers) and not len(self.app.state.drawer_content):
                 self.app.state.drawer_content = 'loaders'
             else:

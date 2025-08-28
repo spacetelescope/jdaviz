@@ -22,7 +22,8 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     cubeviz_helper.plugins['Subset Tools'].import_region(aper)
 
     # Make sure MASK is not an option even when shown in viewer.
-    cubeviz_helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
+    with pytest.raises(ValueError, match=r"No data item found.*"):
+        cubeviz_helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]
     assert plg.dataset.labels == ["test[FLUX]", "test[ERR]"]
@@ -103,7 +104,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 
 def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
-    flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
+    flux_unit = u.Unit("erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
     solid_angle_unit = PIX2
 
     gauss_plg = cubeviz_helper.plugins["Gaussian Smooth"]._obj
@@ -131,10 +132,11 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     assert_allclose(sky.dec.deg, 27.003490103642033)
 
     # sum should be in flux ( have factor of pix^2 multiplied out of input unit)
-    assert_allclose(row["sum"], 48.54973 * flux_unit * solid_angle_unit)  # 3 (w) x 5 (h) x <5 (v)
+    assert_allclose(row["sum"],
+                    48.54973 * 1e-17 * flux_unit * solid_angle_unit)  # 3 (w) x 5 (h) x <5 (v)
 
     assert_allclose(row["sum_aper_area"], 15 * solid_angle_unit)  # 3 (w) x 5 (h)
-    assert_allclose(row["mean"], 3.236648941040039 * flux_unit)
+    assert_allclose(row["mean"], 3.236648941040039 * 1e-17 * flux_unit)
     assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
 

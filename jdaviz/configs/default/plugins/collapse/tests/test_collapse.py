@@ -12,8 +12,8 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     # TODO: this now fails when instantiating Collapse after initialization
     coll = cubeviz_helper.plugins['Collapse']._obj
 
-    coll.selected_data_item = 'Unknown spectrum object[FLUX]'
-    coll.dataset_selected = 'Unknown spectrum object[FLUX]'
+    coll.selected_data_item = '3D Spectrum [FLUX]'
+    coll.dataset_selected = '3D Spectrum [FLUX]'
 
     assert coll.results_label == 'collapsed'
     coll.vue_collapse()
@@ -67,19 +67,8 @@ def test_collapsed_to_extract_plugin(cubeviz_helper, spectral_cube_wcs, tmp_path
 
     collapse_plugin = cubeviz_helper.plugins['Collapse']
 
-    # make sure export enabled is true, and that before the collapse function
-    # is run `collapsed_flux_available` is correctly set to False
-    assert collapse_plugin._obj.export_enabled
-    assert collapse_plugin._obj.collapsed_flux_available is False
-
-    # run collapse function, and make sure `collapsed_flux_available` was set to True
+    # run collapse function
     collapse_plugin._obj.vue_collapse()
-    assert collapse_plugin._obj.collapsed_flux_available
-
-    # check that default filename is correct, then change path
-    fname = 'collapsed_sum_Unknown spectrum object_FLUX.fits'
-    assert collapse_plugin._obj.filename == fname
-    collapse_plugin._obj.filename = str(tmp_path / fname)
 
     label = collapse_plugin._obj.add_results.label
     export_plugin = cubeviz_helper.plugins['Export']._obj

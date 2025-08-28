@@ -33,7 +33,8 @@ else:
     _has_strauss = True
 
 
-@tray_registry('cubeviz-sonify-data', label="Sonify Data")
+@tray_registry('cubeviz-sonify-data', label="Sonify Data",
+               category="data:analysis")
 class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
                  AddResultsMixin):
     """
@@ -97,6 +98,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._data_added_to_viewer)
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def user_api(self):
