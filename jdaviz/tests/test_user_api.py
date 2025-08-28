@@ -1,8 +1,7 @@
-import warnings
-
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 import pytest
 import re
+
 
 # This applies to all viz but testing with Imviz should be enough.
 class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
@@ -50,6 +49,7 @@ def test_toggle_api_hints(specviz_helper):
     assert specviz_helper.app.state.show_api_hints is True
     specviz_helper.toggle_api_hints()
     assert specviz_helper.app.state.show_api_hints is False
+
 
 def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
     ldr = imviz_helper.loaders['object']
