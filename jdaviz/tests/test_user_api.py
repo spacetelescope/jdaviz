@@ -52,31 +52,24 @@ def test_toggle_api_hints(specviz_helper):
 
 
 def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
+    default_choices = ['1: [SCI,1]',
+                       '2: [MASK,1]',
+                       '3: [ERR,1]',
+                       '4: [DQ,1]']
+
+    # Testing directly
     ldr = imviz_helper.loaders['object']
     ldr.object = multi_extension_image_hdu_wcs
     extension_obj = ldr.importer.extension
+    # Default selection
+    assert extension_obj.selected == [default_choices[0]]
+    # Resetting to []
+    # Note this can't be done by setting selected = [], is this intentional?
+    extension_obj.selected.pop(0)
 
-    # Leaving this here for future reference
-    assert extension_obj.choices == ['1: [SCI,1]',
-                                     '2: [MASK,1]',
-                                     '3: [ERR,1]',
-                                     '4: [DQ,1]']
-
+    assert extension_obj.choices == default_choices
     extension_obj.multiselect = False
 
-    # Test all
-    ldr.importer._obj.user_api.extension = '*'
-    assert extension_obj.multiselect is True
-    assert extension_obj.selected == extension_obj.choices
-
-    extension_obj.multiselect = False
-    # Test for repeats
-    ldr.importer._obj.user_api.extension = ['*', '*:*']
-    assert extension_obj.multiselect is True
-    assert extension_obj.selected == extension_obj.choices
-
-    # Resetting
-    extension_obj.selected = []
     err_str1 = "not all items in"
     err_str2 = f"are one of {extension_obj.choices}, reverting selection to []"
     with pytest.raises(ValueError,
@@ -94,11 +87,31 @@ def test_wildcard_matching(imviz_helper, multi_extension_image_hdu_wcs):
     # Check that selected is still/reverted successfully to []
     assert extension_obj.selected == []
 
-    ldr.importer._obj.user_api.extension = '1:*'
-    assert extension_obj.selected == [extension_obj.choices[0]]
+    test_selections = {
+        # Test all
+        '*': extension_obj.choices,
+        # Test repeats
+        ('*', '*:*'): extension_obj.choices,
+        # Test single selection
+        '1:*': [extension_obj.choices[0]],
+        # Test multi-wildcard
+        '*S*': extension_obj.choices[:2],
+        # Test multi-selection
+        ('*ERR*', '*DQ*'): extension_obj.choices[2:]}
 
-    ldr.importer._obj.user_api.extension = '*S*'
-    assert extension_obj.selected == extension_obj.choices[:2]
+    # Check both direct and through load
+    for selection, expected in test_selections.items():
+        # Direct
+        ldr.importer._obj.user_api.extension = selection
+        assert extension_obj.multiselect is True
+        assert extension_obj.selected == expected
+        # Reset
+        extension_obj.selected = []
 
-    ldr.importer._obj.user_api.extension = ['*ERR*', '*DQ*']
-    assert extension_obj.selected == extension_obj.choices[2:]
+        # Through load
+        imviz_helper.load(multi_extension_image_hdu_wcs, extension=selection)
+        #print(imviz_helper.app.data_collection.labels)# == expected
+        #raise Exception()
+
+        # Reset
+        extension_obj.selected = []
