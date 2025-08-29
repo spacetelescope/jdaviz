@@ -638,6 +638,7 @@ def spectrum_ensure_flux_density_unit(spectrum):
     else:
         return NotImplementedError(f"Cannot convert from {spectrum.flux.unit} to flux density")
 
+
 def coerce_unit(quantity):
     """
     coerce the unit on a quantity to have a single length unit (will take the first length

@@ -3644,7 +3644,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         if update_marks:
             mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
 
-            # if there are any NaNs in the resulting continuum don't plot marks. 
+            # if there are any NaNs in the resulting continuum don't plot marks.
             # This can / should be addressed to avoid nans in the final
             # result (in most cases) by properly masking during the computation
             # of continuum marks

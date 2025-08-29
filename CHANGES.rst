@@ -108,6 +108,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fix various bugs in model fitting, including some issues with spectral axis unit conversions and deletion of subsets [#3746]
+
 4.3 (2025-05-28)
 ================
 
