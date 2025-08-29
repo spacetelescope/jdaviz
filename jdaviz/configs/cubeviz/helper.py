@@ -91,7 +91,10 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
         if True or self.app.state.dev_loaders:
             format = kwargs.pop('format', ['1D Spectrum', '3D Spectrum'])
-            # TODO: remove underscore once read to deprecate load_data
+            # TODO: once ready to deprecate load_data: remove if-statement above,
+            # underscore from _load, and all logic below return
+            if data_label is not None and data_label[-6:] != "[FLUX]":
+                data_label = data_label+"[FLUX]"
             self._load(data,
                        data_label=data_label,
                        format=format,
