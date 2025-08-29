@@ -217,9 +217,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
             return False
         return True
 
-    @observe('data_label_value')
+    @observe('data_label_value', 'function_selected')
     def _data_label_changed(self, msg={}):
-        self.ext_data_label_default = f"{self.data_label_value} (auto-ext)"
+        self.ext_data_label_default = f"{self.data_label_value} ({self.function_selected})"
         self.unc_data_label_default = f"{self.data_label_value} [UNC]"
 
     @property
