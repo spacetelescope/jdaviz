@@ -9,6 +9,7 @@ from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectFileExtensionComponent,
+                                        SelectPluginComponent,
                                         ViewerSelectCreateNew)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
@@ -45,6 +46,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
 
     auto_extract = Bool(True).tag(sync=True)
 
+    function_items = List().tag(sync=True)
+    function_selected = Unicode('Sum').tag(sync=True)
+
     ext_data_label_value = Unicode().tag(sync=True)
     ext_data_label_default = Unicode().tag(sync=True)
     ext_data_label_auto = Bool(True).tag(sync=True)
@@ -74,6 +78,13 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
             self.data_label_default = self.default_data_label_from_resolver
         else:
             self.data_label_default = '3D Spectrum'
+
+        self.function = SelectPluginComponent(
+            self,
+            items='function_items',
+            selected='function_selected',
+            manual_options=['Mean', 'Min', 'Max', 'Sum']
+        )
 
         self.ext_data_label = AutoTextField(self,
                                             'ext_data_label_value',
@@ -214,6 +225,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
         try:
             spext = self.app.get_tray_item_from_name('spectral-extraction-3d')
             ext = spext._extract_in_new_instance(dataset=data_label,
+                                                 function=self.function.selected,
                                                  auto_update=False,
                                                  add_data=False)
         except Exception:
