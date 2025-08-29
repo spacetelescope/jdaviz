@@ -43,7 +43,8 @@ def hdu_is_valid(item):
 @loader_importer_registry('3D Spectrum')
 class Spectrum3DImporter(BaseImporterToDataCollection):
     template_file = __file__, "./spectrum3d.vue"
-    parser_preference = ['specutils.Spectrum']  # TODO: add fits support with unc extension selection
+    # TODO: add fits support with unc extension selection
+    parser_preference = ['specutils.Spectrum']
 
     # Uncertainty Cube
     unc_data_label_value = Unicode().tag(sync=True)
