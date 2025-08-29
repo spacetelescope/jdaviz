@@ -75,6 +75,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
 
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
+        elif self.config == 'cubeviz':
+            self.data_label_default = '3D Spectrum [FLUX]'
         else:
             self.data_label_default = '3D Spectrum'
 
@@ -171,8 +173,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
 
     @observe('data_label_value', 'function_selected')
     def _data_label_changed(self, msg={}):
-        self.ext_data_label_default = f"{self.data_label_value} ({self.function_selected})"
-        self.unc_data_label_default = f"{self.data_label_value} [UNC]"
+        base = self.data_label_value.strip('[FLUX]').strip()
+        self.ext_data_label_default = f"{base} ({self.function_selected.lower()})"
+        self.unc_data_label_default = f"{base} [UNC]"
 
     @property
     def output(self):
