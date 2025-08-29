@@ -3456,8 +3456,6 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                       manual_options=['None', 'Surrounding'],
                                       default_mode='first',
                                       filters=['is_spectral'])
-        self.app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
-                               lambda _: self._clear_cache('continuum_marks'))
 
     def _continuum_remove_none_option(self):
         self.continuum.items = [item for item in self.continuum.items
@@ -3645,9 +3643,19 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
         if update_marks:
             mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
-            self._update_continuum_marks(mark_x,
-                                         mark_y,
-                                         viewers=dataset.viewers_with_selected_visible)
+
+            # if there are any NaNs in the resulting continuum don't plot marks.
+            # This can / should be addressed to avoid nans in the final
+            # result (in most cases) by properly masking during the computation
+            # of continuum marks
+            all_marks = np.concatenate([*mark_x.values(), *mark_y.values()])
+            if np.any(np.isnan(all_marks)):
+                self._update_continuum_marks()
+
+            else:
+                self._update_continuum_marks(mark_x,
+                                             mark_y,
+                                             viewers=dataset.viewers_with_selected_visible)
 
         return spectrum, continuum, spectrum - continuum
 
