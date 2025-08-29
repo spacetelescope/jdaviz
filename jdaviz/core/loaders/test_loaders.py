@@ -61,10 +61,10 @@ def test_dbg_access(deconfigged_helper):
     test_data = np.array([1, 2, 3])
     deconfigged_helper.loaders['object'].object = test_data
 
-    # test that _get_importer is successful to grab the object
+    # test that _get_loader is successful to grab the object
     # and expose the underlying error
     with pytest.raises(ValueError, match="Cannot load as image with ndim=1"):  # noqa
-        deconfigged_helper._get_importer('object', 'object', 'Image')
+        deconfigged_helper._get_loader('object', 'object', 'Image')
 
 
 def test_trace_importer(specviz2d_helper, spectrum2d):
