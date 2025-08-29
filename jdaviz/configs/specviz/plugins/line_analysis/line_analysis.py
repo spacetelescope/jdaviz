@@ -334,6 +334,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         spectrum, continuum, spec_subtracted = self._get_continuum(self.dataset,
                                                                    self.spectral_subset,
                                                                    update_marks=update_marks)
+        print(spectrum, continuum, spec_subtracted)
         if spectrum is None:
             self.update_results(None)
             return
