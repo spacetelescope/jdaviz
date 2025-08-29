@@ -253,7 +253,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                 self._calculate_statistics(msg)
 
     def _on_global_display_unit_changed(self, msg):
-        self._calculate_statistics(msg)
+        self._calculate_statistics(msg, update_marks=False)
 
     @observe('is_active')
     def _is_active_changed(self, msg):
@@ -333,7 +333,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
     @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")
     @with_spinner('results_computing')
-    def _calculate_statistics(self, msg={}, store_results=False):
+    def _calculate_statistics(self, msg={}, store_results=False, update_marks=True):
         """
         Run the line analysis functions on the selected data/subset and
         display the results.
@@ -356,7 +356,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         spectrum, continuum, spec_subtracted = self._get_continuum(self.dataset,
                                                                    self.spectral_subset,
-                                                                   update_marks=True)
+                                                                   update_marks=update_marks)
         if spectrum is None:
             self.update_results(None)
             return
