@@ -91,10 +91,11 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
         if True or self.app.state.dev_loaders:
             format = kwargs.pop('format', ['1D Spectrum', '3D Spectrum'])
-            self.load(data,
-                      data_label=data_label,
-                      format=format,
-                      **kwargs)
+            # TODO: remove underscore once read to deprecate load_data
+            self._load(data,
+                       data_label=data_label,
+                       format=format,
+                       **kwargs)
             return
 
         if data_label:
