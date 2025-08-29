@@ -40,7 +40,8 @@ from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
-from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
+                                                    WithSliceSelection)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
@@ -3831,6 +3832,9 @@ class ViewerSelect(SelectPluginComponent):
 
         def is_imviz_image_viewer(viewer):
             return viewer.__class__.__name__ == 'ImvizImageView'
+
+        def is_slice_selection_viewer(viewer):
+            return isinstance(viewer, WithSliceSelection)
 
         def is_slice_indicator_viewer(viewer):
             return isinstance(viewer, WithSliceIndicator)
