@@ -3456,8 +3456,6 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                       manual_options=['None', 'Surrounding'],
                                       default_mode='first',
                                       filters=['is_spectral'])
-        self.app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
-                               lambda _: self._clear_cache('continuum_marks'))
 
     def _continuum_remove_none_option(self):
         self.continuum.items = [item for item in self.continuum.items

@@ -220,18 +220,37 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         else:
             self.disabled_msg = ''
 
+    def _reset_results_and_marks(self):
+        """Reset results, results_available, and clear continuum marks."""
+        self.results_available = False
+        self.results = [{'function': function, 'result': ''} for function in FUNCTIONS]
+        self._update_continuum_marks()
+
     def _on_viewer_subsets_changed(self, msg):
         """
-        Update the statistics if any of the referenced regions have changed
+        Update the statistics if the current selection spectral region has been
+        modified or deleted.
 
         Parameters
         ----------
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
-        if (msg.subset.label in [self.spectral_subset_selected,
-                                 self.continuum_subset_selected]):
-            self._calculate_statistics(msg)
+
+        current_selections = [self.spectral_subset_selected,
+                              self.continuum_subset_selected]
+
+        # If a currently selected subset is deleted, just clear marks and statistics.
+        # The re-calculation of statistics will happen subsequently when the default
+        # selection is applied in the drop down and this method is called again
+        if isinstance(msg, SubsetDeleteMessage):
+            if msg.subset.label in current_selections:
+                self._reset_results_and_marks()
+                return
+
+        else:
+            if msg.subset.label in current_selections:
+                self._calculate_statistics(msg)
 
     def _on_global_display_unit_changed(self, msg):
         self._calculate_statistics(msg)
@@ -249,9 +268,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
     def update_results(self, results=None):
         if results is None:
-            self.results_available = False
-            self.results = [{'function': function, 'result': ''} for function in FUNCTIONS]
-            self._update_continuum_marks()
+            self._reset_results_and_marks()
         else:
             self.results = results
             self.results_available = True
@@ -321,6 +338,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         Run the line analysis functions on the selected data/subset and
         display the results.
         """
+
         if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:  # noqa
             # during initial init, this can trigger before the component is initialized
             return
@@ -345,6 +363,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         if not store_results:
             return
+
+        # if there are no results, statistics do not need to be re-calculated
+        # when is_active is toggled on
+        if hasattr(msg, 'name'):
+            if msg.name == 'is_active' and not self.results_available:
+                return
 
         def _uncertainty(result):
             if getattr(result, 'uncertainty', None) is not None:
