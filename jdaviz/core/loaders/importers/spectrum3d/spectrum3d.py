@@ -229,6 +229,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
                                                  auto_update=False,
                                                  add_data=False)
         except Exception:
+            raise
             ext = None
             msg = SnackbarMessage(
                 "Automatic spectrum extraction failed. See the 3D spectral extraction"

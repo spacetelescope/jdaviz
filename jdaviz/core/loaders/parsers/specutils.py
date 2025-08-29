@@ -14,7 +14,7 @@ class SpecutilsSpectrumParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz', 'specviz2d'):
+        if self.app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         try:

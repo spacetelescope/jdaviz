@@ -30,6 +30,9 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # NOTE: uncomment once ready to deprecate load_data
+        # self.load = self._load
+
         self.app.hub.subscribe(self, AddDataMessage,
                                handler=self._set_spectrum_x_axis)
 
@@ -59,6 +62,8 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                 viewer.state.x_att = ref_data.id["Pixel Axis 2 [x]"]
                 viewer.state.reset_limits()
 
+    # NOTE: uncomment once ready to deprecate load_data
+    #@deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, override_cube_limit=False, **kwargs):
         """
         Load and parse a data cube with Cubeviz.
@@ -83,6 +88,15 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         """
         if not override_cube_limit and len(self.app.state.data_items) != 0:
             raise RuntimeError('Only one cube may be loaded per Cubeviz instance')
+
+        if True or self.app.state.dev_loaders:
+            format = kwargs.pop('format', ['1D Spectrum', '3D Spectrum'])
+            self.load(data,
+                      data_label=data_label,
+                      format=format,
+                      **kwargs)
+            return
+
         if data_label:
             kwargs['data_label'] = data_label
 
