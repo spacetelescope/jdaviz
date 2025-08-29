@@ -1,6 +1,7 @@
 from traitlets import Any, Bool, List, Unicode, observe
 from astropy.io import fits
 from astropy import units as u
+from astropy.nddata import StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum
 
@@ -42,18 +43,39 @@ def hdu_is_valid(item):
 @loader_importer_registry('3D Spectrum')
 class Spectrum3DImporter(BaseImporterToDataCollection):
     template_file = __file__, "./spectrum3d.vue"
-    parser_preference = ['fits', 'specutils.Spectrum']
+    parser_preference = ['specutils.Spectrum']  # TODO: add fits support with unc extension selection
 
+    # Uncertainty Cube
+    unc_data_label_value = Unicode().tag(sync=True)
+    unc_data_label_default = Unicode().tag(sync=True)
+    unc_data_label_auto = Bool(True).tag(sync=True)
+    unc_data_label_invalid_msg = Unicode().tag(sync=True)
+
+    # Uncertainty Viewer
+    unc_viewer_create_new_items = List([]).tag(sync=True)
+    unc_viewer_create_new_selected = Unicode().tag(sync=True)
+
+    unc_viewer_items = List([]).tag(sync=True)
+    unc_viewer_selected = Any([]).tag(sync=True)
+    unc_viewer_multiselect = Bool(True).tag(sync=True)
+
+    unc_viewer_label_value = Unicode().tag(sync=True)
+    unc_viewer_label_default = Unicode().tag(sync=True)
+    unc_viewer_label_auto = Bool(True).tag(sync=True)
+    unc_viewer_label_invalid_msg = Unicode().tag(sync=True)
+
+    # Extraction Options
     auto_extract = Bool(True).tag(sync=True)
-
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
 
+    # Extracted Data
     ext_data_label_value = Unicode().tag(sync=True)
     ext_data_label_default = Unicode().tag(sync=True)
     ext_data_label_auto = Bool(True).tag(sync=True)
     ext_data_label_invalid_msg = Unicode().tag(sync=True)
 
+    # Extracted Viewer
     ext_viewer_create_new_items = List([]).tag(sync=True)
     ext_viewer_create_new_selected = Unicode().tag(sync=True)
 
@@ -74,10 +96,66 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        def viewer_in_registry_names(supported_viewers):
+            def viewer_filter(viewer):
+                classes = [viewer_registry.members.get(item.get('reference')).get('cls')
+                           for item in supported_viewers]
+                return isinstance(viewer, tuple(classes))
+            return viewer_filter
+
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
         else:
             self.data_label_default = '3D Spectrum'
+
+        if self.config == 'cubeviz':
+            self.viewer.selected = ['flux-viewer']
+
+        self.input_hdulist = isinstance(self.input, fits.HDUList)
+        if self.input_hdulist:
+            ext_options = [{'label': f"{index}: {hdu.name}",
+                            'name': hdu.name,
+                            'ver': hdu.ver,
+                            'name_ver': f"{hdu.name},{hdu.ver}",
+                            'index': index,
+                            'obj': hdu}
+                           for index, hdu in enumerate(self.input)]
+            # TODO: make this multiselect and automatically assign roles or have
+            # separate flux_extension, unc_extension, mask_extension, etc?
+            self.extension = SelectFileExtensionComponent(self,
+                                                          items='extension_items',
+                                                          selected='extension_selected',
+                                                          manual_options=ext_options,
+                                                          filters=[hdu_is_valid])
+
+        self.unc_data_label = AutoTextField(self,
+                                            'unc_data_label_value',
+                                            'unc_data_label_default',
+                                            'unc_data_label_auto',
+                                            'unc_data_label_invalid_msg')
+
+        self.unc_viewer = ViewerSelectCreateNew(self,
+                                                'unc_viewer_items',
+                                                'unc_viewer_selected',
+                                                'unc_viewer_create_new_items',
+                                                'unc_viewer_create_new_selected',
+                                                'unc_viewer_label_value',
+                                                'unc_viewer_label_default',
+                                                'unc_viewer_label_auto',
+                                                'unc_viewer_label_invalid_msg',
+                                                multiselect='unc_viewer_multiselect',
+                                                default_mode='empty')
+        # TODO: default label separate from viewer label (so we can call it unc-viewer, etc)
+        supported_viewers = [{'label': '3D Spectrum',
+                              'reference': 'cubeviz-image-viewer'}]
+        if self.app.config == 'deconfigged':
+            self.unc_viewer_create_new_items = supported_viewers
+
+        self.unc_viewer.add_filter(viewer_in_registry_names(supported_viewers))
+        if self.config == 'cubeviz':
+            self.unc_viewer.selected = ['uncert-viewer']
+        else:
+            self.unc_viewer.select_default()
 
         self.function = SelectPluginComponent(
             self,
@@ -108,29 +186,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
         if self.app.config == 'deconfigged':
             self.ext_viewer_create_new_items = supported_viewers
 
-        def viewer_in_registry_names(viewer):
-            classes = [viewer_registry.members.get(item.get('reference')).get('cls')
-                       for item in supported_viewers]
-            return isinstance(viewer, tuple(classes))
-        self.ext_viewer.add_filter(viewer_in_registry_names)
+        self.ext_viewer.add_filter(viewer_in_registry_names(supported_viewers))
         self.ext_viewer.select_default()
-
-        self.input_hdulist = isinstance(self.input, fits.HDUList)
-        if self.input_hdulist:
-            ext_options = [{'label': f"{index}: {hdu.name}",
-                            'name': hdu.name,
-                            'ver': hdu.ver,
-                            'name_ver': f"{hdu.name},{hdu.ver}",
-                            'index': index,
-                            'obj': hdu}
-                           for index, hdu in enumerate(self.input)]
-            # TODO: make this multiselect and automatically assign roles or have
-            # separate flux_extension, unc_extension, mask_extension, etc?
-            self.extension = SelectFileExtensionComponent(self,
-                                                          items='extension_items',
-                                                          selected='extension_selected',
-                                                          manual_options=ext_options,
-                                                          filters=[hdu_is_valid])
 
     @staticmethod
     def _get_supported_viewers():
@@ -138,7 +195,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['auto_extract', 'ext_data_label', 'ext_viewer']
+        expose = ['unc_data_label', 'unc_viewer',
+                  'auto_extract', 'ext_data_label', 'ext_viewer']
         if self.input_hdulist:
             expose += ['extension']
         return ImporterUserApi(self, expose)
@@ -162,6 +220,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
     @observe('data_label_value')
     def _data_label_changed(self, msg={}):
         self.ext_data_label_default = f"{self.data_label_value} (auto-ext)"
+        self.unc_data_label_default = f"{self.data_label_value} [UNC]"
 
     @property
     def output(self):
@@ -218,6 +277,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
         ext_data_label = self.ext_data_label_value
 
         super().__call__()
+
+        uncert = Spectrum(spectral_axis=self.output.spectral_axis,
+                          flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
+                          wcs=self.output.wcs,
+                          meta=self.output.meta)
+        self.add_to_data_collection(uncert,
+                                    self.unc_data_label_value,
+                                    viewer_select=self.unc_viewer)
 
         if not self.auto_extract:
             return

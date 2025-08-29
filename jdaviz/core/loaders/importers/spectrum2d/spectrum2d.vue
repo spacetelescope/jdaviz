@@ -39,6 +39,7 @@
       hint="Select the viewer to use for the new data entry."
     ></plugin-viewer-create-new>
 
+    <j-plugin-section-header>Extracted Spectrum</j-plugin-section-header>
     <plugin-switch
       :value.sync="auto_extract"
       label="Extract 1D Spectrum"
