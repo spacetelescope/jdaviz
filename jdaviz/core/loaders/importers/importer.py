@@ -164,7 +164,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def add_to_data_collection(self, data, data_label=None,
                                parent=None,
-                               viewer_select=None, viewer_select_default=True,
+                               viewer_select=None,
                                cls=None):
         if data_label is None:
             data_label = self.data_label_value.strip()
@@ -196,9 +196,9 @@ class BaseImporterToDataCollection(BaseImporter):
             viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
             viewer.data_menu.add_data(data_label)
 
-            if viewer_select_default:
-                # default to selecting the new viewer for next import
-                viewer_select.select_default()
+            # default to selecting this new viewer for next import
+            viewer_select.create_new.selected = ''
+            viewer_select.selected = [viewer_label]
 
         else:
             failed_viewers = []

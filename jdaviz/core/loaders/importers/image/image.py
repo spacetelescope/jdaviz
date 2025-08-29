@@ -284,9 +284,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
             self.add_to_data_collection(output, data_label,
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
-                                        viewer_select_default=False,
                                         cls=CCDData)
-        self.viewer.select_default()
 
 
 def _validate_fits_image2d(item):
