@@ -274,17 +274,22 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
         data_label = self.data_label_value
+        unc_data_label = self.unc_data_label_value
         ext_data_label = self.ext_data_label_value
 
         super().__call__()
+        # TODO: this will need to be removed when removing restriction of a single flux cube
+        self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
 
         uncert = Spectrum(spectral_axis=self.output.spectral_axis,
                           flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
                           wcs=self.output.wcs,
                           meta=self.output.meta)
         self.add_to_data_collection(uncert,
-                                    self.unc_data_label_value,
+                                    unc_data_label,
                                     viewer_select=self.unc_viewer)
+        # TODO: this will need to be removed when removing restriction of a single flux cube
+        self.app._jdaviz_helper._loaded_uncert_cube = self.app.data_collection[unc_data_label]
 
         if not self.auto_extract:
             return
