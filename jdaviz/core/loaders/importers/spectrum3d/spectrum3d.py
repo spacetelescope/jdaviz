@@ -188,15 +188,17 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
         # TODO: this will need to be removed when removing restriction of a single flux cube
         self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
 
-        uncert = Spectrum(spectral_axis=self.output.spectral_axis,
-                          flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
-                          wcs=self.output.wcs,
-                          meta=self.output.meta)
-        self.add_to_data_collection(uncert,
-                                    unc_data_label,
-                                    viewer_select=self.unc_viewer)
-        # TODO: this will need to be removed when removing restriction of a single flux cube
-        self.app._jdaviz_helper._loaded_uncert_cube = self.app.data_collection[unc_data_label]
+        if self.output.uncertainty is not None:
+            # TODO: detect if uncertainty exists and hide section from UI
+            uncert = Spectrum(spectral_axis=self.output.spectral_axis,
+                              flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
+                              wcs=self.output.wcs,
+                              meta=self.output.meta)
+            self.add_to_data_collection(uncert,
+                                        unc_data_label,
+                                        viewer_select=self.unc_viewer)
+            # TODO: this will need to be removed when removing restriction of a single flux cube
+            self.app._jdaviz_helper._loaded_uncert_cube = self.app.data_collection[unc_data_label]
 
         if not self.auto_extract:
             return
