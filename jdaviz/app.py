@@ -3057,7 +3057,7 @@ class Application(VuetifyTemplate, HubListener):
                     except Exception as e:
                         self.hub.broadcast(SnackbarMessage(
                             f"Failed to load plugin {tray_registry_member.get('name')}: {e}",
-                            sender=self, color='error'))
+                            sender=self, color='error', traceback=e))
                 tray_items.append(tray_item)
 
         self.state.tray_items = tray_items
@@ -3101,7 +3101,7 @@ class Application(VuetifyTemplate, HubListener):
                 except Exception as e:
                     self.hub.broadcast(SnackbarMessage(
                         f"Failed to load viewer {name}: {e}",
-                        sender=self, color='error'))
+                        sender=self, color='error', traceback=e))
                     continue
 
             new_viewer_items.append(item)

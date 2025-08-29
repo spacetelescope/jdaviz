@@ -266,12 +266,13 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         coord = SkyCoord.from_name(
                             self.source, frame=self.coordframe_selected
                         )
-                    except Exception:
+                    except Exception as e:
                         self.hub.broadcast(
                             SnackbarMessage(
                                 f"Unable to resolve source coordinates: {self.source}",
                                 sender=self,
                                 color="error",
+                                traceback=e
                             )
                         )
                         raise LookupError(
@@ -294,6 +295,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         f"Can't connect to VO registry. Check your internet connection: {e}",
                         sender=self,
                         color="error",
+                        traceback=e
                     )
                 )
             else:
@@ -304,6 +306,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     f"An error occured querying the VO Registry: {e}",
                     sender=self,
                     color="error",
+                    traceback=e
                 )
             )
             raise
@@ -339,12 +342,13 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     coord = SkyCoord.from_name(
                         self.source, frame=self.coordframe_selected
                     )
-                except Exception:
+                except Exception as e:
                     self.hub.broadcast(
                         SnackbarMessage(
                             f"Unable to resolve source coordinates: {self.source}",
                             sender=self,
                             color="error",
+                            traceback=e
                         )
                     )
                     raise LookupError(
@@ -398,6 +402,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     f"Unable to locate files for source {self.source}: {e}",
                     sender=self,
                     color="error",
+                    traceback=e
                 )
             )
             raise
@@ -410,6 +415,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     f"Unable to populate table for source {self.source}: {e}",
                     sender=self,
                     color="error",
+                    traceback=e
                 )
             )
             raise
@@ -431,6 +437,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                             f"Can't get metadata columns. Switching table to URL-only: {e}",
                             sender=self,
                             color="warning",
+                            traceback=e
                         )
                     )
                     # Hide all other incomplete columns and only load URL for subsequent rows
@@ -481,6 +488,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         f"Unable to load file to viewer: {entry['URL']}: {e}",
                         sender=self,
                         color="error",
+                        traceback=e
                     )
                 )
         # Clear selected entries' checkboxes on table
