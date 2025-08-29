@@ -40,7 +40,8 @@ from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
-from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
+                                                    WithSliceSelection)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
@@ -82,6 +83,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ApertureSubsetSelect', 'ApertureSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
            'ViewerSelect', 'ViewerSelectMixin',
+           'ViewerSelectCreateNew',
            'LayerSelect', 'LayerSelectMixin',
            'PluginTableSelect', 'PluginTableSelectMixin',
            'PluginPlotSelect', 'PluginPlotSelectMixin',
@@ -3804,6 +3806,12 @@ class ViewerSelect(SelectPluginComponent):
         def is_image_viewer(viewer):
             return _is_image_viewer(viewer)
 
+        def is_imviz_image_viewer(viewer):
+            return viewer.__class__.__name__ == 'ImvizImageView'
+
+        def is_slice_selection_viewer(viewer):
+            return isinstance(viewer, WithSliceSelection)
+
         def is_slice_indicator_viewer(viewer):
             return isinstance(viewer, WithSliceIndicator)
 
@@ -3853,6 +3861,71 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
+
+
+class ViewerSelectCreateNew(ViewerSelect):
+    def __init__(self, plugin, items, selected,
+                 create_new_items, create_new_selected,
+                 new_label_value, new_label_default, new_label_auto, new_label_invalid_msg,
+                 multiselect=None, filters=[],
+                 default_text=None, manual_options=[], default_mode='first'):
+        super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect, filters=filters,
+                         default_text=default_text, manual_options=manual_options,
+                         default_mode=default_mode)
+
+        self.create_new = SelectPluginComponent(plugin,
+                                                items=create_new_items,
+                                                selected=create_new_selected)
+        self.new_label = AutoTextField(plugin, new_label_value,
+                                       new_label_default,
+                                       new_label_auto,
+                                       new_label_invalid_msg)
+        self.add_observe(create_new_selected, self._on_viewer_create_new_selected)
+        self.add_observe(new_label_value, self._on_viewer_label_changed)
+        self.add_observe(items, self._on_viewer_label_changed)
+
+    def __repr__(self):
+        if self.create_new.selected:
+            return f"<create_new='{self.create_new.selected}' create_new.choices={self.create_new.choices} new_label={self.new_label.value} new_label.auto={self.new_label.auto}>"  # noqa
+        return f"<selected={self.selected} choices={self.choices} create_new.choices={self.create_new.choices}>"  # noqa
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self,
+                              expose=('create_new', 'new_label', 'selected'),
+                              readonly=('choices'),
+                              repr_callable=self.__repr__)
+
+    def _on_viewer_create_new_selected(self, msg={}):
+        if self.create_new.selected == '':
+            return
+        self.new_label.default = self.create_new.selected_item.get('label')
+
+    def _on_viewer_label_changed(self, msg={}):
+        if not len(self.new_label.value.strip()):
+            self.new_label.invalid_msg = 'new_label must be provided'
+            return
+
+        # ensure the default label is unique for the data-collection
+        self.new_label.default = self.app.return_unique_name(self.new_label.default, typ='viewer')
+
+        for viewer in self.app._jdaviz_helper.viewers.keys():
+            if self.new_label.value == viewer:
+                self.new_label.invalid_msg = 'new_label already in use'
+                return
+
+        self.new_label.invalid_msg = ''
+
+    def select_default(self):
+        if len(self.choices) > 0:
+            if self.is_multiselect:
+                self.create_new.selected = ''
+                self.select_all()
+            else:
+                self.selected = self.choices[0]
+        elif len(self.create_new.choices) > 0:
+            self.create_new.selected = self.create_new.choices[0]
 
 
 class DatasetSelect(SelectPluginComponent):

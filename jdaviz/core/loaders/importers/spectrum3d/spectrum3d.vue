@@ -1,15 +1,6 @@
 <template>
   <v-container>
-    <plugin-select
-      v-if="input_hdulist"
-      :items="extension_items.map(i => i.label)"
-      :selected.sync="extension_selected"
-      :show_if_single_entry="true"
-      label="Extension"
-      api_hint="ldr.extension ="
-      :api_hints_enabled="api_hints_enabled"
-      hint="Extension to use from the FITS HDUList."
-    />
+    <j-plugin-section-header>Flux Cube</j-plugin-section-header>
     <plugin-auto-label
       :value.sync="data_label_value"
       :default="data_label_default"
@@ -18,7 +9,7 @@
       label="Data Label"
       api_hint="ldr.importer.data_label ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Label to assign to the new data entry."
+      hint="Label to assign to the new flux/science cube data entry."
     ></plugin-auto-label>
 
     <plugin-viewer-create-new
@@ -32,11 +23,41 @@
       :new_label_invalid_msg="viewer_label_invalid_msg"
       :multiselect="viewer_multiselect"
       :show_multiselect_toggle="false"
-      label="Viewer"
+      label="Viewer for Flux Cube"
       api_hint='ldr.importer.viewer = '
       :api_hints_enabled="api_hints_enabled"
       :show_if_single_entry="true"
-      hint="Select the viewer to use for the new data entry."
+      hint="Select the viewer to use for the imported flux/science cube."
+    ></plugin-viewer-create-new>
+
+    <j-plugin-section-header>Uncertainty Cube</j-plugin-section-header>
+    <plugin-auto-label
+      :value.sync="unc_data_label_value"
+      :default="unc_data_label_default"
+      :auto.sync="unc_data_label_auto"
+      :invalid_msg="unc_data_label_invalid_msg"
+      label="Data Label for the Uncertainty Cube"
+      api_hint="ldr.importer.unc_data_label ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Label to assign to the new uncertainty cube data entry."
+    ></plugin-auto-label>
+
+    <plugin-viewer-create-new
+      :items="unc_viewer_items"
+      :selected.sync="unc_viewer_selected"
+      :create_new_items="unc_viewer_create_new_items"
+      :create_new_selected.sync="unc_viewer_create_new_selected"
+      :new_label_value.sync="unc_viewer_label_value"
+      :new_label_default="unc_viewer_label_default"
+      :new_label_auto.sync="unc_viewer_label_auto"
+      :new_label_invalid_msg="unc_viewer_label_invalid_msg"
+      :multiselect="unc_viewer_multiselect"
+      :show_multiselect_toggle="false"
+      label="Viewer for Uncertainty Cube"
+      api_hint='ldr.importer.unc_viewer = '
+      :api_hints_enabled="api_hints_enabled"
+      :show_if_single_entry="true"
+      hint="Select the viewer to use for the imported uncertainty cube."
     ></plugin-viewer-create-new>
 
     <j-plugin-section-header>Extracted Spectrum</j-plugin-section-header>
@@ -45,9 +66,18 @@
       label="Extract 1D Spectrum"
       api_hint="ldr.importer.auto_extract ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extract a 1D spectrum from the 2D data (use the 2D Spectral Extraction Plugin after importing to extract with custom aperture/options)."
+      hint="Extract a 1D spectrum from the entire cube (use the 3D Spectral Extraction Plugin after importing to extract for a particular spatial subset)."
     ></plugin-switch>
     <div v-if="auto_extract">
+      <plugin-select
+        :items="function_items.map(i => i.label)"
+        :selected.sync="function_selected"
+        label="Function"
+        api_hint="ldr.importer.function ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Select the function to apply to the extracted 1D Spectrum."
+      ></plugin-select>
+
       <plugin-auto-label
         :value.sync="ext_data_label_value"
         :default="ext_data_label_default"

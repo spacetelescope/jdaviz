@@ -120,7 +120,7 @@ class Specviz(ConfigHelper, LineListMixin):
             data_label = self.app.return_unique_name(data_label)
         self.load(data, format=format,
                   data_label=data_label,
-                  show_in_viewer=show_in_viewer,
+                  viewer='*' if show_in_viewer else [],
                   **load_kwargs)
 
     @property
