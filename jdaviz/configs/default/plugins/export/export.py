@@ -586,7 +586,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = self.export(show_dialog=True, raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
-                f"Export failed with: {e}", sender=self, color="error"))
+                f"Export failed with: {e}", sender=self,
+                color="error", traceback=e))
         else:
             if filename is not None:
                 self.hub.broadcast(SnackbarMessage(
@@ -599,7 +600,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                    raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
-                f"Export with overwrite failed with: {e}", sender=self, color="error"))
+                f"Export with overwrite failed with: {e}", sender=self,
+                color="error", traceback=e))
         else:
             if filename is not None:
                 self.hub.broadcast(SnackbarMessage(
@@ -624,7 +626,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
                     f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
-                    sender=self, color="error"))
+                    sender=self, color="error", traceback=e))
             finally:
                 self.hub.broadcast(SnackbarMessage(
                     f"{self.viewer.selected} exported to {str(filename)}",
@@ -740,9 +742,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 video = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, frame_size, True)  # noqa: E501
                 for cur_pngfile in temp_png_files:
                     video.write(cv2.imread(cur_pngfile))
-        except Exception as err:
+        except Exception as e:
             self.hub.broadcast(SnackbarMessage(
-                f"Error saving {filename}: {err!r}", sender=self, color="error"))
+                f"Error saving {filename}: {e!r}", sender=self, color="error", traceback=e))
         finally:
             cv2.destroyAllWindows()
             if video:

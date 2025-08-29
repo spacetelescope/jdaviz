@@ -406,7 +406,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Extraction failed: {repr(e)}",
-                sender=self, color="error"))
+                sender=self, color="error",
+                traceback=e))
 
     @observe('aperture_selected', 'function_selected')
     def _set_default_results_label(self, event={}):

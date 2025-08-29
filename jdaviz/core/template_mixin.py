@@ -1654,7 +1654,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
                 self.rename_choice(self.selected, self.edit_value)
             except ValueError as e:
                 self.hub.broadcast(SnackbarMessage(f"Renaming {self._name} failed: {e}",
-                                   sender=self, color="error"))
+                                   sender=self, color="error", traceback=e))
             else:
                 self.mode = 'select'
                 self.edit_value = self.selected
@@ -1663,7 +1663,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
                 self.add_choice(self.edit_value)
             except ValueError as e:
                 self.hub.broadcast(SnackbarMessage(f"Adding {self._name} failed: {e}",
-                                   sender=self, color="error"))
+                                   sender=self, color="error", traceback=e))
             else:
                 self.mode = 'select'
                 self.edit_value = self.selected

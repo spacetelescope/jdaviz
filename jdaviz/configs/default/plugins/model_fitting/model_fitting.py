@@ -1264,9 +1264,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 n_cpu=self.parallel_n_cpu,
                 **kw
             )
-        except AttributeError:
+        except AttributeError as e:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
-                                  color="error", sender=self)
+                                  color="error", sender=self, traceback=e)
             self.hub.broadcast(msg)
             return
 
@@ -1385,10 +1385,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 n_cpu=self.parallel_n_cpu,
                 **kw
             )
-        except ValueError:
+        except ValueError as e:
             snackbar_message = SnackbarMessage(
                 "Cube fitting failed",
-                color='error', loading=False, sender=self)
+                color='error', loading=False, sender=self, traceback=e)
             self.hub.broadcast(snackbar_message)
             raise
 

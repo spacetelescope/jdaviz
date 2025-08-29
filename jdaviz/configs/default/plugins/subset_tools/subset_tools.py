@@ -780,9 +780,10 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self.session.edit_subset_mode.edit_subset = [subset_to_update]
             self.session.edit_subset_mode._combine_data(subset_to_update.subset_state,
                                                         override_mode=ReplaceMode)
-        except Exception as err:  # pragma: no cover
+        except Exception as e:  # pragma: no cover
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to update Subset: {repr(err)}", color='error', sender=self))
+                f"Failed to update Subset: {repr(e)}", color='error',
+                sender=self, traceback=e))
 
     def _check_input(self):
         status = True
@@ -868,11 +869,12 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                     y = phot_aperstats.ycentroid
                 if not np.all(np.isfinite((x, y))):
                     raise ValueError(f'Invalid centroid ({x}, {y})')
-            except Exception as err:
+            except Exception as e:
                 self.set_center(self.get_center(subset_name=subset), subset_name=subset,
                                 update=False)
                 self.hub.broadcast(SnackbarMessage(
-                    f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
+                    f"Failed to calculate centroid: {repr(e)}", color='error',
+                    sender=self, traceback=e))
             else:
                 self.set_center((x, y), subset_name=subset, update=True)
 
@@ -1025,7 +1027,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             self.rename_subset(msg['old_label'], msg['new_label'])
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(f"Failed to rename subset: {repr(e)}",
-                                               color='error', sender=self))
+                                               color='error', sender=self, traceback=e))
         else:
             self.hub.broadcast(SnackbarMessage(f"Renamed '{msg['old_label']}' to '{msg['new_label']}'",  # noqa
                                                color='info', sender=self))

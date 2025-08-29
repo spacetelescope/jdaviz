@@ -674,13 +674,13 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                                             data.get_component('flux').data.units,
                                             self.state.y_display_unit,
                                             equivalencies=eqv)
-            except Exception as err:
+            except Exception as e:
                 # Raising exception here introduces a dirty state that messes up next load_data
                 # but not raising exception also causes weird behavior unless we remove the data
                 # completely.
                 self.session.hub.broadcast(SnackbarMessage(
-                    f"Failed to load {data.label}, so removed it: {repr(err)}",
-                    sender=self, color='error'))
+                    f"Failed to load {data.label}, so removed it: {repr(e)}",
+                    sender=self, color='error', traceback=e))
                 self.jdaviz_app.data_collection.remove(data)
                 return False
             reset_plot_axes = False

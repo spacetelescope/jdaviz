@@ -96,11 +96,12 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
         else:
             try:
                 self.plugins['3D Spectral Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
-            except Exception:
+            except Exception as e:
                 msg = SnackbarMessage(
                     "Automatic spectrum extraction for the entire cube failed."
                     " See the 3D Spectral Extraction plugin to perform a custom extraction",
-                    color='error', sender=self, timeout=10000)
+                    color='error', sender=self, timeout=10000,
+                    traceback=e)
             else:
                 msg = SnackbarMessage(
                     "The extracted 1D spectrum was generated automatically for the entire cube."

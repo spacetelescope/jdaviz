@@ -1,3 +1,5 @@
+import traceback as tb
+
 import astropy.units as u
 from glue.core.message import Message
 
@@ -187,6 +189,7 @@ class SubsetRenameMessage(Message):
 
 class SnackbarMessage(Message):
     def __init__(self, text, color=None, timeout=5000, loading=False,
+                 traceback=None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -194,6 +197,7 @@ class SnackbarMessage(Message):
         self._color = color
         self._timeout = timeout
         self._loading = loading
+        self._traceback = tb.format_exc() if isinstance(traceback, Exception) else traceback  # noqa
 
     @property
     def text(self):
@@ -210,6 +214,10 @@ class SnackbarMessage(Message):
     @property
     def loading(self):
         return self._loading
+
+    @property
+    def traceback(self):
+        return self._traceback
 
 
 class ConfigurationLoadedMessage(Message):

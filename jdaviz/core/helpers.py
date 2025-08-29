@@ -58,13 +58,16 @@ class ConfigHelper(HubListener):
     _default_configuration = 'default'
     _component_ids = {}
 
-    def __init__(self, app=None, verbosity='warning', history_verbosity='info'):
+    def __init__(self, app=None, verbosity=None, history_verbosity=None):
         if app is None:
             self.app = Application(configuration=self._default_configuration)
         else:
             self.app = app
-        self.app.verbosity = verbosity
-        self.app.history_verbosity = history_verbosity
+        if (logger_plg := self.plugins.get('Logger')) is not None:
+            if verbosity is not None:
+                logger_plg.popup_verbosity = verbosity
+            if history_verbosity is not None:
+                logger_plg.history_verbosity = history_verbosity
 
         # give a reference from the app back to this config helper.  These can be accessed from a
         # viewer via viewer.jdaviz_app and viewer.jdaviz_helper

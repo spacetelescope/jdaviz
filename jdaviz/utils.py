@@ -68,7 +68,8 @@ class SnackbarQueue:
         if not msg.loading and history and logger_plg is not None:
             now = time.localtime()
             timestamp = f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
-            new_history = {'time': timestamp, 'text': msg.text, 'color': msg.color}
+            new_history = {'time': timestamp, 'text': msg.text,
+                           'color': msg.color, 'traceback': msg.traceback}
             # for now, we'll hardcode the max length of the stored history
             if len(logger_plg.history) >= 50:
                 logger_plg.history = logger_plg.history[1:] + [new_history]

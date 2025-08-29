@@ -268,10 +268,11 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 try:
                     self._extract_in_new_instance(subset_lbl=subset_lbl,
                                                   auto_update=True, add_data=True)
-                except Exception:
+                except Exception as e:
                     msg = SnackbarMessage(
                         f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed",  # noqa
-                        color='error', sender=self, timeout=10000)
+                        color='error', sender=self, timeout=10000,
+                        traceback=e)
                 else:
                     msg = SnackbarMessage(
                         f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",  # noqa
@@ -740,7 +741,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Extraction failed: {repr(e)}",
-                sender=self, color="error"))
+                sender=self, color="error",
+                traceback=e))
 
     def vue_create_bg_spec(self, *args, **kwargs):
         self.extract_bg_spectrum(add_data=True)

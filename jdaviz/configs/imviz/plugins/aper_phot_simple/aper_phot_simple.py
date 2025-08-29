@@ -452,7 +452,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {self.dataset_selected}: {repr(e)}",
-                color='error', sender=self))
+                color='error', sender=self,
+                traceback=e))
 
         # get correct display unit for newly selected dataset
         if self.config == 'cubeviz':
@@ -512,7 +513,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {self.aperture_selected}: {repr(e)}",
-                color='error', sender=self))
+                color='error', sender=self,
+                traceback=e))
         else:
             self._background_selected_changed()
 
@@ -592,7 +594,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except Exception as e:
             self.background_value = 0
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {background_selected}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {background_selected}: {repr(e)}",
+                color='error', sender=self,
+                traceback=e))
 
     @with_spinner()
     def calculate_photometry(self, dataset=None, aperture=None, background=None,
@@ -1127,7 +1131,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except Exception as e:  # pragma: no cover
             self.plot.clear_all_marks()
             msg = f"Aperture photometry failed: {repr(e)}"
-            self.hub.broadcast(SnackbarMessage(msg, color='error', sender=self))
+            self.hub.broadcast(SnackbarMessage(msg, color='error',
+                                               sender=self,
+                                               traceback=e))
             self.result_failed_msg = msg
         else:
             self.result_failed_msg = ''
