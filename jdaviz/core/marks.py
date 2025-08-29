@@ -190,9 +190,7 @@ class PluginMark:
         unit = u.Unit(unit)
 
         if self.xunit is not None and not np.all([s == 0 for s in self.x.shape]):
-            print('x before', self.x, 'x unit before', self.xunit)
             x = (self.x * self.xunit).to_value(unit, u.spectral())
-            print('x after', x, 'x unit after', unit)
             self.xunit = unit
             self.x = x
         self.xunit = unit
