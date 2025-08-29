@@ -235,7 +235,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
                 data_label = f"{self.data_label_value}_{item_dict['suffix']}"
-                self.add_to_data_collection(spec_obj, data_label)
+                self.add_to_data_collection(spec_obj, data_label, viewer_select_default=False)
+        # we skipped within the for-loop, so reset the viewer selection to default for next import
+        self.viewer.select_default()
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):

@@ -3914,6 +3914,7 @@ class ViewerSelectCreateNew(ViewerSelect):
     def select_default(self):
         if len(self.choices) > 0:
             if self.is_multiselect:
+                self.create_new.selected = ''
                 self.select_all()
             else:
                 self.selected = self.choices[0]
