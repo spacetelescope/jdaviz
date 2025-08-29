@@ -1,43 +1,17 @@
 from traitlets import Any, Bool, List, Unicode, observe
-from astropy.io import fits
-from astropy import units as u
 from astropy.nddata import StdDevUncertainty
-from astropy.wcs import WCS
 from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import (AutoTextField,
-                                        SelectFileExtensionComponent,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew)
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 
 __all__ = ['Spectrum3DImporter']
-
-
-def hdu_is_valid(item):
-    """
-    Check if the HDU is valid to be imported as a 3D Spectrum.
-
-    Parameters
-    ----------
-    hdu : `astropy.io.fits.hdu.base.HDUBase`
-        The HDU to check.
-
-    Returns
-    -------
-    bool
-        True if the HDU is a valid light curve HDU, False otherwise.
-    """
-    hdu = item.get('obj')
-    return (len(getattr(hdu, 'shape', [])) == 3
-            and ('DISPAXIS' in hdu.header
-                 or hdu.header.get('CTYPE1', '') == 'WAVE'
-                 or hdu.header.get('EXTNAME', '') == 'FLUX'))
 
 
 @loader_importer_registry('3D Spectrum')
@@ -89,11 +63,6 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
     ext_viewer_label_auto = Bool(True).tag(sync=True)
     ext_viewer_label_invalid_msg = Unicode().tag(sync=True)
 
-    # HDUList-specific options
-    input_hdulist = Bool(False).tag(sync=True)
-    extension_items = List().tag(sync=True)
-    extension_selected = Unicode().tag(sync=True)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -111,23 +80,6 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
 
         if self.config == 'cubeviz':
             self.viewer.selected = ['flux-viewer']
-
-        self.input_hdulist = isinstance(self.input, fits.HDUList)
-        if self.input_hdulist:
-            ext_options = [{'label': f"{index}: {hdu.name}",
-                            'name': hdu.name,
-                            'ver': hdu.ver,
-                            'name_ver': f"{hdu.name},{hdu.ver}",
-                            'index': index,
-                            'obj': hdu}
-                           for index, hdu in enumerate(self.input)]
-            # TODO: make this multiselect and automatically assign roles or have
-            # separate flux_extension, unc_extension, mask_extension, etc?
-            self.extension = SelectFileExtensionComponent(self,
-                                                          items='extension_items',
-                                                          selected='extension_selected',
-                                                          manual_options=ext_options,
-                                                          filters=[hdu_is_valid])
 
         self.unc_data_label = AutoTextField(self,
                                             'unc_data_label_value',
@@ -207,10 +159,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
         if self.app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
-        if not ((isinstance(self.input, Spectrum)
-                 and self.input.flux.ndim == 3) or
-                (isinstance(self.input, fits.HDUList)
-                 and len([hdu for hdu in self.input if hdu_is_valid({'obj': hdu})]))):  # noqa
+        if not isinstance(self.input, Spectrum):
+            return False
+        if not self.input.flux.ndim == 3:
             return False
         try:
             self.output
@@ -225,52 +176,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
-        if not self.input_hdulist:
-            return self.input
-
-        hdulist = self.input
-        hdu = self.extension.selected_obj
-        data = hdu.data
-        header = hdu.header
-        metadata = standardize_metadata(header)
-        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-        wcs = WCS(header, hdulist)
-
-        try:
-            data_unit = u.Unit(header['BUNIT'])
-        except Exception:
-            data_unit = u.count
-
-        try:
-            if wcs.world_axis_physical_types == [None, None]:
-                # This may be a JWST file with WCS stored in ASDF
-                if 'ASDF' in hdulist:
-                    try:
-                        from stdatamodels import asdf_in_fits
-                        tree = asdf_in_fits.open(hdulist).tree
-                        if 'meta' in tree and 'wcs' in tree['meta']:
-                            wcs = tree["meta"]["wcs"][0]
-                        else:
-                            wcs = None
-                    except ValueError:
-                        wcs = None
-                else:
-                    wcs = None
-            return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
-        except ValueError:
-            # In some cases, the above call to Spectrum will fail if no
-            # spectral axis is found in the WCS. Even without a spectral axis,
-            # the Spectrum.read parser may work, so we try that next.
-            # If that also fails, then drop the WCS.
-            try:
-                Spectrum.read(self._resolver())
-            except Exception:
-                # specutils.Spectrum > Spectrum2D would fail, so use no WCS
-                return Spectrum(flux=data * data_unit, meta=metadata)
-            else:
-                # raising an error here will allow using specutils.Spectrum > Spectrum2D
-                raise
+        return self.input
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
@@ -302,7 +208,6 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
                                                  auto_update=False,
                                                  add_data=False)
         except Exception:
-            raise
             ext = None
             msg = SnackbarMessage(
                 "Automatic spectrum extraction failed. See the 3D spectral extraction"
