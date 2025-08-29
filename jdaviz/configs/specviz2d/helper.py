@@ -106,7 +106,7 @@ class Specviz2d(Specviz):
                       data_label=spectrum_2d_label,
                       ext_data_label=spectrum_1d_label,
                       auto_extract=spectrum_1d is None,
-                      show_in_viewer=show_in_viewer,
+                      viewer='*' if show_in_viewer else [],
                       extension=ext,
                       **load_kwargs)
         if spectrum_1d is not None:
@@ -114,7 +114,7 @@ class Specviz2d(Specviz):
                 spectrum_1d_label = self.app.return_unique_name(spectrum_1d_label)
             self.load(spectrum_1d, format='1D Spectrum',
                       data_label=spectrum_1d_label,
-                      show_in_viewer=show_in_viewer,
+                      viewer='*' if show_in_viewer else [],
                       **load_kwargs)
 
     @deprecated(since="4.3", alternative="load")
@@ -132,7 +132,7 @@ class Specviz2d(Specviz):
             Whether to load into the spectrum-2d-viewer.
         """
         self.load(trace, format='trace', data_label=data_label,
-                  show_in_viewer=show_in_viewer)
+                  viewer='*' if show_in_viewer else [])
 
     def get_data(self, data_label=None, spectral_subset=None,
                  cls=Spectrum, use_display_units=False):

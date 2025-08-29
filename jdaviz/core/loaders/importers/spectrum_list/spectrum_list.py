@@ -87,6 +87,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # only enable the import button if at least one spectrum is selected.
         self.resolver.observe(self._on_format_selected_change, names='format_selected')
 
+    @staticmethod
+    def _get_supported_viewers():
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
+
     @property
     def user_api(self):
         expose = ['sources', 'convert_to_flux_density']
@@ -224,14 +228,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # only used if `show_in_viewer=True` and no existing viewers can accept the data
         return 'spectrum-1d-viewer'
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         if not self.sources.selected:
             raise ValueError("No sources selected.")
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
                 data_label = f"{self.data_label_value}_{item_dict['suffix']}"
-                self.add_to_data_collection(spec_obj, data_label, show_in_viewer=True)
+                self.add_to_data_collection(spec_obj, data_label)
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
@@ -330,10 +334,9 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
                                             wave_units,
                                             flux_units)
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         data_label = self.data_label_value
-        self.add_to_data_collection(self.output, f"{data_label}",
-                                    show_in_viewer=show_in_viewer)
+        self.add_to_data_collection(self.output, f"{data_label}")
 
         # Do we need to reset in case user switches back to Spectrum List?
         # self.sources.selected = []
