@@ -32,7 +32,8 @@ __all__ = ['SpectralExtraction3D']
 
 
 @tray_registry(
-    'spectral-extraction-3d', label="3D Spectral Extraction"
+    'spectral-extraction-3d', label="3D Spectral Extraction",
+    category='data:reduction'
 )
 class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                            DatasetSelectMixin, AddResultsMixin):
@@ -191,6 +192,9 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def user_api(self):
@@ -757,6 +761,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @cached_property
     def marks(self):
         if not self._tray_instance:
+            return {}
+        if not len(self.slice_indicator_viewers):
             return {}
         # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]

@@ -18,7 +18,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Collapse']
 
 
-@tray_registry('g-collapse', label="Collapse")
+@tray_registry('g-collapse', label="Collapse", category="data:reduction")
 class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Collapse Plugin Documentation <collapse>` for more details.
@@ -69,6 +69,9 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Collapse a spectral cube along one axis.'
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def _default_spectrum_viewer_reference_name(self):
