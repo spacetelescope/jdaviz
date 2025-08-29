@@ -63,7 +63,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                 viewer.state.reset_limits()
 
     # NOTE: uncomment once ready to deprecate load_data
-    #@deprecated(since="4.3", alternative="load")
+    # @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, override_cube_limit=False, **kwargs):
         """
         Load and parse a data cube with Cubeviz.
