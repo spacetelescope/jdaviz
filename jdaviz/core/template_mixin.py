@@ -3867,7 +3867,6 @@ class ViewerSelectCreateNew(ViewerSelect):
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
 
-        # TODO: user API when accessing create_new and new_label
         self.create_new = SelectPluginComponent(plugin,
                                                 items=create_new_items,
                                                 selected=create_new_selected)
@@ -3898,7 +3897,7 @@ class ViewerSelectCreateNew(ViewerSelect):
 
     def _on_viewer_label_changed(self, msg={}):
         if not len(self.new_label.value.strip()):
-            self.new_label.invalid_msg = 'viewer_label must be provided'
+            self.new_label.invalid_msg = 'new_label must be provided'
             return
 
         # ensure the default label is unique for the data-collection
@@ -3906,7 +3905,7 @@ class ViewerSelectCreateNew(ViewerSelect):
 
         for viewer in self.app._jdaviz_helper.viewers.keys():
             if self.new_label.value == viewer:
-                self.new_label.invalid_msg = 'viewer_label already in use'
+                self.new_label.invalid_msg = 'new_label already in use'
                 return
 
         self.new_label.invalid_msg = ''

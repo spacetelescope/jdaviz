@@ -138,8 +138,8 @@ class ConfigHelper(HubListener):
 
     def _get_loader(self, resolver_name, parser_name=None, importer_name=None):
         """
-        Attempt to retrieve an resolver/parser/importer that is showing as invalid
-        because of an internal error. Useful for debugging purposes.
+        Attempt to retrieve an resolver/parser/importer for debugging purposes.
+        Can be used to debug an importer that shows as invalid because of an internal error.
         """
         ldr = self.loaders.get(resolver_name)
         resolver = ldr._obj
