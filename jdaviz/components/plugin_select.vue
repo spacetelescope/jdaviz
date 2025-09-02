@@ -47,7 +47,12 @@
             </v-list-item-action>
             <v-list-item-content>
               <v-list-item-title>
-                {{ selected.length < items.length ? 'Select All' : 'Clear All' }}
+                <template v-if="search_enabled && search_query">
+                  {{ selected.length < filtered_items.length ? 'Select All from Search' : 'Clear All from Search' }}
+                </template>
+                <template v-else>
+                  {{ selected.length < items.length ? 'Select All' : 'Clear All' }}
+                </template>
               </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
@@ -130,10 +135,31 @@ module.exports = {
       this.search_query = value;
     },
     toggle_select_all() {
-      if (this.selected.length < this.items.length) {
-        this.$emit('update:selected', this.items.map(item => item.label || item.text || item));
+      if (this.search_enabled && this.search_query) {
+        // When search is active, select/clear only filtered items
+        const filtered_labels = this.filtered_items.map(item => item.label || item.text || item);
+        const selected_set = new Set(this.selected);
+        if (filtered_labels.some(label => !selected_set.has(label))) {
+          // Select all filtered items (add to selection)
+          let new_selected = Array.isArray(this.selected) ? [...this.selected] : [];
+          filtered_labels.forEach(label => {
+            if (!selected_set.has(label)) {
+              new_selected.push(label);
+            }
+          });
+          this.$emit('update:selected', new_selected);
+        } else {
+          // Clear all filtered items from selection
+          let new_selected = Array.isArray(this.selected) ? this.selected.filter(label => !filtered_labels.includes(label)) : [];
+          this.$emit('update:selected', new_selected);
+        }
       } else {
-        this.$emit('update:selected', []);
+        // No search: select/clear all items
+        if (this.selected.length < this.items.length) {
+          this.$emit('update:selected', this.items.map(item => item.label || item.text || item));
+        } else {
+          this.$emit('update:selected', []);
+        }
       }
     },
   },
