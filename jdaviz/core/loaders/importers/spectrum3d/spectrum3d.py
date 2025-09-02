@@ -1,13 +1,17 @@
 from traitlets import Any, Bool, List, Unicode, observe
+from astropy import units as u
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum
 
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew)
+from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
+                                               _eqv_flux_to_sb_pixel)
 from jdaviz.core.user_api import ImporterUserApi
 
 
@@ -177,7 +181,19 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
-        return self.input
+        sp = self.input
+
+        # convert flux and uncertainty to per-pix2 if input is not a surface brightness
+        if not check_if_unit_is_per_solid_angle(sp.flux.unit):
+            target_flux_unit = sp.flux.unit / PIX2
+        elif check_if_unit_is_per_solid_angle(sp.flux.unit, return_unit=True) == "spaxel":
+            # We need to convert spaxel to pix2, since spaxel isn't fully supported by astropy
+            # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
+            target_flux_unit = sp.flux.unit * u.Unit('spaxel') / PIX2
+        else:
+            return sp
+
+        return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
 
     def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
