@@ -105,10 +105,10 @@ module.exports = {
       // Wildcard matching: if query contains * or ?
       if (/[*?]/.test(query)) {
         // Escape regex special chars except * and ?
-        let regexStr = query.replace(/([.+^${}()|\[\]\\])/g, '\\$1');
-        regexStr = regexStr.replace(/\*/g, '.*').replace(/\?/g, '.');
+        let regex_str = query.replace(/([.+^${}()|\[\]\\])/g, '\$1');
+        regex_str = regex_str.replace(/\*/g, '.*').replace(/\?/g, '.');
         // Remove ^ and $ anchors for partial match
-        const regex = new RegExp(regexStr, 'i');
+        const regex = new RegExp(regex_str, 'i');
         filtered = this.items.filter(item => {
           const label = (typeof item === 'string') ? item : (item.label || item.text || '');
           return regex.test(label);
