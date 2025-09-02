@@ -86,6 +86,8 @@ Bug Fixes
 
 - Fixed issue in Rampviz where new loader infrastructure was unintentionally exposed. [#3740]
 
+- Restrict polynomial order value of Polynomial1D model component to be >= 0. [#3741]
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
