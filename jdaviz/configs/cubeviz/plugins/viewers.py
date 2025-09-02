@@ -65,7 +65,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     @property
     def _sonify_plugin(self):
-        if self.jdaviz_helper is not None:
+        if self.jdaviz_helper is not None and 'Sonify Data' in self.jdaviz_helper.plugins:
             return self.jdaviz_helper.plugins['Sonify Data']._obj
         else:
             return None
@@ -156,7 +156,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def _viewer_mouse_event(self, data):
         if data['event'] in ('mouseleave', 'mouseenter') or not self.sonified_layers_enabled:
-            self._sonify_plugin.stop_stream()
+            if self._sonify_plugin is not None:
+                self._sonify_plugin.stop_stream()
             return
         if len(self.jdaviz_app.data_collection) < 1:
             return
