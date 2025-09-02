@@ -129,7 +129,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
 
     data = cubeviz_helper.app.data_collection[0]
     assert len(cubeviz_helper.app.data_collection) == 2
-    assert data.label == "Unknown spectrum object[FLUX]"
+    assert data.label == "3D Spectrum [FLUX]"
     assert data.shape == flux.shape
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
@@ -258,17 +258,17 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
 
 
 def test_invalid_data_types(cubeviz_helper):
-    with pytest.raises(ValueError, match=r"The input file 'does_not_exist\.fits'"):
+    with pytest.raises(ValueError, match=r"no valid loaders found for input.*"):
         cubeviz_helper.load_data('does_not_exist.fits')
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(WCS(naxis=3))
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(Spectrum(flux=np.ones((2, 2)) * u.nJy, spectral_axis_index=1))
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(np.ones((2, 2)))
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(np.ones((2, )))

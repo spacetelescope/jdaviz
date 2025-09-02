@@ -97,6 +97,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                 data_label = data_label+"[FLUX]"
             self._load(data,
                        data_label=data_label,
+                       ext_data_label=f'Spectrum ({kwargs.get("function", "sum").lower()})',
                        format=format,
                        **kwargs)
             return

@@ -194,7 +194,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
             uncert = Spectrum(spectral_axis=self.output.spectral_axis,
                               flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
                               wcs=self.output.wcs,
-                              meta=self.output.meta)
+                              meta=self.output.meta,
+                              spectral_axis_index=self.output.spectral_axis_index)
             self.add_to_data_collection(uncert,
                                         unc_data_label,
                                         viewer_select=self.unc_viewer)
@@ -210,6 +211,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
                                                  function=self.function.selected,
                                                  auto_update=False,
                                                  add_data=False)
+            # we'll add the data manually instead of through add_results_from_plugin
+            # but still want to preserve the plugin metadata
+            ext.meta['Plugin'] = spext._plugin_name
         except Exception:
             ext = None
             msg = SnackbarMessage(

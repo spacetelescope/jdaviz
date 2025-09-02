@@ -3936,7 +3936,7 @@ class ViewerSelectCreateNew(ViewerSelect):
 
         for viewer in self.app._jdaviz_helper.viewers.keys():
             if self.new_label.value == viewer:
-                self.new_label.invalid_msg = 'new_label already in use'
+                self.new_label.invalid_msg = f"new_label='{self.new_label.value}' already in use"
                 return
 
         self.new_label.invalid_msg = ''
@@ -4575,7 +4575,7 @@ class AddResults(BasePluginComponent):
                     self.label_overwrite = True
                     return
                 else:
-                    self.label_invalid_msg = 'label already in use'
+                    self.label_invalid_msg = f"label='{self.label}' already in use"
                     self.label_overwrite = False
                     return
 

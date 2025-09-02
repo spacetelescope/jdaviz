@@ -159,7 +159,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
         for data in self.app.data_collection:
             if self.data_label_value == data.label:
-                self.data_label_invalid_msg = 'data_label already in use'
+                self.data_label_invalid_msg = f"data_label='{self.data_label_value}' already in use"
                 return
 
         self.data_label_invalid_msg = ''

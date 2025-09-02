@@ -12,8 +12,8 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     # TODO: this now fails when instantiating Collapse after initialization
     coll = cubeviz_helper.plugins['Collapse']._obj
 
-    coll.selected_data_item = 'Unknown spectrum object[FLUX]'
-    coll.dataset_selected = 'Unknown spectrum object[FLUX]'
+    coll.selected_data_item = '3D Spectrum [FLUX]'
+    coll.dataset_selected = '3D Spectrum [FLUX]'
 
     assert coll.results_label == 'collapsed'
     coll.vue_collapse()
