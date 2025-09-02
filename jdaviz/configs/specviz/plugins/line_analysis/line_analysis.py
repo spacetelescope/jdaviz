@@ -343,11 +343,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
         if not store_results:
             return
 
-        # if there are no results, statistics do not need to be re-calculated
-        # when is_active is toggled on
-        if getattr(msg, 'name', '') == 'is_active' and not self.results_available:
-            return
-
         def _uncertainty(result):
             if getattr(result, 'uncertainty', None) is not None:
                 # we'll keep the uncertainty and result in the same unit (so
