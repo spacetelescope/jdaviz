@@ -92,16 +92,28 @@ module.exports = {
       if (!this.search_enabled || !this.search_query) {
         return this.items;
       }
-      const query = this.search_query.toLowerCase();
-      // Get selected items (as objects or strings)
+      const query = this.search_query.toLowerCase().trim();
       const selected_set = new Set(
         Array.isArray(this.selected) ? this.selected.map(sel => (typeof sel === 'string' ? sel : sel.label || sel.text || sel)) : [this.selected]
       );
-      // Filter items by search
-      const filtered = this.items.filter(item => {
-        const label = (typeof item === 'string') ? item : (item.label || item.text || '');
-        return label.toLowerCase().includes(query);
-      });
+      let filtered;
+      // Wildcard matching: if query contains * or ?
+      if (/[*?]/.test(query)) {
+        // Escape regex special chars except * and ?
+        let regexStr = query.replace(/([.+^${}()|\[\]\\])/g, '\\$1');
+        regexStr = regexStr.replace(/\*/g, '.*').replace(/\?/g, '.');
+        // Remove ^ and $ anchors for partial match
+        const regex = new RegExp(regexStr, 'i');
+        filtered = this.items.filter(item => {
+          const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+          return regex.test(label);
+        });
+      } else {
+        filtered = this.items.filter(item => {
+          const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+          return label.toLowerCase().includes(query);
+        });
+      }
       // Add back any selected items not in filtered
       const all_labels = new Set(filtered.map(item => (typeof item === 'string' ? item : item.label || item.text || '')));
       this.items.forEach(item => {
