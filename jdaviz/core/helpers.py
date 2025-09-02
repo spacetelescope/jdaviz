@@ -133,7 +133,7 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not (self.app.state.dev_loaders or self.app.config in ('deconfigged', 'specviz', 'specviz2d', 'imviz')):  # noqa
+        if not (self.app.state.dev_loaders or self.app.config in ('deconfigged', 'specviz', 'specviz2d', 'imviz', 'cubeviz')):  # noqa
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}
@@ -448,7 +448,7 @@ class ConfigHelper(HubListener):
             self.app.layout.height = height
             self.app.state.settings['context']['notebook']['max_height'] = height
 
-        if self.app.config in ('specviz', 'specviz2d', 'lcviz') or self.app.state.dev_loaders:
+        if self.app.config in ('specviz', 'specviz2d', 'imviz', 'cubeviz', 'lcviz') or self.app.state.dev_loaders:  # noqa
             if not len(self.viewers) and not len(self.app.state.drawer_content):
                 self.app.state.drawer_content = 'loaders'
             else:
