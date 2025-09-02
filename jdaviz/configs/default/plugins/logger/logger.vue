@@ -25,18 +25,21 @@
       hint="Minimum verbosity level to show in the log below."
     ></plugin-select>
 
-    <plugin-action-button
-      :disabled="history.length == 0"
-      :results_isolated_to_plugin="true"
-      :api_hints_enabled="api_hints_enabled"
+    <v-row justify="end">
+      <plugin-action-button
+        :disabled="history.length == 0"
+        :results_isolated_to_plugin="true"
+        :api_hints_enabled="api_hints_enabled"
 
-      @click="clear_history">
-      {{ api_hints_enabled ?
-        'plg.clear_history()'
-        :
-        'Clear History'
-      }}
-    </plugin-action-button>
+        @click="clear_history">
+          <v-icon>mdi-notification-clear-all</v-icon>
+          {{ api_hints_enabled ?
+            'plg.clear_history()'
+            :
+            'Clear History'
+          }}
+      </plugin-action-button>
+    </v-row>
 
     <v-alert v-if="history.length === 0" dense type="info">No logger messages</v-alert>
     <v-row
