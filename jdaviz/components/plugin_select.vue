@@ -38,7 +38,7 @@
           <v-list-item
             ripple
             @mousedown.prevent
-            @click="toggle_select_all"
+            @click="toggle_select_all_with_search"
           >
             <v-list-item-action>
               <v-icon>
@@ -134,7 +134,7 @@ module.exports = {
     on_search_input(value) {
       this.search_query = value;
     },
-    toggle_select_all() {
+    toggle_select_all_with_search() {
       if (this.search_enabled && this.search_query) {
         // When search is active, select/clear only filtered items
         const filtered_labels = this.filtered_items.map(item => item.label || item.text || item);
