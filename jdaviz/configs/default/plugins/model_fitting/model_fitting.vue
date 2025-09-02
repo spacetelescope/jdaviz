@@ -67,7 +67,7 @@
           v-model.number="poly_order"
           :label="api_hints_enabled ? 'plg.poly_order' : 'Order'"
           :class="api_hints_enabled ? 'api-hint' : null"
-          :rules="[() => poly_order!=='' || 'This field is required']"
+          :error-messages="poly_order_invalid_msg"
           hint="Order of polynomial to fit."
           persistent-hint
         >

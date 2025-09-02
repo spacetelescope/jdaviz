@@ -16,8 +16,11 @@ Bug Fixes
 
 - Fixed issue in Rampviz where new loader infrastructure was unintentionally exposed. [#3740]
 
+- Restrict polynomial order value of Polynomial1D model component to be >= 0. [#3741]
+
 - When all data is unloaded from 1D Spectrum viewer, and new data is loaded, the unit setting in the unit conversion plugin from the initial
   dataset are maintained. [#3746]
+
 
 Cubeviz
 ^^^^^^^
