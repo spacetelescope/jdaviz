@@ -811,6 +811,14 @@ def get_wcs_only_layer_labels(app):
             if layer_is_wcs_only(data)]
 
 
+def wcs_is_spectral(wcs):
+    if wcs is None:
+        return False
+    # NOTE: this may need further generalization for the GWCS but non-specutils case
+    # or for the spectral cube case
+    return isinstance(wcs, SpectralGWCS) or getattr(wcs, 'has_spectral', False)
+
+
 def get_top_layer_index(viewer):
     """Get index of the top visible image layer in a viewer.
     This is because when blinked, first layer might not be top visible layer.

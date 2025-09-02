@@ -62,7 +62,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
-    get_subset_type, is_wcs_only, is_not_wcs_only,
+    get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
     CONFIGS_WITH_LOADERS
 )
@@ -4089,10 +4089,9 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 2
 
         def is_image_not_spectrum(data):
-            if not hasattr(data, 'coords'):
+            if not is_image(data):
                 return False
-            return (is_image(data)
-                    and not getattr(data.coords, 'has_spectral', False))
+            return not wcs_is_spectral(getattr(data, 'coords', None))
 
         def is_cube(data):
             return len(data.shape) == 3
@@ -4103,12 +4102,12 @@ class DatasetSelect(SelectPluginComponent):
         def is_spectrum(data):
             return (len(data.shape) == 1
                     and data.coords is not None
-                    and getattr(data.coords, 'has_spectral', True))
+                    and wcs_is_spectral(getattr(data, 'coords', None)))
 
         def is_2d_spectrum_or_trace(data):
             return (data.ndim == 2
                     and data.coords is not None
-                    and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
+                    and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
 
         def is_spectrum_or_cube(data):
             return is_spectrum(data) or is_cube(data)
