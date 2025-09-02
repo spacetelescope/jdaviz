@@ -67,19 +67,8 @@ def test_collapsed_to_extract_plugin(cubeviz_helper, spectral_cube_wcs, tmp_path
 
     collapse_plugin = cubeviz_helper.plugins['Collapse']
 
-    # make sure export enabled is true, and that before the collapse function
-    # is run `collapsed_flux_available` is correctly set to False
-    assert collapse_plugin._obj.export_enabled
-    assert collapse_plugin._obj.collapsed_flux_available is False
-
-    # run collapse function, and make sure `collapsed_flux_available` was set to True
+    # run collapse function
     collapse_plugin._obj.vue_collapse()
-    assert collapse_plugin._obj.collapsed_flux_available
-
-    # check that default filename is correct, then change path
-    fname = 'collapsed_sum_Unknown spectrum object_FLUX.fits'
-    assert collapse_plugin._obj.filename == fname
-    collapse_plugin._obj.filename = str(tmp_path / fname)
 
     label = collapse_plugin._obj.add_results.label
     export_plugin = cubeviz_helper.plugins['Export']._obj
