@@ -285,6 +285,8 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
+    catalogs_in_dc = CallbackProperty(
+        False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
@@ -761,7 +763,7 @@ class Application(VuetifyTemplate, HubListener):
                     continue
 
                 for existing_comp in existing_data.components:
-                    if existing_comp._component_type in (None, 'unknown'):
+                    if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
                         continue
 
                     # Create link if component-types match
