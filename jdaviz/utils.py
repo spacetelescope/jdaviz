@@ -38,6 +38,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
+           'wildcard_match_str', 'wildcard_match_list_of_str',
            'cmap_samples', 'glue_colormaps']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
