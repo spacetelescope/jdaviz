@@ -11,7 +11,8 @@ from jdaviz.core.custom_units_and_equivs import (PIX2,
                                                  _spectral_and_photon_flux_density_units)
 
 __all__ = ["all_flux_unit_conversion_equivs", "check_if_unit_is_per_solid_angle",
-           "combine_flux_and_angle_units", "convert_integrated_sb_unit",
+           "coerce_unit", "combine_flux_and_angle_units",
+           "convert_integrated_sb_unit",
            "create_equivalent_angle_units_list",
            "create_equivalent_flux_units_list",
            "create_equivalent_spectral_axis_units_list",
@@ -534,3 +535,27 @@ def convert_integrated_sb_unit(u1, spectral_axis_unit, desired_freq_unit, desire
         return u1  # units are compatible, return input
 
     return uu * spec_axis_conversion_scale_factor
+
+
+def coerce_unit(quantity):
+    """
+    coerce the unit on a quantity to have a single length unit (will take the first length
+    unit with a power of 1) and to strip any constants from the units.
+    """
+    # for some reason, quantity.unit.powers gives floats which then raise an error in
+    # quantity.to and we want to avoid casting to integer in case of fractional powers
+    unit = u.Unit(str(quantity.unit))
+    unit_types = [str(subunit.physical_type) for subunit in unit.bases]
+    length_inds = [ind for ind, (base, power, unit_type)
+                   in enumerate(zip(unit.bases, unit.powers, unit_types))
+                   if unit_type == 'length' and abs(power) == 1]
+    # we want to force all length units (not area) to use the same base unit so they can
+    # combine/cancel appropriately
+    coerced_bases = [unit.bases[i if i not in length_inds else length_inds[0]]
+                     for i in range(len(unit.bases))]
+    coerced_unit_string = ' * '.join([f'{base}**{power}'
+                                      for base, power in zip(coerced_bases, unit.powers)])
+    coerced_quantity = quantity.to(coerced_unit_string)
+    if getattr(quantity, 'uncertainty', None) is not None:
+        coerced_quantity.uncertainty = quantity.uncertainty.to(coerced_unit_string)
+    return coerced_quantity

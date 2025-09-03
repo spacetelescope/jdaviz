@@ -16,6 +16,9 @@ Bug Fixes
 
 - Fixed issue in Rampviz where new loader infrastructure was unintentionally exposed. [#3740]
 
+- When all data is unloaded from 1D Spectrum viewer, and new data is loaded, the unit setting in the unit conversion plugin from the initial
+  dataset are maintained. [#3746]
+
 Cubeviz
 ^^^^^^^
 - Fixed issue with initial model components not using spectral y axis unit. [#3715]
@@ -37,6 +40,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+- Fix various bugs in the Line Analysis plugin, including some issues with spectral axis unit conversions and deletion of subsets. [#3746]
 
 4.3 (2025-05-28)
 ================
