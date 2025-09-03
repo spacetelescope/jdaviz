@@ -6,7 +6,7 @@
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
       label="Extension"
-      api_hint="ldr.extension ="
+      api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"
       hint="Extension to use from the FITS HDUList."
     />
