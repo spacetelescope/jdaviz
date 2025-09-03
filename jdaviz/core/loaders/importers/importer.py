@@ -24,8 +24,9 @@ class BaseImporter(PluginTemplateMixin):
     import_disabled = Bool(False).tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
-    def __init__(self, app, resolver, input, **kwargs):
+    def __init__(self, app, resolver, parser, input, **kwargs):
         self._input = input
+        self._parser = parser
         self._resolver = resolver
         super().__init__(app, **kwargs)
 
@@ -84,8 +85,8 @@ class BaseImporterToDataCollection(BaseImporter):
     viewer_label_auto = Bool(True).tag(sync=True)
     viewer_label_invalid_msg = Unicode().tag(sync=True)
 
-    def __init__(self, app, resolver, input, **kwargs):
-        super().__init__(app, resolver, input, **kwargs)
+    def __init__(self, app, resolver, parser, input, **kwargs):
+        super().__init__(app, resolver, parser, input, **kwargs)
         self.data_label_default = self._registry_label
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',

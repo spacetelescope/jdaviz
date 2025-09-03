@@ -90,6 +90,7 @@ class FormatSelect(SelectPluginComponent):
                     try:
                         this_importer = Importer(app=self.plugin.app,
                                                  resolver=self.plugin,
+                                                 parser=this_parser,
                                                  input=importer_input)
                     except Exception as e:  # nosec
                         self._invalid_importers[label] = f'importer exception: {e}'
@@ -287,6 +288,11 @@ class BaseResolver(PluginTemplateMixin):
         self.target._update_items()  # assumes format._importers is updated from above
         # ensure the importer updates even if the format selection remains fixed
         self._on_format_selected_changed()
+
+    @property
+    def parser(self):
+        # give access to the parser used by the selected importer
+        return self.importer._parser
 
     @property
     def importer(self):

@@ -161,7 +161,7 @@ class ConfigHelper(HubListener):
 
         from jdaviz.core.registries import loader_importer_registry
         ImporterCls = loader_importer_registry.members.get(importer_name)
-        return ImporterCls(app=self.app, resolver=resolver, input=input)
+        return ImporterCls(app=self.app, resolver=resolver, parser=parser, input=input)
 
     @property
     def new_viewers(self):
