@@ -670,6 +670,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     cube_wave = data.get_component('spectral')
 
                     eqv = all_flux_unit_conversion_equivs(pixar_sr=psc, cube_wave=cube_wave)
+                    print("Running flux_conversion_general from viewer.add_data")
                     flux_conversion_general([1, 1],
                                             data.get_component('flux').data.units,
                                             self.state.y_display_unit,
@@ -690,6 +691,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         result = super().add_data(data, color, alpha, **layer_state)
 
         if reset_plot_axes:
+            print("Running reset_plot_axes code")
             x_units = data.get_component(self.state.x_att.label).units
 
             y_axis_component = (

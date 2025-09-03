@@ -568,6 +568,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return self._return_extracted(cube, wcs, collapsed_nddata)
 
     def _return_extracted(self, cube, wcs, collapsed_nddata, pass_spectral_axis=False):
+        print("Calling return_extracted for some reason")
         # Convert to Spectrum, with the spectral axis in correct units:
         if hasattr(cube.coords, 'spectral_wcs'):
             target_wave_unit = cube.coords.spectral_wcs.world_axis_units[0]

@@ -244,6 +244,8 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
     if target_wave_unit is not None:
         new_sc.meta['_orig_spec'] = sc  # Need this for later
 
+    print(f"Returning {new_sc} from return_spectrum_with_correct_units")
+
     return new_sc
 
 
@@ -304,6 +306,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
         metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
 
         apply_pix2 = data_type in ['flux', 'uncert']
+        print("calling _return_spectrum_with_correct_units from hdulist")
         sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=data_type,
                                                  hdulist=hdulist, apply_pix2=apply_pix2)
 
@@ -363,6 +366,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
 
             # Also convert data loaded in flux units to a per-square-pixel surface
             # brightness unit (e.g Jy to Jy/pix**2)
+            print("Calling _return_spectrum_with_correct_units from parse 3d")
             s1d = _return_spectrum_with_correct_units(
                 flux, file_obj.wcs, meta, data_type=attr, apply_pix2=True)
 
