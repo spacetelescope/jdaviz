@@ -70,6 +70,7 @@ def test_wildcard_matching_sources(specviz_helper, premade_spectrum_list):
     assert selection_obj.selected == []
 
     assert selection_obj.choices == default_choices
+    # This should get set to True automatically when multiple selections are made
     selection_obj.multiselect = False
 
     err_str1 = "not all items in"
@@ -135,6 +136,7 @@ def test_wildcard_matching_extension(imviz_helper, multi_extension_image_hdu_wcs
     assert selection_obj.selected == []
 
     assert selection_obj.choices == default_choices
+    # This should get set to True automatically when multiple selections are made
     selection_obj.multiselect = False
 
     err_str1 = "not all items in"
