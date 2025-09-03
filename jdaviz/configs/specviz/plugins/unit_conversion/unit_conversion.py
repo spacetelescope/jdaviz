@@ -205,6 +205,11 @@ class UnitConversion(PluginTemplateMixin):
         if viewer.reference == 'spectrum-viewer' and not len(viewer.layers):
             self.disabled_msg = 'Unit Conversion unavailable without data loaded in spectrum viewer' # noqa
 
+        elif viewer.reference == 'spectrum-viewer' and len(viewer.layers):
+            xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+            viewer.state.x_display_unit = xunit
+            viewer.set_plot_axes()
+
     def _on_add_data_to_viewer(self, msg):
 
         # toggle warning message for cubes without PIXAR_SR defined
@@ -222,6 +227,18 @@ class UnitConversion(PluginTemplateMixin):
             self.disabled_msg = ''
         if isinstance(msg.data, glue_core_data):
             data_obj = None
+
+        # sync viewer and UC plugin units when new data is loaded. this is necessary, for
+        # example, when all data is unloaded but unit selections are set in the UC plugin,
+        # and new data is loaded which should use those units
+        if len(self.spectral_unit_selected) and hasattr(viewer.state, 'x_display_unit'):
+            if viewer.state.x_display_unit != self.spectral_unit_selected:
+                xunit = _valid_glue_display_unit(self.spectral_unit.selected, viewer, 'x')
+                viewer.state.x_display_unit = xunit
+                viewer.set_plot_axes()
+        if len(self.spectral_y_unit) and hasattr(viewer.state, 'y_display_unit'):
+            if viewer.state.y_display_unit != self.spectral_y_unit:
+                self._handle_spectral_y_unit()
 
         if (not len(self.spectral_unit_selected)
                 or not len(self.flux_unit_selected)
@@ -267,6 +284,7 @@ class UnitConversion(PluginTemplateMixin):
                             self.angle_unit.selected = str(angle_unit)
                     except ValueError:
                         self.angle_unit.selected = ''
+
                 if (not len(self.spectral_y_type_selected)
                         and isinstance(viewer, JdavizProfileView)):
                     # set spectral_y_type_selected to 'Flux'

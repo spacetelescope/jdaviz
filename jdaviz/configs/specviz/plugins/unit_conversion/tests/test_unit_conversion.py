@@ -311,3 +311,41 @@ def test_image_deconfigged(deconfigged_helper, image_nddata_wcs):
     assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.00000e-06 MJy',
                                          'World 22h30m04.7961s -20d49m58.9990s (ICRS)',
                                          '337.5199835909 -20.8330552820 (deg)')
+
+
+def test_data_unload_reload(specviz2d_helper):
+    """
+    Test that when data is loaded (which sets ths initial unit selection
+    for the unit conversion plugin), then removed, and a new dataset
+    with different units is loaded, that the spectrum viewer is in the
+    original units set by the first dataset. This behavior aligns with the
+    idea that UC plugin selections should be app-wide settings.
+    """
+    # load initial data in MJy, um
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
+    spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.um)
+
+    specviz2d_helper.load_data(spectrum2d)
+
+    # remove data from viewer
+    viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
+    dm = viewer.data_menu
+    dm.remove_from_viewer()
+
+    # make sure initial unit setting matches data units in both
+    # plugin and on the spectrum viewer axes
+    uc = specviz2d_helper.plugins['Unit Conversion']
+    assert uc.flux_unit.selected == viewer.state.y_display_unit == 'MJy'
+    assert uc.spectral_unit == viewer.state.x_display_unit == 'um'
+
+    # re-load data with new units into the spectrum viewer
+    spectrum2d_new = Spectrum(flux=data*u.Jy/u.sr, spectral_axis=data[3]*u.nm)
+    specviz2d_helper.load_data(spectrum2d_new)
+
+    # make sure newly loaded data did not change unit conversion selection,
+    # and that the plugin traitlets and viewer attributes still match the
+    # initially loaded unit
+    uc = specviz2d_helper.plugins['Unit Conversion']
+    assert uc.flux_unit.selected == viewer.state.y_display_unit == 'MJy'
+    assert uc.spectral_unit == viewer.state.x_display_unit == 'um'
