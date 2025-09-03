@@ -8,10 +8,10 @@ from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum, SpectralRegion
 from glue.core.roi import XRangeROI
 
-from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import LineIdentifyMessage
 from jdaviz.core.marks import LineAnalysisContinuum
+from jdaviz.core.unit_conversion_utils import coerce_unit
 
 
 def test_plugin(specviz_helper, spectrum1d):
@@ -264,11 +264,11 @@ def test_coerce_unit():
     q_input = 1 * u.Unit('1E-20 erg m / (Angstrom cm**2 s)')
     q_input.uncertainty = 0.1 * u.Unit('1E-20 erg m / (Angstrom cm**2 s)')
     q_unit = u.Unit('erg / (cm**2 s)')
-    q_coerced = _coerce_unit(q_input)
+    q_coerced = coerce_unit(q_input)
     assert_quantity_allclose(q_coerced, 1e-10 * q_unit)
     assert_quantity_allclose(q_coerced.uncertainty, 1e-11 * q_unit)
     q_input.uncertainty = None
-    q_coerced = _coerce_unit(q_input)
+    q_coerced = coerce_unit(q_input)
     assert not hasattr(q_coerced, 'uncertainty')
 
 
