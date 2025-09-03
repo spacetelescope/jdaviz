@@ -51,27 +51,74 @@ def test_toggle_api_hints(specviz_helper):
     assert specviz_helper.app.state.show_api_hints is False
 
 
-def test_wildcard_matching_selected(imviz_helper, multi_extension_image_hdu_wcs):
-    default_choices = ['1: [SCI,1]',
-                       '2: [MASK,1]',
-                       '3: [ERR,1]',
-                       '4: [DQ,1]']
+@pytest.mark.parametrize('config', ['imviz', 'specviz'])
+def test_wildcard_matching_selected(config, imviz_helper, specviz_helper,
+                                    multi_extension_image_hdu_wcs, premade_spectrum_list):
 
-    # Testing directly
-    ldr = imviz_helper.loaders['object']
-    ldr.object = multi_extension_image_hdu_wcs
-    extension_obj = ldr.importer.extension
-    # Default selection
-    assert extension_obj.selected == [default_choices[0]]
-    # Resetting to []
-    # Note this can't be done by setting selected = [], is this intentional?
-    extension_obj.selected.pop(0)
+    if config == 'imviz':
+        default_choices = ['1: [SCI,1]',
+                           '2: [MASK,1]',
+                           '3: [ERR,1]',
+                           '4: [DQ,1]']
 
-    assert extension_obj.choices == default_choices
-    extension_obj.multiselect = False
+        # Testing directly
+        ldr = imviz_helper.loaders['object']
+        ldr.object = multi_extension_image_hdu_wcs
+        selection_obj = ldr.importer.extension
+
+        # Default selection
+        assert selection_obj.selected == [default_choices[0]]
+
+        # Resetting to []
+        # Note this can't be done by setting selected = [], is this intentional?
+        selection_obj.selected.pop(0)
+        assert selection_obj.selected == []
+
+        test_selections = {
+            # Test all
+            '*': selection_obj.choices,
+            # Test repeats
+            ('*', '*:*'): selection_obj.choices,
+            # Test single selection
+            '1:*': [selection_obj.choices[0]],
+            # Test multi-wildcard
+            '*S*': selection_obj.choices[:2],
+            # Test multi-selection
+            ('*ERR*', '*DQ*'): selection_obj.choices[2:]}
+
+    else:
+        # Specviz
+        default_choices = ['1D Spectrum at index: 0',
+                           '1D Spectrum at index: 1',
+                           'Exposure 0, Source ID: 0000',
+                           'Exposure 0, Source ID: 1111',
+                           'Exposure 1, Source ID: 1111']
+
+        # Testing directly
+        ldr = specviz_helper.loaders['object']
+        ldr.object = premade_spectrum_list
+        selection_obj = ldr.importer.sources
+        print(selection_obj.choices)
+
+        assert selection_obj.selected == []
+
+        test_selections = {
+            # Test all
+            '*': selection_obj.choices,
+            # Test repeats
+            ('*', '*:*'): selection_obj.choices,
+            # Test single selection
+            '1D Spectrum at index:*': selection_obj.choices[:2],
+            # Test multi-wildcard
+            '*Exposure*': selection_obj.choices[2:],
+            # Test multi-selection
+            ('*: 1*', 'Exposure 0*'): selection_obj.choices[1:]}
+
+    assert selection_obj.choices == default_choices
+    selection_obj.multiselect = False
 
     err_str1 = "not all items in"
-    err_str2 = f"are one of {extension_obj.choices}, reverting selection to []"
+    err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
     with pytest.raises(ValueError,
                        match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
         ldr.importer._obj.user_api.extension = 'bad *'
@@ -85,27 +132,15 @@ def test_wildcard_matching_selected(imviz_helper, multi_extension_image_hdu_wcs)
         ldr.importer._obj.user_api.extension = ['another', 'bad * result']
 
     # Check that selected is still/reverted successfully to []
-    assert extension_obj.selected == []
-
-    test_selections = {
-        # Test all
-        '*': extension_obj.choices,
-        # Test repeats
-        ('*', '*:*'): extension_obj.choices,
-        # Test single selection
-        '1:*': [extension_obj.choices[0]],
-        # Test multi-wildcard
-        '*S*': extension_obj.choices[:2],
-        # Test multi-selection
-        ('*ERR*', '*DQ*'): extension_obj.choices[2:]}
+    assert selection_obj.selected == []
 
     for selection, expected in test_selections.items():
         ldr.importer._obj.user_api.extension = selection
-        assert extension_obj.multiselect is True
-        assert extension_obj.selected == expected
+        assert selection_obj.multiselect is True
+        assert selection_obj.selected == expected
         # Reset
-        extension_obj.selected = []
-        extension_obj.multiselect = False
+        selection_obj.selected = []
+        selection_obj.multiselect = False
 
 
 @pytest.mark.parametrize(
