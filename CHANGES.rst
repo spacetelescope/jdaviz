@@ -1,4 +1,4 @@
-4.3.1 (unreleased)
+4.3.1 (2025-09-03)
 ==================
 
 Bug Fixes
@@ -32,14 +32,6 @@ Cubeviz
 - Fixed issue with initializing model components when a spectral subset is selected and
   Cube Fit is toggled on. [#3727]
 
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
