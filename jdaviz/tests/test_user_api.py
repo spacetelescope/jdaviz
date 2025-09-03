@@ -54,8 +54,8 @@ def test_toggle_api_hints(specviz_helper):
 def test_wildcard_matching_sources(specviz_helper, premade_spectrum_list):
     """
     Test wildcard matching for source selection in Specviz. This tests setting
-    the selection directly as opposed to using ``load``, via 'ldr.importer.sources'
-    (whereas in the following test this is done through user_api.extension, same idea).
+    the selection directly as opposed to using ``load``, via ``ldr.importer.sources``
+    (whereas in the following test this is done through ``user_api.extension``, same idea).
     """
     default_choices = ['1D Spectrum at index: 0',
                        '1D Spectrum at index: 1',
@@ -114,8 +114,9 @@ def test_wildcard_matching_sources(specviz_helper, premade_spectrum_list):
 def test_wildcard_matching_extension(imviz_helper, multi_extension_image_hdu_wcs):
     """
     Test wildcard matching for source selection in Specviz. This tests setting
-    the selection directly as opposed to using ``load``, via 'ldr.importer._obj.user_api.extensions'
-    (whereas in the previous test this is done through user_api.sources, same idea).
+    the selection directly as opposed to using ``load``, via
+    ``ldr.importer._obj.user_api.extensions`` (whereas in the previous test this is
+    done through ``user_api.sources``, same idea).
     """
     default_choices = ['1: [SCI,1]',
                        '2: [MASK,1]',
