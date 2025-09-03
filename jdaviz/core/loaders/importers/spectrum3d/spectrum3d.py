@@ -1,3 +1,4 @@
+import numpy as np
 from traitlets import Any, Bool, List, Unicode, observe
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty
@@ -199,6 +200,13 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
             # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
             target_flux_unit = sp.flux.unit * u.Unit('spaxel') / PIX2
         else:
+            target_flux_unit = sp.flux.unit
+
+        # handle scale factors when they are included in the unit
+        if not np.isclose(target_flux_unit.scale, 1, rtol=1e-5):
+            target_flux_unit = target_flux_unit / target_flux_unit.scale
+
+        if target_flux_unit == sp.flux.unit:
             return sp
 
         return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
