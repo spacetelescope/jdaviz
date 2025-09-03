@@ -38,8 +38,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'wildcard_match_str', 'wildcard_match_list_of_str',
-           'cmap_samples', 'glue_colormaps']
+           'wildcard_match', 'cmap_samples', 'glue_colormaps']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
@@ -855,62 +854,71 @@ def get_reference_image_data(app, viewer_id=None):
     return None, -1
 
 
-def wildcard_match_str(choices, value):
+def wildcard_match(obj, value, choices=None):
     """
-    Return a list of strings from exp_obj.choices that match the wildcard pattern
-    in 'value'. If no matches are found, return a list containing 'value' itself.
+    Wrapper that handles both single string and list/tuple of strings as inputs for ``value``.
+
+    Returns a list of strings from ``obj.choices`` that match the wildcard pattern(s)
+    in ``value``. If no matches are found, return a list containing ``value`` itself.
 
     Note: fnmatch provides support for *all* Unix style wildcards
     including ?, [seq], and [!seq]. If we want to exclude those to
-    only allow *, then we'd have to sanitize 'value'.
+    only allow *, then we'd have to sanitize ``value``.
 
     Parameters
     ----------
-    choices: list
-        A list of strings to match against.
-    value : str
-        The wildcard pattern to match against exp_obj.choices.
+    obj : object
+        An object with attributes ``choices`` and potentially ``multiselect``.
+
+    value : str/list/tuple
+        A string or list/tuple of strings to match against choices.
+        Each string may contain Unix shell-style wildcards.
+
+    choices : list of str, optional
+        A list of strings to match against. If not provided,
+        ``obj.choices`` will be used.
 
     Returns
     -------
     list of str
-        A list of matched strings or [value] if no matches found.
+        A list of matched strings or value/[value] if no matches found.
     """
-    matched = fnmatch.filter(choices, value)
-    if len(matched) == 0:
-        matched = [value]
-    return matched
+    def wildcard_match_str(internal_choices, internal_value):
+        matched = fnmatch.filter(internal_choices, internal_value)
+        if len(matched) == 0:
+            matched = [internal_value]
+        return matched
 
+    def wildcard_match_list_of_str(internal_choices, internal_value):
+        matched = []
+        for v in internal_value:
+            if isinstance(v, str) and '*' in v:
+                # Check for wildcard matches
+                matched.extend(wildcard_match_str(internal_choices, v))
+                print(matched)
+            else:
+                # Append as-is
+                matched.append(v)
 
-def wildcard_match_list_of_str(choices, value):
-    """
-    Return a list of strings from exp_obj.choices that match any of the wildcard
-    patterns in the 'value' iterable. If no matches are found for a particular pattern,
-    include the pattern itself in the output list.
+        # Remove duplicates while preserving order
+        return list(dict.fromkeys(matched))
 
-    Parameters
-    ----------
-    choices: list
-        A list of strings to match against.
-    value : list or tuple of str
-        An iterable containing wildcard patterns to match against exp_obj.choices.
+    if not choices:
+        choices = getattr(obj, 'choices', None)
+        if not choices:
+            return value
 
-    Returns
-    -------
-    list of str
-        A list of matched strings or the original patterns if no matches found.
-    """
-    matched = []
-    for v in value:
-        if isinstance(v, str) and '*' in v:
-            # Check for wildcard matches
-            matched.extend(wildcard_match_str(choices, v))
-        else:
-            # Append as-is
-            matched.append(v)
+    # any works for both str and iterable
+    if hasattr(obj, 'multiselect') and any('*' in v for v in value if isinstance(v, str)):
+        if isinstance(value, str):
+            obj.multiselect = True
+            value = wildcard_match_str(choices, value)
 
-    # Remove duplicates while preserving order
-    return list(dict.fromkeys(matched))
+        elif isinstance(value, (list, tuple)):
+            obj.multiselect = True
+            value = wildcard_match_list_of_str(choices, value)
+
+    return value
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in

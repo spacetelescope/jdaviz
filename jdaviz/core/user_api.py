@@ -1,5 +1,5 @@
 import warnings
-from jdaviz.utils import wildcard_match_str, wildcard_match_list_of_str
+from jdaviz.utils import wildcard_match
 
 import astropy.units as u
 
@@ -72,19 +72,6 @@ class UserApiWrapper:
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
 
-            # any works to check both str and list/tuple
-            elif (hasattr(exp_obj, 'multiselect') and
-                  any('*' in v for v in value if isinstance(v, str))):
-                if isinstance(value, str):
-                    exp_obj.multiselect = True
-                    exp_obj.selected = wildcard_match_str(exp_obj.choices, value)
-                    return
-
-                elif isinstance(value, (list, tuple)):
-                    exp_obj.multiselect = True
-                    exp_obj.selected = wildcard_match_list_of_str(exp_obj.choices, value)
-                    return
-
             elif isinstance(exp_obj, SelectFileExtensionComponent):
                 def to_choice_single(value):
                     if isinstance(value, int):
@@ -109,14 +96,17 @@ class UserApiWrapper:
                     value = to_choice_single(value)
             exp_obj.selected = value
             return
+
         elif isinstance(exp_obj, AddResults):
             exp_obj.auto_label.value = value
             return
+
         elif isinstance(exp_obj, AutoTextField):
             exp_obj.value = value
             if value != exp_obj.default:
                 exp_obj.auto = False
             return
+
         elif isinstance(exp_obj, PlotOptionsSyncState):
             if not len(exp_obj.linked_states):
                 raise ValueError("there are currently no synced glue states to set")

@@ -63,7 +63,8 @@ from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only,
-    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global
+    _wcs_only_label, wildcard_match,
+    layer_is_not_dq as layer_is_not_dq_global
 )
 
 
@@ -934,10 +935,14 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
 
         return getattr(self._plugin, self._plugin_traitlets.get(attr))
 
+    def map_value(self, attr, value):
+        # to be overridden by subclasses if needed
+        return value
+
     def __setattr__(self, attr, value, force_super=False):
         if attr[0] == '_' or force_super or attr not in self._plugin_traitlets.keys():
             return super().__setattr__(attr, value)
-
+        value = self.map_value(attr, value)
         return setattr(self._plugin, self._plugin_traitlets.get(attr), value)
 
     def add_traitlets(self, **traitlets):
@@ -1092,6 +1097,28 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def __hash__(self):
         # defining __eq__ without defining __hash__ makes the object unhashable
         return super().__hash__()
+
+    def map_value(self, attr, value):
+        """
+        Map the value being set to the traitlet.  This is used to handle wildcard matching
+        for the 'selected' traitlet when in multiselect mode. This method overrides the
+        ``BasePluginComponent.map_value`` method.
+
+        Parameters
+        ----------
+        attr : str
+            The name of the traitlet being set.
+        value : any
+            The value being set to the traitlet.
+
+        Returns
+        -------
+        value : any
+            The (possibly modified) value to be set to the traitlet.
+        """
+        if attr == 'selected':
+            value = wildcard_match(self, value)
+        return value
 
     @property
     def choices(self):
