@@ -10,6 +10,16 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Extension to use from the FITS HDUList."
     />
+    <plugin-select
+      v-if="input_hdulist"
+      :items="unc_extension_items.map(i => i.label)"
+      :selected.sync="unc_extension_selected"
+      :show_if_single_entry="true"
+      label="Uncertainty Extension"
+      api_hint="ldr.importer.unc_extension ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Extension to use from the FITS HDUList for uncertainty."
+    />
     <plugin-auto-label
       :value.sync="data_label_value"
       :default="data_label_default"

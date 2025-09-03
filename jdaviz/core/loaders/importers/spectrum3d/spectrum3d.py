@@ -7,6 +7,7 @@ from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers.spectrum2d import HDUListToSpectrumMixin
 from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew)
@@ -19,10 +20,9 @@ __all__ = ['Spectrum3DImporter']
 
 
 @loader_importer_registry('3D Spectrum')
-class Spectrum3DImporter(BaseImporterToDataCollection):
+class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
     template_file = __file__, "./spectrum3d.vue"
-    # TODO: add fits support with unc extension selection
-    parser_preference = ['specutils.Spectrum']
+    parser_preference = ['fits', 'specutils.Spectrum']
 
     # Uncertainty Cube
     unc_data_label_value = Unicode().tag(sync=True)
@@ -156,6 +156,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
     def user_api(self):
         expose = ['unc_data_label', 'unc_viewer',
                   'auto_extract', 'ext_data_label', 'ext_viewer']
+        if self.input_hdulist:
+            expose += ['extension', 'unc_extension']
         return ImporterUserApi(self, expose)
 
     @property
@@ -163,9 +165,11 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
         if self.app.config not in ('deconfigged', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
-        if not isinstance(self.input, Spectrum):
+        try:
+            sp = self.spectrum
+        except Exception:
             return False
-        if not self.input.flux.ndim == 3:
+        if sp.flux.ndim != 3:
             return False
         try:
             self.output
@@ -180,8 +184,12 @@ class Spectrum3DImporter(BaseImporterToDataCollection):
         self.unc_data_label_default = f"{base} [UNC]"
 
     @property
+    def supported_flux_ndim(self):
+        return 3
+
+    @property
     def output(self):
-        sp = self.input
+        sp = self.spectrum
 
         # convert flux and uncertainty to per-pix2 if input is not a surface brightness
         if not check_if_unit_is_per_solid_angle(sp.flux.unit):

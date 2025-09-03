@@ -1,5 +1,6 @@
 from astropy import units as u
 from astropy.io import fits
+from astropy.nddata import StdDevUncertainty
 from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
@@ -19,31 +20,13 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 __all__ = ['Spectrum2DImporter', 'HDUListToSpectrumMixin']
 
 
-def hdu_is_valid(item):
-    """
-    Check if the HDU is valid to be imported as a 2D Spectrum.
-
-    Parameters
-    ----------
-    hdu : `astropy.io.fits.hdu.base.HDUBase`
-        The HDU to check.
-
-    Returns
-    -------
-    bool
-        True if the HDU is a valid light curve HDU, False otherwise.
-    """
-    hdu = item.get('obj')
-    return (len(getattr(hdu, 'shape', [])) == 2
-            and ('DISPAXIS' in hdu.header
-                 or hdu.header.get('CTYPE1', '') == 'WAVE'
-                 or hdu.header.get('EXTNAME', '') == 'FLUX'))
-
-
 class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
     input_hdulist = Bool(False).tag(sync=True)
     extension_items = List().tag(sync=True)
     extension_selected = Unicode().tag(sync=True)
+
+    unc_extension_items = List().tag(sync=True)
+    unc_extension_selected = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -61,7 +44,54 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                                                       items='extension_items',
                                                       selected='extension_selected',
                                                       manual_options=ext_options,
-                                                      filters=[hdu_is_valid])
+                                                      filters=[self.hdu_is_valid_flux])
+        self.unc_extension = SelectFileExtensionComponent(self,
+                                                          items='unc_extension_items',
+                                                          selected='unc_extension_selected',
+                                                          manual_options=ext_options,
+                                                          filters=[self.hdu_is_valid_unc])
+
+    @property
+    def supported_flux_ndim(self):
+        return 2
+
+    def hdu_is_valid_flux(self, item):
+        """
+        Check if the HDU is valid to be imported as a 2D Spectrum.
+
+        Parameters
+        ----------
+        hdu : `astropy.io.fits.hdu.base.HDUBase`
+            The HDU to check.
+
+        Returns
+        -------
+        bool
+            True if the HDU is a valid light curve HDU, False otherwise.
+        """
+        hdu = item.get('obj')
+        return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
+                and ('DISPAXIS' in hdu.header
+                     or hdu.header.get('CTYPE1', '') == 'WAVE'
+                     or hdu.header.get('EXTNAME', '') == 'FLUX'))
+
+    def hdu_is_valid_unc(self, item):
+        """
+        Check if the HDU is valid to be imported as a 2D Spectrum.
+
+        Parameters
+        ----------
+        hdu : `astropy.io.fits.hdu.base.HDUBase`
+            The HDU to check.
+
+        Returns
+        -------
+        bool
+            True if the HDU is a valid light curve HDU, False otherwise.
+        """
+        hdu = item.get('obj')
+        return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
+                and hdu.header.get('EXTNAME', '') == 'ERR')
 
     @cached_property
     def spectrum(self):
@@ -77,18 +107,32 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         wcs = WCS(header, hdulist)
+
+        try:
+            data_unit = u.Unit(header['BUNIT'])
+        except Exception:
+            data_unit = u.count
+
+        if self.unc_extension.selected != '':
+            unc_hdu = self.unc_extension.selected_obj
+            unc_data = unc_hdu.data
+        else:
+            unc_data = None
+
         if data.shape[0] > data.shape[1]:
             data = data.T
+            if unc_data is not None:
+                unc_data = unc_data.T
             self.app.hub.broadcast(SnackbarMessage(
                 f"Transposed input data to {data.shape}",
                 sender=self, color="warning"))
         if wcs.array_shape[0] > wcs.array_shape[1]:
             wcs = wcs.swapaxes(0, 1)
 
-        try:
-            data_unit = u.Unit(header['BUNIT'])
-        except Exception:
-            data_unit = u.count
+        if unc_data is not None:
+            unc = StdDevUncertainty(unc_data * data_unit)
+        else:
+            unc = None
 
         try:
             if wcs.world_axis_physical_types == [None, None]:
@@ -107,7 +151,8 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                         wcs = None
                 else:
                     wcs = None
-            return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
+            return Spectrum(flux=data * data_unit, uncertainty=unc,
+                            meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,
@@ -117,7 +162,8 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                 Spectrum.read(self._resolver())
             except Exception:
                 # specutils.Spectrum reader would fail, so use no WCS
-                return Spectrum(flux=data * data_unit, meta=metadata)
+                return Spectrum(flux=data * data_unit, uncertainty=unc,
+                                meta=metadata)
             else:
                 # raising an error here will consider this parser as non-valid
                 # so that specutils.Spectrum parser is preferred
@@ -195,7 +241,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
     def user_api(self):
         expose = ['auto_extract', 'ext_data_label', 'ext_viewer']
         if self.input_hdulist:
-            expose += ['extension']
+            expose += ['extension', 'unc_extension']
         return ImporterUserApi(self, expose)
 
     @property
