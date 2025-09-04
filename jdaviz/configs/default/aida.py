@@ -1,4 +1,5 @@
 from echo import delay_callback, ignore_callback
+from echo import delay_callback, ignore_callback
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
@@ -137,6 +138,64 @@ class AID:
         self._set_center(center)
         self._set_fov(fov, image_label)
 
+    def _set_rotation(self, rotation):
+        if rotation is None:
+            return
+
+        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
+
+        if orientation is None:
+            return
+
+        if isinstance(rotation, (u.Quantity, Angle)):
+            rotation = rotation.to_value(u.deg)
+
+        degn = orientation._obj._get_wcs_angles()[-3]
+        rotation_angle = (degn + rotation) % 360
+
+        label = f"{rotation}"
+
+        if label == orientation._obj.orientation.selected:
+            return
+        elif label in orientation._obj.orientation.choices:
+            orientation._obj.orientation.selected = label
+        else:
+            orientation.add_orientation(
+                rotation_angle=rotation_angle,
+                east_left=True,
+                set_on_create=True,
+                label=label
+            )
+
+    def set_viewport(self, center=None, fov=None, rotation=None, image_label=None, **kwargs):
+        """
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord` or tuple of floats
+            Center the viewer on this coordinate.
+
+        fov : `~astropy.units.Quantity` or tuple of floats
+            Set the width of the viewport to span `field_of_view`.
+
+        image_label : str
+            Set the viewport with respect to the image
+            with the data label: ``image_label``.
+        """
+        with ignore_callback(
+            self.viewer.state,
+            'x_min', 'x_max', 'y_min', 'y_max',
+            'zoom_center_x', 'zoom_center_y', 'zoom_radius'
+        ):
+            self._set_rotation(rotation)
+            self._set_center(center)
+
+        with delay_callback(
+            self.viewer.state,
+            'x_min', 'x_max', 'y_min', 'y_max',
+            'zoom_center_x', 'zoom_center_y', 'zoom_radius'
+        ):
+            self._set_fov(fov, image_label)
+
     def _mean_pixel_scale(self, data):
         wcs = data.coords
 
@@ -214,6 +273,17 @@ class AID:
         rotation = rotation_angle - degn
         return rotation * u.deg if (sky_or_pixel in ("sky", None)) else rotation
 
+    def _get_current_rotation(self, sky_or_pixel):
+        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        # rotation angle from pixel y
+        rotation_angle = orientation.rotation_angle
+
+        # rotation angle of pixel y from north
+        degn = orientation._obj._get_wcs_angles()[-3]
+
+        rotation = rotation_angle - degn
+        return rotation * u.deg if (sky_or_pixel in ("sky", None)) else rotation
+
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
         sky_or_pixel : str, optional
@@ -241,6 +311,8 @@ class AID:
 
         return dict(
             center=self._get_current_center(sky_or_pixel=sky_or_pixel, image_label=image_label),
+            fov=self._get_current_fov(sky_or_pixel=sky_or_pixel),
+            rotation=self._get_current_rotation(sky_or_pixel=sky_or_pixel),
             fov=self._get_current_fov(sky_or_pixel=sky_or_pixel),
             rotation=self._get_current_rotation(sky_or_pixel=sky_or_pixel),
             image_label=image_label
