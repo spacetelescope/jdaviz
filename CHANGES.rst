@@ -68,6 +68,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Add rotation to aida `set_viewport` and `get_viewport` methods [#3759]
+
 4.4.2 (unreleased)
 ==================
 
