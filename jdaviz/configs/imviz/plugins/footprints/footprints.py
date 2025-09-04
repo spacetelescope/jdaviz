@@ -3,6 +3,9 @@ import numpy as np
 import os
 import regions
 
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -22,6 +25,7 @@ from jdaviz.core.user_api import PluginUserApi
 
 from jdaviz.configs.imviz.plugins.footprints import preset_regions
 
+from spherical_geometry.polygon import SphericalPolygon
 
 __all__ = ['Footprints']
 
@@ -275,6 +279,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
 
         overlay_data = []
         for viewer in viewers:
+            skycoord_icrs = viewer.state.reference_data.coords.pixel_to_world(click_x, click_y).icrs
+            ra_deg, dec_deg = skycoord_icrs.ra.deg, skycoord_icrs.dec.deg
+            print(
+                f"click pixel=({click_x:.2f},{click_y:.2f})  sky(ICRS)=({ra_deg:.6f},{dec_deg:.6f})")
             overlays = self._get_marks(viewer)
             for overlay in overlays:
                 overlay_data.append({
