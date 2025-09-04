@@ -12,6 +12,8 @@ New Features
 
 - Loaders now allow selecting which viewer(s) to show the data or whether to create a new viewer. [#3739]
 
+- Ability to change the logger levels and clear the logger history from the UI. [#3745]
+
 Cubeviz
 ^^^^^^^
 
@@ -70,7 +72,30 @@ Other Changes and Additions
 
 - When importing a 2D spectrum file into a SpectrumList, surface brightness units are automatically converted to flux units. [#3729]
 
-4.3.1 (unreleased)
+
+4.3.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+
+4.3.1 (2025-09-03)
 ==================
 
 Bug Fixes
@@ -87,6 +112,12 @@ Bug Fixes
 - Fixed a bug in freezable state `_set_zoom_radius_center` where `x/y_min/max` values were calculated incorrectly when the viewer was rotated [#3731]
 
 - Fixed issue in Rampviz where new loader infrastructure was unintentionally exposed. [#3740]
+
+- Restrict polynomial order value of Polynomial1D model component to be >= 0. [#3741]
+
+- When all data is unloaded from 1D Spectrum viewer, and new data is loaded, the unit setting in the unit conversion plugin from the initial
+  dataset are maintained. [#3746]
+
 
 Cubeviz
 ^^^^^^^
@@ -109,6 +140,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+- Fix various bugs in the Line Analysis plugin, including some issues with spectral axis unit conversions and deletion of subsets. [#3746]
 
 4.3 (2025-05-28)
 ================

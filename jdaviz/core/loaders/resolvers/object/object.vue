@@ -21,8 +21,8 @@
             prepend-icon='mdi-language-python'
             style="padding: 0px 8px"
             :disabled="true"
-            :label="api_hints_enabled ? 'loader.object =' : ''"
-            :class="api_hints_enabled ? 'api-hint' : null"
+            label="ldr.object ="
+            class="api-hint"
         ></v-text-field>
 
     </j-loader>

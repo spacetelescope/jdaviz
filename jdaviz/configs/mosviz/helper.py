@@ -417,15 +417,17 @@ class Mosviz(ConfigHelper, LineListMixin):
         if allow_link_table:
             try:
                 self.link_table_data(None)
-            except KeyError:
+            except KeyError as e:
                 self.app.hub.broadcast(SnackbarMessage(
-                    "The table data was not linked", color="warning", sender=self))
+                    "The table data was not linked", color="warning", sender=self,
+                    traceback=e))
 
         try:
             self._add_redshift_column()
-        except ValueError:
+        except ValueError as e:
             self.app.hub.broadcast(SnackbarMessage(
-                "No data found with label 'MOS Table'", color="warning", sender=self))
+                "No data found with label 'MOS Table'", color="warning", sender=self,
+                traceback=e))
 
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
@@ -444,9 +446,10 @@ class Mosviz(ConfigHelper, LineListMixin):
             self.app.get_viewer(
                 self._default_table_viewer_reference_name
             ).figure_widget.highlighted = 0
-        except ValueError:
+        except ValueError as e:
             self.app.hub.broadcast(SnackbarMessage(
-                "No data found with label 'MOS Table'", color="warning", sender=self))
+                "No data found with label 'MOS Table'", color="warning", sender=self,
+                traceback=e))
 
         # Notify the user that this all loaded successfully
         self.app.hub.broadcast(SnackbarMessage(

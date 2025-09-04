@@ -1655,7 +1655,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
                 self.rename_choice(self.selected, self.edit_value)
             except ValueError as e:
                 self.hub.broadcast(SnackbarMessage(f"Renaming {self._name} failed: {e}",
-                                   sender=self, color="error"))
+                                   sender=self, color="error", traceback=e))
             else:
                 self.mode = 'select'
                 self.edit_value = self.selected
@@ -1664,7 +1664,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
                 self.add_choice(self.edit_value)
             except ValueError as e:
                 self.hub.broadcast(SnackbarMessage(f"Adding {self._name} failed: {e}",
-                                   sender=self, color="error"))
+                                   sender=self, color="error", traceback=e))
             else:
                 self.mode = 'select'
                 self.edit_value = self.selected
@@ -3457,8 +3457,6 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                       manual_options=['None', 'Surrounding'],
                                       default_mode='first',
                                       filters=['is_spectral'])
-        self.app.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
-                               lambda _: self._clear_cache('continuum_marks'))
 
     def _continuum_remove_none_option(self):
         self.continuum.items = [item for item in self.continuum.items
@@ -3646,6 +3644,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
         if update_marks:
             mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
+
             self._update_continuum_marks(mark_x,
                                          mark_y,
                                          viewers=dataset.viewers_with_selected_visible)

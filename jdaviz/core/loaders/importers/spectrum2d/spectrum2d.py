@@ -220,12 +220,12 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
             spext = self.app.get_tray_item_from_name('spectral-extraction-2d')
             ext = spext._extract_in_new_instance(dataset=data_label,
                                                  add_data=False)
-        except Exception:
+        except Exception as e:
             ext = None
             msg = SnackbarMessage(
                 "Automatic spectrum extraction failed. See the spectral extraction"
                 " plugin to perform a custom extraction",
-                color='error', sender=self, timeout=10000)
+                color='error', sender=self, timeout=10000, traceback=e)
         else:
             msg = SnackbarMessage(
                 "The extracted 1D spectrum was generated automatically."

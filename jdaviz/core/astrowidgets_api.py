@@ -87,7 +87,7 @@ class AstrowidgetsImageViewerMixin:
                 except NoConvergence as e:  # pragma: no cover
                     self.session.hub.broadcast(SnackbarMessage(
                         f'{point} is likely out of bounds: {repr(e)}',
-                        color="warning", sender=self))
+                        color="warning", sender=self, traceback=e))
                     return
             else:
                 raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
@@ -522,7 +522,7 @@ class AstrowidgetsImageViewerMixin:
         except Exception as e:  # pragma: no cover
             self.session.hub.broadcast(SnackbarMessage(
                 f"Failed to add markers '{marker_name}': {repr(e)}",
-                color="warning", sender=self))
+                color="warning", sender=self, traceback=e))
         else:
             # Only can set alpha and color using self.add_data(), so brute force here instead.
             # https://github.com/glue-viz/glue/issues/2201
@@ -565,7 +565,7 @@ class AstrowidgetsImageViewerMixin:
         except ValueError as e:  # pragma: no cover
             self.session.hub.broadcast(SnackbarMessage(
                 f"Failed to remove markers '{marker_name}': {repr(e)}",
-                color="warning", sender=self))
+                color="warning", sender=self, traceback=e))
             return
 
         data = self.session.application.data_collection[i]
