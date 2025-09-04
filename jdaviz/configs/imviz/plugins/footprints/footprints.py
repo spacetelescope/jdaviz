@@ -284,16 +284,27 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
             print(
                 f"click pixel=({click_x:.2f},{click_y:.2f})  sky(ICRS)=({ra_deg:.6f},{dec_deg:.6f})")
             overlays = self._get_marks(viewer)
-            for overlay in overlays:
-                overlay_data.append({
-                    "overlay": overlay.overlay,
-                    "x": np.array(overlay.x),
-                    "y": np.array(overlay.y),
-                })
-        closest_overlay_label, closest_point = find_closest_polygon_point(
-            click_x, click_y, overlay_data)
-        self.overlay_selected = closest_overlay_label
-        self._highlight_overlay(closest_overlay_label, viewers=self.viewer.selected_obj)
+            for mark in overlays:
+                overlay_label = mark.overlay
+                x_pix = np.asarray(mark.x)
+                y_pix = np.asarray(mark.y)
+                verts_icrs = viewer.state.reference_data.coords.pixel_to_world(x_pix, y_pix).icrs
+                lon_vertices = verts_icrs.ra.deg
+                lat_vertices = verts_icrs.dec.deg
+
+                spherical_polygon = SphericalPolygon.from_lonlat(lon_vertices, lat_vertices)
+                is_inside = spherical_polygon.contains_lonlat(ra_deg, dec_deg)
+                print(f"overlay='{overlay_label}' contains={is_inside}")
+
+        #         overlay_data.append({
+        #             "overlay": overlay.overlay,
+        #             "x": np.array(overlay.x),
+        #             "y": np.array(overlay.y),
+        #         })
+        # closest_overlay_label, closest_point = find_closest_polygon_point(
+        #     click_x, click_y, overlay_data)
+        # self.overlay_selected = closest_overlay_label
+        # self._highlight_overlay(closest_overlay_label, viewers=self.viewer.selected_obj)
 
     @property
     def user_api(self):
