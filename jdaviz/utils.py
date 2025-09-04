@@ -859,18 +859,19 @@ def wildcard_match(obj, value, choices=None):
     Wrapper that handles both single string and list/tuple of strings as inputs for ``value``.
 
     Returns a list of strings from ``obj.choices`` that match the wildcard pattern(s)
-    in ``value``. If no matches are found, return a list containing ``value`` itself.
+    in ``value``. If no matches are found, returns a list containing ``value`` itself.
 
-    Note: fnmatch provides support for *all* Unix style wildcards
-    including ?, [seq], and [!seq]. If we want to exclude those to
-    only allow *, then we'd have to sanitize ``value``.
+    .. note::
+       ``fnmatch`` provides support for all Unix style wildcards including ``*``, ``?``,
+       ``[seq]``, and ``[!seq]``. If you want to exclude those and only allow ``*``,
+       you must sanitize ``value`` yourself.
 
     Parameters
     ----------
     obj : object
         An object with attributes ``choices`` and potentially ``multiselect``.
 
-    value : str/list/tuple
+    value : str or list or tuple
         A string or list/tuple of strings to match against choices.
         Each string may contain Unix shell-style wildcards.
 
@@ -881,7 +882,7 @@ def wildcard_match(obj, value, choices=None):
     Returns
     -------
     list of str
-        A list of matched strings or value/[value] if no matches found.
+        A list of matched strings or ``value``/``[value]`` if no matches found.
     """
     def wildcard_match_str(internal_choices, internal_value):
         matched = fnmatch.filter(internal_choices, internal_value)
