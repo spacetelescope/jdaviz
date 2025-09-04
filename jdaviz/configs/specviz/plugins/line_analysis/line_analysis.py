@@ -402,7 +402,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                         # user
                         self.hub.broadcast(SnackbarMessage(
                             f"failed to calculate line analysis statistics: {e}", sender=self,
-                            color="warning"))
+                            color="warning", traceback=e))
                         self.update_results(None)
                         return
 
@@ -437,7 +437,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                         # user
                         self.hub.broadcast(SnackbarMessage(
                             f"failed to calculate line analysis statistics: {e}", sender=self,
-                            color="warning"))
+                            color="warning", traceback=e))
                         self.update_results(None)
                         return
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2

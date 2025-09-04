@@ -148,5 +148,6 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             snackbar_fail_message = SnackbarMessage(
                 f"Data set '{self.dataset_selected}' could not collapse successfully: {repr(e)}",
                 color="error",
+                traceback=e,
                 sender=self)
             self.hub.broadcast(snackbar_fail_message)
