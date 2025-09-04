@@ -9,7 +9,6 @@ from specutils import Spectrum, SpectrumList
 
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListImporter,
-    SpectrumListConcatenatedImporter,
     combine_lists_to_1d_spectrum
 )
 

@@ -24,8 +24,7 @@ from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListImporter,
-    SpectrumListConcatenatedImporter,
-    combine_lists_to_1d_spectrum
+    SpectrumListConcatenatedImporter
 )
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin

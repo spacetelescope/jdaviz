@@ -144,7 +144,6 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
     assert selection_obj.multiselect is True
 
 
-
 @pytest.mark.parametrize(
     ("selection", "matches"), [
         ('*', (0, 1, 2, 3)),
@@ -153,7 +152,7 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
         ('*S*', (0, 1)),
         (('*ERR*', '*DQ*'), (2, 3))])
 def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs,
-                                        selection, matches):
+                                     selection, matches):
     data_labels = ['Image[SCI,1]',
                    'Image[MASK,1]',
                    'Image[ERR,1]',

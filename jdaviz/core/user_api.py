@@ -1,5 +1,4 @@
 import warnings
-from jdaviz.utils import wildcard_match
 
 import astropy.units as u
 

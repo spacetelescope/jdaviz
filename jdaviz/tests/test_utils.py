@@ -1,6 +1,5 @@
 import os
 import warnings
-import re
 
 import pytest
 
@@ -8,7 +7,7 @@ from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, cached_uri, wildcard_match)
 from astropy.io import fits
 
-from jdaviz.conftest import FakeSpectrumListImporter, premade_spectrum_list
+from jdaviz.conftest import FakeSpectrumListImporter
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -150,7 +149,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
                        '1D Spectrum at index: 1',
                        'Exposure 0, Source ID: 0000',
                        'Exposure 0, Source ID: 1111',
-                       'Exposure 1, Source ID: 1111']                
+                       'Exposure 1, Source ID: 1111']
     """
 
     test_selections = {
