@@ -22,6 +22,14 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
                                               _image_nddata_wcs)
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
+from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
+    SpectrumListImporter,
+    SpectrumListConcatenatedImporter,
+    combine_lists_to_1d_spectrum
+)
+from jdaviz.core.registries import loader_importer_registry
+from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.registries import tray_registry
 
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
@@ -37,9 +45,73 @@ def fake_classes_in_registries():
     list of fake items in the various registries that could
     potentially throw off those tests if not accounted for.
     """
-    return ('Test Fake 1D Spectrum List',
-            'Test Fake 1D Spectrum List Concatenated',
-            'Test Fake Plugin')
+    return ('Test Fake Plugin',
+            'Test Fake 1D Spectrum List',
+            'Test Fake 1D Spectrum List Concatenated')
+
+
+@tray_registry('test-fake-plugin', label='Test Fake Plugin', category='core')
+class FakePlugin(PluginTemplateMixin):
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+@loader_importer_registry('Test Fake 1D Spectrum List')
+class FakeSpectrumListImporter(SpectrumListImporter):
+    """A fake importer for testing/convenience purposes only.
+    Mostly used to hot-update input for clean code/speed purposes.
+
+    Usage Example:
+    x = FakeSpectrumListImporter(app=deconfigged_helper.app,
+                                 resolver=deconfigged_helper.loaders['object']._obj,
+                                 input=premade_spectrum_list)
+    """
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.new_default_data_label = None
+
+    @property
+    def input(self):
+        return super().input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
+
+    @property
+    def default_data_label_from_resolver(self):
+        if hasattr(self, 'new_default_data_label'):
+            return self.new_default_data_label
+        return None
+
+
+@loader_importer_registry('Test Fake 1D Spectrum List Concatenated')
+class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
+    """A fake importer for testing/convenience purposes only.
+    Mostly used to hot-update input for clean code/speed purposes."""
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.new_default_data_label = None
+
+    @property
+    def input(self):
+        return super().input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
+
+    @property
+    def default_data_label_from_resolver(self):
+        if hasattr(self, 'new_default_data_label'):
+            return self.new_default_data_label
+        return None
 
 
 @pytest.fixture

@@ -3,8 +3,6 @@ import pytest
 import numpy as np
 import astropy.units as u
 from specutils import SpectralRegion
-from jdaviz.core.template_mixin import PluginTemplateMixin
-from jdaviz.core.registries import tray_registry
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -79,14 +77,6 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     # try setting based on id instead of reference
     p.viewer = p.viewer.ids[0]
     assert p.viewer.selected == p.viewer.labels[0]
-
-
-@tray_registry('test-fake-plugin', label='Test Fake Plugin', category='core')
-class FakePlugin(PluginTemplateMixin):
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
 class TestObserveTraitletsForRelevancy:

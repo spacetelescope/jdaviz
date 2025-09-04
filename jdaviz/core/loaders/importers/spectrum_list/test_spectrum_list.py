@@ -12,7 +12,8 @@ from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListConcatenatedImporter,
     combine_lists_to_1d_spectrum
 )
-from jdaviz.core.registries import loader_importer_registry
+
+from jdaviz.conftest import FakeSpectrumListImporter, FakeSpectrumListConcatenatedImporter
 
 
 def extract_wfss_info(spec):
@@ -24,31 +25,6 @@ def extract_wfss_info(spec):
     exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
     source_id = str(spec.meta.get('source_id', ''))
     return exp_num, source_id
-
-
-@loader_importer_registry('Test Fake 1D Spectrum List')
-class FakeImporter(SpectrumListImporter):
-    """A fake importer for testing/convenience purposes only.
-    Mostly used to hot-update input for clean code/speed purposes."""
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.new_default_data_label = None
-
-    @property
-    def input(self):
-        return super().input
-
-    @input.setter
-    def input(self, value):
-        self._input = value
-
-    @property
-    def default_data_label_from_resolver(self):
-        if hasattr(self, 'new_default_data_label'):
-            return self.new_default_data_label
-        return None
 
 
 class TestSpectrumListImporter:
@@ -66,9 +42,9 @@ class TestSpectrumListImporter:
                                     '1D Spectrum_EXP-0_ID-1111',
                                     '1D Spectrum_EXP-1_ID-1111']
 
-        return FakeImporter(app=config_helper.app,
-                            resolver=config_helper.loaders['object']._obj,
-                            input=input_obj)
+        return FakeSpectrumListImporter(app=config_helper.app,
+                                        resolver=config_helper.loaders['object']._obj,
+                                        input=input_obj)
 
     def test_spectrum_list_importer_init_attributes(self, specviz_helper, deconfigged_helper,
                                                     premade_spectrum_list):
@@ -411,38 +387,13 @@ def test_combine_lists_to_1d_spectrum(with_uncertainty):
         assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
 
 
-@loader_importer_registry('Test Fake 1D Spectrum List Concatenated')
-class FakeConcatenatedImporter(SpectrumListConcatenatedImporter):
-    """A fake importer for testing/convenience purposes only.
-    Mostly used to hot-update input for clean code/speed purposes."""
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.new_default_data_label = None
-
-    @property
-    def input(self):
-        return super().input
-
-    @input.setter
-    def input(self, value):
-        self._input = value
-
-    @property
-    def default_data_label_from_resolver(self):
-        if hasattr(self, 'new_default_data_label'):
-            return self.new_default_data_label
-        return None
-
-
 class TestSpectrumListConcatenatedImporter:
 
     @staticmethod
     def setup_importer_obj(config_helper, input_obj):
-        return FakeConcatenatedImporter(app=config_helper.app,
-                                        resolver=config_helper.loaders['object']._obj,
-                                        input=input_obj)
+        return FakeSpectrumListConcatenatedImporter(app=config_helper.app,
+                                                    resolver=config_helper.loaders['object']._obj,
+                                                    input=input_obj)
 
     def setup_combined_spectrum(self, with_uncertainty):
         wl = [1, 2, 3] * u.nm
