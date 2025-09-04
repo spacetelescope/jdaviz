@@ -93,8 +93,8 @@ class AID:
         if isinstance(rotation, (u.Quantity, Angle)):
             rotation = rotation.to_value(u.deg)
         elif not isinstance(rotation, (float, int)):
-            raise valueError(
-                f"`rotation` must be a Quantity or float, got {fov=}"
+            raise ValueError(
+                f"`rotation` must be a Quantity or float, got {rotation=}"
             )
 
         degn = orientation._obj._get_wcs_angles()[-3]
