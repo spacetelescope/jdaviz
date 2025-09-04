@@ -313,7 +313,5 @@ class AID:
             center=self._get_current_center(sky_or_pixel=sky_or_pixel, image_label=image_label),
             fov=self._get_current_fov(sky_or_pixel=sky_or_pixel),
             rotation=self._get_current_rotation(sky_or_pixel=sky_or_pixel),
-            fov=self._get_current_fov(sky_or_pixel=sky_or_pixel),
-            rotation=self._get_current_rotation(sky_or_pixel=sky_or_pixel),
             image_label=image_label
         )
