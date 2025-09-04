@@ -45,31 +45,26 @@ class AID:
         imviz_aligned_by_wcs = self.app._align_by == 'wcs'
         if isinstance(center, SkyCoord):
             if imviz_aligned_by_wcs:
-                (
-                    self.viewer.state.zoom_center_x,
-                    self.viewer.state.zoom_center_y
-                ) = center.ra.degree, center.dec.degree
+                center = center.ra.degree, center.dec.degree
             else:
                 reference_wcs = self.viewer.state.reference_data.coords
 
                 if isinstance(reference_wcs, GWCS):
                     reference_wcs = WCS(reference_wcs.to_fits_sip())
 
-                (
-                    self.viewer.state.zoom_center_x,
-                    self.viewer.state.zoom_center_y
-                ) = reference_wcs.world_to_pixel(center)
+                center = reference_wcs.world_to_pixel(center)
 
-        elif hasattr(center, '__len__') and isinstance(center[0], (float, int)):
-            (
-                self.viewer.state.zoom_center_x,
-                self.viewer.state.zoom_center_y
-            ) = center
-        else:
+        elif not hasattr(center, '__len__') and not isinstance(center[0], (float, int)):
             raise ValueError(
                 "The AID API supports `center` arguments as SkyCoords or as "
                 f"a tuple of floats in pixel coordinates, got {center=}."
             )
+
+        with delay_callback(self.viewer.state, "zoom_center_y", "zoom_center_x"):
+            (
+                self.viewer.state.zoom_center_x,
+                self.viewer.state.zoom_center_y
+            ) = center
 
     def _set_fov(self, fov, image_label):
         if fov is None:
@@ -85,7 +80,9 @@ class AID:
             )
 
         scale_factor = float(fov / current_fov)
-        self.viewer.state.zoom_radius = self.viewer.state.zoom_radius * scale_factor
+
+        with delay_callback(self.viewer.state, "zoom_radius"):
+            self.viewer.state.zoom_radius = self.viewer.state.zoom_radius * scale_factor
 
     def _set_rotation(self, rotation):
         if rotation is None:
@@ -93,8 +90,12 @@ class AID:
 
         orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
 
-        if orientation is None:
+        if isinstance(rotation, (u.Quantity, Angle)):
             rotation = rotation.to_value(u.deg)
+        elif not isinstance(rotation, (float, int)):
+            raise valueError(
+                f"`rotation` must be a Quantity or float, got {fov=}"
+            )
 
         degn = orientation._obj._get_wcs_angles()[-3]
         rotation_angle = (degn + rotation) % 360
@@ -132,10 +133,9 @@ class AID:
             'zoom_center_x', 'zoom_center_y', 'zoom_radius'
         ):
             self._set_rotation(rotation)
-            self._set_center(center)
 
-        with delay_callback(
-            self._set_fov(fov, image_label)
+        self._set_center(center)
+        self._set_fov(fov, image_label)
 
     def _mean_pixel_scale(self, data):
         wcs = data.coords
@@ -151,7 +151,7 @@ class AID:
         ])
         return np.mean(abs_cdelts)
 
-    def _get_current_fov(self, sky_or_pixel):
+    def _get_current_fov(self, sky_or_pixel=None):
         state = self.viewer.state
         wcs = state.reference_data.coords
 
