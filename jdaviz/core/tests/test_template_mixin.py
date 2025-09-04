@@ -282,3 +282,24 @@ class TestObserveTraitletsForRelevancy:
             # Check that self.set_relevant_msg is overwritten by our if_fake_truthy
             # behind the scenes
             assert self.set_relevant_msg != not_fresh_msg
+
+
+def test_select_plugin_component_map_value(imviz_helper, multi_extension_image_hdu_wcs):
+    ldr = imviz_helper.loaders['object']
+    ldr.object = multi_extension_image_hdu_wcs
+    selection_obj = ldr.importer.extension
+
+    # Check default selection
+    assert selection_obj.selected == [selection_obj.choices[0]]
+
+    # Check set selected directly via wildcard
+    selection_obj.selected = '*'
+    assert selection_obj.selected == selection_obj.choices
+    choices_before = selection_obj.choices
+
+    selection_obj.fake_attribute = 'item1'
+    # Check that a different attribute *does not* trigger the wildcard logic
+    # i.e. it gets set as-is and doesn't go through `choices`
+    selection_obj.fake_attribute = ['fake * item1', 'fake item2']
+    assert selection_obj.fake_attribute == ['fake * item1', 'fake item2']
+    assert selection_obj.choices == choices_before

@@ -1116,9 +1116,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         value : any
             The (possibly modified) value to be set to the traitlet.
         """
-        if attr == 'selected':
-            value = wildcard_match(self, value)
-        return value
+        return wildcard_match(self, value) if attr == 'selected' else value
 
     @property
     def choices(self):
