@@ -2548,10 +2548,19 @@ class Application(VuetifyTemplate, HubListener):
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
 
-        self.data_collection.remove(self.data_collection[data_label])
+        data_to_remove = self.data_collection[data_label]
+        if self.config in CONFIGS_WITH_LOADERS:
+            data_needing_relinking = []
+            for link in self.data_collection.external_links:
+                if data_to_remove == link.data1:
+                    data_needing_relinking.append(link.data2)
+                elif data_to_remove == link.data2:
+                    data_needing_relinking.append(link.data1)
 
-        if self.config in CONFIGS_WITH_LOADERS and len(self.data_collection) > 1:
-            for data in self.data_collection[1:]:
+        self.data_collection.remove(data_to_remove)
+
+        if self.config in CONFIGS_WITH_LOADERS:
+            for data in data_needing_relinking:
                 self._link_new_data_by_component_type(data.label)
 
         # If there are two or more datasets left we need to link them back together if anything
