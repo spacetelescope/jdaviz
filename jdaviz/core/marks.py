@@ -186,6 +186,7 @@ class PluginMark:
                     return
             else:
                 unit = self.viewer.state.x_display_unit
+
         unit = u.Unit(unit)
 
         if self.xunit is not None and not np.all([s == 0 for s in self.x.shape]):
@@ -206,6 +207,7 @@ class PluginMark:
                     return
             else:
                 unit = self.viewer.state.y_display_unit
+
         unit = u.Unit(unit)
 
         # spectrum y-values in viewer have already been converted, don't convert again
@@ -240,6 +242,7 @@ class PluginMark:
 
         if not self.auto_update_units:
             return
+
         unit = msg.unit
         if (msg.axis in ('spectral', 'spectral_y') and
                 self.viewer.__class__.__name__ in ('Spectrum2DViewer',
@@ -247,6 +250,7 @@ class PluginMark:
             # then we want to ignore the change to spectral unit as these viewers
             # are always in pixel units on the x-axis
             unit = u.pix
+
         if self.viewer.__class__.__name__ in ('Spectrum1DViewer',
                                               'Spectrum2DViewer',
                                               'CubevizProfileView',
@@ -259,7 +263,7 @@ class PluginMark:
         axis = axis_map.get(msg.axis, None)
         if axis is not None:
             scale = self.scales.get(axis, None)
-            # if PluginMark mark is LinearScale(0, 1), prevent it from entering unit conversion
+            # if PluginMark mark is LinearScale prevent it from entering unit conversion
             # machinery so it maintains it's position in viewer.
             if isinstance(scale, LinearScale) and (scale.min, scale.max) == (0, 1):
                 return

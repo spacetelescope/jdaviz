@@ -802,7 +802,8 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                     else:
                         app.hub.broadcast(SnackbarMessage(
                             f"Error linking '{data.label}' to '{refdata.label}': "
-                            f"{repr(e)}", color="warning", timeout=8000, sender=app))
+                            f"{repr(e)}", color="warning", timeout=8000,
+                            sender=app, traceback=e))
                         continue
             else:  # pragma: no cover
                 if error_on_fail:

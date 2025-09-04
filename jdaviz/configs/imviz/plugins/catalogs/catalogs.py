@@ -245,7 +245,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                           f"r={zoom_radius}: {repr(e)}")
                 if error_on_fail:
                     raise Exception(errmsg) from e
-                self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self))
+                self.hub.broadcast(SnackbarMessage(errmsg, color='error',
+                                                   sender=self,
+                                                   traceback=e))
                 query_region_result = None
 
             if query_region_result is None:

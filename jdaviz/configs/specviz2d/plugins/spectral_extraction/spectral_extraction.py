@@ -938,7 +938,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
         except Exception as e:
             self.app.hub.broadcast(
                 SnackbarMessage(f"Specreduce background failed with the following error: {repr(e)}",
-                                color='error', sender=self)
+                                color='error', sender=self, traceback=e)
             )
 
     @with_spinner('bg_spec_spinner')
