@@ -4,8 +4,11 @@ import re
 
 import pytest
 
-from jdaviz.utils import alpha_index, download_uri_to_path, get_cloud_fits, cached_uri
+from jdaviz.utils import (alpha_index, download_uri_to_path,
+                          get_cloud_fits, cached_uri, wildcard_match)
 from astropy.io import fits
+
+from jdaviz.conftest import FakeSpectrumListImporter, premade_spectrum_list
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -88,147 +91,83 @@ def test_get_cloud_fits_ext():
     hdul = get_cloud_fits(s3_uri, ext=["SCI"])
     assert isinstance(hdul, fits.HDUList)
 
-def test_wildcard_matching_sources(specviz_helper, premade_spectrum_list):
+
+class FakeObject:
+    def __init__(self):
+        pass
+
+
+def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
+    default_choices = ['some choice', 'some good choice', 'good choice', 'maybe a bad choice']
+    test_obj = FakeObject()
+
+    # No choices in obj or provided
+    match_result = wildcard_match(test_obj, '*')
+    assert match_result == '*'
+
+    # Multiselect is not an attribute yet
+    match_result = wildcard_match(test_obj, '*', choices=default_choices[0])
+    assert match_result == '*'
+
+    # Add choices attribute, no matches
+    test_obj.choices = default_choices
+    match_result = wildcard_match(test_obj, 'not good*')
+    assert match_result == 'not good*'
+
+    # Test that the function kwarg `choices` overrides the object's choices attribute
+    match_result = wildcard_match(test_obj, 'bad*', choices=default_choices[:-1])
+    assert match_result == 'bad*'
+
+    test_selections = {
+        # Test all
+        '*': default_choices,
+        # Test repeats
+        ('*', '* good *'): default_choices,
+        # Test single selection
+        'some*': default_choices[:2],
+        # Test multi-wildcard
+        ('*', 'good*'): default_choices,
+        # Test multi-selection
+        ('some*', 'good*'): default_choices[:-1]}
+
+    for selection, expected in test_selections.items():
+        # Reset
+        test_obj.multiselect = False
+        match_result = wildcard_match(test_obj, selection)
+        assert test_obj.multiselect is True
+        assert match_result == expected
+
+    # Making sure a stand-in for a SelectPluginComponent object with an attribute
+    # that has `choices` works as expected
+    fake_importer = FakeSpectrumListImporter(app=deconfigged_helper.app,
+                                             resolver=deconfigged_helper.loaders['object']._obj,
+                                             input=premade_spectrum_list)
+    test_obj = fake_importer.sources
+
     """
-    Test wildcard matching for source selection in Specviz. This tests setting
-    the selection directly as opposed to using ``load``, via ``ldr.importer.sources``
-    (whereas in the following test this is done through ``user_api.extension``, same idea).
-    """
+    Left here for reference, premade_spectrum_list has 5 spectra:
     default_choices = ['1D Spectrum at index: 0',
                        '1D Spectrum at index: 1',
                        'Exposure 0, Source ID: 0000',
                        'Exposure 0, Source ID: 1111',
-                       'Exposure 1, Source ID: 1111']
-
-    # Testing directly
-    ldr = specviz_helper.loaders['object']
-    ldr.object = premade_spectrum_list
-    selection_obj = ldr.importer.sources
-    assert selection_obj.selected == []
-
-    assert selection_obj.choices == default_choices
-    # This should get set to True automatically when multiple selections are made
-    selection_obj.multiselect = False
-
-    err_str1 = "not all items in"
-    err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
-        ldr.importer.sources = 'bad *'
-
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
-        ldr.importer.sources = ['bad *', '* result']
-
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
-        ldr.importer.sources = ['another', 'bad * result']
-
-    # Check that selected is still/reverted successfully to []
-    assert selection_obj.selected == []
+                       'Exposure 1, Source ID: 1111']                
+    """
 
     test_selections = {
         # Test all
-        '*': selection_obj.choices,
+        '*': test_obj.choices,
         # Test repeats
-        ('*', '*:*'): selection_obj.choices,
+        ('*', '*:*'): test_obj.choices,
         # Test single selection
-        '1D Spectrum at index:*': selection_obj.choices[:2],
+        '1D Spectrum at index:*': test_obj.choices[:2],
         # Test multi-wildcard
-        '*Exposure*': selection_obj.choices[2:],
+        '*Exposure*': test_obj.choices[2:],
         # Test multi-selection
-        ('*at index: 1', 'Exposure 0*'): selection_obj.choices[1:-1]}
+        ('*at index: 1', 'Exposure 0*'): test_obj.choices[1:-1]}
 
     for selection, expected in test_selections.items():
-        ldr.importer.sources = selection
-        assert selection_obj.multiselect is True
-        assert selection_obj.selected == expected
         # Reset
-        selection_obj.selected = []
-        selection_obj.multiselect = False
-
-
-def test_wildcard_matching_extension(imviz_helper, multi_extension_image_hdu_wcs):
-    """
-    Test wildcard matching for source selection in Specviz. This tests setting
-    the selection directly as opposed to using ``load``, via
-    ``ldr.importer._obj.user_api.extensions`` (whereas in the previous test this is
-    done through ``user_api.sources``, same idea).
-    """
-    default_choices = ['1: [SCI,1]',
-                       '2: [MASK,1]',
-                       '3: [ERR,1]',
-                       '4: [DQ,1]']
-
-    # Testing directly
-    ldr = imviz_helper.loaders['object']
-    ldr.object = multi_extension_image_hdu_wcs
-    selection_obj = ldr.importer.extension
-
-    # Default selection
-    assert selection_obj.selected == [default_choices[0]]
-
-    # Resetting to []
-    # Note this can't be done by setting selected = [], is this intentional?
-    selection_obj.selected.pop(0)
-    assert selection_obj.selected == []
-
-    assert selection_obj.choices == default_choices
-    # This should get set to True automatically when multiple selections are made
-    selection_obj.multiselect = False
-
-    err_str1 = "not all items in"
-    err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *'] {err_str2}")):
-        ldr.importer._obj.user_api.extension = 'bad *'
-
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['bad *', '* result'] {err_str2}")):
-        ldr.importer._obj.user_api.extension = ['bad *', '* result']
-
-    with pytest.raises(ValueError,
-                       match=re.escape(f"{err_str1} ['another', 'bad * result'] {err_str2}")):
-        ldr.importer._obj.user_api.extension = ['another', 'bad * result']
-
-    # Check that selected is still/reverted successfully to []
-    assert selection_obj.selected == []
-
-    test_selections = {
-        # Test all
-        '*': selection_obj.choices,
-        # Test repeats
-        ('*', '*:*'): selection_obj.choices,
-        # Test single selection
-        '1:*': [selection_obj.choices[0]],
-        # Test multi-wildcard
-        '*S*': selection_obj.choices[:2],
-        # Test multi-selection
-        ('*ERR*', '*DQ*'): selection_obj.choices[2:]}
-
-    for selection, expected in test_selections.items():
-        ldr.importer._obj.user_api.extension = selection
-        assert selection_obj.multiselect is True
-        assert selection_obj.selected == expected
-        # Reset
-        selection_obj.selected = []
-        selection_obj.multiselect = False
-
-
-@pytest.mark.parametrize(
-    ("selection", "matches"), [
-        ('*', (0, 1, 2, 3)),
-        (('*', '*:*'), (0, 1, 2, 3)),
-        ('1:*', (0,)),
-        ('*S*', (0, 1)),
-        (('*ERR*', '*DQ*'), (2, 3))])
-def test_wildcard_matching_through_load(imviz_helper, multi_extension_image_hdu_wcs,
-                                        selection, matches):
-    data_labels = ['Image[SCI,1]',
-                   'Image[MASK,1]',
-                   'Image[ERR,1]',
-                   'Image[DQ,1]']
-
-    # Through load
-    imviz_helper.load(multi_extension_image_hdu_wcs, extension=selection)
-    assert imviz_helper.data_labels == [data_labels[i] for i in matches]
+        test_obj.multiselect = False
+        match_result = wildcard_match(test_obj, selection)
+        assert test_obj.multiselect is True
+        assert match_result == expected
