@@ -895,7 +895,6 @@ def wildcard_match(obj, value, choices=None):
             if isinstance(v, str) and '*' in v:
                 # Check for wildcard matches
                 matched.extend(wildcard_match_str(internal_choices, v))
-                print(matched)
             else:
                 # Append as-is
                 matched.append(v)
