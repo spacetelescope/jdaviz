@@ -105,7 +105,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
-    filename = Unicode().tag(sync=True)
     extraction_available = Bool(False).tag(sync=True)
 
     results_units = Unicode().tag(sync=True)
@@ -119,11 +118,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     conflicting_aperture_and_function = Bool(False).tag(sync=True)
     conflicting_aperture_error_message = Unicode('Aperture method Exact cannot be selected along'
                                                  ' with Min or Max.').tag(sync=True)
-
-    # export_enabled controls whether saving to a file is enabled via the UI.  This
-    # is a temporary measure to allow server-installations to disable saving server-side until
-    # saving client-side is supported
-    export_enabled = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -187,11 +181,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                            handler=self._on_global_display_unit_changed)
 
         self._update_disabled_msg()
-
-        if self.app.state.settings.get('server_is_remote', False):
-            # when the server is remote, saving the file in python would save on the server, not
-            # on the user's machine, so export support in cubeviz should be disabled
-            self.export_enabled = False
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
@@ -682,8 +671,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # stuff for exporting to file
         self.extracted_spec = spec
         self.extraction_available = True
-        fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
-        self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
