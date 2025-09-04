@@ -30,7 +30,8 @@ Specviz2d
 API Changes
 -----------
 
-- Extend unix style wildcard matching for select objects supporting multiselect. [#3744]
+- Extend unix style wildcard matching for searches in UI dropdown menus and
+  API objects that support multiselect. [#3744, #3752]
 
 Cubeviz
 ^^^^^^^
