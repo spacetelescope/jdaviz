@@ -179,6 +179,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                                       selected='combination_mode_selected',
                                                       manual_options=COMBO_OPTIONS)
 
+        self._update_loader_items()
+
     @property
     def user_api(self):
         expose = ['loaders', 'subset', 'combination_mode',
