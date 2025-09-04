@@ -15,7 +15,7 @@
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
     ></v-select>
 
-    <span v-if="loader_selected.length && api_hints_enabled" class="api-hint" style="font-weight: bold; padding-left: 6px">
+    <span v-if="loader_selected.length && (api_hints_enabled || loader_selected === 'object')" class="api-hint" style="font-weight: bold; padding-left: 6px">
       ldr = {{ api_hints_obj }}.loaders['{{ loader_selected }}']
     </span>
 
