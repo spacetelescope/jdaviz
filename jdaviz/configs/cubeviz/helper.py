@@ -88,8 +88,10 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
             raise RuntimeError('Only one cube may be loaded per Cubeviz instance')
 
         format = kwargs.pop('format', ['1D Spectrum', '3D Spectrum'])
-        if data_label is not None and data_label[-6:] != "[FLUX]":
-            data_label = data_label+"[FLUX]"
+        if data_label is not None:
+            if data_label[-6:] != "[FLUX]":
+                data_label = data_label.strip()+"[FLUX]"
+            kwargs.setdefault('unc_data_label', data_label.strip('[FLUX]').strip()+'[ERR]')
         self.load(data,
                   data_label=data_label,
                   ext_data_label=f'Spectrum ({kwargs.get("function", "sum").lower()})',
