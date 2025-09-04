@@ -11,7 +11,7 @@
       hint="Extension to use from the FITS HDUList."
     />
     <plugin-select
-      v-if="input_hdulist"
+      v-if="input_hdulist && has_unc"
       :items="unc_extension_items.map(i => i.label)"
       :selected.sync="unc_extension_selected"
       :show_if_single_entry="true"

@@ -28,6 +28,9 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
     unc_extension_items = List().tag(sync=True)
     unc_extension_selected = Unicode().tag(sync=True)
 
+    mask_extension_items = List().tag(sync=True)
+    mask_extension_selected = Unicode().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.input_hdulist = isinstance(self.input, fits.HDUList)
@@ -50,6 +53,11 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                                                           selected='unc_extension_selected',
                                                           manual_options=ext_options,
                                                           filters=[self.hdu_is_valid_unc])
+        self.mask_extension = SelectFileExtensionComponent(self,
+                                                           items='mask_extension_items',
+                                                           selected='mask_extension_selected',
+                                                           manual_options=ext_options,
+                                                           filters=[self.hdu_is_valid_mask])
 
     @property
     def supported_flux_ndim(self):
@@ -57,7 +65,7 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
 
     def hdu_is_valid_flux(self, item):
         """
-        Check if the HDU is valid to be imported as a 2D Spectrum.
+        Check if the HDU is valid to be imported for the flux in a Spectrum.
 
         Parameters
         ----------
@@ -77,7 +85,7 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
 
     def hdu_is_valid_unc(self, item):
         """
-        Check if the HDU is valid to be imported as a 2D Spectrum.
+        Check if the HDU is valid to be imported for the uncertainty in a Spectrum.
 
         Parameters
         ----------
@@ -92,6 +100,24 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and hdu.header.get('EXTNAME', '') == 'ERR')
+
+    def hdu_is_valid_mask(self, item):
+        """
+        Check if the HDU is valid to be imported for the mask in a Spectrum.
+
+        Parameters
+        ----------
+        hdu : `astropy.io.fits.hdu.base.HDUBase`
+            The HDU to check.
+
+        Returns
+        -------
+        bool
+            True if the HDU is a valid light curve HDU, False otherwise.
+        """
+        hdu = item.get('obj')
+        return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
+                and hdu.header.get('EXTNAME', '') == 'MASK')
 
     @cached_property
     def spectrum(self):
@@ -118,11 +144,18 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
             unc_data = unc_hdu.data
         else:
             unc_data = None
+        if self.mask_extension.selected != '':
+            mask_hdu = self.mask_extension.selected_obj
+            mask_data = mask_hdu.data
+        else:
+            mask_data = None
 
         if data.shape[0] > data.shape[1]:
             data = data.T
             if unc_data is not None:
                 unc_data = unc_data.T
+            if mask_data is not None:
+                mask_data = mask_data.T
             self.app.hub.broadcast(SnackbarMessage(
                 f"Transposed input data to {data.shape}",
                 sender=self, color="warning"))
@@ -152,7 +185,8 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                 else:
                     wcs = None
             return Spectrum(flux=data * data_unit, uncertainty=unc,
-                            meta=metadata, wcs=wcs, spectral_axis_index=1)
+                            mask=mask_data, meta=metadata, wcs=wcs,
+                            spectral_axis_index=1)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,

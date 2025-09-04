@@ -32,6 +32,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
     unc_data_label_invalid_msg = Unicode().tag(sync=True)
 
     # Uncertainty Viewer
+    has_unc = Bool(False).tag(sync=True)
     unc_viewer_create_new_items = List([]).tag(sync=True)
     unc_viewer_create_new_selected = Unicode().tag(sync=True)
 
@@ -43,6 +44,26 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
     unc_viewer_label_default = Unicode().tag(sync=True)
     unc_viewer_label_auto = Bool(True).tag(sync=True)
     unc_viewer_label_invalid_msg = Unicode().tag(sync=True)
+
+    # Mask Cube
+    mask_data_label_value = Unicode().tag(sync=True)
+    mask_data_label_default = Unicode().tag(sync=True)
+    mask_data_label_auto = Bool(True).tag(sync=True)
+    mask_data_label_invalid_msg = Unicode().tag(sync=True)
+
+    # Mask Viewer
+    has_mask = Bool(False).tag(sync=True)
+    mask_viewer_create_new_items = List([]).tag(sync=True)
+    mask_viewer_create_new_selected = Unicode().tag(sync=True)
+
+    mask_viewer_items = List([]).tag(sync=True)
+    mask_viewer_selected = Any([]).tag(sync=True)
+    mask_viewer_multiselect = Bool(True).tag(sync=True)
+
+    mask_viewer_label_value = Unicode().tag(sync=True)
+    mask_viewer_label_default = Unicode().tag(sync=True)
+    mask_viewer_label_auto = Bool(True).tag(sync=True)
+    mask_viewer_label_invalid_msg = Unicode().tag(sync=True)
 
     # Extraction Options
     auto_extract = Bool(True).tag(sync=True)
@@ -78,6 +99,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
                 return isinstance(viewer, tuple(classes))
             return viewer_filter
 
+        # FLUX CUBE
         if self.default_data_label_from_resolver:
             self.data_label_default = self.default_data_label_from_resolver
         elif self.config == 'cubeviz':
@@ -88,6 +110,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
         if self.config == 'cubeviz':
             self.viewer.selected = ['flux-viewer']
 
+        # UNCERTAINTY CUBE
+        self.has_unc = self.spectrum.uncertainty is not None
         self.unc_data_label = AutoTextField(self,
                                             'unc_data_label_value',
                                             'unc_data_label_default',
@@ -117,6 +141,38 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
         else:
             self.unc_viewer.select_default()
 
+        # MASK CUBE
+        self.has_mask = self.spectrum.mask is not None
+        self.mask_data_label = AutoTextField(self,
+                                             'mask_data_label_value',
+                                             'mask_data_label_default',
+                                             'mask_data_label_auto',
+                                             'mask_data_label_invalid_msg')
+
+        self.mask_viewer = ViewerSelectCreateNew(self,
+                                                 'mask_viewer_items',
+                                                 'mask_viewer_selected',
+                                                 'mask_viewer_create_new_items',
+                                                 'mask_viewer_create_new_selected',
+                                                 'mask_viewer_label_value',
+                                                 'mask_viewer_label_default',
+                                                 'mask_viewer_label_auto',
+                                                 'mask_viewer_label_invalid_msg',
+                                                 multiselect='mask_viewer_multiselect',
+                                                 default_mode='empty')
+        # TODO: default label separate from viewer label (so we can call it mask-viewer, etc)
+        supported_viewers = [{'label': '3D Spectrum',
+                              'reference': 'cubeviz-image-viewer'}]
+        if self.app.config == 'deconfigged':
+            self.mask_viewer_create_new_items = supported_viewers
+
+        self.mask_viewer.add_filter(viewer_in_registry_names(supported_viewers))
+        if self.config == 'cubeviz':
+            self.mask_viewer.selected = []
+        else:
+            self.mask_viewer.selected = []
+
+        # AUTO-EXTRACTION
         self.function = SelectPluginComponent(
             self,
             items='function_items',
@@ -155,10 +211,17 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
 
     @property
     def user_api(self):
-        expose = ['unc_data_label', 'unc_viewer',
-                  'auto_extract', 'ext_data_label', 'ext_viewer']
+        expose = ['auto_extract', 'ext_data_label', 'ext_viewer']
+        if self.has_unc:
+            expose += ['unc_data_label', 'unc_viewer']
+        if self.has_mask:
+            expose += ['mask_data_label', 'mask_viewer']
         if self.input_hdulist:
-            expose += ['extension', 'unc_extension']
+            expose += ['extension']
+            if self.has_unc:
+                expose += ['unc_extension']
+            if self.has_mask:
+                expose += ['mask_extension']
         return ImporterUserApi(self, expose)
 
     @property
@@ -183,6 +246,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
         base = self.data_label_value.strip('[FLUX]').strip()
         self.ext_data_label_default = f"{base} ({self.function_selected.lower()})"
         self.unc_data_label_default = f"{base} [UNC]"
+        self.mask_data_label_default = f"{base} [MASK]"
 
     @property
     def supported_flux_ndim(self):
@@ -215,13 +279,14 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
         # get a copy of both of these before additional data entries changes defaults
         data_label = self.data_label_value
         unc_data_label = self.unc_data_label_value
+        mask_data_label = self.mask_data_label_value
         ext_data_label = self.ext_data_label_value
 
         super().__call__()
         # TODO: this will need to be removed when removing restriction of a single flux cube
         self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
 
-        if self.output.uncertainty is not None:
+        if self.has_unc:
             # TODO: detect if uncertainty exists and hide section from UI
             uncert = Spectrum(spectral_axis=self.output.spectral_axis,
                               flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
@@ -233,6 +298,18 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
                                         viewer_select=self.unc_viewer)
             # TODO: this will need to be removed when removing restriction of a single flux cube
             self.app._jdaviz_helper._loaded_uncert_cube = self.app.data_collection[unc_data_label]
+
+        if self.has_mask:
+            mask = Spectrum(spectral_axis=self.output.spectral_axis,
+                            flux=self.output.mask * u.dimensionless_unscaled,
+                            wcs=self.output.wcs,
+                            meta=self.output.meta,
+                            spectral_axis_index=self.output.spectral_axis_index)
+            self.add_to_data_collection(mask,
+                                        mask_data_label,
+                                        viewer_select=self.mask_viewer)
+            # TODO: this will need to be removed when removing restriction of a single flux cube
+            self.app._jdaviz_helper._loaded_mask_cube = self.app.data_collection[mask_data_label]
 
         if not self.auto_extract:
             return
