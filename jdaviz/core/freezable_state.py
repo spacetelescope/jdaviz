@@ -175,9 +175,10 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             x_max = center_x + radius
             y_min = center_y - radius
             y_max = center_y + radius
-            self.x_min, self.x_max, self.y_min, self.y_max = x_min, x_max, y_min, y_max
+            with delay_callback(self, 'x_min', 'x_max', 'y_min', 'y_max'):
+                self.x_min, self.x_max, self.y_min, self.y_max = x_min, x_max, y_min, y_max
 
-            self._adjust_limits_aspect()
+                self._adjust_limits_aspect()
 
     def _set_axes_aspect_ratio(self, axes_ratio):
         # when aspect-ratio is changed (changing viewer.shape), ensure zoom/center are synced
