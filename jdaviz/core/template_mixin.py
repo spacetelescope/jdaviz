@@ -3928,7 +3928,7 @@ class ViewerSelectCreateNew(ViewerSelect):
         self.new_label.default = self.app.return_unique_name(self.new_label.default, typ='viewer')
 
         for viewer in self.app._jdaviz_helper.viewers.keys():
-            if self.new_label.value == viewer:
+            if self.new_label.value.strip() == viewer:
                 self.new_label.invalid_msg = 'new_label already in use'
                 return
 

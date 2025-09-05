@@ -192,7 +192,7 @@ class BaseImporterToDataCollection(BaseImporter):
         viewer_select = viewer_select if viewer_select is not None else self.viewer
         if viewer_select.create_new.selected:
             viewer_reference = viewer_select.create_new.selected_item.get('reference')
-            viewer_label = viewer_select.new_label.value
+            viewer_label = viewer_select.new_label.value.strip()
 
             viewer_dict = viewer_registry.members.get(viewer_reference)
             viewer_cls = viewer_dict.get('cls')
