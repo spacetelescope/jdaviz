@@ -23,8 +23,8 @@ class SubsetImporter(BaseImporterToPlugin):
     subset_label_auto = Bool(True).tag(sync=True)
     subset_label_invalid_msg = Unicode().tag(sync=True)
 
-    def __init__(self, app, resolver, input, **kwargs):
-        super().__init__(app, resolver, input, **kwargs)
+    def __init__(self, app, resolver, parser, input, **kwargs):
+        super().__init__(app, resolver, parser, input, **kwargs)
         self.subset_label_default = 'Subset 1'
         self.subset_label = AutoTextField(self, 'subset_label_value',
                                           'subset_label_default',
@@ -73,9 +73,9 @@ class SubsetImporter(BaseImporterToPlugin):
 
     @observe('subset_label_invalid_msg')
     def _set_import_disabled(self, change={}):
-        self.resolver.import_disabled = len(self.subset_label_invalid_msg) > 0
+        self.import_disabled = len(self.subset_label_invalid_msg) > 0
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         if self.subset_label_invalid_msg:
             raise ValueError(self.subset_label_invalid_msg)
         if self.subset_label_value.strip() == self.subset_label_default:
