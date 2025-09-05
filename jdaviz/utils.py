@@ -46,6 +46,8 @@ NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 PRIHDR_KEY = '_primary_header'
 COMMENTCARD_KEY = '_fits_comment_card'
 
+CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz', 'specviz', 'specviz2d', 'imviz')
+
 
 class SnackbarQueue:
     '''
@@ -809,6 +811,14 @@ def layer_is_wcs_only(layer):
 def get_wcs_only_layer_labels(app):
     return [data.label for data in app.data_collection
             if layer_is_wcs_only(data)]
+
+
+def wcs_is_spectral(wcs):
+    if wcs is None:
+        return False
+    # NOTE: this may need further generalization for the GWCS but non-specutils case
+    # or for the spectral cube case
+    return isinstance(wcs, SpectralGWCS) or getattr(wcs, 'has_spectral', False)
 
 
 def get_top_layer_index(viewer):
