@@ -329,16 +329,7 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
 @pytest.mark.parametrize('method', ['load', 'loader_infrastructure'])
 def test_spectral_extraction_two_spectra_deconfigged(method,
         deconfigged_helper, spectrum2d, mos_spectrum2d):
-    sp_ext_plugin = config.plugins['2D Spectral Extraction']
-    sp_ext_plugin.trace_dataset = spectrum_2
 
-    sp_ext_plugin.bg_dataset = spectrum_2
-    # sp_ext_plugin.bg_trace = 'From Plugin'
-
-    sp_ext_plugin.ext_dataset = spectrum_2
-    sp_ext_plugin.ext_trace = 'From Plugin'
-
-    sp_ext_2 = sp_ext_plugin.export_extract_spectrum()
     if method == 'load':
         spec2d_label = '2D Spectrum'
         deconfigged_helper.load(spectrum2d, format='2D Spectrum', label=spec2d_label)
