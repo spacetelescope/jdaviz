@@ -47,6 +47,7 @@ class UserApiWrapper:
     def __setattr__(self, attr, value):
         if attr in _internal_attrs:
             return super().__setattr__(attr, value)
+
         if attr not in self._expose:
             raise ValueError(f"{attr} is not a valid attribute and cannot be set")
 
@@ -56,21 +57,20 @@ class UserApiWrapper:
         exp_obj = getattr(self._obj, attr)
         if hasattr(exp_obj, '__call__'):
             raise AttributeError(f"{attr} is a callable, cannot set to a value.  See help({attr}) for input arguments.")  # noqa
+
         from jdaviz.core.template_mixin import (SelectPluginComponent,
                                                 UnitSelectPluginComponent,
                                                 SelectFileExtensionComponent,
                                                 PlotOptionsSyncState,
                                                 AddResults,
                                                 AutoTextField)
+
         if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
             if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
                 value = value.to_string()
-            elif value == '*' and hasattr(exp_obj, 'multiselect'):
-                exp_obj.multiselect = True
-                exp_obj.select_all()
-                return
+
             elif isinstance(exp_obj, SelectFileExtensionComponent):
                 def to_choice_single(value):
                     if isinstance(value, int):
@@ -95,14 +95,17 @@ class UserApiWrapper:
                     value = to_choice_single(value)
             exp_obj.selected = value
             return
+
         elif isinstance(exp_obj, AddResults):
             exp_obj.auto_label.value = value
             return
+
         elif isinstance(exp_obj, AutoTextField):
             exp_obj.value = value
             if value != exp_obj.default:
                 exp_obj.auto = False
             return
+
         elif isinstance(exp_obj, PlotOptionsSyncState):
             if not len(exp_obj.linked_states):
                 raise ValueError("there are currently no synced glue states to set")
