@@ -3,8 +3,6 @@ import pytest
 import numpy as np
 import astropy.units as u
 from specutils import SpectralRegion
-from jdaviz.core.template_mixin import PluginTemplateMixin
-from jdaviz.core.registries import tray_registry
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -79,14 +77,6 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     # try setting based on id instead of reference
     p.viewer = p.viewer.ids[0]
     assert p.viewer.selected == p.viewer.labels[0]
-
-
-@tray_registry('test-fake-plugin', label='Test Fake Plugin', category='core')
-class FakePlugin(PluginTemplateMixin):
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
 class TestObserveTraitletsForRelevancy:
@@ -292,3 +282,24 @@ class TestObserveTraitletsForRelevancy:
             # Check that self.set_relevant_msg is overwritten by our if_fake_truthy
             # behind the scenes
             assert self.set_relevant_msg != not_fresh_msg
+
+
+def test_select_plugin_component_map_value(imviz_helper, multi_extension_image_hdu_wcs):
+    ldr = imviz_helper.loaders['object']
+    ldr.object = multi_extension_image_hdu_wcs
+    selection_obj = ldr.importer.extension
+
+    # Check default selection
+    assert selection_obj.selected == [selection_obj.choices[0]]
+
+    # Check set selected directly via wildcard
+    selection_obj.selected = '*'
+    assert selection_obj.selected == selection_obj.choices
+    choices_before = selection_obj.choices
+
+    selection_obj.fake_attribute = 'item1'
+    # Check that a different attribute *does not* trigger the wildcard logic
+    # i.e. it gets set as-is and doesn't go through `choices`
+    selection_obj.fake_attribute = ['fake * item1', 'fake item2']
+    assert selection_obj.fake_attribute == ['fake * item1', 'fake item2']
+    assert selection_obj.choices == choices_before

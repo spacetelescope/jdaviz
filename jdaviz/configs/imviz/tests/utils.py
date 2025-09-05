@@ -13,18 +13,18 @@ __all__ = ['_image_hdu_nowcs', '_image_hdu_wcs', '_image_nddata_wcs',
            'BaseImviz_WCS_NoWCS', 'BaseImviz_WCS_WCS', 'BaseImviz_WCS_GWCS', 'BaseImviz_GWCS_GWCS']
 
 
-def _image_hdu_nowcs(arr=np.ones((10, 10))):
+def _image_hdu_nowcs(arr=np.ones((10, 10)), name='SCI'):
     """
     Create a FITS ImageHDU without WCS.
     """
-    return fits.ImageHDU(arr, name='SCI')
+    return fits.ImageHDU(arr, name=name)
 
 
-def _image_hdu_wcs(arr=np.ones((10, 10))):
+def _image_hdu_wcs(arr=np.ones((10, 10)), name='SCI'):
     """
     Create a FITS ImageHDU with WCS.
     """
-    hdu = _image_hdu_nowcs(arr)
+    hdu = _image_hdu_nowcs(arr, name=name)
     # Apply some celestial WCS from
     # https://learn.astropy.org/rst-tutorials/celestial_coords1.html
     hdu.header.update({'CTYPE1': 'RA---TAN',
@@ -42,11 +42,11 @@ def _image_hdu_wcs(arr=np.ones((10, 10))):
     return hdu
 
 
-def _image_nddata_wcs(arr=np.ones((10, 10)), unit=u.Jy):
+def _image_nddata_wcs(arr=np.ones((10, 10)), unit=u.Jy, name='SCI'):
     """
     Create a NDData object with WCS.
     """
-    hdu = _image_hdu_wcs(arr)
+    hdu = _image_hdu_wcs(arr, name=name)
     return NDData(hdu.data, wcs=WCS(hdu.header), unit=unit)
 
 
