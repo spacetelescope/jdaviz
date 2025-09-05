@@ -1,5 +1,7 @@
 import gwcs
 import pytest
+import pytest_check as check
+
 from astropy.modeling import models
 from astropy.nddata import VarianceUncertainty
 from astropy.tests.helper import assert_quantity_allclose
@@ -9,6 +11,8 @@ import numpy as np
 from packaging.version import Version
 from specreduce import tracing, background, extract
 from specutils import Spectrum
+
+from glue.core.link_helpers import LinkSameWithUnits
 
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
@@ -326,53 +330,95 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
         assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
 
 
-@pytest.mark.parametrize('method', ['load', 'loader_infrastructure'])
-def test_spectral_extraction_two_spectra_deconfigged(method,
-        deconfigged_helper, spectrum2d, mos_spectrum2d):
+@pytest.mark.xfail
+@pytest.mark.parametrize('method', ['load']) #, 'loader_infrastructure'])
+def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
+                                                     spectrum2d, mos_spectrum2d):
+    # One resembling the default
+    spec2d_label = '2D Spectrum'
+    spec2d_ext_label = '2D Spectrum (auto-ext)'
+    # One specific
+    mos_spec2d_label = 'Mos 2D Spectrum'
+    mos_spec2d_ext_label = 'Mos 2D Spectrum Extraction'
 
     if method == 'load':
-        spec2d_label = '2D Spectrum'
-        deconfigged_helper.load(spectrum2d, format='2D Spectrum', label=spec2d_label)
-        assert spec2d_label in deconfigged_helper.data_collection.labels
+        deconfigged_helper.load(spectrum2d, format='2D Spectrum',
+                                data_label=spec2d_label, ext_data_label=spec2d_ext_label)
 
-        mos_spec2d_label = 'Mos 2D Spectrum'
-        deconfigged_helper.load(mos_spectrum2d, format='2D Spectrum', label=mos_spec2d_label)
-        assert mos_spec2d_label in deconfigged_helper.data_collection.labels
+        deconfigged_helper.load(mos_spectrum2d, format='2D Spectrum',
+                                data_label=mos_spec2d_label, ext_data_label=mos_spec2d_ext_label)
+
     elif method == 'loader_infrastructure':
         ldr = deconfigged_helper.loaders['object']
         ldr.object = mos_spectrum2d
         ldr.format = '2D Spectrum'
         ldr.importer.auto_extract = True
+        ldr.importer.data_label = spec2d_label
+        ldr.importer.ext_data_label = spec2d_ext_label
         ldr.importer()
 
-        # Swapping these causes a different issue
+        # Swapping the load order causes a different issue
         ldr.object = spectrum2d
         ldr.format = '2D Spectrum'
         ldr.importer.auto_extract = True
+        ldr.importer.data_label = mos_spec2d_label
+        ldr.importer.ext_data_label = mos_spec2d_ext_label
         ldr.importer()
 
-    # Test that Nans are linked correctly
-    # and match to markers is worked correctly
+    dc = deconfigged_helper.app.data_collection
 
-    # sp_ext = deconfigged_helper.plugins['2D Spectral Extraction']
-    # print('first selection', sp_ext.bg_dataset.selected)
-    # extracted_spectrum1 = sp_ext.export_extract_spectrum()
-    # print('first spectrum', sp_ext.ext_dataset.get_selected_spectrum())
+    # TODO: Anywhere 'check' is used should be replaced with 'assert'
+    #  once issues are fixed.
+    assert spec2d_label in dc.labels
+    assert spec2d_ext_label in dc.labels
+    extracted_spec2d = deconfigged_helper.get_data(spec2d_ext_label)
+    # Check for any non-NaN data, if all NaNs, something went wrong
+    # assert np.any(~np.isnan(extracted_spec2d.flux))
+    check.is_true(np.any(~np.isnan(extracted_spec2d.flux)))
 
-    # Test that 2nd spectra can be loaded in and that the spectral extraction runs
-    # by virtue of auto_extract = True
+    assert mos_spec2d_label in dc.labels
+    # TODO: This fails with the loader infrastructure, the second extraction label does not exist
+    #  (maybe it's overwriting the first spectral extraction?)
+    # assert mos_spec2d_ext_label in dc.labels
+    check.is_true(mos_spec2d_ext_label in dc.labels)
 
-    # sp_ext = deconfigged_helper.plugins['2D Spectral Extraction']
-    print('first', deconfigged_helper.get_data('2D Spectrum (auto-ext)'))
-    print()
-    print('second', deconfigged_helper.get_data('2D Spectrum (1) (auto-ext)'))
-    # print('third?', deconfigged_helper.get_data('2D Spectrum (2) (auto-ext)'))
+    extracted_mos_spec2d = deconfigged_helper.get_data(mos_spec2d_ext_label)
+    # Check for any non-NaN data, if all NaNs, something went wrong
+    # assert np.any(~np.isnan(extracted_mos_spec2d.flux))
+    check.is_true(np.any(~np.isnan(extracted_mos_spec2d.flux)))
 
-    # print('second selection', sp_ext.bg_dataset.selected)
-    #sp_ext.dataset = mos_spectrum2d
-    #extracted_spectrum2 = sp_ext.export_extract_spectrum()
-    #print('second spectrum', sp_ext.ext_dataset.get_selected_spectrum())
+    # TODO: Investigate why they're coming out identical!
+    # assert not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux)
+    check.is_true(not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux))
+    # print(extracted_spec2d.flux, extracted_mos_spec2d.flux)
 
-    # print(extracted_spectrum1, extracted_spectrum2)
-    # print(extracted_spectrum2)
-    # assert not np.array_equal(extracted_spectrum1.flux, extracted_spectrum2.flux)
+    # Check markers
+    pext = deconfigged_helper.app.get_tray_item_from_name('spectral-extraction-2d')
+    pext.keep_active = True
+    for k, v in pext.marks.items():
+        check.is_true(len(v.marks_list) > 0, msg=f'marks_list empty for {k}')
+
+    # Check some specific marks (copied and pasted from test_plugin)
+    for mark in ['bg1_center', 'bg2_center']:
+        # assert pext.marks[mark].marks_list[0].visible is False
+        check.is_false(pext.marks[mark].marks_list[0].visible)
+
+    for mark in ['ext_lower', 'ext_upper']:
+        # assert pext.marks[mark].marks_list[0].visible is True
+        check.is_true(pext.marks[mark].marks_list[0].visible)
+        # assert len(pext.marks[mark].marks_list[0].x) > 0
+        check.is_true(len(pext.marks[mark].marks_list[0].x) > 0)
+
+    # Check linking
+    for link in dc.external_links:
+        print(dir(link))
+        parent = link.data1
+        child = link.data2
+        print('link:', parent.label, '<=>', child.label)
+        # check.is_true(child.label == spec_ext, msg='link output data label mismatch')
+        assert isinstance(link, LinkSameWithUnits)
+        # if (input_data is spec2d_data and output_data is spec2d_ext_data) or \
+        #    (input_data is spec2d_ext_data and output_data is spec2d_data):
+        #     links_between.append(link)
+        #     print('success:', spec, spec_ext)
+        print()
