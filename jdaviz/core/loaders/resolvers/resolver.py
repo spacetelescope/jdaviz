@@ -97,7 +97,7 @@ class FormatSelect(SelectPluginComponent):
                     if self.debug:
                         self._dbg_importers[label] = this_importer
                     if (self.plugin._restrict_to_target is not None and
-                            this_importer.target['label'] != self.plugin._restrict_to_target):
+                            this_importer.target.get('label') != self.plugin._restrict_to_target):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'not matching target'
                         continue
@@ -199,8 +199,6 @@ class BaseResolver(PluginTemplateMixin):
     requires_api_support = False
 
     importer_widget = Unicode().tag(sync=True)
-    import_disabled = Bool(False).tag(sync=True)
-    import_spinner = Bool(False).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
@@ -332,6 +330,7 @@ class BaseResolver(PluginTemplateMixin):
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
             self.valid_import_formats = ''
+            self.import_disabled = self.importer.import_disabled
 
     def close_in_tray(self, close_sidebar=False):
         """
@@ -356,10 +355,6 @@ class BaseResolver(PluginTemplateMixin):
         self.set_active_loader_callback(self._registry_label)
         if self.open_callback is not None:
             self.open_callback()
-
-    @with_spinner('import_spinner')
-    def vue_import_clicked(self, *args, **kwargs):
-        self.importer()
 
 
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):

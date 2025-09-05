@@ -1,19 +1,17 @@
-from traitlets import Bool, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
 from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, AutoTextField
+from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        AutoTextField,
+                                        ViewerSelectCreateNew,
+                                        with_spinner)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
-
-
-vid_map = {'spectrum-1d-viewer': '1D Spectrum',
-           'spectrum-2d-viewer': '2D Spectrum',
-           'imviz-image-viewer': 'Image'}
 
 
 class BaseImporter(PluginTemplateMixin):
@@ -22,6 +20,9 @@ class BaseImporter(PluginTemplateMixin):
     # over any parsers not included in the list).  If not empty but no valid parsers are in
     # the list, the first remaining match will be used.
     parser_preference = []
+
+    import_disabled = Bool(False).tag(sync=True)
+    import_spinner = Bool(False).tag(sync=True)
 
     def __init__(self, app, resolver, input, **kwargs):
         self._input = input
@@ -61,12 +62,27 @@ class BaseImporter(PluginTemplateMixin):
     def user_api(self):
         return ImporterUserApi(self)
 
+    def vue_import_clicked(self, *args, **kwargs):
+        self.__call__()
+
 
 class BaseImporterToDataCollection(BaseImporter):
     data_label_value = Unicode().tag(sync=True)
     data_label_default = Unicode().tag(sync=True)
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
+
+    viewer_create_new_items = List([]).tag(sync=True)
+    viewer_create_new_selected = Unicode().tag(sync=True)
+
+    viewer_items = List([]).tag(sync=True)
+    viewer_selected = Any([]).tag(sync=True)
+    viewer_multiselect = Bool(True).tag(sync=True)
+
+    viewer_label_value = Unicode().tag(sync=True)
+    viewer_label_default = Unicode().tag(sync=True)
+    viewer_label_auto = Bool(True).tag(sync=True)
+    viewer_label_invalid_msg = Unicode().tag(sync=True)
 
     def __init__(self, app, resolver, input, **kwargs):
         super().__init__(app, resolver, input, **kwargs)
@@ -76,16 +92,43 @@ class BaseImporterToDataCollection(BaseImporter):
                                         'data_label_auto',
                                         'data_label_invalid_msg')
 
+        self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
+                                            'viewer_selected',
+                                            'viewer_create_new_items',
+                                            'viewer_create_new_selected',
+                                            'viewer_label_value',
+                                            'viewer_label_default',
+                                            'viewer_label_auto',
+                                            'viewer_label_invalid_msg',
+                                            multiselect='viewer_multiselect',
+                                            default_mode='empty')
+
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=lambda _: self._on_label_changed())
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=lambda _: self._on_label_changed())
-        self.observe(self._on_label_changed, 'data_label_value')
         self._on_label_changed()
 
-    @property
-    def default_viewer_reference(self):
-        raise NotImplementedError("Importer subclass must implement default_viewer_reference")  # noqa pragma: nocover
+        supported_viewers = self._get_supported_viewers()
+        if self.app.config == 'deconfigged':
+            self.viewer_create_new_items = supported_viewers
+
+        # for now, we'll use the same list of viewers that can be created
+        # as the filter on existing viewers.  Eventually we may want this
+        # to be more flexible so that custom viewers can show up in this
+        # list (or both lists) without having to modify the importer - perhaps
+        # by both viewers and importers describing their supported data shapes
+        # and physical types
+        def viewer_in_registry_names(viewer):
+            classes = [viewer_registry.members.get(item.get('reference')).get('cls')
+                       for item in supported_viewers]
+            return isinstance(viewer, tuple(classes))
+        self.viewer.add_filter(viewer_in_registry_names)
+        self.viewer.select_default()
+
+    @staticmethod
+    def _get_supported_viewers():
+        raise NotImplementedError("Importer subclass must implement viewer_create_new_items")  # noqa pragma: nocover
 
     @property
     def ignore_viewers_with_cls(self):
@@ -96,15 +139,15 @@ class BaseImporterToDataCollection(BaseImporter):
         return self._resolver.default_label
 
     @property
-    def default_viewer_label(self):
-        return vid_map.get(self.default_viewer_reference, self.default_viewer_reference)
-
-    @property
     def target(self):
-        return {'type': 'viewer',
-                'icon': 'mdi-window-maximize',
-                'label': self.default_viewer_label}
+        if len(self.viewer.create_new.choices) > 0:
+            return {'type': 'viewer',
+                    'icon': 'mdi-window-maximize',
+                    'label': self.viewer.create_new.choices[0]}
+        else:
+            return {}
 
+    @observe('data_label_value')
     def _on_label_changed(self, msg={}):
         if not len(self.data_label_value.strip()):
             # strip will raise the same error for a label of all spaces
@@ -121,49 +164,15 @@ class BaseImporterToDataCollection(BaseImporter):
 
         self.data_label_invalid_msg = ''
 
-    @observe('data_label_invalid_msg')
+    @observe('data_label_invalid_msg', 'viewer_label_invalid_msg')
     def _set_import_disabled(self, change={}):
-        self.resolver.import_disabled = len(self.data_label_invalid_msg) > 0
-
-    def load_into_viewer(self, data_label, default_viewer_reference=None):
-        added = 0
-        for viewer in self.app._jdaviz_helper.viewers.values():
-            if isinstance(viewer._obj, self.ignore_viewers_with_cls):
-                continue
-            if data_label in viewer.data_menu.data_labels_unloaded:
-                added += 1
-                viewer.data_menu.add_data(data_label)
-            elif data_label in viewer.data_menu.data_labels_loaded:
-                # was already loaded, increment count to avoid creating a new viewer
-                added += 1
-        if added == 0:
-            if self.app.config not in ('deconfigged', 'lcviz'):
-                # do not add additional viewers
-                msg = SnackbarMessage(
-                    "Data units are incompatible with viewer units, unload all data from viewer to add",  # noqa
-                    color='error', sender=self, timeout=10000)
-                self.app.hub.broadcast(msg)
-                return
-            if default_viewer_reference is None:
-                default_viewer_reference = self.default_viewer_reference
-                default_viewer_label = self.default_viewer_label
-            else:
-                default_viewer_label = vid_map.get(default_viewer_reference,
-                                                   default_viewer_reference)
-            default_viewer_label = self.app.return_unique_name(default_viewer_label,
-                                                               typ='viewer')
-
-            viewer_dict = viewer_registry.members.get(default_viewer_reference)
-            viewer_cls = viewer_dict.get('cls')
-            self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
-                                    vid=default_viewer_label,
-                                    name=default_viewer_label,
-                                    open_data_menu_if_empty=False)
-            viewer = self.app._jdaviz_helper.viewers.get(default_viewer_label)
-            viewer.data_menu.add_data(data_label)
+        self.import_disabled = (len(self.data_label_invalid_msg) > 0
+                                or len(self.viewer_label_invalid_msg) > 0)
 
     def add_to_data_collection(self, data, data_label=None,
-                               parent=None, show_in_viewer=True, cls=None):
+                               parent=None,
+                               viewer_select=None,
+                               cls=None):
         if data_label is None:
             data_label = self.data_label_value.strip()
         if hasattr(data, 'meta'):
@@ -179,13 +188,44 @@ class BaseImporterToDataCollection(BaseImporter):
         cls = cls if cls is not None else data.__class__
         self.app.data_collection[data_label]._native_data_cls = cls
         self.app.data_collection[data_label]._importer = self.__class__.__name__
-        if show_in_viewer:
-            self.load_into_viewer(data_label)
 
-    def __call__(self, show_in_viewer=True):
+        viewer_select = viewer_select if viewer_select is not None else self.viewer
+        if viewer_select.create_new.selected:
+            viewer_reference = viewer_select.create_new.selected_item.get('reference')
+            viewer_label = viewer_select.new_label.value.strip()
+
+            viewer_dict = viewer_registry.members.get(viewer_reference)
+            viewer_cls = viewer_dict.get('cls')
+            self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                    vid=viewer_label,
+                                    name=viewer_label,
+                                    open_data_menu_if_empty=False)
+            viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+            viewer.data_menu.add_data(data_label)
+
+            # default to selecting this new viewer for next import
+            viewer_select.create_new.selected = ''
+            viewer_select.selected = [viewer_label]
+
+        else:
+            failed_viewers = []
+            for viewer_label in viewer_select.selected:
+                viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+                try:
+                    viewer.data_menu.add_data(data_label)
+                except Exception:
+                    failed_viewers.append(viewer_label)
+            if len(failed_viewers) > 0:
+                msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error'))
+
+    @with_spinner('import_spinner')
+    def __call__(self):
         if self.data_label_invalid_msg:
             raise ValueError(self.data_label_invalid_msg)
-        self.add_to_data_collection(self.output, show_in_viewer=show_in_viewer)
+        if self.viewer.create_new.selected != '' and self.viewer_label_invalid_msg:
+            raise ValueError(self.viewer_label_invalid_msg)
+        self.add_to_data_collection(self.output)
 
 
 class BaseImporterToPlugin(BaseImporter):

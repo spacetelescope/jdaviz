@@ -139,6 +139,30 @@ class ConfigHelper(HubListener):
                    for item in self.app.state.loader_items}
         return loaders
 
+    def _get_loader(self, resolver_name, parser_name=None, importer_name=None):
+        """
+        Attempt to retrieve an resolver/parser/importer for debugging purposes.
+        Can be used to debug an importer that shows as invalid because of an internal error.
+        """
+        ldr = self.loaders.get(resolver_name)
+        resolver = ldr._obj
+        if parser_name is None:
+            return resolver
+
+        orig_debug = ldr.format.debug
+        ldr.format.debug = True
+        parser = ldr.format._dbg_parsers[parser_name]
+        ldr.format.debug = orig_debug
+        if importer_name is None:
+            return parser
+
+        input = parser.output
+        ldr.format.debug = orig_debug
+
+        from jdaviz.core.registries import loader_importer_registry
+        ImporterCls = loader_importer_registry.members.get(importer_name)
+        return ImporterCls(app=self.app, resolver=resolver, input=input)
+
     @property
     def new_viewers(self):
         """
@@ -182,14 +206,17 @@ class ConfigHelper(HubListener):
                                           target=target,
                                           **kwargs)
 
-        # TODO: deprecate show_in_viewer?
-        show_in_viewer = kwargs.pop('show_in_viewer', True)
-        importer = resolver.importer
+        if 'show_in_viewer' in kwargs.keys():
+            if 'viewer' in kwargs.keys():
+                raise ValueError('Cannot specify both "show_in_viewer" and "viewer".')
+            warnings.warn('The "show_in_viewer" argument is deprecated and will be removed in a future version. Use "viewer" instead.', DeprecationWarning)  # noqa
+            kwargs['viewer'] = '*' if kwargs.pop('show_in_viewer') else []
 
+        importer = resolver.importer
         for k, v in kwargs.items():
             if hasattr(importer, k) and v is not None:
                 setattr(importer, k, v)
-        return importer(show_in_viewer=show_in_viewer)
+        return importer()
 
     @property
     def data_labels(self):
