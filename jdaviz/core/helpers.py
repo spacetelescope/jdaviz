@@ -466,7 +466,6 @@ class ConfigHelper(HubListener):
 
     def _handle_display_units(self, data, use_display_units=True):
         if use_display_units:
-            print(f"Calling _handle_display_units on {data}")
             if isinstance(data, Spectrum):
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
@@ -532,8 +531,8 @@ class ConfigHelper(HubListener):
                 # convert spectral axis to display units
                 if data.spectral_axis.unit != spectral_unit:
                     new_spec = (spectral_axis_conversion(data.spectral_axis.value,
-                                                        data.spectral_axis.unit,
-                                                        spectral_unit)
+                                                         data.spectral_axis.unit,
+                                                         spectral_unit)
                                 * u.Unit(spectral_unit))
                 else:
                     new_spec = data.spectral_axis

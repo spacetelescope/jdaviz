@@ -4531,8 +4531,6 @@ class AddResults(BasePluginComponent):
                 add_to_viewer_vis = [True]
                 preserved_attributes = [{}]
 
-        print(f"Adding {data_item} to {self.add_to_viewer_selected}")
-
         if label in self.app.data_collection:
             for viewer_ref in add_to_viewer_refs:
                 self.app.remove_data_from_viewer(viewer_ref, label)

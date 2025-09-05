@@ -304,7 +304,6 @@ class UnitConversion(PluginTemplateMixin):
         if isinstance(viewer, JdavizProfileView):
             if (viewer.state.x_display_unit == self.spectral_unit_selected
                     and viewer.state.y_display_unit == self.spectral_y_unit):
-                print("Returning from UnitConversion")
                 # data already existed in this viewer and display units were already set
                 return
 
