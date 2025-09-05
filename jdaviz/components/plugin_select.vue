@@ -47,7 +47,12 @@
             </v-list-item-action>
             <v-list-item-content>
               <v-list-item-title>
-                {{ selected.length < items.length ? 'Select All' : 'Clear All' }}
+                <template v-if="search_enabled && search_query">
+                  {{ selected.length < filtered_items.length ? 'Select All from Search' : 'Clear All from Search' }}
+                </template>
+                <template v-else>
+                  {{ selected.length < items.length ? 'Select All' : 'Clear All' }}
+                </template>
               </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
@@ -92,16 +97,28 @@ module.exports = {
       if (!this.search_enabled || !this.search_query) {
         return this.items;
       }
-      const query = this.search_query.toLowerCase();
-      // Get selected items (as objects or strings)
+      const query = this.search_query.toLowerCase().trim();
       const selected_set = new Set(
         Array.isArray(this.selected) ? this.selected.map(sel => (typeof sel === 'string' ? sel : sel.label || sel.text || sel)) : [this.selected]
       );
-      // Filter items by search
-      const filtered = this.items.filter(item => {
-        const label = (typeof item === 'string') ? item : (item.label || item.text || '');
-        return label.toLowerCase().includes(query);
-      });
+      let filtered;
+      // Wildcard matching: if query contains * or ?
+      if (/[*?]/.test(query)) {
+        // Escape regex special chars except * and ?
+        let regex_str = query.replace(/([.+^${}()|\[\]\\])/g, '\$1');
+        regex_str = regex_str.replace(/\*/g, '.*').replace(/\?/g, '.');
+        // Remove ^ and $ anchors for partial match
+        const regex = new RegExp(regex_str, 'i');
+        filtered = this.items.filter(item => {
+          const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+          return regex.test(label);
+        });
+      } else {
+        filtered = this.items.filter(item => {
+          const label = (typeof item === 'string') ? item : (item.label || item.text || '');
+          return label.toLowerCase().includes(query);
+        });
+      }
       // Add back any selected items not in filtered
       const all_labels = new Set(filtered.map(item => (typeof item === 'string' ? item : item.label || item.text || '')));
       this.items.forEach(item => {
@@ -118,10 +135,31 @@ module.exports = {
       this.search_query = value;
     },
     toggle_select_all() {
-      if (this.selected.length < this.items.length) {
-        this.$emit('update:selected', this.items.map(item => item.label || item.text || item));
+      if (this.search_enabled && this.search_query) {
+        // When search is active, select/clear only filtered items
+        const filtered_labels = this.filtered_items.map(item => item.label || item.text || item);
+        const selected_set = new Set(this.selected);
+        if (filtered_labels.some(label => !selected_set.has(label))) {
+          // Select all filtered items (add to selection)
+          let new_selected = Array.isArray(this.selected) ? [...this.selected] : [];
+          filtered_labels.forEach(label => {
+            if (!selected_set.has(label)) {
+              new_selected.push(label);
+            }
+          });
+          this.$emit('update:selected', new_selected);
+        } else {
+          // Clear all filtered items from selection
+          let new_selected = Array.isArray(this.selected) ? this.selected.filter(label => !filtered_labels.includes(label)) : [];
+          this.$emit('update:selected', new_selected);
+        }
       } else {
-        this.$emit('update:selected', []);
+        // No search: select/clear all items
+        if (this.selected.length < this.items.length) {
+          this.$emit('update:selected', this.items.map(item => item.label || item.text || item));
+        } else {
+          this.$emit('update:selected', []);
+        }
       }
     },
   },
