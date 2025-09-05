@@ -324,3 +324,64 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
 
         exported_extract = pext.export_extract()
         assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
+
+
+@pytest.mark.parametrize('method', ['load', 'loader_infrastructure'])
+def test_spectral_extraction_two_spectra_deconfigged(method,
+        deconfigged_helper, spectrum2d, mos_spectrum2d):
+    sp_ext_plugin = config.plugins['2D Spectral Extraction']
+    sp_ext_plugin.trace_dataset = spectrum_2
+
+    sp_ext_plugin.bg_dataset = spectrum_2
+    # sp_ext_plugin.bg_trace = 'From Plugin'
+
+    sp_ext_plugin.ext_dataset = spectrum_2
+    sp_ext_plugin.ext_trace = 'From Plugin'
+
+    sp_ext_2 = sp_ext_plugin.export_extract_spectrum()
+    if method == 'load':
+        spec2d_label = '2D Spectrum'
+        deconfigged_helper.load(spectrum2d, format='2D Spectrum', label=spec2d_label)
+        assert spec2d_label in deconfigged_helper.data_collection.labels
+
+        mos_spec2d_label = 'Mos 2D Spectrum'
+        deconfigged_helper.load(mos_spectrum2d, format='2D Spectrum', label=mos_spec2d_label)
+        assert mos_spec2d_label in deconfigged_helper.data_collection.labels
+    elif method == 'loader_infrastructure':
+        ldr = deconfigged_helper.loaders['object']
+        ldr.object = mos_spectrum2d
+        ldr.format = '2D Spectrum'
+        ldr.importer.auto_extract = True
+        ldr.importer()
+
+        # Swapping these causes a different issue
+        ldr.object = spectrum2d
+        ldr.format = '2D Spectrum'
+        ldr.importer.auto_extract = True
+        ldr.importer()
+
+    # Test that Nans are linked correctly
+    # and match to markers is worked correctly
+
+    # sp_ext = deconfigged_helper.plugins['2D Spectral Extraction']
+    # print('first selection', sp_ext.bg_dataset.selected)
+    # extracted_spectrum1 = sp_ext.export_extract_spectrum()
+    # print('first spectrum', sp_ext.ext_dataset.get_selected_spectrum())
+
+    # Test that 2nd spectra can be loaded in and that the spectral extraction runs
+    # by virtue of auto_extract = True
+
+    # sp_ext = deconfigged_helper.plugins['2D Spectral Extraction']
+    print('first', deconfigged_helper.get_data('2D Spectrum (auto-ext)'))
+    print()
+    print('second', deconfigged_helper.get_data('2D Spectrum (1) (auto-ext)'))
+    # print('third?', deconfigged_helper.get_data('2D Spectrum (2) (auto-ext)'))
+
+    # print('second selection', sp_ext.bg_dataset.selected)
+    #sp_ext.dataset = mos_spectrum2d
+    #extracted_spectrum2 = sp_ext.export_extract_spectrum()
+    #print('second spectrum', sp_ext.ext_dataset.get_selected_spectrum())
+
+    # print(extracted_spectrum1, extracted_spectrum2)
+    # print(extracted_spectrum2)
+    # assert not np.array_equal(extracted_spectrum1.flux, extracted_spectrum2.flux)
