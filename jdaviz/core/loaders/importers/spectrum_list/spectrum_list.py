@@ -110,9 +110,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     @observe('sources_selected')
     def _on_sources_selected_change(self, change={}):
         if len(self.sources_selected) == 0:
-            self.resolver.import_disabled = True
+            self.import_disabled = True
         else:
-            self.resolver.import_disabled = False
+            self.import_disabled = False
 
             self.input_in_sb = bool(np.any([sp.flux.unit.physical_type == 'surface brightness'
                                             for sp in self.sources.selected_obj]))
@@ -128,12 +128,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         elif change['new'] == '1D Spectrum Concatenated':
             # 2D Spectra load all for concatenated
             if self._is_2d_spectrum:
-                self.resolver.import_disabled = False
+                self.import_disabled = False
             else:
                 self._on_sources_selected_change()
 
         else:
-            self.resolver.import_disabled = False
+            self.import_disabled = False
 
     def input_to_list_of_spec(self, inp):
 
@@ -292,7 +292,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
             self.select_all_for_concatenation = True
             # Enable the import button upon initialization because otherwise having
             # no sources selected will disable it for other valid importers (e.g. Image).
-            self.resolver.import_disabled = False
+            self.import_disabled = False
 
     @property
     def output(self):

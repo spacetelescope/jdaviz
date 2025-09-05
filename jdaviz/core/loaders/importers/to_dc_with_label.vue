@@ -30,5 +30,20 @@
       hint="Select the viewer to use for the new data entry."
     ></plugin-viewer-create-new>
 
+    <v-row justify="end">
+      <plugin-action-button
+        :spinner="import_spinner"
+        :disabled="import_disabled"
+        :results_isolated_to_plugin="false"
+        :api_hints_enabled="api_hints_enabled"
+        @click="import_clicked">
+        {{ api_hints_enabled ?
+          'ldr.importer()'
+          :
+          'Import'
+        }}
+      </plugin-action-button>
+    </v-row>
+
   </v-container>
 </template>

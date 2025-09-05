@@ -6,7 +6,8 @@ from jdaviz.core.events import NewViewerMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AutoTextField,
-                                        ViewerSelectCreateNew)
+                                        ViewerSelectCreateNew,
+                                        with_spinner)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata
 
@@ -19,6 +20,9 @@ class BaseImporter(PluginTemplateMixin):
     # over any parsers not included in the list).  If not empty but no valid parsers are in
     # the list, the first remaining match will be used.
     parser_preference = []
+
+    import_disabled = Bool(False).tag(sync=True)
+    import_spinner = Bool(False).tag(sync=True)
 
     def __init__(self, app, resolver, input, **kwargs):
         self._input = input
@@ -57,6 +61,9 @@ class BaseImporter(PluginTemplateMixin):
     @property
     def user_api(self):
         return ImporterUserApi(self)
+
+    def vue_import_clicked(self, *args, **kwargs):
+        self.__call__()
 
 
 class BaseImporterToDataCollection(BaseImporter):
@@ -159,8 +166,8 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @observe('data_label_invalid_msg', 'viewer_label_invalid_msg')
     def _set_import_disabled(self, change={}):
-        self.resolver.import_disabled = (len(self.data_label_invalid_msg) > 0
-                                         or len(self.viewer_label_invalid_msg) > 0)
+        self.import_disabled = (len(self.data_label_invalid_msg) > 0
+                                or len(self.viewer_label_invalid_msg) > 0)
 
     def add_to_data_collection(self, data, data_label=None,
                                parent=None,
@@ -212,6 +219,7 @@ class BaseImporterToDataCollection(BaseImporter):
                 msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
                 self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error'))
 
+    @with_spinner('import_spinner')
     def __call__(self):
         if self.data_label_invalid_msg:
             raise ValueError(self.data_label_invalid_msg)
