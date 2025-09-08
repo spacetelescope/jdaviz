@@ -25,6 +25,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AddResultsMixin,
                                         TableMixin,
                                         with_spinner)
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               flux_conversion_general)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
@@ -779,16 +781,28 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             for param in model['parameters']:
                 current_quant = param['value']*u.Unit(param['unit'])
                 new_quant = None
+                spectral_axis = self.dataset.selected_obj.spectral_axis
+                # Just need a single spectral axis value to enable spectral_density equivalency
+                equivalencies = all_flux_unit_conversion_equivs(cube_wave=spectral_axis[0])
                 if ((axis == 'y' and param['unit'] == previous_y) or
                         (axis == 'x' and param['unit'] == previous_x)):
-                    new_quant = current_quant.to(self._units[axis])
+                    new_quant = flux_conversion_general(current_quant.value,
+                                                        current_quant.unit,
+                                                        self._units[axis],
+                                                        equivalencies=equivalencies)  # noqa
                 elif param['name'] in ('slope', 'c1'):
-                    new_quant = current_quant.to(u.Unit(self._units['y']) /
-                                                 u.Unit(self._units['x']))
+                    new_quant = flux_conversion_general(current_quant.value,
+                                                        current_quant.unit,
+                                                        u.Unit(self._units['y']) /
+                                                        u.Unit(self._units['x']),
+                                                        equivalencies=equivalencies)
                 elif param['name'][0] == 'c':
                     order = int(param['name'][1:])
-                    new_quant = current_quant.to(u.Unit(self._units['y']) /
-                                                 u.Unit(self._units['x'])**order)
+                    new_quant = flux_conversion_general(current_quant.value,
+                                                        current_quant.unit,
+                                                        u.Unit(self._units['y']) /
+                                                        u.Unit(self._units['x'])**order,
+                                                        equivalencies=equivalencies)
                 # Some parameters have units that aren't related to x or y
                 if new_quant is not None:
                     param['value'] = new_quant.value
@@ -1310,10 +1324,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self._warn_if_no_equation():
             return
         models_to_fit = self._reinitialize_with_fixed()
-        print(models_to_fit)
 
         spec = self.dataset.get_selected_spectrum(use_display_units=True)
-        print(spec)
 
         masked_spectrum = self._apply_subset_masks(spec,
                                                    self.spectral_subset)
