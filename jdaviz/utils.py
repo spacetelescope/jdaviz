@@ -6,6 +6,7 @@ import warnings
 from collections import deque
 from urllib.parse import urlparse
 import fnmatch
+import re
 
 import asdf
 import numpy as np
@@ -855,6 +856,11 @@ def get_reference_image_data(app, viewer_id=None):
     return None, -1
 
 
+def has_wildcard(s):
+    """Check if the string contains any shell-style wildcards: *, ?, [seq], [!seq], [^seq]."""
+    return bool(re.search(r'[\*\?]|\[[!^]?[^\]]+\]', s))
+
+
 def wildcard_match(obj, value, choices=None):
     """
     Wrapper that handles both single string and list/tuple of strings as inputs for ``value``.
@@ -894,7 +900,7 @@ def wildcard_match(obj, value, choices=None):
     def wildcard_match_list_of_str(internal_choices, internal_value):
         matched = []
         for v in internal_value:
-            if isinstance(v, str) and '*' in v:
+            if isinstance(v, str) and any(has_wildcard(v) for v in value if isinstance(v, str)):
                 # Check for wildcard matches
                 matched.extend(wildcard_match_str(internal_choices, v))
             else:
@@ -910,7 +916,7 @@ def wildcard_match(obj, value, choices=None):
             return value
 
     # any works for both str and iterable
-    if hasattr(obj, 'multiselect') and any('*' in v for v in value if isinstance(v, str)):
+    if hasattr(obj, 'multiselect') and any(has_wildcard(v) for v in value if isinstance(v, str)):
         if isinstance(value, str):
             obj.multiselect = True
             value = wildcard_match_str(choices, value)
