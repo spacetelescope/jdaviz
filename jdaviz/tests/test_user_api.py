@@ -150,7 +150,11 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
         (('*', '*:*'), (0, 1, 2, 3)),
         ('1:*', (0,)),
         ('*S*', (0, 1)),
-        (('*ERR*', '*DQ*'), (2, 3))])
+        (('*ERR*', '*DQ*'), (2, 3)),
+        # Brackets should be sanitized, if not this will fail
+        ('?: [SCI,1]', (0,)),
+        ('?:*', (0, 1, 2, 3)),
+    ])
 def test_wildcard_match_through_load(imviz_helper, multi_extension_image_hdu_wcs,
                                      selection, matches):
     data_labels = ['Image[SCI,1]',
