@@ -1,7 +1,7 @@
 <template>
   <v-btn :disabled="spinner || disabled"
     text
-    :color=buttonColor
+    :color="buttonColor"
     :class="api_hints_enabled ? 'api-hint' : null"
     @click="$emit('click')"
   >

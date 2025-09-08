@@ -1,13 +1,15 @@
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 from astropy.io import fits
 from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.core.registries import loader_importer_registry
+from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.template_mixin import AutoTextField, SelectFileExtensionComponent
+from jdaviz.core.template_mixin import (AutoTextField,
+                                        SelectFileExtensionComponent,
+                                        ViewerSelectCreateNew)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
@@ -48,6 +50,18 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
     ext_data_label_auto = Bool(True).tag(sync=True)
     ext_data_label_invalid_msg = Unicode().tag(sync=True)
 
+    ext_viewer_create_new_items = List([]).tag(sync=True)
+    ext_viewer_create_new_selected = Unicode().tag(sync=True)
+
+    ext_viewer_items = List([]).tag(sync=True)
+    ext_viewer_selected = Any([]).tag(sync=True)
+    ext_viewer_multiselect = Bool(True).tag(sync=True)
+
+    ext_viewer_label_value = Unicode().tag(sync=True)
+    ext_viewer_label_default = Unicode().tag(sync=True)
+    ext_viewer_label_auto = Bool(True).tag(sync=True)
+    ext_viewer_label_invalid_msg = Unicode().tag(sync=True)
+
     # HDUList-specific options
     input_hdulist = Bool(False).tag(sync=True)
     extension_items = List().tag(sync=True)
@@ -67,6 +81,29 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                             'ext_data_label_auto',
                                             'ext_data_label_invalid_msg')
 
+        self.ext_viewer = ViewerSelectCreateNew(self,
+                                                'ext_viewer_items',
+                                                'ext_viewer_selected',
+                                                'ext_viewer_create_new_items',
+                                                'ext_viewer_create_new_selected',
+                                                'ext_viewer_label_value',
+                                                'ext_viewer_label_default',
+                                                'ext_viewer_label_auto',
+                                                'ext_viewer_label_invalid_msg',
+                                                multiselect='ext_viewer_multiselect',
+                                                default_mode='empty')
+        supported_viewers = [{'label': '1D Spectrum',
+                              'reference': 'spectrum-1d-viewer'}]
+        if self.app.config == 'deconfigged':
+            self.ext_viewer_create_new_items = supported_viewers
+
+        def viewer_in_registry_names(viewer):
+            classes = [viewer_registry.members.get(item.get('reference')).get('cls')
+                       for item in supported_viewers]
+            return isinstance(viewer, tuple(classes))
+        self.ext_viewer.add_filter(viewer_in_registry_names)
+        self.ext_viewer.select_default()
+
         self.input_hdulist = isinstance(self.input, fits.HDUList)
         if self.input_hdulist:
             ext_options = [{'label': f"{index}: {hdu.name}",
@@ -82,9 +119,13 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                                                           manual_options=ext_options,
                                                           filters=[hdu_is_valid])
 
+    @staticmethod
+    def _get_supported_viewers():
+        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
+
     @property
     def user_api(self):
-        expose = ['auto_extract', 'ext_data_label']
+        expose = ['auto_extract', 'ext_data_label', 'ext_viewer']
         if self.input_hdulist:
             expose += ['extension']
         return ImporterUserApi(self, expose)
@@ -104,12 +145,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         except Exception:
             return False
         return True
-
-    @property
-    def default_viewer_reference(self):
-        # returns the registry name of the default viewer
-        # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'spectrum-2d-viewer'
 
     @observe('data_label_value')
     def _data_label_changed(self, msg={}):
@@ -171,12 +206,12 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                 # raising an error here will allow using specutils.Spectrum > Spectrum2D
                 raise
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         # get a copy of both of these before additional data entries changes defaults
         data_label = self.data_label_value
         ext_data_label = self.ext_data_label_value
 
-        super().__call__(show_in_viewer=show_in_viewer)
+        super().__call__()
 
         if not self.auto_extract:
             return
@@ -200,5 +235,4 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
         self.app.hub.broadcast(msg)
 
         if ext is not None:
-            self.add_to_data_collection(ext, ext_data_label, show_in_viewer=False)
-            self.load_into_viewer(ext_data_label, "spectrum-1d-viewer")
+            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)

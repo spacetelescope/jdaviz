@@ -176,6 +176,13 @@ class Imviz(ImageConfigHelper):
                                    **kw)
             return
 
+        if isinstance(show_in_viewer, str):
+            viewer = [show_in_viewer]
+        elif isinstance(show_in_viewer, bool):
+            viewer = '*' if show_in_viewer else []
+        else:
+            raise TypeError('show_in_viewer must be a bool or str')
+
         if isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
                 data = data.squeeze()
@@ -195,7 +202,7 @@ class Imviz(ImageConfigHelper):
                            data_label=data_label,
                            extension=extensions,
                            parent=kwargs.pop('parent', None),
-                           show_in_viewer=show_in_viewer,
+                           viewer=viewer,
                            gwcs_to_fits_sip=gwcs_to_fits_sip)
         elif isinstance(data, str) and data.endswith('.reg'):
             self._load(data,
@@ -203,7 +210,7 @@ class Imviz(ImageConfigHelper):
                        data_label=data_label,
                        extension=extensions,
                        parent=kwargs.pop('parent', None),
-                       show_in_viewer=show_in_viewer,
+                       viewer=viewer,
                        gwcs_to_fits_sip=gwcs_to_fits_sip)
         else:
             # if the data-label is provided but without an
@@ -230,7 +237,7 @@ class Imviz(ImageConfigHelper):
                        data_label_as_prefix=data_label_as_prefix,
                        extension=extensions,
                        parent=kwargs.pop('parent', None),
-                       show_in_viewer=show_in_viewer,
+                       viewer=viewer,
                        gwcs_to_fits_sip=gwcs_to_fits_sip)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):

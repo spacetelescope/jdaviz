@@ -140,54 +140,54 @@ class TestSpectrumListImporter:
     def test_on_sources_selected(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Baseline, no sources selected
-        assert importer_obj.resolver.import_disabled is True
+        assert importer_obj.import_disabled is True
 
         importer_obj.sources.selected = importer_obj.sources.choices[0]
-        assert importer_obj.resolver.import_disabled is False
+        assert importer_obj.import_disabled is False
 
         importer_obj.sources.selected = []
-        assert importer_obj.resolver.import_disabled is True
+        assert importer_obj.import_disabled is True
 
     def test_on_format_selected(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
         # Baseline, no sources selected
-        assert importer_obj.resolver.import_disabled is True
+        assert importer_obj.import_disabled is True
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
 
         # Still no selection
-        assert importer_obj.resolver.import_disabled is True
+        assert importer_obj.import_disabled is True
 
         # Still no selection
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
-        assert importer_obj.resolver.import_disabled is True
+        assert importer_obj.import_disabled is True
 
         importer_obj.sources.selected = importer_obj.sources.choices[0]
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
-        assert importer_obj.resolver.import_disabled is False
+        assert importer_obj.import_disabled is False
 
         # Still no selection
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
-        assert importer_obj.resolver.import_disabled is False
+        assert importer_obj.import_disabled is False
 
         importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
-        assert importer_obj.resolver.import_disabled is False
+        assert importer_obj.import_disabled is False
 
     def test_on_format_selected_2d(self, deconfigged_helper, spectrum2d):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
 
         # Baseline, no sources selected
-        assert importer_obj.resolver.import_disabled is True
+        assert importer_obj.import_disabled is True
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
 
         # Still no selection
-        assert importer_obj.resolver.import_disabled is True
+        assert importer_obj.import_disabled is True
 
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
-        assert importer_obj.resolver.import_disabled is False
+        assert importer_obj.import_disabled is False
 
         importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
-        assert importer_obj.resolver.import_disabled is False
+        assert importer_obj.import_disabled is False
 
     def test_input_to_list_of_spec(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
@@ -410,11 +410,11 @@ class TestSpectrumListConcatenatedImporter:
         if use_list:
             importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
             assert importer_obj.user_api.sources == []
-            assert importer_obj.resolver.import_disabled is True
+            assert importer_obj.import_disabled is True
         else:
             importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
             assert len(set(importer_obj.user_api.sources.selected).difference(set(importer_obj.sources.choices))) == 0 # noqa
-            assert importer_obj.resolver.import_disabled is False
+            assert importer_obj.import_disabled is False
 
         assert isinstance(importer_obj, SpectrumListImporter)
         # Sneaky negation of boolean to test the disable_dropdown attribute
