@@ -9,14 +9,16 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ViewerSelectCreateNew,
                                         with_spinner)
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import standardize_metadata, CONFIGS_WITH_LOADERS
+from jdaviz.utils import (standardize_metadata,
+                          CONFIGS_WITH_LOADERS,
+                          SPECTRAL_AXIS_COMP_LABELS)
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
            '_spectrum_assign_component_type']
 
 
 def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
-    if ('World' in str(comp_id) or str(comp_id) == 'Wave'):
+    if comp_id in SPECTRAL_AXIS_COMP_LABELS:
         if physical_type in ('frequency', 'length'):
             # link frequency to wavelength
             return 'spectral_axis'
