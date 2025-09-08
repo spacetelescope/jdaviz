@@ -4,7 +4,8 @@ import warnings
 import pytest
 
 from jdaviz.utils import (alpha_index, download_uri_to_path,
-                          get_cloud_fits, cached_uri, wildcard_match)
+                          get_cloud_fits, cached_uri, escape_brackets,
+                          has_wildcard, wildcard_match)
 from astropy.io import fits
 
 from jdaviz.conftest import FakeSpectrumListImporter
@@ -96,6 +97,27 @@ class FakeObject:
         pass
 
 
+def test_escape_brackets():
+    # Test that wildcard_match escapes brackets properly
+    assert escape_brackets("") == ""
+    assert escape_brackets("no brackets") == "no brackets"
+    assert escape_brackets("some [brackets]") == "some [[]brackets[]]"
+    assert escape_brackets("s[o]me [br]a[]ckets]") == "s[[]o[]]me [[]br[]]a[[][]]ckets[]]"
+
+
+def test_has_wildcard():
+    assert has_wildcard("") is False
+    assert has_wildcard("no wildcards") is False
+    assert has_wildcard("some * wildcard") is True
+    assert has_wildcard("some ? wildcard") is True
+    # Don't check for brackets anymore, just * and ?
+    assert has_wildcard("some [brackets] wildcard") is False
+    assert has_wildcard("some [brackets] and * wildcard") is True
+    assert has_wildcard("some [brackets] and ? wildcard") is True
+    assert has_wildcard("*") is True
+    assert has_wildcard("?") is True
+
+
 def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     default_choices = ['some choice', 'some good choice', 'good choice', 'maybe a bad choice']
     test_obj = FakeObject()
@@ -158,7 +180,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         # Test repeats
         ('*', '*:*'): test_obj.choices,
         # Test single selection
-        '1D Spectrum at index:*': test_obj.choices[:2],
+        '1D Spectrum at index: ?': test_obj.choices[:2],
         # Test multi-wildcard
         '*Exposure*': test_obj.choices[2:],
         # Test multi-selection
