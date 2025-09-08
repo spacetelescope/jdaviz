@@ -233,6 +233,19 @@ def test_mult_data_types(deconfigged_helper, image_nddata_wcs, spectrum2d, spect
     assert len(deconfigged_helper.viewers) == 3
 
 
+def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='sp_wavelength')
+    sp1d_freq = Spectrum(spectral_axis=spectrum1d.spectral_axis.to(u.Hz, equivalencies=u.spectral()),  # noqa
+                         flux=spectrum1d.flux,
+                         uncertainty=spectrum1d.uncertainty,
+                         mask=spectrum1d.mask,
+                         meta=spectrum1d.meta)
+    deconfigged_helper.load(sp1d_freq, format='1D Spectrum', data_label='sp_frequency')
+
+    # flux <> flux, uncertainty <> uncertainty, wavelength <> freq
+    assert len(deconfigged_helper.app.data_collection.external_links) == 3
+
+
 def test_load_image_mult_sci_extension(imviz_helper):
     # test loading an image with multiple SCI extensions and
     # ensure that automatic parenting logic is handled correctly

@@ -19,10 +19,13 @@ vid_map = {'spectrum-1d-viewer': '1D Spectrum',
 
 def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
     if ('World' in str(comp_id) or str(comp_id) == 'Wave'):
-        if physical_type == 'length':
-            return 'spectral_axis:length'
-        elif units == 'pix':
-            return 'spectral_axis:pix'
+        if physical_type in ('frequency', 'length'):
+            # link frequency to wavelength
+            return 'spectral_axis'
+        return 'spectral_axis:'+physical_type
+    if str(comp_id) == 'uncertainty':
+        # don't link with flux columns
+        return 'uncertainty:'+physical_type
     return physical_type
 
 
