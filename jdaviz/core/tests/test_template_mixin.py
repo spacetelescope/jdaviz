@@ -297,6 +297,11 @@ def test_select_plugin_component_map_value(imviz_helper, multi_extension_image_h
     assert selection_obj.selected == selection_obj.choices
     choices_before = selection_obj.choices
 
+    # Check set selected directly via ? wildcard
+    selection_obj.selected = '*MASK,?]'
+    assert selection_obj.selected == [selection_obj.choices[1]]
+    choices_before = selection_obj.choices
+
     selection_obj.fake_attribute = 'item1'
     # Check that a different attribute *does not* trigger the wildcard logic
     # i.e. it gets set as-is and doesn't go through `choices`
