@@ -18,6 +18,8 @@ __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin
 
 
 def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
+    if physical_type is None:
+        return None
     if comp_id in SPECTRAL_AXIS_COMP_LABELS:
         if physical_type in ('frequency', 'length'):
             # link frequency to wavelength
