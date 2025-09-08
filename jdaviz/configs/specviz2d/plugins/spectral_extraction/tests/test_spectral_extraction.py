@@ -10,9 +10,10 @@ from astropy.utils.data import download_file
 import numpy as np
 from packaging.version import Version
 from specreduce import tracing, background, extract
-from specutils import Spectrum
-
+from specutils import Spectrum, SpectralRegion
+from regions import CirclePixelRegion, PixCoord
 from glue.core.link_helpers import LinkSameWithUnits
+from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
@@ -392,33 +393,95 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     check.is_true(not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux))
     # print(extracted_spec2d.flux, extracted_mos_spec2d.flux)
 
-    # Check markers
-    pext = deconfigged_helper.app.get_tray_item_from_name('spectral-extraction-2d')
-    pext.keep_active = True
-    for k, v in pext.marks.items():
-        check.is_true(len(v.marks_list) > 0, msg=f'marks_list empty for {k}')
+    # Check mouseover mark and subsets, i.e. pixel <=> spectral_axis conversion
+    # between 2D Spectrum and 1D extracted Spectrum
 
-    # Check some specific marks (copied and pasted from test_plugin)
-    for mark in ['bg1_center', 'bg2_center']:
-        # assert pext.marks[mark].marks_list[0].visible is False
-        check.is_false(pext.marks[mark].marks_list[0].visible)
+    extract_plg = deconfigged_helper.app.get_tray_item_from_name('spectral-extraction-2d')
 
-    for mark in ['ext_lower', 'ext_upper']:
-        # assert pext.marks[mark].marks_list[0].visible is True
-        check.is_true(pext.marks[mark].marks_list[0].visible)
-        # assert len(pext.marks[mark].marks_list[0].x) > 0
-        check.is_true(len(pext.marks[mark].marks_list[0].x) > 0)
+    viewer_1d = extract_plg.spectrum_1d_viewers[0]
+    viewer_2d = extract_plg.spectrum_2d_viewers[0]
+    x_min = viewer_2d.axis_x.scale.min
+    x_max = viewer_2d.axis_x.scale.max
+    midway = (x_min + x_max) / 2
 
-    # Check linking
+    # create subset in 2d viewer, want data in 1d viewer
+    viewer_2d.apply_roi(XRangeROI(x_min + 0.5 * midway, x_max - 0.5 * midway))
+    subset_drawn_2d = viewer_1d.native_marks[-1]
+
+    # get x and y components to compute subset mask
+    y1 = subset_drawn_2d.y
+    x1 = subset_drawn_2d.x
+
+    subset_highlighted_region1 = x1[np.isfinite(y1)]
+    min_value_subset = np.min(subset_highlighted_region1)
+    max_value_subset = np.max(subset_highlighted_region1)
+
+    expected_min = 0
+    expected_max = 1
+    tolerance = 1e-6
+    assert np.allclose(min_value_subset, expected_min, atol=tolerance)
+    assert np.allclose(max_value_subset, expected_max, atol=tolerance)
+
+    # now create a subset in the spectrum-viewer, and determine if
+    # subset is linked correctly in spectrum2d-viewer
+    x_reg = 1
+    y_reg = 2
+    spec_reg = SpectralRegion(x_reg * u.um, y_reg * u.um)
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(spec_reg, edit_subset='Subset 1')
+
+    mask = viewer_2d._get_layer('Subset 1')._get_image()
+    x_coords = np.nonzero(mask)[1]
+    min_value_subset = x_coords.min()
+    max_value_subset = x_coords.max()
+
+    tolerance = 1
+    expected_min = x_reg
+    expected_max = y_reg
+
+    assert np.allclose(min_value_subset, expected_min, atol=tolerance)
+    assert np.allclose(max_value_subset, expected_max, atol=tolerance)
+
+    # create a subset with a single pixel:
+    regions = [
+        # create a subset with a single pixel:
+        CirclePixelRegion(PixCoord(0, 1), radius=0.7),
+        # two-pixel region:
+        CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)
+    ]
+    deconfigged_helper.plugins['Subset Tools'].import_region(regions, combination_mode='new')
+
+    extract_plg = deconfigged_helper.app.get_tray_item_from_name('spectral-extraction-2d')
+    # deconfigged_helper.plugins['2D Spectral Extraction']
+
+    # sample_marks = ['bg1_center', 'bg2_center', 'ext_lower', 'ext_upper', 'trace']
+    # marks = extract_plg.marks
+    # with extract_plg.as_active():
+    #     for mark in sample_marks:
+    #         print(mark)
+    #         assert mark in marks
+    #
+    #         m = marks[mark].marks_list[0]
+    #         # assert m.visible is True
+    #         assert not len(m.x)
+    #         # before_x = m.x
+
+
+        # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
+        # slice_values = [4.62280007e-07, 4.62360028e-07]
+        # slice_plg.value = slice_values[1]
+        # assert mark.x[1] == before_x[1]
+
+    # raise(Exception())
+    # Check linking, e.g.
+    # 2D Spectrum <=> 2D Spectrum (auto-ext)
+    # 2D Spectrum <=> Mos 2D Spectrum
+    # 2D Spectrum <=> Mos 2D Spectrum Extraction
+    assert len(dc.external_links) == 3
     for link in dc.external_links:
-        print(dir(link))
         parent = link.data1
         child = link.data2
-        print('link:', parent.label, '<=>', child.label)
+        check.is_true(parent.label == spec2d_label)
+        check.is_true(child.label in [spec2d_ext_label, mos_spec2d_label, mos_spec2d_ext_label])
         # check.is_true(child.label == spec_ext, msg='link output data label mismatch')
         assert isinstance(link, LinkSameWithUnits)
-        # if (input_data is spec2d_data and output_data is spec2d_ext_data) or \
-        #    (input_data is spec2d_ext_data and output_data is spec2d_data):
-        #     links_between.append(link)
-        #     print('success:', spec, spec_ext)
-        print()
