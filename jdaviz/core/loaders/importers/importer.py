@@ -193,6 +193,8 @@ class BaseImporterToDataCollection(BaseImporter):
                                cls=None):
         if data_label is None:
             data_label = self.data_label_value.strip()
+        else:
+            data_label = data_label.strip()
         if hasattr(data, 'meta'):
             try:
                 data.meta = standardize_metadata(data.meta)

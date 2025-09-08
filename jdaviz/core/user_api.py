@@ -105,9 +105,9 @@ class UserApiWrapper:
             return
 
         elif isinstance(exp_obj, AutoTextField):
-            exp_obj.value = value
             if value != exp_obj.default:
                 exp_obj.auto = False
+            exp_obj.value = value
             return
 
         elif isinstance(exp_obj, PlotOptionsSyncState):
