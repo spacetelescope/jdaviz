@@ -160,7 +160,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         # Test single selection
         '1D Spectrum at index: ?': test_obj.choices[:2],
         # Test multi-wildcard
-        '*Expo[sure]*': test_obj.choices[2:],
+        '*Exposure*': test_obj.choices[2:],
         # Test multi-selection
         ('*at index: 1', 'Exposure 0*'): test_obj.choices[1:-1]}
 

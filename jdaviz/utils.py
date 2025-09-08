@@ -856,9 +856,14 @@ def get_reference_image_data(app, viewer_id=None):
     return None, -1
 
 
+def escape_brackets(s):
+    # Replace [ with [[] and ] with []]
+    return re.sub(r'([\[\]])', r'[\1]', s)
+
+
 def has_wildcard(s):
-    """Check if the string contains any shell-style wildcards: *, ?, [seq], [!seq], [^seq]."""
-    return bool(re.search(r'[\*\?]|\[[!^]?[^\]]+\]', s))
+    """Check if the string contains any shell-style wildcards: * or ?."""
+    return bool(re.search(r'[\*\?]', s))
 
 
 def wildcard_match(obj, value, choices=None):
@@ -869,9 +874,9 @@ def wildcard_match(obj, value, choices=None):
     in ``value``. If no matches are found, returns a list containing ``value`` itself.
 
     .. note::
-       ``fnmatch`` provides support for all Unix style wildcards including ``*``, ``?``,
-       ``[seq]``, and ``[!seq]``. If you want to exclude those and only allow ``*``,
-       you must sanitize ``value`` yourself.
+       ``fnmatch`` provides support for all Unix style wildcards including ``*``, ``?``.
+       We do not check for '[seq]`` and '[!seq]' because image extensions as we handle them
+       contain brackets.
 
     Parameters
     ----------
@@ -892,6 +897,8 @@ def wildcard_match(obj, value, choices=None):
         A list of matched strings or ``value``/``[value]`` if no matches found.
     """
     def wildcard_match_str(internal_choices, internal_value):
+        # Assume we want to escape brackets as in the case of images with
+        # multiple extensions
         matched = fnmatch.filter(internal_choices, internal_value)
         if len(matched) == 0:
             matched = [internal_value]
