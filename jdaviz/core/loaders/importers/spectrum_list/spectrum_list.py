@@ -88,6 +88,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # only enable the import button if at least one spectrum is selected.
         self.resolver.observe(self._on_format_selected_change, names='format_selected')
 
+    @staticmethod
+    def _get_supported_viewers():
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
+
     @property
     def user_api(self):
         expose = ['sources', 'convert_to_flux_density']
@@ -107,9 +111,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     @observe('sources_selected')
     def _on_sources_selected_change(self, change={}):
         if len(self.sources_selected) == 0:
-            self.resolver.import_disabled = True
+            self.import_disabled = True
         else:
-            self.resolver.import_disabled = False
+            self.import_disabled = False
 
             self.input_in_sb = bool(np.any([sp.flux.unit.physical_type == 'surface brightness'
                                             for sp in self.sources.selected_obj]))
@@ -125,12 +129,12 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         elif change['new'] == '1D Spectrum Concatenated':
             # 2D Spectra load all for concatenated
             if self._is_2d_spectrum:
-                self.resolver.import_disabled = False
+                self.import_disabled = False
             else:
                 self._on_sources_selected_change()
 
         else:
-            self.resolver.import_disabled = False
+            self.import_disabled = False
 
     def input_to_list_of_spec(self, inp):
 
@@ -219,23 +223,17 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return spec
 
-    @property
-    def default_viewer_reference(self):
-        # returns the registry name of the default viewer
-        # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'spectrum-1d-viewer'
-
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         if not self.sources.selected:
             raise ValueError("No sources selected.")
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
                 data_label = f"{self.data_label_value}_{item_dict['suffix']}"
-                self.add_to_data_collection(spec_obj, data_label, show_in_viewer=True)
+                self.add_to_data_collection(spec_obj, data_label)
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
@@ -292,7 +290,7 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
             self.select_all_for_concatenation = True
             # Enable the import button upon initialization because otherwise having
             # no sources selected will disable it for other valid importers (e.g. Image).
-            self.resolver.import_disabled = False
+            self.import_disabled = False
 
     @property
     def output(self):
@@ -334,10 +332,9 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
                                             wave_units,
                                             flux_units)
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
         data_label = self.data_label_value
-        self.add_to_data_collection(self.output, f"{data_label}",
-                                    show_in_viewer=show_in_viewer)
+        self.add_to_data_collection(self.output, f"{data_label}")
 
         # Do we need to reset in case user switches back to Spectrum List?
         # self.sources.selected = []

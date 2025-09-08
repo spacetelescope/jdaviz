@@ -57,6 +57,16 @@ def test_resolver_matching(specviz_helper):
     assert len(specviz_helper.app.data_collection) == 1
 
 
+def test_dbg_access(deconfigged_helper):
+    test_data = np.array([1, 2, 3])
+    deconfigged_helper.loaders['object'].object = test_data
+
+    # test that _get_loader is successful to grab the object
+    # and expose the underlying error
+    with pytest.raises(ValueError, match="Cannot load as image with ndim=1"):  # noqa
+        deconfigged_helper._get_loader('object', 'object', 'Image')
+
+
 def test_trace_importer(specviz2d_helper, spectrum2d):
     specviz2d_helper._load(spectrum2d, format='2D Spectrum')
 
@@ -77,6 +87,27 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     # import through load method
     specviz2d_helper._load(trace, data_label='Trace 2')
     assert specviz2d_helper.app.data_collection[-1].label == 'Trace 2'
+
+
+def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum2d
+
+    assert ldr.importer.viewer.create_new == '2D Spectrum'
+    assert ldr.importer.viewer.new_label == '2D Spectrum'
+    assert ldr.importer.ext_viewer.create_new == '1D Spectrum'
+    assert ldr.importer.ext_viewer.new_label == '1D Spectrum'
+
+    ldr.importer.ext_viewer.create_new = ''
+    assert ldr.importer.ext_viewer == []
+
+    assert ldr.importer.auto_extract
+    ldr.importer()
+
+    # created 2D Spectrum viewer, did auto-extract,
+    # but did not create 1D Spectrum viewer
+    assert len(deconfigged_helper.viewers) == 1
+    assert len(deconfigged_helper.app.data_collection) == 2
 
 
 def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
