@@ -20,10 +20,10 @@ def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
         if physical_type in ('frequency', 'length'):
             # link frequency to wavelength
             return 'spectral_axis'
-        return 'spectral_axis:'+physical_type
+        return f'spectral_axis:{physical_type}'
     if str(comp_id) == 'uncertainty':
         # don't link with flux columns
-        return 'uncertainty:'+physical_type
+        return f'uncertainty:{physical_type}'
     return physical_type
 
 
