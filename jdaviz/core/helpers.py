@@ -683,7 +683,6 @@ class ConfigHelper(HubListener):
                 warnings.warn(f"Not able to get {data_label} returned with"
                               f" subset {mask_subset} applied of type {cls}."
                               f" Exception: {e}")
-                raise
             if spatial_subset:
                 # Return collapsed Spectrum object with spectral subset mask applied
                 data.mask = spec_subset.mask
