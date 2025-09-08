@@ -6,6 +6,7 @@ import warnings
 from collections import deque
 from urllib.parse import urlparse
 import fnmatch
+import re
 
 import asdf
 import numpy as np
@@ -865,6 +866,16 @@ def get_reference_image_data(app, viewer_id=None):
     return None, -1
 
 
+def escape_brackets(s):
+    # Replace [ with [[] and ] with []]
+    return re.sub(r'([\[\]])', r'[\1]', s)
+
+
+def has_wildcard(s):
+    """Check if the string contains any shell-style wildcards: * or ?."""
+    return bool(re.search(r'[\*\?]', s))
+
+
 def wildcard_match(obj, value, choices=None):
     """
     Wrapper that handles both single string and list/tuple of strings as inputs for ``value``.
@@ -873,9 +884,9 @@ def wildcard_match(obj, value, choices=None):
     in ``value``. If no matches are found, returns a list containing ``value`` itself.
 
     .. note::
-       ``fnmatch`` provides support for all Unix style wildcards including ``*``, ``?``,
-       ``[seq]``, and ``[!seq]``. If you want to exclude those and only allow ``*``,
-       you must sanitize ``value`` yourself.
+       ``fnmatch`` provides support for all Unix style wildcards including ``*``, ``?``.
+       We do not check for '[seq]`` and '[!seq]' because image extensions as we handle them
+       contain brackets.
 
     Parameters
     ----------
@@ -896,6 +907,9 @@ def wildcard_match(obj, value, choices=None):
         A list of matched strings or ``value``/``[value]`` if no matches found.
     """
     def wildcard_match_str(internal_choices, internal_value):
+        # Assume we want to escape brackets as in the case of images with
+        # multiple extensions
+        internal_value = escape_brackets(internal_value)
         matched = fnmatch.filter(internal_choices, internal_value)
         if len(matched) == 0:
             matched = [internal_value]
@@ -904,7 +918,7 @@ def wildcard_match(obj, value, choices=None):
     def wildcard_match_list_of_str(internal_choices, internal_value):
         matched = []
         for v in internal_value:
-            if isinstance(v, str) and '*' in v:
+            if isinstance(v, str) and any(has_wildcard(v) for v in value):
                 # Check for wildcard matches
                 matched.extend(wildcard_match_str(internal_choices, v))
             else:
@@ -920,7 +934,7 @@ def wildcard_match(obj, value, choices=None):
             return value
 
     # any works for both str and iterable
-    if hasattr(obj, 'multiselect') and any('*' in v for v in value if isinstance(v, str)):
+    if hasattr(obj, 'multiselect') and any(has_wildcard(v) for v in value if isinstance(v, str)):
         if isinstance(value, str):
             obj.multiselect = True
             value = wildcard_match_str(choices, value)

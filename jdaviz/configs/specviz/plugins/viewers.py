@@ -51,7 +51,17 @@ class Spectrum1DViewer(JdavizProfileView):
             if not len(self.layers):
                 return True
 
-            data_xunit = data.get_component(str(self.state.x_att)).units
+            # If we load, e.g.,  one spectrum in Frequency and one in Wavelength,
+            # the viewer state x_att won't match the component of the second spectrum since
+            # (as of Specutils 2.X) they're no longer both the non-specific "World 0"
+            if str(self.state.x_att) in data.component_ids():
+                data_xunit = data.get_component(str(self.state.x_att)).units
+            else:
+                for comp in ('Wavelength', 'Frequency', 'Energy',
+                             'Velocity', 'Wavenumber', 'World 0'):
+                    if comp in data.component_ids():
+                        data_xunit = data.get_component(comp).units
+                        break
             data_yunit = data.get_component('flux').units
 
             viewer_xunit = self.state.x_display_unit
