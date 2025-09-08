@@ -395,7 +395,6 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
 
     # Check mouseover mark and subsets, i.e. pixel <=> spectral_axis conversion
     # between 2D Spectrum and 1D extracted Spectrum
-
     extract_plg = deconfigged_helper.app.get_tray_item_from_name('spectral-extraction-2d')
 
     viewer_1d = extract_plg.spectrum_1d_viewers[0]
@@ -404,8 +403,18 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     x_max = viewer_2d.axis_x.scale.max
     midway = (x_min + x_max) / 2
 
+    # Confirm that no subsets are present to start with
+    assert not any('subset' in str(layer).lower() for layer in viewer_1d.layers)
+    assert not any('subset' in str(layer).lower() for layer in viewer_2d.layers)
+
+    # Following the procedure from ``test_subsets.py``
     # create subset in 2d viewer, want data in 1d viewer
     viewer_2d.apply_roi(XRangeROI(x_min + 0.5 * midway, x_max - 0.5 * midway))
+    # Confirm that subsets are present in both viewers
+    subset_label = 'Subset 1'
+    assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+    assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+
     subset_drawn_2d = viewer_1d.native_marks[-1]
 
     # get x and y components to compute subset mask
@@ -418,42 +427,30 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
 
     expected_min = 0
     expected_max = 1
-    tolerance = 1e-6
-    assert np.allclose(min_value_subset, expected_min, atol=tolerance)
-    assert np.allclose(max_value_subset, expected_max, atol=tolerance)
+    assert min_value_subset == expected_min
+    assert max_value_subset == expected_max
 
     # now create a subset in the spectrum-viewer, and determine if
     # subset is linked correctly in spectrum2d-viewer
-    x_reg = 1
-    y_reg = 2
-    spec_reg = SpectralRegion(x_reg * u.um, y_reg * u.um)
+    x_min_reg = 1
+    x_max_reg = 2
+    spec_reg = SpectralRegion(x_min_reg * u.um, x_max_reg * u.um)
     st = deconfigged_helper.plugins['Subset Tools']
-    st.import_region(spec_reg, edit_subset='Subset 1')
+    st.import_region(spec_reg, edit_subset=subset_label)
 
-    mask = viewer_2d._get_layer('Subset 1')._get_image()
+    # Check again
+    assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+    assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+
+    mask = viewer_2d._get_layer(subset_label)._get_image()
     x_coords = np.nonzero(mask)[1]
     min_value_subset = x_coords.min()
     max_value_subset = x_coords.max()
 
-    tolerance = 1
-    expected_min = x_reg
-    expected_max = y_reg
+    assert min_value_subset == x_min_reg
+    assert max_value_subset == x_max_reg
 
-    assert np.allclose(min_value_subset, expected_min, atol=tolerance)
-    assert np.allclose(max_value_subset, expected_max, atol=tolerance)
-
-    # create a subset with a single pixel:
-    regions = [
-        # create a subset with a single pixel:
-        CirclePixelRegion(PixCoord(0, 1), radius=0.7),
-        # two-pixel region:
-        CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)
-    ]
-    deconfigged_helper.plugins['Subset Tools'].import_region(regions, combination_mode='new')
-
-    extract_plg = deconfigged_helper.app.get_tray_item_from_name('spectral-extraction-2d')
-    # deconfigged_helper.plugins['2D Spectral Extraction']
-
+    # TODO: Test marks/mouseover information
     # sample_marks = ['bg1_center', 'bg2_center', 'ext_lower', 'ext_upper', 'trace']
     # marks = extract_plg.marks
     # with extract_plg.as_active():
@@ -462,15 +459,10 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     #         assert mark in marks
     #
     #         m = marks[mark].marks_list[0]
-    #         # assert m.visible is True
-    #         assert not len(m.x)
-    #         # before_x = m.x
-
-
-        # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
-        # slice_values = [4.62280007e-07, 4.62360028e-07]
-        # slice_plg.value = slice_values[1]
-        # assert mark.x[1] == before_x[1]
+    #         print(m)
+            # assert m.visible is True
+            # assert not len(m.x)
+            # before_x = m.x
 
     # raise(Exception())
     # Check linking, e.g.
