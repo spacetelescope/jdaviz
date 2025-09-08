@@ -25,8 +25,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         AddResultsMixin,
                                         TableMixin,
                                         with_spinner)
-from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
-                                               flux_conversion_general)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
