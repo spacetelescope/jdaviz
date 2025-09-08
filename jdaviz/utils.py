@@ -899,6 +899,7 @@ def wildcard_match(obj, value, choices=None):
     def wildcard_match_str(internal_choices, internal_value):
         # Assume we want to escape brackets as in the case of images with
         # multiple extensions
+        internal_value = escape_brackets(internal_value)
         matched = fnmatch.filter(internal_choices, internal_value)
         if len(matched) == 0:
             matched = [internal_value]
