@@ -766,6 +766,9 @@ class Application(VuetifyTemplate, HubListener):
 
                     # Create link if component-types match
                     if new_comp._component_type == existing_comp._component_type:
+                        msg = SnackbarMessage(text=f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})",  # noqa
+                                              color='info', sender=self)
+                        self.hub.broadcast(msg)
                         link = LinkSameWithUnits(new_comp, existing_comp)
                         new_links.append(link)
                         # only need one link for the new component, reparenting will handle
