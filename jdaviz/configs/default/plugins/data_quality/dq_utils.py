@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 from matplotlib.colors import ListedColormap, rgb2hex
 from glue.config import stretches
-from astropy.utils import minversion
 from astropy.table import Table
 
 from jdaviz.utils import STDATAMODELS_LT_402
