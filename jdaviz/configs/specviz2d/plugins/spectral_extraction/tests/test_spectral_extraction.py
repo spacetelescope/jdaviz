@@ -429,6 +429,54 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     assert any(subset_label in str(layer) for layer in viewer_1d.layers)
     assert any(subset_label in str(layer) for layer in viewer_2d.layers)
 
+    subset_drawn_2d = viewer_1d.native_marks[-1]
+    # get x and y components to compute subset mask
+    y1 = subset_drawn_2d.y
+    x1 = subset_drawn_2d.x
+
+    subset_highlighted_region1 = x1[np.isfinite(y1)]
+    min_value_subset = np.min(subset_highlighted_region1)
+    max_value_subset = np.max(subset_highlighted_region1)
+
+    expected_min = 0
+    expected_max = 1
+    atol=1e-2
+    try:
+        assert_allclose(min_value_subset, expected_min,atol=atol)
+        assert_allclose(max_value_subset, expected_max, atol=atol)
+    except AssertionError:
+        check.is_true(False, msg=f'Subset in 1D viewer has incorrect x range\n'
+                                 f'Expected approx: {expected_min}, {expected_max}\n'
+                                 f'Found: {min_value_subset}, {max_value_subset}')
+
+    # now create a subset in the spectrum-viewer, and determine if
+    # subset is linked correctly in spectrum2d-viewer
+    x_min_reg = 1
+    x_max_reg = 2
+    spec_reg = SpectralRegion(x_min_reg * u.um, x_max_reg * u.um)
+    st = deconfigged_helper.plugins['Subset Tools']
+    st.import_region(spec_reg, edit_subset=subset_label)
+
+    # Check again
+    assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+    assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+
+    mask = viewer_2d._get_layer(subset_label)._get_image()
+
+    try:
+        x_coords = np.nonzero(mask)[1]
+        min_value_subset = x_coords.min()
+        max_value_subset = x_coords.max()
+
+        assert_allclose(min_value_subset, x_min_reg, atol=atol)
+        assert_allclose(max_value_subset, x_max_reg, atol=atol)
+    except ValueError:
+        check.is_true(False, msg='Subset in 2D viewer has no non-zero values')
+    except AssertionError:
+        check.is_true(False, msg=f'Subset in 2D viewer has incorrect x range\n'
+                                 f'Expected approx: {x_min_reg}, {x_max_reg}\n'
+                                 f'Found: {min_value_subset}, {max_value_subset}')
+
     # Now trying through the viewer ROI
     roi = XRangeROI(0, 2)
     viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['bqplot:xrange']
