@@ -12,7 +12,6 @@ from numpy.testing import assert_allclose
 from packaging.version import Version
 from specreduce import tracing, background, extract
 from specutils import Spectrum, SpectralRegion
-from regions import CirclePixelRegion, PixCoord
 from glue.core.link_helpers import LinkSameWithUnits
 from glue.core.roi import XRangeROI
 
@@ -440,9 +439,9 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
 
     expected_min = 0
     expected_max = 1
-    atol=1e-2
+    atol = 1e-2
     try:
-        assert_allclose(min_value_subset, expected_min,atol=atol)
+        assert_allclose(min_value_subset, expected_min, atol=atol)
         assert_allclose(max_value_subset, expected_max, atol=atol)
     except AssertionError:
         check.is_true(False, msg=f'Subset in 1D viewer has incorrect x range\n'
