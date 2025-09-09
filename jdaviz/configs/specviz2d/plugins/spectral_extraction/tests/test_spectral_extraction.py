@@ -492,8 +492,8 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     # Not 100% sure why there is a difference of 1 in the number of marks
     # but leaving this here for posterity.
     assert len(viewer_2d.native_marks) == 7
-    # assert len(viewer_1d.native_marks) == 3 or 6
-    check.is_true(len(viewer_1d.native_marks) == 3, msg='unexpected number of marks in 1D viewer')
+    check.is_true(len(viewer_1d.native_marks) == 6,
+                  msg='unexpected number of marks in 1D viewer (due to missing extracted spectra)')
 
     # Checking that panning one viewer pans the other
     viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['jdaviz:panzoom_matchx']
