@@ -389,11 +389,9 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
         check.is_true(np.any(~np.isnan(extracted_mos_spec2d.flux)),
                       msg='second extraction all NaNs')
 
-        # TODO: Investigate why they're coming out identical!
-        # assert not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux)
-        check.is_true(not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux),
-                      msg='extracted spectra are identical')
-        # print(extracted_spec2d.flux, extracted_mos_spec2d.flux)
+        assert not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux)
+        # check.is_true(not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux),
+        #               msg='extracted spectra are identical')
 
     # Check linking, e.g.
     # 2D Spectrum <=> 2D Spectrum (auto-ext)
@@ -416,9 +414,8 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     viewer_1d = deconfigged_helper.app.get_viewer('1D Spectrum')
 
     # We'll be panning along x so keep x_min, x_max generic but specify y_min_1d, y_max_1d
-    x_min, x_max = viewer_2d.get_limits()[:2]
-    y_min_1d, y_max_1d = viewer_1d.get_limits()[2:]
-    midway = (x_min + x_max) / 2
+    x_min_2d, x_max_2d = viewer_2d.get_limits()[:2]
+    midway = (x_min_2d + x_max_2d) / 2
 
     # Confirm that no subsets are present to start with
     assert not any('subset' in str(layer).lower() for layer in viewer_1d.layers)
@@ -426,7 +423,7 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
 
     # Following the procedure from ``test_subsets.py``
     # create subset in 2d viewer, want data in 1d viewer
-    viewer_2d.apply_roi(XRangeROI(x_min + 0.5 * midway, x_max - 0.5 * midway))
+    viewer_2d.apply_roi(XRangeROI(x_min_2d + 0.5 * midway, x_max_2d - 0.5 * midway))
     # Confirm that subsets are present in both viewers
     subset_label = 'Subset 1'
     assert any(subset_label in str(layer) for layer in viewer_1d.layers)
@@ -453,24 +450,23 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     # Checking that panning one viewer pans the other
     viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['jdaviz:panzoom_matchx']
 
-    # Check before
-    try:
-        assert_allclose(viewer_1d.get_limits(), (x_min, x_max, y_min_1d, y_max_1d))
-    except AssertionError:
-        check.is_true(False, msg='initial limits between viewers do not match')
-
     # Simulate a pan by changing the x-axis limits
-    new_x_min = x_min + 1
-    new_x_max = x_max + 1
+    x_min_1d, x_max_1d, y_min_1d, y_max_1d = viewer_1d.get_limits()
+    dx = 1
     # 2D viewer pan
-    viewer_2d.set_limits(x_min=new_x_min, x_max=new_x_max)
+    viewer_2d.set_limits(x_min=x_min_2d+dx, x_max=x_max_2d+dx)
+    # Double check that the 2D viewer limits were actually changed
+    assert_allclose(viewer_2d.get_limits()[:2], (x_min_2d+dx, x_max_2d+dx))
 
     # Notify the active tool that the limits have changed (simulate pan event)
     viewer_2d.toolbar.active_tool.on_limits_change()
 
     # Check that the 1D viewer updated its x-axis limits to match the 2D viewer
+    expected = (x_min_1d + dx, x_max_1d + dx, y_min_1d, y_max_1d)
     try:
-        assert_allclose(viewer_1d.get_limits(),
-                        (new_x_min, new_x_max, y_min_1d, y_max_1d))
+        assert_allclose(viewer_1d.get_limits(), expected)
     except AssertionError:
-        check.is_true(False, msg='final limits between viewers do not match')
+        check.is_true(False, msg=f'1d viewer did not shift correctly\n'
+                                 # f'2D viewer limits: {viewer_2d.get_limits()}\n'
+                                 f'1D viewer x limits: {viewer_1d.get_limits()[:2]}\n'
+                                 f'Expected approx: {expected[:2]}')
