@@ -207,6 +207,13 @@ class BaseImporterToDataCollection(BaseImporter):
             viewer_select.create_new.selected = ''
             viewer_select.selected = [viewer_label]
 
+        elif len(viewer_select.selected) == 0:
+            # just send a snackbar as feedback
+            if len(self.app._jdaviz_helper.viewers):
+                msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
+            else:
+                msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
+            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
         else:
             failed_viewers = []
             for viewer_label in viewer_select.selected:
