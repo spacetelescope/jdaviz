@@ -140,7 +140,6 @@ def load_flag_map(mission_or_instrument=None, path=None):
         flag_mapping[int(flag)] = dict(name=name, description=desc)
 
     if STDATAMODELS_LT_402 and mission_or_instrument == 'jwst':
-        print("Less than 4.0.2")
         flag_mapping[8]['name'] = 'UNRELIABLE_ERROR'
 
     return flag_mapping
