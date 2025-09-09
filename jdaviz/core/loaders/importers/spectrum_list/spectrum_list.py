@@ -80,7 +80,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     multiselect='sources_multiselect',
                                                     manual_options=sources_options)
 
-        self.sources.selected = []
+        self.sources.selected = [self.sources.choices[0]]
         self._sources_items_helper = deepcopy(self.sources.items)
 
         # TODO: This observer will likely be removed in follow-up effort

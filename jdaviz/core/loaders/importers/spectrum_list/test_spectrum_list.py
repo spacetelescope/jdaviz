@@ -58,7 +58,7 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'disable_dropdown')
         assert hasattr(importer_obj, 'sources')
 
-        assert importer_obj.sources.selected == []
+        assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
 
         assert importer_obj._sources_items_helper == importer_obj.sources.items
 
@@ -139,11 +139,9 @@ class TestSpectrumListImporter:
 
     def test_on_sources_selected(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        # Baseline, no sources selected
-        assert importer_obj.import_disabled is True
-
-        importer_obj.sources.selected = importer_obj.sources.choices[0]
+        # Baseline, default first source selected
         assert importer_obj.import_disabled is False
+        assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
 
         importer_obj.sources.selected = []
         assert importer_obj.import_disabled is True
@@ -151,22 +149,28 @@ class TestSpectrumListImporter:
     def test_on_format_selected(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
-        # Baseline, no sources selected
-        assert importer_obj.import_disabled is True
+        # Baseline, default first source selected
+        assert importer_obj.import_disabled is False
+        assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        # No change
+        assert importer_obj.import_disabled is False
 
-        # Still no selection
+        # Set new selection to empty to ensure it doesn't change on format change
+        importer_obj.sources.selected = []
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        # No selection
         assert importer_obj.import_disabled is True
 
         # Still no selection
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
         assert importer_obj.import_disabled is True
 
-        importer_obj.sources.selected = importer_obj.sources.choices[0]
+        importer_obj.sources.selected = importer_obj.sources.choices[:2]
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
         assert importer_obj.import_disabled is False
 
-        # Still no selection
+        # No new selection
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
         assert importer_obj.import_disabled is False
 
@@ -176,13 +180,18 @@ class TestSpectrumListImporter:
     def test_on_format_selected_2d(self, deconfigged_helper, spectrum2d):
         importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
 
-        # Baseline, no sources selected
-        assert importer_obj.import_disabled is True
+        # Baseline, single source selected
+        assert importer_obj.import_disabled is False
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        # No change
+        assert importer_obj.import_disabled is False
 
-        # Still no selection
+        # Reset to no selection
+        importer_obj.sources.selected = []
         assert importer_obj.import_disabled is True
 
+        # For 2d spectra, changing format does not change selection, but
+        # we specifically enable the import button for 1D Spectrum Concatenated
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
         assert importer_obj.import_disabled is False
 
@@ -317,6 +326,7 @@ class TestSpectrumListImporter:
         sources_data_labels = self.sources_data_labels
 
         if not selection:
+            importer_obj.user_api.sources = selection
             error_msg = "No sources selected."
             # Checking with no selection yet, raises error
             with pytest.raises(
@@ -405,10 +415,14 @@ class TestSpectrumListConcatenatedImporter:
                                                       use_list):
         if use_list:
             importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-            assert importer_obj.user_api.sources == []
+            # Without this, the test gets stuck on the call to importer_obj.output
+            # I have not been able to replicate the behavior outside the tests,
+            # so I am leaving this test as-is for now.
+            importer_obj.sources.selected = []
             assert importer_obj.import_disabled is True
         else:
             importer_obj = self.setup_importer_obj(deconfigged_helper, spectrum2d)
+            # Just in case the order is different
             assert len(set(importer_obj.user_api.sources.selected).difference(set(importer_obj.sources.choices))) == 0 # noqa
             assert importer_obj.import_disabled is False
 
@@ -443,6 +457,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
+        importer_obj.sources.selected = []
         assert len(importer_obj.output) == 0
 
     def test_spectrum_list_concatenated_importer_output_2d(self, deconfigged_helper, spectrum2d):
