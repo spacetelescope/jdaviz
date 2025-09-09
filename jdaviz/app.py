@@ -752,7 +752,7 @@ class Application(VuetifyTemplate, HubListener):
 
         new_links = []
         for new_comp in new_data.components:
-            if new_comp._component_type is None:
+            if new_comp._component_type in (None, 'unknown'):
                 continue
 
             found_match = False
@@ -766,7 +766,8 @@ class Application(VuetifyTemplate, HubListener):
 
                     # Create link if component-types match
                     if new_comp._component_type == existing_comp._component_type:
-                        msg = SnackbarMessage(text=f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})",  # noqa
+                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})"  # noqa
+                        msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)
                         self.hub.broadcast(msg)
                         link = LinkSameWithUnits(new_comp, existing_comp)

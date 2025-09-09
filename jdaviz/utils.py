@@ -48,7 +48,7 @@ PRIHDR_KEY = '_primary_header'
 COMMENTCARD_KEY = '_fits_comment_card'
 
 CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz', 'specviz', 'specviz2d', 'imviz')
-SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Frequency', 'Energy',
+SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
