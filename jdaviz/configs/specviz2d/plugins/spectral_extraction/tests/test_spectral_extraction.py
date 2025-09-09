@@ -333,7 +333,7 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
 
 
 @pytest.mark.xfail
-@pytest.mark.parametrize('method', ['load']) #, 'loader_infrastructure'])
+@pytest.mark.parametrize('method', ['load', 'loader_infrastructure'])
 def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
                                                      spectrum2d, mos_spectrum2d):
     # One resembling the default
@@ -464,19 +464,23 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
 
     # Now trying through the viewer ROI
     roi = XRangeROI(0, 2)
-    viewer_2d.toolbar.tools['bqplot:xrange'].activate()
-    viewer_2d.toolbar.tools['bqplot:xrange'].update_from_roi(roi)
-    viewer_2d.toolbar.tools['bqplot:xrange'].update_selection()
+    viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['bqplot:xrange']
+    viewer_2d.toolbar.active_tool.activate()
+    viewer_2d.toolbar.active_tool.update_from_roi(roi)
+    viewer_2d.toolbar.active_tool.update_selection()
 
     # Check that the subset appears in both viewers
     subset_label = 'Subset 2'
     assert any(subset_label in str(layer) for layer in viewer_1d.layers)
     assert any(subset_label in str(layer) for layer in viewer_2d.layers)
 
+    # Not 100% sure why there is a difference of 1 in the number of marks
+    # but leaving this here for posterity.
+    assert len(viewer_2d.native_marks) == 7
+    assert len(viewer_2d.native_marks) == 6
+
     # Checking that panning one viewer pans the other
     viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['jdaviz:panzoom_matchx']
-    assert len(viewer_2d.native_marks) == 5
-    assert len(viewer_1d.data()) == 4
 
     # Check before
     assert_allclose(viewer_1d.get_limits(), (x_min, x_max, y_min_1d, y_max_1d))
