@@ -451,8 +451,8 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
 
     # now create a subset in the spectrum-viewer, and determine if
     # subset is linked correctly in spectrum2d-viewer
-    x_min_reg = 1
-    x_max_reg = 2
+    x_min_reg = x_min_2d + midway
+    x_max_reg = x_max_2d - midway
     spec_reg = SpectralRegion(x_min_reg * u.um, x_max_reg * u.um)
     st = deconfigged_helper.plugins['Subset Tools']
     st.import_region(spec_reg, edit_subset=subset_label)
@@ -471,7 +471,7 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
         assert_allclose(min_value_subset, x_min_reg, atol=atol)
         assert_allclose(max_value_subset, x_max_reg, atol=atol)
     except ValueError:
-        check.is_true(False, msg='Subset in 2D viewer has no non-zero values')
+        check.is_true(False, msg='Subset in mask calculation failed (no non-zero values).')
     except AssertionError:
         check.is_true(False, msg=f'Subset in 2D viewer has incorrect x range\n'
                                  f'Expected approx: {x_min_reg}, {x_max_reg}\n'
