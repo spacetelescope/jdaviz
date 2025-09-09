@@ -18,10 +18,12 @@ __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin
 
 
 def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
+    if units in ('ct',):
+        physical_type = 'ct'
     if physical_type is None:
         return None
-    if comp_id in SPECTRAL_AXIS_COMP_LABELS:
-        if physical_type in ('frequency', 'length'):
+    if str(comp_id) in SPECTRAL_AXIS_COMP_LABELS:
+        if physical_type in ('frequency', 'length') or units == 'pixel':
             # link frequency to wavelength
             return 'spectral_axis'
         return f'spectral_axis:{physical_type}'
