@@ -8,6 +8,7 @@ from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.utils.data import download_file
 import numpy as np
+from numpy.testing import assert_allclose
 from packaging.version import Version
 from specreduce import tracing, background, extract
 from specutils import Spectrum, SpectralRegion
@@ -393,14 +394,26 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     check.is_true(not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux))
     # print(extracted_spec2d.flux, extracted_mos_spec2d.flux)
 
-    # Check mouseover mark and subsets, i.e. pixel <=> spectral_axis conversion
-    # between 2D Spectrum and 1D extracted Spectrum
-    extract_plg = deconfigged_helper.app.get_tray_item_from_name('spectral-extraction-2d')
+    # Check linking, e.g.
+    # 2D Spectrum <=> 2D Spectrum (auto-ext)
+    # 2D Spectrum <=> Mos 2D Spectrum
+    # 2D Spectrum <=> Mos 2D Spectrum Extraction
+    assert len(dc.external_links) == 3
+    for link in dc.external_links:
+        parent = link.data1
+        child = link.data2
+        check.is_true(parent.label == spec2d_label)
+        check.is_true(child.label in [spec2d_ext_label, mos_spec2d_label, mos_spec2d_ext_label])
+        # check.is_true(child.label == spec_ext, msg='link output data label mismatch')
+        assert isinstance(link, LinkSameWithUnits)
 
-    viewer_1d = extract_plg.spectrum_1d_viewers[0]
-    viewer_2d = extract_plg.spectrum_2d_viewers[0]
-    x_min = viewer_2d.axis_x.scale.min
-    x_max = viewer_2d.axis_x.scale.max
+    # Test marks/subsets between the two layers
+    viewer_2d = deconfigged_helper.app.get_viewer('2D Spectrum')
+    viewer_1d = deconfigged_helper.app.get_viewer('1D Spectrum')
+
+    # We'll be panning along x so keep x_min, x_max generic but specify y_min_1d, y_max_1d
+    x_min, x_max = viewer_2d.get_limits()[:2]
+    y_min_1d, y_max_1d = viewer_1d.get_limits()[2:]
     midway = (x_min + x_max) / 2
 
     # Confirm that no subsets are present to start with
@@ -416,7 +429,6 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     assert any(subset_label in str(layer) for layer in viewer_2d.layers)
 
     subset_drawn_2d = viewer_1d.native_marks[-1]
-
     # get x and y components to compute subset mask
     y1 = subset_drawn_2d.y
     x1 = subset_drawn_2d.x
@@ -450,30 +462,33 @@ def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
     assert min_value_subset == x_min_reg
     assert max_value_subset == x_max_reg
 
-    # TODO: Test marks/mouseover information
-    # sample_marks = ['bg1_center', 'bg2_center', 'ext_lower', 'ext_upper', 'trace']
-    # marks = extract_plg.marks
-    # with extract_plg.as_active():
-    #     for mark in sample_marks:
-    #         print(mark)
-    #         assert mark in marks
-    #
-    #         m = marks[mark].marks_list[0]
-    #         print(m)
-            # assert m.visible is True
-            # assert not len(m.x)
-            # before_x = m.x
+    # Now trying through the viewer ROI
+    roi = XRangeROI(0, 2)
+    viewer_2d.toolbar.tools['bqplot:xrange'].activate()
+    viewer_2d.toolbar.tools['bqplot:xrange'].update_from_roi(roi)
+    viewer_2d.toolbar.tools['bqplot:xrange'].update_selection()
 
-    # raise(Exception())
-    # Check linking, e.g.
-    # 2D Spectrum <=> 2D Spectrum (auto-ext)
-    # 2D Spectrum <=> Mos 2D Spectrum
-    # 2D Spectrum <=> Mos 2D Spectrum Extraction
-    assert len(dc.external_links) == 3
-    for link in dc.external_links:
-        parent = link.data1
-        child = link.data2
-        check.is_true(parent.label == spec2d_label)
-        check.is_true(child.label in [spec2d_ext_label, mos_spec2d_label, mos_spec2d_ext_label])
-        # check.is_true(child.label == spec_ext, msg='link output data label mismatch')
-        assert isinstance(link, LinkSameWithUnits)
+    # Check that the subset appears in both viewers
+    subset_label = 'Subset 2'
+    assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+    assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+
+    # Checking that panning one viewer pans the other
+    viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['jdaviz:panzoom_matchx']
+    assert len(viewer_2d.native_marks) == 5
+    assert len(viewer_1d.data()) == 4
+
+    # Check before
+    assert_allclose(viewer_1d.get_limits(), (x_min, x_max, y_min_1d, y_max_1d))
+
+    # Simulate a pan by changing the x-axis limits
+    new_x_min = x_min + 1
+    new_x_max = x_max + 1
+    # 2D viewer pan
+    viewer_2d.set_limits(x_min=new_x_min, x_max=new_x_max)
+
+    # Notify the active tool that the limits have changed (simulate pan event)
+    viewer_2d.toolbar.active_tool.on_limits_change()
+
+    # Check that the 1D viewer updated its x-axis limits to match the 2D viewer
+    assert_allclose(viewer_1d.get_limits(), (new_x_min, new_x_max, y_min_1d, y_max_1d))
