@@ -4,7 +4,9 @@ from pathlib import Path
 import numpy as np
 from matplotlib.colors import ListedColormap, rgb2hex
 from glue.config import stretches
+from astropy.utils import minversion
 from astropy.table import Table
+import stdatamodels
 
 # paths to CSV files with DQ flag mappings:
 dq_flag_map_paths = {
@@ -17,6 +19,8 @@ dq_flag_map_paths = {
     'hst-cos': Path('data', 'data_quality', 'hst-cos.csv'),
 }
 
+
+STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
 
 class LookupStretch:
     """
@@ -134,6 +138,10 @@ def load_flag_map(mission_or_instrument=None, path=None):
     flag_mapping = {}
     for flag, name, desc in flag_table[['flag', 'name', 'description']].iterrows():
         flag_mapping[int(flag)] = dict(name=name, description=desc)
+
+    if STDATAMODELS_LT_402 and mission_or_instrument=='jwst':
+        print("Less than 4.0.2")
+        flag_mapping[8]['name'] = 'UNRELIABLE_ERROR'
 
     return flag_mapping
 
