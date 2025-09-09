@@ -21,6 +21,7 @@ from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.unit_conversion_utils import (spectral_axis_conversion,
                                                flux_conversion_general,
                                                all_flux_unit_conversion_equivs)
+from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
 
@@ -57,8 +58,7 @@ class Spectrum1DViewer(JdavizProfileView):
             if str(self.state.x_att) in data.component_ids():
                 data_xunit = data.get_component(str(self.state.x_att)).units
             else:
-                for comp in ('Wavelength', 'Frequency', 'Energy',
-                             'Velocity', 'Wavenumber', 'World 0'):
+                for comp in SPECTRAL_AXIS_COMP_LABELS:
                     if comp in data.component_ids():
                         data_xunit = data.get_component(comp).units
                         break

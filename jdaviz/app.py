@@ -54,7 +54,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
                           layer_is_table_data, MultiMaskSubsetState,
-                          _wcs_only_label)
+                          _wcs_only_label, CONFIGS_WITH_LOADERS)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
@@ -739,13 +739,59 @@ class Application(VuetifyTemplate, HubListener):
                 # re-center the viewer on previous location.
                 viewer.center_on(sky_cen)
 
+    def _link_new_data_by_component_type(self, new_data_label):
+        new_data = self.data_collection[new_data_label]
+
+        if (new_data._importer == 'ImageImporter' and
+                'Orientation' in self._jdaviz_helper.plugins):
+            # Orientation plugin alreadly listens for messages for added Data and handles linking
+            # orientation_plugin._link_image_data()
+            # NOTE: eventually we may only want to skip for pixel/sky coordinates and allow
+            # flux, etc, to link to other data for custom histograms/scatter plots
+            return
+
+        new_links = []
+        for new_comp in new_data.components:
+            if new_comp._component_type in (None, 'unknown'):
+                continue
+
+            found_match = False
+            for existing_data in self.data_collection:
+                if existing_data.label == new_data_label:
+                    continue
+
+                for existing_comp in existing_data.components:
+                    if existing_comp._component_type in (None, 'unknown'):
+                        continue
+
+                    # Create link if component-types match
+                    if new_comp._component_type == existing_comp._component_type:
+                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})"  # noqa
+                        msg = SnackbarMessage(text=msg_text,
+                                              color='info', sender=self)
+                        self.hub.broadcast(msg)
+                        link = LinkSameWithUnits(new_comp, existing_comp)
+                        new_links.append(link)
+                        # only need one link for the new component, reparenting will handle
+                        # if that data entry is deleted
+                        found_match = True
+                        break  # break out of existing_comp loop
+
+                if found_match:
+                    break  # break out of existing_data loop
+
+        # Add all new links to the data collection
+        if new_links:
+            self.data_collection.add_link(new_links)
+
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
         When additional data is loaded, check to see if the spectral axis of
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config == 'imviz':  # Imviz does its own thing
+        if self.config in CONFIGS_WITH_LOADERS:
+            # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
             return
@@ -768,13 +814,7 @@ class Application(VuetifyTemplate, HubListener):
         ref_data = dc[reference_data] if reference_data else dc[default_refdata_index]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        if 'Trace' in linked_data.meta:
-            links = [LinkSame(linked_data.components[1], ref_data.components[0]),
-                     LinkSame(linked_data.components[0], ref_data.components[1])]
-            dc.add_link(links)
-            return
-
-        elif self.config == 'cubeviz' and linked_data.ndim == 1:
+        if self.config == 'cubeviz' and linked_data.ndim == 1:
             # Don't want to use negative indices in case there are extra components like a mask
             ref_wavelength_component = dc[0].components[spectral_axis_index]
             # May need to update this for specutils 2
@@ -788,21 +828,8 @@ class Application(VuetifyTemplate, HubListener):
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                  ref_data.ndim < 3)
               ):
-            if self.config == 'specviz2d':
-                links = []
-                if linked_data.ndim == 2:
-                    # extracted image added to data collection
-                    ref_wavelength_component = ref_data.components[1]
-                else:
-                    # extracted spectrum added to data collection
-                    ref_wavelength_component = ref_data.components[3]
-                    links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
-
-                links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[0]),
-                          LinkSameWithUnits(linked_data.components[1], ref_wavelength_component)]
-            else:
-                links = [LinkSame(linked_data.components[0], ref_data.components[0]),
-                         LinkSame(linked_data.components[1], ref_data.components[1])]
+            links = [LinkSame(linked_data.components[0], ref_data.components[0]),
+                     LinkSame(linked_data.components[1], ref_data.components[1])]
 
             dc.add_link(links)
             return
@@ -2526,13 +2553,26 @@ class Application(VuetifyTemplate, HubListener):
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
 
-        self.data_collection.remove(self.data_collection[data_label])
+        data_to_remove = self.data_collection[data_label]
+        if self.config in CONFIGS_WITH_LOADERS:
+            data_needing_relinking = []
+            for link in self.data_collection.external_links:
+                if data_to_remove == link.data1:
+                    data_needing_relinking.append(link.data2)
+                elif data_to_remove == link.data2:
+                    data_needing_relinking.append(link.data1)
+
+        self.data_collection.remove(data_to_remove)
+
+        if self.config in CONFIGS_WITH_LOADERS:
+            for data in data_needing_relinking:
+                self._link_new_data_by_component_type(data.label)
 
         # If there are two or more datasets left we need to link them back together if anything
         # was linked only through the removed data.
-        if (len(self.data_collection) > 1 and
-                len(self.data_collection.external_links) < len(self.data_collection) - 1):
-            if orientation_plugin is not None:
+        if orientation_plugin is not None:
+            if (len(self.data_collection) > 1 and
+                    len(self.data_collection.external_links) < len(self.data_collection) - 1):
                 orientation_plugin._obj._link_image_data()
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
@@ -2543,9 +2583,6 @@ class Application(VuetifyTemplate, HubListener):
                     if len(loaded_layers):
                         self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
                         self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
-            else:
-                for i in range(1, len(self.data_collection)):
-                    self._link_new_data(data_to_be_linked=i)
 
     def vue_close_snackbar_message(self, event):
         """
@@ -2875,7 +2912,7 @@ class Application(VuetifyTemplate, HubListener):
         self._viewer_store[vid] = viewer
 
         # Add viewer locally
-        if (self.config in ('deconfigged', 'specviz', 'specviz2d', 'lcviz')
+        if (self.config in CONFIGS_WITH_LOADERS
                 and len(self.state.stack_items)):
             # add to bottom (eventually will want more control in placement)
             self.state.stack_items[0]['children'].append(new_stack_item)

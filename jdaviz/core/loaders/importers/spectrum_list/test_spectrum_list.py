@@ -305,10 +305,6 @@ class TestSpectrumListImporter:
         importer_obj.input = spectrum1d
         assert importer_obj.output is None
 
-    def test_default_viewer_reference(self, deconfigged_helper, premade_spectrum_list):
-        importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
-        assert importer_obj.default_viewer_reference == 'spectrum-1d-viewer'
-
     @pytest.mark.parametrize('selection', [[],
                                            ['1D Spectrum at index: 0',
                                             '1D Spectrum at index: 1',

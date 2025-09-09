@@ -62,9 +62,9 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
-    get_subset_type, is_wcs_only, is_not_wcs_only,
-    _wcs_only_label, wildcard_match,
-    layer_is_not_dq as layer_is_not_dq_global
+    get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
+    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
+    wildcard_match, CONFIGS_WITH_LOADERS
 )
 
 
@@ -4178,8 +4178,9 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 2
 
         def is_image_not_spectrum(data):
-            return (is_image(data)
-                    and not getattr(data.coords, 'is_spectral', True))
+            if not is_image(data):
+                return False
+            return not wcs_is_spectral(getattr(data, 'coords', None))
 
         def is_cube(data):
             return len(data.shape) == 3
@@ -4190,12 +4191,12 @@ class DatasetSelect(SelectPluginComponent):
         def is_spectrum(data):
             return (len(data.shape) == 1
                     and data.coords is not None
-                    and getattr(data.coords, 'is_spectral', True))
+                    and wcs_is_spectral(getattr(data, 'coords', None)))
 
         def is_2d_spectrum_or_trace(data):
             return (data.ndim == 2
                     and data.coords is not None
-                    and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
+                    and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
 
         def is_spectrum_or_cube(data):
             return is_spectrum(data) or is_cube(data)
@@ -4575,7 +4576,7 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item, replace=None, label=None):
+    def add_results_from_plugin(self, data_item, replace=None, label=None, format=None):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
@@ -4640,7 +4641,14 @@ class AddResults(BasePluginComponent):
             subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
             data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
-        self.app.add_data(data_item, label)
+        if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
+            self.app._jdaviz_helper.load(data_item,
+                                         loader='object', format=format,
+                                         data_label=label, viewer=[])
+        else:
+            # NOTE: eventually remove this entirely once all plugins are set to go through
+            # the new loaders infrastructure above
+            self.app.add_data(data_item, label)
 
         for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
                                                   preserved_attributes):

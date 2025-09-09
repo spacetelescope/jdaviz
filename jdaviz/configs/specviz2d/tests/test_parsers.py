@@ -58,6 +58,9 @@ def test_hlsp_goods_s2d(specviz2d_helper):
     # ensure uncalibrated 2d spectrum extraction works
     assert len(specviz2d_helper.app.data_collection) == 2
 
+    # links: spectral_axis, flux
+    assert len(specviz2d_helper.app.data_collection.external_links) == 2
+
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
 
@@ -76,8 +79,7 @@ def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
     dc_0 = deconfigged_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)
     assert isinstance(deconfigged_helper.plugins['2D Spectral Extraction'].trace_dataset.selected_obj, Spectrum)  # noqa
-    # TODO: store expected class in data itself so get_data doesn't need to pass cls
-    assert isinstance(deconfigged_helper.get_data('2D Spectrum', cls=Spectrum), Spectrum)
+    assert isinstance(deconfigged_helper.get_data('2D Spectrum'), Spectrum)
 
 
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):

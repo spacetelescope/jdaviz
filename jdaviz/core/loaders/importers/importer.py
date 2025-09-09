@@ -9,9 +9,31 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ViewerSelectCreateNew,
                                         with_spinner)
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import standardize_metadata
+from jdaviz.utils import (standardize_metadata,
+                          CONFIGS_WITH_LOADERS,
+                          SPECTRAL_AXIS_COMP_LABELS)
 
-__all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
+__all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
+           '_spectrum_assign_component_type']
+
+
+def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
+    if not len(units) and str(comp_id) == 'flux':
+        units = 'ct'
+    if units in ('ct', 'pixel'):
+        physical_type = units
+
+    if physical_type is None:
+        return None
+    if str(comp_id) in SPECTRAL_AXIS_COMP_LABELS:
+        if physical_type in ('frequency', 'length', 'pixel'):
+            # link frequency to wavelength
+            return 'spectral_axis'
+        return f'spectral_axis:{physical_type}'
+    if str(comp_id) == 'uncertainty':
+        # don't link with flux columns
+        return f'uncertainty:{physical_type}'
+    return physical_type
 
 
 class BaseImporter(PluginTemplateMixin):
@@ -169,25 +191,52 @@ class BaseImporterToDataCollection(BaseImporter):
         self.import_disabled = (len(self.data_label_invalid_msg) > 0
                                 or len(self.viewer_label_invalid_msg) > 0)
 
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return physical_type
+
     def add_to_data_collection(self, data, data_label=None,
                                parent=None,
                                viewer_select=None,
                                cls=None):
         if data_label is None:
             data_label = self.data_label_value.strip()
+        else:
+            data_label = data_label.strip()
         if hasattr(data, 'meta'):
             try:
                 data.meta = standardize_metadata(data.meta)
             except TypeError:
                 pass
+
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
             self.app._set_assoc_data_as_child(data_label, parent)
         # store the original input class so that get_data can default to the
         # same class as the input
         cls = cls if cls is not None else data.__class__
-        self.app.data_collection[data_label]._native_data_cls = cls
-        self.app.data_collection[data_label]._importer = self.__class__.__name__
+        new_dc_entry = self.app.data_collection[data_label]
+        new_dc_entry._native_data_cls = cls
+        new_dc_entry._importer = self.__class__.__name__
+
+        def _physical_type_from_component(comp_id, comp):
+            import astropy.units as u
+            try:
+                comp_units = comp.units
+                if comp_units is None or comp_units == '':
+                    return comp_units, None
+                return comp_units, str(u.Unit(comp_units).physical_type)
+            except (ValueError, TypeError, AttributeError):
+                return comp_units, None
+
+        for comp_id in new_dc_entry.components:
+            comp_units, physical_type = _physical_type_from_component(comp_id,
+                                                                      new_dc_entry.get_component(comp_id))  # noqa
+            comp_id._component_type = self.assign_component_type(comp_id,
+                                                                 new_dc_entry.get_component(comp_id),  # noqa
+                                                                 comp_units, physical_type)
+
+        if self.app.config in CONFIGS_WITH_LOADERS:
+            self.app._link_new_data_by_component_type(data_label)
 
         viewer_select = viewer_select if viewer_select is not None else self.viewer
         if viewer_select.create_new.selected:

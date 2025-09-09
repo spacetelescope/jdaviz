@@ -75,6 +75,7 @@ Other Changes and Additions
 
 - When importing a 2D spectrum file into a SpectrumList, surface brightness units are automatically converted to flux units. [#3729]
 
+- Linking is now generalized to act based on physical type. [#3698]
 
 4.3.2 (unreleased)
 ==================

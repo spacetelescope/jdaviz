@@ -173,7 +173,8 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         if add_data:
             # add data to the collection/viewer
-            self.add_results.add_results_from_plugin(results)
+            self.add_results.add_results_from_plugin(results,
+                                                     format=('1D Spectrum', '2D Spectrum'))
             self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
