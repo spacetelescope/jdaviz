@@ -6,7 +6,8 @@ from matplotlib.colors import ListedColormap, rgb2hex
 from glue.config import stretches
 from astropy.utils import minversion
 from astropy.table import Table
-import stdatamodels
+
+from jdaviz.utils import STDATAMODELS_LT_402
 
 # paths to CSV files with DQ flag mappings:
 dq_flag_map_paths = {
@@ -18,8 +19,6 @@ dq_flag_map_paths = {
     'hst-wfc3-ir': Path('data', 'data_quality', 'hst-wfc3-ir.csv'),
     'hst-cos': Path('data', 'data_quality', 'hst-cos.csv'),
 }
-
-STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
 
 
 class LookupStretch:
@@ -140,6 +139,7 @@ def load_flag_map(mission_or_instrument=None, path=None):
         flag_mapping[int(flag)] = dict(name=name, description=desc)
 
     if STDATAMODELS_LT_402 and mission_or_instrument == 'jwst':
+        # This bit was changed from UNRELIABLE_ERROR back to RESERVED after 4.0.1
         flag_mapping[8]['name'] = 'UNRELIABLE_ERROR'
 
     return flag_mapping
