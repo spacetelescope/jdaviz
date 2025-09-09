@@ -3918,9 +3918,11 @@ class ViewerSelectCreateNew(ViewerSelect):
         if self.create_new.selected == '':
             return
         self.new_label.default = self.create_new.selected_item.get('label')
+        # may also affect new_label.invalid_msg
+        self._on_viewer_label_changed()
 
     def _on_viewer_label_changed(self, msg={}):
-        if not len(self.new_label.value.strip()):
+        if not len(self.new_label.value.strip()) and self.create_new.selected != '':
             self.new_label.invalid_msg = 'new_label must be provided'
             return
 
