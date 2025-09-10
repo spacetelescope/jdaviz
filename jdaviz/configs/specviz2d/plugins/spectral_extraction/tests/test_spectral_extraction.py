@@ -342,7 +342,7 @@ class TestTwo2dSpectra:
     def setup_another_2d_spectrum(self, spec2d):
         # Specific data labels
         another_spec2d_label = 'Another 2D Spectrum'
-        another_spec2d_ext_label = 'Another 2D Spectrum Extraction'
+        another_spec2d_ext_label = 'Another 2D Spectral Extraction'
 
         # Make the data different enough that extracted spectra should differ
         another_spec2d = Spectrum(flux=spec2d.flux * 2, spectral_axis=spec2d.spectral_axis)
