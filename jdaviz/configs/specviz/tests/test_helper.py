@@ -2,7 +2,6 @@ from zipfile import ZipFile
 
 import numpy as np
 import pytest
-import re
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
