@@ -54,7 +54,7 @@ class AID:
 
                 center = reference_wcs.world_to_pixel(center)
 
-        elif not hasattr(center, '__len__') and not isinstance(center[0], (float, int)):
+        elif not hasattr(center, '__len__') or not isinstance(center[0], (float, int)):
             raise ValueError(
                 "The AID API supports `center` arguments as SkyCoords or as "
                 f"a tuple of floats in pixel coordinates, got {center=}."

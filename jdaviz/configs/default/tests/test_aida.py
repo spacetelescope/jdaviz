@@ -26,7 +26,7 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     viewport = viewer.aid.get_viewport('sky')
 
     expected_center = SkyCoord(ra=337.51894337, dec=-20.83208305, unit='deg')
-    expected_fov = 0.00277778 * u.arcsec
+    expected_fov = 0.00277778 * u.deg
     expected_image_label = imviz_helper.app.data_collection[0].label
 
     # by default, the viewer y-axis is the narrower axis, which is used to
