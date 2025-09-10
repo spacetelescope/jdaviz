@@ -110,36 +110,25 @@
         :items="waveband_items.map(i => i.label)"
         :selected.sync="waveband_selected"
         label="Resource Waveband"
+        :search="true"
         api_hint="ldr.waveband ="
         :api_hints_enabled="api_hints_enabled"
         hint="Select a spectral waveband to filter your surveys"
       ></plugin-select>
 
-      <v-row class="no-outside-padding">
-        <div :style="'width: calc(100% - 32px)'">
-          <plugin-select
-            :show_if_single_entry="true"
-            :items="resource_items.map(i => i.label)"
-            :selected.sync="resource_selected"
-            :loading="resources_loading"
-            :rules="[() => !!resource_selected || 'This field is required']"
-            label="Available Resources"
-            api_hint="ldr.resource ="
-            :api_hints_enabled="api_hints_enabled"
-            hint="Select a SIA resource to query"
-          ></plugin-select>
-        </div>
-        <div style="line-height: 64px; width:32px">
-          <j-tooltip tipid='plugin-vo-refresh-resources'>
-            <v-btn
-              @click="query_registry_resources"
-              icon
-              :loading="resources_loading">
-              <v-icon>mdi-refresh</v-icon>
-            </v-btn>
-          </j-tooltip>
-        </div>
-      </v-row>
+
+      <plugin-select
+        :show_if_single_entry="true"
+        :items="resource_items.map(i => i.label)"
+        :selected.sync="resource_selected"
+        :loading="resources_loading"
+        :rules="[() => !!resource_selected || 'This field is required']"
+        label="Available Resources"
+        :search="true"
+        api_hint="ldr.resource ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Select a SIA resource to query"
+      ></plugin-select>
     </v-form>
 
     <v-row class="row-no-outside-padding" justify="end">

@@ -220,17 +220,12 @@ class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
 
         self.viewer_centered = True
 
-    @observe("waveband_selected", type="change")
-    def vue_query_registry_resources(self, _=None):
-        """
-        This vue method serves as UI entrypoint for two actions:
-        * Automatically fires when a waveband is selected
-        * The manual resource refresh btn
-        """
-        self.query_registry_resources()
-
+    @observe("waveband_selected",
+             "source", "coordframe_selected",
+             "radius", "radius_unit_selected",
+             "resource_filter_coverage")
     @with_spinner(spinner_traitlet="resources_loading")
-    def query_registry_resources(self, _=None):
+    def query_registry_resources(self, event={}):
         """
         Query Virtual Observatory registry for all SIA services
         that serve data in that waveband around the source.
@@ -239,6 +234,11 @@ class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
         # If waveband was changed to nothing, immediately quit
         # Don't throw an error due to trigger by plugin init
         if not self.waveband_selected:
+            return
+
+        # No need to update if the change was from source but coverage filtering is off
+        if (event.get("name") in ("source", "coordframe_selected", "radius", "radius_unit_selected")
+                and not self.resource_filter_coverage):
             return
 
         # Can't filter by coverage if we don't have a source to filter on
