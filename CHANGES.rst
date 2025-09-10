@@ -13,7 +13,7 @@ New Features
 - Enable unix style wildcard matching for searches in UI dropdown menus and
   API objects that support multiselect. [#3744, #3752]
 
-- Loaders now allow selecting which viewer(s) to show the data or whether to create a new viewer. [#3739]
+- Loaders now allow selecting which viewer(s) to show the data or whether to create a new viewer. [#3739, #3766]
 
 - Ability to change the logger levels and clear the logger history from the UI. [#3745]
 

@@ -67,7 +67,17 @@ class UserApiWrapper:
                                                 SelectFileExtensionComponent,
                                                 PlotOptionsSyncState,
                                                 AddResults,
-                                                AutoTextField)
+                                                AutoTextField,
+                                                ViewerSelectCreateNew)
+        if isinstance(exp_obj, ViewerSelectCreateNew):
+            if value in exp_obj.choices + ['', []]:
+                exp_obj.create_new.selected = ''
+                exp_obj.selected = value
+                return
+            elif len(exp_obj.create_new.choices) > 0:
+                exp_obj.create_new.selected = exp_obj.create_new.choices[0]
+                exp_obj.new_label.value = value
+                return
 
         if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying

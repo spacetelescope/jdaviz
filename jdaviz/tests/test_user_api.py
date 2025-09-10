@@ -144,6 +144,34 @@ def test_wildcard_match_extension(imviz_helper, multi_extension_image_hdu_wcs):
     assert selection_obj.multiselect is True
 
 
+def test_viewer_create_new(deconfigged_helper, spectrum1d):
+    assert len(deconfigged_helper.new_viewers.keys()) == 0
+    # passing [] should not load into a new viewer nor should it create a new viewer
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', viewer=[], data_label='data1')
+    assert len(deconfigged_helper.app.data_collection) == 1
+    assert len(deconfigged_helper.viewers) == 0
+    assert len(deconfigged_helper.new_viewers.keys()) > 0
+
+    # passing nothing when there are no viewers should create a new viewer
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='data2')
+    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(deconfigged_helper.viewers) == 1
+    assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 1
+
+    # passing nothing when there is a viewer should default to loading into that viewer
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='data3')
+    assert len(deconfigged_helper.app.data_collection) == 3
+    assert len(deconfigged_helper.viewers) == 1
+    assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
+
+    # passing a string of a viewer that does not exist should create a viewer with that label
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', viewer='user-defined-viewer', data_label='data4')  # noqa
+    assert len(deconfigged_helper.app.data_collection) == 4
+    assert len(deconfigged_helper.viewers) == 2
+    assert len(deconfigged_helper.viewers['1D Spectrum'].data_menu.layer.choices) == 2
+    assert len(deconfigged_helper.viewers['user-defined-viewer'].data_menu.layer.choices) == 1
+
+
 @pytest.mark.parametrize(
     ("selection", "matches"), [
         ('*', (0, 1, 2, 3)),
