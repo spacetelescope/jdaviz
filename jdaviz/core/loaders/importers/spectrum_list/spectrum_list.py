@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from copy import deepcopy
+import warnings
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -42,6 +43,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
         sources_options = []
+        self._sources_selected_default = True
 
         if isinstance(self.input, Spectrum):
             speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
@@ -82,6 +84,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     manual_options=sources_options)
 
         self.sources.selected = [self.sources.choices[0]]
+        # Make sure it's still set to true
         self._sources_selected_default = True
         self._sources_items_helper = deepcopy(self.sources.items)
 
@@ -117,7 +120,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # in __call__() is not triggered.
         if (self._sources_selected_default and
                 change.get('name') == 'sources_selected' and
-                change.get('new') != self.sources.selected):
+                change.get('new') != self.sources.choices[0]):
             self._sources_selected_default = False
 
         if len(self.sources_selected) == 0:
@@ -233,6 +236,16 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return spec
 
+    def _check_sources_selected_default(self):
+        if self._sources_selected_default:
+            msg_str = (f"The default source selection ({self.sources.selected}) will be used.\n"
+                       f"To load additional sources, please specify them via dropdown or "
+                       f"as follows:\n'{self.config}.load(filename, sources = [...]).")
+            msg = SnackbarMessage(msg_str,
+                color='warning', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
+            warnings.warn(msg_str)
+
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
@@ -240,13 +253,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         if not self.sources.selected:
             raise ValueError("No sources selected.")
 
-        if self._sources_selected_default:
-            msg = SnackbarMessage(
-                f"The default source selection ({self.sources.selected}) will be loaded."
-                " To load additional sources, please specify them via dropdown or"
-                f" as follows:\n'{self.config}.load(filename, sources = [...]).",
-                color='warning', sender=self, timeout=10000)
-            self.app.hub.broadcast(msg)
+        self._check_sources_selected_default()
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
@@ -318,6 +325,8 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         spectrum_list = self.sources.selected
         if len(spectrum_list) == 0:
             return []
+
+        self._check_sources_selected_default()
 
         # Vectorized collection of all wavelengths, fluxes, and uncertainties
         wl_list = []
