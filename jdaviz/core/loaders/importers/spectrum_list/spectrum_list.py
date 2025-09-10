@@ -13,6 +13,7 @@ from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            _spectrum_assign_component_type)
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.core.events import SnackbarMessage
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -81,6 +82,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     manual_options=sources_options)
 
         self.sources.selected = [self.sources.choices[0]]
+        self._sources_selected_default = True
         self._sources_items_helper = deepcopy(self.sources.items)
 
         # TODO: This observer will likely be removed in follow-up effort
@@ -110,6 +112,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @observe('sources_selected')
     def _on_sources_selected_change(self, change={}):
+        # Check to see if the user has changed the selection from the default
+        # If so, we set this flag to False so that the snackbar message
+        # in __call__() is not triggered.
+        if (self._sources_selected_default and
+                change.get('name') == 'sources_selected' and
+                change.get('new') != self.sources.selected):
+            self._sources_selected_default = False
+
         if len(self.sources_selected) == 0:
             self.import_disabled = True
         else:
@@ -229,6 +239,14 @@ class SpectrumListImporter(BaseImporterToDataCollection):
     def __call__(self):
         if not self.sources.selected:
             raise ValueError("No sources selected.")
+
+        if self._sources_selected_default:
+            msg = SnackbarMessage(
+                f"The default source selection ({self.sources.selected}) will be loaded."
+                " To load additional sources, please specify them via dropdown or"
+                f" as follows:\n'{self.config}.load(filename, sources = [...]).",
+                color='warning', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
