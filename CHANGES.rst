@@ -86,6 +86,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixes support for using jdaviz downstream in lcviz. [#3772]
+
 Cubeviz
 ^^^^^^^
 
