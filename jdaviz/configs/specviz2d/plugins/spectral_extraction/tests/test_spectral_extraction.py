@@ -330,12 +330,12 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
         assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
 
 
-class TestTwo2dSpectraDeconfigged:
+class TestTwo2dSpectra:
 
-    def load_2d_spectrum(self, dcf_helper, spec2d, spec2d_label_idx=0, spec2d_ext_label_idx=1):
+    def load_2d_spectrum(self, helper, spec2d, spec2d_label_idx=0, spec2d_ext_label_idx=1):
         # Allow this to use the default label
-        dcf_helper.load(spec2d, format='2D Spectrum')
-        dc_labels = dcf_helper.app.data_collection.labels
+        helper.load(spec2d, format='2D Spectrum')
+        dc_labels = helper.app.data_collection.labels
         self.spec2d_label = dc_labels[spec2d_label_idx]
         self.spec2d_ext_label = dc_labels[spec2d_ext_label_idx]
 
@@ -351,29 +351,65 @@ class TestTwo2dSpectraDeconfigged:
         self.another_spec2d_label = another_spec2d_label
         self.another_spec2d_ext_label = another_spec2d_ext_label
 
-    def load_another_2d_spectrum(self, dcf_helper, spec2d):
-        self.setup_another_2d_spectrum(spec2d)  # noqa
-        dcf_helper.load(self.another_spec2d,
-                        format='2D Spectrum',
-                        data_label=self.another_spec2d_label,
-                        ext_data_label=self.another_spec2d_ext_label)
+    def load_another_2d_spectrum(self, helper, spec2d):
+        self.setup_another_2d_spectrum(spec2d)
+        helper.load(self.another_spec2d,
+                    format='2D Spectrum',
+                    data_label=self.another_spec2d_label,
+                    ext_data_label=self.another_spec2d_ext_label)
 
     @pytest.mark.xfail
-    @pytest.mark.parametrize('method', ['load', 'loader_infrastructure_alternate_order'])
+    @pytest.mark.parametrize('method', ['load',
+                                        'specviz2d',
+                                        'specviz2d_alternate_order',
+                                        'loader_infrastructure',
+                                        'loader_infrastructure_alternate_order'])
     def test_labels_and_spectral_extraction_flux_difference(self,
-                                                            method, deconfigged_helper, spectrum2d):
+                                                            method,
+                                                            specviz2d_helper,
+                                                            deconfigged_helper,
+                                                            spectrum2d):
         parent_label = ''
-        if method == 'load':
-            self.load_2d_spectrum(deconfigged_helper, spectrum2d)
-            self.load_another_2d_spectrum(deconfigged_helper, spectrum2d)
+        helper_dict = {'load': deconfigged_helper,
+                       'loader_infrastructure': deconfigged_helper,
+                       'loader_infrastructure_alternate_order': deconfigged_helper,
+                       'specviz2d': specviz2d_helper,
+                       'specviz2d_alternate_order': specviz2d_helper}
+        helper = helper_dict[method]
+        if method in ('load', 'specviz2d'):
+            self.load_2d_spectrum(helper, spectrum2d)
+            self.load_another_2d_spectrum(helper, spectrum2d)
             parent_label = self.spec2d_label
+
+        elif method == 'specviz2d_alternate_order':
+            self.load_another_2d_spectrum(helper, spectrum2d)
+            self.load_2d_spectrum(helper, spectrum2d, spec2d_label_idx=2, spec2d_ext_label_idx=3)
+            parent_label = self.another_spec2d_label
+
+        elif method == 'loader_infrastructure':
+            # Allow this to use the default label
+            ldr = helper.loaders['object']
+            ldr.object = spectrum2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer()
+            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[:2]
+
+            self.setup_another_2d_spectrum(spectrum2d)
+            ldr.object = self.another_spec2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer.data_label = self.another_spec2d_label
+            ldr.importer.ext_data_label = self.another_spec2d_ext_label
+            ldr.importer()
+
+            parent_label = self.another_spec2d_label
 
         elif method == 'loader_infrastructure_alternate_order':
             self.setup_another_2d_spectrum(spectrum2d)
-
             # Swapping the load order changes the parent and
             # the spectral extraction that is duplicated
-            ldr = deconfigged_helper.loaders['object']
+            ldr = helper.loaders['object']
             ldr.object = self.another_spec2d
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
@@ -386,7 +422,7 @@ class TestTwo2dSpectraDeconfigged:
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
             ldr.importer()
-            self.spec2d_label, self.spec2d_ext_label = deconfigged_helper.app.data_collection.labels[-2:]  # noqa
+            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[-2:]
 
             parent_label = self.another_spec2d_label
 
@@ -395,17 +431,17 @@ class TestTwo2dSpectraDeconfigged:
                         self.another_spec2d_label,
                         self.another_spec2d_ext_label}.difference({parent_label})
 
-        dc = deconfigged_helper.app.data_collection
+        dc = helper.app.data_collection
 
         assert self.spec2d_label in dc.labels
         assert self.spec2d_ext_label in dc.labels
-        extracted_spec2d = deconfigged_helper.get_data(self.spec2d_ext_label)
+        extracted_spec2d = helper.get_data(self.spec2d_ext_label)
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(extracted_spec2d.flux))
 
         assert self.another_spec2d_label in dc.labels
         assert self.another_spec2d_ext_label in dc.labels
-        extracted_another_spec2d = deconfigged_helper.get_data(self.another_spec2d_ext_label)
+        extracted_another_spec2d = helper.get_data(self.another_spec2d_ext_label)
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(extracted_another_spec2d.flux))
 
