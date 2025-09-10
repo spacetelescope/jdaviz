@@ -776,6 +776,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Update model component values and units
         for model in self.component_models:
+            # If we're converting between wavelength and frequency, make the user reestimate
+            # parameters for Linear or Polynomial models because there's no equivalency to convert.
+            if (axis == 'x' and 'x' in self._units and not
+                    u.Unit(self._units['x']).is_equivalent(previous_x)):
+                if model['model_type'] in ('Linear1D', 'Polynomial1D'):
+                    model['compat_display_units'] = False
+                    continue
+
             for param in model['parameters']:
                 current_quant = param['value']*u.Unit(param['unit'])
                 new_quant = None
@@ -788,19 +796,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                         current_quant.unit,
                                                         self._units[axis],
                                                         equivalencies=equivalencies)  # noqa
-                elif param['name'] in ('slope', 'c1'):
-                    new_quant = flux_conversion_general(current_quant.value,
-                                                        current_quant.unit,
-                                                        u.Unit(self._units['y']) /
-                                                        u.Unit(self._units['x']),
-                                                        equivalencies=equivalencies)
-                elif param['name'][0] == 'c':
-                    order = int(param['name'][1:])
-                    new_quant = flux_conversion_general(current_quant.value,
-                                                        current_quant.unit,
-                                                        u.Unit(self._units['y']) /
-                                                        u.Unit(self._units['x'])**order,
-                                                        equivalencies=equivalencies)
+
                 # Some parameters have units that aren't related to x or y
                 if new_quant is not None:
                     param['value'] = new_quant.value
