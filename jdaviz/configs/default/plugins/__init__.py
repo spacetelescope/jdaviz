@@ -14,4 +14,3 @@ from .markers.markers import * # noqa
 from .data_quality.data_quality import *  # noqa
 from .about.about import *  # noqa
 from .logger.logger import *  # noqa
-from .virtual_observatory import *  # noqa
