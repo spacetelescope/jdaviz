@@ -1,6 +1,5 @@
 import gwcs
 import pytest
-import pytest_check as check
 
 from astropy.modeling import models
 from astropy.nddata import VarianceUncertainty
@@ -331,189 +330,193 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
         assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
 
 
-@pytest.mark.xfail
-@pytest.mark.parametrize('method', ['load', 'loader_infrastructure'])
-def test_spectral_extraction_two_spectra_deconfigged(method, deconfigged_helper,
-                                                     spectrum2d, mos_spectrum2d):
-    # One resembling the default
-    spec2d_label = '2D Spectrum'
-    spec2d_ext_label = '2D Spectrum (auto-ext)'
-    # One specific
-    mos_spec2d_label = 'Mos 2D Spectrum'
-    mos_spec2d_ext_label = 'Mos 2D Spectrum Extraction'
+class TestTwo2dSpectraDeconfigged:
 
-    if method == 'load':
-        deconfigged_helper.load(spectrum2d, format='2D Spectrum',
-                                data_label=spec2d_label, ext_data_label=spec2d_ext_label)
+    def load_2d_spectrum(self, dcf_helper, spec2d, spec2d_label_idx=0, spec2d_ext_label_idx=1):
+        # Allow this to use the default label
+        dcf_helper.load(spec2d, format='2D Spectrum')
+        dc_labels = dcf_helper.app.data_collection.labels
+        self.spec2d_label = dc_labels[spec2d_label_idx]
+        self.spec2d_ext_label = dc_labels[spec2d_ext_label_idx]
 
-        deconfigged_helper.load(mos_spectrum2d, format='2D Spectrum',
-                                data_label=mos_spec2d_label, ext_data_label=mos_spec2d_ext_label)
+    def setup_another_2d_spectrum(self, spec2d):
+        # Specific data labels
+        another_spec2d_label = 'Another 2D Spectrum'
+        another_spec2d_ext_label = 'Another 2D Spectrum Extraction'
 
-    elif method == 'loader_infrastructure':
-        ldr = deconfigged_helper.loaders['object']
-        ldr.object = mos_spectrum2d
-        ldr.format = '2D Spectrum'
-        ldr.importer.auto_extract = True
-        ldr.importer.data_label = spec2d_label
-        ldr.importer.ext_data_label = spec2d_ext_label
-        ldr.importer()
+        # Make the data different enough that extracted spectra should differ
+        another_spec2d = Spectrum(flux=spec2d.flux * 2, spectral_axis=spec2d.spectral_axis)
 
-        # Swapping the load order causes a different issue
-        ldr.object = spectrum2d
-        ldr.format = '2D Spectrum'
-        ldr.importer.auto_extract = True
-        ldr.importer.data_label = mos_spec2d_label
-        ldr.importer.ext_data_label = mos_spec2d_ext_label
-        ldr.importer()
+        self.another_spec2d = another_spec2d
+        self.another_spec2d_label = another_spec2d_label
+        self.another_spec2d_ext_label = another_spec2d_ext_label
 
-    dc = deconfigged_helper.app.data_collection
+    def load_another_2d_spectrum(self, dcf_helper, spec2d):
+        self.setup_another_2d_spectrum(spec2d)  # noqa
+        dcf_helper.load(self.another_spec2d,
+                        format='2D Spectrum',
+                        data_label=self.another_spec2d_label,
+                        ext_data_label=self.another_spec2d_ext_label)
 
-    # TODO: Anywhere 'check' is used should be replaced with 'assert'
-    #  once issues are fixed.
-    assert spec2d_label in dc.labels
-    assert spec2d_ext_label in dc.labels
-    extracted_spec2d = deconfigged_helper.get_data(spec2d_ext_label)
-    # Check for any non-NaN data, if all NaNs, something went wrong
-    # assert np.any(~np.isnan(extracted_spec2d.flux))
-    check.is_true(np.any(~np.isnan(extracted_spec2d.flux)), msg='first extraction all NaNs')
+    @pytest.mark.xfail
+    @pytest.mark.parametrize('method', ['load', 'loader_infrastructure_alternate_order'])
+    def test_labels_and_spectral_extraction_flux_difference(self,
+                                                            method, deconfigged_helper, spectrum2d):
+        parent_label = ''
+        if method == 'load':
+            self.load_2d_spectrum(deconfigged_helper, spectrum2d)
+            self.load_another_2d_spectrum(deconfigged_helper, spectrum2d)
+            parent_label = self.spec2d_label
 
-    assert mos_spec2d_label in dc.labels
-    # TODO: This fails with the loader infrastructure, the second extraction label does not exist
-    #  (maybe it's overwriting the first spectral extraction?)
-    # assert mos_spec2d_ext_label in dc.labels
-    if check.is_true(mos_spec2d_ext_label in dc.labels, msg='second extraction label missing'):
-        extracted_mos_spec2d = deconfigged_helper.get_data(mos_spec2d_ext_label)
+        elif method == 'loader_infrastructure_alternate_order':
+            self.setup_another_2d_spectrum(spectrum2d)
+
+            # Swapping the load order changes the parent and
+            # the spectral extraction that is duplicated
+            ldr = deconfigged_helper.loaders['object']
+            ldr.object = self.another_spec2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer.data_label = self.another_spec2d_label
+            ldr.importer.ext_data_label = self.another_spec2d_ext_label
+            ldr.importer()
+
+            # Allow this to use the default label
+            ldr.object = spectrum2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer()
+            self.spec2d_label, self.spec2d_ext_label = deconfigged_helper.app.data_collection.labels[-2:]  # noqa
+
+            parent_label = self.another_spec2d_label
+
+        child_labels = {self.spec2d_label,
+                        self.spec2d_ext_label,
+                        self.another_spec2d_label,
+                        self.another_spec2d_ext_label}.difference({parent_label})
+
+        dc = deconfigged_helper.app.data_collection
+
+        assert self.spec2d_label in dc.labels
+        assert self.spec2d_ext_label in dc.labels
+        extracted_spec2d = deconfigged_helper.get_data(self.spec2d_ext_label)
         # Check for any non-NaN data, if all NaNs, something went wrong
-        # assert np.any(~np.isnan(extracted_mos_spec2d.flux))
-        check.is_true(np.any(~np.isnan(extracted_mos_spec2d.flux)),
-                      msg='second extraction all NaNs')
+        assert np.any(~np.isnan(extracted_spec2d.flux))
 
-        assert not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux)
-        # check.is_true(not np.array_equal(extracted_spec2d.flux, extracted_mos_spec2d.flux),
-        #               msg='extracted spectra are identical')
+        assert self.another_spec2d_label in dc.labels
+        assert self.another_spec2d_ext_label in dc.labels
+        extracted_another_spec2d = deconfigged_helper.get_data(self.another_spec2d_ext_label)
+        # Check for any non-NaN data, if all NaNs, something went wrong
+        assert np.any(~np.isnan(extracted_another_spec2d.flux))
 
-    # Check linking, e.g.
-    # 2D Spectrum <=> 2D Spectrum (auto-ext)
-    # 2D Spectrum <=> Mos 2D Spectrum
-    # 2D Spectrum <=> Mos 2D Spectrum Extraction
-    # assert len(dc.external_links) == 3
-    check.is_true(len(dc.external_links) == 3,
-                  msg='incorrect number of external links (due to missing extracted spectra)')
-    for link in dc.external_links:
-        parent = link.data1
-        child = link.data2
-        check.is_true(parent.label == spec2d_label, msg='link parent data label mismatch')
-        check.is_true(child.label in [spec2d_ext_label, mos_spec2d_label, mos_spec2d_ext_label],
-                      msg='link child data label mismatch')
-        # check.is_true(child.label == spec_ext, msg='link output data label mismatch')
-        assert isinstance(link, LinkSameWithUnits)
+        # TODO: THIS FAILS!
+        assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
+            'Extracted spectra should differ!'
 
-    # Test marks/subsets between the two layers
-    viewer_2d = deconfigged_helper.app.get_viewer('2D Spectrum')
-    viewer_1d = deconfigged_helper.app.get_viewer('1D Spectrum')
+        # Check linking, e.g.
+        # 2D Spectrum 1 <=> 2D Spectrum Extraction 1
+        # 2D Spectrum 1 <=> 2D Spectrum 2
+        # 2D Spectrum 1 <=> 2D Spectrum Extraction 2
+        assert len(dc.external_links) == 3
+        for link in dc.external_links:
+            parent = link.data1
+            child = link.data2
+            assert parent.label == parent_label
+            assert child.label in child_labels
+            assert isinstance(link, LinkSameWithUnits)
 
-    # We'll be panning along x so keep x_min, x_max generic but specify y_min_1d, y_max_1d
-    x_min_2d, x_max_2d = viewer_2d.get_limits()[:2]
-    midway = (x_min_2d + x_max_2d) / 2
+    def test_subsets_and_viewer_things(self, deconfigged_helper, spectrum2d):
+        # Allow this to use the default label
+        self.load_2d_spectrum(deconfigged_helper, spectrum2d)
+        self.load_another_2d_spectrum(deconfigged_helper, spectrum2d)
 
-    # Confirm that no subsets are present to start with
-    assert not any('subset' in str(layer).lower() for layer in viewer_1d.layers)
-    assert not any('subset' in str(layer).lower() for layer in viewer_2d.layers)
+        # Test marks/subsets between the two layers
+        viewer_2d = deconfigged_helper.app.get_viewer('2D Spectrum')
+        viewer_1d = deconfigged_helper.app.get_viewer('1D Spectrum')
 
-    # Following the procedure from ``test_subsets.py``
-    # create subset in 2d viewer, want data in 1d viewer
-    viewer_2d.apply_roi(XRangeROI(x_min_2d + 0.5 * midway, x_max_2d - 0.5 * midway))
-    # Confirm that subsets are present in both viewers
-    subset_label = 'Subset 1'
-    assert any(subset_label in str(layer) for layer in viewer_1d.layers)
-    assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+        # We'll be panning along x so keep x_min, x_max generic but specify y_min_1d, y_max_1d
+        x_min_2d, x_max_2d = viewer_2d.get_limits()[:2]
+        midway = (x_min_2d + x_max_2d) / 2
 
-    subset_drawn_2d = viewer_1d.native_marks[-1]
-    # get x and y components to compute subset mask
-    y1 = subset_drawn_2d.y
-    x1 = subset_drawn_2d.x
+        # Confirm that no subsets are present to start with
+        assert not any('subset' in str(layer).lower() for layer in viewer_1d.layers)
+        assert not any('subset' in str(layer).lower() for layer in viewer_2d.layers)
 
-    subset_highlighted_region1 = x1[np.isfinite(y1)]
-    min_value_subset = np.min(subset_highlighted_region1)
-    max_value_subset = np.max(subset_highlighted_region1)
+        # Following the procedure from ``test_subsets.py``
+        # create subset in 2d viewer, want data in 1d viewer
+        viewer_2d.apply_roi(XRangeROI(x_min_2d + 0.5 * midway, x_max_2d - 0.5 * midway))
+        # Confirm that subsets are present in both viewers
+        subset_label = 'Subset 1'
+        assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+        assert any(subset_label in str(layer) for layer in viewer_2d.layers)
 
-    expected_min = 0
-    expected_max = 1
-    atol = 1e-2
-    try:
+        subset_drawn_2d = viewer_1d.native_marks[-1]
+        # get x and y components to compute subset mask
+        y1 = subset_drawn_2d.y
+        x1 = subset_drawn_2d.x
+
+        subset_highlighted_region1 = x1[np.isfinite(y1)]
+        min_value_subset = np.min(subset_highlighted_region1)
+        max_value_subset = np.max(subset_highlighted_region1)
+
+        expected_min = 0
+        expected_max = 1
+        atol = 1e-2
         assert_allclose(min_value_subset, expected_min, atol=atol)
         assert_allclose(max_value_subset, expected_max, atol=atol)
-    except AssertionError:
-        check.is_true(False, msg=f'Subset in 1D viewer has incorrect x range\n'
-                                 f'Expected approx: {expected_min}, {expected_max}\n'
-                                 f'Found: {min_value_subset}, {max_value_subset}')
 
-    # now create a subset in the spectrum-viewer, and determine if
-    # subset is linked correctly in spectrum2d-viewer
-    x_min_reg = x_min_2d + midway
-    x_max_reg = x_max_2d - midway
-    spec_reg = SpectralRegion(x_min_reg * u.um, x_max_reg * u.um)
-    st = deconfigged_helper.plugins['Subset Tools']
-    st.import_region(spec_reg, edit_subset=subset_label)
+        # now create a subset in the spectrum-viewer, and determine if
+        # subset is linked correctly in spectrum2d-viewer
+        x_min_reg = x_min_2d + midway
+        x_max_reg = x_max_2d - midway
+        spec_reg = SpectralRegion(x_min_reg * u.um, x_max_reg * u.um)
+        st = deconfigged_helper.plugins['Subset Tools']
+        st.import_region(spec_reg, edit_subset=subset_label)
 
-    # Check again
-    assert any(subset_label in str(layer) for layer in viewer_1d.layers)
-    assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+        # Check again
+        assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+        assert any(subset_label in str(layer) for layer in viewer_2d.layers)
 
-    mask = viewer_2d._get_layer(subset_label)._get_image()
+        mask = viewer_2d._get_layer(subset_label)._get_image()
 
-    try:
         x_coords = np.nonzero(mask)[1]
         min_value_subset = x_coords.min()
         max_value_subset = x_coords.max()
 
         assert_allclose(min_value_subset, x_min_reg, atol=atol)
         assert_allclose(max_value_subset, x_max_reg, atol=atol)
-    except ValueError:
-        check.is_true(False, msg='Subset in mask calculation failed (no non-zero values).')
-    except AssertionError:
-        check.is_true(False, msg=f'Subset in 2D viewer has incorrect x range\n'
-                                 f'Expected approx: {x_min_reg}, {x_max_reg}\n'
-                                 f'Found: {min_value_subset}, {max_value_subset}')
 
-    # Now trying through the viewer ROI
-    roi = XRangeROI(0, 2)
-    viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['bqplot:xrange']
-    viewer_2d.toolbar.active_tool.activate()
-    viewer_2d.toolbar.active_tool.update_from_roi(roi)
-    viewer_2d.toolbar.active_tool.update_selection()
+        # Now trying through the viewer ROI
+        roi = XRangeROI(0, 2)
+        viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['bqplot:xrange']
+        viewer_2d.toolbar.active_tool.activate()
+        viewer_2d.toolbar.active_tool.update_from_roi(roi)
+        viewer_2d.toolbar.active_tool.update_selection()
 
-    # Check that the subset appears in both viewers
-    subset_label = 'Subset 2'
-    assert any(subset_label in str(layer) for layer in viewer_1d.layers)
-    assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+        # Check that the subset appears in both viewers
+        subset_label = 'Subset 2'
+        assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+        assert any(subset_label in str(layer) for layer in viewer_2d.layers)
 
-    # Not 100% sure why there is a difference of 1 in the number of marks
-    # but leaving this here for posterity.
-    assert len(viewer_2d.native_marks) == 7
-    check.is_true(len(viewer_1d.native_marks) == 6,
-                  msg='unexpected number of marks in 1D viewer (due to missing extracted spectra)')
+        # Not 100% sure why there is a difference of 1 in the number of marks
+        # but leaving this here for posterity.
+        assert len(viewer_2d.native_marks) == 7
+        assert len(viewer_1d.native_marks) == 6
 
-    # Checking that panning one viewer pans the other
-    viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['jdaviz:panzoom_matchx']
+        # Checking that panning one viewer pans the other
+        viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['jdaviz:panzoom_matchx']
 
-    # Simulate a pan by changing the x-axis limits
-    x_min_1d, x_max_1d, y_min_1d, y_max_1d = viewer_1d.get_limits()
-    dx = 1
-    # 2D viewer pan
-    viewer_2d.set_limits(x_min=x_min_2d+dx, x_max=x_max_2d+dx)
-    # Double check that the 2D viewer limits were actually changed
-    assert_allclose(viewer_2d.get_limits()[:2], (x_min_2d+dx, x_max_2d+dx))
+        # Simulate a pan by changing the x-axis limits
+        x_min_1d, x_max_1d, y_min_1d, y_max_1d = viewer_1d.get_limits()
+        dx = 1
+        # 2D viewer pan
+        viewer_2d.set_limits(x_min=x_min_2d+dx, x_max=x_max_2d+dx)
+        # Double check that the 2D viewer limits were actually changed
+        assert_allclose(viewer_2d.get_limits()[:2], (x_min_2d+dx, x_max_2d+dx))
 
-    # Notify the active tool that the limits have changed (simulate pan event)
-    viewer_2d.toolbar.active_tool.on_limits_change()
+        # Notify the active tool that the limits have changed (simulate pan event)
+        viewer_2d.toolbar.active_tool.on_limits_change()
 
-    # Check that the 1D viewer updated its x-axis limits to match the 2D viewer
-    expected = (x_min_1d + dx, x_max_1d + dx, y_min_1d, y_max_1d)
-    try:
+        # Check that the 1D viewer updated its x-axis limits to match the 2D viewer
+        expected = (x_min_1d + dx, x_max_1d + dx, y_min_1d, y_max_1d)
         assert_allclose(viewer_1d.get_limits(), expected)
-    except AssertionError:
-        check.is_true(False, msg=f'1d viewer did not shift correctly\n'
-                                 # f'2D viewer limits: {viewer_2d.get_limits()}\n'
-                                 f'1D viewer x limits: {viewer_1d.get_limits()[:2]}\n'
-                                 f'Expected approx: {expected[:2]}')
