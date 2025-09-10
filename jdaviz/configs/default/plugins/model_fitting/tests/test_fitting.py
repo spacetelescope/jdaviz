@@ -631,7 +631,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     # Switch back to Jy, see that the component didn't change but the output does
     uc.flux_unit = 'Jy'
-    assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'MJy / {solid_angle_string}'
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'Jy / {solid_angle_string}'
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit()

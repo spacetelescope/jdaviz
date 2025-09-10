@@ -556,10 +556,13 @@ class ConfigHelper(HubListener):
                                                     eqv, with_unit=False) * u.Unit(y_unit)
 
                 # convert spectral axis to display units
-                new_spec = (spectral_axis_conversion(data.spectral_axis.value,
-                                                     data.spectral_axis.unit,
-                                                     spectral_unit)
-                            * u.Unit(spectral_unit))
+                if data.spectral_axis.unit != spectral_unit:
+                    new_spec = (spectral_axis_conversion(data.spectral_axis.value,
+                                                         data.spectral_axis.unit,
+                                                         spectral_unit)
+                                * u.Unit(spectral_unit))
+                else:
+                    new_spec = data.spectral_axis
 
                 data = Spectrum(spectral_axis=new_spec,
                                 flux=new_y,

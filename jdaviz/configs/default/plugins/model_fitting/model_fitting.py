@@ -760,16 +760,50 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             else:
                 if unit != uc._obj.sb_unit_selected:
-                    self._units[axis] = uc._obj.sb_unit_selected
+                    unit = uc._obj.sb_unit_selected
                     self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                     return
                 elif msg.axis == 'flux' and uc._obj.has_sb:
                     unit = u.Unit(self.app._get_display_unit('sb'))
 
+        if 'x' in self._units and 'y' in self._units:
+            # Not populated yet on startup
+            previous_x = self._units['x']
+            previous_y = self._units['y']
+
         # update internal tracking of current units
         self._units[axis] = str(unit)
 
+        # Update model component values and units
+        for model in self.component_models:
+            # If we're converting between wavelength and frequency, make the user reestimate
+            # parameters for Linear or Polynomial models because there's no equivalency to convert.
+            if (axis == 'x' and 'x' in self._units and not
+                    u.Unit(self._units['x']).is_equivalent(previous_x)):
+                if model['model_type'] in ('Linear1D', 'Polynomial1D'):
+                    model['compat_display_units'] = False
+                    continue
+
+            for param in model['parameters']:
+                current_quant = param['value']*u.Unit(param['unit'])
+                new_quant = None
+                spectral_axis = self.dataset.selected_obj.spectral_axis
+                # Just need a single spectral axis value to enable spectral_density equivalency
+                equivalencies = all_flux_unit_conversion_equivs(cube_wave=spectral_axis[0])
+                if ((axis == 'y' and param['unit'] == previous_y) or
+                        (axis == 'x' and param['unit'] == previous_x)):
+                    new_quant = flux_conversion_general(current_quant.value,
+                                                        current_quant.unit,
+                                                        self._units[axis],
+                                                        equivalencies=equivalencies)  # noqa
+
+                # Some parameters have units that aren't related to x or y
+                if new_quant is not None:
+                    param['value'] = new_quant.value
+                    param['unit'] = str(new_quant.unit)
+
         self._check_model_component_compat([axis], [unit])
+        self._update_initialized_parameters()
 
     def remove_model_component(self, model_component_label):
         """
