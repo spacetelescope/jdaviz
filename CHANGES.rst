@@ -86,6 +86,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix deprecation warning from traitlets/isinstance check. [#3768]
+
 Cubeviz
 ^^^^^^^
 

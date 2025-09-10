@@ -177,7 +177,7 @@ class PluginMark:
     def set_x_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
-                if isinstance(self.viewer, ('Spectrum2DViewer', 'MosvizProfile2DView')):
+                if self.viewer.__class__.__name__ in ('Spectrum2DViewer', 'MosvizProfile2DView'):
                     # x-unit of 2d spectrum viewers are always in pixels
                     unit = u.pix
                 elif self.viewer.data() and hasattr(self.viewer.data()[0], 'spectral_axis'):
@@ -198,7 +198,7 @@ class PluginMark:
     def set_y_unit(self, unit=None):
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
-                if isinstance(self.viewer, ('Spectrum2DViewer', 'MosvizProfile2DView')):
+                if self.viewer.__class__.__name__ in ('Spectrum2DViewer', 'MosvizProfile2DView'):
                     # y-unit of 2d spectrum viewers are always in pixels
                     unit = u.pix
                 elif self.viewer.data() and hasattr(self.viewer.data()[0], 'flux'):
