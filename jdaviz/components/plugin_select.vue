@@ -14,6 +14,7 @@
       :chips="multiselect && !api_hints_enabled"
       :disabled="disabled"
       :dense="dense"
+      :loading="loading"
       item-text="label"
       item-value="label"
       persistent-hint
@@ -83,7 +84,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search'],
+          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading'],
   data() {
     return {
       search_query: '',

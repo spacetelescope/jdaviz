@@ -1,1 +1,1 @@
-from .vo_plugin import *  # noqa
+from .vo import *  # noqa

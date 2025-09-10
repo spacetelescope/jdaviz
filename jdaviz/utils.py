@@ -717,8 +717,8 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
     cache_none_msg = (
         "You may be querying for a remote file "
-        f"at '{possible_uri}', but the `cache` argument was not "
-        f"in the call to `load_data`. Unless you set `cache` "
+        f"at '{possible_uri}', but the `cache` argument was not used."
+        f"Unless you set `cache` "
         f"explicitly, remote files will be cached locally and "
         f"this warning will be raised."
     )

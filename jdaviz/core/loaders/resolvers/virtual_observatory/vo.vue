@@ -9,19 +9,18 @@
     :format_selected.sync="format_selected"
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
-    :import_spinner="import_spinner"
-    @import-clicked="import_clicked"
+    :valid_import_formats="valid_import_formats"
   >
-  
-
     <v-form v-model="all_fields_filled">
-
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
 
       <plugin-viewer-select
         :items="viewer_items"
         :selected.sync="viewer_selected"
+        :show_if_single_entry="false"
         label="Viewer"
+        api_hint="ldr.viewer ="
+        :api_hints_enabled="api_hints_enabled"
         :show_if_single_entry="true"
         hint="Select a viewer to retrieve center coordinates, or Manual for manual coordinate entry."
       />
@@ -39,7 +38,8 @@
         <div :style="!(viewer_selected !== 'Manual' && !coord_follow_viewer_pan) ? 'width: 100%' : 'width: calc(100% - 32px)'">
           <v-text-field
             v-model="source"
-            label="Source/Coordinates"
+            :label="api_hints_enabled ? 'ldr.source =' : 'Source/Coordinates'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Enter a source name or coordinates in degrees to center your query on"
             :disabled="viewer_selected !== 'Manual'"
             :rules="[() => !!source || 'This field is required']"
@@ -61,75 +61,73 @@
         </div>
       </v-row>
 
-      <v-row>
-        <v-select
-          v-model="coordframe_selected"
-          :menu-props="{ left: true }"
-          attach
-          :items="coordframe_choices.map(i => i.label)"
-          label="Coordinate Frame"
-          hint="Astronomical Coordinate Frame of the provided Coordinates"
-          :disabled="viewer_selected !== 'Manual'"
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="coordframe_choices.map(i => i.label)"
+        :selected.sync="coordframe_selected"
+        label="Coordinate Frame"
+        api_hint="ldr.coordframe ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Astronomical Coordinate Frame of the provided Coordinates"
+        :disabled="viewer_selected !== 'Manual'"
+      ></plugin-select>
 
       <v-row justify="space-between">
         <div :style="{ width: '55%' }">
           <v-text-field
             v-model.number="radius"
             type="number"
-            label="Radius"
+            :label="api_hints_enabled ? 'ldr.radius =' : 'Radius'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Angular radius around source coordinates, within which to query for data (Default 1 degree)"
             persistent-hint>
           </v-text-field>
         </div>
         <div :style="{ width: '40%' }">
-          <v-select
-            v-model="radius_unit_selected"
-            attach
+          <plugin-select
             :items="radius_unit_items.map(i => i.label)"
-            label="Unit">
-          </v-select>
+            :selected.sync="radius_unit_selected"
+            label="Unit"
+            api_hint="ldr.radius_unit ="
+            :api_hints_enabled="api_hints_enabled"
+          ></plugin-select>
         </div>
       </v-row>
 
-
-    <j-plugin-section-header>Survey Collections</j-plugin-section-header>
+      <j-plugin-section-header>Survey Collections</j-plugin-section-header>
       <v-row>
         <j-tooltip tipid='plugin-vo-filter-coverage'>
           <plugin-switch
             :value.sync="resource_filter_coverage"
-            label="Filter by Coverage">
-          </plugin-switch>
+            label="Filter by Coverage"
+            api_hint="ldr.resource_filter_coverage ="
+            :api_hints_enabled="api_hints_enabled"
+          ></plugin-switch>
         </j-tooltip>
       </v-row>
-      
-      <v-row>
-        <v-select
-          v-model="waveband_selected"
-          :menu-props="{ left: true }"
-          attach
-          :items="waveband_items.map(i => i.label)"
-          label="Resource Waveband"
-          hint="Select a spectral waveband to filter your surveys"
-          persistent-hint
-        ></v-select>
-      </v-row>
 
-      <v-row>
+      <plugin-select
+        :show_if_single_entry="true"
+        :items="waveband_items.map(i => i.label)"
+        :selected.sync="waveband_selected"
+        label="Resource Waveband"
+        api_hint="ldr.waveband ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Select a spectral waveband to filter your surveys"
+      ></plugin-select>
+
+      <v-row class="no-outside-padding">
         <div :style="'width: calc(100% - 32px)'">
-          <v-select
-            v-model="resource_selected"
-            :menu-props="{ left: true }"
-            attach
-            :items="resource_choices.map(i => i.label)"
+          <plugin-select
+            :show_if_single_entry="true"
+            :items="resource_items.map(i => i.label)"
+            :selected.sync="resource_selected"
             :loading="resources_loading"
             :rules="[() => !!resource_selected || 'This field is required']"
             label="Available Resources"
+            api_hint="ldr.resource ="
+            :api_hints_enabled="api_hints_enabled"
             hint="Select a SIA resource to query"
-            persistent-hint
-          ></v-select>
+          ></plugin-select>
         </div>
         <div style="line-height: 64px; width:32px">
           <j-tooltip tipid='plugin-vo-refresh-resources'>
@@ -144,13 +142,19 @@
       </v-row>
     </v-form>
 
-    <v-row class="row-no-outside-padding">
-      <v-col>
-        <plugin-action-button
-          :loading="results_loading"
-          :disabled="!all_fields_filled"
-          @click="query_resource">Query Archive</plugin-action-button>
-      </v-col>
+    <v-row class="row-no-outside-padding" justify="end">
+      <plugin-action-button
+        :spinner="results_loading"
+        :disabled="!all_fields_filled"
+        :results_isolated_to_plugin="true"
+        :api_hints_enabled="api_hints_enabled"
+        @click="query_archive">
+            {{ api_hints_enabled ?
+                'ldr.query_archive()'
+                :
+                'Query Archive'
+            }}
+      </plugin-action-button>
     </v-row>
 
     <jupyter-widget :widget="table_widget"></jupyter-widget>

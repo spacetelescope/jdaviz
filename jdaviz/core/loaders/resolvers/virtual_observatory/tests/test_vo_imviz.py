@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
-from jdaviz.core.loaders.resolvers.virtual_observatory.vo_plugin import vo_plugin_label
 
 
 class fake_siaresult:
@@ -37,7 +36,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
 
         # Check default viewer is "Manual"
-        vo_plugin = self.imviz.loaders[vo_plugin_label]._obj
+        vo_plugin = self.imviz.loaders["virtual observatory"]._obj
         assert vo_plugin.viewer.selected == "Manual"
         assert vo_plugin.source == ""
 
@@ -70,7 +69,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         Tests populating the results table with a mocked SIARsult
         and verifies the default headers populate the correct fields
         """
-        vo_plugin = self.imviz.loaders[vo_plugin_label]._obj
+        vo_plugin = self.imviz.loaders["virtual observatory"]._obj
         fake_result = fake_siaresult(
             {
                 "title": "Fake Title",
@@ -91,7 +90,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
 
     def test_populate_table_custom_headers(self):
         """Tests the ability to control and adjust the table to custom columns"""
-        vo_plugin = self.imviz.loaders[vo_plugin_label]._obj
+        vo_plugin = self.imviz.loaders["virtual observatory"]._obj
         fake_result = fake_siaresult(
             {
                 "attrA": "Field A",
@@ -117,7 +116,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         If a SIAResult is missing a required header,
         the table should switch to displaying URLs only
         """
-        vo_plugin = self.imviz.loaders[vo_plugin_label]._obj
+        vo_plugin = self.imviz.loaders["virtual observatory"]._obj
         fake_result = fake_siaresult(
             {
                 "attrA": "Field A",
@@ -176,7 +175,7 @@ def test_link_type_autocoord(imviz_helper):
     )
     imviz_helper.load_data(hdu2, data_label="has_wcs_2")
 
-    vo_plugin = imviz_helper.loaders[vo_plugin_label]._obj
+    vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
     vo_plugin.viewer.selected = "imviz-0"
     vo_plugin.center_on_data()
     ra_str, dec_str = vo_plugin.source.split()
@@ -210,7 +209,7 @@ class TestVOImvizRemote:
         vo_plugin_api : `~jdaviz.configs.default.plugins.virtual_observatory.VoPlugin`
             The raw VoPlugin class plugin instance
         """
-        vo_plugin = imviz_helper.loaders[vo_plugin_label]._obj
+        vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
 
         # Sets common args for Remote Testing
         vo_plugin.viewer.selected = "Manual"
@@ -224,7 +223,7 @@ class TestVOImvizRemote:
     def test_query_registry_args(self, imviz_helper):
         """Ensure we don't query registry if we're missing required arguments"""
         # If waveband isn't selected, plugin should ignore our registry query attempts
-        vo_plugin = imviz_helper.loaders[vo_plugin_label]._obj
+        vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
         vo_plugin.waveband.selected = ""
         vo_plugin.query_registry_resources()
         assert len(vo_plugin.resource.choices) == 0
@@ -282,7 +281,7 @@ class TestVOImvizRemote:
         when a provided source is irresolvable
         """
         expected_error_msg = "Unable to resolve source coordinates"
-        vo_plugin = imviz_helper.loaders[vo_plugin_label]._obj
+        vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
 
         # Manually set the source to a fake target
         vo_plugin.viewer.selected = "Manual"
