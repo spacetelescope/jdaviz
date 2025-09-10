@@ -11,7 +11,7 @@ from jdaviz.utils import cached_uri
 @pytest.mark.parametrize(("uri, expected_helper"), [
     ('mast:HST/product/jclj01010_drz.fits', 'imviz'),
     ('mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_x1d.fits', 'specviz'),
-    ('mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits', 'specviz2d'),  # noqa: E501
+    ('mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits', 'specviz2d'),  # noqa: E501
     ('mast:JWST/product/jw02727-o002_t062_nircam_clear-f277w_i2d.fits', 'imviz'),
     ('mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_s3d.fits', 'cubeviz')])
 def test_auto_config_detection(uri, expected_helper):
