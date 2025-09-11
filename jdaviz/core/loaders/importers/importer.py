@@ -10,6 +10,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
+                          _wcs_only_label,
                           CONFIGS_WITH_LOADERS,
                           SPECTRAL_AXIS_COMP_LABELS)
 
@@ -265,7 +266,8 @@ class BaseImporterToDataCollection(BaseImporter):
                 msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
             else:
                 msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
-            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            if not new_dc_entry.meta.get(_wcs_only_label, False):
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
         else:
             failed_viewers = []
             for viewer_label in viewer_select.selected:
