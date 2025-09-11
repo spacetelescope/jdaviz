@@ -70,7 +70,7 @@ class UserApiWrapper:
                                                 AutoTextField,
                                                 ViewerSelectCreateNew)
         if isinstance(exp_obj, ViewerSelectCreateNew):
-            if value in exp_obj.choices + ['', []]:
+            if value in exp_obj.choices + ['', []] or '*' in value or '?' in value:
                 exp_obj.create_new.selected = ''
                 exp_obj.selected = value
                 return
