@@ -40,7 +40,8 @@ from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
-from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
+                                                    WithSliceSelection)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
@@ -3829,6 +3830,12 @@ class ViewerSelect(SelectPluginComponent):
         def is_image_viewer(viewer):
             return _is_image_viewer(viewer)
 
+        def is_imviz_image_viewer(viewer):
+            return viewer.__class__.__name__ == 'ImvizImageView'
+
+        def is_slice_selection_viewer(viewer):
+            return isinstance(viewer, WithSliceSelection)
+
         def is_slice_indicator_viewer(viewer):
             return isinstance(viewer, WithSliceIndicator)
 
@@ -3931,7 +3938,7 @@ class ViewerSelectCreateNew(ViewerSelect):
 
         for viewer in self.app._jdaviz_helper.viewers.keys():
             if self.new_label.value.strip() == viewer:
-                self.new_label.invalid_msg = 'new_label already in use'
+                self.new_label.invalid_msg = f"new_label='{self.new_label.value}' already in use"
                 return
 
         self.new_label.invalid_msg = ''
@@ -4571,7 +4578,7 @@ class AddResults(BasePluginComponent):
                     self.label_overwrite = True
                     return
                 else:
-                    self.label_invalid_msg = 'label already in use'
+                    self.label_invalid_msg = f"label='{self.label}' already in use"
                     self.label_overwrite = False
                     return
 
