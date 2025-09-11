@@ -88,8 +88,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     icons = Dict().tag(sync=True)
 
-    viewer_items = List().tag(sync=True)
-    viewer_selected = Unicode().tag(sync=True)
     orientation_layer_items = List().tag(sync=True)
     orientation_layer_selected = Unicode().tag(sync=True)
 
