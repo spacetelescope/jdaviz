@@ -202,7 +202,7 @@ class ImageImporter(BaseImporterToDataCollection):
             data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
                     for ext in self.extension.selected_name]
         # JWST ASDF-in-FITS
-        elif 'ASDF' in input:
+        elif isinstance(input, fits.HDUList) and 'ASDF' in input:
             data = [_jwst2data(hdu, input) for hdu in self.extension.selected_obj]
         # FITS
         else:
