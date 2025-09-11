@@ -744,7 +744,7 @@ class Application(VuetifyTemplate, HubListener):
     def _link_new_data_by_component_type(self, new_data_label):
         new_data = self.data_collection[new_data_label]
 
-        if (new_data.meta.get('_importer') == 'ImageImporter' and
+        if (new_data.meta.get('_importer') in ('ImageImporter', 'CatalogImporter') and
                 'Orientation' in self._jdaviz_helper.plugins):
             # Orientation plugin alreadly listens for messages for added Data and handles linking
             # orientation_plugin._link_image_data()
