@@ -657,8 +657,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'stretch_curve_visible', 'apply_RGB_presets']
         if self.config in ('imviz', 'deconfigged'):
             expose += ['marker_visible', 'marker_fill', 'marker_opacity',
-                       'marker_size', 'marker_size_scale', 'marker_color_mode', 'marker_color',
-                       'marker_color_col', 'marker_colormap', 'marker_colormap_vmin', 'marker_colormap_vmax']
+                       'marker_size', 'marker_size_scale',
+                       'marker_color_mode', 'marker_color',
+                       'marker_color_col', 'marker_colormap',
+                       'marker_colormap_vmin', 'marker_colormap_vmax']
 
         return PluginUserApi(self, expose)
 
@@ -1206,7 +1208,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     def _layer_is_image_layer(self):
         from glue_jupyter.bqplot.image.state import BqplotImageLayerState
-        return np.all([isinstance(lyr.state, BqplotImageLayerState) for lyr in self.layer.selected_obj])
+        return np.all([isinstance(lyr.state, BqplotImageLayerState)
+                       for lyr in self.layer.selected_obj])
 
     def image_segmentation_map_presets(self, *args, **kwargs):
         # if 'Random' colormap is used for visualizing image segmentation,
