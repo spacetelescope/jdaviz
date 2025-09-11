@@ -610,8 +610,8 @@ class ConfigHelper(HubListener):
         data = self.app.data_collection[data_label]
 
         if not cls:
-            if hasattr(data, '_native_data_cls'):
-                cls = data._native_data_cls
+            if data.meta.get('_native_data_cls', None) is not None:
+                cls = data.meta['_native_data_cls']
             # TODO: once everything goes through loaders, can we remove everything below?
             elif 'Trace' in data.meta:
                 cls = None

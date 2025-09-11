@@ -84,7 +84,7 @@ ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 @unit_converter('custom-jdaviz')
 class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
-        if (getattr(data, '_importer', None) == 'ImageImporter' and
+        if (data.meta.get('_importer') == 'ImageImporter' and
                 u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             all_flux_units = SPEC_PHOTON_FLUX_DENSITY_UNITS + ['ct']
             angle_units = supported_sq_angle_units()
@@ -122,7 +122,7 @@ class UnitConverterWithSpectral:
             # handle ramps loaded into Rampviz by avoiding conversion
             # of the groups axis:
             return values
-        elif (getattr(data, '_importer', None) == 'ImageImporter' and
+        elif (data.meta.get('_importer') == 'ImageImporter' and
               u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             # handle surface brightness units in image-like data
             return (values * u.Unit(original_units)).to_value(target_units)
@@ -744,7 +744,7 @@ class Application(VuetifyTemplate, HubListener):
     def _link_new_data_by_component_type(self, new_data_label):
         new_data = self.data_collection[new_data_label]
 
-        if (new_data._importer == 'ImageImporter' and
+        if (new_data.meta.get('_importer') == 'ImageImporter' and
                 'Orientation' in self._jdaviz_helper.plugins):
             # Orientation plugin alreadly listens for messages for added Data and handles linking
             # orientation_plugin._link_image_data()

@@ -4179,6 +4179,9 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_image_not_spectrum_or_catalog(data):
+            return is_image_not_spectrum(data) or data.meta.get('_importer', '') == 'CatalogImporter'
+
         def is_image_not_spectrum(data):
             if not is_image(data):
                 return False

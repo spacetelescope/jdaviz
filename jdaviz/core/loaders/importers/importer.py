@@ -208,15 +208,17 @@ class BaseImporterToDataCollection(BaseImporter):
             except TypeError:
                 pass
 
-        self.app.add_data(data, data_label=data_label)
-        if parent is not None:
-            self.app._set_assoc_data_as_child(data_label, parent)
         # store the original input class so that get_data can default to the
         # same class as the input
         cls = cls if cls is not None else data.__class__
-        new_dc_entry = self.app.data_collection[data_label]
-        new_dc_entry._native_data_cls = cls
-        new_dc_entry._importer = self.__class__.__name__
+        if not hasattr(data, 'meta'):
+            data.meta = {}
+        data.meta['_native_data_cls'] = cls
+        data.meta['_importer'] = self.__class__.__name__
+
+        self.app.add_data(data, data_label=data_label)
+        if parent is not None:
+            self.app._set_assoc_data_as_child(data_label, parent)
 
         def _physical_type_from_component(comp_id, comp):
             import astropy.units as u
@@ -228,6 +230,7 @@ class BaseImporterToDataCollection(BaseImporter):
             except (ValueError, TypeError, AttributeError):
                 return comp_units, None
 
+        new_dc_entry = self.app.data_collection[data_label]
         for comp_id in new_dc_entry.components:
             comp_units, physical_type = _physical_type_from_component(comp_id,
                                                                       new_dc_entry.get_component(comp_id))  # noqa
