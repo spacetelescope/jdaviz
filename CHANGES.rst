@@ -88,6 +88,8 @@ Bug Fixes
 
 - Fixes support for using jdaviz downstream in lcviz. [#3772]
 
+- Updated JWST data quality flag for bit 8 to match updated value in ``stdatamodels``. [#3765]
+
 Cubeviz
 ^^^^^^^
 

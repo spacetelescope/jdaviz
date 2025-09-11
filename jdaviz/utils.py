@@ -23,6 +23,7 @@ import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
 from specutils.utils.wcs_utils import SpectralGWCS
+import stdatamodels
 
 from glue.config import settings
 from glue.config import colormaps as glue_colormaps
@@ -42,6 +43,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'wildcard_match', 'cmap_samples', 'glue_colormaps']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
+STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
