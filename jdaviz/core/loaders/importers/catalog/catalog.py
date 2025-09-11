@@ -36,11 +36,6 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_other_selected = List().tag(sync=True)
     col_other_multiselect = Bool(True).tag(sync=True)
 
-    label_value = Unicode().tag(sync=True)
-    label_default = Unicode().tag(sync=True)
-    label_auto = Bool(True).tag(sync=True)
-    label_invalid_msg = Unicode().tag(sync=True)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
