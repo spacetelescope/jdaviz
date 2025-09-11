@@ -75,10 +75,6 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
 
-        self.data_label_default = 'Catalog'
-        self.data_label = self.app.return_unique_name(self.data_label_default)
-        self.data_label_default = self.data_label
-
     def _guess_ra_dec_cols(self, col):
         """
         Rough guess at detecting ra, dec columns from input table by checking
