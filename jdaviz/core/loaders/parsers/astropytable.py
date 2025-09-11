@@ -54,8 +54,6 @@ class AstropyTableParser(BaseParser):
         else:
             return len(table) > 0
 
-        return True
-
     @cached_property
     def output(self):
         return QTable.read(self.input, format='ascii')
