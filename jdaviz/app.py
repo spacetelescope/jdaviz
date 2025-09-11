@@ -2613,6 +2613,13 @@ class Application(VuetifyTemplate, HubListener):
             kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
             item.open_in_tray(**kw)
 
+    def print_external_links(self):
+        for link in self.data_collection.external_links:
+            try:
+                print(f"{link.__class__.__name__} {link.data1.label}:{link.cids1[0]}({getattr(link.cids1[0], '_component_type', 'undefined')}) <--> {link.data2.label}:{link.cids2[0]}({getattr(link.cids2[0], '_component_type', 'undefined')})")  # noqa: E501
+            except Exception:
+                print(f"{link.__class__.__name__} {str(link)}")
+
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
