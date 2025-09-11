@@ -478,9 +478,10 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.sources.select_all()
+        with pytest.warns(UserWarning):
+            # Catch the warning about default selection
+            result = importer_obj.output
 
-        result = importer_obj.output
         assert np.all(result.flux == spec.flux)
         assert np.all(result.spectral_axis == spec.spectral_axis)
         if with_uncertainty:
@@ -527,8 +528,9 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        importer_obj.sources.select_all()
-        importer_obj.__call__()
+        with pytest.warns(UserWarning):
+            # Catch the warning about default selection
+            importer_obj.__call__()
 
         dc = deconfigged_helper.app.data_collection
         assert len(dc) == 1  # 1 concatenated spectrum loaded

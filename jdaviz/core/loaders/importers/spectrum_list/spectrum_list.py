@@ -118,10 +118,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # Check to see if the user has changed the selection from the default
         # If so, we set this flag to False so that the snackbar message
         # in __call__() is not triggered.
-        if (self._sources_selected_default and
-                change.get('name') == 'sources_selected' and
-                change.get('new') != self.sources.choices[0]):
-            self._sources_selected_default = False
+        if self._sources_selected_default and change.get('name') == 'sources_selected':
+            # Normalize the new value to a list so we can compare consistently
+            # whether the change provides a single value or a list of values.
+            new = change.get('new')
+            new_list = new if isinstance(new, (list, tuple)) else [new]
+            if new_list != [self.sources.choices[0]]:
+                self._sources_selected_default = False
 
         if len(self.sources_selected) == 0:
             self.import_disabled = True
