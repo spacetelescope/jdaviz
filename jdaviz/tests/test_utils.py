@@ -121,6 +121,7 @@ def test_has_wildcard():
 def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     default_choices = ['some choice', 'some good choice', 'good choice', 'maybe a bad choice']
     test_obj = FakeObject()
+    test_obj.allow_multiselect = True
 
     # No choices in obj or provided
     match_result = wildcard_match(test_obj, '*')
