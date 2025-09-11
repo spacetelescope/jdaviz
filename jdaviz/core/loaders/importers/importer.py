@@ -108,11 +108,11 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def __init__(self, app, resolver, input, **kwargs):
         super().__init__(app, resolver, input, **kwargs)
-        self.data_label_default = self._registry_label
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',
                                         'data_label_invalid_msg')
+        self.data_label_default = self.app.return_unique_name(self._registry_label)
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
                                             'viewer_selected',
@@ -150,7 +150,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @staticmethod
     def _get_supported_viewers():
-        raise NotImplementedError("Importer subclass must implement viewer_create_new_items")  # noqa pragma: nocover
+        raise NotImplementedError("Importer subclass must implement _get_supported_viewers")  # noqa pragma: nocover
 
     @property
     def ignore_viewers_with_cls(self):
