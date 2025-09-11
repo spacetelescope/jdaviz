@@ -121,24 +121,26 @@ def test_has_wildcard():
 def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     default_choices = ['some choice', 'some good choice', 'good choice', 'maybe a bad choice']
     test_obj = FakeObject()
-    test_obj.allow_multiselect = True
 
     # No choices in obj or provided
     match_result = wildcard_match(test_obj, '*')
     assert match_result == '*'
 
-    # Multiselect is not an attribute yet
+    # Multiselect is not an attribute yet so we retain the value of the input string
     match_result = wildcard_match(test_obj, '*', choices=default_choices[0])
     assert match_result == '*'
+
+    # Turn on allow_multiselect to check the actual matching functionality
+    test_obj.allow_multiselect = True
 
     # Add choices attribute, no matches
     test_obj.choices = default_choices
     match_result = wildcard_match(test_obj, 'not good*')
-    assert match_result == 'not good*'
+    assert match_result == ['not good*']
 
     # Test that the function kwarg `choices` overrides the object's choices attribute
     match_result = wildcard_match(test_obj, 'bad*', choices=default_choices[:-1])
-    assert match_result == 'bad*'
+    assert match_result == ['bad*']
 
     test_selections = {
         # Test all
