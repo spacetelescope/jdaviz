@@ -215,7 +215,7 @@
       <v-container class="fill-height pa-0" fluid>
         <splitpanes>
           <pane size="25" min-size="25" v-if="config === 'deconfigged' && state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 320px">
-            <v-card v-if="state.drawer_content === 'loaders'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'loaders' && !disableFileLoader" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.add_subtab">
                 <v-tab>Data</v-tab>
                 <v-tab>Viewer</v-tab>
@@ -355,7 +355,7 @@
           </pane>
 
           <pane size="25" min-size="25" v-if="config !== 'deconfigged' && state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
-            <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'loaders' && !disableFileLoader" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <j-loader-panel
                 :loader_items="state.loader_items"
                 :loader_selected.sync="state.loader_selected"
@@ -449,6 +449,19 @@ export default {
       outputCellHasHeight: false,
       showGoldenLayout: true,
     };
+  },
+  computed: {
+    showLoaderPanel() {
+      const isRemote = this.state.settings.server_is_remote;
+      const remoteSetting = this.state.settings.remote_loader_setting;
+      if (!isRemote) return true;
+      if (remote_setting === 'hide') return false;
+      if (remoteSetting === 'show' || remoteSetting === 'allow_subcomponent_selection') return true;
+      return false;
+    },
+    disableFileLoader() {
+      return this.state.settings.server_is_remote && this.state.settings.remote_loader_setting === 'allow_secondary_selection';
+    }
   },
   methods: {
     checkNotebookContext() {
