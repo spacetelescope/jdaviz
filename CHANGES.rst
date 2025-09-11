@@ -88,6 +88,9 @@ Bug Fixes
 
 - Fixes support for using jdaviz downstream in lcviz. [#3772]
 
+- Fixed a bug in Line Analysis where spectra were improperly being shifted away from
+  0 after continuum subtraction, particularly affecting absorption features. [#3775]
+
 Cubeviz
 ^^^^^^^
 
