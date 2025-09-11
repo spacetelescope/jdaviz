@@ -938,7 +938,7 @@ def wildcard_match(obj, value, choices=None):
             return value
 
     # any works for both str and iterable
-    if hasattr(obj, 'multiselect') and any(has_wildcard(v) for v in value if isinstance(v, str)):
+    if obj.allow_multiselect and any(has_wildcard(v) for v in value if isinstance(v, str)):
         if isinstance(value, str):
             obj.multiselect = True
             value = wildcard_match_str(choices, value)
