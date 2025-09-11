@@ -655,6 +655,10 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
                        'stretch_curve_visible', 'apply_RGB_presets']
+        if self.config in ('imviz', 'deconfigged'):
+            expose += ['marker_visible', 'marker_fill', 'marker_opacity',
+                       'marker_size', 'marker_size_scale', 'marker_color_mode', 'marker_color',
+                       'marker_color_col', 'marker_colormap', 'marker_colormap_vmin', 'marker_colormap_vmax']
 
         return PluginUserApi(self, expose)
 
