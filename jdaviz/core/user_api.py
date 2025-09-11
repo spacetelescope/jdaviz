@@ -70,7 +70,8 @@ class UserApiWrapper:
                                                 AutoTextField,
                                                 ViewerSelectCreateNew)
         if isinstance(exp_obj, ViewerSelectCreateNew):
-            if value in exp_obj.choices + ['', []] or '*' in value or '?' in value:
+            from jdaviz.utils import has_wildcard
+            if value in exp_obj.choices + ['', []] or has_wildcard(value):
                 exp_obj.create_new.selected = ''
                 exp_obj.selected = value
                 return
