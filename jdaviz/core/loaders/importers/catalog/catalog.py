@@ -75,11 +75,14 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
 
-        self.label_default = 'Catalog'
-        self.label = AutoTextField(self, 'label_value',
-                                   'label_default',
-                                   'label_auto',
-                                   'label_invalid_msg')
+        self.data_label_default = 'Catalog'
+        self.data_label = self.app.return_unique_name(self.data_label_default)
+        self.data_label_default = self.data_label
+
+        # self.data_label = AutoTextField(self, 'data_label_value',
+        #                                 'data_label_default',
+        #                                 'data_label_auto',
+        #                                 'data_label_invalid_msg')   
 
     def _guess_ra_dec_cols(self, col):
         """
@@ -256,12 +259,3 @@ class CatalogImporter(BaseImporterToDataCollection):
                 output_table[col] = table[col]
 
         return output_table
-
-    def __call__(self):
-
-        data_label = self.data_label_value
-
-        # self.output is always a list of Data objects
-        output = self.output
-
-        self.add_to_data_collection(output, data_label)

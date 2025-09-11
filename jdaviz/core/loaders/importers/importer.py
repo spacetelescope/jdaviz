@@ -150,7 +150,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @staticmethod
     def _get_supported_viewers():
-        raise NotImplementedError("Importer subclass must implement get_supported_viewers")  # noqa pragma: nocover
+        raise NotImplementedError("Importer subclass must implement _get_supported_viewers")  # noqa pragma: nocover
 
     @property
     def ignore_viewers_with_cls(self):
