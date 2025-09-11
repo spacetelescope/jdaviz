@@ -5,7 +5,7 @@ import numpy as np
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.template_mixin import AutoTextField, SelectPluginComponent
+from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
 
@@ -78,11 +78,6 @@ class CatalogImporter(BaseImporterToDataCollection):
         self.data_label_default = 'Catalog'
         self.data_label = self.app.return_unique_name(self.data_label_default)
         self.data_label_default = self.data_label
-
-        # self.data_label = AutoTextField(self, 'data_label_value',
-        #                                 'data_label_default',
-        #                                 'data_label_auto',
-        #                                 'data_label_invalid_msg')   
 
     def _guess_ra_dec_cols(self, col):
         """

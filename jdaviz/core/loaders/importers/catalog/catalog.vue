@@ -52,10 +52,10 @@
   />
 
 <plugin-auto-label
-      :value.sync="label_value"
-      :default="label_default"
-      :auto.sync="label_auto"
-      :invalid_msg="label_invalid_msg"
+      :value.sync="data_label_value"
+      :default="data_label_default"
+      :auto.sync="data_label_auto"
+      :invalid_msg="data_label_invalid_msg"
       label="Catalog label"
       api_hint="ldr.importer.label ="
       :api_hints_enabled="api_hints_enabled"
