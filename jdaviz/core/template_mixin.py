@@ -2006,6 +2006,7 @@ class LayerSelect(SelectPluginComponent):
                         # hard-code sonified layer icon color for data menu and plot options
                         colors = '#000000'
                     elif (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
+                            and hasattr(layer.state, 'bitmap_visible')
                             and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
                     else:
