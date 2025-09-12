@@ -262,7 +262,8 @@ class ApplicationState(State):
         },
         'dense_toolbar': True,
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        'remote_loader_setting': 'show',
+        'remote_hide_source_loader_panel': True,
+        'remote_only_show_source_component_selection': True,
         # In the context of a remote server, allow/disallow showing the loader
         # server_is_remote == False -> Usual behavior, show loader, etc.
         # server_is_remote + 'show' -> show loader
@@ -351,6 +352,9 @@ class Application(VuetifyTemplate, HubListener):
     invisible_children = List(Any()).tag(sync=True, **widget_serialization)
     golden_layout_state = Dict(default_value=None, allow_none=True).tag(sync=True)
     force_open_about = Bool(False).tag(sync=True)
+
+    hide_source_loader_panel = Bool(False).tag(sync=True)
+    only_show_source_component_selection = Bool(False).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -460,6 +464,9 @@ class Application(VuetifyTemplate, HubListener):
                                 lambda value: self.hub.broadcast(IconsUpdatedMessage('viewer', value, sender=self)))  # noqa
         self.state.add_callback('layer_icons',
                                 lambda value: self.hub.broadcast(IconsUpdatedMessage('layer', value, sender=self)))  # noqa
+
+        # Set traitlets for the remote server configuration
+        set_traitlets_remote_server(self)
 
     def _on_plugin_table_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -3296,3 +3303,26 @@ class Application(VuetifyTemplate, HubListener):
 
     def _get_assoc_data_parent(self, data_label):
         return self._data_associations.get(data_label, {}).get('parent')
+
+
+def set_traitlets_remote_server(target):
+    """
+    Set loader-related traitlets based on the application's remote server
+    configuration.
+
+    Parameters
+    ----------
+    target : object
+        Either an `Application` instance or a resolver instance that has an
+        `app` attribute pointing to an `Application`.
+    """
+    if isinstance(target, Application):
+        state_settings = target.state.settings
+    else:
+        state_settings = target.app.state.settings
+
+    if state_settings.get('server_is_remote', False):
+        # Set the traitlet on the passed object (app or resolver).
+        target.hide_source_loader_panel = state_settings.get('remote_hide_source_loader_panel')
+        if not target.hide_source_loader_panel:
+            target.only_show_source_component_selection = state_settings.get('remote_only_show_source_component_selection')  # noqa
