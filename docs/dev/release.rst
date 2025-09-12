@@ -408,7 +408,7 @@ Milestones bookkeeping
 
 4. Make sure the milestone of this release ends up with "0 open" and then close it.
 
-56. Remind the other devs of the open pull requests with milestone moved that they
+5. Remind the other devs of the open pull requests with milestone moved that they
    will need to move their change log entries to the new release section that you
    have created in ``CHANGES.rst`` during the release process.
 
