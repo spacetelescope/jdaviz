@@ -227,6 +227,7 @@
                     :loader_selected.sync="state.loader_selected"
                     :api_hints_enabled="state.show_api_hints"
                     :api_hints_obj="api_hints_obj || config"
+                    :disable_file_loader="disableSourceLoader"
                   ></j-loader-panel>
                 </v-tab-item>
                 <v-tab-item style="padding-bottom: 40px">
@@ -361,6 +362,7 @@
                 :loader_selected.sync="state.loader_selected"
                 :api_hints_enabled="state.show_api_hints"
                 :api_hints_obj="api_hints_obj || config"
+                :disable_file_loader="disableSourceLoader"
               ></j-loader-panel>
             </v-card>
 
@@ -460,7 +462,7 @@ export default {
       return false;
     },
     disableSourceLoader() {
-      return this.state.settings.server_is_remote && this.state.settings.remote_loader_setting === 'allow_secondary_selection';
+      return this.state.settings.server_is_remote && this.state.settings.remote_loader_setting === 'allow_subcomponent_selection';
     }
   },
   methods: {
