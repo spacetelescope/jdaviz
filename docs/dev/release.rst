@@ -284,7 +284,7 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
    backport PRs intended for this release have been merged.
 
 3. Checkout the upstream ``vX.Y.x`` branch corresponding to the last feature release.
-   Alternativley you can create a new local branch from ``vX.Y.x`` and make sure
+   Alternatively you can create a new local branch from ``vX.Y.x`` and make sure
    it is up to date with the upstream ``vX.Y.x`` branch, in which case you will
    eventually open a PR to ``vX.Y.x`` with changes for the release from your fork 
    instead of pushing directly to upstream.
@@ -306,7 +306,7 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      git add CITATION.cff
      git commit -m "Preparing release vX.Y.Z"
 
-7. Push the ``vX.Y.x`` branch to upstream. Alternativley, you can open a PR to
+7. Push the ``vX.Y.x`` branch to upstream. Alternatively, you can open a PR to
    the ``vX.Y.x`` branch from your fork if you do not have direct push access or
    prefer to not push directly to upstream. Make sure the CI passes. If any of
    the CI fails, stop here; do not continue! Contact the maintainers for
