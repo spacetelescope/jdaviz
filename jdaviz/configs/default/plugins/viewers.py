@@ -7,12 +7,14 @@ from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
+from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.utils import avoid_circular
 
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.scatter import BqplotScatterView
 from glue_jupyter.table import TableViewer
 
 from astropy.utils import deprecated
@@ -424,6 +426,8 @@ class JdavizViewerMixin(WithCache):
         # we don't have access to the actual subset yet to tell if its spectral or spatial, so
         # we'll store the name of this new subset and change the default linewidth when the
         # layers are added
+        if not hasattr(self, '_expected_subset_layers'):
+            return
         if msg.subset.label not in self._expected_subset_layers and msg.subset.label:
             self._expected_subset_layers.append(msg.subset.label)
 
@@ -964,3 +968,19 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
             for i in (0, 1):
                 self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}
+
+
+@viewer_registry("scatter-viewer", label="scatter")
+class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                    ['bqplot:xrange', 'bqplot:yrange', 'bqplot:rectangle'],
+                    [],
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
+    _state_cls = ScatterViewerState
+
+    _native_mark_classnames = ('Image', 'ImageGL', 'Scatter', 'ScatterGL')
