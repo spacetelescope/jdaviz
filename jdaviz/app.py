@@ -262,16 +262,14 @@ class ApplicationState(State):
         },
         'dense_toolbar': True,
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        """
-        In the context of a remote server, allow/disallow showing the loader
-        server_is_remote == False -> Usual behavior, show loader, etc.
-        server_is_remote + 'show' -> show loader
-        server_is_remote + 'hide' -> hide loader completely, prepopulate the data
-        server_is_remote + 'allow_subcomponent_selection' -> hide the file loader, 
-          but allow selecting and loading items from the file. This is used for 
-          Spectrum Lists or multi-extension images.
-        """
         'remote_loader_setting': 'show',
+        # In the context of a remote server, allow/disallow showing the loader
+        # server_is_remote == False -> Usual behavior, show loader, etc.
+        # server_is_remote + 'show' -> show loader
+        # server_is_remote + 'hide' -> hide loader completely, prepopulate the data
+        # server_is_remote + 'allow_subcomponent_selection' -> hide the file loader,
+        #   but allow selecting and loading items from the file. This is used for
+        #   Spectrum Lists or multi-extension images.
         'context': {
             'notebook': {
                 'max_height': '600px'
