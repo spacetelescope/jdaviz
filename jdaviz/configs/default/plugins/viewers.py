@@ -7,12 +7,14 @@ from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
+from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.utils import avoid_circular
 
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.scatter import BqplotScatterView
 from glue_jupyter.table import TableViewer
 
 from astropy.utils import deprecated
@@ -966,9 +968,6 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
             for i in (0, 1):
                 self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}
-
-from glue_jupyter.bqplot.scatter import BqplotScatterView
-from glue.viewers.scatter.state import ScatterViewerState
 
 
 @viewer_registry("scatter-viewer", label="scatter")

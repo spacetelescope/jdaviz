@@ -207,7 +207,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     yatt_value = Unicode().tag(sync=True)
     yatt_sync = Dict().tag(sync=True)
 
-
     # profile/line viewer/layer options:
     line_visible_value = Bool().tag(sync=True)
     line_visible_sync = Dict().tag(sync=True)
