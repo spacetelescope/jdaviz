@@ -36,7 +36,6 @@ Choose your adventure:
 But wait, there's more:
 
 * :ref:`release-milestones`
-* :ref:`release-labels`
 * :ref:`manual-backport`
 
 .. _release-feature:
@@ -54,12 +53,14 @@ You can do a release from your fork directly without a clean code check-out.
    and `readthedocs (RTD) build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
    are passing.
 
-2. Lock down the ``main`` branch of the repository by setting the
+2. Optional, but recommended: Lock down the ``main`` branch of the repository by setting the
    `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
    rule for ``main`` (note: only available to Jdaviz admins) to some high number
    required to merge, so that more PRs don't get merged while you're releasing.
+   At the very least, give a heads up to the team that you are working on a release
+   and that they should hold off merging any PRs until the release is done.
 
-3. Create a new local branch and make sure you have updated tags too. Note
+3. Create a new local 'vX.Y.x' branch and make sure you have updated tags too. Note
    that the "x" here should actually be the letter "x", whereas the upper case "X"
    and "Y" should be replace by your major and minor version numbers:
 
@@ -243,7 +244,7 @@ You can do a release from your fork directly without a clean code check-out.
      git tag -a vA.C.dev -m "Back to development: A.C.dev"
      git push upstream vA.C.dev
 
-17. Follow procedures for :ref:`release-milestones` and :ref:`release-labels`.
+17. Follow procedures for :ref:`release-milestones`.
 
 18. For your own sanity (unrelated to the release), grab the new tag for your fork:
 
@@ -270,16 +271,23 @@ cleanup on the ``main`` branch. In the following, X and Y refer to the minor rel
 which you're doing a bugfix release. For example, if you are releasing v3.5.2, replace all
 instances of ``vX.Y.x`` with ``v3.5.x``.
 
-1. Lock down the ``vX.Y.x`` branch of the repository by setting the
+1. Optional but recommended: Lock down the ``vX.Y.x`` branch of the repository by setting the
    `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
    rule for ``v*.x`` (note: only available to Jdaviz admins) to some high number required to merge,
-   so that more PRs don't get merged while you're releasing.
+   so that more PRs don't get merged while you're releasing. At the very least,
+   give a heads up to the team that you are working on a release
+   and that they should hold off merging any PRs to the bugfix branch (including
+   tagging PRs to main to the bugfix branch) until the release is done.
 
 2. Review the appropriate `Milestone <https://github.com/spacetelescope/jdaviz/milestones>`_
    to see which PRs should be released in this version, and double check that any open
    backport PRs intended for this release have been merged.
 
-3. Checkout the ``vX.Y.x`` branch corresponding to the last feature release.
+3. Checkout the upstream ``vX.Y.x`` branch corresponding to the last feature release.
+   Alternativley you can create a new local branch from ``vX.Y.x`` and make sure
+   it is up to date with the upstream ``vX.Y.x`` branch, in which case you will
+   eventually open a PR to ``vX.Y.x`` with changes for the release from your fork 
+   instead of pushing directly to upstream.
 
 4. The ``CHANGES.rst`` file should have all of the bug fixes to be released. Delete the
    unreleased feature version section at the top of the changelog if it exists and update
@@ -298,9 +306,10 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      git add CITATION.cff
      git commit -m "Preparing release vX.Y.Z"
 
-7. Push the ``vX.Y.x`` branch to upstream.
-   Make sure the CI passes. If any of the CI fails,
-   stop here; do not continue! Contact the maintainers for
+7. Push the ``vX.Y.x`` branch to upstream. Alternativley, you can open a PR to
+   the ``vX.Y.x`` branch from your fork if you do not have direct push access or
+   prefer to not push directly to upstream. Make sure the CI passes. If any of
+   the CI fails, stop here; do not continue! Contact the maintainers for
    information on how to proceed. Otherwise,
    go to the next step.
 
@@ -385,40 +394,24 @@ Milestones bookkeeping
 
 2. If you are doing a bugfix release, create a new milestone for the next bugfix release.
    If you are doing a feature release, create a new milestone for **both**
-   feature and bugfix releases.
-   You do not need to fill in the description and due date fields.
+   feature and bugfix releases. Change the ``description`` field for the new
+   milestone(s) to include ONLY "on-merge: backport to vX.Y.x", with X and Y
+   being the major and minor version of these milestones. For example, if you are
+   creating a new 1.2.3 bugfix milestone after a 1.2.2 bugfix release, the description
+   for the 1.2.3 milestone should be "on-merge: backport to v1.2.x". This text in
+   the milestone description is used by the auto-backport bot to trigger automatic
+   backport on merge for PRs with this milestone. You can leave the due date field
+   empty.
 
 3. If there are any open issues or pull requests still attached to the current release,
    move their milestones to the next feature or bugfix milestone as appropriate.
 
 4. Make sure the milestone of this release ends up with "0 open" and then close it.
 
-5. Remind the other devs of the open pull requests with milestone moved that they
+56. Remind the other devs of the open pull requests with milestone moved that they
    will need to move their change log entries to the new release section that you
    have created in ``CHANGES.rst`` during the release process.
 
-.. _release-labels:
-
-Labels bookkeeping
-==================
-
-This is only applicable if you are doing a new branched release.
-In the instructions below, ``A.B`` is the old release and ``A.C`` is
-the new release:
-
-1. Go to `Labels <https://github.com/spacetelescope/jdaviz/labels>`_.
-
-2. Find the old ``backport-vA.B.x`` label. Click its "Edit" button and
-   add ``:zzz:`` in front of it. This would send it all the way to the
-   end of labels listing and indicate that it has been retired from usage.
-
-3. Click "New label" (big green button on top right). Enter ``backport-vA.C.x``
-   as the label name, ``on-merge: backport to vA.C.x`` as the description, and
-   ``#5319E7`` as the color. Then click "Create label".
-
-Going forward, any PR that needs backporting to the ``vA.C.x`` branch can
-have this label applied *before* merge to trigger the auto-backport bot on merge.
-For more info on the bot, see https://meeseeksbox.github.io/ .
 
 .. _manual-backport:
 
@@ -429,8 +422,8 @@ Situations where a pull request might need to be manually backported
 after being merged into ``main`` branch:
 
 * Auto-backport failed.
-* Maintainer forgot to apply relevant label to trigger auto-backport
-  (see :ref:`release-labels`) *before* merging the pull request.
+* Maintainer forgot to apply relevant milestone to trigger auto-backport
+  *before* merging the pull request.
 
 To manually backport pull request ``NNNN`` to a ``vX.Y.x`` branch;
 ``abcdef`` should be replaced by the actual *merge commit hash*
