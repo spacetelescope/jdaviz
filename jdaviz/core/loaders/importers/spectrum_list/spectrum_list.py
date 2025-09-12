@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from copy import deepcopy
+import warnings
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -13,6 +14,7 @@ from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            _spectrum_assign_component_type)
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.core.events import SnackbarMessage
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -41,6 +43,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
         sources_options = []
+        self._sources_selected_default = True
 
         if isinstance(self.input, Spectrum):
             speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
@@ -80,7 +83,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     multiselect='sources_multiselect',
                                                     manual_options=sources_options)
 
-        self.sources.selected = []
+        self.sources.selected = [self.sources.choices[0]]
+        # Make sure it's still set to true
+        self._sources_selected_default = True
         self._sources_items_helper = deepcopy(self.sources.items)
 
         # TODO: This observer will likely be removed in follow-up effort
@@ -110,6 +115,17 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
     @observe('sources_selected')
     def _on_sources_selected_change(self, change={}):
+        # Check to see if the user has changed the selection from the default
+        # If so, we set this flag to False so that the snackbar message
+        # in __call__() is not triggered.
+        if self._sources_selected_default and change.get('name') == 'sources_selected':
+            # Normalize the new value to a list so we can compare consistently
+            # whether the change provides a single value or a list of values.
+            new = change.get('new')
+            new_list = new if isinstance(new, (list, tuple)) else [new]
+            if new_list != [self.sources.choices[0]]:
+                self._sources_selected_default = False
+
         if len(self.sources_selected) == 0:
             self.import_disabled = True
         else:
@@ -223,12 +239,23 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         return spec
 
+    def _check_sources_selected_default(self):
+        if self._sources_selected_default:
+            msg_str = (f"The default source selection ({self.sources.selected}) will be used.\n"
+                       f"To load additional sources, please specify them via dropdown or "
+                       f"as follows:\n'{self.config}.load(filename, sources = [...]).")
+            msg = SnackbarMessage(msg_str, color='warning', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
+            warnings.warn(msg_str)
+
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return _spectrum_assign_component_type(comp_id, comp, units, physical_type)
 
     def __call__(self):
         if not self.sources.selected:
             raise ValueError("No sources selected.")
+
+        self._check_sources_selected_default()
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
@@ -300,6 +327,8 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
         spectrum_list = self.sources.selected
         if len(spectrum_list) == 0:
             return []
+
+        self._check_sources_selected_default()
 
         # Vectorized collection of all wavelengths, fluxes, and uncertainties
         wl_list = []

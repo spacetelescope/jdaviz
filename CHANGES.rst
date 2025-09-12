@@ -34,6 +34,8 @@ Specviz
 
 - Added support for WFSS Level 3 data. [#3729]
 
+- Spectrum lists default to selecting the first available source. [#3771]
+
 Specviz2d
 ^^^^^^^^^
 

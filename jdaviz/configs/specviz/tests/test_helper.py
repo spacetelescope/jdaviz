@@ -2,7 +2,6 @@ from zipfile import ZipFile
 
 import numpy as np
 import pytest
-import re
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
@@ -62,12 +61,6 @@ class TestSpecvizHelper:
          {'sources': [f"1D Spectrum at index: {i}" for i in (0, 1, 2)]},
          {'sources': '*'}))
     def test_load_spectrum_list_with_kwargs(self, kwargs):
-        error_msg = "No sources selected."
-        with pytest.raises(
-                ValueError,
-                match=re.escape(error_msg)):
-            self.spec_app.load_data(self.spec_list)
-
         # When loading via the ``data_label`` argument, the length of the
         # list must match the number of sources in the SpectrumList.
         self.spec_app.load_data(self.spec_list, **kwargs)
