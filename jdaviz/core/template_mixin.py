@@ -1971,6 +1971,11 @@ class LayerSelect(SelectPluginComponent):
         def is_dq_layer(lyr):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
+        def is_not_scatter_if_wcs_linked(lyr):
+            if self.app._align_by.lower() == 'pixels':
+                return getattr(lyr, 'coords', None) is not None
+            return True
+
         return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
