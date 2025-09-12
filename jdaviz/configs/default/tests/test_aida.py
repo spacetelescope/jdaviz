@@ -41,6 +41,9 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     assert_coordinate_close(viewport['center'], expected_center)
     assert_angle_close(viewport['fov'], expected_fov)
 
+    expected_rotation = -0.00052851 * u.deg
+    assert_angle_close(viewport['rotation'], expected_rotation)
+
     assert viewport['image_label'] == expected_image_label
 
 
@@ -52,7 +55,8 @@ def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
     # change only the center:
     new_viewport_settings = dict(
         center=SkyCoord(ra=337.5, dec=-20.8, unit='deg'),
-        fov=0.01 * u.deg
+        fov=0.01 * u.deg,
+        rotation=90 * u.deg
     )
     viewer.aid.set_viewport(**new_viewport_settings)
     new_viewport = viewer.aid.get_viewport('sky')
