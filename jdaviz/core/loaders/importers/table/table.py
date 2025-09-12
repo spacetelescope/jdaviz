@@ -4,11 +4,11 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 
 
-__all__ = ['ScatterImporter']
+__all__ = ['TableImporter']
 
 
-@loader_importer_registry('Scatter')
-class ScatterImporter(BaseImporterToDataCollection):
+@loader_importer_registry('Table')
+class TableImporter(BaseImporterToDataCollection):
     template_file = __file__, "../to_dc_with_label.vue"
 
     def __init__(self, *args, **kwargs):
