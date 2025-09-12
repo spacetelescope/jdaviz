@@ -369,7 +369,6 @@ class TestTwo2dSpectra:
                                                             specviz2d_helper,
                                                             deconfigged_helper,
                                                             spectrum2d):
-        parent_label = ''
         helper_dict = {'load': deconfigged_helper,
                        'loader_infrastructure': deconfigged_helper,
                        'loader_infrastructure_alternate_order': deconfigged_helper,
