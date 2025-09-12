@@ -1,13 +1,13 @@
 <template>
   <v-card flat>
-    <v-card-title class="headline" color="primary" primary-title style="display: block; width: 100%">
+    <v-card-title v-if="!only_show_source_component_selection" class="headline" color="primary" primary-title style="display: block; width: 100%">
       {{title}}
       <span style="float: right">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </span>
     </v-card-title>
     <v-card-text>
-        <v-container>
+        <v-container v-if="!only_show_source_component_selection">
           <slot/>
         </v-container>
         <div style="display: grid"> <!-- overlay container -->
@@ -74,7 +74,7 @@ module.exports = {
   props: ['title', 'popout_button',
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',
-          'importer_widget',
+          'importer_widget', 'only_show_source_component_selection',
           'api_hints_enabled', 'valid_import_formats'],
 }
 </script>
