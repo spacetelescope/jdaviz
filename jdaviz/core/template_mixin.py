@@ -1971,6 +1971,11 @@ class LayerSelect(SelectPluginComponent):
         def is_dq_layer(lyr):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
+        def is_not_scatter_if_wcs_linked(lyr):
+            if self.app._align_by.lower() == 'pixels':
+                return getattr(lyr, 'coords', None) is not None
+            return True
+
         return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
@@ -2006,6 +2011,7 @@ class LayerSelect(SelectPluginComponent):
                         # hard-code sonified layer icon color for data menu and plot options
                         colors = '#000000'
                     elif (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
+                            and hasattr(layer.state, 'bitmap_visible')
                             and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
                     else:
@@ -4178,6 +4184,10 @@ class DatasetSelect(SelectPluginComponent):
 
         def is_image(data):
             return len(data.shape) == 2
+
+        def is_image_not_spectrum_or_catalog(data):
+            return (is_image_not_spectrum(data)
+                    or data.meta.get('_importer', '') == 'CatalogImporter')
 
         def is_image_not_spectrum(data):
             if not is_image(data):
