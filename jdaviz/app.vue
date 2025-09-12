@@ -7,7 +7,7 @@
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
 
       <v-toolbar-items v-if="config === 'deconfigged'">
-        <j-tooltip tipid="app-toolbar-loaders">
+        <j-tooltip v-if="showAddData" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
@@ -77,7 +77,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state.show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="(state.dev_loaders || ['cubeviz', 'mosviz', 'rampviz'].indexOf(config) === -1) && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="(state.dev_loaders || ['cubeviz', 'mosviz', 'rampviz'].indexOf(config) === -1) && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0 && showAddData" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
@@ -215,7 +215,7 @@
       <v-container class="fill-height pa-0" fluid>
         <splitpanes>
           <pane size="25" min-size="25" v-if="config === 'deconfigged' && state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 320px">
-            <v-card v-if="state.drawer_content === 'loaders' && !disableFileLoader" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'loaders'" flat tile class="fill-height" style="overflow-x: hidden; overflow-y: hidden" color="gray">
               <v-tabs fixed-tabs dark background-color="viewer_toolbar" v-model="state.add_subtab">
                 <v-tab>Data</v-tab>
                 <v-tab>Viewer</v-tab>
@@ -355,7 +355,7 @@
           </pane>
 
           <pane size="25" min-size="25" v-if="config !== 'deconfigged' && state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
-            <v-card v-if="state.drawer_content === 'loaders' && !disableFileLoader" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+            <v-card v-if="state.drawer_content === 'loaders'" flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <j-loader-panel
                 :loader_items="state.loader_items"
                 :loader_selected.sync="state.loader_selected"
@@ -451,15 +451,15 @@ export default {
     };
   },
   computed: {
-    showLoaderPanel() {
+    showAddData() {
       const isRemote = this.state.settings.server_is_remote;
       const remoteSetting = this.state.settings.remote_loader_setting;
       if (!isRemote) return true;
-      if (remote_setting === 'hide') return false;
+      if (remoteSetting === 'hide') return false;
       if (remoteSetting === 'show' || remoteSetting === 'allow_subcomponent_selection') return true;
       return false;
     },
-    disableFileLoader() {
+    disableSourceLoader() {
       return this.state.settings.server_is_remote && this.state.settings.remote_loader_setting === 'allow_secondary_selection';
     }
   },
