@@ -67,7 +67,7 @@ def test_uri_to_download_specviz(specviz_helper):
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper):
-    uri = cached_uri("mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
+    uri = cached_uri("mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
     specviz2d_helper.load_data(uri, cache=True)
 
 

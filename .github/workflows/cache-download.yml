@@ -12,7 +12,7 @@ env:
                  hst:jclj01010_drz.fits,
                  jwst:jw01050-o003_t005_miri_ch1-medium_s3d.fits,
                  jwst:jw01524-o003_t002_miri_ch1-medium_s3d.fits,
-                 jwst:jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits,
+                 jwst:jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits,
                  jwst:jw01538160001_16101_00004_nrs1_s2d.fits,
                  jwst:jw01895001004_07101_00001_nrca3_cal.fits,
                  jwst:jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d.fits,
