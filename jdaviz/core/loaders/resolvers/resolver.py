@@ -7,6 +7,7 @@ from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
+from jdaviz.app import set_traitlets_remote_server
 
 __all__ = ['BaseResolver', 'find_matching_resolver']
 
@@ -200,6 +201,11 @@ class BaseResolver(PluginTemplateMixin):
 
     importer_widget = Unicode().tag(sync=True)
 
+    # This (unofficially) shadows the traitlet in `app.py`
+    # to set remote server options based on the app configuration via
+    # set_traitlets_remote_server
+    only_show_source_component_selection = Bool(False).tag(sync=True)
+
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
@@ -224,6 +230,9 @@ class BaseResolver(PluginTemplateMixin):
         self.target = TargetSelect(self,
                                    items='target_items',
                                    selected='target_selected')
+
+        # This set the show_source_loader traitlet based on the app configuration
+        set_traitlets_remote_server(self)
 
     @contextmanager
     def defer_update_format_items(self):
