@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-select
+      v-if="!only_show_source_component_selection"
       :menu-props="{ left: true }"
       attach
       :items="loader_items_filtered"
@@ -13,7 +14,6 @@
       persistent-hint
       outlined
       style="width: 100%; margin-top: 12px; padding-left: 6px; padding-right: 6px;"
-      :disabled="disable_file_loader"
     ></v-select>
 
     <span v-if="loader_selected.length && (api_hints_enabled || loader_selected === 'object')" class="api-hint" style="font-weight: bold; padding-left: 6px">
@@ -27,7 +27,7 @@
 
 <script>
 module.exports = {
-  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'disable_file_loader'],
+  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'only_show_source_component_selection'],
   computed: {
     loader_items_filtered() {
       var has_api_support = this.checkNotebookContext();
