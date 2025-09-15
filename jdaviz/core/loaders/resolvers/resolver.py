@@ -233,18 +233,8 @@ class BaseResolver(PluginTemplateMixin):
                                                             self.server_is_remote)
 
         # Set up bidirectional synchronization
-        self._setup_server_is_remote_sync()
-
-    def _setup_server_is_remote_sync(self):
-        """
-        Set up bidirectional synchronization between the traitlet and app settings.
-        """
         # Listen for changes to app.state.settings and update traitlet
-        # The callback receives the new settings dictionary as the argument
         self.app.state.add_callback('settings', self._on_app_settings_changed)
-
-        # Listen for changes to traitlet and update app settings
-        self.observe(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
 
     def _on_app_settings_changed(self, new_settings_dict):
         """
@@ -255,28 +245,30 @@ class BaseResolver(PluginTemplateMixin):
         new_settings_dict : dict
             The new settings dictionary from the app state.
         """
-        server_is_remote_value = new_settings_dict.get('server_is_remote', False)
-        if self.server_is_remote != server_is_remote_value:
-            # Temporarily remove the observer to prevent infinite loop
-            self.unobserve(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
-            try:
-                self.server_is_remote = server_is_remote_value
-            finally:
-                # Re-attach the observer
-                self.observe(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
+        self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
-    def _on_traitlet_server_is_remote_changed(self, change):
-        """
-        Update app settings when traitlet server_is_remote changes.
+        # TODO: Do we want bi-directional sync?
+        # # No need to go through this if the value is unchanged
+        # if self.server_is_remote != server_is_remote_value:
+        #     # Temporarily remove the observer to prevent infinite loop
+        #     self.unobserve(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
+        #     try:
+        #         self.server_is_remote = server_is_remote_value
+        #     finally:
+        #         # Re-attach the observer
+        #         self.observe(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
 
-        Parameters
-        ----------
-        change : dict
-            Traitlet change dictionary with 'old', 'new', etc.
-        """
-        new_value = change['new']
-        if self.app.state.settings.get('server_is_remote') != new_value:
-            self.app.state.settings['server_is_remote'] = new_value
+    # @observe('server_is_remote')
+    # def _on_traitlet_server_is_remote_changed(self, change):
+    #     """
+    #     Update app settings when traitlet server_is_remote changes.
+    #
+    #     Parameters
+    #     ----------
+    #     change : dict
+    #         Traitlet change dictionary with 'old', 'new', etc.
+    #     """
+    #     self.app.state.settings['server_is_remote'] = change['new']
 
     @contextmanager
     def defer_update_format_items(self):
