@@ -228,8 +228,16 @@ class BaseResolver(PluginTemplateMixin):
                                    items='target_items',
                                    selected='target_selected')
 
-        # This sets the show_source_loader traitlet based on the app configuration
-        self.server_is_remote = self.app.state.settings.get('server_is_remote', False)
+        # Ensure traitlet and app state are in sync at init
+        self.server_is_remote = self.app.state.settings.get('server_is_remote',
+                                                            self.server_is_remote)
+
+    def _on_app_settings_changed(self, new_settings):
+        """
+        Update traitlet when app state settings change.
+        """
+        pass
+        #self.server_is_remote = new_settings.get('server_is_remote', self.server_is_remote)
 
     @contextmanager
     def defer_update_format_items(self):
