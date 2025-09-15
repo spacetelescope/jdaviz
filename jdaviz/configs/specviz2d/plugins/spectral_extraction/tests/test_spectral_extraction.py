@@ -418,6 +418,9 @@ class TestTwo2dSpectra:
 
             parent_label = self.another_spec2d_label
 
+        else:
+            raise NotImplementedError(f"Method {method} not implemented.")
+
         child_labels = {self.spec2d_label,
                         self.spec2d_ext_label,
                         self.another_spec2d_label,
