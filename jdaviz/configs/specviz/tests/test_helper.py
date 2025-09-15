@@ -2,11 +2,10 @@ from zipfile import ZipFile
 
 import numpy as np
 import pytest
-import re
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
-from specutils import Spectrum, SpectrumList, SpectrumCollection, SpectralRegion
+from specutils import Spectrum1D, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
 
 from jdaviz.app import Application
@@ -34,7 +33,7 @@ class TestSpecvizHelper:
 
         data = self.spec_app.get_data()
 
-        assert isinstance(data, Spectrum)
+        assert isinstance(data, Spectrum1D)
 
     def test_load_hdulist(self):
         # Create a fake fits file with a 1D spectrum for testing.
@@ -53,43 +52,35 @@ class TestSpecvizHelper:
         self.label = "Test 1D Spectrum"
         self.spec_app.load_data(fake_hdulist)
         data = self.spec_app.get_data(data_label=self.label)
-        # HDUList should load as Spectrum
-        assert isinstance(data, Spectrum)
+        # HDUList should load as Spectrum1D
+        assert isinstance(data, Spectrum1D)
 
-    @pytest.mark.parametrize(
-        'kwargs',
-        ({'data_label': [f"List test {i}" for i in (1, 2, 3)]},
-         {'sources': [f"1D Spectrum at index: {i}" for i in (0, 1, 2)]},
-         {'sources': '*'}))
-    def test_load_spectrum_list_with_kwargs(self, kwargs):
-        error_msg = "No sources selected."
-        with pytest.raises(
-                ValueError,
-                match=re.escape(error_msg)):
-            self.spec_app.load_data(self.spec_list)
-
-        # When loading via the ``data_label`` argument, the length of the
-        # list must match the number of sources in the SpectrumList.
-        self.spec_app.load_data(self.spec_list, **kwargs)
+    def test_load_spectrum_list_no_labels(self):
+        # now load three more spectra from a SpectrumList, without labels
+        self.spec_app.load_data(self.spec_list)
         assert len(self.spec_app.app.data_collection) == 4
-        if 'load' in list(kwargs.keys())[0]:
-            for i in (1, 2, 3):
-                assert "1D Spectrum" in self.spec_app.app.data_collection[i].label
+        for i in (1, 2, 3):
+            assert "specviz_data" in self.spec_app.app.data_collection[i].label
+
+    def test_load_spectrum_list_with_labels(self):
+        # now load three more spectra from a SpectrumList, with labels:
+        labels = ["List test 1", "List test 2", "List test 3"]
+        self.spec_app.load_data(self.spec_list, data_label=labels)
+        assert len(self.spec_app.app.data_collection) == 4
 
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_data(self.multi_order_spectrum_list, sources='*')
+        self.spec_app.load_data(self.multi_order_spectrum_list)
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
-        # NOTE: will be removed after load_data deprecation is removed
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
             self.spec_app.load_data(self.spec_list, data_label=labels)
 
     def test_load_spectrum_collection(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             collection = SpectrumCollection([1]*u.AA)
             self.spec_app.load_data(collection)
 
@@ -296,7 +287,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     # Mouseover without data should not crash.
-    label_mouseover = specviz_helper._coords_info
+    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
     assert label_mouseover.as_text() == ('', '', '')
@@ -367,14 +358,12 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
 
 
 def test_app_links(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     assert isinstance(sv.jdaviz_app, Application)
     assert isinstance(sv.jdaviz_helper, Specviz)
 
 
 @pytest.mark.remote_data
-@pytest.mark.xfail(reason='Multiple file support not yet implemented in loaders')
 def test_load_spectrum_list_directory(tmpdir, specviz_helper):
     # niriss_parser_test_data.zip
     test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
@@ -401,7 +390,6 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
 
 
 @pytest.mark.remote_data
-@pytest.mark.xfail(reason='Multiple file support not yet implemented in loaders')
 def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
     # niriss_parser_test_data.zip
     test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
@@ -421,30 +409,29 @@ def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
 
 def test_load_2d_flux(specviz_helper):
     # Test loading a spectrum with a 2D flux, which should be split into separate
-    # 1D Spectrum objects to load in Specviz.
-    spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
-                    flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
-
-    specviz_helper.load_data(spec, data_label="test", sources='*')
+    # 1D Spectrum1D objects to load in Specviz.
+    spec = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
+                      flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
+    specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
-    assert specviz_helper.app.data_collection[0].label == "test_index-0"
+    assert specviz_helper.app.data_collection[0].label == "test [0]"
 
-    spec2 = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
-                     flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
+    spec2 = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
+                       flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
-    specviz_helper.load_data(spec_list, data_label="second test", sources='*')
+    specviz_helper.load_data(spec_list, data_label="second test")
 
-    assert len(specviz_helper.app.data_collection) == 6
-    assert specviz_helper.app.data_collection[-1].label == "second test_index-1"
+    assert len(specviz_helper.app.data_collection) == 10
+    assert specviz_helper.app.data_collection[-1].label == "second test [5]"
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    specviz_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    specviz_viewer = specviz_helper.app.get_viewer("spectrum-viewer")
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
@@ -487,18 +474,18 @@ def test_spectra_partial_overlap(specviz_helper):
 
     wave_1 = np.linspace(6000, 7000, 10) * u.AA
     flux_1 = ([1200] * wave_1.size) * u.nJy
-    sp_1 = Spectrum(flux=flux_1, spectral_axis=wave_1)
+    sp_1 = Spectrum1D(flux=flux_1, spectral_axis=wave_1)
 
     wave_2 = wave_1 + (800 * u.AA)
     flux_2 = ([60] * wave_2.size) * u.nJy
-    sp_2 = Spectrum(flux=flux_2, spectral_axis=wave_2)
+    sp_2 = Spectrum1D(flux=flux_2, spectral_axis=wave_2)
 
     specviz_helper.load_data(sp_1, data_label='left')
     specviz_helper.load_data(sp_2, data_label='right')
 
     # Test mouseover outside of left but in range for right.
     # Should show right spectrum even when mouse is near left flux.
-    label_mouseover = specviz_helper._coords_info
+    label_mouseover = specviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 7022, 'y': 1000}})
     assert label_mouseover.as_text() == ('Cursor 7.02200e+03, 1.00000e+03',
@@ -510,18 +497,16 @@ def test_spectra_partial_overlap(specviz_helper):
 def test_spectra_incompatible_flux(specviz_helper):
     """https://github.com/spacetelescope/jdaviz/issues/2459"""
     wav = [1.1, 1.2, 1.3] * u.um
-    sp1 = Spectrum(flux=[1, 1.1, 1] * (u.MJy / u.sr), spectral_axis=wav)
-    sp2 = Spectrum(flux=[1, 1, 1.1] * (u.MJy), spectral_axis=wav)
+    sp1 = Spectrum1D(flux=[1, 1.1, 1] * (u.MJy / u.sr), spectral_axis=wav)
+    sp2 = Spectrum1D(flux=[1, 1, 1.1] * (u.MJy), spectral_axis=wav)
     flux3 = ([1, 1.1, 1] * u.MJy).to(u.erg / u.s / u.cm / u.cm / u.AA, u.spectral_density(wav))
-    sp3 = Spectrum(flux=flux3, spectral_axis=wav)
+    sp3 = Spectrum1D(flux=flux3, spectral_axis=wav)
 
     specviz_helper.load_data(sp2, data_label="2")  # OK
     specviz_helper.load_data(sp1, data_label="1")  # Not OK
     specviz_helper.load_data(sp3, data_label="3")  # OK
 
-    # all 3 load into data-collection, but only two in the viewer (with snackbar error)
-    assert len(specviz_helper.app.data_collection.labels) == 3
-    assert len(specviz_helper.viewers['spectrum-viewer']._obj.layers) == 2
+    assert specviz_helper.app.data_collection.labels == ["2", "3"]
 
 
 def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
@@ -539,7 +524,7 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     assert subset1.subset_state.att.parent.label == "my_spec_AA"
     np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
-    specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
+    specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "my_spec_AA")
     specviz_helper.app.data_item_remove("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened

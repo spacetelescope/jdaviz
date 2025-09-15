@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.utils.decorators import deprecated
 from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
-from specutils import SpectralRegion, Spectrum, SpectrumList, SpectrumCollection
+from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
@@ -17,13 +17,13 @@ def _apply_redshift_to_spectra(spectra, redshift):
 
     flux = spectra.flux
     # This is a hack around inability to input separate redshift with
-    # a SpectralAxis instance in Spectrum
+    # a SpectralAxis instance in Spectrum1D
     spaxis = spectra.spectral_axis.value * spectra.spectral_axis.unit
     mask = spectra.mask
     uncertainty = spectra.uncertainty
-    output_spectra = Spectrum(flux, spectral_axis=spaxis,
-                              redshift=redshift, mask=mask,
-                              uncertainty=uncertainty)
+    output_spectra = Spectrum1D(flux, spectral_axis=spaxis,
+                                redshift=redshift, mask=mask,
+                                uncertainty=uncertainty)
 
     return output_spectra
 
@@ -40,25 +40,22 @@ class Specviz(ConfigHelper, LineListMixin):
         # Listen for new redshifts from the redshift slider
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
-        # Temporary during deconfigging (until _load exposed to all configs)
-        self.load = self._load
 
-    @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
                   concat_by_file=False, cache=None, local_path=None, timeout=None,
-                  load_as_list=False, exposures=None, sources=None, load_all=False):
+                  load_as_list=False):
         """
         Load data into Specviz.
 
         Parameters
         ----------
-        data : str, `~specutils.Spectrum`, or `~specutils.SpectrumList`
-            Spectrum, SpectrumList, or path to compatible data file.
+        data : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
+            Spectrum1D, SpectrumList, or path to compatible data file.
         data_label : str
             The Glue data label found in the ``DataCollection``.
         format : str
             Loader format specification used to indicate data format in
-            `~specutils.Spectrum.read` io method.
+            `~specutils.Spectrum1D.read` io method.
         show_in_viewer : bool
             Show data in viewer(s).
         concat_by_file : bool
@@ -77,61 +74,16 @@ class Specviz(ConfigHelper, LineListMixin):
             `~astropy.utils.data.download_file` or
             `~astroquery.mast.Conf.timeout`).
         """
-        if format is not None:
-            raise NotImplementedError("format is ignored and will be removed in a future release")
-
-        if load_as_list and concat_by_file:
-            raise ValueError("Cannot set both load_as_list and concat_by_file")
-
-        load_kwargs = {}
-        if cache is not None:
-            load_kwargs['cache'] = cache
-        if timeout is not None:
-            load_kwargs['timeout'] = timeout
-        if local_path is not None:
-            load_kwargs['local_path'] = local_path
-        if sources is not None:
-            load_kwargs['sources'] = sources
-        if exposures is not None:
-            load_kwargs['exposures'] = exposures
-
-        if isinstance(data, (SpectrumList, SpectrumCollection)) and isinstance(data_label, list):
-            if len(data_label) != len(data):
-                raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
-                                 f" than length of list of data ({len(data)})")
-            # new infrastructure doesn't support passing a list, but we'll
-            # wrap it for now during deprecation period
-            for spec, label in zip(data, data_label):
-                self.load_data(spec, data_label=label,
-                               show_in_viewer=show_in_viewer,
-                               **load_kwargs)
-            return
-
-        if load_as_list:
-            format = '1D Spectrum List'
-        elif concat_by_file:
-            format = '1D Spectrum Concatenated'
-        elif (isinstance(data, (SpectrumList, SpectrumCollection))
-                or (isinstance(data, Spectrum) and len(data.shape) == 2)):
-            format = '1D Spectrum List'
-        else:
-            format = '1D Spectrum'
-        if data_label is not None:
-            data_label = self.app.return_unique_name(data_label)
-        self.load(data, format=format,
-                  data_label=data_label,
-                  viewer='*' if show_in_viewer else [],
-                  **load_kwargs)
-
-    @property
-    def _spectrum_viewer(self):
-        viewer_reference = self.app._get_first_viewer_reference_name(
-            require_spectrum_viewer=True
-        )
-        if viewer_reference is None:
-            return None
-
-        return self.app.get_viewer(viewer_reference)
+        super().load_data(data,
+                          parser_reference='specviz-spectrum1d-parser',
+                          data_label=data_label,
+                          format=format,
+                          show_in_viewer=show_in_viewer,
+                          concat_by_file=concat_by_file,
+                          cache=cache,
+                          local_path=local_path,
+                          timeout=timeout,
+                          load_as_list=load_as_list)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
@@ -140,15 +92,13 @@ class Specviz(ConfigHelper, LineListMixin):
         spectra = {}
         # Just to save line length
         get_data_method = self.app._jdaviz_helper.get_data
-        viewer = self._spectrum_viewer
-        if viewer is None:
-            return spectra
+        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         all_subsets = self.app.get_subsets(object_only=True)
 
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
                                        spectral_subset=spectral_subset,
-                                       cls=Spectrum)
+                                       cls=Spectrum1D)
             spectra[data_label] = spectrum
         else:
             for layer_state in viewer.state.layers:
@@ -157,7 +107,7 @@ class Specviz(ConfigHelper, LineListMixin):
                     if lyr.label == spectral_subset:
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    spectral_subset=spectral_subset,
-                                                   cls=Spectrum)
+                                                   cls=Spectrum1D)
                         spectra[lyr.data.label] = spectrum
                     else:
                         continue
@@ -170,11 +120,11 @@ class Specviz(ConfigHelper, LineListMixin):
                         isinstance(all_subsets[lyr.label], SpectralRegion)):
                     spectrum = get_data_method(data_label=lyr.data.label,
                                                spectral_subset=lyr.label,
-                                               cls=Spectrum)
+                                               cls=Spectrum1D)
                     spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                 else:
                     spectrum = get_data_method(data_label=lyr.label,
-                                               cls=Spectrum)
+                                               cls=Spectrum1D)
                     spectra[lyr.label] = spectrum
 
         if not apply_slider_redshift:
@@ -183,7 +133,7 @@ class Specviz(ConfigHelper, LineListMixin):
             return spectra
         else:
             output_spectra = {}
-            # We need to create new Spectrum outputs with the redshifts set
+            # We need to create new Spectrum1D outputs with the redshifts set
             for key in spectra.keys():
                 output_spectra[key] = _apply_redshift_to_spectra(spectra[key], self._redshift)
 
@@ -218,7 +168,7 @@ class Specviz(ConfigHelper, LineListMixin):
         """
         return self.app.get_subsets(spectral_only=True, use_display_units=use_display_units)
 
-    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
 
@@ -241,7 +191,7 @@ class Specviz(ConfigHelper, LineListMixin):
         ref_spec = self.get_spectra(ref_index, apply_slider_redshift=False)
         self._set_scale(scale, ref_spec.spectral_axis, x_min, x_max)
 
-    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def y_limits(self, y_min=None, y_max=None):
         """Sets the limits of the y-axis
 
@@ -301,21 +251,21 @@ class Specviz(ConfigHelper, LineListMixin):
 
             scale.max = float(max_val)
 
-    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].reset_limits")
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].reset_limits")
     def autoscale_x(self):
         """Sets the x-axis limits to the min/max of the reference data
 
         """
         self.x_limits("auto", "auto")
 
-    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].reset_limits")
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].reset_limits")
     def autoscale_y(self):
         """Sets the y-axis limits to the min/max of the reference data
 
         """
         self.y_limits("auto", "auto")
 
-    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def flip_x(self):
         """Flips the current limits of the x-axis
 
@@ -323,7 +273,7 @@ class Specviz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer(self._default_spectrum_viewer_reference_name).scale_x
         self.x_limits(x_min=scale.max, x_max=scale.min)
 
-    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_limits")
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_limits")
     def flip_y(self):
         """Flips the current limits of the y-axis
 
@@ -331,7 +281,7 @@ class Specviz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer(self._default_spectrum_viewer_reference_name).scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
 
-    @deprecated(since="4.2", alternative="viewers['1D Spectrum'].set_tick_format")
+    @deprecated(since="4.2", alternative="viewers['spectrum-viewer'].set_tick_format")
     def set_spectrum_tick_format(self, fmt, axis=None):
         """
         Manually set the tick format of one of the axes of the profile viewer.
@@ -353,7 +303,7 @@ class Specviz(ConfigHelper, LineListMixin):
         sv = self.viewers[self._default_spectrum_viewer_reference_name]
         sv.set_tick_format(fmt, axis=['x', 'y'][axis])
 
-    def get_data(self, data_label=None, spectral_subset=None, cls=Spectrum,
+    def get_data(self, data_label=None, spectral_subset=None, cls=None,
                  use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
@@ -365,7 +315,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Provide a label to retrieve a specific data set from data_collection.
         spectral_subset : str, optional
             Spectral subset applied to data.
-        cls : `~specutils.Spectrum`, optional
+        cls : `~specutils.Spectrum1D`, optional
             The type that data will be returned as.
         use_display_units: bool, optional
             Whether to convert to the display units defined in the <unit-conversion> plugin.

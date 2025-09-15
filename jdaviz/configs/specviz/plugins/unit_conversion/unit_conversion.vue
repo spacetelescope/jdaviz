@@ -13,7 +13,6 @@
       v-if="has_spectral"
       :items="spectral_unit_items.map(i => i.label)"
       :selected.sync="spectral_unit_selected"
-      :show_if_single_entry="true"
       label="Spectral Unit"
       api_hint="plg.spectral_unit ="
       :api_hints_enabled="api_hints_enabled"
@@ -24,7 +23,6 @@
       v-if="has_time"
       :items="time_unit_items.map(i => i.label)"
       :selected.sync="time_unit_selected"
-      :show_if_single_entry="true"
       label="Time Unit"
       api_hint="plg.time_unit ="
       :api_hints_enabled="api_hints_enabled"
@@ -35,7 +33,6 @@
       v-if="has_flux"
       :items="flux_unit_items.map(i => i.label)"
       :selected.sync="flux_unit_selected"
-      :show_if_single_entry="true"
       label="Flux Unit"
       api_hint="plg.flux_unit ="
       :api_hints_enabled="api_hints_enabled"
@@ -46,11 +43,10 @@
       v-if="has_angle"
       :items="angle_unit_items.map(i => i.label)"
       :selected.sync="angle_unit_selected"
-      :show_if_single_entry="true"
       label="Angle Unit"
       api_hint="plg.angle_unit ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Global display unit for solid angle."
+      hint="Solid angle unit."
     />
 
     <v-row v-if="has_sb">
@@ -72,7 +68,6 @@
       <plugin-select
         :items="spectral_y_type_items.map(i => i.label)"
         :selected.sync="spectral_y_type_selected"
-        :show_if_single_entry="true"
         label="Spectral y-axis Type"
         api_hint="plg.spectral_y_type ="
         :api_hints_enabled="api_hints_enabled"
