@@ -261,16 +261,17 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'dense_toolbar': True,
-        'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        'remote_hide_source_loader_panel': True,
-        'remote_only_show_source_component_selection': True,
         # In the context of a remote server, allow/disallow showing the loader
         # server_is_remote == False -> Usual behavior, show loader, etc.
-        # server_is_remote + 'show' -> show loader
-        # server_is_remote + 'hide' -> hide loader completely, prepopulate the data
-        # server_is_remote + 'allow_subcomponent_selection' -> hide the file loader,
+        # server_is_remote + remote_hide_source_loader_panel -> hide loader panel completely,
+        #   prepopulate the data, remote_only_show_source_component_selection is not used
+        # server_is_remote + remote_only_show_source_component_selection -> hide the file loader,
         #   but allow selecting and loading items from the file. This is used for
         #   Spectrum Lists or multi-extension images.
+        'server_is_remote': False,  # sets some defaults, should be set before loading the config
+        'remote_hide_source_loader_panel': True,  # default to True just in case a remote server
+                                                  # is used but this is not set by the dev
+        'remote_only_show_source_component_selection': True,
         'context': {
             'notebook': {
                 'max_height': '600px'
