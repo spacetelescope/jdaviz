@@ -14,7 +14,6 @@ from specutils import Spectrum, SpectralRegion
 from glue.core.link_helpers import LinkSameWithUnits
 from glue.core.roi import XRangeROI
 
-from jdaviz.conftest import specviz2d_helper
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
 
@@ -421,7 +420,7 @@ class TestTwo2dSpectra:
         else:
             raise NotImplementedError(f"Method {method} not implemented.")
 
-        child_labels = {self.spec2d_label,
+        child_labels = {self.spec2d_label,  # noqa F841
                         self.spec2d_ext_label,
                         self.another_spec2d_label,
                         self.another_spec2d_ext_label}.difference({parent_label})
@@ -452,7 +451,7 @@ class TestTwo2dSpectra:
         assert len(dc.external_links) == 3
         for link in dc.external_links:
             parent = link.data1
-            child = link.data2
+            child = link.data2  # noqa F841
             assert parent.label == parent_label
             # TODO: THIS FAILS (for specviz2d case only, due to the same label issue above)
             # assert child.label in child_labels
