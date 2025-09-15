@@ -1,13 +1,13 @@
 <template>
   <v-card flat>
-    <v-card-title v-if="!only_show_source_component_selection" class="headline" color="primary" primary-title style="display: block; width: 100%">
+    <v-card-title v-if="remote_enable_importers" class="headline" color="primary" primary-title style="display: block; width: 100%">
       {{title}}
       <span style="float: right">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </span>
     </v-card-title>
     <v-card-text>
-        <v-container v-if="!only_show_source_component_selection">
+        <v-container v-if="remote_enable_importers">
           <slot/>
         </v-container>
         <div style="display: grid"> <!-- overlay container -->

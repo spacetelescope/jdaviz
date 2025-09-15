@@ -7,7 +7,7 @@
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
 
       <v-toolbar-items v-if="config === 'deconfigged'">
-        <j-tooltip v-if="!hide_source_loader_panel" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="(!server_is_remote || remote_enable_importers)" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
@@ -77,7 +77,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state.show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="(state.dev_loaders || ['cubeviz', 'mosviz', 'rampviz'].indexOf(config) === -1) && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0 && !hide_source_loader_panel" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="(state.dev_loaders || ['cubeviz', 'mosviz', 'rampviz'].indexOf(config) === -1) && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0 && (!server_is_remote || remote_enable_importers)" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>
@@ -227,7 +227,7 @@
                     :loader_selected.sync="state.loader_selected"
                     :api_hints_enabled="state.show_api_hints"
                     :api_hints_obj="api_hints_obj || config"
-                    :only_show_source_component_selection="only_show_source_component_selection"
+                    :remote_enable_importers="remote_enable_importers"
                   ></j-loader-panel>
                 </v-tab-item>
                 <v-tab-item style="padding-bottom: 40px">
@@ -362,7 +362,7 @@
                 :loader_selected.sync="state.loader_selected"
                 :api_hints_enabled="state.show_api_hints"
                 :api_hints_obj="api_hints_obj || config"
-                :only_show_source_component_selection="only_show_source_component_selection"
+                :remote_enable_importers="remote_enable_importers"
               ></j-loader-panel>
             </v-card>
 

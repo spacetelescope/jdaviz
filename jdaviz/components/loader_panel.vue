@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-select
-      v-if="!only_show_source_component_selection"
+      v-if="remote_enable_importers"
       :menu-props="{ left: true }"
       attach
       :items="loader_items_filtered"
@@ -27,7 +27,7 @@
 
 <script>
 module.exports = {
-  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'only_show_source_component_selection'],
+  props: ['loader_items', 'loader_selected', 'api_hints_enabled', 'api_hints_obj', 'remote_enable_importers'],
   computed: {
     loader_items_filtered() {
       var has_api_support = this.checkNotebookContext();

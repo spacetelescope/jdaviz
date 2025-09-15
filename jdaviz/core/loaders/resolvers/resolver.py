@@ -201,10 +201,8 @@ class BaseResolver(PluginTemplateMixin):
 
     importer_widget = Unicode().tag(sync=True)
 
-    # This (unofficially) shadows the traitlet in `app.py`
-    # to set remote server options based on the app configuration via
-    # set_traitlets_remote_server
-    only_show_source_component_selection = Bool(False).tag(sync=True)
+    # Set remote server options based on the app configuration
+    remote_enable_importers = Bool(True).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
@@ -232,7 +230,9 @@ class BaseResolver(PluginTemplateMixin):
                                    selected='target_selected')
 
         # This sets the show_source_loader traitlet based on the app configuration
-        set_traitlets_remote_server(self)
+        if self.app.state.settings.get('server_is_remote', False):
+            self.remote_enable_importers = self.app.state.settings.get('remote_enable_importers',
+                                                                       self.remote_enable_importers)
 
     @contextmanager
     def defer_update_format_items(self):
