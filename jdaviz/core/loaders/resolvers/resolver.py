@@ -202,7 +202,6 @@ class BaseResolver(PluginTemplateMixin):
 
     # Set remote server options based on the app configuration
     server_is_remote = Bool(False).tag(sync=True)
-    remote_enable_importers = Bool(True).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
@@ -231,9 +230,6 @@ class BaseResolver(PluginTemplateMixin):
 
         # This sets the show_source_loader traitlet based on the app configuration
         self.server_is_remote = self.app.state.settings.get('server_is_remote', False)
-        if self.server_is_remote:
-            self.remote_enable_importers = self.app.state.settings.get('remote_enable_importers',
-                                                                       self.remote_enable_importers)
 
     @contextmanager
     def defer_update_format_items(self):
