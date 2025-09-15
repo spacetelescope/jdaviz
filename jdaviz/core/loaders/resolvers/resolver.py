@@ -232,12 +232,51 @@ class BaseResolver(PluginTemplateMixin):
         self.server_is_remote = self.app.state.settings.get('server_is_remote',
                                                             self.server_is_remote)
 
-    def _on_app_settings_changed(self, new_settings):
+        # Set up bidirectional synchronization
+        self._setup_server_is_remote_sync()
+
+    def _setup_server_is_remote_sync(self):
+        """
+        Set up bidirectional synchronization between the traitlet and app settings.
+        """
+        # Listen for changes to app.state.settings and update traitlet
+        # The callback receives the new settings dictionary as the argument
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+        # Listen for changes to traitlet and update app settings
+        self.observe(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
+
+    def _on_app_settings_changed(self, new_settings_dict):
         """
         Update traitlet when app state settings change.
+
+        Parameters
+        ----------
+        new_settings_dict : dict
+            The new settings dictionary from the app state.
         """
-        pass
-        #self.server_is_remote = new_settings.get('server_is_remote', self.server_is_remote)
+        server_is_remote_value = new_settings_dict.get('server_is_remote', False)
+        if self.server_is_remote != server_is_remote_value:
+            # Temporarily remove the observer to prevent infinite loop
+            self.unobserve(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
+            try:
+                self.server_is_remote = server_is_remote_value
+            finally:
+                # Re-attach the observer
+                self.observe(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
+
+    def _on_traitlet_server_is_remote_changed(self, change):
+        """
+        Update app settings when traitlet server_is_remote changes.
+
+        Parameters
+        ----------
+        change : dict
+            Traitlet change dictionary with 'old', 'new', etc.
+        """
+        new_value = change['new']
+        if self.app.state.settings.get('server_is_remote') != new_value:
+            self.app.state.settings['server_is_remote'] = new_value
 
     @contextmanager
     def defer_update_format_items(self):
