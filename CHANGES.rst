@@ -8,6 +8,9 @@ Bug Fixes
 
 - Updated JWST data quality flag for bit 8 to match updated value in ``stdatamodels``. [#3765]
 
+- Fixed a bug in Line Analysis where spectra were improperly being shifted away from
+  0 after continuum subtraction, particularly affecting absorption features. [#3775]
+
 Cubeviz
 ^^^^^^^
 
