@@ -1,4 +1,4 @@
-4.3.2 (unreleased)
+4.3.2 (2025-09-15)
 ==================
 
 Bug Fixes
@@ -11,22 +11,10 @@ Bug Fixes
 - Fixed a bug in Line Analysis where spectra were improperly being shifted away from
   0 after continuum subtraction, particularly affecting absorption features. [#3775]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
-- Allow image importer to accept component labels starting with 'SCI' rather 
+- Allow image importer to accept component labels starting with 'SCI' rather
   than only matching 'SCI' exactly. [#3781]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 4.3.1 (2025-09-03)
 ==================
