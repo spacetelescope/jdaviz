@@ -25,6 +25,8 @@ Cubeviz
 
 Imviz
 ^^^^^
+- Allow image importer to accept component labels starting with 'SCI' rather 
+  than only matching 'SCI' exactly. [#3781]
 
 Mosviz
 ^^^^^^
