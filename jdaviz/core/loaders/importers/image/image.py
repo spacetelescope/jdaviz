@@ -402,7 +402,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
 
 def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
     comp_label = hdu.name.lower()
-    if comp_label == 'sci' or comp_label.startswith("sci"):
+    if comp_label.startswith("sci"):
         comp_label = 'data'
     data = Data()
     unit_attr = f'bunit_{comp_label}'
