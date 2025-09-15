@@ -231,7 +231,7 @@ class BaseResolver(PluginTemplateMixin):
                                    items='target_items',
                                    selected='target_selected')
 
-        # This set the show_source_loader traitlet based on the app configuration
+        # This sets the show_source_loader traitlet based on the app configuration
         set_traitlets_remote_server(self)
 
     @contextmanager
