@@ -10,7 +10,7 @@
         :importer_widget="importer_widget"
         :api_hints_enabled="api_hints_enabled"
         :valid_import_formats="valid_import_formats"
-        :only_show_source_component_selection="only_show_source_component_selection"
+        :remote_enable_importers="remote_enable_importers"
     >
         <v-row>
             Select a file with data you want to load into this instance of Jdaviz.
