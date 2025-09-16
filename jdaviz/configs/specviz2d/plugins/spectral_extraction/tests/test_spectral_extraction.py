@@ -206,7 +206,7 @@ def test_user_api(specviz2d_helper):
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
 @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_background_extraction_and_display(specviz2d_helper):
-    uri = 'mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
+    uri = 'mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits'
     specviz2d_helper.load_data(spectrum_2d=cached_uri(uri), cache=True)
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction-2d')
 
