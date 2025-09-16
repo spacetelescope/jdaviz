@@ -43,7 +43,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
         sources_options = []
-        self._sources_selected_default = True
 
         if isinstance(self.input, Spectrum):
             speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
@@ -84,8 +83,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     manual_options=sources_options)
 
         self.sources.selected = [self.sources.choices[0]]
-        # Make sure it's still set to true
-        self._sources_selected_default = True
         self._sources_items_helper = deepcopy(self.sources.items)
 
         # TODO: This observer will likely be removed in follow-up effort

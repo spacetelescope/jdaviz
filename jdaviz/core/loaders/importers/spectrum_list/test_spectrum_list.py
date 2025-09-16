@@ -60,7 +60,6 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'sources')
 
         assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
-        assert importer_obj._sources_selected_default is True
         assert importer_obj._sources_items_helper == importer_obj.sources.items
 
     # Parameterize to test both single and multiple selection
@@ -142,16 +141,13 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         # Baseline, default first source selected
         assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
-        assert importer_obj._sources_selected_default is True
         assert importer_obj.import_disabled is False
 
         # Selecting the same thing shouldn't turn off the default flag
         importer_obj.sources.selected = [importer_obj.sources.choices[0]]
-        assert importer_obj._sources_selected_default is True
         assert importer_obj.import_disabled is False
 
         importer_obj.sources.selected = []
-        assert importer_obj._sources_selected_default is False
         assert importer_obj.import_disabled is True
 
     def test_on_format_selected(self, deconfigged_helper, premade_spectrum_list):
@@ -160,15 +156,12 @@ class TestSpectrumListImporter:
         # Baseline, default first source selected
         assert importer_obj.import_disabled is False
         assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
-        assert importer_obj._sources_selected_default is True
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
         # No change
         assert importer_obj.import_disabled is False
-        assert importer_obj._sources_selected_default is True
 
         # Set new selection to empty to ensure it doesn't change on format change
         importer_obj.sources.selected = []
-        assert importer_obj._sources_selected_default is False
         importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
         # No selection
         assert importer_obj.import_disabled is True
@@ -311,7 +304,7 @@ class TestSpectrumListImporter:
         assert np.all(result.uncertainty.array == spec.uncertainty[~mask].array)
         assert np.all(result.mask == mask[~mask])
 
-    def test_check_sources_selected_default(self, deconfigged_helper, premade_spectrum_list):
+    def test_apply_kwargs(self, deconfigged_helper, premade_spectrum_list):
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
 
         warning_msg = (
@@ -322,16 +315,15 @@ class TestSpectrumListImporter:
         # Mock the broadcast method to catch the snackbar messages
         with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
             with pytest.warns(UserWarning, match=re.escape(warning_msg)):
-                importer_obj._check_sources_selected_default()
+                importer_obj._apply_kwargs({})
 
             broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
                               if hasattr(arg[0][0], 'text')]
             assert warning_msg in broadcast_msgs
 
-        importer_obj._sources_selected_default = False
         # No warning this time
         with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
-            importer_obj._check_sources_selected_default()
+            importer_obj._apply_kwargs({'sources': ['1D Spectrum at index: 1']})
             assert mock_broadcast.call_count == 0
 
     def test_output(self, deconfigged_helper, premade_spectrum_list, spectrum1d):
@@ -478,9 +470,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        with pytest.warns(UserWarning):
-            # Catch the warning about default selection
-            result = importer_obj.output
+        result = importer_obj.output
 
         assert np.all(result.flux == spec.flux)
         assert np.all(result.spectral_axis == spec.spectral_axis)
@@ -498,20 +488,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        warning_msg = (
-            f"The default source selection ({importer_obj.sources.selected}) will be used.\n"
-            f"To load additional sources, please specify them via dropdown or "
-            f"as follows:\n'{importer_obj.config}.load(filename, sources = [...]).")
-
-        # Mock the broadcast method to catch the snackbar messages
-        with patch.object(deconfigged_helper.app.hub, 'broadcast') as mock_broadcast:
-            with pytest.warns(UserWarning, match=re.escape(warning_msg)):
-                result = importer_obj.output
-
-            broadcast_msgs = [arg[0][0].text for arg in mock_broadcast.call_args_list
-                              if hasattr(arg[0][0], 'text')]
-            assert warning_msg in broadcast_msgs
-
+        result = importer_obj.output
         assert np.all(result.flux == spec.flux)
         assert np.all(result.spectral_axis == spec.spectral_axis)
         assert np.all(result.uncertainty.array == spec.uncertainty.array)
@@ -528,9 +505,7 @@ class TestSpectrumListConcatenatedImporter:
         spec = self.setup_combined_spectrum(with_uncertainty=True)
 
         importer_obj = self.setup_importer_obj(deconfigged_helper, SpectrumList([spec]))
-        with pytest.warns(UserWarning):
-            # Catch the warning about default selection
-            importer_obj.__call__()
+        importer_obj.__call__()
 
         dc = deconfigged_helper.app.data_collection
         assert len(dc) == 1  # 1 concatenated spectrum loaded
