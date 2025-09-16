@@ -213,7 +213,7 @@ class ConfigHelper(HubListener):
             kwargs['viewer'] = '*' if kwargs.pop('show_in_viewer') else []
 
         importer = resolver.importer
-        importer._apply_kwargs(kwargs)
+        importer._obj._apply_kwargs(kwargs)
         return importer()
 
     @property

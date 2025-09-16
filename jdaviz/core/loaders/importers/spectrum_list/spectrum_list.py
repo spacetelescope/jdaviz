@@ -102,6 +102,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             msg = SnackbarMessage(msg_str, color='warning', sender=self, timeout=10000)
             self.app.hub.broadcast(msg)
             warnings.warn(msg_str)
+        return applied_kwargs
 
     @staticmethod
     def _get_supported_viewers():
