@@ -269,8 +269,7 @@ class ApplicationState(State):
         #   but allow selecting and loading items from the file. This is used for
         #   Spectrum Lists or multi-extension images.
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
-        'remote_enable_importers': True,  # default to True because otherwise this would hide
-                                          # the loader/importers for normal use-cases
+        'remote_enable_importers': True,  # Depends on server_is_remote, see above
         'context': {
             'notebook': {
                 'max_height': '600px'
