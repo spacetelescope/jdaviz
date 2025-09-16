@@ -20,6 +20,8 @@ New Features
 - Initialized model components in Model Fitting now update when units are changed by the
   Unit Conversion plugin. [#3742]
 
+- Ability to show/hide resolver and loader selection using remote server settings. [#3785]
+
 Cubeviz
 ^^^^^^^
 
