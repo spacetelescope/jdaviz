@@ -151,7 +151,7 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             prefix = "Image"
 
-        if self.input_has_extensions:
+        if self.input_has_extensions and hasattr(self, 'extension'):
             if self.extension.selected_name is None:
                 return
             if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
@@ -402,7 +402,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
 
 def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
     comp_label = hdu.name.lower()
-    if comp_label == 'sci':
+    if comp_label.startswith("sci"):
         comp_label = 'data'
     data = Data()
     unit_attr = f'bunit_{comp_label}'

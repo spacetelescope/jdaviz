@@ -754,7 +754,7 @@ class Application(VuetifyTemplate, HubListener):
 
         new_links = []
         for new_comp in new_data.components:
-            if new_comp._component_type in (None, 'unknown'):
+            if getattr(new_comp, '_component_type', None) in (None, 'unknown'):
                 continue
 
             found_match = False

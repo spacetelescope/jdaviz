@@ -13,7 +13,7 @@ New Features
 - Enable unix style wildcard matching for searches in UI dropdown menus and
   API objects that support multiselect. [#3744, #3752]
 
-- Loaders now allow selecting which viewer(s) to show the data or whether to create a new viewer. [#3739, #3766]
+- Loaders now allow selecting which viewer(s) to show the data or whether to create a new viewer. [#3739, #3766, #3774]
 
 - Ability to change the logger levels and clear the logger history from the UI. [#3745]
 
@@ -80,7 +80,7 @@ Other Changes and Additions
 
 - Linking is now generalized to act based on physical type. [#3698]
 
-4.3.2 (unreleased)
+4.3.2 (2025-09-15)
 ==================
 
 Bug Fixes
@@ -90,21 +90,13 @@ Bug Fixes
 
 - Updated JWST data quality flag for bit 8 to match updated value in ``stdatamodels``. [#3765]
 
-Cubeviz
-^^^^^^^
+- Fixed a bug in Line Analysis where spectra were improperly being shifted away from
+  0 after continuum subtraction, particularly affecting absorption features. [#3775]
 
 Imviz
 ^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
+- Allow image importer to accept component labels starting with 'SCI' rather
+  than only matching 'SCI' exactly. [#3781]
 
 4.3.1 (2025-09-03)
 ==================
