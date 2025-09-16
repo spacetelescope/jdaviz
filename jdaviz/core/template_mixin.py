@@ -1025,6 +1025,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     * :meth:`select_none` (only if ``is_multiselect``)
     """
     filters = List([]).tag(sync=True)
+    _allow_multiselect = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -1068,6 +1069,9 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         if kwargs.get('multiselect'):
             self.add_observe(kwargs.get('multiselect'), self._multiselect_changed)
+            self._allow_multiselect = kwargs.get('allow_multiselect', True)
+        else:
+            self._allow_multiselect = False
 
         # this callback MUST come first so that any plugins that use @observe have those
         # callbacks triggered AFTER the cache is cleared and the value is checked against
@@ -1085,7 +1089,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return {'label': item}
 
     def __repr__(self):
-        if hasattr(self, 'multiselect'):
+        if self.allow_multiselect:
             if self.is_multiselect and isinstance(self.selected, list):
                 # NOTE: selected is a list here so should not be wrapped with quotes
                 return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
@@ -1128,8 +1132,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self.items = [{'label': choice} for choice in choices]
 
     @property
+    def allow_multiselect(self):
+        return self._allow_multiselect and hasattr(self, 'multiselect')
+
+    @property
     def is_multiselect(self):
-        if not hasattr(self, 'multiselect'):
+        if not self.allow_multiselect or not hasattr(self, 'multiselect'):
             return False
         else:
             return self.multiselect

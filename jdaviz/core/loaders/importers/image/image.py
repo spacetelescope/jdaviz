@@ -151,7 +151,7 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             prefix = "Image"
 
-        if self.input_has_extensions:
+        if self.input_has_extensions and hasattr(self, 'extension'):
             if self.extension.selected_name is None:
                 return
             if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
