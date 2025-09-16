@@ -11,7 +11,7 @@ class TestBaseResolver(BaseResolver):
         super().__init__(*args, **kwargs)
 
 
-def test_server_is_remote_callback(config):
+def test_server_is_remote_callback():
     # Create app instance
     app = Application()
 
