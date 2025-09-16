@@ -679,6 +679,9 @@ class Application(VuetifyTemplate, HubListener):
         else:
             viewer = self.get_viewer(viewer_id)
 
+        if not hasattr(viewer, '_get_center_skycoord'):
+            return
+
         old_refdata = viewer.state.reference_data
 
         if old_refdata is not None and ((new_refdata_label == old_refdata.label)
