@@ -256,7 +256,7 @@ class BaseResolver(PluginTemplateMixin):
         #         self.server_is_remote = server_is_remote_value
         #     finally:
         #         # Re-attach the observer
-        #         self.observe(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])
+        #         self.observe(self._on_traitlet_server_is_remote_changed, names=['server_is_remote'])  # noqa
 
     # @observe('server_is_remote')
     # def _on_traitlet_server_is_remote_changed(self, change):

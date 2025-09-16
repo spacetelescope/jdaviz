@@ -1,9 +1,4 @@
-import pytest
-
-from jdaviz import Specviz2d
-import jdaviz
 from jdaviz.app import Application
-from jdaviz.core.config import get_configuration
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver
 
 
@@ -11,6 +6,7 @@ from jdaviz.core.loaders.resolvers.resolver import BaseResolver
 # without this we get an error when attempting to use BaseResolver directly
 class TestBaseResolver(BaseResolver):
     template = ''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
