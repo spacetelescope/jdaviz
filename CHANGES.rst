@@ -69,7 +69,7 @@ Other Changes and Additions
 ---------------------------
 
 - When importing a 2D spectrum file into a SpectrumList, surface brightness units are automatically converted to flux units. [#3729]
-- Add rotation to aida `set_viewport` and `get_viewport` methods [#3759]
+- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759]
 
 
 4.3.2 (unreleased)
