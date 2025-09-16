@@ -201,7 +201,8 @@ class BaseResolver(PluginTemplateMixin):
     importer_widget = Unicode().tag(sync=True)
 
     # Set remote server options based on the app configuration
-    server_is_remote = Bool(False).tag(sync=True)  # read-only: change via app.state.settings['server_is_remote']
+    # read-only: change via app.state.settings['server_is_remote']
+    server_is_remote = Bool(False).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
