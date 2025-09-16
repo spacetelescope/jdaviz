@@ -93,6 +93,16 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # only enable the import button if at least one spectrum is selected.
         self.resolver.observe(self._on_format_selected_change, names='format_selected')
 
+    def _apply_kwargs(self, kwargs):
+        applied_kwargs = super()._apply_kwargs(kwargs)
+        if 'sources' not in applied_kwargs:
+            msg_str = (f"The default source selection ({self.sources.selected}) will be used.\n"
+                       f"To load additional sources, please specify them via dropdown or "
+                       f"as follows:\n'{self.config}.load(filename, sources = [...]).")
+            msg = SnackbarMessage(msg_str, color='warning', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
+            warnings.warn(msg_str)
+
     @staticmethod
     def _get_supported_viewers():
         return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
