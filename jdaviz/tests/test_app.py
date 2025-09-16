@@ -7,7 +7,6 @@ from specutils import Spectrum
 from ipywidgets.widgets import widget_serialization
 
 from jdaviz import Specviz, Specviz2d
-import jdaviz
 from jdaviz.core.config import get_configuration
 from jdaviz.app import Application
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
