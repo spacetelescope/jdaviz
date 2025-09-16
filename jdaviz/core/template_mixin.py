@@ -1980,7 +1980,7 @@ class LayerSelect(SelectPluginComponent):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
         def is_not_scatter_if_wcs_linked(lyr):
-            if self.app._align_by.lower() == 'pixels':
+            if self.app._align_by.lower() == 'wcs':
                 return getattr(lyr, 'coords', None) is not None
             return True
 
