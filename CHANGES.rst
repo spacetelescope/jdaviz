@@ -68,7 +68,7 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-- Add rotation to aida `set_viewport` and `get_viewport` methods [#3759]
+- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759]
 
 4.4.2 (unreleased)
 ==================
