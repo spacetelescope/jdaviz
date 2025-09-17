@@ -100,7 +100,7 @@ class AID:
         degn = orientation._obj._get_wcs_angles()[-3]
         rotation_angle = (degn + rotation) % 360
 
-        label = f"{rotation}"
+        label = f'{rotation:.2f} deg east of north'
 
         if label == orientation._obj.orientation.selected:
             return
