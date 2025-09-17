@@ -24,9 +24,9 @@ class FootprintImporter(BaseImporterToPlugin):
         super().__init__(app, resolver, input, **kwargs)
         self.footprint_label_default = 'default'
         self.footprint_label = AutoTextField(self, 'footprint_label_value',
-                                            'footprint_label_default',
-                                            'footprint_label_auto',
-                                            'footprint_label_invalid_msg')
+                                             'footprint_label_default',
+                                             'footprint_label_auto',
+                                             'footprint_label_invalid_msg')
 
         # TODO: event subscription for creation/deletion of footprint overlays
 #        for msg in (SubsetCreateMessage, SubsetDeleteMessage, SubsetRenameMessage):
