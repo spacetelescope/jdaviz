@@ -461,7 +461,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def export_to_buffer(self):
         f = io.BytesIO()  # TODO: can we reuse this or should we close/clear it?
-        self.export(filename=f, show_dialog=False)
+        self.export(filename=f)
         return f.getvalue()
 
     @with_spinner()
@@ -475,9 +475,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         filename : str, optional
             If not provided, plugin value will be used.
 
-        show_dialog : bool or `None`
-            If `True`, prompts dialog to save PNG/SVG from browser.
-
         overwrite : bool
             If `True`, silently overwrite an existing file.
 
@@ -486,6 +483,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             output file already exists. Otherwise, a message will be sent
             to application snackbar instead.
         """
+        if show_dialog:
+            raise ValueError("show_dialog is no longer supported, use UI to trigger browser save dialog")  # noqa
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
 
@@ -529,7 +528,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                 width=f"{self.image_width}px" if self.image_custom_size else None,
                                 height=f"{self.image_height}px" if self.image_custom_size else None)
             else:
-                self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
+                self.save_figure(viewer, filename, filetype,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
                                  height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
 
@@ -557,7 +556,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
                 return
 
-            self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
+            self.save_figure(plot, filename, filetype)
 
         elif len(self.plugin_table.selected):
             filetype = self.plugin_table_format.selected
@@ -606,7 +605,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:
-            filename = self.export(show_dialog=True, raise_error_for_overwrite=False)
+            filename = self.export(raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self,
@@ -619,7 +618,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def vue_overwrite_from_ui(self, *args, **kwargs):
         """Attempt to force writing the output if the user confirms the desire to overwrite."""
         try:
-            filename = self.export(show_dialog=True, overwrite=True,
+            filename = self.export(overwrite=True,
                                    raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
@@ -631,7 +630,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
             self.overwrite_warn = False
 
-    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False,
+    def save_figure(self, viewer, filename=None, filetype="png",
                     width=None, height=None):
         if filename is None:
             filename = self.filename_default
@@ -711,13 +710,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
             _show_hidden(cloned_viewer.figure, width, height)
         elif filetype == 'png':
-            if filename is None or isinstance(filename, io.BytesIO) or show_dialog:
+            if filename is None or isinstance(filename, io.BytesIO):
                 viewer.figure.save_png(str(filename) if isinstance(filename, Path) else filename)
             else:
                 # NOTE: get_png already check if _upload_png_callback is not None
                 get_png(viewer.figure)
         elif filetype == 'svg':
-            if filename is None or isinstance(filename, io.BytesIO) or show_dialog:
+            if filename is None or isinstance(filename, io.BytesIO):
                 viewer.figure.save_svg(str(filename) if isinstance(filename, Path) else filename)
             else:
                 if viewer.figure._upload_svg_callback is not None:
@@ -754,7 +753,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 slice_plg.vue_play_next()
                 cur_pngfile = Path(f"._cubeviz_movie_frame_{i}.png")
                 # TODO: skip success snackbars when exporting temp movie frames?
-                self.save_figure(viewer, filename=cur_pngfile, filetype="png", show_dialog=False,
+                self.save_figure(viewer, filename=cur_pngfile, filetype="png",
                                  width=width, height=height)
                 temp_png_files.append(cur_pngfile)
                 i += i_step
