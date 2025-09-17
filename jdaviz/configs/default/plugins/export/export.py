@@ -597,7 +597,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-            self.dataset.selected_obj.write(Path(filename) if isinstance(filename, str) else filename, overwrite=True, format=filetype)
+            self.dataset.selected_obj.write(Path(filename)
+                                            if isinstance(filename, str) else filename,
+                                            overwrite=True, format=filetype)
         else:
             raise ValueError("nothing selected for export")
 
