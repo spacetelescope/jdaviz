@@ -454,6 +454,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _extract_from_aperture(self, cube, uncert_cube, mask_cube, aperture,
                                weight_mask, wavelength_dependent,
                                selected_func, **kwargs):
+
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
         # and uncertainties in different glue Data objects, we translate the spectral
@@ -505,7 +506,10 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             wcs = cube.coords
 
         # Filter out NaNs (False = good)
-        mask = np.logical_or(mask, np.isnan(flux))
+        if mask is None:
+            mask = np.isnan(flux)
+        else:
+            mask = np.logical_or(mask, np.isnan(flux))
 
         # Also apply the cube's original mask array
         if mask_cube:
