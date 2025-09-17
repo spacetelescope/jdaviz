@@ -2079,6 +2079,7 @@ class Application(VuetifyTemplate, HubListener):
                     result = find_viewer_item(stack_item.get('children'))
                     if result is not None:
                         return result
+            return None
 
         viewer_item = find_viewer_item(self.state.stack_items)
 
