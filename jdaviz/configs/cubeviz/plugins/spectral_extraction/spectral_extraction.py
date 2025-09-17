@@ -403,7 +403,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.mask_cube is not None:
             mask_non_science = np.logical_or(self.mask_cube.get_component('flux').data,
                                              mask_non_science)
-        return np.logical_not(mask_non_science).astype(float)
+        return np.logical_not(mask_non_science)
 
     @property
     def aperture_weight_mask(self):
