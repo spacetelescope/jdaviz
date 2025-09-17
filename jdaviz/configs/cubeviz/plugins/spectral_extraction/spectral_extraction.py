@@ -505,7 +505,10 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             wcs = cube.coords
 
         # Filter out NaNs (False = good)
-        mask = np.logical_or(mask, np.isnan(flux))
+        if mask is None:
+            mask = np.isnan(flux)
+        else:
+            mask = np.logical_or(mask, np.isnan(flux))
 
         # Also apply the cube's original mask array
         if mask_cube:
