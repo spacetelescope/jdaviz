@@ -1313,6 +1313,8 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         default_empty = [] if self.is_multiselect else ''
         if self.default_mode == 'first':
             self.selected = self.labels[0] if len(self.labels) else default_empty
+        elif self.default_mode == 'second':
+            self.selected = self.labels[1] if len(self.labels) > 1 else default_empty
         elif self.default_mode == 'default_text':
             self.selected = self._default_text if self._default_text else default_empty
         else:
