@@ -1983,6 +1983,10 @@ class LayerSelect(SelectPluginComponent):
             if not np.all([viewer.__class__.__name__ == 'ImvizImageView'
                            for viewer in self.viewer_objs]):
                 return True
+            if getattr(lyr, 'meta', {}).get('_importer', '') != 'CatalogImporter':
+                # for now, allow any non-catalog layers to reproduce
+                # expected behavior from tests
+                return True
             if self.app._align_by.lower() == 'pixels':
                 return getattr(lyr, 'coords', None) is not None
             return True
