@@ -203,7 +203,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                         if isinstance(wcs, (list, tuple)):
                             wcs = wcs[0]
                         if len(wcs.forward_transform.inputs) == 5:
-                            print("Setting WCS to None")
                             wcs = None
 
             return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
