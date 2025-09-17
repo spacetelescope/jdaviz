@@ -9,7 +9,7 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 from glue_jupyter.bqplot.image import BqplotImageView
 from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
@@ -114,6 +114,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     movie_interrupt = Bool(False).tag(sync=True)
 
     overwrite_warn = Bool(False).tag(sync=True)
+
+    # Controls which expansion panels are open (first panel open by default)
+    expansion_panels_opened = Any([0]).tag(sync=True)
 
     # This is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported for all exports.
