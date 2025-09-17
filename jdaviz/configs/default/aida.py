@@ -66,7 +66,7 @@ class AID:
                 self.viewer.state.zoom_center_y
             ) = center
 
-    def _set_fov(self, fov, image_label):
+    def _set_fov(self, fov):
         if fov is None:
             return
 
@@ -107,8 +107,8 @@ class AID:
         elif label in orientation._obj.orientation.choices:
             orientation._obj.orientation.selected = label
         else:
+            orientation.rotation_angle = rotation_angle
             orientation.add_orientation(
-                rotation_angle=rotation_angle,
                 east_left=True,
                 set_on_create=True,
                 label=label
@@ -135,7 +135,7 @@ class AID:
             self._set_rotation(rotation)
 
         self._set_center(center)
-        self._set_fov(fov, image_label)
+        self._set_fov(fov)
 
     def _mean_pixel_scale(self, data):
         wcs = data.coords
@@ -203,7 +203,7 @@ class AID:
 
         return center
 
-    def _get_current_rotation(self, sky_or_pixel):
+    def _get_current_rotation(self):
         orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
         # rotation angle from pixel y
         rotation_angle = orientation.rotation_angle
@@ -211,8 +211,8 @@ class AID:
         # rotation angle of pixel y from north
         degn = orientation._obj._get_wcs_angles()[-3]
 
-        rotation = rotation_angle - degn
-        return rotation * u.deg if (sky_or_pixel in ("sky", None)) else rotation
+        rotation = (rotation_angle - degn) % 360
+        return rotation * u.deg
 
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
@@ -242,6 +242,6 @@ class AID:
         return dict(
             center=self._get_current_center(sky_or_pixel=sky_or_pixel, image_label=image_label),
             fov=self._get_current_fov(sky_or_pixel=sky_or_pixel),
-            rotation=self._get_current_rotation(sky_or_pixel=sky_or_pixel),
+            rotation=self._get_current_rotation(),
             image_label=image_label
         )
