@@ -118,9 +118,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     overwrite_warn = Bool(False).tag(sync=True)
 
-    # Controls which expansion panels are open (first panel open by default)
-    expansion_panels_opened = Any([0]).tag(sync=True)
-
     # This is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported for all exports.
     serverside_enabled = Bool(True).tag(sync=True)
