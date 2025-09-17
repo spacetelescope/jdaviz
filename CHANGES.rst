@@ -80,6 +80,14 @@ Other Changes and Additions
 
 - Linking is now generalized to act based on physical type. [#3698]
 
+4.3.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Speed up loading of large cubes into cubeviz. [#3787]
+
 4.3.2 (2025-09-15)
 ==================
 

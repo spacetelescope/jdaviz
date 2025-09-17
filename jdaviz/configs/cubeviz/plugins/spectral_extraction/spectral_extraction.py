@@ -454,7 +454,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _extract_from_aperture(self, cube, uncert_cube, mask_cube, aperture,
                                weight_mask, wavelength_dependent,
                                selected_func, **kwargs):
-
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
         # and uncertainties in different glue Data objects, we translate the spectral
