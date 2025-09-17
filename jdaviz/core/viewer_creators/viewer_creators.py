@@ -24,6 +24,8 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
         self.close_callback = kwargs.pop('close_callback', None)
         super().__init__(app, **kwargs)
         self.dataset.multiselect = True
+        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer']
+
         self.viewer_type = self._registry_label
 
         self.viewer_label = AutoTextField(self, 'viewer_label_value',
