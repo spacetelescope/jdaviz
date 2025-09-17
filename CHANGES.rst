@@ -61,6 +61,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Speed up loading of large cubes into cubeviz. [#3787]
+
 Imviz
 ^^^^^
 
@@ -79,14 +81,6 @@ Other Changes and Additions
 - When importing a 2D spectrum file into a SpectrumList, surface brightness units are automatically converted to flux units. [#3729]
 
 - Linking is now generalized to act based on physical type. [#3698]
-
-4.3.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-- Speed up loading of large cubes into cubeviz. [#3787]
 
 4.3.2 (2025-09-15)
 ==================
