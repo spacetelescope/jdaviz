@@ -582,7 +582,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 return
 
             if self.subset_format.selected in ('fits', 'reg'):
-                self.save_subset_as_region(selected_subset_label, filename)
+                # TODO: what format should be passed for .reg?
+                # I'm getting errors for a spatial subset
+                self.save_subset_as_region(selected_subset_label, filename,
+                                           format=self.subset_format.selected)
             elif self.subset_format.selected == 'ecsv':
                 self.save_subset_as_table(filename)
             elif self.subset_format.selected == 'stcs':
@@ -903,7 +906,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         with open(filename, 'w') as f:
             f.write(stcs_str)
 
-    def save_subset_as_region(self, selected_subset_label, filename):
+    def save_subset_as_region(self, selected_subset_label, filename, format):
         """
         Save a subset to file as a Region object in the working directory.
         Currently only enabled for non-composite spatial subsets. Can be saved
@@ -921,7 +924,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         region = region[0][f'{"sky_" if align_by == "wcs" else ""}region']
 
-        region.write(str(filename), overwrite=True)
+        region.write(str(filename), format=format, overwrite=True)
 
     def save_subset_as_table(self, filename):
         region = self.app.get_subsets(subset_name=self.subset.selected)
