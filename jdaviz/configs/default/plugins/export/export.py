@@ -1,7 +1,10 @@
 import os
 import time
+import io
 from pathlib import Path
+from ipywidgets import widget_serialization
 import threading
+import solara
 
 from astropy import units as u
 from astropy.nddata import CCDData
@@ -122,6 +125,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # saving client-side is supported for all exports.
     serverside_enabled = Bool(True).tag(sync=True)
 
+    file_download = Any().tag(sync=True, **widget_serialization)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -129,6 +134,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'filename_default',
                                       'filename_auto',
                                       'filename_invalid_msg')
+        self.file_download = solara.FileDownload.widget(data=self.export_to_buffer,
+                                                        filename=self.filename.value,
+                                                        label="Open Browser Dialog")
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Export data/plots and other outputs to a file.'
@@ -371,6 +379,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
 
+        # Change default filename of solara's file download widget
+        if hasattr(self.file_download, 'filename'):
+            self.file_download.filename = self.filename_value
+
     def _set_subset_not_supported_msg(self, msg=None):
         """
         Check if selected subset is spectral or composite, and warn and
@@ -412,6 +424,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.data_invalid_msg = ''
 
     def _normalize_filename(self, filename=None, filetype=None, overwrite=False, default_path=False):  # noqa: E501
+        if isinstance(filename, io.BytesIO):
+            return filename
+
         # Make sure filename is valid and file does not end up in weird places in standalone mode.
         if not filename:
             raise ValueError("Invalid filename")
@@ -443,6 +458,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.overwrite_warn = False
 
         return filename
+
+    def export_to_buffer(self):
+        f = io.BytesIO()  # TODO: can we reuse this or should we close/clear it?
+        self.export(filename=f, show_dialog=False)
+        return f.getvalue()
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
@@ -578,7 +598,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-            self.dataset.selected_obj.write(Path(filename), overwrite=True)
+            self.dataset.selected_obj.write(Path(filename) if isinstance(filename, str) else filename, overwrite=True, format=filetype)
         else:
             raise ValueError("nothing selected for export")
 
@@ -691,12 +711,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
             _show_hidden(cloned_viewer.figure, width, height)
         elif filetype == 'png':
-            # NOTE: get_png already check if _upload_png_callback is not None
-            get_png(viewer.figure)
+            if filename is None or isinstance(filename, io.BytesIO) or show_dialog:
+                viewer.figure.save_png(str(filename) if isinstance(filename, Path) else filename)
+            else:
+                # NOTE: get_png already check if _upload_png_callback is not None
+                get_png(viewer.figure)
         elif filetype == 'svg':
-            if viewer.figure._upload_svg_callback is not None:
-                raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
-            viewer.figure.get_svg_data(on_img_received)
+            if filename is None or isinstance(filename, io.BytesIO) or show_dialog:
+                viewer.figure.save_svg(str(filename) if isinstance(filename, Path) else filename)
+            else:
+                if viewer.figure._upload_svg_callback is not None:
+                    raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
+                viewer.figure.get_svg_data(on_img_received)
         else:
             raise ValueError(f"Unsupported filetype={filetype} for save_figure")
 

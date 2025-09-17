@@ -372,8 +372,18 @@
             <span style="padding: 6px">Save via Browser</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
+            <plugin-auto-label
+              :value.sync="filename_value"
+              :default="filename_default"
+              :auto.sync="filename_auto"
+              :invalid_msg="filename_invalid_msg"
+              label="Filename"
+              :api_hint="'plg.filename = \''+filename_value+'\''"
+              :api_hints_enabled="api_hints_enabled"
+              hint="Filename for download."
+            ></plugin-auto-label>
             <v-row>
-              <span>COMING SOON</span>
+              <jupyter-widget :widget="file_download"></jupyter-widget>
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
