@@ -200,6 +200,10 @@ class BaseResolver(PluginTemplateMixin):
 
     importer_widget = Unicode().tag(sync=True)
 
+    # Set remote server options based on the app configuration
+    # read-only: change via app.state.settings['server_is_remote']
+    server_is_remote = Bool(False).tag(sync=True)
+
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
@@ -224,6 +228,25 @@ class BaseResolver(PluginTemplateMixin):
         self.target = TargetSelect(self,
                                    items='target_items',
                                    selected='target_selected')
+
+        # Ensure traitlet and app state are in sync at init
+        self.server_is_remote = self.app.state.settings.get('server_is_remote',
+                                                            self.server_is_remote)
+
+        # Set up bidirectional synchronization
+        # Listen for changes to app.state.settings and update traitlet
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    def _on_app_settings_changed(self, new_settings_dict):
+        """
+        Update traitlet when app state settings change.
+
+        Parameters
+        ----------
+        new_settings_dict : dict
+            The new settings dictionary from the app state.
+        """
+        self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
     @contextmanager
     def defer_update_format_items(self):

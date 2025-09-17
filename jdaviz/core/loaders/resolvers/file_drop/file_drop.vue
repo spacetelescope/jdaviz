@@ -9,6 +9,7 @@
         :format_selected.sync="format_selected"
         :importer_widget="importer_widget"
         :api_hints_enabled="api_hints_enabled"
+        :server_is_remote="server_is_remote"
     >
         <v-row>
             Select a file from your local file system and send to jdaviz through the browser.

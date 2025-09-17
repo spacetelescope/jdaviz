@@ -261,7 +261,15 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'dense_toolbar': True,
+        # In the context of a remote server, allow/disallow showing the loader
+        # server_is_remote == False -> Usual behavior, show loader, etc.
+        # server_is_remote + remote_enable_importers==False -> hide loader panel completely,
+        #   prepopulate the data
+        # server_is_remote + remote_enable_importers==True -> hide the loader,
+        #   but allow selecting and loading items from the file. This is used for
+        #   Spectrum Lists or multi-extension images.
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
+        'remote_enable_importers': True,  # Depends on server_is_remote, see above
         'context': {
             'notebook': {
                 'max_height': '600px'

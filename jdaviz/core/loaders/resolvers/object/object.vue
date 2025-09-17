@@ -9,6 +9,7 @@
         :format_selected.sync="format_selected"
         :importer_widget="importer_widget"
         :api_hints_enabled="api_hints_enabled"
+        :server_is_remote="server_is_remote"
     >
         <v-alert type="info">
             Access the user API in a notebook cell to import a python object.
