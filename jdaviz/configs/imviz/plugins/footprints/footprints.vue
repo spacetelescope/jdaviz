@@ -120,6 +120,7 @@
         :api_hints_enabled="api_hints_enabled"
         :from_file.sync="from_file"
         :from_file_message="from_file_message"
+        :deprecate_from_file="true"
         dialog_title="Import Region"
         dialog_hint="Select a region file"
         @click-cancel="file_import_cancel()"
