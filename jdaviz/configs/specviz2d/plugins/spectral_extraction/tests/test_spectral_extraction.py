@@ -433,24 +433,23 @@ class TestTwo2dSpectra:
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(extracted_spec2d.flux))
 
-        # TODO: THIS FAILS (for specviz2d case only)
-        # assert self.another_spec2d_label in dc.labels
+        assert self.another_spec2d_label in dc.labels
         assert self.another_spec2d_ext_label in dc.labels
         extracted_another_spec2d = helper.get_data(self.another_spec2d_ext_label)
         # Check for any non-NaN data, if all NaNs, something went wrong
         assert np.any(~np.isnan(extracted_another_spec2d.flux))
 
-        # TODO: THIS FAILS!
-        # assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
-        #     'Extracted spectra should differ!'
+        assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
+            'Extracted spectra should differ!'
 
         # Check linking, e.g.
         # 2D Spectrum 1 <=> 2D Spectrum Extraction 1
         # 2D Spectrum 1 <=> 2D Spectrum 2
         # 2D Spectrum 1 <=> 2D Spectrum Extraction 2
         # TODO(?): These fail on GitHub CI but not locally
-        # assert len(dc.external_links) == 3
+        assert len(dc.external_links) == 6
         for link in dc.external_links:
+            # print(link.data1.label, link.data2.label)
             parent = link.data1  # noqa F841
             child = link.data2  # noqa F841
             # assert parent.label == parent_label
