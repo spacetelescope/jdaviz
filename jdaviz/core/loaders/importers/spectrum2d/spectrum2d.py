@@ -185,9 +185,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                         from stdatamodels import asdf_in_fits
                         tree = asdf_in_fits.open(hdulist).tree
                         if 'meta' in tree and 'wcs' in tree['meta']:
-                            wcs = tree["meta"]["wcs"]
-                            if isinstance(wcs, (list, tuple)):
-                                wcs = wcs[0]
+                            wcs = tree["meta"]["wcs"][0]
                         else:
                             wcs = None
                     except ValueError:
@@ -205,6 +203,7 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                         if isinstance(wcs, (list, tuple)):
                             wcs = wcs[0]
                         if len(wcs.forward_transform.inputs) == 5:
+                            print("Setting WCS to None")
                             wcs = None
 
             return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
