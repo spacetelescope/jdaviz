@@ -1979,8 +1979,11 @@ class LayerSelect(SelectPluginComponent):
         def is_dq_layer(lyr):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
-        def is_not_scatter_if_wcs_linked(lyr):
-            if self.app._align_by.lower() == 'wcs':
+        def has_wcs_if_image_viewer_pixel_linked(lyr):
+            if not np.all([viewer.__class__.__name__ == 'ImvizImageView'
+                           for viewer in self.viewer_objs]):
+                return True
+            if self.app._align_by.lower() == 'pixels':
                 return getattr(lyr, 'coords', None) is not None
             return True
 
@@ -4193,7 +4196,7 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
-        def is_image_not_spectrum_or_catalog(data):
+        def is_catalog_or_image_not_spectrum(data):
             return (is_image_not_spectrum(data)
                     or data.meta.get('_importer', '') == 'CatalogImporter')
 

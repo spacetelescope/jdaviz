@@ -395,7 +395,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
-        self.layer.filters += [is_not_wcs_only, 'is_not_scatter_if_wcs_linked']
+        self.layer.filters += [is_not_wcs_only, 'has_wcs_if_image_viewer_pixel_linked']
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
