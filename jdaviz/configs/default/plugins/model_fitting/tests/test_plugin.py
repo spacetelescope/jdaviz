@@ -417,6 +417,41 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     assert plugin._obj.spectral_subset_valid
 
 
+def test_fitting_with_nans(specviz_helper):
+    # test that model fitting works when there are nans in the flux array. these
+    # nonfinite values should be filtered out both when computing the initial
+    # guess for model parameters, and when fitting the model
+
+    spec = Spectrum(flux=np.array([0, 1, 2, np.nan, np.nan, np.nan, 6, 7, 8, 9]) * u.Jy,
+                    spectral_axis=np.arange(10) * u.nm)
+    specviz_helper.load_data(spec)
+
+    plugin = specviz_helper.plugins['Model Fitting']
+    plugin.model_component = 'Linear1D'
+    plugin.create_model_component()
+
+    # check initial component value guesses
+    assert_allclose(plugin._obj.component_models[0]['parameters'][0]['value'], 4.5)  # slope
+    assert_allclose(plugin._obj.component_models[0]['parameters'][1]['value'], 4.5)  # intercept
+
+    with pytest.warns(AstropyUserWarning) as ws:
+        plugin.calculate_fit()
+
+    # should be two warnings, one for linear model, one for nans
+    assert len(ws) == 2
+    assert any('Model is linear in parameters' in str(w.message) for w in ws)
+    assert any('Non-Finite input data has been removed by the fitter' in str(w.message) for w in ws)
+
+    # check that slope and intercept are fit correctly
+    assert_allclose(plugin._obj.component_models[0]['parameters'][0]['value'], 1.0)  # slope
+    assert_allclose(plugin._obj.component_models[0]['parameters'][1]['value'],
+                    0.0, atol=1e-12)  # intercept
+
+    # and that this value is correctly set to false, since its only the data
+    # values that are non-finite, not the uncertainty values
+    assert plugin._obj.non_finite_uncertainty_mismatch is False
+
+
 def test_all_nan_uncert(specviz_helper):
 
     # test that if you have a fully finite data array, and a fully nan/inf
