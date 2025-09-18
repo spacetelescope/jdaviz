@@ -67,8 +67,10 @@ def test_wildcard_match_sources(specviz_helper, premade_spectrum_list):
     ldr = specviz_helper.loaders['object']
     ldr.object = premade_spectrum_list
     selection_obj = ldr.importer.sources
-    assert selection_obj.selected == []
+    assert selection_obj.selected == [default_choices[0]]
     assert selection_obj.choices == default_choices
+    # Resetting to empty
+    selection_obj.selected = []
 
     err_str1 = "not all items in"
     err_str2 = f"are one of {selection_obj.choices}, reverting selection to []"

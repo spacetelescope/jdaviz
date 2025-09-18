@@ -155,7 +155,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         ('some*', 'good*'): default_choices[:-1]}
 
     for selection, expected in test_selections.items():
-        # Reset
+        # Set and reset
         test_obj.multiselect = False
         match_result = wildcard_match(test_obj, selection)
         assert test_obj.multiselect is True
