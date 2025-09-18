@@ -1,4 +1,4 @@
-4.4 (unreleased)
+4.4 (2025-09-18)
 ================
 
 New Features
@@ -22,42 +22,12 @@ New Features
 
 - Ability to show/hide resolver and loader selection using remote server settings. [#3785]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 - Added support for WFSS Level 3 data. [#3729]
 
 - Spectrum lists default to selecting the first available source. [#3771]
-
-Specviz2d
-^^^^^^^^^
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Bug Fixes
 ---------
@@ -66,18 +36,6 @@ Cubeviz
 ^^^^^^^
 
 - Speed up loading of large cubes into cubeviz. [#3787]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Other Changes and Additions
 ---------------------------
