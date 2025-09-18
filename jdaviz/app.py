@@ -84,7 +84,7 @@ ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 @unit_converter('custom-jdaviz')
 class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
-        if (getattr(data, '_importer', None) == 'ImageImporter' and
+        if (data.meta.get('_importer') == 'ImageImporter' and
                 u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             all_flux_units = SPEC_PHOTON_FLUX_DENSITY_UNITS + ['ct']
             angle_units = supported_sq_angle_units()
@@ -122,7 +122,7 @@ class UnitConverterWithSpectral:
             # handle ramps loaded into Rampviz by avoiding conversion
             # of the groups axis:
             return values
-        elif (getattr(data, '_importer', None) == 'ImageImporter' and
+        elif (data.meta.get('_importer') == 'ImageImporter' and
               u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             # handle surface brightness units in image-like data
             return (values * u.Unit(original_units)).to_value(target_units)
@@ -687,6 +687,9 @@ class Application(VuetifyTemplate, HubListener):
         else:
             viewer = self.get_viewer(viewer_id)
 
+        if not hasattr(viewer, '_get_center_skycoord'):
+            return
+
         old_refdata = viewer.state.reference_data
 
         if old_refdata is not None and ((new_refdata_label == old_refdata.label)
@@ -752,7 +755,7 @@ class Application(VuetifyTemplate, HubListener):
     def _link_new_data_by_component_type(self, new_data_label):
         new_data = self.data_collection[new_data_label]
 
-        if (getattr(new_data, '_importer', None) == 'ImageImporter' and
+        if (new_data.meta.get('_importer') in ('ImageImporter', 'CatalogImporter') and
                 'Orientation' in self._jdaviz_helper.plugins):
             # Orientation plugin alreadly listens for messages for added Data and handles linking
             # orientation_plugin._link_image_data()
@@ -2620,6 +2623,13 @@ class Application(VuetifyTemplate, HubListener):
         else:
             kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
             item.open_in_tray(**kw)
+
+    def print_external_links(self):
+        for link in self.data_collection.external_links:
+            try:
+                print(f"{link.__class__.__name__} {link.data1.label}:{link.cids1[0]}({getattr(link.cids1[0], '_component_type', 'undefined')}) <--> {link.data2.label}:{link.cids2[0]}({getattr(link.cids2[0], '_component_type', 'undefined')})")  # noqa: E501
+            except Exception:
+                print(f"{link.__class__.__name__} {str(link)}")
 
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items

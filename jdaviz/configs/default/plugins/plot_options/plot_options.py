@@ -395,7 +395,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
-        self.layer.filters += [is_not_wcs_only]
+        self.layer.filters += [is_not_wcs_only, 'has_wcs_if_image_viewer_pixel_linked']
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
@@ -655,6 +655,12 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
                        'stretch_curve_visible', 'apply_RGB_presets']
+        if self.config in ('imviz', 'deconfigged'):
+            expose += ['marker_visible', 'marker_fill', 'marker_opacity',
+                       'marker_size', 'marker_size_scale',
+                       'marker_color_mode', 'marker_color',
+                       'marker_color_col', 'marker_colormap',
+                       'marker_colormap_vmin', 'marker_colormap_vmax']
 
         return PluginUserApi(self, expose)
 
@@ -942,7 +948,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             # will be hidden in the UI
             return
 
-        if not self._viewer_is_image_viewer():
+        if not self._viewer_is_image_viewer() or not self._layer_is_image_layer():
             # don't update histogram if selected viewer is not an image viewer:
             return
 
@@ -1199,6 +1205,11 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
             viewers = [viewers]
 
         return np.all([_is_image_viewer(viewer) for viewer in viewers])
+
+    def _layer_is_image_layer(self):
+        from glue_jupyter.bqplot.image.state import BqplotImageLayerState
+        return np.all([isinstance(lyr.state, BqplotImageLayerState)
+                       for lyr in self.layer.selected_obj])
 
     def image_segmentation_map_presets(self, *args, **kwargs):
         # if 'Random' colormap is used for visualizing image segmentation,
