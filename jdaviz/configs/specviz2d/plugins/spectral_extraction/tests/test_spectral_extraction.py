@@ -421,16 +421,24 @@ class TestTwo2dSpectra:
 
         assert self.spec2d_label in dc.labels
         assert self.spec2d_ext_label in dc.labels
+        spec2d = helper.get_data(self.spec2d_label)
         extracted_spec2d = helper.get_data(self.spec2d_ext_label)
         # Check for any non-NaN data, if all NaNs, something went wrong
+        assert np.any(~np.isnan(spec2d.flux))
         assert np.any(~np.isnan(extracted_spec2d.flux))
 
         assert self.another_spec2d_label in dc.labels
         assert self.another_spec2d_ext_label in dc.labels
+        another_spec2d = helper.get_data(self.another_spec2d_label)
         extracted_another_spec2d = helper.get_data(self.another_spec2d_ext_label)
         # Check for any non-NaN data, if all NaNs, something went wrong
+        assert np.any(~np.isnan(another_spec2d.flux))
         assert np.any(~np.isnan(extracted_another_spec2d.flux))
 
+        # Check that the loaded spectra differ from one another, i.e. that
+        # the second spectra is being pulled in correctly.
+        assert not np.array_equal(spec2d.flux, another_spec2d.flux), \
+            'Loaded spectra should differ!'
         assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
             'Extracted spectra should differ!'
 
