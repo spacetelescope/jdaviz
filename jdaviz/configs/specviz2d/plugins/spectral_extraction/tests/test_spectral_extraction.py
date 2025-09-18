@@ -370,12 +370,10 @@ class TestTwo2dSpectra:
         if method in ('load', 'specviz2d'):
             self.load_2d_spectrum(helper, spectrum2d)
             self.load_another_2d_spectrum(helper, spectrum2d)
-            parent_label = self.spec2d_label
 
         elif method == 'specviz2d_alternate_order':
             self.load_another_2d_spectrum(helper, spectrum2d)
             self.load_2d_spectrum(helper, spectrum2d, spec2d_label_idx=2, spec2d_ext_label_idx=3)
-            parent_label = self.another_spec2d_label
 
         elif method == 'loader_infrastructure':
             # Allow this to use the default label
@@ -393,8 +391,6 @@ class TestTwo2dSpectra:
             ldr.importer.data_label = self.another_spec2d_label
             ldr.importer.ext_data_label = self.another_spec2d_ext_label
             ldr.importer()
-
-            parent_label = self.spec2d_label
 
         elif method == 'loader_infrastructure_alternate_order':
             self.setup_another_2d_spectrum(spectrum2d)
@@ -415,15 +411,11 @@ class TestTwo2dSpectra:
             ldr.importer()
             self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[-2:]
 
-            parent_label = self.another_spec2d_label
-
         else:
             raise NotImplementedError(f"Method {method} not implemented.")
 
-        child_labels = {self.spec2d_label,  # noqa F841
-                        self.spec2d_ext_label,
-                        self.another_spec2d_label,
-                        self.another_spec2d_ext_label}.difference({parent_label})
+        expected_labels = [self.spec2d_label, self.spec2d_ext_label,
+                           self.another_spec2d_label, self.another_spec2d_ext_label]
 
         dc = helper.app.data_collection
 
@@ -443,18 +435,17 @@ class TestTwo2dSpectra:
             'Extracted spectra should differ!'
 
         # Check linking, e.g.
-        # 2D Spectrum 1 <=> 2D Spectrum Extraction 1
-        # 2D Spectrum 1 <=> 2D Spectrum 2
-        # 2D Spectrum 1 <=> 2D Spectrum Extraction 2
-        # TODO(?): These fail on GitHub CI but not locally
+        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral axis]
+        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
+        # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
+        # Another 2D Spectral Extraction <=> 2D Spectrum
         assert len(dc.external_links) == 6
         for link in dc.external_links:
-            # print(link.data1.label, link.data2.label)
-            parent = link.data1  # noqa F841
-            child = link.data2  # noqa F841
-            # assert parent.label == parent_label
-            # TODO: THIS FAILS (for specviz2d case only, due to the same label issue above)
-            # assert child.label in child_labels
+            # Check that linking is correct by confirming that both
+            # are in `expected_labels`
+            assert (link.data1.label in expected_labels) and (link.data2.label in expected_labels)
             assert isinstance(link, LinkSameWithUnits)
 
     def test_subsets_and_viewer_things(self, deconfigged_helper, spectrum2d):
