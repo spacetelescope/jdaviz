@@ -14,9 +14,8 @@ from jdaviz.core.events import (
     RemoveDataMessage,
     LinkUpdatedMessage,
 )
-from jdaviz.core.registries import tray_registry
+from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin,
     AddResultsMixin,
     TableMixin,
     ViewerSelect,
@@ -24,16 +23,16 @@ from jdaviz.core.template_mixin import (
     UnitSelectPluginComponent,
     with_spinner,
 )
+from jdaviz.core.loaders.resolvers import BaseResolver
+from jdaviz.core.user_api import LoaderUserApi
+from jdaviz.utils import download_uri_to_path
 
-__all__ = ["VoPlugin"]
-vo_plugin_label = "Virtual Observatory"
+__all__ = ["VOResolver"]
 
 
-@tray_registry("VoPlugin", label=vo_plugin_label)
-class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
-    """Plugin to query the Virtual Observatory and load data into Imviz"""
-
-    template_file = __file__, "vo_plugin.vue"
+@loader_resolver_registry("virtual observatory")
+class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
+    template_file = __file__, "vo.vue"
 
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
@@ -41,7 +40,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resource_filter_coverage = Bool(False).tag(sync=True)
-    resource_choices = List([]).tag(sync=True)
+    resource_items = List([]).tag(sync=True)
     resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resources_loading = Bool(False).tag(sync=True)
 
@@ -55,7 +54,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
-    data_loading = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -93,7 +91,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self._full_registry_results = None
         self.resource_selected = ""
         self.resource = SelectPluginComponent(
-            self, items="resource_choices", selected="resource_selected"
+            self, items="resource_items", selected="resource_selected"
         )
         self.resource.choices = []
 
@@ -103,10 +101,24 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         self.table.show_rowselect = True
         self.table.item_key = "URL"
+        self.table.multiselect = False
+        self.table._selected_rows_changed_callback = self._on_table_select_change
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
+
+    @property
+    def user_api(self):
+        return LoaderUserApi(
+            self,
+            expose=[
+                "viewer", "coordframe", "radius", "radius_unit",
+                "source",
+                "resource_filter_coverage", "waveband", "resource",
+                "query_archive", "table",
+            ],
+        )
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -208,17 +220,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         self.viewer_centered = True
 
-    @observe("waveband_selected", type="change")
-    def vue_query_registry_resources(self, _=None):
-        """
-        This vue method serves as UI entrypoint for two actions:
-        * Automatically fires when a waveband is selected
-        * The manual resource refresh btn
-        """
-        self.query_registry_resources()
-
+    @observe("waveband_selected",
+             "source", "coordframe_selected",
+             "radius", "radius_unit_selected",
+             "resource_filter_coverage")
     @with_spinner(spinner_traitlet="resources_loading")
-    def query_registry_resources(self, _=None):
+    def query_registry_resources(self, event={}):
         """
         Query Virtual Observatory registry for all SIA services
         that serve data in that waveband around the source.
@@ -227,6 +234,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         # If waveband was changed to nothing, immediately quit
         # Don't throw an error due to trigger by plugin init
         if not self.waveband_selected:
+            return
+
+        # No need to update if the change was from source but coverage filtering is off
+        if (event.get("name") in ("source", "coordframe_selected", "radius", "radius_unit_selected")
+                and not self.resource_filter_coverage):
             return
 
         # Can't filter by coverage if we don't have a source to filter on
@@ -312,7 +324,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             raise
 
     @with_spinner(spinner_traitlet="results_loading")
-    def vue_query_resource(self, _=None):
+    def query_archive(self):
         """
         Once a specific VO resource is selected, query it with the user-specified source target.
         User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
@@ -420,6 +432,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             )
             raise
 
+    def vue_query_archive(self, _=None):
+        self.query_archive()
+
     def _populate_table(
         self,
         sia_results,
@@ -457,39 +472,29 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             )
         )
 
-    def vue_load_selected_data(self, event=None):
-        """UI entrypoint for load data btn"""
-        self.load_selected_data()
+    def _on_table_select_change(self, _=None):
+        self._update_format_items()
 
-    @with_spinner(spinner_traitlet="data_loading")
-    def load_selected_data(self, _=None):
-        """Load the files selected by the user in the table"""
-        if (
-            self.app._jdaviz_helper.plugins["Orientation"].align_by != "WCS"
-            and len(self.app.data_collection) > 0
-        ):
+    @property
+    def is_valid(self):
+        # this resolver does not accept any direct, (default_input = None), so can
+        # always be considered valid
+        return True
+
+    def __call__(self):
+        if not len(self.table.selected_rows):
+            raise ValueError("must select a row in the query results table")
+
+        # Resolver infrastructure only supports one data product at a time
+        if len(self.table.selected_rows) != 1:
             error_msg = (
-                "WCS linking is not enabled; data layers may not be aligned. To align, "
-                "switch link type to WCS in the Orientation plugin"
+                "Only one data product is supported at a time. "
+                "Only the first selection will be loaded."
             )
             self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
 
-        for entry in self.table.selected_rows:
-            try:
-                self.app._jdaviz_helper.load_data(
-                    str(entry["URL"]),  # Open URL as FITS object
-                    data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}",  # noqa: E501
-                    cache=False,
-                    timeout=1e6,  # Set to arbitrarily large value to prevent timeouts
-                )
-            except Exception as e:
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"Unable to load file to viewer: {entry['URL']}: {e}",
-                        sender=self,
-                        color="error",
-                        traceback=e
-                    )
-                )
-        # Clear selected entries' checkboxes on table
-        self.table.selected_rows = []
+        # TODO: implement cache and timeout options
+        return download_uri_to_path(self.table.selected_rows[0]["URL"],
+                                    local_path=None,
+                                    timeout=60,
+                                    cache=False)
