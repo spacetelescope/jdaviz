@@ -10,7 +10,7 @@ from jdaviz.core.registries import loader_parser_registry
 __all__ = ['AstropyTableParser']
 
 
-@loader_parser_registry('Astropy Table')
+@loader_parser_registry('astropy.Table')
 class AstropyTableParser(BaseParser):
 
     @property
