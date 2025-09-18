@@ -92,8 +92,8 @@ class WithSliceSelection:
         # if slice_index is 0, then we want the equivalent of [:, 0, 0]
         # if slice_index is 1, then we want the equivalent of [0, :, 0]
         # if slice_index is 2, then we want the equivalent of [0, 0, :]
-        take_inds = [2, 1, 0]
-        take_inds.remove(self.slice_index)
+        data_slice = [0, 0, 0]
+        data_slice[self.slice_index] = slice(None)
         converted_axis = np.array([])
 
         # Retrieve display units
@@ -130,8 +130,11 @@ class WithSliceSelection:
                     continue
 
                 data = np.asarray(
-                    data_comp.data.take(0, take_inds[0]).take(0, take_inds[1]),
-                    dtype=float)
+                    data_comp[data_slice],
+                    dtype=float,
+                    copy=False
+                )
+
                 data_units = getattr(data_comp, 'units', None)
 
             # Convert to display units if applicable
