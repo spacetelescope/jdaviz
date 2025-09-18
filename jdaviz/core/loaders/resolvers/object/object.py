@@ -25,8 +25,13 @@ class ObjectResolver(BaseResolver):
     @property
     def is_valid(self):
         if isinstance(self.object, str):
-            # if a string, it must be a path-like string
-            return not Path(self.object).exists()
+            # reject strings that should go through file
+            # or url resolvers instead
+            if Path(self.object).exists():
+                return False
+            if self.object.strip().startswith(('http://', 'https://',
+                                               'ftp://', 's3://', 'mast://')):
+                return False
         return not isinstance(self.object, Path)
 
     @property
