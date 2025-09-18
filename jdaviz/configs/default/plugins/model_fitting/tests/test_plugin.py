@@ -417,12 +417,13 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     assert plugin._obj.spectral_subset_valid
 
 
-def test_fitting_with_nans(specviz_helper):
+@pytest.mark.parametrize('fill_val', [np.nan, np.inf])
+def test_fitting_with_nans(specviz_helper, fill_val):
     # test that model fitting works when there are nans in the flux array. these
     # nonfinite values should be filtered out both when computing the initial
     # guess for model parameters, and when fitting the model
 
-    spec = Spectrum(flux=np.array([0, 1, 2, np.nan, np.nan, np.nan, 6, 7, 8, 9]) * u.Jy,
+    spec = Spectrum(flux=np.array([0, 1, 2, fill_val, fill_val, fill_val, 6, 7, 8, 9]) * u.Jy,
                     spectral_axis=np.arange(10) * u.nm)
     specviz_helper.load_data(spec)
 
@@ -452,12 +453,13 @@ def test_fitting_with_nans(specviz_helper):
     assert plugin._obj.non_finite_uncertainty_mismatch is False
 
 
-def test_fitting_partial_overlap_subset(specviz_helper):
+@pytest.mark.parametrize('fill_val', [np.nan, np.inf])
+def test_fitting_partial_overlap_subset(specviz_helper, fill_val):
     # test that a partially out of bounds subset works correctly,
     # using a test dataset with nans to make sure the masking accounts for
     # out-of-bounds values as well as nonfinite values
 
-    spec = Spectrum(flux=np.array([0, 1, 2, np.nan, np.nan, np.nan, 6, 7, 8, 9]) * u.Jy,
+    spec = Spectrum(flux=np.array([0, 1, 2, fill_val, fill_val, fill_val, 6, 7, 8, 9]) * u.Jy,
                     spectral_axis=np.arange(10) * u.nm)
     specviz_helper.load_data(spec)
 
