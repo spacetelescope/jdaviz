@@ -129,11 +129,10 @@ class WithSliceSelection:
                 except (AttributeError, KeyError):
                     continue
 
-                data = np.asarray(
-                    data_comp[tuple(data_slice)],
-                    dtype=float,
-                    copy=False
-                )
+                data = data_comp[tuple(data_slice)]
+
+                if not isinstance(data, np.ndarray) or data.dtype.kind not in 'if':
+                    data = np.asarray(data, dtype=float)
 
                 data_units = getattr(data_comp, 'units', None)
 
