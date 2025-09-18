@@ -24,7 +24,10 @@ class ObjectResolver(BaseResolver):
 
     @property
     def is_valid(self):
-        return not isinstance(self.object, (str, Path))
+        if isinstance(self.object, str):
+            # if a string, it must be a path-like string
+            return not Path(self.object).exists()
+        return not isinstance(self.object, Path)
 
     @property
     def object(self):
