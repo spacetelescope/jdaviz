@@ -174,6 +174,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
 
     is_pixel_linked = Bool(True).tag(sync=True)  # plugin disabled if linked by pixel (default)
 
+    skewer_mode_active = Bool(True).tag(sync=True)
+
     # OVERLAY LABEL
     overlay_mode = Unicode().tag(sync=True)
     overlay_edit_value = Unicode().tag(sync=True)
@@ -272,39 +274,87 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
             for mark in self._get_marks(viewer):
                 mark.set_selected_style(is_selected=mark.overlay == overlay_label)
 
-    def _on_select_footprint_overlay(self, data):
+    def _on_select_footprint_overlay(self, msg):
+        """Dispatch click handling to the active selection mode."""
+        if getattr(msg, "mode", "nearest") == "skewer":
+            self._handle_skewer_click(msg)
+        else:
+            self._handle_nearest_click(msg)
+
+    def _handle_nearest_click(self, data):
         click_x, click_y = data.x, data.y
         viewers = self.viewer.selected_obj if isinstance(self.viewer.selected_obj, list) else [
                                                      self.viewer.selected_obj]
-
+        print("NEAREST CLICK")
         overlay_data = []
         for viewer in viewers:
-            skycoord_icrs = viewer.state.reference_data.coords.pixel_to_world(click_x, click_y).icrs
-            ra_deg, dec_deg = skycoord_icrs.ra.deg, skycoord_icrs.dec.deg
-            print(
-                f"click pixel=({click_x:.2f},{click_y:.2f})  sky(ICRS)=({ra_deg:.6f},{dec_deg:.6f})")
             overlays = self._get_marks(viewer)
-            for mark in overlays:
+            for overlay in overlays:
+                overlay_data.append({
+                    "overlay": overlay.overlay,
+                    "x": np.array(overlay.x),
+                    "y": np.array(overlay.y),
+                })
+        closest_overlay_label, closest_point = find_closest_polygon_point(
+            click_x, click_y, overlay_data)
+        self.overlay_selected = closest_overlay_label
+
+    def _handle_skewer_click(self, data):
+        """Spherical (great-circle) selection: only selects if the click is INSIDE a footprint.
+        If multiple overlays contain the click, picks the one with smallest area.
+        """
+        click_x, click_y = data.x, data.y
+        selected_viewers = (self.viewer.selected_obj if isinstance(self.viewer.selected_obj, list)
+                            else [self.viewer.selected_obj])
+        for viewer in selected_viewers:
+            # Pixel -> Sky/ICRS
+            skycoord_icrs = viewer.state.reference_data.coords.pixel_to_world(click_x, click_y).icrs
+            ra_deg = skycoord_icrs.ra.deg
+            dec_deg = skycoord_icrs.dec.deg
+
+            containing_overlay_labels = set()
+            areas_by_label = {}
+            overlay_marks = self._get_marks(viewer)
+
+            for mark in overlay_marks:
                 overlay_label = mark.overlay
                 x_pix = np.asarray(mark.x)
                 y_pix = np.asarray(mark.y)
+
+                # drop duplicate closing vertex
+                if len(x_pix) > 1 and x_pix[0] == x_pix[-1] and y_pix[0] == y_pix[-1]:
+                    x_pix = x_pix[:-1]
+                    y_pix = y_pix[:-1]
+
                 verts_icrs = viewer.state.reference_data.coords.pixel_to_world(x_pix, y_pix).icrs
-                lon_vertices = verts_icrs.ra.deg
-                lat_vertices = verts_icrs.dec.deg
+                spherical_polygon = SphericalPolygon.from_lonlat(
+                    verts_icrs.ra.deg, verts_icrs.dec.deg, degrees=True)
 
-                spherical_polygon = SphericalPolygon.from_lonlat(lon_vertices, lat_vertices)
-                is_inside = spherical_polygon.contains_lonlat(ra_deg, dec_deg)
-                print(f"overlay='{overlay_label}' contains={is_inside}")
+                # accumulate area per overlay (steradians -> deg^2)
+                areas_by_label[overlay_label] = areas_by_label.get(
+                    overlay_label, 0.0
+                ) + spherical_polygon.area() * (180.0/np.pi)**2
 
-        #         overlay_data.append({
-        #             "overlay": overlay.overlay,
-        #             "x": np.array(overlay.x),
-        #             "y": np.array(overlay.y),
-        #         })
-        # closest_overlay_label, closest_point = find_closest_polygon_point(
-        #     click_x, click_y, overlay_data)
-        # self.overlay_selected = closest_overlay_label
-        # self._highlight_overlay(closest_overlay_label, viewers=self.viewer.selected_obj)
+                if spherical_polygon.contains_lonlat(ra_deg, dec_deg, degrees=True):
+                    containing_overlay_labels.add(overlay_label)
+
+            # decide selection
+            if len(containing_overlay_labels) == 1:
+                chosen = list(containing_overlay_labels)[0]
+                self.overlay_selected = chosen
+                self._highlight_overlay(chosen, viewers=self.viewer.selected_obj)
+                return
+
+            if len(containing_overlay_labels) > 1:
+                labels_arr = np.array(sorted(containing_overlay_labels))
+                areas_arr = np.array([areas_by_label[lbl] for lbl in labels_arr], dtype=float)
+
+                min_idx = np.argmin(areas_arr)
+                chosen = labels_arr[min_idx]
+
+                self.overlay_selected = chosen
+                self._highlight_overlay(chosen, viewers=self.viewer.selected_obj)
+                return
 
     @property
     def user_api(self):

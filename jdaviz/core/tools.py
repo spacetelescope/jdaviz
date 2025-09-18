@@ -437,7 +437,7 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
         self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
-        msg = FootprintSelectClickEventMessage(data, sender=self)
+        msg = FootprintSelectClickEventMessage(data, mode="nearest", sender=self)
         self.viewer.session.hub.broadcast(msg)
 
     def is_visible(self):
@@ -445,6 +445,29 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
             isinstance(m, FootprintOverlay) and m.visible
             for m in self.viewer.figure.marks
             )
+
+
+@viewer_tool
+class SkewerSelectFootprint(CheckableTool, HubListener):
+    icon = os.path.join(ICON_DIR, 'skewer_select.svg')
+    tool_id = 'jdaviz:skewerselect'
+    action_text = 'Skewer: spherical select'
+    tool_tip = 'Select footprint only if click is inside'
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event,
+                                       events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        msg = FootprintSelectClickEventMessage(data, mode="skewer", sender=self)
+        self.viewer.session.hub.broadcast(msg)
+
+    def is_visible(self):
+        return any(isinstance(m, FootprintOverlay) and m.visible
+                   for m in self.viewer.figure.marks)
 
 
 @viewer_tool
