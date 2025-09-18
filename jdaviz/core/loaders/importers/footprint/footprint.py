@@ -6,6 +6,7 @@ from traitlets import Unicode, Bool, observe
 from jdaviz.core.loaders.importers import BaseImporterToPlugin
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.template_mixin import AutoTextField
+from jdaviz.core.user_api import ImporterUserApi
 
 
 __all__ = ['FootprintImporter']
@@ -28,11 +29,6 @@ class FootprintImporter(BaseImporterToPlugin):
                                              'footprint_label_auto',
                                              'footprint_label_invalid_msg')
 
-        # TODO: event subscription for creation/deletion of footprint overlays
-#        for msg in (SubsetCreateMessage, SubsetDeleteMessage, SubsetRenameMessage):
-#            self.hub.subscribe(self, msg,
-#                               handler=lambda _: self._on_label_changed())
-
         self.observe(self._on_label_changed, 'footprint_label_value')
         self._on_label_changed()
 
@@ -48,6 +44,10 @@ class FootprintImporter(BaseImporterToPlugin):
         return (isinstance(self.input, (regions.Region, regions.Regions))
                 and _ensure_sky(self.input)
                 and self.has_default_plugin)
+
+    @property
+    def user_api(self):
+        return ImporterUserApi(self, expose=['footprint_label'])
 
     @property
     def default_plugin(self):
