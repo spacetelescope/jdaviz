@@ -3,9 +3,6 @@ import numpy as np
 import os
 import regions
 
-from astropy.coordinates import SkyCoord
-import astropy.units as u
-
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -285,7 +282,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
         click_x, click_y = data.x, data.y
         viewers = self.viewer.selected_obj if isinstance(self.viewer.selected_obj, list) else [
                                                      self.viewer.selected_obj]
-        print("NEAREST CLICK")
         overlay_data = []
         for viewer in viewers:
             overlays = self._get_marks(viewer)
