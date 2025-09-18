@@ -1228,7 +1228,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         viewer_name = viewer_parameter or list(self.app._jdaviz_helper.viewers.keys())[0]
         viewer = self.app.get_viewer(viewer_name)
         # Subset is global but reference data is viewer-dependent.
-        if refdata_label is None:
+        if refdata_label is None and hasattr(viewer.state, 'reference_data'):
             data = viewer.state.reference_data
         else:
             data = self.app.data_collection[refdata_label]
