@@ -1423,12 +1423,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Apply masks from selected spectral subset
         spec = self._apply_subset_masks(spec, self.spectral_subset, spatial_axes=spatial_axes)
-        # Also mask out NaNs for fitting. Simply adding filter_non_finite to the cube fit
-        # didn't work out of the box, so doing this for now.
+
+        # Add NaNs in flux to the mask. In theory, the 'filter_non_finite' kwarg
+        # in the fitter should handle this, but during a cube fit, this causes
+        # issues with multiple AstropyUserWarnings being raised
+        # and the message queueing acting up, so add them to the mask to avoid this.
         if spec.mask is None:
-            spec.mask = np.isnan(spec.flux)
+            spec.mask = ~np.isfinite(spec.flux)
         else:
-            spec.mask = spec.mask | np.isnan(spec.flux)
+            spec.mask = spec.mask | ~np.isfinite(spec.flux)
 
         kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
               if param['type'] == 'call'}
