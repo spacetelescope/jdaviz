@@ -67,6 +67,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Speed up loading of large cubes into cubeviz. [#3791]
+
 Imviz
 ^^^^^
 
