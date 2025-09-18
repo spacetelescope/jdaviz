@@ -1228,10 +1228,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         viewer_name = viewer_parameter or list(self.app._jdaviz_helper.viewers.keys())[0]
         viewer = self.app.get_viewer(viewer_name)
         # Subset is global but reference data is viewer-dependent.
-        if refdata_label is None:
+        if refdata_label is None and hasattr(viewer.state, 'reference_data'):
             data = viewer.state.reference_data
-        else:
+        elif refdata_label is not None:
             data = self.app.data_collection[refdata_label]
+        elif len(viewer.layers):
+            data = viewer.layers[0].layer
+        else:
+            raise ValueError('No reference data found in viewer.')
 
         has_wcs = data_has_valid_wcs(data, ndim=2) or data_has_valid_wcs(data, ndim=3)
 

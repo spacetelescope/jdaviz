@@ -2,45 +2,43 @@
 <v-container>
 
   <j-plugin-section-header>Select RA & Dec columns</j-plugin-section-header>
-	<plugin-select
-	    :items="col_ra_items.map(i => i.label)"
-	    :selected.sync="col_ra_selected"
-	    label="RA"
-	    hint="Select column corresponding to RA."
-	    api_hint="ldr.importer.col_ra ="
-	    :api_hints_enabled="api_hints_enabled"
- 	></plugin-select>
+  <plugin-select
+    :items="col_ra_items.map(i => i.label)"
+    :selected.sync="col_ra_selected"
+    label="RA"
+    hint="Select column corresponding to RA."
+    api_hint="ldr.importer.col_ra ="
+    :api_hints_enabled="api_hints_enabled"
+  ></plugin-select>
 
  	<plugin-select v-if="!col_ra_has_unit"
-		:items="col_ra_unit_items.map(i => i.label)"
-	    :selected.sync="col_ra_unit_selected"
-	    label="RA Unit"
-	    hint="Select unit for RA."
-	    api_hint="ldr.importer.col_ra_unit ="
-	    :api_hints_enabled="api_hints_enabled"
+    :items="col_ra_unit_items.map(i => i.label)"
+    :selected.sync="col_ra_unit_selected"
+    label="RA Unit"
+    hint="Select unit for RA."
+    api_hint="ldr.importer.col_ra_unit ="
+    :api_hints_enabled="api_hints_enabled"
  	></plugin-select>
 
   <plugin-select
-      :items="col_dec_items.map(i => i.label)"
-      :selected.sync="col_dec_selected"
-      label="Dec"
-      hint="Select column corresponding to Dec."
-      api_hint="ldr.importer.col_dec ="
-      :api_hints_enabled="api_hints_enabled"
+    :items="col_dec_items.map(i => i.label)"
+    :selected.sync="col_dec_selected"
+    label="Dec"
+    hint="Select column corresponding to Dec."
+    api_hint="ldr.importer.col_dec ="
+    :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
 
   <plugin-select v-if="!col_dec_has_unit"
     :items="col_dec_unit_items.map(i => i.label)"
-      :selected.sync="col_dec_unit_selected"
-      label="Dec Unit"
-      hint="Select unit for Dec."
-      api_hint="ldr.importer.col_dec_unit ="
-      :api_hints_enabled="api_hints_enabled"
+    :selected.sync="col_dec_unit_selected"
+    label="Dec Unit"
+    hint="Select unit for Dec."
+    api_hint="ldr.importer.col_dec_unit ="
+    :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
 
-
-<j-plugin-section-header>Select Additional Columns</j-plugin-section-header>
-
+  <j-plugin-section-header>Select Additional Columns</j-plugin-section-header>
   <plugin-select
     :items="col_other_items.map(i => i.label)"
     :selected.sync="col_other_selected"
@@ -85,16 +83,15 @@
       :spinner="import_spinner"
       :disabled="import_disabled"
       :results_isolated_to_plugin="false"
-      :api_hints_enabled="api_hints_enabled"
-      @click="import_clicked">
-      {{ api_hints_enabled ?
-        'ldr.importer()'
-        :
-        'Import'
-      }}
+        :api_hints_enabled="api_hints_enabled"
+        @click="import_clicked">
+        {{ api_hints_enabled ?
+          'ldr.importer()'
+          :
+          'Import'
+        }}
     </plugin-action-button>
   </v-row>
-
 
 </v-container>
 </template>
