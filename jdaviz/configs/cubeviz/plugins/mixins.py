@@ -130,7 +130,7 @@ class WithSliceSelection:
                     continue
 
                 data = np.asarray(
-                    data_comp[data_slice],
+                    data_comp[tuple(data_slice)],
                     dtype=float,
                     copy=False
                 )
