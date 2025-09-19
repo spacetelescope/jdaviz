@@ -192,6 +192,19 @@ class Spectrum2DImporter(BaseImporterToDataCollection):
                         wcs = None
                 else:
                     wcs = None
+            elif hasattr(wcs, 'spectral') and wcs.spectral.naxis == 0:
+                # This is the case for WFSS BSUB files, which we want to allow in Specviz2D
+                # without worrying about the wavelength solution for now.
+                if 'ASDF' in hdulist:
+                    from stdatamodels import asdf_in_fits
+                    tree = asdf_in_fits.open(hdulist).tree
+                    if 'meta' in tree and 'wcs' in tree['meta']:
+                        wcs = tree["meta"]["wcs"]
+                        if isinstance(wcs, (list, tuple)):
+                            wcs = wcs[0]
+                        if len(wcs.forward_transform.inputs) == 5:
+                            wcs = None
+
             return Spectrum(flux=data * data_unit, meta=metadata, wcs=wcs, spectral_axis_index=1)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
