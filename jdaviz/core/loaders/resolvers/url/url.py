@@ -34,6 +34,7 @@ class URLResolver(BaseResolver):
 
     @property
     def is_valid(self):
+        # NOTE: if changing this, also update the object resolver to reject the same
         return self.url_scheme in ['http', 'https', 'mast', 'ftp', 's3']
 
     @property

@@ -517,8 +517,8 @@ in the plugin to change its color, opacity, visibilities in any image viewer in 
 You can also select between various preset instruments and change the input options
 (position on the sky, position angle, offsets, etc).
 
-To import a file, choose "From File..." from the presets dropdown and select a valid file (must
-be able to be parsed by `regions.Regions.read`).
+To import a file, open the "Import" section at the top of the dropdown and select a valid file (must
+be able to be parsed by `regions.Regions.read`) from the applicable source.
 
 To import a regions file, object, or ``STC-S`` string from the API:
 
