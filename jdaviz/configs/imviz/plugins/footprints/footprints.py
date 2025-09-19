@@ -326,13 +326,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
                 spherical_polygon = SphericalPolygon.from_lonlat(
                     verts_icrs.ra.deg, verts_icrs.dec.deg, degrees=True)
 
-                # accumulate area per overlay (steradians -> deg^2)
-                areas_by_label[overlay_label] = areas_by_label.get(
-                    overlay_label, 0.0
-                ) + spherical_polygon.area() * (180.0/np.pi)**2
-
                 if spherical_polygon.contains_lonlat(ra_deg, dec_deg, degrees=True):
                     containing_overlay_labels.add(overlay_label)
+                    area_deg2 = spherical_polygon.area() * (180.0/np.pi)**2
+                    prev = areas_by_label.get(overlay_label)
+                    areas_by_label[overlay_label] = area_deg2 if prev is None else min(
+                        prev, area_deg2)
 
             # decide selection
             if len(containing_overlay_labels) == 1:
