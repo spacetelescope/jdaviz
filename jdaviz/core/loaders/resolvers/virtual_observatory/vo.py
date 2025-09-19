@@ -16,22 +16,19 @@ from jdaviz.core.events import (
 )
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.template_mixin import (
-    AddResultsMixin,
-    TableMixin,
     ViewerSelect,
     SelectPluginComponent,
     UnitSelectPluginComponent,
     with_spinner,
 )
-from jdaviz.core.loaders.resolvers import BaseResolver
+from jdaviz.core.loaders.resolvers.query_results import QueryResultsResolver
 from jdaviz.core.user_api import LoaderUserApi
-from jdaviz.utils import download_uri_to_path
 
 __all__ = ["VOResolver"]
 
 
 @loader_resolver_registry("virtual observatory")
-class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
+class VOResolver(QueryResultsResolver):
     template_file = __file__, "vo.vue"
 
     viewer_items = List([]).tag(sync=True)
@@ -57,11 +54,6 @@ class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # description displayed under plugin title in tray
-        self._plugin_description = (
-            "Download data products from VO-registered telescopes and missions."
-        )
 
         self.viewer = ViewerSelect(
             self, "viewer_items", "viewer_selected", manual_options=["Manual"]
@@ -94,15 +86,6 @@ class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
             self, items="resource_items", selected="resource_selected"
         )
         self.resource.choices = []
-
-        self.table.headers_avail = ["Title", "Instrument", "DateObs", "URL"]
-        self.table.headers_visible = ["Title", "Instrument", "DateObs"]
-        self._populate_url_only = False
-
-        self.table.show_rowselect = True
-        self.table.item_key = "URL"
-        self.table.multiselect = False
-        self.table._selected_rows_changed_callback = self._on_table_select_change
 
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
@@ -330,11 +313,6 @@ class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
         User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
         then attempts to parse as a target name.
         """
-        # Reset Table
-        self.table.items = []
-        self._populate_url_only = False
-        self.table.headers_visible = ["Title", "Instrument", "DateObs"]
-
         try:
             # Query SIA service
             # Service is indexed via short name (resource_selected), which is the suggested way
@@ -420,7 +398,7 @@ class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
             raise
 
         try:
-            self._populate_table(sia_results)
+            self.object = sia_results
         except Exception as e:
             self.hub.broadcast(
                 SnackbarMessage(
@@ -435,66 +413,8 @@ class VOResolver(BaseResolver, AddResultsMixin, TableMixin):
     def vue_query_archive(self, _=None):
         self.query_archive()
 
-    def _populate_table(
-        self,
-        sia_results,
-        table_headers={"Title": "title", "Instrument": "instr", "DateObs": "dateobs"},
-    ):
-        for result in sia_results:
-            table_entry = {"URL": result.getdataurl()}
-            if not self._populate_url_only:
-                try:
-                    for header, attr in table_headers.items():
-                        table_entry[header] = str(getattr(result, attr))
-                except Exception as e:
-                    self.hub.broadcast(
-                        SnackbarMessage(
-                            f"Can't get metadata columns. Switching table to URL-only: {e}",
-                            sender=self,
-                            color="warning",
-                            traceback=e
-                        )
-                    )
-                    # Hide all other incomplete columns and only load URL for subsequent rows
-                    self.table.headers_visible = ["URL"]
-                    self._populate_url_only = True
-                    # Reset current entry to URL only
-                    table_entry = {"URL": result.getdataurl()}
-            # Table widget only supports JSON-verification for serial table additions.
-            # For improved performance with larger tables, a `table.add_items` that accepts
-            # a table of elements should be implemented
-            self.table.add_item(table_entry)
-        self.hub.broadcast(
-            SnackbarMessage(
-                f"{len(sia_results)} SIA results populated!",
-                sender=self,
-                color="success",
-            )
-        )
-
-    def _on_table_select_change(self, _=None):
-        self._update_format_items()
-
     @property
     def is_valid(self):
         # this resolver does not accept any direct, (default_input = None), so can
         # always be considered valid
         return True
-
-    def __call__(self):
-        if not len(self.table.selected_rows):
-            raise ValueError("must select a row in the query results table")
-
-        # Resolver infrastructure only supports one data product at a time
-        if len(self.table.selected_rows) != 1:
-            error_msg = (
-                "Only one data product is supported at a time. "
-                "Only the first selection will be loaded."
-            )
-            self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
-
-        # TODO: implement cache and timeout options
-        return download_uri_to_path(self.table.selected_rows[0]["URL"],
-                                    local_path=None,
-                                    timeout=60,
-                                    cache=False)

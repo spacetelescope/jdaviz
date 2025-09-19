@@ -1,6 +1,6 @@
 <template>
     <j-loader
-        title="Python Object"
+        title="Python Object (from API)"
         :popout_button="popout_button"
         :target_items="target_items"
         :target_selected.sync="target_selected"
