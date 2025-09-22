@@ -16,6 +16,7 @@ from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
+from jdaviz.core.marks import Lines
 
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 
@@ -328,6 +329,68 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
 
         exported_extract = pext.export_extract()
         assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
+    # Multiple 1D viewers is a deconfigged thing so we stick with using
+    # that helper throughout.
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum')
+    default_label = deconfigged_helper.app.data_collection.labels[0]
+    # Assume auto extract is on
+    default_extraction_label = deconfigged_helper.app.data_collection.labels[1]
+    custom_extraction_label = 'custom-extraction'
+
+    # Create a custom extraction and add to a existing viewer
+    spext = deconfigged_helper.plugins['2D Spectral Extraction']
+    spext.trace_pixel = 2  # to distinguish from auto-extract
+    spext.ext_add_results.label = custom_extraction_label
+    spext.export_extract_spectrum(add_data=True)  # added as layer to "1D Spectrum" viewer
+
+    default_extraction_data = deconfigged_helper.get_data(default_extraction_label)
+    custom_extraction_data = deconfigged_helper.get_data(custom_extraction_label)
+
+    assert np.any(~np.isnan(default_extraction_data.flux))
+    assert np.any(~np.isnan(custom_extraction_data.flux))
+    # Check that the loaded spectra differ from one another, i.e. that
+    # the second spectra is being pulled in correctly.
+    assert not np.array_equal(default_extraction_data.flux, custom_extraction_data.flux)
+
+    # Check that both are in the default viewer
+    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
+    assert default_extraction_label in dm.layer.choices
+    assert custom_extraction_label in dm.layer.choices
+
+    # Remove layer from default viewer
+    dm.layer = [custom_extraction_label]
+    dm.remove_from_viewer()
+
+    # Check that only the default extraction remains in the default viewer
+    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
+    assert default_extraction_label in dm.layer.choices
+    assert custom_extraction_label not in dm.layer.choices
+
+    # and add to a new viewer
+    custom_viewer_label = 'manual-viewer'
+    nvc = deconfigged_helper.new_viewers['1D Spectrum']
+    nvc.dataset = custom_extraction_label
+    nvc.viewer_label = custom_viewer_label
+    new_viewer = nvc()
+    new_dm = new_viewer.data_menu
+
+    # Check that only the custom extraction is in the new viewer
+    assert default_extraction_label not in new_dm.layer.choices
+    assert custom_extraction_label in new_dm.layer.choices
+
+    # check that the preview lines appear/disappear as expected
+    # (as modified from 'test_ramp_extraction.py')
+    for interactive_extract in [True, False]:
+        with spext.as_active():
+            spext.interactive_extract = interactive_extract
+            assert len([
+                mark for mark in new_viewer._obj.custom_marks
+                if mark.visible and isinstance(mark, Lines) and
+                   len(mark.x) == len(spectrum2d.spectral_axis)]) == int(interactive_extract)
 
 
 class TestTwo2dSpectra:
