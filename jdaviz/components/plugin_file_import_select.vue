@@ -33,7 +33,7 @@
             {{ item.label }}
           </span>
         </template>
-    
+
       </v-select>
       <v-chip v-if="selected === 'From File...'"
         close
@@ -42,7 +42,7 @@
         @click:close="() => {this.$emit('click-cancel')}"
         style="margin-top: -50px; width: 100%"
       >
-       <!-- @click:close resets from_file and relies on the @observe in python to reset preset 
+       <!-- @click:close resets from_file and relies on the @observe in python to reset preset
             to its default, but the traitlet change wouldn't be fired if from_file is already
             empty (which should only happen if setting from the API but not setting from_file) -->
          <span style="overflow-x: hidden; whitespace: nowrap; text-overflow: ellipsis; width: 100%">
@@ -51,7 +51,21 @@
       </v-chip>
     </v-row>
     <v-dialog :value="selected === 'From File...' && from_file.length == 0" height="400" width="600">
-      <v-card>
+      <v-card v-if="deprecate_from_file">
+        <v-card-title class="headline" color="primary" primary-title>Import Behavior Changed</v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-alert color="warning">This functionality has been moved to the top of the plugin under "Import"</v-alert>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <div class="flex-grow-1"></div>
+          <v-btn color="primary" text @click="$emit('click-cancel')">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+      <v-card v-else>
         <v-card-title class="headline" color="primary" primary-title>{{ dialog_title || "Import File" }}</v-card-title>
         <v-card-text>
           {{ dialog_hint }}
@@ -84,7 +98,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'from_file', 'from_file_message',
-          'dialog_title', 'dialog_hint', 'api_hint', 'api_hints_enabled']
+          'dialog_title', 'dialog_hint', 'api_hint', 'api_hints_enabled', 'deprecate_from_file'],
 };
 </script>
 

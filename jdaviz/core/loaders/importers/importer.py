@@ -55,6 +55,16 @@ class BaseImporter(PluginTemplateMixin):
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
+    def _apply_kwargs(self, kwargs):
+        user_api = self.user_api
+        applied_kwargs = []
+        for k, v in kwargs.items():
+            if hasattr(user_api, k) and v is not None:
+                setattr(user_api, k, v)
+                applied_kwargs.append(k)
+
+        return applied_kwargs
+
     @property
     def is_valid(self):
         # override by subclass

@@ -381,33 +381,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.component_models[model_index]["compat_display_units"] = False
             self.send_state('component_models')
 
-    @observe("dataset_selected")
-    def _dataset_selected_changed(self, event=None):
-        """
-        Callback method for when the user has selected data from the drop down
-        in the front-end. It is here that we actually parse and create a new
-        data object from the selected data. From this data object, unit
-        information is scraped, and the selected spectrum is stored for later
-        use in fitting.
-
-        Parameters
-        ----------
-        event : str
-            IPyWidget callback event object. In this case, represents the data
-            label of the data collection object selected by the user.
-        """
-        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None or self.dataset_selected == '':  # noqa
-            # during initial init, this can trigger before the component is initialized
-            return
-
-        selected_spec = self.dataset.selected_obj
-        if selected_spec is None:
-            return
-
-        # Replace NaNs from collapsed Spectrum in Cubeviz
-        # (won't affect calculations because these locations are masked)
-        selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
-
     def _default_comp_label(self, model, poly_order=None):
         abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz1D': 'Lo'}
         abbrev = abbrevs.get(model, model[0].upper())
@@ -653,7 +626,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
 
-        mask = masked_spectrum.mask
+        # subset-masked spectrum, if aplicable
+        subset_mask = masked_spectrum.mask
+
+        # mask out non-finite values in flux array
+        flux_nan_mask = ~np.isfinite(masked_spectrum.flux)
+
+        if subset_mask is not None:
+            mask = subset_mask | flux_nan_mask
+        else:
+            mask = flux_nan_mask if np.any(flux_nan_mask) else None
+
         if mask is not None:
             if mask.ndim == 3:
                 if masked_spectrum.spectral_axis_index in [2, -1]:
@@ -1440,12 +1423,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Apply masks from selected spectral subset
         spec = self._apply_subset_masks(spec, self.spectral_subset, spatial_axes=spatial_axes)
-        # Also mask out NaNs for fitting. Simply adding filter_non_finite to the cube fit
-        # didn't work out of the box, so doing this for now.
+
+        # Add NaNs in flux to the mask. In theory, the 'filter_non_finite' kwarg
+        # in the fitter should handle this, but during a cube fit, this causes
+        # issues with multiple AstropyUserWarnings being raised
+        # and the message queueing acting up, so add them to the mask to avoid this.
         if spec.mask is None:
-            spec.mask = np.isnan(spec.flux)
+            spec.mask = ~np.isfinite(spec.flux)
         else:
-            spec.mask = spec.mask | np.isnan(spec.flux)
+            spec.mask = spec.mask | ~np.isfinite(spec.flux)
 
         kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
               if param['type'] == 'call'}

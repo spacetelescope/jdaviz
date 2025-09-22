@@ -1,14 +1,18 @@
 import gwcs
 import pytest
+
 from astropy.modeling import models
 from astropy.nddata import VarianceUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from astropy.utils.data import download_file
 import numpy as np
+from numpy.testing import assert_allclose
 from packaging.version import Version
 from specreduce import tracing, background, extract
-from specutils import Spectrum
+from specutils import Spectrum, SpectralRegion
+from glue.core.link_helpers import LinkSameWithUnits
+from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
@@ -324,3 +328,226 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
 
         exported_extract = pext.export_extract()
         assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
+
+
+class TestTwo2dSpectra:
+
+    def load_2d_spectrum(self, helper, spec2d, spec2d_label_idx=0, spec2d_ext_label_idx=1):
+        # Allow this to use the default label
+        helper.load(spec2d, format='2D Spectrum')
+        dc_labels = helper.app.data_collection.labels
+        self.spec2d_label = dc_labels[spec2d_label_idx]
+        self.spec2d_ext_label = dc_labels[spec2d_ext_label_idx]
+
+    def setup_another_2d_spectrum(self, spec2d):
+        # Specific data labels
+        another_spec2d_label = 'Another 2D Spectrum'
+        another_spec2d_ext_label = 'Another 2D Spectral Extraction'
+
+        # Make the data different enough that extracted spectra should differ
+        another_spec2d = Spectrum(flux=spec2d.flux * 2, spectral_axis=spec2d.spectral_axis)
+
+        self.another_spec2d = another_spec2d
+        self.another_spec2d_label = another_spec2d_label
+        self.another_spec2d_ext_label = another_spec2d_ext_label
+
+    def load_another_2d_spectrum(self, helper, spec2d):
+        self.setup_another_2d_spectrum(spec2d)
+        helper.load(self.another_spec2d,
+                    format='2D Spectrum',
+                    data_label=self.another_spec2d_label,
+                    ext_data_label=self.another_spec2d_ext_label)
+
+    @pytest.mark.parametrize(('method', 'helper'),
+                             [('load', 'deconfigged_helper'),
+                              ('specviz2d', 'specviz2d_helper'),
+                              ('specviz2d_alternate_order', 'specviz2d_helper'),
+                              ('loader_infrastructure', 'deconfigged_helper'),
+                              ('loader_infrastructure_alternate_order', 'deconfigged_helper')])
+    def test_labels_and_spectral_extraction_flux_difference(self, method, helper, request,
+                                                            spectrum2d):
+        helper = request.getfixturevalue(helper)
+        if method in ('load', 'specviz2d'):
+            self.load_2d_spectrum(helper, spectrum2d)
+            self.load_another_2d_spectrum(helper, spectrum2d)
+
+        elif method == 'specviz2d_alternate_order':
+            self.load_another_2d_spectrum(helper, spectrum2d)
+            self.load_2d_spectrum(helper, spectrum2d, spec2d_label_idx=2, spec2d_ext_label_idx=3)
+
+        elif method == 'loader_infrastructure':
+            # Allow this to use the default label
+            ldr = helper.loaders['object']
+            ldr.object = spectrum2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer()
+            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[:2]
+
+            self.setup_another_2d_spectrum(spectrum2d)
+            ldr.object = self.another_spec2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer.data_label = self.another_spec2d_label
+            ldr.importer.ext_data_label = self.another_spec2d_ext_label
+            ldr.importer()
+
+        elif method == 'loader_infrastructure_alternate_order':
+            self.setup_another_2d_spectrum(spectrum2d)
+            # Swapping the load order changes the parent and
+            # the spectral extraction that is duplicated
+            ldr = helper.loaders['object']
+            ldr.object = self.another_spec2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer.data_label = self.another_spec2d_label
+            ldr.importer.ext_data_label = self.another_spec2d_ext_label
+            ldr.importer()
+
+            # Allow this to use the default label
+            ldr.object = spectrum2d
+            ldr.format = '2D Spectrum'
+            ldr.importer.auto_extract = True
+            ldr.importer()
+            self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[-2:]
+
+        else:
+            raise NotImplementedError(f"Method {method} not implemented.")
+
+        expected_labels = [self.spec2d_label, self.spec2d_ext_label,
+                           self.another_spec2d_label, self.another_spec2d_ext_label]
+
+        dc = helper.app.data_collection
+
+        assert self.spec2d_label in dc.labels
+        assert self.spec2d_ext_label in dc.labels
+        spec2d = helper.get_data(self.spec2d_label)
+        extracted_spec2d = helper.get_data(self.spec2d_ext_label)
+        # Check for any non-NaN data, if all NaNs, something went wrong
+        assert np.any(~np.isnan(spec2d.flux))
+        assert np.any(~np.isnan(extracted_spec2d.flux))
+
+        assert self.another_spec2d_label in dc.labels
+        assert self.another_spec2d_ext_label in dc.labels
+        another_spec2d = helper.get_data(self.another_spec2d_label)
+        extracted_another_spec2d = helper.get_data(self.another_spec2d_ext_label)
+        # Check for any non-NaN data, if all NaNs, something went wrong
+        assert np.any(~np.isnan(another_spec2d.flux))
+        assert np.any(~np.isnan(extracted_another_spec2d.flux))
+
+        # Check that the loaded spectra differ from one another, i.e. that
+        # the second spectra is being pulled in correctly.
+        assert not np.array_equal(spec2d.flux, another_spec2d.flux), \
+            'Loaded spectra should differ!'
+        assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
+            'Extracted spectra should differ!'
+
+        # Check linking, e.g.
+        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral axis]
+        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
+        # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
+        # Another 2D Spectral Extraction <=> 2D Spectrum
+        assert len(dc.external_links) == 6
+        for link in dc.external_links:
+            # Check that linking is correct by confirming that both
+            # are in `expected_labels`
+            assert (link.data1.label in expected_labels) and (link.data2.label in expected_labels)
+            assert isinstance(link, LinkSameWithUnits)
+
+    def test_subsets_and_viewer_things(self, deconfigged_helper, spectrum2d):
+        # Allow this to use the default label
+        self.load_2d_spectrum(deconfigged_helper, spectrum2d)
+        self.load_another_2d_spectrum(deconfigged_helper, spectrum2d)
+
+        # Test marks/subsets between the two layers
+        viewer_2d = deconfigged_helper.app.get_viewer('2D Spectrum')
+        viewer_1d = deconfigged_helper.app.get_viewer('1D Spectrum')
+
+        # We'll be panning along x so keep x_min, x_max generic but specify y_min_1d, y_max_1d
+        x_min_2d, x_max_2d = viewer_2d.get_limits()[:2]
+        midway = (x_min_2d + x_max_2d) / 2
+
+        # Confirm that no subsets are present to start with
+        assert not any('subset' in str(layer).lower() for layer in viewer_1d.layers)
+        assert not any('subset' in str(layer).lower() for layer in viewer_2d.layers)
+
+        # Following the procedure from ``test_subsets.py``
+        # create subset in 2d viewer, want data in 1d viewer
+        viewer_2d.apply_roi(XRangeROI(x_min_2d + 0.5 * midway, x_max_2d - 0.5 * midway))
+        # Confirm that subsets are present in both viewers
+        subset_label = 'Subset 1'
+        assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+        assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+
+        subset_drawn_2d = viewer_1d.native_marks[-1]
+        # get x and y components to compute subset mask
+        y1 = subset_drawn_2d.y
+        x1 = subset_drawn_2d.x
+
+        subset_highlighted_region1 = x1[np.isfinite(y1)]
+        min_value_subset = np.min(subset_highlighted_region1)
+        max_value_subset = np.max(subset_highlighted_region1)
+
+        expected_min = 0
+        expected_max = 1
+        atol = 1e-2
+        assert_allclose(min_value_subset, expected_min, atol=atol)
+        assert_allclose(max_value_subset, expected_max, atol=atol)
+
+        # now create a subset in the spectrum-viewer, and determine if
+        # subset is linked correctly in spectrum2d-viewer
+        x_min_reg = x_min_2d + midway
+        x_max_reg = x_max_2d - midway
+        spec_reg = SpectralRegion(x_min_reg * u.um, x_max_reg * u.um)
+        st = deconfigged_helper.plugins['Subset Tools']
+        st.import_region(spec_reg, edit_subset=subset_label)
+
+        # Check again
+        assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+        assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+
+        mask = viewer_2d._get_layer(subset_label)._get_image()
+
+        x_coords = np.nonzero(mask)[1]
+        min_value_subset = x_coords.min()
+        max_value_subset = x_coords.max()
+
+        assert_allclose(min_value_subset, x_min_reg, atol=atol)
+        assert_allclose(max_value_subset, x_max_reg, atol=atol)
+
+        # Now trying through the viewer ROI
+        roi = XRangeROI(0, 2)
+        viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['bqplot:xrange']
+        viewer_2d.toolbar.active_tool.activate()
+        viewer_2d.toolbar.active_tool.update_from_roi(roi)
+        viewer_2d.toolbar.active_tool.update_selection()
+
+        # Check that the subset appears in both viewers
+        subset_label = 'Subset 2'
+        assert any(subset_label in str(layer) for layer in viewer_1d.layers)
+        assert any(subset_label in str(layer) for layer in viewer_2d.layers)
+
+        # Not 100% sure why there is a difference of 1 in the number of marks
+        # but leaving this here for posterity.
+        assert len(viewer_2d.native_marks) == 7
+        assert len(viewer_1d.native_marks) == 6
+
+        # Checking that panning one viewer pans the other
+        viewer_2d.toolbar.active_tool = viewer_2d.toolbar.tools['jdaviz:panzoom_matchx']
+
+        # Simulate a pan by changing the x-axis limits
+        x_min_1d, x_max_1d, y_min_1d, y_max_1d = viewer_1d.get_limits()
+        dx = 1
+        # 2D viewer pan
+        viewer_2d.set_limits(x_min=x_min_2d+dx, x_max=x_max_2d+dx)
+        # Double check that the 2D viewer limits were actually changed
+        assert_allclose(viewer_2d.get_limits()[:2], (x_min_2d+dx, x_max_2d+dx))
+
+        # Notify the active tool that the limits have changed (simulate pan event)
+        viewer_2d.toolbar.active_tool.on_limits_change()
+
+        # Check that the 1D viewer updated its x-axis limits to match the 2D viewer
+        expected = (x_min_1d + dx, x_max_1d + dx, y_min_1d, y_max_1d)
+        assert_allclose(viewer_1d.get_limits(), expected)

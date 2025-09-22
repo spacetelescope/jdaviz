@@ -12,6 +12,13 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <plugin-loaders-panel
+      :loader_panel_ind.sync="loader_panel_ind"
+      :loader_items="loader_items"
+      :loader_selected.sync="loader_selected"
+      :api_hints_enabled="api_hints_enabled"
+    ></plugin-loaders-panel>
+
     <plugin-editable-select
       :mode.sync="overlay_mode"
       :edit_value.sync="overlay_edit_value"
@@ -113,6 +120,7 @@
         :api_hints_enabled="api_hints_enabled"
         :from_file.sync="from_file"
         :from_file_message="from_file_message"
+        :deprecate_from_file="true"
         dialog_title="Import Region"
         dialog_hint="Select a region file"
         @click-cancel="file_import_cancel()"

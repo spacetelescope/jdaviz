@@ -1,4 +1,93 @@
-4.4 (unreleased)
+4.5 (unreleased)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+- Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+- Fixes in model fitting plugin to work better with nonfinite data. [#3792]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+4.4.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Automatic spectral extraction now works when multiple 2D spectra are loaded. [#3793]
+
+4.4 (2025-09-18)
 ================
 
 New Features
@@ -22,40 +111,12 @@ New Features
 
 - Ability to show/hide resolver and loader selection using remote server settings. [#3785]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 - Added support for WFSS Level 3 data. [#3729]
 
-Specviz2d
-^^^^^^^^^
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
+- Spectrum lists default to selecting the first available source. [#3771]
 
 Bug Fixes
 ---------
@@ -65,18 +126,6 @@ Cubeviz
 
 - Speed up loading of large cubes into cubeviz. [#3787]
 
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
 Other Changes and Additions
 ---------------------------
 
@@ -85,6 +134,7 @@ Other Changes and Additions
 - Linking is now generalized to act based on physical type. [#3698]
 
 - Improve memory usage when loading large cubes in cubeviz. [#3788]
+
 
 4.3.2 (2025-09-15)
 ==================

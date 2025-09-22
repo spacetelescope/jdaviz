@@ -539,6 +539,7 @@ def test_cube_fit_with_nans(cubeviz_helper):
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit()
+
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
@@ -713,3 +714,47 @@ def test_different_fitters(specviz_helper, spectrum1d, fitter):
     expected_result = [6000., 6222.22222222, 6444.44444444, 6666.66666667, 6888.88888889,
                        7111.11111111, 7333.33333333, 7555.55555556, 7777.77777778, 8000.] * u.AA
     assert_allclose(result.get_object().spectral_axis, expected_result)
+
+
+def test_specviz2d_linking(specviz2d_helper):
+    header = {
+              'WCSAXES': 2,
+              'CRPIX1': 0.0, 'CRPIX2': 8.5,
+              'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
+              'CUNIT1': 'm', 'CUNIT2': 'deg',
+              'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+              'CRVAL1': 0.0, 'CRVAL2': 5.0,
+              'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    wcs = WCS(header)
+
+    x_values = np.linspace(0, 10, 128)
+    y_values = np.linspace(0, 5, 256)
+
+    # Create a continuous 2D
+    data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
+    spectrum_data = Spectrum(data, wcs=wcs, meta=header)
+    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
+
+    viewer_1d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_viewer_reference_name)
+
+    mf = specviz2d_helper.plugins['Model Fitting']
+    mf.create_model_component('Const1D')
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit()
+
+    # testing to ensure a bug where the fit values create a vertical line along the
+    # x-axis (x=0). This test verifies that the x-range is of the fit is within the
+    # limits of the spectrum data used to produce the fit.
+    fit_marks_x = viewer_1d.native_marks[-1].x
+    fit_x_min = np.min(fit_marks_x)
+    fit_x_max = np.max(fit_marks_x)
+
+    data_marks_x = viewer_1d.native_marks[0].x
+    data_x_min = np.min(data_marks_x)
+    data_x_max = np.max(data_marks_x)
+
+    assert data_x_min <= fit_x_min <= fit_x_max <= data_x_max, (
+        f"Fit range [{fit_x_min},{fit_x_max}] isn't within data range [{data_x_min},{data_x_max}]"
+    )
