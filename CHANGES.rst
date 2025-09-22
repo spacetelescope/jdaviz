@@ -64,6 +64,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Scatter viewer support in the deconfigged app instance. [#3778]
+
 4.4.1 (unreleased)
 ==================
 
