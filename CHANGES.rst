@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
+
 Mosviz
 ^^^^^^
 

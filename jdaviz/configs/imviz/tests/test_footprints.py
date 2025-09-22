@@ -331,3 +331,19 @@ def test_footprint_select(imviz_helper):
         fp.v3_offset = 10
         tool.on_mouse_event({'domain': {'x': 95, 'y': 140}})
         assert fp.overlay.selected == "layer1"
+
+
+def test_footprint_loaders(imviz_helper, image_2d_wcs):
+    arr = np.ones((10, 10))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    # load the image twice to test linking
+    imviz_helper.load_data(ndd)
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    plg = imviz_helper.plugins['Footprints']
+    ldr = plg.loaders['object']
+    ldr.object = 'POLYGON ICRS 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
+    ldr.importer.footprint_label = 'imported from STCS'
+    ldr.importer()
+
+    assert 'imported from STCS' in plg.overlay.choices

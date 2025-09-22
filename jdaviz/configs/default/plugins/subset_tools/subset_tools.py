@@ -181,7 +181,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
     @property
     def user_api(self):
-        expose = ['loaders', 'subset', 'combination_mode',
+        expose = ['subset', 'combination_mode',
                   'recenter_dataset', 'recenter',
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
