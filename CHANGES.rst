@@ -21,6 +21,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
+
 API Changes
 -----------
 
