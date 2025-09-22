@@ -357,40 +357,51 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
     assert not np.array_equal(default_extraction_data.flux, custom_extraction_data.flux)
 
     # Check that both are in the default viewer
-    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
-    assert default_extraction_label in dm.layer.choices
-    assert custom_extraction_label in dm.layer.choices
+    default_viewer = deconfigged_helper.viewers['1D Spectrum']
+    default_dm = default_viewer.data_menu
+    assert default_extraction_label in default_dm.layer.choices
+    assert custom_extraction_label in default_dm.layer.choices
 
     # Remove layer from default viewer
-    dm.layer = [custom_extraction_label]
-    dm.remove_from_viewer()
+    default_dm.layer = [custom_extraction_label]
+    default_dm.remove_from_viewer()
 
     # Check that only the default extraction remains in the default viewer
-    dm = deconfigged_helper.viewers['1D Spectrum'].data_menu
-    assert default_extraction_label in dm.layer.choices
-    assert custom_extraction_label not in dm.layer.choices
+    default_dm = default_viewer.data_menu
+    assert default_extraction_label in default_dm.layer.choices
+    assert custom_extraction_label not in default_dm.layer.choices
 
     # and add to a new viewer
-    custom_viewer_label = 'manual-viewer'
     nvc = deconfigged_helper.new_viewers['1D Spectrum']
     nvc.dataset = custom_extraction_label
-    nvc.viewer_label = custom_viewer_label
+    nvc.viewer_label = 'manual-viewer'
     new_viewer = nvc()
-    new_dm = new_viewer.data_menu
 
-    # Check that only the custom extraction is in the new viewer
-    assert default_extraction_label not in new_dm.layer.choices
-    assert custom_extraction_label in new_dm.layer.choices
+    # Iterate through both viewers to perform the existence and preview checks.
+    # Adds the custom extraction *back* to the default viewer to check
+    # that the preview works there as well even after all the moving around.
+    for i, viewer in enumerate([new_viewer, default_viewer]):
+        dm = viewer.data_menu
+        if i == 0:
+            # Check that only the custom extraction is in the new viewer
+            assert default_extraction_label not in dm.layer.choices
+        else:
+            # re-add to old viewer and confirm that the preview appears there too
+            default_dm.add_data(custom_extraction_label)
+            assert default_extraction_label in dm.layer.choices
 
-    # check that the preview lines appear/disappear as expected
-    # (as modified from 'test_ramp_extraction.py')
-    for interactive_extract in [True, False]:
-        with spext.as_active():
-            spext.interactive_extract = interactive_extract
-            assert len([
-                mark for mark in new_viewer._obj.custom_marks
-                if mark.visible and isinstance(mark, Lines) and
-                   len(mark.x) == len(spectrum2d.spectral_axis)]) == int(interactive_extract)
+        assert custom_extraction_label in dm.layer.choices
+
+        # check that the preview lines appear/disappear as expected
+        # (as modified from 'test_ramp_extraction.py')
+        for interactive_extract in [True, False]:
+            with spext.as_active():
+                spext.interactive_extract = interactive_extract
+                assert len([
+                    mark for mark in viewer._obj.custom_marks
+                    if mark.visible and isinstance(mark, Lines) and
+                       len(mark.x) == len(spectrum2d.spectral_axis)
+                ]) == int(interactive_extract)
 
 
 class TestTwo2dSpectra:
