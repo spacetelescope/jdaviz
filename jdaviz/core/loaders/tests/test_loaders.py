@@ -57,6 +57,16 @@ def test_resolver_matching(specviz_helper):
     assert len(specviz_helper.app.data_collection) == 1
 
 
+def test_dbg_access(deconfigged_helper):
+    test_data = np.array([1, 2, 3])
+    deconfigged_helper.loaders['object'].object = test_data
+
+    # test that _get_loader is successful to grab the object
+    # and expose the underlying error
+    with pytest.raises(ValueError, match="Cannot load as image with ndim=1"):  # noqa
+        deconfigged_helper._get_loader('object', 'object', 'Image')
+
+
 def test_trace_importer(specviz2d_helper, spectrum2d):
     specviz2d_helper._load(spectrum2d, format='2D Spectrum')
 
@@ -79,6 +89,27 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     assert specviz2d_helper.app.data_collection[-1].label == 'Trace 2'
 
 
+def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum2d
+
+    assert ldr.importer.viewer.create_new == '2D Spectrum'
+    assert ldr.importer.viewer.new_label == '2D Spectrum'
+    assert ldr.importer.ext_viewer.create_new == '1D Spectrum'
+    assert ldr.importer.ext_viewer.new_label == '1D Spectrum'
+
+    ldr.importer.ext_viewer.create_new = ''
+    assert ldr.importer.ext_viewer == []
+
+    assert ldr.importer.auto_extract
+    ldr.importer()
+
+    # created 2D Spectrum viewer, did auto-extract,
+    # but did not create 1D Spectrum viewer
+    assert len(deconfigged_helper.viewers) == 1
+    assert len(deconfigged_helper.app.data_collection) == 2
+
+
 def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
@@ -98,11 +129,9 @@ def test_fits_spectrum2d(deconfigged_helper):
         ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
-    # Default is Image but the test switches to 2D Spectrum
-    # since this file type is not yet supported by the image loader
+    # Default format is Image, manually set to 2D Spectrum
     assert ldr.format == 'Image'
     assert ldr.importer._obj.input_has_extensions is True
-
     ldr.format = '2D Spectrum'
 
     ldr.importer()
@@ -218,6 +247,34 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     assert len(loader.format.choices) > 0
 
     loader.importer()
+
+
+@pytest.mark.parametrize('order', ([0, 1, 2], [0, 2, 1], [2, 0, 1], [2, 1, 0], [1, 2, 0]))
+def test_mult_data_types(deconfigged_helper, image_nddata_wcs, spectrum2d, spectrum1d, order):
+    datas = [image_nddata_wcs, spectrum2d, spectrum1d]
+    load_kwargs = [{'format': 'Image'},
+                   {'format': '2D Spectrum', 'auto_extract': True},
+                   {'format': '1D Spectrum'}]
+
+    for i in order:
+        deconfigged_helper.load(datas[i], **load_kwargs[i])
+
+    # NOTE: 2D Spectrum will also result in auto-extracted 1D Spectrum
+    assert len(deconfigged_helper.app.data_collection) == 4
+    assert len(deconfigged_helper.viewers) == 3
+
+
+def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label='sp_wavelength')
+    sp1d_freq = Spectrum(spectral_axis=spectrum1d.spectral_axis.to(u.Hz, equivalencies=u.spectral()),  # noqa
+                         flux=spectrum1d.flux,
+                         uncertainty=spectrum1d.uncertainty,
+                         mask=spectrum1d.mask,
+                         meta=spectrum1d.meta)
+    deconfigged_helper.load(sp1d_freq, format='1D Spectrum', data_label='sp_frequency')
+
+    # flux <> flux, uncertainty <> uncertainty, wavelength <> freq
+    assert len(deconfigged_helper.app.data_collection.external_links) == 3
 
 
 def test_load_image_mult_sci_extension(imviz_helper):

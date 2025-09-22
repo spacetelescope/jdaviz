@@ -3,7 +3,8 @@ from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
+from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
+                                           _spectrum_assign_component_type)
 
 
 __all__ = ['SpectrumImporter']
@@ -24,6 +25,10 @@ class SpectrumImporter(BaseImporterToDataCollection):
         else:
             self.data_label_default = '1D Spectrum'
 
+    @staticmethod
+    def _get_supported_viewers():
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
+
     @property
     def is_valid(self):
         if self.app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
@@ -31,12 +36,6 @@ class SpectrumImporter(BaseImporterToDataCollection):
             # NOTE: temporary during deconfig process
             return False
         return isinstance(self.input, Spectrum) and self.input.flux.ndim == 1
-
-    @property
-    def default_viewer_reference(self):
-        # returns the registry name of the default viewer
-        # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'spectrum-1d-viewer'
 
     @property
     def output(self):
@@ -56,3 +55,6 @@ class SpectrumImporter(BaseImporterToDataCollection):
                     msg = 'All uncertainties are nonfinite, replacing with uncertainty=None.'
                     self.app.hub.broadcast(SnackbarMessage(msg, color="warning", sender=self.app))
         return data
+
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return _spectrum_assign_component_type(comp_id, comp, units, physical_type)

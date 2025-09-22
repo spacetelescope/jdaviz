@@ -54,7 +54,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
                           layer_is_table_data, MultiMaskSubsetState,
-                          _wcs_only_label)
+                          _wcs_only_label, CONFIGS_WITH_LOADERS)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
@@ -84,7 +84,7 @@ ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 @unit_converter('custom-jdaviz')
 class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
-        if (getattr(data, '_importer', None) == 'ImageImporter' and
+        if (data.meta.get('_importer') == 'ImageImporter' and
                 u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             all_flux_units = SPEC_PHOTON_FLUX_DENSITY_UNITS + ['ct']
             angle_units = supported_sq_angle_units()
@@ -122,7 +122,7 @@ class UnitConverterWithSpectral:
             # handle ramps loaded into Rampviz by avoiding conversion
             # of the groups axis:
             return values
-        elif (getattr(data, '_importer', None) == 'ImageImporter' and
+        elif (data.meta.get('_importer') == 'ImageImporter' and
               u.Unit(data.get_component(cid).units).physical_type == 'surface brightness'):
             # handle surface brightness units in image-like data
             return (values * u.Unit(original_units)).to_value(target_units)
@@ -174,6 +174,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
+                     'plugin-viewer-create-new': 'components/plugin_viewer_create_new.vue',
                      'plugin-layer-select': 'components/plugin_layer_select.vue',
                      'plugin-layer-select-tabs': 'components/plugin_layer_select_tabs.vue',
                      'plugin-editable-select': 'components/plugin_editable_select.vue',
@@ -260,7 +261,15 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'dense_toolbar': True,
+        # In the context of a remote server, allow/disallow showing the loader
+        # server_is_remote == False -> Usual behavior, show loader, etc.
+        # server_is_remote + remote_enable_importers==False -> hide loader panel completely,
+        #   prepopulate the data
+        # server_is_remote + remote_enable_importers==True -> hide the loader,
+        #   but allow selecting and loading items from the file. This is used for
+        #   Spectrum Lists or multi-extension images.
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
+        'remote_enable_importers': True,  # Depends on server_is_remote, see above
         'context': {
             'notebook': {
                 'max_height': '600px'
@@ -284,6 +293,8 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
+    catalogs_in_dc = CallbackProperty(
+        False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
         docstring="List of loaders available to the application.")
     loader_selected = CallbackProperty(
@@ -676,6 +687,9 @@ class Application(VuetifyTemplate, HubListener):
         else:
             viewer = self.get_viewer(viewer_id)
 
+        if not hasattr(viewer, '_get_center_skycoord'):
+            return
+
         old_refdata = viewer.state.reference_data
 
         if old_refdata is not None and ((new_refdata_label == old_refdata.label)
@@ -738,13 +752,59 @@ class Application(VuetifyTemplate, HubListener):
                 # re-center the viewer on previous location.
                 viewer.center_on(sky_cen)
 
+    def _link_new_data_by_component_type(self, new_data_label):
+        new_data = self.data_collection[new_data_label]
+
+        if (new_data.meta.get('_importer') in ('ImageImporter', 'CatalogImporter') and
+                'Orientation' in self._jdaviz_helper.plugins):
+            # Orientation plugin alreadly listens for messages for added Data and handles linking
+            # orientation_plugin._link_image_data()
+            # NOTE: eventually we may only want to skip for pixel/sky coordinates and allow
+            # flux, etc, to link to other data for custom histograms/scatter plots
+            return
+
+        new_links = []
+        for new_comp in new_data.components:
+            if getattr(new_comp, '_component_type', None) in (None, 'unknown'):
+                continue
+
+            found_match = False
+            for existing_data in self.data_collection:
+                if existing_data.label == new_data_label:
+                    continue
+
+                for existing_comp in existing_data.components:
+                    if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
+                        continue
+
+                    # Create link if component-types match
+                    if new_comp._component_type == existing_comp._component_type:
+                        msg_text = f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})"  # noqa
+                        msg = SnackbarMessage(text=msg_text,
+                                              color='info', sender=self)
+                        self.hub.broadcast(msg)
+                        link = LinkSameWithUnits(new_comp, existing_comp)
+                        new_links.append(link)
+                        # only need one link for the new component, reparenting will handle
+                        # if that data entry is deleted
+                        found_match = True
+                        break  # break out of existing_comp loop
+
+                if found_match:
+                    break  # break out of existing_data loop
+
+        # Add all new links to the data collection
+        if new_links:
+            self.data_collection.add_link(new_links)
+
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
         When additional data is loaded, check to see if the spectral axis of
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config == 'imviz':  # Imviz does its own thing
+        if self.config in CONFIGS_WITH_LOADERS:
+            # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
             return
@@ -767,13 +827,7 @@ class Application(VuetifyTemplate, HubListener):
         ref_data = dc[reference_data] if reference_data else dc[default_refdata_index]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        if 'Trace' in linked_data.meta:
-            links = [LinkSame(linked_data.components[1], ref_data.components[0]),
-                     LinkSame(linked_data.components[0], ref_data.components[1])]
-            dc.add_link(links)
-            return
-
-        elif self.config == 'cubeviz' and linked_data.ndim == 1:
+        if self.config == 'cubeviz' and linked_data.ndim == 1:
             # Don't want to use negative indices in case there are extra components like a mask
             ref_wavelength_component = dc[0].components[spectral_axis_index]
             # May need to update this for specutils 2
@@ -787,21 +841,8 @@ class Application(VuetifyTemplate, HubListener):
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                  ref_data.ndim < 3)
               ):
-            if self.config == 'specviz2d':
-                links = []
-                if linked_data.ndim == 2:
-                    # extracted image added to data collection
-                    ref_wavelength_component = ref_data.components[1]
-                else:
-                    # extracted spectrum added to data collection
-                    ref_wavelength_component = ref_data.components[3]
-                    links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
-
-                links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[0]),
-                          LinkSameWithUnits(linked_data.components[1], ref_wavelength_component)]
-            else:
-                links = [LinkSame(linked_data.components[0], ref_data.components[0]),
-                         LinkSame(linked_data.components[1], ref_data.components[1])]
+            links = [LinkSame(linked_data.components[0], ref_data.components[0]),
+                     LinkSame(linked_data.components[1], ref_data.components[1])]
 
             dc.add_link(links)
             return
@@ -2525,13 +2566,26 @@ class Application(VuetifyTemplate, HubListener):
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
 
-        self.data_collection.remove(self.data_collection[data_label])
+        data_to_remove = self.data_collection[data_label]
+        if self.config in CONFIGS_WITH_LOADERS:
+            data_needing_relinking = []
+            for link in self.data_collection.external_links:
+                if data_to_remove == link.data1:
+                    data_needing_relinking.append(link.data2)
+                elif data_to_remove == link.data2:
+                    data_needing_relinking.append(link.data1)
+
+        self.data_collection.remove(data_to_remove)
+
+        if self.config in CONFIGS_WITH_LOADERS:
+            for data in data_needing_relinking:
+                self._link_new_data_by_component_type(data.label)
 
         # If there are two or more datasets left we need to link them back together if anything
         # was linked only through the removed data.
-        if (len(self.data_collection) > 1 and
-                len(self.data_collection.external_links) < len(self.data_collection) - 1):
-            if orientation_plugin is not None:
+        if orientation_plugin is not None:
+            if (len(self.data_collection) > 1 and
+                    len(self.data_collection.external_links) < len(self.data_collection) - 1):
                 orientation_plugin._obj._link_image_data()
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
@@ -2542,9 +2596,6 @@ class Application(VuetifyTemplate, HubListener):
                     if len(loaded_layers):
                         self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
                         self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
-            else:
-                for i in range(1, len(self.data_collection)):
-                    self._link_new_data(data_to_be_linked=i)
 
     def vue_close_snackbar_message(self, event):
         """
@@ -2572,6 +2623,13 @@ class Application(VuetifyTemplate, HubListener):
         else:
             kw = {'scroll_to': item._obj._sidebar == 'plugins'} if attr == 'plugins' else {}  # noqa
             item.open_in_tray(**kw)
+
+    def print_external_links(self):
+        for link in self.data_collection.external_links:
+            try:
+                print(f"{link.__class__.__name__} {link.data1.label}:{link.cids1[0]}({getattr(link.cids1[0], '_component_type', 'undefined')}) <--> {link.data2.label}:{link.cids2[0]}({getattr(link.cids2[0], '_component_type', 'undefined')})")  # noqa: E501
+            except Exception:
+                print(f"{link.__class__.__name__} {str(link)}")
 
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
@@ -2874,7 +2932,7 @@ class Application(VuetifyTemplate, HubListener):
         self._viewer_store[vid] = viewer
 
         # Add viewer locally
-        if (self.config in ('deconfigged', 'specviz', 'specviz2d', 'lcviz')
+        if (self.config in CONFIGS_WITH_LOADERS
                 and len(self.state.stack_items)):
             # add to bottom (eventually will want more control in placement)
             self.state.stack_items[0]['children'].append(new_stack_item)

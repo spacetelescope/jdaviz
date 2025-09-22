@@ -62,8 +62,9 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
-    get_subset_type, is_wcs_only, is_not_wcs_only,
-    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global
+    get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
+    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
+    wildcard_match, CONFIGS_WITH_LOADERS
 )
 
 
@@ -82,6 +83,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ApertureSubsetSelect', 'ApertureSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
            'ViewerSelect', 'ViewerSelectMixin',
+           'ViewerSelectCreateNew',
            'LayerSelect', 'LayerSelectMixin',
            'PluginTableSelect', 'PluginTableSelectMixin',
            'PluginPlotSelect', 'PluginPlotSelectMixin',
@@ -934,10 +936,14 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
 
         return getattr(self._plugin, self._plugin_traitlets.get(attr))
 
+    def map_value(self, attr, value):
+        # to be overridden by subclasses if needed
+        return value
+
     def __setattr__(self, attr, value, force_super=False):
         if attr[0] == '_' or force_super or attr not in self._plugin_traitlets.keys():
             return super().__setattr__(attr, value)
-
+        value = self.map_value(attr, value)
         return setattr(self._plugin, self._plugin_traitlets.get(attr), value)
 
     def add_traitlets(self, **traitlets):
@@ -1019,6 +1025,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     * :meth:`select_none` (only if ``is_multiselect``)
     """
     filters = List([]).tag(sync=True)
+    _allow_multiselect = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -1062,6 +1069,9 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         if kwargs.get('multiselect'):
             self.add_observe(kwargs.get('multiselect'), self._multiselect_changed)
+            self._allow_multiselect = kwargs.get('allow_multiselect', True)
+        else:
+            self._allow_multiselect = False
 
         # this callback MUST come first so that any plugins that use @observe have those
         # callbacks triggered AFTER the cache is cleared and the value is checked against
@@ -1079,7 +1089,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return {'label': item}
 
     def __repr__(self):
-        if hasattr(self, 'multiselect'):
+        if self.allow_multiselect:
             if self.is_multiselect and isinstance(self.selected, list):
                 # NOTE: selected is a list here so should not be wrapped with quotes
                 return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
@@ -1093,6 +1103,26 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         # defining __eq__ without defining __hash__ makes the object unhashable
         return super().__hash__()
 
+    def map_value(self, attr, value):
+        """
+        Map the value being set to the traitlet.  This is used to handle wildcard matching
+        for the 'selected' traitlet when in multiselect mode. This method overrides the
+        ``BasePluginComponent.map_value`` method.
+
+        Parameters
+        ----------
+        attr : str
+            The name of the traitlet being set.
+        value : any
+            The value being set to the traitlet.
+
+        Returns
+        -------
+        value : any
+            The (possibly modified) value to be set to the traitlet.
+        """
+        return wildcard_match(self, value) if attr == 'selected' else value
+
     @property
     def choices(self):
         return self.labels
@@ -1102,8 +1132,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self.items = [{'label': choice} for choice in choices]
 
     @property
+    def allow_multiselect(self):
+        return self._allow_multiselect and hasattr(self, 'multiselect')
+
+    @property
     def is_multiselect(self):
-        if not hasattr(self, 'multiselect'):
+        if not self.allow_multiselect or not hasattr(self, 'multiselect'):
             return False
         else:
             return self.multiselect
@@ -1302,7 +1336,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self._clear_cache()
         if self.is_multiselect:
             self.selected = [self.selected] if self.selected != '' else []
-        elif isinstance(self.selected, list) and len(self.selected):
+        elif isinstance(self.selected, list) and len(self.selected) > 1:
             self.selected = self.selected[0]
         else:
             self._apply_default_selection()
@@ -1945,6 +1979,18 @@ class LayerSelect(SelectPluginComponent):
         def is_dq_layer(lyr):
             return getattr(getattr(lyr, 'data', None), 'meta', '').get('_extname', '') == 'DQ'
 
+        def has_wcs_if_image_viewer_pixel_linked(lyr):
+            if not np.all([viewer.__class__.__name__ == 'ImvizImageView'
+                           for viewer in self.viewer_objs]):
+                return True
+            if getattr(lyr, 'meta', {}).get('_importer', '') != 'CatalogImporter':
+                # for now, allow any non-catalog layers to reproduce
+                # expected behavior from tests
+                return True
+            if self.app._align_by.lower() == 'pixels':
+                return getattr(lyr, 'coords', None) is not None
+            return True
+
         return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
@@ -1980,6 +2026,7 @@ class LayerSelect(SelectPluginComponent):
                         # hard-code sonified layer icon color for data menu and plot options
                         colors = '#000000'
                     elif (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
+                            and hasattr(layer.state, 'bitmap_visible')
                             and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
                     else:
@@ -3854,6 +3901,73 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
 
 
+class ViewerSelectCreateNew(ViewerSelect):
+    def __init__(self, plugin, items, selected,
+                 create_new_items, create_new_selected,
+                 new_label_value, new_label_default, new_label_auto, new_label_invalid_msg,
+                 multiselect=None, filters=[],
+                 default_text=None, manual_options=[], default_mode='first'):
+        super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect, filters=filters,
+                         default_text=default_text, manual_options=manual_options,
+                         default_mode=default_mode)
+
+        self.create_new = SelectPluginComponent(plugin,
+                                                items=create_new_items,
+                                                selected=create_new_selected)
+        self.new_label = AutoTextField(plugin, new_label_value,
+                                       new_label_default,
+                                       new_label_auto,
+                                       new_label_invalid_msg)
+        self.add_observe(create_new_selected, self._on_viewer_create_new_selected)
+        self.add_observe(new_label_value, self._on_viewer_label_changed)
+        self.add_observe(items, self._on_viewer_label_changed)
+
+    def __repr__(self):
+        if self.create_new.selected:
+            return f"<create_new='{self.create_new.selected}' create_new.choices={self.create_new.choices} new_label={self.new_label.value} new_label.auto={self.new_label.auto}>"  # noqa
+        return f"<selected={self.selected} choices={self.choices} create_new.choices={self.create_new.choices}>"  # noqa
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self,
+                              expose=('create_new', 'new_label', 'selected'),
+                              readonly=('choices'),
+                              repr_callable=self.__repr__)
+
+    def _on_viewer_create_new_selected(self, msg={}):
+        if self.create_new.selected == '':
+            return
+        self.new_label.default = self.create_new.selected_item.get('label')
+        # may also affect new_label.invalid_msg
+        self._on_viewer_label_changed()
+
+    def _on_viewer_label_changed(self, msg={}):
+        if not len(self.new_label.value.strip()) and self.create_new.selected != '':
+            self.new_label.invalid_msg = 'new_label must be provided'
+            return
+
+        # ensure the default label is unique for the data-collection
+        self.new_label.default = self.app.return_unique_name(self.new_label.default, typ='viewer')
+
+        for viewer in self.app._jdaviz_helper.viewers.keys():
+            if self.new_label.value.strip() == viewer:
+                self.new_label.invalid_msg = 'new_label already in use'
+                return
+
+        self.new_label.invalid_msg = ''
+
+    def select_default(self):
+        if len(self.choices) > 0:
+            if self.is_multiselect:
+                self.create_new.selected = ''
+                self.select_all()
+            else:
+                self.selected = self.choices[0]
+        elif len(self.create_new.choices) > 0:
+            self.create_new.selected = self.create_new.choices[0]
+
+
 class DatasetSelect(SelectPluginComponent):
     """
     Plugin select for data entries, with support for single or multi-selection.
@@ -4086,9 +4200,14 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_catalog_or_image_not_spectrum(data):
+            return (is_image_not_spectrum(data)
+                    or data.meta.get('_importer', '') == 'CatalogImporter')
+
         def is_image_not_spectrum(data):
-            return (is_image(data)
-                    and not getattr(data.coords, 'is_spectral', True))
+            if not is_image(data):
+                return False
+            return not wcs_is_spectral(getattr(data, 'coords', None))
 
         def is_cube(data):
             return len(data.shape) == 3
@@ -4099,12 +4218,12 @@ class DatasetSelect(SelectPluginComponent):
         def is_spectrum(data):
             return (len(data.shape) == 1
                     and data.coords is not None
-                    and getattr(data.coords, 'is_spectral', True))
+                    and wcs_is_spectral(getattr(data, 'coords', None)))
 
         def is_2d_spectrum_or_trace(data):
             return (data.ndim == 2
                     and data.coords is not None
-                    and getattr(data.coords, 'has_spectral', True)) or 'Trace' in data.meta
+                    and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
 
         def is_spectrum_or_cube(data):
             return is_spectrum(data) or is_cube(data)
@@ -4484,7 +4603,7 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item, replace=None, label=None):
+    def add_results_from_plugin(self, data_item, replace=None, label=None, format=None):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
@@ -4549,7 +4668,14 @@ class AddResults(BasePluginComponent):
             subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
             data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
-        self.app.add_data(data_item, label)
+        if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
+            self.app._jdaviz_helper.load(data_item,
+                                         loader='object', format=format,
+                                         data_label=label, viewer=[])
+        else:
+            # NOTE: eventually remove this entirely once all plugins are set to go through
+            # the new loaders infrastructure above
+            self.app.add_data(data_item, label)
 
         for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
                                                   preserved_attributes):

@@ -130,7 +130,8 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             data['flux'] = collapsed_flux.value
             data.get_component('flux').units = collapsed_flux.unit.to_string()
 
-            self.add_results.add_results_from_plugin(data)
+            self.add_results.add_results_from_plugin(data,
+                                                     format='Image')
 
             snackbar_message = SnackbarMessage(
                 f"Data set '{self.dataset_selected}' collapsed successfully.",

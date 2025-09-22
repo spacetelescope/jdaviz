@@ -11,6 +11,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
+from astropy.table import Table
 from astropy.wcs import WCS
 from specutils import Spectrum, SpectrumCollection, SpectrumList
 from astropy.utils.masked import Masked
@@ -22,6 +23,13 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
                                               _image_nddata_wcs)
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
+from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
+    SpectrumListImporter,
+    SpectrumListConcatenatedImporter
+)
+from jdaviz.core.registries import loader_importer_registry
+from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.registries import tray_registry
 
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
@@ -37,9 +45,73 @@ def fake_classes_in_registries():
     list of fake items in the various registries that could
     potentially throw off those tests if not accounted for.
     """
-    return ('Test Fake 1D Spectrum List',
-            'Test Fake 1D Spectrum List Concatenated',
-            'Test Fake Plugin')
+    return ('Test Fake Plugin',
+            'Test Fake 1D Spectrum List',
+            'Test Fake 1D Spectrum List Concatenated')
+
+
+@tray_registry('test-fake-plugin', label='Test Fake Plugin', category='core')
+class FakePlugin(PluginTemplateMixin):
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+@loader_importer_registry('Test Fake 1D Spectrum List')
+class FakeSpectrumListImporter(SpectrumListImporter):
+    """A fake importer for testing/convenience purposes only.
+    Mostly used to hot-update input for clean code/speed purposes.
+
+    Usage Example:
+    x = FakeSpectrumListImporter(app=deconfigged_helper.app,
+                                 resolver=deconfigged_helper.loaders['object']._obj,
+                                 input=premade_spectrum_list)
+    """
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.new_default_data_label = None
+
+    @property
+    def input(self):
+        return super().input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
+
+    @property
+    def default_data_label_from_resolver(self):
+        if hasattr(self, 'new_default_data_label'):
+            return self.new_default_data_label
+        return None
+
+
+@loader_importer_registry('Test Fake 1D Spectrum List Concatenated')
+class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
+    """A fake importer for testing/convenience purposes only.
+    Mostly used to hot-update input for clean code/speed purposes."""
+    template = ''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.new_default_data_label = None
+
+    @property
+    def input(self):
+        return super().input
+
+    @input.setter
+    def input(self, value):
+        self._input = value
+
+    @property
+    def default_data_label_from_resolver(self):
+        if hasattr(self, 'new_default_data_label'):
+            return self.new_default_data_label
+        return None
 
 
 @pytest.fixture
@@ -126,6 +198,46 @@ def image_2d_wcs():
                 'CRPIX1': 1, 'CRVAL1': 337.5202808,
                 'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                 'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
+
+
+@pytest.fixture
+def source_catalog():
+    """
+    Create a sample source catalog with sources positioned within the
+    coordinate range of the image_2d_wcs fixture.
+
+    The catalog contains 5 sources spread across a 128x128 pixel image field.
+    """
+    # WCS parameters from image_2d_wcs fixture
+    ra_center = 337.5202808  # degrees
+    dec_center = -20.833333  # degrees
+    pixel_scale_deg = 0.0002777777778  # degrees per pixel
+
+    # Create the catalog table
+    catalog = Table()
+
+    # Define source positions spread across the image field
+    catalog['ra'] = [
+        ra_center - 30 * pixel_scale_deg,  # Left side of image
+        ra_center,                          # Center
+        ra_center + 25 * pixel_scale_deg,  # Right side
+        ra_center - 10 * pixel_scale_deg,  # Slightly left of center
+        ra_center + 15 * pixel_scale_deg   # Slightly right of center
+    ] * u.deg
+
+    catalog['dec'] = [
+        dec_center + 20 * pixel_scale_deg,  # Top
+        dec_center - 25 * pixel_scale_deg,  # Bottom
+        dec_center + 10 * pixel_scale_deg,  # Upper right
+        dec_center,                         # Center row
+        dec_center - 15 * pixel_scale_deg   # Lower right
+    ] * u.deg
+
+    catalog['magnitude'] = [12.5, 14.2, 13.8, 15.1, 16.3] * u.mag
+    catalog['flux'] = [1.23e-12, 8.45e-13, 9.87e-13, 6.12e-13, 4.33e-13] * u.erg / (u.cm**2 * u.s)
+    catalog['source_id'] = ['src_001', 'src_002', 'src_003', 'src_004', 'src_005']
+
+    return catalog
 
 
 @pytest.fixture
@@ -511,6 +623,15 @@ def image_hdu_nowcs():
 @pytest.fixture
 def image_hdu_wcs():
     return _image_hdu_wcs()
+
+
+@pytest.fixture
+def multi_extension_image_hdu_wcs():
+    return fits.HDUList([fits.PrimaryHDU(),
+                         _image_hdu_wcs(),
+                         _image_hdu_nowcs(np.zeros((10, 10)), name='MASK'),
+                         _image_hdu_nowcs(name='ERR'),
+                         _image_hdu_nowcs(name='DQ')])
 
 
 @pytest.fixture

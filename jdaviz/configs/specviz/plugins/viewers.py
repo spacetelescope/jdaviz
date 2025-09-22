@@ -21,6 +21,7 @@ from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.unit_conversion_utils import (spectral_axis_conversion,
                                                flux_conversion_general,
                                                all_flux_unit_conversion_equivs)
+from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
 
@@ -51,7 +52,16 @@ class Spectrum1DViewer(JdavizProfileView):
             if not len(self.layers):
                 return True
 
-            data_xunit = data.get_component(str(self.state.x_att)).units
+            # If we load, e.g.,  one spectrum in Frequency and one in Wavelength,
+            # the viewer state x_att won't match the component of the second spectrum since
+            # (as of Specutils 2.X) they're no longer both the non-specific "World 0"
+            if str(self.state.x_att) in data.component_ids():
+                data_xunit = data.get_component(str(self.state.x_att)).units
+            else:
+                for comp in SPECTRAL_AXIS_COMP_LABELS:
+                    if comp in data.component_ids():
+                        data_xunit = data.get_component(comp).units
+                        break
             data_yunit = data.get_component('flux').units
 
             viewer_xunit = self.state.x_display_unit

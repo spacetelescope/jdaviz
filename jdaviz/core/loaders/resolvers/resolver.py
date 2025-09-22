@@ -97,7 +97,7 @@ class FormatSelect(SelectPluginComponent):
                     if self.debug:
                         self._dbg_importers[label] = this_importer
                     if (self.plugin._restrict_to_target is not None and
-                            this_importer.target['label'] != self.plugin._restrict_to_target):
+                            this_importer.target.get('label') != self.plugin._restrict_to_target):
                         # skip importers that do not match the target
                         self._invalid_importers[label] = 'not matching target'
                         continue
@@ -199,8 +199,10 @@ class BaseResolver(PluginTemplateMixin):
     requires_api_support = False
 
     importer_widget = Unicode().tag(sync=True)
-    import_disabled = Bool(False).tag(sync=True)
-    import_spinner = Bool(False).tag(sync=True)
+
+    # Set remote server options based on the app configuration
+    # read-only: change via app.state.settings['server_is_remote']
+    server_is_remote = Bool(False).tag(sync=True)
 
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
@@ -226,6 +228,25 @@ class BaseResolver(PluginTemplateMixin):
         self.target = TargetSelect(self,
                                    items='target_items',
                                    selected='target_selected')
+
+        # Ensure traitlet and app state are in sync at init
+        self.server_is_remote = self.app.state.settings.get('server_is_remote',
+                                                            self.server_is_remote)
+
+        # Set up bidirectional synchronization
+        # Listen for changes to app.state.settings and update traitlet
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    def _on_app_settings_changed(self, new_settings_dict):
+        """
+        Update traitlet when app state settings change.
+
+        Parameters
+        ----------
+        new_settings_dict : dict
+            The new settings dictionary from the app state.
+        """
+        self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
     @contextmanager
     def defer_update_format_items(self):
@@ -332,6 +353,7 @@ class BaseResolver(PluginTemplateMixin):
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
             self.valid_import_formats = ''
+            self.import_disabled = self.importer.import_disabled
 
     def close_in_tray(self, close_sidebar=False):
         """
@@ -357,13 +379,9 @@ class BaseResolver(PluginTemplateMixin):
         if self.open_callback is not None:
             self.open_callback()
 
-    @with_spinner('import_spinner')
-    def vue_import_clicked(self, *args, **kwargs):
-        self.importer()
-
 
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
-    formats = format if isinstance(format, list) else [format]
+    formats = format if isinstance(format, (list, tuple)) else [format]
     invalid_resolvers = {}
     valid_resolvers = []
     for resolver_name, Resolver in loader_resolver_registry.members.items():
@@ -399,6 +417,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
         if not len(this_resolver.format.items):
             invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
             continue
+
         for fmt_item in this_resolver.format.items:
             if (format is not None
                 and not any([format in (fmt_item['label'],

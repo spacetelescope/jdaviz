@@ -5,6 +5,7 @@ settings:
     tray: true
     tab_headers: true
   server_is_remote: false
+  remote_enable_importers: true
   context:
     notebook:
       max_height: 600px
