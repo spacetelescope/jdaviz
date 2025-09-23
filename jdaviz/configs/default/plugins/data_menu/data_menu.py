@@ -332,19 +332,29 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
-        if event.get('name') == 'layer_items' and len(event['new']) == len(self.data_labels_loaded):
+
+        # Have to count subsets + data, but not the invisible WCS layers in Imviz
+        data_menu_len = len(self.existing_subset_labels) + len(self.data_labels_loaded)
+
+        if (event.get('name') == 'layer_items' and len(event['new']) == data_menu_len
+                and isinstance(event.get('owner'), DataMenu)):
             # Setting layer.zorder causes a change to layer_items, which causes this function to be
             # immediately called again. Use this flag to prevent that.
             if self.prevent_layer_items_recursion:
                 return
             self.prevent_layer_items_recursion = True
             label_order = [li['label'] for li in event["new"]]
+            not_in_order = [layer.layer.label for layer in self._viewer.layers if layer.layer.label
+                            not in label_order]
 
             for layer in self._viewer.layers:
-                if is_not_wcs_only(layer):
-                    new_zorder = len(self._viewer.layers) - label_order.index(layer.layer.label)
-                    if new_zorder != layer.zorder:
-                        layer.zorder = new_zorder
+                if layer.layer.label in label_order:
+                    new_zorder = len(label_order) - label_order.index(layer.layer.label)
+                else:
+                    new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
+
+                if new_zorder != layer.zorder:
+                    layer.zorder = new_zorder
 
             self.prevent_layer_items_recursion = False
         if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
