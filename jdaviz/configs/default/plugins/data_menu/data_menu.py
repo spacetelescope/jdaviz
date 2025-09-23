@@ -332,7 +332,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
-        if event.get('name') == 'layer_items' and len(event['new']) == len(self._viewer.layers):
+        if event.get('name') == 'layer_items' and len(event['new']) == len(self.data_labels_loaded):
             # Setting layer.zorder causes a change to layer_items, which causes this function to be
             # immediately called again. Use this flag to prevent that.
             if self.prevent_layer_items_recursion:
@@ -341,9 +341,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             label_order = [li['label'] for li in event["new"]]
 
             for layer in self._viewer.layers:
-                new_zorder = len(self._viewer.layers) - label_order.index(layer.layer.label)
-                if new_zorder != layer.zorder:
-                    layer.zorder = new_zorder
+                if is_not_wcs_only(layer):
+                    new_zorder = len(self._viewer.layers) - label_order.index(layer.layer.label)
+                    if new_zorder != layer.zorder:
+                        layer.zorder = new_zorder
 
             self.prevent_layer_items_recursion = False
         if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
