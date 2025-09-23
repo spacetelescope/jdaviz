@@ -203,7 +203,7 @@ class TargetSelect(SelectPluginComponent):
 
 
 class BaseResolver(PluginTemplateMixin, TableMixin):
-    _defer_resolver_input_updated = False  # only use via defer_resolver_input_updated contex manager
+    _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
     requires_api_support = False
@@ -315,8 +315,8 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         return getattr(self, self.default_input)
 
     def parse_input(self):
-        # override by subclass - this should return something that is either interpretted as a products list
-        # OR something that can be passed to at least one parser
+        # override by subclass - this should return something that is either interpretted as
+        # a products list OR something that can be passed to at least one parser
         raise NotImplementedError("Resolver subclass must implement parse_input")  # pragma: nocover
 
     @cached_property
@@ -324,7 +324,8 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         return self.parse_input()
 
     def _parsed_input_to_products_list(self, parsed_input):
-        if isinstance(parsed_input, str) and os.path.exists(parsed_input) and os.path.isfile(parsed_input):
+        if (isinstance(parsed_input, str)
+                and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
             try:
                 parsed_input = Table.read(parsed_input)
@@ -382,7 +383,7 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
             return None
         url = self.products_list.selected_rows[0]['url']
         if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
-            return 'https://mast.stsci.edu/search/jwst/api/v0.1/retrieve_product?product_name=' + url
+            return 'https://mast.stsci.edu/search/jwst/api/v0.1/retrieve_product?product_name=' + url  # noqa
         return url
 
     @cached_property
