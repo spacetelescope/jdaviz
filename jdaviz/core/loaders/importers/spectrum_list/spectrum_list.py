@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from copy import deepcopy
+import warnings
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -13,6 +14,7 @@ from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            _spectrum_assign_component_type)
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.core.events import SnackbarMessage
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -80,13 +82,24 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     multiselect='sources_multiselect',
                                                     manual_options=sources_options)
 
-        self.sources.selected = []
+        self.sources.selected = [self.sources.choices[0]]
         self._sources_items_helper = deepcopy(self.sources.items)
 
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
         # only enable the import button if at least one spectrum is selected.
         self.resolver.observe(self._on_format_selected_change, names='format_selected')
+
+    def _apply_kwargs(self, kwargs):
+        applied_kwargs = super()._apply_kwargs(kwargs)
+        if 'sources' not in applied_kwargs:
+            msg_str = (f"The default source selection ({self.sources.selected}) will be used.\n"
+                       f"To load additional sources, please specify them via dropdown or "
+                       f"as follows:\n'{self.config}.load(filename, sources = [...]).")
+            msg = SnackbarMessage(msg_str, color='warning', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
+            warnings.warn(msg_str)
+        return applied_kwargs
 
     @staticmethod
     def _get_supported_viewers():
@@ -105,8 +118,13 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         # TODO: should this be split into two loaders?
         # should a loader take a single input type, output a single output type,
         # or just have a consistent data_label and viewer?
-        return (isinstance(self.input, (SpectrumList, SpectrumCollection))
-                or self._is_2d_spectrum)
+
+        # If the input is a SpectrumList or SpectrumCollection, it
+        # must be non-empty.
+        if isinstance(self.input, (SpectrumList, SpectrumCollection)):
+            return len(self.input) > 0
+
+        return self._is_2d_spectrum
 
     @observe('sources_selected')
     def _on_sources_selected_change(self, change={}):

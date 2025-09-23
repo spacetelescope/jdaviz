@@ -66,7 +66,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         # intensive.
         self.state.image_external_padding = 0.5
 
-        self.data_menu._obj.dataset.add_filter('is_image_not_spectrum')
+        self.data_menu._obj.dataset.add_filter('is_catalog_or_image_not_spectrum')
         self.aid = aida.AID(self)
 
     def on_mouse_or_key_event(self, data):

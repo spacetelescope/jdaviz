@@ -7,6 +7,7 @@ settings:
     tab_headers: false
   dense_toolbar: false
   server_is_remote: false
+  remote_enable_importers: true
   context:
     notebook:
       max_height: 860px

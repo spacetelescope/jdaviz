@@ -67,7 +67,7 @@ def test_uri_to_download_specviz(specviz_helper):
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper):
-    uri = cached_uri("mast:jwst/product/jw01538-o161_s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
+    uri = cached_uri("mast:jwst/product/jw01538-o161_t002-s000000001_nirspec_f290lp-g395h-s1600a1_s2d.fits")  # noqa: E501
     specviz2d_helper.load_data(uri, cache=True)
 
 
@@ -126,18 +126,21 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     match_result = wildcard_match(test_obj, '*')
     assert match_result == '*'
 
-    # Multiselect is not an attribute yet
+    # Multiselect is not an attribute yet so we retain the value of the input string
     match_result = wildcard_match(test_obj, '*', choices=default_choices[0])
     assert match_result == '*'
+
+    # Turn on allow_multiselect to check the actual matching functionality
+    test_obj.allow_multiselect = True
 
     # Add choices attribute, no matches
     test_obj.choices = default_choices
     match_result = wildcard_match(test_obj, 'not good*')
-    assert match_result == 'not good*'
+    assert match_result == ['not good*']
 
     # Test that the function kwarg `choices` overrides the object's choices attribute
     match_result = wildcard_match(test_obj, 'bad*', choices=default_choices[:-1])
-    assert match_result == 'bad*'
+    assert match_result == ['bad*']
 
     test_selections = {
         # Test all
@@ -152,7 +155,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         ('some*', 'good*'): default_choices[:-1]}
 
     for selection, expected in test_selections.items():
-        # Reset
+        # Set and reset
         test_obj.multiselect = False
         match_result = wildcard_match(test_obj, selection)
         assert test_obj.multiselect is True

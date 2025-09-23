@@ -381,33 +381,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.component_models[model_index]["compat_display_units"] = False
             self.send_state('component_models')
 
-    @observe("dataset_selected")
-    def _dataset_selected_changed(self, event=None):
-        """
-        Callback method for when the user has selected data from the drop down
-        in the front-end. It is here that we actually parse and create a new
-        data object from the selected data. From this data object, unit
-        information is scraped, and the selected spectrum is stored for later
-        use in fitting.
-
-        Parameters
-        ----------
-        event : str
-            IPyWidget callback event object. In this case, represents the data
-            label of the data collection object selected by the user.
-        """
-        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None or self.dataset_selected == '':  # noqa
-            # during initial init, this can trigger before the component is initialized
-            return
-
-        selected_spec = self.dataset.selected_obj
-        if selected_spec is None:
-            return
-
-        # Replace NaNs from collapsed Spectrum in Cubeviz
-        # (won't affect calculations because these locations are masked)
-        selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
-
     def _default_comp_label(self, model, poly_order=None):
         abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz1D': 'Lo'}
         abbrev = abbrevs.get(model, model[0].upper())
@@ -653,7 +626,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
 
-        mask = masked_spectrum.mask
+        # subset-masked spectrum, if aplicable
+        subset_mask = masked_spectrum.mask
+
+        # mask out non-finite values in flux array
+        flux_nan_mask = ~np.isfinite(masked_spectrum.flux)
+
+        if subset_mask is not None:
+            mask = subset_mask | flux_nan_mask
+        else:
+            mask = flux_nan_mask if np.any(flux_nan_mask) else None
+
         if mask is not None:
             if mask.ndim == 3:
                 if masked_spectrum.spectral_axis_index in [2, -1]:
@@ -760,16 +743,50 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             else:
                 if unit != uc._obj.sb_unit_selected:
-                    self._units[axis] = uc._obj.sb_unit_selected
+                    unit = uc._obj.sb_unit_selected
                     self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                     return
                 elif msg.axis == 'flux' and uc._obj.has_sb:
                     unit = u.Unit(self.app._get_display_unit('sb'))
 
+        if 'x' in self._units and 'y' in self._units:
+            # Not populated yet on startup
+            previous_x = self._units['x']
+            previous_y = self._units['y']
+
         # update internal tracking of current units
         self._units[axis] = str(unit)
 
+        # Update model component values and units
+        for model in self.component_models:
+            # If we're converting between wavelength and frequency, make the user reestimate
+            # parameters for Linear or Polynomial models because there's no equivalency to convert.
+            if (axis == 'x' and 'x' in self._units and not
+                    u.Unit(self._units['x']).is_equivalent(previous_x)):
+                if model['model_type'] in ('Linear1D', 'Polynomial1D'):
+                    model['compat_display_units'] = False
+                    continue
+
+            for param in model['parameters']:
+                current_quant = param['value']*u.Unit(param['unit'])
+                new_quant = None
+                spectral_axis = self.dataset.selected_obj.spectral_axis
+                # Just need a single spectral axis value to enable spectral_density equivalency
+                equivalencies = all_flux_unit_conversion_equivs(cube_wave=spectral_axis[0])
+                if ((axis == 'y' and param['unit'] == previous_y) or
+                        (axis == 'x' and param['unit'] == previous_x)):
+                    new_quant = flux_conversion_general(current_quant.value,
+                                                        current_quant.unit,
+                                                        self._units[axis],
+                                                        equivalencies=equivalencies)  # noqa
+
+                # Some parameters have units that aren't related to x or y
+                if new_quant is not None:
+                    param['value'] = new_quant.value
+                    param['unit'] = str(new_quant.unit)
+
         self._check_model_component_compat([axis], [unit])
+        self._update_initialized_parameters()
 
     def remove_model_component(self, model_component_label):
         """
@@ -1406,12 +1423,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Apply masks from selected spectral subset
         spec = self._apply_subset_masks(spec, self.spectral_subset, spatial_axes=spatial_axes)
-        # Also mask out NaNs for fitting. Simply adding filter_non_finite to the cube fit
-        # didn't work out of the box, so doing this for now.
+
+        # Add NaNs in flux to the mask. In theory, the 'filter_non_finite' kwarg
+        # in the fitter should handle this, but during a cube fit, this causes
+        # issues with multiple AstropyUserWarnings being raised
+        # and the message queueing acting up, so add them to the mask to avoid this.
         if spec.mask is None:
-            spec.mask = np.isnan(spec.flux)
+            spec.mask = ~np.isfinite(spec.flux)
         else:
-            spec.mask = spec.mask | np.isnan(spec.flux)
+            spec.mask = spec.mask | ~np.isfinite(spec.flux)
 
         kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
               if param['type'] == 'call'}

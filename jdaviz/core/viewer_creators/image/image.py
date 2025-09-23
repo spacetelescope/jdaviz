@@ -12,7 +12,7 @@ class ImageViewerCreator(BaseViewerCreator):
 
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
-        self.dataset.filters = ['is_image', 'is_not_wcs_only']
+        self.dataset.filters = ['is_catalog_or_image_not_spectrum', 'is_not_wcs_only']
         self.viewer_label_default = 'Image'  # TODO: append suffix if taken
 
     @property

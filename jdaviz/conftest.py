@@ -11,6 +11,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
+from astropy.table import Table
 from astropy.wcs import WCS
 from specutils import Spectrum, SpectrumCollection, SpectrumList
 from astropy.utils.masked import Masked
@@ -197,6 +198,46 @@ def image_2d_wcs():
                 'CRPIX1': 1, 'CRVAL1': 337.5202808,
                 'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
                 'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
+
+
+@pytest.fixture
+def source_catalog():
+    """
+    Create a sample source catalog with sources positioned within the
+    coordinate range of the image_2d_wcs fixture.
+
+    The catalog contains 5 sources spread across a 128x128 pixel image field.
+    """
+    # WCS parameters from image_2d_wcs fixture
+    ra_center = 337.5202808  # degrees
+    dec_center = -20.833333  # degrees
+    pixel_scale_deg = 0.0002777777778  # degrees per pixel
+
+    # Create the catalog table
+    catalog = Table()
+
+    # Define source positions spread across the image field
+    catalog['ra'] = [
+        ra_center - 30 * pixel_scale_deg,  # Left side of image
+        ra_center,                          # Center
+        ra_center + 25 * pixel_scale_deg,  # Right side
+        ra_center - 10 * pixel_scale_deg,  # Slightly left of center
+        ra_center + 15 * pixel_scale_deg   # Slightly right of center
+    ] * u.deg
+
+    catalog['dec'] = [
+        dec_center + 20 * pixel_scale_deg,  # Top
+        dec_center - 25 * pixel_scale_deg,  # Bottom
+        dec_center + 10 * pixel_scale_deg,  # Upper right
+        dec_center,                         # Center row
+        dec_center - 15 * pixel_scale_deg   # Lower right
+    ] * u.deg
+
+    catalog['magnitude'] = [12.5, 14.2, 13.8, 15.1, 16.3] * u.mag
+    catalog['flux'] = [1.23e-12, 8.45e-13, 9.87e-13, 6.12e-13, 4.33e-13] * u.erg / (u.cm**2 * u.s)
+    catalog['source_id'] = ['src_001', 'src_002', 'src_003', 'src_004', 'src_005']
+
+    return catalog
 
 
 @pytest.fixture

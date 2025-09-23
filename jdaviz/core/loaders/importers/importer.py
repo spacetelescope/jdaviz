@@ -10,6 +10,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
+                          _wcs_only_label,
                           CONFIGS_WITH_LOADERS,
                           SPECTRAL_AXIS_COMP_LABELS)
 
@@ -53,6 +54,16 @@ class BaseImporter(PluginTemplateMixin):
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
+
+    def _apply_kwargs(self, kwargs):
+        user_api = self.user_api
+        applied_kwargs = []
+        for k, v in kwargs.items():
+            if hasattr(user_api, k) and v is not None:
+                setattr(user_api, k, v)
+                applied_kwargs.append(k)
+
+        return applied_kwargs
 
     @property
     def is_valid(self):
@@ -108,11 +119,11 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def __init__(self, app, resolver, input, **kwargs):
         super().__init__(app, resolver, input, **kwargs)
-        self.data_label_default = self._registry_label
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',
                                         'data_label_invalid_msg')
+        self.data_label_default = self.app.return_unique_name(self._registry_label)
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
                                             'viewer_selected',
@@ -132,7 +143,7 @@ class BaseImporterToDataCollection(BaseImporter):
         self._on_label_changed()
 
         supported_viewers = self._get_supported_viewers()
-        if self.app.config == 'deconfigged':
+        if self.app.config in ('deconfigged', 'imviz', 'lcviz'):
             self.viewer_create_new_items = supported_viewers
 
         # for now, we'll use the same list of viewers that can be created
@@ -150,7 +161,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @staticmethod
     def _get_supported_viewers():
-        raise NotImplementedError("Importer subclass must implement viewer_create_new_items")  # noqa pragma: nocover
+        raise NotImplementedError("Importer subclass must implement _get_supported_viewers")  # noqa pragma: nocover
 
     @property
     def ignore_viewers_with_cls(self):
@@ -208,15 +219,17 @@ class BaseImporterToDataCollection(BaseImporter):
             except TypeError:
                 pass
 
-        self.app.add_data(data, data_label=data_label)
-        if parent is not None:
-            self.app._set_assoc_data_as_child(data_label, parent)
         # store the original input class so that get_data can default to the
         # same class as the input
         cls = cls if cls is not None else data.__class__
-        new_dc_entry = self.app.data_collection[data_label]
-        new_dc_entry._native_data_cls = cls
-        new_dc_entry._importer = self.__class__.__name__
+        if not hasattr(data, 'meta'):
+            data.meta = {}
+        data.meta['_native_data_cls'] = cls
+        data.meta['_importer'] = self.__class__.__name__
+
+        self.app.add_data(data, data_label=data_label)
+        if parent is not None:
+            self.app._set_assoc_data_as_child(data_label, parent)
 
         def _physical_type_from_component(comp_id, comp):
             import astropy.units as u
@@ -228,6 +241,7 @@ class BaseImporterToDataCollection(BaseImporter):
             except (ValueError, TypeError, AttributeError):
                 return comp_units, None
 
+        new_dc_entry = self.app.data_collection[data_label]
         for comp_id in new_dc_entry.components:
             comp_units, physical_type = _physical_type_from_component(comp_id,
                                                                       new_dc_entry.get_component(comp_id))  # noqa
@@ -262,7 +276,8 @@ class BaseImporterToDataCollection(BaseImporter):
                 msg = f"{data_label} loaded without any viewers selected - add manually from viewer data-menu"  # noqa
             else:
                 msg = f"{data_label} loaded but no viewers were created.  Create viewers manually and add data from data-menu"  # noqa
-            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            if not new_dc_entry.meta.get(_wcs_only_label, False):
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
         else:
             failed_viewers = []
             for viewer_label in viewer_select.selected:

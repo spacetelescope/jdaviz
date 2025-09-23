@@ -410,7 +410,11 @@ class SpectralExtraction2D(PluginTemplateMixin):
         plg = self.new()
         # all other settings remain at their plugin defaults
         plg._clear_default_inputs()
+
+        plg.selected = self.selected if dataset is None else dataset
         plg.trace_dataset.selected = self.trace_dataset.selected if dataset is None else dataset
+        plg.bg_dataset.selected = self.bg_dataset.selected if dataset is None else dataset
+
         plg._trace_dataset_selected()  # should only be necessary if default dataset
         return plg.export_extract_spectrum(add_data=add_data)
 

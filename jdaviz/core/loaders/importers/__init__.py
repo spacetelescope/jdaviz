@@ -5,3 +5,5 @@ from .spectrum_list import *  # noqa
 from .image import *  # noqa
 from .subset import *  # noqa
 from .trace import *  # noqa
+from .catalog import *  # noqa
+from .footprint import *  # noqa

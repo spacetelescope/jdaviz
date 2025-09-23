@@ -190,8 +190,17 @@
                 </v-list-item-content>
                 <v-list-item-action>
                   <j-tooltip
-                    :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                    v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
+                    tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
                   >
+                    <v-btn icon disabled>
+                      <v-icon>mdi-eye-off</v-icon>
+                    </v-btn>
+                  </j-tooltip>
+                  <j-tooltip
+                    v-else
+                    :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                    >
                     <plugin-switch
                       :value="item.visible"
                       @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
