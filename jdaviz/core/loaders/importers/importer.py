@@ -224,12 +224,10 @@ class BaseImporterToDataCollection(BaseImporter):
         cls = cls if cls is not None else data.__class__
         if not hasattr(data, 'meta'):
             data.meta = {}
-        try:
-            data.meta['_native_data_cls'] = cls
-        except TypeError:
-            # TypeError: 'HduToMetaMapping' object does not support item assignment
-            data.meta = {k: v for k, v in data.meta.items()}
-            data.meta['_native_data_cls'] = cls
+        if not isinstance(data.meta, dict):
+            # ensure that data.meta is a dictionary and supports item assignment
+            data.meta = dict(data.meta)
+        data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
 
         self.app.add_data(data, data_label=data_label)
