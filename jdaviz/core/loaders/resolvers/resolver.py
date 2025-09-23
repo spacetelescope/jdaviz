@@ -1,12 +1,22 @@
+import os
 import warnings
+from io import BytesIO
 from contextlib import contextmanager
+from functools import cached_property
 from traitlets import Bool, List, Unicode, observe
 
-from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
+from astropy.table import Table
+
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        SelectPluginComponent,
+                                        TableMixin,
+                                        with_spinner)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
+from jdaviz.utils import download_uri_to_path
 
 __all__ = ['BaseResolver', 'find_matching_resolver']
 
@@ -59,7 +69,7 @@ class FormatSelect(SelectPluginComponent):
             # NOTE: plugin is just because this inherits from SelectPluginComponent,
             # but is actually the resolver.  This calls the implemented __call__ method
             # on the parent resolver.
-            parser_input = self.plugin()
+            parser_input = self.plugin.output
         except Exception as e:
             self.items = []
             self._invalid_importers = f'resolver exception: {e}'
@@ -74,7 +84,7 @@ class FormatSelect(SelectPluginComponent):
                     self._dbg_parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
-                        importer_input = this_parser()
+                        importer_input = this_parser.output
                     else:
                         self._invalid_importers[parser_name] = 'not valid'
                         importer_input = None
@@ -192,14 +202,28 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin):
-    _defer_update_format_items = False  # only use via defer_update_format_items contex manager
+class BaseResolver(PluginTemplateMixin, TableMixin):
+    _defer_resolver_input_updated = False  # only use via defer_resolver_input_updated contex manager
     default_input = None
     default_input_cast = None
     requires_api_support = False
 
+    # whether the current output could be interpretted as a list of data products
+    parsed_input_is_products_list = Bool(False).tag(sync=True)
+    # if parsed_input_is_products_list is True, whether to treat it as such
+    # or pass it on directly to the parsers/importers
+    treat_table_as_products_list = Bool(True).tag(sync=True)
+
+    # options to download selected item in products list
+    products_url_scheme = Unicode("").tag(sync=True)
+    products_url = Unicode("").tag(sync=True)
+    products_cache = Bool(True).tag(sync=True)
+    products_local_path = Unicode("").tag(sync=True)
+    products_timeout = FloatHandleEmpty(10).tag(sync=True)
+
     importer_widget = Unicode().tag(sync=True)
 
+    parse_input_spinner = Bool(False).tag(sync=True)
     format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
@@ -215,7 +239,12 @@ class BaseResolver(PluginTemplateMixin):
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
         super().__init__(*args, **kwargs)
 
-        # subclasses should call self._update_format_items on any change
+        self.products_list.show_rowselect = True
+        self.products_list.item_key = "url"
+        self.products_list.multiselect = False
+        self.products_list._selected_rows_changed_callback = self._on_product_select_change
+
+        # subclasses should call self._resolver_input_updated on any change
         # to user-inputs that might affect the available formats
         self.format = FormatSelect(self,
                                    items='format_items',
@@ -226,23 +255,23 @@ class BaseResolver(PluginTemplateMixin):
                                    selected='target_selected')
 
     @contextmanager
-    def defer_update_format_items(self):
+    def defer_resolver_input_updated(self):
         """
         Context manager to delay updating format items until multiple traitlets have been set.
         """
-        self._defer_update_format_items = True
+        self._defer_resolver_input_updated = True
         try:
             yield
         finally:
-            self._defer_update_format_items = False
-            self._update_format_items()
+            self._defer_resolver_input_updated = False
+            self._resolver_input_updated()
 
     @classmethod
     def from_input(cls, app, inp, **kwargs):
         self = cls(app=app)
         if self.default_input is None:
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
-        with self.defer_update_format_items():
+        with self.defer_resolver_input_updated():
             setattr(self, self.default_input,
                     self.default_input_cast(inp) if self.default_input_cast else inp)
             user_api = self.user_api
@@ -262,11 +291,95 @@ class BaseResolver(PluginTemplateMixin):
             raise NotImplementedError("Resolver subclass must implement default_input")
         return getattr(self, self.default_input)
 
-    def __call__(self):
-        # override by subclass - must convert any inputs into something
-        # that can be interpretted by at least one parser
-        # (generally a filepath, file object, or python object)
-        raise NotImplementedError("Resolver subclass must implement __call__")  # pragma: nocover
+    def parse_input(self):
+        # override by subclass - this should return something that is either interpretted as a products list
+        # OR something that can be passed to at least one parser
+        raise NotImplementedError("Resolver subclass must implement parse_input")  # pragma: nocover
+
+    @cached_property
+    def parsed_input(self):
+        return self.parse_input()
+
+    def _parsed_input_to_products_list(self, parsed_input):
+        if isinstance(parsed_input, str) and os.path.exists(parsed_input) and os.path.isfile(parsed_input):
+            # try to read into a table which could be a products list
+            try:
+                parsed_input = Table.read(parsed_input)
+            except Exception:  # nosec
+                return None
+        if isinstance(parsed_input, BytesIO):
+            # support loading in from file drop resolver
+            # TODO: iterate over possible formats?
+            try:
+                parsed_input = Table.read(parsed_input, format='csv')
+            except Exception:  # nosec
+                return None
+        if isinstance(parsed_input, Table):
+            if 'url' in parsed_input.colnames:
+                return parsed_input
+            for map_to_url in ('URL', 'uri', 'URI', 'download', 'Filename'):
+                if map_to_url in parsed_input.colnames:
+                    parsed_input.rename_column(map_to_url, 'url')
+                    return parsed_input
+        return None
+
+    @observe('parsed_input_is_products_list', 'treat_table_as_products_list')
+    @with_spinner('parse_input_spinner')
+    def _resolver_input_updated(self, *args):
+        if self._defer_resolver_input_updated:
+            return
+        self._clear_cache('parsed_input', 'output')
+
+        parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
+        products_list = self._parsed_input_to_products_list(parsed_input)
+        if products_list is not None:
+            self.products_list._qtable = None
+
+            for row in products_list:
+                self.products_list.add_item(row)
+            self.parsed_input_is_products_list = True
+        else:
+            self.parsed_input_is_products_list = False
+            self._update_format_items()
+
+    def _on_product_select_change(self, _=None):
+        self._clear_cache('output')
+        self._update_format_items()
+
+    @with_spinner('format_items_spinner')
+    def _update_format_items(self):
+        # NOTE: this will call self.output
+        self.format._update_items()
+        self.target._update_items()  # assumes format._importers is updated from above
+        # ensure the importer updates even if the format selection remains fixed
+        self._on_format_selected_changed()
+
+    def get_selected_url(self):
+        if len(self.products_list.selected_rows) != 1:
+            return None
+        url = self.products_list.selected_rows[0]['url']
+        if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
+            return 'https://mast.stsci.edu/search/jwst/api/v0.1/retrieve_product?product_name=' + url
+        return url
+
+    @cached_property
+    def output(self):
+        if self.parsed_input_is_products_list and self.treat_table_as_products_list:
+            url = self.get_selected_url().strip()
+            if not url:
+                return None
+            return download_uri_to_path(url,
+                                        cache=self.products_cache,
+                                        local_path=self.products_local_path,
+                                        timeout=self.products_timeout)
+        else:
+            return self.parsed_input
+
+    @property
+    def products_list(self):
+        # for convenience, provide products_list as an alias to table (products_list will
+        # be exposed to the userAPI)
+        return self.table
 
     @property
     def user_api(self):
@@ -277,16 +390,6 @@ class BaseResolver(PluginTemplateMixin):
         # override by subclass to provide a default label to the importer
         # importers can then decide whether to use this or not.
         return None
-
-    @with_spinner('format_items_spinner')
-    def _update_format_items(self):
-        if self._defer_update_format_items:
-            return
-        # NOTE: this will result in a call to the implemented __call__ on the resolver
-        self.format._update_items()
-        self.target._update_items()  # assumes format._importers is updated from above
-        # ensure the importer updates even if the format selection remains fixed
-        self._on_format_selected_changed()
 
     @property
     def importer(self):

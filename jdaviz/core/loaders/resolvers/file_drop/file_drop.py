@@ -50,9 +50,9 @@ class FileDropResolver(BaseResolver):
     def _on_file_updated(self, file_infos):
         self.nfiles = len(file_infos)
         self._file_info = file_infos[0]
-        self._update_format_items()
+        self._resolver_input_updated()
         self.progress = 100
 
-    def __call__(self, local_path=None, timeout=60):
+    def parse_input(self):
         # this will return a bytes object of the file contents
         return io.BytesIO(self._file_info.get('data'))

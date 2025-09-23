@@ -34,7 +34,7 @@ class ObjectResolver(BaseResolver):
     def object(self, obj):
         self._object = obj
         self.object_repr = f"<{obj.__class__.__name__} object>"
-        self._update_format_items()
+        self._resolver_input_updated()
 
-    def __call__(self):
+    def parse_input(self):
         return self.object

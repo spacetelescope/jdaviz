@@ -2,6 +2,10 @@
   <j-loader
     title="Virtual Observatory"
     :popout_button="popout_button"
+    :parse_input_spinner="parse_input_spinner"
+    :parsed_input_is_products_list="parsed_input_is_products_list"
+    :treat_table_as_products_list.sync="treat_table_as_products_list"
+    :table_widget="table_widget"
     :target_items="target_items"
     :target_selected.sync="target_selected"
     :format_items_spinner="format_items_spinner"
@@ -21,7 +25,6 @@
         label="Viewer"
         api_hint="ldr.viewer ="
         :api_hints_enabled="api_hints_enabled"
-        :show_if_single_entry="true"
         hint="Select a viewer to retrieve center coordinates, or Manual for manual coordinate entry."
       />
 
@@ -138,16 +141,13 @@
         :results_isolated_to_plugin="true"
         :api_hints_enabled="api_hints_enabled"
         @click="query_archive">
-            {{ api_hints_enabled ?
-                'ldr.query_archive()'
-                :
-                'Query Archive'
-            }}
+          {{ api_hints_enabled ?
+              'ldr.query_archive()'
+              :
+              'Query Archive'
+          }}
       </plugin-action-button>
     </v-row>
-
-    <jupyter-widget :widget="table_widget"></jupyter-widget>
-
   </j-loader>
 </template>
 

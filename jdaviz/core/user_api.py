@@ -211,7 +211,12 @@ class LoaderUserApi(UserApiWrapper):
     """
     def __init__(self, loader, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
         expose = list(set(list(expose) + ['format', 'target', 'importer', 'show',
-                                          'open_in_tray', 'close_in_tray']))
+                                          'open_in_tray', 'close_in_tray',
+                                          'treat_table_as_products_list',
+                                          'products_list',
+                                          'products_list_cache',
+                                          'products_list_timeout',
+                                          'products_list_local_path']))
         super().__init__(loader, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):

@@ -21,14 +21,14 @@ from jdaviz.core.template_mixin import (
     UnitSelectPluginComponent,
     with_spinner,
 )
-from jdaviz.core.loaders.resolvers.query_results import QueryResultsResolver
+from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ["VOResolver"]
 
 
 @loader_resolver_registry("virtual observatory")
-class VOResolver(QueryResultsResolver):
+class VOResolver(BaseResolver):
     template_file = __file__, "vo.vue"
 
     viewer_items = List([]).tag(sync=True)
@@ -36,7 +36,7 @@ class VOResolver(QueryResultsResolver):
 
     waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
-    resource_filter_coverage = Bool(False).tag(sync=True)
+    resource_filter_coverage = Bool(True).tag(sync=True)
     resource_items = List([]).tag(sync=True)
     resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resources_loading = Bool(False).tag(sync=True)
@@ -54,9 +54,11 @@ class VOResolver(QueryResultsResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._output = None
 
         self.viewer = ViewerSelect(
-            self, "viewer_items", "viewer_selected", manual_options=["Manual"]
+            self, "viewer_items", "viewer_selected", manual_options=["Manual"],
+            filters=['is_image_viewer']
         )
 
         self.coordframe = SelectPluginComponent(
@@ -99,7 +101,7 @@ class VOResolver(QueryResultsResolver):
                 "viewer", "coordframe", "radius", "radius_unit",
                 "source",
                 "resource_filter_coverage", "waveband", "resource",
-                "query_archive", "table",
+                "query_archive"
             ],
         )
 
@@ -398,7 +400,7 @@ class VOResolver(QueryResultsResolver):
             raise
 
         try:
-            self.object = sia_results
+            self._output = sia_results.to_table()
         except Exception as e:
             self.hub.broadcast(
                 SnackbarMessage(
@@ -409,6 +411,7 @@ class VOResolver(QueryResultsResolver):
                 )
             )
             raise
+        self._resolver_input_updated()
 
     def vue_query_archive(self, _=None):
         self.query_archive()
@@ -418,3 +421,6 @@ class VOResolver(QueryResultsResolver):
         # this resolver does not accept any direct, (default_input = None), so can
         # always be considered valid
         return True
+
+    def parse_input(self):
+        return self._output

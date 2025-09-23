@@ -5452,9 +5452,9 @@ class TableMixin(VuetifyTemplate, HubListener):
     """
     table_widget = Unicode().tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, table_attr_name='table', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.table = Table(self, name='table')
+        self.table = Table(self, name=table_attr_name)
         self.table_widget = 'IPY_MODEL_'+self.table.model_id
 
     def clear_table(self):

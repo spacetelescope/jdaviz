@@ -2,6 +2,13 @@
   <j-loader
     title="Download from URL"
     :popout_button="popout_button"
+    :parse_input_spinner="parse_input_spinner"
+    :parsed_input_is_products_list="parsed_input_is_products_list"
+    :treat_table_as_products_list.sync="treat_table_as_products_list"
+    :products_url_scheme="products_url_scheme"
+    :products_cache="products_cache"
+    :products_timeout="products_timeout"
+    :table_widget="table_widget"
     :target_items="target_items"
     :target_selected.sync="target_selected"
     :format_items_spinner="format_items_spinner"
@@ -38,6 +45,6 @@
       api_hint="ldr.cache = "
       :api_hints_enabled="api_hints_enabled"
       hint="Whether to attempt to read from the cache if this same URL has been previously fetched."
-    />
+    ></plugin-switch>
   </j-loader>
 </template>

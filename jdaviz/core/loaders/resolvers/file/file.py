@@ -58,7 +58,7 @@ class FileResolver(BaseResolver):
         if self.filepath == '':
             return
         self.filepath_reactive.value = Path(self.filepath)
-        self._update_format_items()
+        self._resolver_input_updated()
 
     @property
     def is_valid(self):
@@ -68,5 +68,5 @@ class FileResolver(BaseResolver):
     def default_label(self):
         return os.path.splitext(os.path.basename(self.filepath))[0] if self.filepath else None
 
-    def __call__(self):
+    def parse_input(self):
         return self.filepath
