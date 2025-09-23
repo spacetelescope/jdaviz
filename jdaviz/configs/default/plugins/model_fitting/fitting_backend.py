@@ -1,11 +1,14 @@
+from typing import Any
+
 from asteval import Interpreter
 import multiprocessing as mp
-from multiprocessing import Pool
 import numpy as np
 
 from astropy.modeling import fitting
 from specutils import Spectrum
 from specutils.fitting import fit_lines
+
+from jdaviz.utils import parallelize_calculation
 
 __all__ = ['fit_model_to_spectrum', 'generate_spaxel_list']
 
@@ -67,8 +70,11 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
     # Initial guess for the fit.
     initial_model = _build_model(component_list, expression)
 
+    # Only used for 3D model fitting
+    parallel_framework = kwargs.pop('parallel_framework', None)
     if len(spectrum.shape) > 1:
-        return _fit_3D(initial_model, spectrum, fitter=fitter, window=window, n_cpu=n_cpu, **kwargs)
+        return _fit_3D(initial_model, spectrum, fitter=fitter, window=window, n_cpu=n_cpu,
+                       parallel_framework=parallel_framework, **kwargs)
     else:
         return _fit_1D(initial_model, spectrum, run_fitter, fitter=fitter, window=window, **kwargs)
 
@@ -181,34 +187,37 @@ def _fit_3D(initial_model, spectrum, fitter, window=None, n_cpu=None, **kwargs):
             elif spectrum.spectral_axis_index == 0:
                 output_flux_cube[:, y, x] = fitted_values
 
-    # Run multiprocessor pool to fit each spaxel and
-    # compute model values on that same spaxel.
-    if n_cpu > 1:
-        results = []
-        pool = Pool(n_cpu)
+    # Allow selecting a futures-based streaming backend via
+    # the `use_futures` kwarg. This preserves callback-like
+    # behavior by processing results as each worker finishes.
+    parallel_framework = kwargs.pop('parallel_framework', '')
+    if parallel_framework or n_cpu > 1:
+        # Build workers (one per chunk) same as the Pool chunking
+        workers = (
+            SpaxelWorker(spectrum.flux,
+                         spectrum.spectral_axis,
+                         initial_model,
+                         fitter=fitter,
+                         param_set=spx,
+                         window=window,
+                         mask=spectrum.mask,
+                         spectral_axis_index=spectrum.spectral_axis_index,
+                         **kwargs)
+            for spx in np.array_split(spaxels, n_cpu))
 
-        # The communication overhead of spawning a process for each *individual*
-        # parameter set is prohibitively high (it's actually faster to run things
-        # sequentially). Instead, chunk the spaxel list based on the number of
-        # available processors, and have each processor do the model fitting
-        # on the entire subset of spaxel tuples, then return the set of results.
-        for spx in np.array_split(spaxels, n_cpu):
-            # Worker for the multiprocess pool.
-            worker = SpaxelWorker(spectrum.flux,
-                                  spectrum.spectral_axis,
-                                  initial_model,
-                                  fitter=fitter,
-                                  param_set=spx,
-                                  window=window,
-                                  mask=spectrum.mask,
-                                  spectral_axis_index=spectrum.spectral_axis_index,
-                                  **kwargs)
-            r = pool.apply_async(worker, callback=collect_result)
-            results.append(r)
-        for r in results:
-            r.wait()
+        if parallel_framework == 'futures':
+            parallelize_calculation(workers, collect_result, framework='futures', n_cpu=n_cpu)
 
-        pool.close()
+        elif parallel_framework == 'joblib':
+            parallelize_calculation(workers, collect_result, framework='joblib', n_cpu=n_cpu)
+
+        elif parallel_framework and parallel_framework != 'multiprocessing':
+            raise ValueError(f"Invalid parallel_framework '{parallel_framework}'")
+
+        else:
+            # Run multiprocessor pool to fit each spaxel and
+            # compute model values on that same spaxel.
+            parallelize_calculation(workers, collect_result, n_cpu=n_cpu)
 
     # This route is only for dev debugging because it is very slow
     # but exceptions will not get swallowed up by multiprocessing.
