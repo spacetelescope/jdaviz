@@ -21,6 +21,8 @@ Specviz2d
 
 - Automatic spectral extraction now works when multiple 2D spectra are loaded. [#3793]
 
+- Fixes an incorrect API hint in 2D Spectral Extraction. [#3798]
+
 4.4 (2025-09-18)
 ================
 
