@@ -123,6 +123,10 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and hdu.header.get('EXTNAME', '') == 'MASK')
+    
+    def _get_celestial_wcs(self, wcs):
+        """ If `wcs` has a celestial component return that, otherwise return None """
+        return wcs.celestial if hasattr(wcs, 'celestial') else None
 
     @cached_property
     def spectrum(self):
@@ -138,6 +142,29 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         wcs = WCS(header, hdulist)
+
+        # Try to get the spectral axis unit from the FITS header if possible
+        target_wave_unit = None
+        if target_wave_unit is None and hdulist is not None:
+            found_target = False
+            for ext in ('SCI', 'FLUX', 'PRIMARY', 'DATA'):  # In priority order
+                if found_target:
+                    break
+                if ext not in hdulist:
+                    continue
+                hdr = hdulist[ext].header
+                # The WCS could be swapped or unswapped.
+                for cunit_num in (3, 1):
+                    cunit_key = f"CUNIT{cunit_num}"
+                    ctype_key = f"CTYPE{cunit_num}"
+                    if cunit_key in hdr and 'WAV' in hdr[ctype_key]:
+                        target_wave_unit = u.Unit(hdr[cunit_key])
+                        found_target = True
+                        break
+
+        # Default to meters if no unit found
+        if target_wave_unit is None:
+            target_wave_unit = u.Unit('m')
 
         try:
             data_unit = u.Unit(header['BUNIT'])
@@ -172,6 +199,14 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
         else:
             unc = None
 
+        sc = Spectrum(flux=data * data_unit, uncertainty=unc,
+                mask=mask_data, meta=metadata, wcs=wcs,
+                spectral_axis_index=self.default_spectral_axis_index)
+
+        # Keep original spectrum and spatial WCS around for later use
+        metadata['_orig_spec'] = sc  # Need this for later
+        metadata['_orig_spatial_wcs'] = self._get_celestial_wcs(sc.wcs)
+
         try:
             if wcs.world_axis_physical_types == [None, None]:
                 # This may be a JWST file with WCS stored in ASDF
@@ -189,9 +224,11 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                         wcs = None
                 else:
                     wcs = None
-            return Spectrum(flux=data * data_unit, uncertainty=unc,
-                            mask=mask_data, meta=metadata, wcs=wcs,
-                            spectral_axis_index=self.default_spectral_axis_index)
+            return Spectrum(
+                spectral_axis=sc.spectral_axis.to(target_wave_unit, equivalencies=u.spectral()),
+                  flux=data * data_unit, uncertainty=unc,
+                  mask=mask_data, meta=metadata,
+                  spectral_axis_index=self.default_spectral_axis_index)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,
@@ -201,8 +238,10 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                 Spectrum.read(self._resolver())
             except Exception:
                 # specutils.Spectrum reader would fail, so use no WCS
-                return Spectrum(flux=data * data_unit, uncertainty=unc,
-                                meta=metadata)
+                return Spectrum(
+                    spectral_axis=sc.spectral_axis.to(target_wave_unit, equivalencies=u.spectral()),
+                      flux=data * data_unit, uncertainty=unc,
+                      meta=metadata)
             else:
                 # raising an error here will consider this parser as non-valid
                 # so that specutils.Spectrum parser is preferred
