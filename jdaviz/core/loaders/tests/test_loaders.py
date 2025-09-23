@@ -146,6 +146,24 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert str(sp1d.spectral_axis.unit) == 'um'
 
 
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+@pytest.mark.filterwarnings(r"ignore::asdf.exceptions.AsdfPackageVersionWarning")
+def test_jwst_wfss_bsub(deconfigged_helper):
+    uri = 'https://stsci.box.com/shared/static/k5l446jid348jk343m8r4vvbkzk4syom.fits'
+    ldr = deconfigged_helper.loaders['url']
+    ldr.cache = True
+    ldr.url = uri
+
+    assert ldr.format == '2D Spectrum'
+
+    ldr.importer()
+
+    sp1d = deconfigged_helper.get_data('k5l446jid348jk343m8r4vvbkzk4syom (auto-ext)')  # noqa
+    assert isinstance(sp1d, Spectrum)
+    assert str(sp1d.spectral_axis.unit) == 'pix'
+
+
 # TODO: Skip until file is uploaded to box
 @pytest.mark.skip
 def test_fits_spectrum_list_L3_wfss(deconfigged_helper):

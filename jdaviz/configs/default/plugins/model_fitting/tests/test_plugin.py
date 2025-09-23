@@ -14,7 +14,7 @@ from astropy.utils.exceptions import AstropyUserWarning
 from astropy.utils.introspection import minversion
 import astropy.units as u
 
-from glue.core.roi import CircularROI
+from glue.core.roi import CircularROI, XRangeROI
 from specutils import Spectrum, SpectralRegion
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
@@ -415,6 +415,78 @@ def test_invalid_subset(specviz_helper, spectrum1d):
 
     plugin.dataset = 'left_spectrum'
     assert plugin._obj.spectral_subset_valid
+
+
+@pytest.mark.parametrize('fill_val', [np.nan, np.inf])
+def test_fitting_with_nans(specviz_helper, fill_val):
+    # test that model fitting works when there are nans in the flux array. these
+    # nonfinite values should be filtered out both when computing the initial
+    # guess for model parameters, and when fitting the model
+
+    spec = Spectrum(flux=np.array([0, 1, 2, fill_val, fill_val, fill_val, 6, 7, 8, 9]) * u.Jy,
+                    spectral_axis=np.arange(10) * u.nm)
+    specviz_helper.load_data(spec)
+
+    plugin = specviz_helper.plugins['Model Fitting']
+    plugin.model_component = 'Linear1D'
+    plugin.create_model_component()
+
+    # check initial component value guesses
+    assert_allclose(plugin._obj.component_models[0]['parameters'][0]['value'], 4.5)  # slope
+    assert_allclose(plugin._obj.component_models[0]['parameters'][1]['value'], 4.5)  # intercept
+
+    with pytest.warns(AstropyUserWarning) as ws:
+        plugin.calculate_fit()
+
+    # should be two warnings, one for linear model, one for nans
+    assert len(ws) == 2
+    assert any('Model is linear in parameters' in str(w.message) for w in ws)
+    assert any('Non-Finite input data has been removed by the fitter' in str(w.message) for w in ws)
+
+    # check that slope and intercept are fit correctly
+    assert_allclose(plugin._obj.component_models[0]['parameters'][0]['value'], 1.0)  # slope
+    assert_allclose(plugin._obj.component_models[0]['parameters'][1]['value'],
+                    0.0, atol=1e-12)  # intercept
+
+    # and that this value is correctly set to false, since its only the data
+    # values that are non-finite, not the uncertainty values
+    assert plugin._obj.non_finite_uncertainty_mismatch is False
+
+
+@pytest.mark.parametrize('fill_val', [np.nan, np.inf])
+def test_fitting_partial_overlap_subset(specviz_helper, fill_val):
+    # test that a partially out of bounds subset works correctly,
+    # using a test dataset with nans to make sure the masking accounts for
+    # out-of-bounds values as well as nonfinite values
+
+    spec = Spectrum(flux=np.array([0, 1, 2, fill_val, fill_val, fill_val, 6, 7, 8, 9]) * u.Jy,
+                    spectral_axis=np.arange(10) * u.nm)
+    specviz_helper.load_data(spec)
+
+    plugin = specviz_helper.plugins['Model Fitting']
+    plugin.model_component = 'Linear1D'
+    plugin.create_model_component()
+
+    # apply a spectral subset that partially overalps the data range
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv.apply_roi(XRangeROI(7, 12))
+
+    # check initial component value guesses
+    assert_allclose(plugin._obj.component_models[0]['parameters'][0]['value'], 4.5)  # slope
+    assert_allclose(plugin._obj.component_models[0]['parameters'][1]['value'], 4.5)  # intercept
+
+    with pytest.warns(AstropyUserWarning) as ws:
+        plugin.calculate_fit()
+
+    # should be two warnings, one for linear model, one for nans
+    assert len(ws) == 2
+    assert any('Model is linear in parameters' in str(w.message) for w in ws)
+    assert any('Non-Finite input data has been removed by the fitter' in str(w.message) for w in ws)
+
+    # check that slope and intercept are fit correctly
+    assert_allclose(plugin._obj.component_models[0]['parameters'][0]['value'], 1.0)  # slope
+    assert_allclose(plugin._obj.component_models[0]['parameters'][1]['value'],
+                    0.0, atol=1e-12)  # intercept
 
 
 def test_all_nan_uncert(specviz_helper):

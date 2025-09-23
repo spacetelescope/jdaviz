@@ -213,9 +213,7 @@ class ConfigHelper(HubListener):
             kwargs['viewer'] = '*' if kwargs.pop('show_in_viewer') else []
 
         importer = resolver.importer
-        for k, v in kwargs.items():
-            if hasattr(importer, k) and v is not None:
-                setattr(importer, k, v)
+        importer._obj._apply_kwargs(kwargs)
         return importer()
 
     @property
@@ -556,10 +554,13 @@ class ConfigHelper(HubListener):
                                                     eqv, with_unit=False) * u.Unit(y_unit)
 
                 # convert spectral axis to display units
-                new_spec = (spectral_axis_conversion(data.spectral_axis.value,
-                                                     data.spectral_axis.unit,
-                                                     spectral_unit)
-                            * u.Unit(spectral_unit))
+                if data.spectral_axis.unit != spectral_unit:
+                    new_spec = (spectral_axis_conversion(data.spectral_axis.value,
+                                                         data.spectral_axis.unit,
+                                                         spectral_unit)
+                                * u.Unit(spectral_unit))
+                else:
+                    new_spec = data.spectral_axis
 
                 data = Spectrum(spectral_axis=new_spec,
                                 flux=new_y,
@@ -607,8 +608,8 @@ class ConfigHelper(HubListener):
         data = self.app.data_collection[data_label]
 
         if not cls:
-            if hasattr(data, '_native_data_cls'):
-                cls = data._native_data_cls
+            if data.meta.get('_native_data_cls', None) is not None:
+                cls = data.meta['_native_data_cls']
             # TODO: once everything goes through loaders, can we remove everything below?
             elif 'Trace' in data.meta:
                 cls = None

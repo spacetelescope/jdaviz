@@ -7,7 +7,7 @@ flag,name,description
 5,PERSISTENCE,High persistence (was RESERVED_2)
 6,AD_FLOOR,Below A/D floor (0 DN; was RESERVED_3)
 7,CHARGELOSS,Charge migration (was RESERVED_4)
-8,UNRELIABLE_ERROR,Uncertainty exceeds quoted error
+8,RESERVED,Reserved for future use (was UNRELIABLE_ERROR)
 9,NON_SCIENCE,Pixel not on science portion of detector
 10,DEAD,Dead pixel
 11,HOT,Hot pixel

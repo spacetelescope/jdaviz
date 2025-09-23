@@ -1,13 +1,13 @@
 <template>
   <v-card flat>
-    <v-card-title class="headline" color="primary" primary-title style="display: block; width: 100%">
+    <v-card-title v-if="!server_is_remote" class="headline" color="primary" primary-title style="display: block; width: 100%">
       {{title}}
       <span style="float: right">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </span>
     </v-card-title>
     <v-card-text>
-        <v-container>
+        <v-container v-if="!server_is_remote">
           <slot/>
         </v-container>
         <div style="display: grid"> <!-- overlay container -->
@@ -74,7 +74,7 @@ module.exports = {
   props: ['title', 'popout_button',
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',
-          'importer_widget',
+          'importer_widget', 'server_is_remote',
           'api_hints_enabled', 'valid_import_formats'],
 }
 </script>

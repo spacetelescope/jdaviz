@@ -70,7 +70,8 @@ class UserApiWrapper:
                                                 AutoTextField,
                                                 ViewerSelectCreateNew)
         if isinstance(exp_obj, ViewerSelectCreateNew):
-            if value in exp_obj.choices + ['', []]:
+            from jdaviz.utils import has_wildcard
+            if value in exp_obj.choices + ['', []] or has_wildcard(value):
                 exp_obj.create_new.selected = ''
                 exp_obj.selected = value
                 return
@@ -186,6 +187,8 @@ class PluginUserApi(UserApiWrapper):
             default = ['open_in_tray', 'close_in_tray', 'show']
         else:
             default = ['show']
+        if hasattr(plugin, 'loaders'):
+            default += ['loaders']
         expose = list(set(list(expose) + default))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']

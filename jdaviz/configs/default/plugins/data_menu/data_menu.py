@@ -3,7 +3,7 @@ import os
 from contextlib import contextmanager
 from traitlets import Bool, Dict, Unicode, Integer, List, observe
 
-from jdaviz.core.template_mixin import (TemplateMixin, LayerSelect,
+from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSelect,
                                         LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
@@ -80,6 +80,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     orientation_align_by_wcs = Bool(False).tag(sync=True)
     orientation_layer_items = List().tag(sync=True)
     orientation_layer_selected = Unicode().tag(sync=True)
+
+    disabled_layers_due_to_pixel_link = List().tag(sync=True)
 
     cmap_samples = Dict(cmap_samples).tag(sync=True)
     subset_tools = List().tag(sync=True)
@@ -241,6 +243,21 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 if ref_label not in self.orientation.choices:
                     self.orientation._update_items()
                 self.orientation.selected = str(ref_label)
+            self.disabled_layers_due_to_pixel_link = []
+        else:
+            # disable any scatter layers.  In the future, this may be dependent
+            # on whether sky coordinates exist in the data (and vice versa when
+            # aligned by WCS)
+            hiding_due_to_pixel_link = []
+            for layer in self._viewer.layers:
+                if getattr(layer.layer, 'coords', None) is None:
+                    if layer.visible:
+                        hiding_due_to_pixel_link.append(layer.layer.label)
+                        layer.visible = False
+            if len(hiding_due_to_pixel_link):
+                self.hub.broadcast(SnackbarMessage(f"Hiding layers {hiding_due_to_pixel_link} in '{self.viewer_reference}' viewer due to change in align_by to 'Pixel'.",  # noqa
+                                                   color='warning', sender=self))
+                self.disabled_layers_due_to_pixel_link = hiding_due_to_pixel_link
 
     def _on_viewer_renamed_message(self, msg):
         if self.viewer_reference == msg.old_viewer_ref:
@@ -430,6 +447,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         dict
             A dictionary of the current visible layers.
         """
+        if visible and layer_label in self.disabled_layers_due_to_pixel_link:
+            raise ValueError(f"Layer '{layer_label}' cannot be made visible when "
+                             "viewer is aligned by pixel coordinates.")
         for layer in self._viewer.layers:
             if layer.layer.label == layer_label:
                 if isinstance(layer, SonifiedDataLayerArtist):
