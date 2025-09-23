@@ -123,7 +123,7 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and hdu.header.get('EXTNAME', '') == 'MASK')
-    
+
     def _get_celestial_wcs(self, wcs):
         """ If `wcs` has a celestial component return that, otherwise return None """
         return wcs.celestial if hasattr(wcs, 'celestial') else None
@@ -200,8 +200,8 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
             unc = None
 
         sc = Spectrum(flux=data * data_unit, uncertainty=unc,
-                mask=mask_data, meta=metadata, wcs=wcs,
-                spectral_axis_index=self.default_spectral_axis_index)
+                      mask=mask_data, meta=metadata, wcs=wcs,
+                      spectral_axis_index=self.default_spectral_axis_index)
 
         # Keep original spectrum and spatial WCS around for later use
         metadata['_orig_spec'] = sc  # Need this for later
@@ -226,9 +226,9 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                     wcs = None
             return Spectrum(
                 spectral_axis=sc.spectral_axis.to(target_wave_unit, equivalencies=u.spectral()),
-                  flux=data * data_unit, uncertainty=unc,
-                  mask=mask_data, meta=metadata,
-                  spectral_axis_index=self.default_spectral_axis_index)
+                flux=data * data_unit, uncertainty=unc,
+                mask=mask_data, meta=metadata,
+                spectral_axis_index=self.default_spectral_axis_index)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,
@@ -240,8 +240,8 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                 # specutils.Spectrum reader would fail, so use no WCS
                 return Spectrum(
                     spectral_axis=sc.spectral_axis.to(target_wave_unit, equivalencies=u.spectral()),
-                      flux=data * data_unit, uncertainty=unc,
-                      meta=metadata)
+                    flux=data * data_unit, uncertainty=unc,
+                    meta=metadata)
             else:
                 # raising an error here will consider this parser as non-valid
                 # so that specutils.Spectrum parser is preferred
