@@ -7,6 +7,10 @@ from collections import deque
 from urllib.parse import urlparse
 import fnmatch
 import re
+import multiprocessing as mp
+from multiprocessing import Pool
+from joblib import Parallel, delayed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import asdf
 import numpy as np
@@ -951,6 +955,91 @@ def wildcard_match(obj, value, choices=None):
             value = wildcard_match_list_of_str(choices, value)
 
     return value
+
+
+def _worker_init():
+    """
+    Initialize worker process to filter Astropy fit warnings.
+    Call this function via ProcessPoolExecutor(initializer=_worker_init).
+    """
+    import warnings
+    from astropy.utils.exceptions import AstropyUserWarning
+
+    # Ignore the specific Astropy fit warning message.
+    warnings.filterwarnings(
+        'ignore',
+        category=AstropyUserWarning,
+        message='The fit may be unsuccessful; check: .*'
+    )
+
+
+def parallelize_calculation(workers, collect_result_callback,
+                            framework='multiprocessing', n_cpu=mp.cpu_count() - 1,
+                            initalizer=_worker_init):
+    """
+    Function to perform parallel processing using one of three backends:
+    'multiprocessing', 'joblib', or 'futures'. The function takes a list
+    of callables (functions with no arguments that return a result) and
+    executes them in parallel using the specified backend. The results of
+    each callable are passed to a callback function for collection.
+
+    Parameters
+    ----------
+    workers : worker type object
+        The function to be called within the parallel backend context.
+    collect_result_callback : function
+        A callback function to collect the results of each worker.
+    framework : str
+        The parallel backend to use.
+        Supported values are 'multiprocessing', 'joblib', and 'futures'.
+    n_cpu : int
+        The number of CPU cores to use for parallel processing.
+        Defaults to the total number of available CPU cores - 1.
+    """
+    if framework == 'multiprocessing':
+        results = []
+        pool = Pool(n_cpu)
+        for worker in workers:
+            r = pool.apply_async(worker, callback=collect_result_callback)
+            results.append(r)
+        for r in results:
+            r.wait()
+
+        pool.close()
+
+    elif framework == 'joblib':
+        results = Parallel(n_jobs=n_cpu)(delayed(worker)() for worker in workers)
+        _ = [collect_result_callback(r) for r in results]
+
+    elif framework == 'futures':
+        # Prefer a fork-based start method to avoid child processes
+        # re-importing the main module (which can cause recursive
+        # execution when users call this function at top-level).
+        # Fall back to the default context if 'fork' is unavailable
+        # (e.g. on some Windows/python builds).
+        try:
+            ctx = mp.get_context('fork')
+        except (RuntimeError, ValueError):
+            ctx = None
+
+        if ctx is not None:
+            with ProcessPoolExecutor(max_workers=n_cpu, mp_context=ctx, initializer=initalizer) as exe:  # noqa
+                futures = [exe.submit(worker) for worker in workers]
+                for fut in as_completed(futures):
+                    r = fut.result()
+                    collect_result_callback(r)
+        else:
+            # Fallback: let ProcessPoolExecutor choose the default start
+            # method (may require "if __name__ == '__main__'" when used
+            # at top-level). This preserves functionality on non-fork OSes.
+            with ProcessPoolExecutor(max_workers=n_cpu, initializer=initalizer) as exe:
+                futures = [exe.submit(worker) for worker in workers]
+                for fut in as_completed(futures):
+                    r = fut.result()
+                    collect_result_callback(r)
+    else:
+        raise ValueError(f"Unsupported backend '{framework}'. "
+                         f"Supported backends are 'multiprocessing', 'joblib', and 'futures'.")
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
