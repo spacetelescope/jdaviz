@@ -198,10 +198,16 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
             unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
-
-        sc = Spectrum(flux=data * data_unit, uncertainty=unc,
-                      mask=mask_data, meta=metadata, wcs=wcs,
-                      spectral_axis_index=self.default_spectral_axis_index)
+        # print('WCS:', wcs.wcs.cunit, data, data_unit, mask_data, self.default_spectral_axis_index)
+        print('!!!!!!!! ', data.shape, data.ndim, target_wave_unit)
+        if data.ndim == 3:
+            sc = Spectrum(flux=data * data_unit, uncertainty=unc,
+                        mask=mask_data, meta=metadata, wcs=wcs,
+                        spectral_axis_index=2)
+        else:
+            sc = Spectrum(flux=data * data_unit, uncertainty=unc,
+                        mask=mask_data, meta=metadata,
+                        spectral_axis_index=self.default_spectral_axis_index)
 
         # Keep original spectrum and spatial WCS around for later use
         metadata['_orig_spec'] = sc  # Need this for later
@@ -224,11 +230,20 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                         wcs = None
                 else:
                     wcs = None
-            return Spectrum(
-                spectral_axis=sc.spectral_axis.to(target_wave_unit, equivalencies=u.spectral()),
-                flux=data * data_unit, uncertainty=unc,
-                mask=mask_data, meta=metadata,
-                spectral_axis_index=self.default_spectral_axis_index)
+            if data.ndim == 3:
+                # with wcs 53 failed
+                # without wcs 50 failed
+                return Spectrum(
+                    spectral_axis=sc.spectral_axis.to(target_wave_unit, equivalencies=u.spectral()),
+                    flux=data * data_unit, uncertainty=unc,
+                    mask=mask_data, meta=metadata,
+                    spectral_axis_index=2)
+            else:
+                # with wcs 53 failed
+                # without wcs 50 failed
+                return Spectrum(flux=data * data_unit, uncertainty=unc,
+                                mask=mask_data, meta=metadata,
+                                spectral_axis_index=self.default_spectral_axis_index)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,
