@@ -1,7 +1,6 @@
 import numpy as np
 from contextlib import contextmanager
 import multiprocessing as mp
-from multiprocessing import Pool
 import sys
 import os
 
