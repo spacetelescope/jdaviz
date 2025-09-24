@@ -336,7 +336,6 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
     # Multiple 1D viewers is a deconfigged thing so we stick with using
     # that helper throughout.
     deconfigged_helper.load(spectrum2d, format='2D Spectrum')
-    default_label = deconfigged_helper.app.data_collection.labels[0]
     # Assume auto extract is on
     default_extraction_label = deconfigged_helper.app.data_collection.labels[1]
     custom_extraction_label = 'custom-extraction'
@@ -400,8 +399,7 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
                 assert len([
                     mark for mark in viewer._obj.custom_marks
                     if mark.visible and isinstance(mark, Lines) and
-                       len(mark.x) == len(spectrum2d.spectral_axis)
-                ]) == int(interactive_extract)
+                       len(mark.x) == len(spectrum2d.spectral_axis)]) == int(interactive_extract)
 
 
 class TestTwo2dSpectra:
