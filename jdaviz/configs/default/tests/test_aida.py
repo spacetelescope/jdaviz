@@ -81,7 +81,7 @@ def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
     viewer.aid.set_viewport(**new_viewport_settings)
     new_viewport = viewer.aid.get_viewport('sky')
 
-    assert_angle_close(new_viewport['rotation'], new_viewport_settings['rotation'], atol=.001*u.deg)
+    assert_angle_close(new_viewport['rotation'], new_viewport_settings['rotation'], atol=0.001*u.deg)
 
 
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
