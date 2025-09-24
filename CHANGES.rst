@@ -11,6 +11,8 @@ Imviz
 ^^^^^
 
 - Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
+  
+- Footprints plugin now includes a new Skewer Selection tool that selects the smallest footprint when multiple overlap. [#3794]
 
 Mosviz
 ^^^^^^
