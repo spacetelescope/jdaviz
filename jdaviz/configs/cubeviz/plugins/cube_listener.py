@@ -149,7 +149,7 @@ class CubeListenerData:
                 elif self.spectral_axis_index == 0:
                     self.sigcube[:, y, x] = sig
 
-        # Workers for the multiprocess pool.
+        # Workers for the parallelization pool.
         workers = (SonifySpaxelWorker(self.cube, spx, lo2hi, self.dur, self.srate,
                                       self.audfrqmin, self.audfrqmax, self.eln, self.maxval,
                                       spectral_axis_index=self.spectral_axis_index)
