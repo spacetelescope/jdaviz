@@ -1,5 +1,3 @@
-from typing import Any
-
 from asteval import Interpreter
 import multiprocessing as mp
 import numpy as np
