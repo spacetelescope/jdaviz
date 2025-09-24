@@ -6,6 +6,8 @@ from matplotlib.colors import ListedColormap, rgb2hex
 from glue.config import stretches
 from astropy.table import Table
 
+from jdaviz.utils import STDATAMODELS_LT_402
+
 # paths to CSV files with DQ flag mappings:
 dq_flag_map_paths = {
     'jwst': Path('data', 'data_quality', 'jwst.csv'),
@@ -134,6 +136,10 @@ def load_flag_map(mission_or_instrument=None, path=None):
     flag_mapping = {}
     for flag, name, desc in flag_table[['flag', 'name', 'description']].iterrows():
         flag_mapping[int(flag)] = dict(name=name, description=desc)
+
+    if STDATAMODELS_LT_402 and mission_or_instrument == 'jwst':
+        # This bit was changed from UNRELIABLE_ERROR back to RESERVED after 4.0.1
+        flag_mapping[8]['name'] = 'UNRELIABLE_ERROR'
 
     return flag_mapping
 

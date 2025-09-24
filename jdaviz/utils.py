@@ -5,6 +5,8 @@ import threading
 import warnings
 from collections import deque
 from urllib.parse import urlparse
+import fnmatch
+import re
 
 import asdf
 import numpy as np
@@ -21,6 +23,7 @@ import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
 from specutils.utils.wcs_utils import SpectralGWCS
+import stdatamodels
 
 from glue.config import settings
 from glue.config import colormaps as glue_colormaps
@@ -37,13 +40,20 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'cmap_samples', 'glue_colormaps']
+           'wildcard_match', 'cmap_samples', 'glue_colormaps']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
+STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
 COMMENTCARD_KEY = '_fits_comment_card'
+
+CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz', 'specviz', 'specviz2d', 'imviz')
+SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
+                             'Velocity', 'Wavenumber',
+                             'World 0', 'World 1',
+                             'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
 
 
 class SnackbarQueue:
@@ -810,6 +820,14 @@ def get_wcs_only_layer_labels(app):
             if layer_is_wcs_only(data)]
 
 
+def wcs_is_spectral(wcs):
+    if wcs is None:
+        return False
+    # NOTE: this may need further generalization for the GWCS but non-specutils case
+    # or for the spectral cube case
+    return isinstance(wcs, SpectralGWCS) or getattr(wcs, 'has_spectral', False)
+
+
 def get_top_layer_index(viewer):
     """Get index of the top visible image layer in a viewer.
     This is because when blinked, first layer might not be top visible layer.
@@ -852,6 +870,87 @@ def get_reference_image_data(app, viewer_id=None):
         return refdata, iref
 
     return None, -1
+
+
+def escape_brackets(s):
+    # Replace [ with [[] and ] with []]
+    return re.sub(r'([\[\]])', r'[\1]', s)
+
+
+def has_wildcard(s):
+    """Check if the string contains any shell-style wildcards: * or ?."""
+    return bool(re.search(r'[\*\?]', s))
+
+
+def wildcard_match(obj, value, choices=None):
+    """
+    Wrapper that handles both single string and list/tuple of strings as inputs for ``value``.
+
+    Returns a list of strings from ``obj.choices`` that match the wildcard pattern(s)
+    in ``value``. If no matches are found, returns a list containing ``value`` itself.
+
+    .. note::
+       ``fnmatch`` provides support for all Unix style wildcards including ``*``, ``?``.
+       We do not check for '[seq]`` and '[!seq]' because image extensions as we handle them
+       contain brackets.
+
+    Parameters
+    ----------
+    obj : object
+        An object with attributes ``choices`` and potentially ``multiselect``.
+
+    value : str or list or tuple
+        A string or list/tuple of strings to match against choices.
+        Each string may contain Unix shell-style wildcards.
+
+    choices : list of str, optional
+        A list of strings to match against. If not provided,
+        ``obj.choices`` will be used.
+
+    Returns
+    -------
+    list of str
+        A list of matched strings or ``value``/``[value]`` if no matches found.
+    """
+    def wildcard_match_str(internal_choices, internal_value):
+        # Assume we want to escape brackets as in the case of images with
+        # multiple extensions
+        internal_value = escape_brackets(internal_value)
+        matched = fnmatch.filter(internal_choices, internal_value)
+        if len(matched) == 0:
+            matched = [internal_value]
+        return matched
+
+    def wildcard_match_list_of_str(internal_choices, internal_value):
+        matched = []
+        for v in internal_value:
+            if isinstance(v, str) and any(has_wildcard(v) for v in value):
+                # Check for wildcard matches
+                matched.extend(wildcard_match_str(internal_choices, v))
+            else:
+                # Append as-is
+                matched.append(v)
+
+        # Remove duplicates while preserving order
+        return list(dict.fromkeys(matched))
+
+    if not choices:
+        choices = getattr(obj, 'choices', None)
+        if not choices:
+            return value
+
+    # any works for both str and iterable
+    if (getattr(obj, 'allow_multiselect', False)
+            and any(has_wildcard(v) for v in value if isinstance(v, str))):
+        if isinstance(value, str):
+            obj.multiselect = True
+            value = wildcard_match_str(choices, value)
+
+        elif isinstance(value, (list, tuple)):
+            obj.multiselect = True
+            value = wildcard_match_list_of_str(choices, value)
+
+    return value
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in

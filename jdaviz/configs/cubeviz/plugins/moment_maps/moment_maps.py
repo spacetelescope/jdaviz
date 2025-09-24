@@ -377,7 +377,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.filename = f"moment{n_moment}_{fname_label}.fits"
 
         if add_data:
-            self.add_results.add_results_from_plugin(self.moment)
+            self.add_results.add_results_from_plugin(self.moment,
+                                                     format='Image')
 
             msg = SnackbarMessage("{} added to data collection".format(self.results_label),
                                   sender=self, color="success")

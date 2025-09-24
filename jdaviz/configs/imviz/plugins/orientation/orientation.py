@@ -88,8 +88,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     icons = Dict().tag(sync=True)
 
-    viewer_items = List().tag(sync=True)
-    viewer_selected = Unicode().tag(sync=True)
     orientation_layer_items = List().tag(sync=True)
     orientation_layer_selected = Unicode().tag(sync=True)
 
@@ -105,6 +103,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # description displayed under plugin title in tray
         self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'  # noqa
 
+        self.viewer._allow_multiselect = False
         self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
@@ -151,7 +150,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._update_layer_label_default()
 
         if self.app.config == 'deconfigged':
-            self.disabled_msg = 'Orientation plugin not available in deconfigged until generalized linking is implemented'  # noqa
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
@@ -609,7 +607,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
 def add_wcs_data_to_app(app, data, data_label=None):
     app._jdaviz_helper.load(data, format='Image',
-                            data_label=data_label, show_in_viewer=False)
+                            data_label=data_label, viewer=[])
     # TODO: refactor logic to avoid having to send an AddDataMessage just to update icons
     # ensure that icons are updated by forcing a call to app._on_layers_changed
     image_viewer = app.get_viewers_of_cls(ImvizImageView)[0]

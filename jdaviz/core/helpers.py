@@ -28,7 +28,7 @@ from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.loaders.resolvers import find_matching_resolver
 from jdaviz.core.template_mixin import show_widget
-from jdaviz.utils import data_has_valid_wcs
+from jdaviz.utils import data_has_valid_wcs, CONFIGS_WITH_LOADERS
 from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
                                                check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -133,11 +133,35 @@ class ConfigHelper(HubListener):
         loaders : dict
             dict of loader objects
         """
-        if not (self.app.state.dev_loaders or self.app.config in ('deconfigged', 'specviz', 'specviz2d', 'imviz')):  # noqa
+        if not (self.app.state.dev_loaders or self.app.config in CONFIGS_WITH_LOADERS):  # noqa
             raise NotImplementedError("loaders is under active development and requires a dev-flag to test")  # noqa
         loaders = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
                    for item in self.app.state.loader_items}
         return loaders
+
+    def _get_loader(self, resolver_name, parser_name=None, importer_name=None):
+        """
+        Attempt to retrieve an resolver/parser/importer for debugging purposes.
+        Can be used to debug an importer that shows as invalid because of an internal error.
+        """
+        ldr = self.loaders.get(resolver_name)
+        resolver = ldr._obj
+        if parser_name is None:
+            return resolver
+
+        orig_debug = ldr.format.debug
+        ldr.format.debug = True
+        parser = ldr.format._dbg_parsers[parser_name]
+        ldr.format.debug = orig_debug
+        if importer_name is None:
+            return parser
+
+        input = parser.output
+        ldr.format.debug = orig_debug
+
+        from jdaviz.core.registries import loader_importer_registry
+        ImporterCls = loader_importer_registry.members.get(importer_name)
+        return ImporterCls(app=self.app, resolver=resolver, input=input)
 
     @property
     def new_viewers(self):
@@ -182,14 +206,15 @@ class ConfigHelper(HubListener):
                                           target=target,
                                           **kwargs)
 
-        # TODO: deprecate show_in_viewer?
-        show_in_viewer = kwargs.pop('show_in_viewer', True)
-        importer = resolver.importer
+        if 'show_in_viewer' in kwargs.keys():
+            if 'viewer' in kwargs.keys():
+                raise ValueError('Cannot specify both "show_in_viewer" and "viewer".')
+            warnings.warn('The "show_in_viewer" argument is deprecated and will be removed in a future version. Use "viewer" instead.', DeprecationWarning)  # noqa
+            kwargs['viewer'] = '*' if kwargs.pop('show_in_viewer') else []
 
-        for k, v in kwargs.items():
-            if hasattr(importer, k) and v is not None:
-                setattr(importer, k, v)
-        return importer(show_in_viewer=show_in_viewer)
+        importer = resolver.importer
+        importer._obj._apply_kwargs(kwargs)
+        return importer()
 
     @property
     def data_labels(self):
@@ -529,10 +554,13 @@ class ConfigHelper(HubListener):
                                                     eqv, with_unit=False) * u.Unit(y_unit)
 
                 # convert spectral axis to display units
-                new_spec = (spectral_axis_conversion(data.spectral_axis.value,
-                                                     data.spectral_axis.unit,
-                                                     spectral_unit)
-                            * u.Unit(spectral_unit))
+                if data.spectral_axis.unit != spectral_unit:
+                    new_spec = (spectral_axis_conversion(data.spectral_axis.value,
+                                                         data.spectral_axis.unit,
+                                                         spectral_unit)
+                                * u.Unit(spectral_unit))
+                else:
+                    new_spec = data.spectral_axis
 
                 data = Spectrum(spectral_axis=new_spec,
                                 flux=new_y,
@@ -580,8 +608,8 @@ class ConfigHelper(HubListener):
         data = self.app.data_collection[data_label]
 
         if not cls:
-            if hasattr(data, '_native_data_cls'):
-                cls = data._native_data_cls
+            if data.meta.get('_native_data_cls', None) is not None:
+                cls = data.meta['_native_data_cls']
             # TODO: once everything goes through loaders, can we remove everything below?
             elif 'Trace' in data.meta:
                 cls = None

@@ -4,7 +4,10 @@ import numpy as np
 from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum
-from jdaviz import Specviz
+from ipywidgets.widgets import widget_serialization
+
+from jdaviz import Specviz, Specviz2d
+from jdaviz.core.config import get_configuration
 from jdaviz.app import Application
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
@@ -291,3 +294,61 @@ def test_all_plugins_have_description(cubeviz_helper, specviz_helper,
     for config_helper in config_helpers:
         for item in config_helper.plugins:
             assert config_helper.plugins[item]._obj.plugin_description != ''
+
+
+@pytest.mark.parametrize(('server_is_remote', 'remote_enable_importers'),
+                         [(None, None),
+                          (False, False),
+                          (True, False),
+                          (False, True),
+                          (True, True)])
+def test_remote_server_settings_config(server_is_remote, remote_enable_importers):
+    config = get_configuration('specviz2d')
+    if server_is_remote is not None:
+        config['settings']['server_is_remote'] = server_is_remote
+        config['settings']['remote_enable_importers'] = remote_enable_importers
+
+    specviz2d_app = Application(config)
+    specviz2d_helper = Specviz2d(specviz2d_app)
+    settings = specviz2d_helper.app.state.settings
+
+    if server_is_remote is None:
+        # Defaults
+        assert settings['server_is_remote'] is False
+        server_is_remote = False
+        assert settings['remote_enable_importers'] is True
+    else:
+        # Explicit settings
+        assert settings['server_is_remote'] == server_is_remote
+        assert settings['remote_enable_importers'] == remote_enable_importers
+
+    # Get the loader items and check their widget properties
+    loader_items = specviz2d_helper.app.state.loader_items
+
+    for loader_item in loader_items:
+        widget_model_id = loader_item['widget']
+        loader_widget = widget_serialization['from_json'](widget_model_id, None)
+
+        # Check that the server_is_remote traitlet is properly synced
+        assert hasattr(loader_widget, 'server_is_remote')
+        assert loader_widget.server_is_remote == server_is_remote
+
+
+@pytest.mark.parametrize('server_is_remote', [False, True])
+def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote):
+    settings = deconfigged_helper.app.state.settings
+    # Defaults
+    assert settings['server_is_remote'] is False
+    assert settings['remote_enable_importers'] is True
+    settings['server_is_remote'] = server_is_remote
+
+    # Get the loader items and check their widget properties
+    loader_items = deconfigged_helper.app.state.loader_items
+
+    for loader_item in loader_items:
+        widget_model_id = loader_item['widget']
+        loader_widget = widget_serialization['from_json'](widget_model_id, None)
+
+        # Check that the server_is_remote traitlet is properly synced
+        assert hasattr(loader_widget, 'server_is_remote')
+        assert loader_widget.server_is_remote == server_is_remote

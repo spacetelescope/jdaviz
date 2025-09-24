@@ -139,6 +139,68 @@ def test_zoom_center_radius_init(imviz_helper):
     assert imviz_helper.default_viewer._obj.state.zoom_radius > 0
 
 
+def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
+    data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
+    imviz_helper.load_data(data, data_label='my_data')
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # TODO: remove once dev-flag no longer required
+    imviz_helper.app.state.catalogs_in_dc = True
+
+    # Load the catalog as a source catalog
+    imviz_helper.load(source_catalog, viewer=[],
+                      format='Catalog', data_label='my_catalog')
+
+    iv = imviz_helper.viewers['imviz-0']
+    dm = iv.data_menu
+    po = imviz_helper.plugins['Plot Options']
+
+    assert dm.data_labels_visible == ['my_data[DATA]']
+
+    # BEGIN TEMPORARY MANUAL LINKS
+    from glue.core.component_link import ComponentLink
+
+    data1, data2 = imviz_helper.app.data_collection[0], imviz_helper.app.data_collection[2]
+
+    # print(f"data1({data1.label}).components = {data1.components}")
+    # print(f"data2({data2.label}).components = {data2.components}")
+
+    data1_ra = data1.components[3]
+    data1_dec = data1.components[2]
+
+    data2_ra = data2.components[1]
+    data2_dec = data2.components[2]
+
+    links = [
+        ComponentLink([data1_ra], data2_ra),
+        ComponentLink([data1_dec], data2_dec)
+    ]
+
+    for link in links:
+        imviz_helper.app.data_collection.add_link(link)
+
+    # END TEMPORARY MANUAL LINKS
+
+    assert imviz_helper.app.data_collection[2].label == 'my_catalog'
+    assert imviz_helper.app.data_collection[2].meta.get('_importer') == 'CatalogImporter'
+
+    # should be available to be added in the image viewer since we're linked by WCS
+    assert 'my_catalog' in dm._obj.dataset.choices
+    assert 'my_catalog' not in dm.data_labels_visible
+    dm.add_data('my_catalog')
+    assert 'my_catalog' not in dm._obj.dataset.choices
+    assert 'my_catalog' in dm.data_labels_visible
+
+    # should be available from plot options
+    assert 'my_catalog' in po.layer.choices
+
+    # changing to pixel linking should set the layer to hidden
+    # and remove from the plot options layer tabs
+    imviz_helper.plugins['Orientation'].align_by = 'Pixels'
+    assert 'my_catalog' not in dm.data_labels_visible
+    assert 'my_catalog' not in po.layer.choices
+
+
 class TestDeleteData(BaseImviz_WCS_NoWCS):
 
     def test_plot_options_after_destroy(self):

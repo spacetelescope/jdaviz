@@ -107,6 +107,10 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             self._set_default_data_label()
 
+    @staticmethod
+    def _get_supported_viewers():
+        return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
+
     @property
     def user_api(self):
         expose = ['parent', 'data_label_as_prefix', 'gwcs_to_fits_sip']
@@ -136,12 +140,6 @@ class ImageImporter(BaseImporterToDataCollection):
             glue_data.coords = _try_gwcs_to_fits_sip(glue_data.coords)
         return glue_data
 
-    @property
-    def default_viewer_reference(self):
-        # returns the registry name of the default viewer
-        # only used if `show_in_viewer=True` and no existing viewers can accept the data
-        return 'imviz-image-viewer'
-
     def _get_label_with_extension(self, prefix, ext=None, ver=None):
         full_ext = ",".join([str(e) for e in (ext, ver) if e is not None])
         return f"{prefix}[{full_ext}]" if len(full_ext) else prefix
@@ -153,7 +151,7 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             prefix = "Image"
 
-        if self.input_has_extensions:
+        if self.input_has_extensions and hasattr(self, 'extension'):
             if self.extension.selected_name is None:
                 return
             if len(self.extension.selected_name) == 1 and not self.data_label_as_prefix:
@@ -202,7 +200,7 @@ class ImageImporter(BaseImporterToDataCollection):
             data = [_roman_asdf_2d_to_glue_data(input, ext=ext)
                     for ext in self.extension.selected_name]
         # JWST ASDF-in-FITS
-        elif 'ASDF' in input:
+        elif isinstance(input, fits.HDUList) and 'ASDF' in input:
             data = [_jwst2data(hdu, input) for hdu in self.extension.selected_obj]
         # FITS
         else:
@@ -224,7 +222,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
         return data
 
-    def __call__(self, show_in_viewer=True):
+    def __call__(self):
 
         base_data_label = self.data_label_value
         # self.output is always a list of Data objects
@@ -286,7 +284,6 @@ class ImageImporter(BaseImporterToDataCollection):
 
             self.add_to_data_collection(output, data_label,
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
-                                        show_in_viewer=show_in_viewer,
                                         cls=CCDData)
 
 
@@ -342,7 +339,7 @@ def _validate_bunit(bunit, raise_error=False):
 
 def _ndarray_to_glue_data(arr):
     if arr.ndim != 2:
-        raise ValueError(f'Imviz cannot load this array with ndim={arr.ndim}')
+        raise ValueError(f'Cannot load as image with ndim={arr.ndim}')
 
     data = Data()
     component = Component.autotyped(arr)
@@ -352,7 +349,7 @@ def _ndarray_to_glue_data(arr):
 
 def _nddata_to_glue_data(ndd):
     if ndd.data.ndim != 2:
-        raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
+        raise ValueError(f'Cannot load as image with ndim={ndd.data.ndim}')
 
     returned_data = []
     for attrib in ('data', 'mask', 'uncertainty'):
@@ -405,7 +402,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
 
 def _jwst2data(hdu, hdulist, try_gwcs_to_fits_sip=False):
     comp_label = hdu.name.lower()
-    if comp_label == 'sci':
+    if comp_label.startswith("sci"):
         comp_label = 'data'
     data = Data()
     unit_attr = f'bunit_{comp_label}'
