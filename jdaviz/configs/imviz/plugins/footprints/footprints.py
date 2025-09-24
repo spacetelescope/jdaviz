@@ -171,8 +171,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
 
     is_pixel_linked = Bool(True).tag(sync=True)  # plugin disabled if linked by pixel (default)
 
-    skewer_mode_active = Bool(True).tag(sync=True)
-
     # OVERLAY LABEL
     overlay_mode = Unicode().tag(sync=True)
     overlay_edit_value = Unicode().tag(sync=True)
