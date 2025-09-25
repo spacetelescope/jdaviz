@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fixes cases where import data raises exception in attempting to set metadata. [#3797]
+
 Cubeviz
 ^^^^^^^
 
