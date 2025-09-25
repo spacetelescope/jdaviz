@@ -358,13 +358,6 @@ class BaseResolver(PluginTemplateMixin):
                 parsed_input = astropyTable.read(parsed_input)
             except Exception:  # nosec
                 return None
-        if isinstance(parsed_input, BytesIO):
-            # support loading in from file drop resolver
-            # TODO: iterate over possible formats?
-            try:
-                parsed_input = astropyTable.read(parsed_input, format='csv')
-            except Exception:  # nosec
-                return None
         if isinstance(parsed_input, astropyTable):
             return parsed_input
         return None
