@@ -373,6 +373,7 @@ class TestParseImage:
     def test_parse_jwst_niriss_grism(self, imviz_helper):
         imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
+        print(data.components)
         if STDATAMODELS_LT_402:
             comp = data.get_component('data')
         else:
