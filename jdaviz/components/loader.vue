@@ -11,7 +11,7 @@
           <slot/>
         </v-container>
 
-        <!-- products list selection -->
+        <!-- observation/file table -->
         <div v-if="parsed_input_is_query">
           <j-plugin-section-header>Query Results</j-plugin-section-header>
           <plugin-switch
@@ -23,10 +23,14 @@
             style="margin-bottom: 12px"
           ></plugin-switch>
 
-          <div v-if="treat_table_as_query">
+          <div v-if="treat_table_as_query && observation_table_populated">
+            <span class="table-title">Observations</span>
+            <span v-if="api_hints_enabled" class="api-hint">ldr.observation_table</span>
 
             <jupyter-widget v-if="treat_table_as_query" :widget="observation_table"></jupyter-widget>
-
+          </div>
+          <div v-if="treat_table_as_query && file_table_populated">
+            <span class="table-title">Files</span>
             <v-row>
               <v-expansion-panels popout>
                 <v-expansion-panel>
@@ -60,6 +64,7 @@
               </v-expansion-panels>
             </v-row>
 
+            <span v-if="api_hints_enabled" class="api-hint">ldr.file_table</span>
             <jupyter-widget v-if="treat_table_as_query" :widget="file_table"></jupyter-widget>
           </div>
 
@@ -128,7 +133,8 @@
 module.exports = {
   props: ['title', 'popout_button', 'parse_input_spinner',
           'parsed_input_is_query', 'treat_table_as_query',
-          'observation_table', 'file_table',
+          'observation_table', 'observation_table_populated',
+          'file_table', 'file_table_populated',
           'file_url_scheme', 'file_cache', 'file_timeout',
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',
@@ -136,3 +142,18 @@ module.exports = {
           'api_hints_enabled', 'valid_import_formats'],
 }
 </script>
+
+<style scoped>
+  .table-title {
+    margin-top: 24px;
+    margin-left: 20px;
+    margin-right: 20px;
+    display: block;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: gray;
+    font-weight: 500;
+  }
+</style>

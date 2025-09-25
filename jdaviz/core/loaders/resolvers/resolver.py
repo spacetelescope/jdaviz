@@ -1,6 +1,5 @@
 import os
 import warnings
-from io import BytesIO
 from contextlib import contextmanager
 from functools import cached_property
 from traitlets import Bool, Instance, List, Unicode, observe, default
@@ -218,7 +217,9 @@ class BaseResolver(PluginTemplateMixin):
     treat_table_as_query = Bool(True).tag(sync=True)
 
     observation_table = Instance(Table).tag(sync=True, **widget_serialization)
+    observation_table_populated = Bool(False).tag(sync=True)
     file_table = Instance(Table).tag(sync=True, **widget_serialization)
+    file_table_populated = Bool(False).tag(sync=True)
 
     # options to download selected item in products list
     file_url_scheme = Unicode("").tag(sync=True)
@@ -408,6 +409,8 @@ class BaseResolver(PluginTemplateMixin):
                 for row in file_table:
                     self.file_table.add_item(row)
                 self.parsed_input_is_query = True
+                self.observation_table_populated = False
+                self.file_table_populated = True
                 return
 
             observation_table = self._parsed_input_to_observation_table(parsed_input_table)
@@ -418,9 +421,13 @@ class BaseResolver(PluginTemplateMixin):
                 for row in observation_table:
                     self.observation_table.add_item(row)
                 self.parsed_input_is_query = True
+                self.observation_table_populated = True
+                self.file_table_populated = False
                 return
 
         self.parsed_input_is_query = False
+        self.observation_table_populated = False
+        self.file_table_populated = False
         self._update_format_items()
 
     @cached_property
