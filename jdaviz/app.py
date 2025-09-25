@@ -293,6 +293,10 @@ class ApplicationState(State):
 
     dev_loaders = CallbackProperty(
         False, docstring='Whether to enable developer mode for new loaders infrastructure')
+    # catalogs_in_dc PRs (include in changelog when removing the dev-flag):
+    # https://github.com/spacetelescope/jdaviz/pull/3761
+    # https://github.com/spacetelescope/jdaviz/pull/3777
+    # https://github.com/spacetelescope/jdaviz/pull/3778
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
@@ -2079,6 +2083,7 @@ class Application(VuetifyTemplate, HubListener):
                     result = find_viewer_item(stack_item.get('children'))
                     if result is not None:
                         return result
+            return None
 
         viewer_item = find_viewer_item(self.state.stack_items)
 
