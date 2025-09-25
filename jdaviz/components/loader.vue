@@ -12,41 +12,41 @@
         </v-container>
 
         <!-- products list selection -->
-        <div v-if="parsed_input_is_products_list">
-          <j-plugin-section-header>Products List</j-plugin-section-header>
+        <div v-if="parsed_input_is_file_list">
+          <j-plugin-section-header>File List</j-plugin-section-header>
           <plugin-switch
-            label="Treat Table as Products List"
-            :value.sync="treat_table_as_products_list"
-            api_hint="ldr.treat_table_as_products_list ="
+            label="Treat Table as File List"
+            :value.sync="treat_table_as_file_list"
+            api_hint="ldr.treat_table_as_file_list ="
             :api_hints_enabled="api_hints_enabled"
             style="margin-bottom: 12px"
           ></plugin-switch>
 
-          <div v-if="treat_table_as_products_list">
+          <div v-if="treat_table_as_file_list">
             <v-row>
               <v-expansion-panels popout>
                 <v-expansion-panel>
                   <v-expansion-panel-header v-slot="{ open }">
-                    <span style="padding: 6px">Product Download Options</span>
+                    <span style="padding: 6px">File Download Options</span>
                   </v-expansion-panel-header>
                   <v-expansion-panel-content class="plugin-expansion-panel-content">
                     <v-content>
-                      <v-row v-if="products_url_scheme !== 's3'">
+                      <v-row v-if="file_url_scheme !== 's3'">
                         <v-text-field
-                          v-model.number='products_timeout'
+                          v-model.number='file_timeout'
                           type="number"
                           style="padding: 0px 8px"
                           suffix="s"
-                          :label="api_hints_enabled ? 'ldr.products_timeout =' : 'Timeout (s)'"
+                          :label="api_hints_enabled ? 'ldr.file_timeout =' : 'Timeout (s)'"
                           :class="api_hints_enabled ? 'api-hint' : null"
                         ></v-text-field>
                       </v-row>
 
                       <plugin-switch
-                        v-if="products_url_scheme !== 's3'"
-                        :value.sync="products_cache"
+                        v-if="file_url_scheme !== 's3'"
+                        :value.sync="file_cache"
                         label="Cache File"
-                        api_hint="ldr.products_cache = "
+                        api_hint="ldr.file_cache = "
                         :api_hints_enabled="api_hints_enabled"
                         hint="Whether to attempt to read from the cache if this same URL has been previously fetched."
                       ></plugin-switch>
@@ -56,7 +56,7 @@
               </v-expansion-panels>
             </v-row>
 
-            <jupyter-widget v-if="treat_table_as_products_list" :widget="table_widget"></jupyter-widget>
+            <jupyter-widget v-if="treat_table_as_file_list" :widget="table_widget"></jupyter-widget>
           </div>
 
         <!-- format (parser/importer) selection and UI -->
@@ -123,8 +123,8 @@
 <script>
 module.exports = {
   props: ['title', 'popout_button', 'parse_input_spinner',
-          'parsed_input_is_products_list', 'treat_table_as_products_list',
-          'products_url_scheme', 'products_cache', 'products_timeout',
+          'parsed_input_is_file_list', 'treat_table_as_file_list',
+          'file_url_scheme', 'file_cache', 'file_timeout',
           'table_widget',
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',

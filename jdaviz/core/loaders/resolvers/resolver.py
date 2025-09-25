@@ -209,17 +209,17 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
     requires_api_support = False
 
     # whether the current output could be interpretted as a list of data products
-    parsed_input_is_products_list = Bool(False).tag(sync=True)
-    # if parsed_input_is_products_list is True, whether to treat it as such
+    parsed_input_is_file_list = Bool(False).tag(sync=True)
+    # if parsed_input_is_file_list is True, whether to treat it as such
     # or pass it on directly to the parsers/importers
-    treat_table_as_products_list = Bool(True).tag(sync=True)
+    treat_table_as_file_list = Bool(True).tag(sync=True)
 
     # options to download selected item in products list
-    products_url_scheme = Unicode("").tag(sync=True)
-    products_url = Unicode("").tag(sync=True)
-    products_cache = Bool(True).tag(sync=True)
-    products_local_path = Unicode("").tag(sync=True)
-    products_timeout = FloatHandleEmpty(10).tag(sync=True)
+    file_url_scheme = Unicode("").tag(sync=True)
+    file_url = Unicode("").tag(sync=True)
+    file_cache = Bool(True).tag(sync=True)
+    file_local_path = Unicode("").tag(sync=True)
+    file_timeout = FloatHandleEmpty(10).tag(sync=True)
 
     importer_widget = Unicode().tag(sync=True)
 
@@ -243,10 +243,10 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
         super().__init__(*args, **kwargs)
 
-        self.products_list.show_rowselect = True
-        self.products_list.item_key = "url"
-        self.products_list.multiselect = False
-        self.products_list._selected_rows_changed_callback = self._on_product_select_change
+        self.file_list.show_rowselect = True
+        self.file_list.item_key = "url"
+        self.file_list.multiselect = False
+        self.file_list._selected_rows_changed_callback = self._on_product_select_change
 
         # subclasses should call self._resolver_input_updated on any change
         # to user-inputs that might affect the available formats
@@ -323,7 +323,7 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
     def parsed_input(self):
         return self.parse_input()
 
-    def _parsed_input_to_products_list(self, parsed_input):
+    def _parsed_input_to_file_list(self, parsed_input):
         if (isinstance(parsed_input, str)
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
@@ -347,7 +347,7 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
                     return parsed_input
         return None
 
-    @observe('parsed_input_is_products_list', 'treat_table_as_products_list')
+    @observe('parsed_input_is_file_list', 'treat_table_as_file_list')
     @with_spinner('parse_input_spinner')
     def _resolver_input_updated(self, *args):
         if self._defer_resolver_input_updated:
@@ -355,15 +355,15 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         self._clear_cache('parsed_input', 'output')
 
         parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
-        products_list = self._parsed_input_to_products_list(parsed_input)
-        if products_list is not None:
-            self.products_list._qtable = None
+        file_list = self._parsed_input_to_file_list(parsed_input)
+        if file_list is not None:
+            self.file_list._qtable = None
 
-            for row in products_list:
-                self.products_list.add_item(row)
-            self.parsed_input_is_products_list = True
+            for row in file_list:
+                self.file_list.add_item(row)
+            self.parsed_input_is_file_list = True
         else:
-            self.parsed_input_is_products_list = False
+            self.parsed_input_is_file_list = False
             self._update_format_items()
 
     def _on_product_select_change(self, _=None):
@@ -379,29 +379,29 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         self._on_format_selected_changed()
 
     def get_selected_url(self):
-        if len(self.products_list.selected_rows) != 1:
+        if len(self.file_list.selected_rows) != 1:
             return None
-        url = self.products_list.selected_rows[0]['url']
+        url = self.file_list.selected_rows[0]['url']
         if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
             return 'https://mast.stsci.edu/search/jwst/api/v0.1/retrieve_product?product_name=' + url  # noqa
         return url
 
     @cached_property
     def output(self):
-        if self.parsed_input_is_products_list and self.treat_table_as_products_list:
+        if self.parsed_input_is_file_list and self.treat_table_as_file_list:
             url = self.get_selected_url().strip()
             if not url:
                 return None
             return download_uri_to_path(url,
-                                        cache=self.products_cache,
-                                        local_path=self.products_local_path,
-                                        timeout=self.products_timeout)
+                                        cache=self.file_cache,
+                                        local_path=self.file_local_path,
+                                        timeout=self.file_timeout)
         else:
             return self.parsed_input
 
     @property
-    def products_list(self):
-        # for convenience, provide products_list as an alias to table (products_list will
+    def file_list(self):
+        # for convenience, provide file_list as an alias to table (file_list will
         # be exposed to the userAPI)
         return self.table
 
