@@ -210,6 +210,8 @@ class BaseResolver(PluginTemplateMixin):
     default_input_cast = None
     requires_api_support = False
 
+    spinner = Unicode("").tag(sync=True)
+
     # whether the current output could be interpretted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
     # if parsed_input_is_query is True, whether to treat it as such
@@ -234,8 +236,6 @@ class BaseResolver(PluginTemplateMixin):
     # read-only: change via app.state.settings['server_is_remote']
     server_is_remote = Bool(False).tag(sync=True)
 
-    parse_input_spinner = Bool(False).tag(sync=True)
-    format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
     valid_import_formats = Unicode().tag(sync=True)
@@ -382,7 +382,7 @@ class BaseResolver(PluginTemplateMixin):
         return None
 
     @observe('parsed_input_is_query', 'treat_table_as_query')
-    @with_spinner('parse_input_spinner')
+    @with_spinner('spinner', 'parsing input...')
     def _resolver_input_updated(self, msg={}):
         if self._defer_resolver_input_updated:
             return
@@ -434,28 +434,36 @@ class BaseResolver(PluginTemplateMixin):
     def missions_query(self):
         return MastMissions()
 
+    @with_spinner('spinner', 'fetching product list...')
+    def _get_product_list(self, mission, dataset):
+        self.missions_query.mission = mission
+        return self.missions_query.get_product_list(dataset)
+
     def on_observation_select_changed(self, _=None):
-        self.missions_query.mission = 'jwst'  # TODO: set dynamically
+
         if len(self.observation_table.selected_rows) != 1:
             self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
                                                    sender=self, color="warning"))
             return
         dataset = self.observation_table.selected_rows[0]['Dataset']
-        results = self.missions_query.get_product_list(dataset)
+        # TODO: guess mission from table row
+        results = self._get_product_list('jwst', dataset)
         file_table = self._parsed_input_to_file_table(results)
         if file_table is not None:
             self.file_table._clear_table()
             for row in file_table:
                 self.file_table.add_item(row)
+            self.file_table_populated = True
         else:
             self.app.hub.broadcast(SnackbarMessage(f"No products found for {dataset}",
                                                    sender=self, color="error"))
+            self.file_table_populated = False
 
     def on_file_select_changed(self, _=None):
         self._clear_cache('output')
         self._update_format_items()
 
-    @with_spinner('format_items_spinner')
+    @with_spinner('spinner', 'searching for valid formats...')
     def _update_format_items(self):
         # NOTE: this will call self.output
         self.format._update_items()
@@ -471,16 +479,20 @@ class BaseResolver(PluginTemplateMixin):
             return 'https://mast.stsci.edu/search/jwst/api/v0.1/retrieve_product?product_name=' + url  # noqa
         return url
 
+    @with_spinner('spinner', 'downloading file...')
+    def _download_from_file_table(self):
+        url = self.get_selected_url().strip()
+        if not url:
+            return None
+        return download_uri_to_path(url,
+                                    cache=self.file_cache,
+                                    local_path=self.file_local_path,
+                                    timeout=self.file_timeout)
+
     @cached_property
     def output(self):
         if self.parsed_input_is_query and self.treat_table_as_query:
-            url = self.get_selected_url().strip()
-            if not url:
-                return None
-            return download_uri_to_path(url,
-                                        cache=self.file_cache,
-                                        local_path=self.file_local_path,
-                                        timeout=self.file_timeout)
+            return self._download_from_file_table()
         else:
             return self.parsed_input
 

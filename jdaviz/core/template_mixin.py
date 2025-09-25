@@ -491,22 +491,24 @@ def skip_if_not_relevant():
     return decorator
 
 
-def with_spinner(spinner_traitlet='spinner'):
+def with_spinner(spinner_traitlet='spinner', truthy=True):
     """
-    decorator on a plugin method to set a traitlet to True at the beginning
-    and False either on failure or successful completion.  This traitlet can
-    then be used in the UI to disable elements or display a spinner during
-    operation.  Each plugin gets a 'spinner' traitlet by default, but some plugins
+    decorator on a plugin method to set a traitlet to True (or the passed string)
+    at the beginning and False (or an empty string) either on failure or successful
+    completion.  This traitlet can then be used in the UI to disable elements or
+    display a spinner during operation.
+
+    Each plugin gets a 'spinner' traitlet by default, but some plugins
     may want different controls for different sections/actions within the plugin.
     """
     def decorator(meth):
         @wraps(meth)
         def wrapper(self, *args, **kwargs):
-            setattr(self, spinner_traitlet, True)
+            setattr(self, spinner_traitlet, truthy)
             try:
                 ret_ = meth(self, *args, **kwargs)
             finally:
-                setattr(self, spinner_traitlet, False)
+                setattr(self, spinner_traitlet, False if truthy is True else '')
             return ret_
         return wrapper
     return decorator
