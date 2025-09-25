@@ -5253,6 +5253,7 @@ class Table(PluginSubcomponent):
     selected_rows = List().tag(sync=True)  # List of selected rows
 
     show_if_empty = Bool(True).tag(sync=True)
+    enable_clear = Bool(True).tag(sync=True)
     clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
 
     def __init__(self, plugin, name='table', selected_rows_changed_callback=None,
@@ -5268,9 +5269,12 @@ class Table(PluginSubcomponent):
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, ('clear_table', 'export_table',
-                                     'select_rows', 'select_all',
-                                     'select_none'))
+        expose = ('export_table',
+                  'select_rows', 'select_all',
+                  'select_none')
+        if self.enable_clear:
+            expose += ('clear_table',)
+        return UserApiWrapper(self, expose)
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -5377,6 +5381,8 @@ class Table(PluginSubcomponent):
         return len(self.items)
 
     def _clear_table(self):
+        if not self.enable_clear:
+            raise ValueError("Table clearing is disabled.")
         self.items = []
         self.selected_rows = []
         self.selected_indices = []

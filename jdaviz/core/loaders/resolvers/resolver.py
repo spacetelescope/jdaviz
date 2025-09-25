@@ -247,6 +247,7 @@ class BaseResolver(PluginTemplateMixin):
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
         super().__init__(*args, **kwargs)
 
+        self.file_table.enable_clear = False
         self.file_table.show_rowselect = True
         self.file_table.item_key = "url"
         self.file_table.multiselect = False
