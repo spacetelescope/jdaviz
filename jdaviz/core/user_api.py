@@ -216,7 +216,7 @@ class LoaderUserApi(UserApiWrapper):
         expose = list(set(list(expose) + ['format', 'target', 'importer', 'show',
                                           'open_in_tray', 'close_in_tray',
                                           'treat_table_as_query',
-                                          'file_table',
+                                          'observation_table', 'file_table',
                                           'file_cache',
                                           'file_timeout',
                                           'file_local_path']))

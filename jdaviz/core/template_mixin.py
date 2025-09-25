@@ -5381,8 +5381,6 @@ class Table(PluginSubcomponent):
         return len(self.items)
 
     def _clear_table(self):
-        if not self.enable_clear:
-            raise ValueError("Table clearing is disabled.")
         self.items = []
         self.selected_rows = []
         self.selected_indices = []
@@ -5393,6 +5391,8 @@ class Table(PluginSubcomponent):
         """
         Clear all entries/markers from the current table.
         """
+        if not self.enable_clear:
+            raise ValueError("Table clearing is disabled.")
         self._clear_table()
         if self._clear_callback is not None:
             self._clear_callback()

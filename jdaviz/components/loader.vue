@@ -23,6 +23,9 @@
           ></plugin-switch>
 
           <div v-if="treat_table_as_query">
+
+            <jupyter-widget v-if="treat_table_as_query" :widget="observation_table"></jupyter-widget>
+
             <v-row>
               <v-expansion-panels popout>
                 <v-expansion-panel>
@@ -124,8 +127,8 @@
 module.exports = {
   props: ['title', 'popout_button', 'parse_input_spinner',
           'parsed_input_is_query', 'treat_table_as_query',
+          'observation_table', 'file_table',
           'file_url_scheme', 'file_cache', 'file_timeout',
-          'file_table',
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',
           'importer_widget', 'server_is_remote',

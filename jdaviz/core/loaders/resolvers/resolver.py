@@ -7,8 +7,10 @@ from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 from astropy.table import Table as astropyTable
+from astroquery.mast import MastMissions
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         Table,
@@ -247,11 +249,19 @@ class BaseResolver(PluginTemplateMixin):
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
         super().__init__(*args, **kwargs)
 
+        self.observation_table.enable_clear = False
+        self.observation_table.show_if_empty = False
+        self.observation_table.show_rowselect = True
+        self.observation_table.item_key = "Dataset"
+        self.observation_table.multiselect = False
+        self.observation_table._selected_rows_changed_callback = self.on_observation_select_changed
+
         self.file_table.enable_clear = False
+        self.file_table.show_if_empty = False
         self.file_table.show_rowselect = True
         self.file_table.item_key = "url"
         self.file_table.multiselect = False
-        self.file_table._selected_rows_changed_callback = self._on_product_select_change
+        self.file_table._selected_rows_changed_callback = self.on_file_select_changed
 
         # subclasses should call self._resolver_input_updated on any change
         # to user-inputs that might affect the available formats
@@ -340,7 +350,7 @@ class BaseResolver(PluginTemplateMixin):
     def parsed_input(self):
         return self.parse_input()
 
-    def _parsed_input_to_file_list(self, parsed_input):
+    def _parsed_input_to_table(self, parsed_input):
         if (isinstance(parsed_input, str)
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
@@ -356,12 +366,25 @@ class BaseResolver(PluginTemplateMixin):
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, astropyTable):
-            if 'url' in parsed_input.colnames:
-                return parsed_input
-            for map_to_url in ('URL', 'uri', 'URI', 'download', 'Filename'):
-                if map_to_url in parsed_input.colnames:
-                    parsed_input.rename_column(map_to_url, 'url')
-                    return parsed_input
+            return parsed_input
+        return None
+
+    def _parsed_input_to_observation_table(self, parsed_input_table):
+        if 'Dataset' in parsed_input_table.colnames:
+            return parsed_input_table
+        for map_to_ds in ('fileSetName', 'sci_data_set_name'):
+            if map_to_ds in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_ds, 'Dataset')
+                return parsed_input_table
+        return None
+
+    def _parsed_input_to_file_table(self, parsed_input_table):
+        if 'url' in parsed_input_table.colnames:
+            return parsed_input_table
+        for map_to_url in ('URL', 'uri', 'URI', 'download', 'Filename'):
+            if map_to_url in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_url, 'url')
+                return parsed_input_table
         return None
 
     @observe('parsed_input_is_query', 'treat_table_as_query')
@@ -372,18 +395,58 @@ class BaseResolver(PluginTemplateMixin):
         self._clear_cache('parsed_input', 'output')
 
         parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
-        file_list = self._parsed_input_to_file_list(parsed_input)
-        if file_list is not None:
-            self.file_table._qtable = None
 
-            for row in file_list:
+        # first attempt to parse the input as a table
+        parsed_input_table = self._parsed_input_to_table(parsed_input)
+        # if the input could be parsed as a table, try to interpret it as
+        # either an observation table or file table.  parsed_input_table
+        # will be None if it could not be parsed as a table.
+        if parsed_input_table is not None:
+            file_table = self._parsed_input_to_file_table(parsed_input_table)
+            if file_table is not None:
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+
+                for row in file_table:
+                    self.file_table.add_item(row)
+                self.parsed_input_is_query = True
+                return
+
+            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
+            if observation_table is not None:
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+
+                for row in observation_table:
+                    self.observation_table.add_item(row)
+                self.parsed_input_is_query = True
+                return
+
+        self.parsed_input_is_query = False
+        self._update_format_items()
+
+    @cached_property
+    def missions_query(self):
+        return MastMissions()
+
+    def on_observation_select_changed(self, _=None):
+        self.missions_query.mission = 'jwst'  # TODO: set dynamically
+        if len(self.observation_table.selected_rows) != 1:
+            self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
+                                                   sender=self, color="warning"))
+            return
+        dataset = self.observation_table.selected_rows[0]['Dataset']
+        results = self.missions_query.get_product_list(dataset)
+        file_table = self._parsed_input_to_file_table(results)
+        if file_table is not None:
+            self.file_table._clear_table()
+            for row in file_table:
                 self.file_table.add_item(row)
-            self.parsed_input_is_query = True
         else:
-            self.parsed_input_is_query = False
-            self._update_format_items()
+            self.app.hub.broadcast(SnackbarMessage(f"No products found for {dataset}",
+                                                   sender=self, color="error"))
 
-    def _on_product_select_change(self, _=None):
+    def on_file_select_changed(self, _=None):
         self._clear_cache('output')
         self._update_format_items()
 
