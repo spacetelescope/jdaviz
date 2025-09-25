@@ -120,7 +120,6 @@ class BaseImporterToDataCollection(BaseImporter):
 
     def __init__(self, app, resolver, parser, input, **kwargs):
         super().__init__(app, resolver, parser, input, **kwargs)
-        self.data_label_default = self._registry_label
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',

@@ -260,6 +260,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
     def output(self):
         sp = self.spectrum
 
+        print('in spectrum3d spectral axis unit: ', sp.spectral_axis.unit, sp.wcs.wcs.cunit)
+
         # convert flux and uncertainty to per-pix2 if input is not a surface brightness
         if not check_if_unit_is_per_solid_angle(sp.flux.unit):
             target_flux_unit = sp.flux.unit / PIX2
@@ -276,6 +278,9 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
 
         if target_flux_unit == sp.flux.unit:
             return sp
+
+        sp.meta['_orig_spec'] = sp  # Need this for later
+        sp.meta['_orig_spatial_wcs'] = self._get_celestial_wcs(sp.wcs)
 
         return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
 
