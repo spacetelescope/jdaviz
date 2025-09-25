@@ -57,7 +57,7 @@
       ></v-data-table>
     </v-row>
 
-    <v-row v-if="clear_table && items.length" justify="end">
+    <v-row v-if="enable_clear && clear_table && items.length" justify="end">
       <plugin-action-button
         :results_isolated_to_plugin="true"
         @click="clear_table"

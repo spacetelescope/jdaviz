@@ -3,14 +3,15 @@ import warnings
 from io import BytesIO
 from contextlib import contextmanager
 from functools import cached_property
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Bool, Instance, List, Unicode, observe, default
+from ipywidgets import widget_serialization
 
-from astropy.table import Table
+from astropy.table import Table as astropyTable
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
-                                        TableMixin,
+                                        Table,
                                         with_spinner)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
@@ -202,17 +203,20 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, TableMixin):
+class BaseResolver(PluginTemplateMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
     requires_api_support = False
 
     # whether the current output could be interpretted as a list of data products
-    parsed_input_is_file_list = Bool(False).tag(sync=True)
-    # if parsed_input_is_file_list is True, whether to treat it as such
+    parsed_input_is_query = Bool(False).tag(sync=True)
+    # if parsed_input_is_query is True, whether to treat it as such
     # or pass it on directly to the parsers/importers
-    treat_table_as_file_list = Bool(True).tag(sync=True)
+    treat_table_as_query = Bool(True).tag(sync=True)
+
+    observation_table = Instance(Table).tag(sync=True, **widget_serialization)
+    file_table = Instance(Table).tag(sync=True, **widget_serialization)
 
     # options to download selected item in products list
     file_url_scheme = Unicode("").tag(sync=True)
@@ -243,10 +247,10 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
         super().__init__(*args, **kwargs)
 
-        self.file_list.show_rowselect = True
-        self.file_list.item_key = "url"
-        self.file_list.multiselect = False
-        self.file_list._selected_rows_changed_callback = self._on_product_select_change
+        self.file_table.show_rowselect = True
+        self.file_table.item_key = "url"
+        self.file_table.multiselect = False
+        self.file_table._selected_rows_changed_callback = self._on_product_select_change
 
         # subclasses should call self._resolver_input_updated on any change
         # to user-inputs that might affect the available formats
@@ -265,6 +269,18 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         # Set up bidirectional synchronization
         # Listen for changes to app.state.settings and update traitlet
         self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    @default('observation_table')
+    def _default_observation_table(self):
+        return Table(self,
+                     name='observation_table',
+                     title='Observations')
+
+    @default('file_table')
+    def _default_file_table(self):
+        return Table(self,
+                     name='file_table',
+                     title='Files')
 
     def _on_app_settings_changed(self, new_settings_dict):
         """
@@ -328,17 +344,17 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
                 and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
             # try to read into a table which could be a products list
             try:
-                parsed_input = Table.read(parsed_input)
+                parsed_input = astropyTable.read(parsed_input)
             except Exception:  # nosec
                 return None
         if isinstance(parsed_input, BytesIO):
             # support loading in from file drop resolver
             # TODO: iterate over possible formats?
             try:
-                parsed_input = Table.read(parsed_input, format='csv')
+                parsed_input = astropyTable.read(parsed_input, format='csv')
             except Exception:  # nosec
                 return None
-        if isinstance(parsed_input, Table):
+        if isinstance(parsed_input, astropyTable):
             if 'url' in parsed_input.colnames:
                 return parsed_input
             for map_to_url in ('URL', 'uri', 'URI', 'download', 'Filename'):
@@ -347,7 +363,7 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
                     return parsed_input
         return None
 
-    @observe('parsed_input_is_file_list', 'treat_table_as_file_list')
+    @observe('parsed_input_is_query', 'treat_table_as_query')
     @with_spinner('parse_input_spinner')
     def _resolver_input_updated(self, *args):
         if self._defer_resolver_input_updated:
@@ -357,13 +373,13 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
         file_list = self._parsed_input_to_file_list(parsed_input)
         if file_list is not None:
-            self.file_list._qtable = None
+            self.file_table._qtable = None
 
             for row in file_list:
-                self.file_list.add_item(row)
-            self.parsed_input_is_file_list = True
+                self.file_table.add_item(row)
+            self.parsed_input_is_query = True
         else:
-            self.parsed_input_is_file_list = False
+            self.parsed_input_is_query = False
             self._update_format_items()
 
     def _on_product_select_change(self, _=None):
@@ -379,16 +395,16 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
         self._on_format_selected_changed()
 
     def get_selected_url(self):
-        if len(self.file_list.selected_rows) != 1:
+        if len(self.file_table.selected_rows) != 1:
             return None
-        url = self.file_list.selected_rows[0]['url']
+        url = self.file_table.selected_rows[0]['url']
         if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
             return 'https://mast.stsci.edu/search/jwst/api/v0.1/retrieve_product?product_name=' + url  # noqa
         return url
 
     @cached_property
     def output(self):
-        if self.parsed_input_is_file_list and self.treat_table_as_file_list:
+        if self.parsed_input_is_query and self.treat_table_as_query:
             url = self.get_selected_url().strip()
             if not url:
                 return None
@@ -398,12 +414,6 @@ class BaseResolver(PluginTemplateMixin, TableMixin):
                                         timeout=self.file_timeout)
         else:
             return self.parsed_input
-
-    @property
-    def file_list(self):
-        # for convenience, provide file_list as an alias to table (file_list will
-        # be exposed to the userAPI)
-        return self.table
 
     @property
     def user_api(self):

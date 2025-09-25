@@ -12,17 +12,17 @@
         </v-container>
 
         <!-- products list selection -->
-        <div v-if="parsed_input_is_file_list">
-          <j-plugin-section-header>File List</j-plugin-section-header>
+        <div v-if="parsed_input_is_query">
+          <j-plugin-section-header>Query Results</j-plugin-section-header>
           <plugin-switch
-            label="Treat Table as File List"
-            :value.sync="treat_table_as_file_list"
-            api_hint="ldr.treat_table_as_file_list ="
+            label="Treat Table as Query"
+            :value.sync="treat_table_as_query"
+            api_hint="ldr.treat_table_as_query ="
             :api_hints_enabled="api_hints_enabled"
             style="margin-bottom: 12px"
           ></plugin-switch>
 
-          <div v-if="treat_table_as_file_list">
+          <div v-if="treat_table_as_query">
             <v-row>
               <v-expansion-panels popout>
                 <v-expansion-panel>
@@ -56,7 +56,7 @@
               </v-expansion-panels>
             </v-row>
 
-            <jupyter-widget v-if="treat_table_as_file_list" :widget="table_widget"></jupyter-widget>
+            <jupyter-widget v-if="treat_table_as_query" :widget="file_table"></jupyter-widget>
           </div>
 
         <!-- format (parser/importer) selection and UI -->
@@ -123,9 +123,9 @@
 <script>
 module.exports = {
   props: ['title', 'popout_button', 'parse_input_spinner',
-          'parsed_input_is_file_list', 'treat_table_as_file_list',
+          'parsed_input_is_query', 'treat_table_as_query',
           'file_url_scheme', 'file_cache', 'file_timeout',
-          'table_widget',
+          'file_table',
           'target_items', 'target_selected',
           'format_items_spinner', 'format_items', 'format_selected',
           'importer_widget', 'server_is_remote',
