@@ -389,10 +389,15 @@ class BaseResolver(PluginTemplateMixin):
 
     @observe('parsed_input_is_query', 'treat_table_as_query')
     @with_spinner('parse_input_spinner')
-    def _resolver_input_updated(self, *args):
+    def _resolver_input_updated(self, msg={}):
         if self._defer_resolver_input_updated:
             return
-        self._clear_cache('parsed_input', 'output')
+        if msg.get('name') == 'treat_table_as_query':
+            # the input itself has remain unchanged, but how that
+            # is mapped to output has
+            self._clear_cache('output')
+        else:
+            self._clear_cache('parsed_input', 'output')
 
         parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
 

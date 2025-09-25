@@ -17,6 +17,7 @@
           <plugin-switch
             label="Treat Table as Query"
             :value.sync="treat_table_as_query"
+            @update:value="$emit('update:treat_table_as_query', $event)"
             api_hint="ldr.treat_table_as_query ="
             :api_hints_enabled="api_hints_enabled"
             style="margin-bottom: 12px"
