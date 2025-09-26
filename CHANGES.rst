@@ -1,4 +1,4 @@
-4.2.2 (unreleased)
+4.4.2 (unreleased)
 ==================
 
 Bug Fixes
