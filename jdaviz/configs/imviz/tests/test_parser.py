@@ -372,7 +372,8 @@ class TestParseImage:
     def test_parse_jwst_niriss_grism(self, imviz_helper):
         imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
-        for label in ('data', 'SCI,1'):
+        print(data.components)
+        for label in ('SCI,1', 'data'):
             if label in data.components:
                 comp = data.get_component(label)
                 break
