@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Change parallelization framework for better performance and flexibility. [#3806]
+
 Cubeviz
 ^^^^^^^
 
