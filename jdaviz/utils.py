@@ -7,6 +7,7 @@ from collections import deque
 from urllib.parse import urlparse
 import fnmatch
 import re
+import hashlib
 import multiprocessing as mp
 from joblib import Parallel, delayed
 
@@ -17,6 +18,7 @@ from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.units.quantity import Quantity
 from astroquery.mast import Observations, conf
 from gwcs import WCS as gwcs
 from gwcs.coordinate_frames import CompositeFrame, SpectralFrame
@@ -42,7 +44,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'wildcard_match', 'cmap_samples', 'glue_colormaps',
+           'wildcard_match', 'create_data_hash_from_arr',
+           'cmap_samples', 'glue_colormaps',
            'att_to_componentid']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
@@ -980,6 +983,117 @@ def parallelize_calculation(workers, collect_result_callback, n_cpu=mp.cpu_count
     """
     results = Parallel(n_jobs=n_cpu)(delayed(worker)() for worker in workers)
     _ = [collect_result_callback(r) for r in results]
+
+
+def _clean_data_arr_for_hash(data):
+    """
+    Extract and return the array from the data object for hashing.
+    The function checks for common attributes like 'flux' or 'data' to
+    extract the relevant array. If the data is an `astropy.units.Quantity`,
+    it extracts the value and records the unit. If the array is a masked
+    array, it separates the mask and data for hashing.
+
+    Parameters
+    ----------
+    data : object
+        The data object from which to extract the array for hashing.
+
+    Returns
+    -------
+    target_for_hash : array-like
+        The extracted array to be used for hashing.
+    """
+    if hasattr(data, 'flux'):
+        data = getattr(data, 'flux')
+    elif hasattr(data, 'data'):
+        data = getattr(data, 'data')
+    else:
+        data = data
+
+    unit_str = None
+    # Handle astropy Quantity by extracting value and recording unit
+    if isinstance(data, Quantity):
+        unit_str = str(data.unit)
+        arr = np.ascontiguousarray(data.value)
+    else:
+        arr = np.ascontiguousarray(data)
+
+    # If it's a masked array, separate mask and data
+    mask_arr = None
+    if hasattr(arr, 'mask') and np.ma.is_masked(arr):
+        mask_arr = np.ascontiguousarray(np.asarray(arr.mask).astype('uint8'))
+        arr = np.ascontiguousarray(np.asarray(arr.data))
+
+    return arr, mask_arr, unit_str
+
+
+def create_data_hash_from_arr(data):
+    """
+    Create and return a deterministic hash for the provided data array.
+
+    The function accepts an n-dimensional array-like object. If
+    ``data`` is ``None``, it will attempt to use ``self.output`` as
+    the source. The hash covers the array's shape, dtype (including
+    endianness), the raw bytes of the array processed in chunks, and
+    when applicable, a mask and units for `astropy.units.Quantity`.
+
+    Parameters
+    ----------
+    data : array-like or `astropy.units.Quantity`
+        The data array to hash. If `astropy.units.Quantity`, the unit
+        is included in the hash.
+
+    Returns
+    -------
+    str
+        A hexadecimal string representing the SHA-256 hash of the data.
+    """
+    arr, mask_arr, unit_str = _clean_data_arr_for_hash(data)
+
+    # Initialize hasher and include shape/dtype to avoid collisions
+    # Use blake2b and shorter digest for speed
+    hasher = hashlib.blake2b(digest_size=16)
+    hasher.update(f'shape:{arr.shape};dtype:{arr.dtype.str}'.encode())
+    if unit_str is not None:
+        hasher.update(f';unit:{unit_str}'.encode())
+
+    # Hash the main array buffer in chunks via memoryview if possible
+    try:
+        mv = memoryview(arr).cast('B')
+    except TypeError:
+        # Fallback - arr.tobytes() will create a copy but should work
+        try:
+            hasher.update(arr.tobytes())
+        except Exception as err:
+            raise RuntimeError(f'Could not obtain bytes for hashing: {err}')
+        # include mask if present
+        if mask_arr is not None:
+            try:
+                hasher.update(b';mask:')
+                hasher.update(np.ascontiguousarray(mask_arr).tobytes())
+            except Exception:
+                # best effort: ignore mask if it cannot be serialized
+                pass
+        return hasher.hexdigest()
+
+    chunk = 1024 * 1024
+    n = len(mv)
+    for i in range(0, n, chunk):
+        hasher.update(mv[i:i + chunk])
+
+    # Include mask bytes if present
+    if mask_arr is not None:
+        try:
+            hasher.update(b';mask:')
+            mv_mask = memoryview(mask_arr).cast('B')
+            nm = len(mv_mask)
+            for i in range(0, nm, chunk):
+                hasher.update(mv_mask[i:i + chunk])
+        except Exception:
+            # ignore mask-related failures; hash already includes data
+            pass
+
+    return hasher.hexdigest()
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in

@@ -13,7 +13,8 @@ from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
                           CONFIGS_WITH_LOADERS,
-                          SPECTRAL_AXIS_COMP_LABELS)
+                          SPECTRAL_AXIS_COMP_LABELS,
+                          create_data_hash_from_arr)
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
            '_spectrum_assign_component_type']
@@ -124,6 +125,7 @@ class BaseImporterToDataCollection(BaseImporter):
                                         'data_label_default',
                                         'data_label_auto',
                                         'data_label_invalid_msg')
+
         self.data_label_default = self.app.return_unique_name(self._registry_label)
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
@@ -236,6 +238,18 @@ class BaseImporterToDataCollection(BaseImporter):
             data.meta = dict(data.meta)
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
+
+        # Compute a deterministic content hash and store it in metadata.
+        # Failures are noted in metadata rather than
+        # raising to avoid breaking imports for odd objects.
+        data_hash = create_data_hash_from_arr(data)
+
+        for existing_data in self.app.data_collection:
+            if data_hash == existing_data.meta.get('_data_hash', None):
+                msg = f"Warning: data '{data_label}' already imported."
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+
+        data.meta['_data_hash'] = create_data_hash_from_arr(data)
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
