@@ -254,7 +254,7 @@ class BaseResolver(PluginTemplateMixin):
         self.observation_table.show_if_empty = False
         self.observation_table.show_rowselect = True
         self.observation_table.item_key = "Dataset"
-        self.observation_table.multiselect = False
+        self.observation_table.multiselect = True
         self.observation_table._selected_rows_changed_callback = self.on_observation_select_changed
 
         self.file_table.enable_clear = False
@@ -441,13 +441,13 @@ class BaseResolver(PluginTemplateMixin):
 
     def on_observation_select_changed(self, _=None):
 
-        if len(self.observation_table.selected_rows) != 1:
+        if len(self.observation_table.selected_rows) == 0:
             self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
                                                    sender=self, color="warning"))
             return
-        dataset = self.observation_table.selected_rows[0]['Dataset']
+        datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
         # TODO: guess mission from table row
-        results = self._get_product_list('jwst', dataset)
+        results = self._get_product_list('jwst', datasets)
         file_table = self._parsed_input_to_file_table(results)
         if file_table is not None:
             self.file_table._clear_table()
@@ -455,7 +455,7 @@ class BaseResolver(PluginTemplateMixin):
                 self.file_table.add_item(row)
             self.file_table_populated = True
         else:
-            self.app.hub.broadcast(SnackbarMessage(f"No products found for {dataset}",
+            self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
                                                    sender=self, color="error"))
             self.file_table_populated = False
 
