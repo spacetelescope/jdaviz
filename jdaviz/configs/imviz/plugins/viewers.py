@@ -29,7 +29,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias',
-                        'jdaviz:selectcatalog', 'jdaviz:selectfootprint'],
+                        'jdaviz:selectcatalog', 'jdaviz:selectfootprint', 'jdaviz:skewerselect'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
                 ]
 
