@@ -373,7 +373,7 @@ class TestParseImage:
         imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
         for label in ('SCI,1', 'data'):
-            if label in data.components:
+            if label in data.component_ids():
                 comp = data.get_component(label)
                 break
         expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_2))[0] + '[SCI,1]'
