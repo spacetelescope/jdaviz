@@ -439,6 +439,15 @@ class BaseResolver(PluginTemplateMixin):
         self.missions_query.mission = mission
         return self.missions_query.get_product_list(dataset)
 
+    @staticmethod
+    def guess_mission(dataset):
+        if dataset.startswith('jw'):
+            return 'jwst'
+        elif dataset.startswith('r'):
+            return 'roman'
+        else:
+            return 'hst'
+
     def on_observation_select_changed(self, _=None):
 
         if len(self.observation_table.selected_rows) == 0:
@@ -446,8 +455,7 @@ class BaseResolver(PluginTemplateMixin):
                                                    sender=self, color="warning"))
             return
         datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
-        # TODO: guess mission from table row
-        results = self._get_product_list('jwst', datasets)
+        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
         file_table = self._parsed_input_to_file_table(results)
         if file_table is not None:
             self.file_table._clear_table()
@@ -476,7 +484,7 @@ class BaseResolver(PluginTemplateMixin):
             return None
         url = self.file_table.selected_rows[0]['url']
         if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
-            return 'https://mast.stsci.edu/search/jwst/api/v0.1/retrieve_product?product_name=' + url  # noqa
+            return f'https://mast.stsci.edu/search/{self.guess_mission(url)}/api/v0.1/retrieve_product?product_name={url}'  # noqa
         return url
 
     @with_spinner('spinner', 'downloading file...')
