@@ -262,15 +262,12 @@ def test_fitting_backend(n_cpu, unc):
 
 # For coverage of serial vs multiprocessing and unc
 @pytest.mark.parametrize(
-    ('n_cpu', 'unc', 'parallel_framework'), [
-        (1, "zeros", None),
-        (1, None, None),
-        (None, "zeros", None),  # Should use multiprocessing by default
-        (None, None, None),  # Should be the same as specifying 'multiprocessing' below
-        (None, None, 'multiprocessing'),
-        (None, None, 'futures'),
-        (None, None, 'joblib')])
-def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path, parallel_framework):
+    ('n_cpu', 'unc'), [
+        (1, "zeros"),
+        (1, None),
+        (None, "zeros"),
+        (None, None)])
+def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
     np.random.seed(42)
 
     SIGMA = 0.1  # noise in data
@@ -329,7 +326,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path, parallel_fra
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="The fit may be unsuccessful*")
         fitted_parameters, fitted_spectrum = fb.fit_model_to_spectrum(
-            spectrum, model_list, expression, n_cpu=n_cpu, parallel_framework=parallel_framework)
+            spectrum, model_list, expression, n_cpu=n_cpu)
 
     # Check that parameter results are formatted as expected.
     assert isinstance(fitted_parameters, list)

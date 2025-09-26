@@ -68,11 +68,8 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
     # Initial guess for the fit.
     initial_model = _build_model(component_list, expression)
 
-    # Only used for 3D model fitting
-    parallel_framework = kwargs.pop('parallel_framework', None)
     if len(spectrum.shape) > 1:
-        return _fit_3D(initial_model, spectrum, fitter=fitter, window=window, n_cpu=n_cpu,
-                       parallel_framework=parallel_framework, **kwargs)
+        return _fit_3D(initial_model, spectrum, fitter=fitter, window=window, n_cpu=n_cpu, **kwargs)
     else:
         return _fit_1D(initial_model, spectrum, run_fitter, fitter=fitter, window=window, **kwargs)
 
@@ -188,8 +185,7 @@ def _fit_3D(initial_model, spectrum, fitter, window=None, n_cpu=None, **kwargs):
     # Allow selecting a futures-based streaming backend via
     # the `use_futures` kwarg. This preserves callback-like
     # behavior by processing results as each worker finishes.
-    parallel_framework = kwargs.pop('parallel_framework', '')
-    if parallel_framework or n_cpu > 1:
+    if n_cpu > 1:
         # Build workers (one per chunk) same as the Pool chunking
         workers = (
             SpaxelWorker(spectrum.flux,
@@ -203,22 +199,10 @@ def _fit_3D(initial_model, spectrum, fitter, window=None, n_cpu=None, **kwargs):
                          **kwargs)
             for spx in np.array_split(spaxels, n_cpu))
 
-        if parallel_framework == 'futures':
-            parallelize_calculation(workers, collect_result, framework='futures', n_cpu=n_cpu)
-
-        elif parallel_framework == 'joblib':
-            parallelize_calculation(workers, collect_result, framework='joblib', n_cpu=n_cpu)
-
-        elif parallel_framework and parallel_framework != 'multiprocessing':
-            raise ValueError(f"Invalid parallel_framework '{parallel_framework}'")
-
-        else:
-            # Run multiprocessor pool to fit each spaxel and
-            # compute model values on that same spaxel.
-            parallelize_calculation(workers, collect_result, n_cpu=n_cpu)
+        parallelize_calculation(workers, collect_result, n_cpu=n_cpu)
 
     # This route is only for dev debugging because it is very slow
-    # but exceptions will not get swallowed up by multiprocessing.
+    # but exceptions will not get swallowed up by joblib.
     else:  # pragma: no cover
         worker = SpaxelWorker(spectrum.flux,
                               spectrum.spectral_axis,
