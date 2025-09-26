@@ -1,3 +1,5 @@
+from numbers import Number
+
 from jdaviz.core.events import SliceSelectSliceMessage, NewViewerMessage
 from jdaviz.core.helpers import CubeConfigHelper
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
@@ -64,7 +66,7 @@ class Rampviz(CubeConfigHelper):
             The nearest group will be selected if "snap to slice" is enabled
             in the slice plugin.
         """
-        if not isinstance(group_index, (int, float)):
+        if not isinstance(group_index, Number):
             raise TypeError("group_index must be convertible to an integer")
         if group_index < 0:
             raise ValueError("group_index must be positive")
