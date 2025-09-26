@@ -1,4 +1,4 @@
-4.4.1 (unreleased)
+4.4.1 (2025-09-26)
 ==================
 
 Bug Fixes
@@ -10,15 +10,6 @@ Cubeviz
 ^^^^^^^
 
 - Speed up loading of large cubes into cubeviz. [#3791]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
