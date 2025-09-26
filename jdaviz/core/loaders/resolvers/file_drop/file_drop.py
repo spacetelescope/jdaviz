@@ -62,6 +62,7 @@ class FileDropResolver(BaseResolver):
         self.nfiles = len(file_infos)
         self._file_info = file_infos[0]
         self._resolver_input_updated()
+        self._update_format_items()
         self.progress = 100
 
     def parse_input(self):
