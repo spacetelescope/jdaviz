@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
-from jdaviz.configs.default.plugins.virtual_observatory.vo_plugin import vo_plugin_label
 
 
 class fake_siaresult:
@@ -37,7 +36,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
 
         # Check default viewer is "Manual"
-        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
+        vo_plugin = self.imviz.loaders["virtual observatory"]._obj
         assert vo_plugin.viewer.selected == "Manual"
         assert vo_plugin.source == ""
 
@@ -64,72 +63,6 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         np.testing.assert_allclose(
             float(dec_str), self._data_center_coords["has_wcs_2[SCI,1]"]["dec"]
         )
-
-    def test_populate_table_default_headers(self):
-        """
-        Tests populating the results table with a mocked SIARsult
-        and verifies the default headers populate the correct fields
-        """
-        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
-        fake_result = fake_siaresult(
-            {
-                "title": "Fake Title",
-                "instr": "Fake Instrument",
-                "dateobs": "Fake Dateobs",
-            }
-        )
-        vo_plugin._populate_table([fake_result])
-
-        assert vo_plugin.table.items == [
-            {
-                "URL": fake_result.getdataurl(),
-                "Title": fake_result.title,
-                "Instrument": fake_result.instr,
-                "DateObs": fake_result.dateobs,
-            }
-        ]
-
-    def test_populate_table_custom_headers(self):
-        """Tests the ability to control and adjust the table to custom columns"""
-        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
-        fake_result = fake_siaresult(
-            {
-                "attrA": "Field A",
-                "attrB": "Field B",
-                "attrC": "Field C",
-            }
-        )
-        vo_plugin._populate_table(
-            [fake_result], {"Title A": "attrA", "Title B": "attrB", "Title C": "attrC"}
-        )
-
-        assert vo_plugin.table.items == [
-            {
-                "URL": fake_result.getdataurl(),
-                "Title A": fake_result.attrA,
-                "Title B": fake_result.attrB,
-                "Title C": fake_result.attrC,
-            }
-        ]
-
-    def test_populate_table_url_header_fallback(self):
-        """
-        If a SIAResult is missing a required header,
-        the table should switch to displaying URLs only
-        """
-        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
-        fake_result = fake_siaresult(
-            {
-                "attrA": "Field A",
-                "attrC": "Field C",
-            }
-        )
-
-        vo_plugin._populate_table(
-            [fake_result], {"Title A": "attrA", "Title B": "attrB", "Title C": "attrC"}
-        )
-        assert vo_plugin._populate_url_only is True
-        assert vo_plugin.table.headers_visible == ["URL"]
 
 
 def test_link_type_autocoord(imviz_helper):
@@ -176,7 +109,7 @@ def test_link_type_autocoord(imviz_helper):
     )
     imviz_helper.load_data(hdu2, data_label="has_wcs_2")
 
-    vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
+    vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
     vo_plugin.viewer.selected = "imviz-0"
     vo_plugin.center_on_data()
     ra_str, dec_str = vo_plugin.source.split()
@@ -210,7 +143,7 @@ class TestVOImvizRemote:
         vo_plugin_api : `~jdaviz.configs.default.plugins.virtual_observatory.VoPlugin`
             The raw VoPlugin class plugin instance
         """
-        vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
+        vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
 
         # Sets common args for Remote Testing
         vo_plugin.viewer.selected = "Manual"
@@ -224,7 +157,7 @@ class TestVOImvizRemote:
     def test_query_registry_args(self, imviz_helper):
         """Ensure we don't query registry if we're missing required arguments"""
         # If waveband isn't selected, plugin should ignore our registry query attempts
-        vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
+        vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
         vo_plugin.waveband.selected = ""
         vo_plugin.query_registry_resources()
         assert len(vo_plugin.resource.choices) == 0
@@ -282,7 +215,7 @@ class TestVOImvizRemote:
         when a provided source is irresolvable
         """
         expected_error_msg = "Unable to resolve source coordinates"
-        vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
+        vo_plugin = imviz_helper.loaders["virtual observatory"]._obj
 
         # Manually set the source to a fake target
         vo_plugin.viewer.selected = "Manual"
@@ -313,7 +246,6 @@ class TestVOImvizRemote:
         imviz_helper.plugins['Logger'].history = []
         vo_plugin.resource.selected = "HST.M51"
         with pytest.raises(LookupError, match=expected_error_msg):
-            vo_plugin.vue_query_resource()
             assert any(
                 expected_error_msg in d["text"]
                 for d in imviz_helper.plugins['Logger'].history
@@ -338,37 +270,11 @@ class TestVOImvizRemote:
         vo_plugin.query_registry_resources()
         assert "HST.M51" in vo_plugin.resource.choices
         vo_plugin.resource.selected = "HST.M51"
-
-        # Query resource
-        vo_plugin.vue_query_resource()
         assert len(vo_plugin.table.items) > 0
 
-        # Add poisoned fake result
-        fake_result = fake_siaresult(
-            {
-                "title": "Fake Title",
-                "instr": "Fake Instrument",
-                "dateobs": "Fake Dateobs",
-            }
-        )
-        vo_plugin._populate_table([fake_result])
-
-        # Put the fake result first to make sure we hit the fake result before the real one
-        vo_plugin.table.selected_rows = [
-            vo_plugin.table.items[-1],
-            vo_plugin.table.items[0],
-        ]
-        assert vo_plugin.table.selected_rows[0]["URL"] == fake_result.getdataurl()
-
-        # Load first data product and fake result
-        vo_plugin.load_selected_data()
-        assert vo_plugin.data_loading is False
-        # Test that user was warned about failed file loading on fake result
-        assert any(
-            "Unable to load file to viewer" in d["text"]
-            for d in imviz_helper.plugins['Logger'].history
-        )
-        # But also test that didn't prevent us from loading the valid results
+        # Load first data product
+        vo_plugin.product_list.select_rows(0)
+        vo_plugin.importer()
         assert len(imviz_helper.app.data_collection) == 1
         assert "M51_HST.M51" in imviz_helper.data_labels[0]
 
@@ -377,10 +283,8 @@ class TestVOImvizRemote:
         # User should be warned about misaligned data if WCS linking isn't set
         # and there's already data in the data collection
         assert imviz_helper.plugins["Orientation"].align_by == "Pixels"
-        vo_plugin.table.selected_rows = [
-            vo_plugin.table.items[0]
-        ]  # Select first entry
-        vo_plugin.load_selected_data()
+        vo_plugin.product_list.selected_rows(0)
+        vo_plugin.importer()
         assert vo_plugin.data_loading is False
         assert any(
             "WCS linking is not enabled; data layers may not be aligned" in d["text"]
