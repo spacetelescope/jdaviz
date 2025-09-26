@@ -1,12 +1,14 @@
 import os
 import warnings
+import threading
+
+from astropy.io import fits
 
 import pytest
 
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, cached_uri, escape_brackets,
-                          has_wildcard, wildcard_match)
-from astropy.io import fits
+                          has_wildcard, wildcard_match, parallelize_calculation)
 
 from jdaviz.conftest import FakeSpectrumListImporter
 
@@ -195,3 +197,117 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
         match_result = wildcard_match(test_obj, selection)
         assert test_obj.multiselect is True
         assert match_result == expected
+
+
+@pytest.mark.parametrize('n_cpu', [1, 2, None])
+class TestParallelizeCalculation:
+    """
+    Test for parallelize_calculation in jdaviz.utils.
+
+    This module provides a simple embarrassingly parallel test: compute
+    squares of integers using no-argument worker callables, then collect
+    results via a thread-safe callback. The test asserts all expected
+    results are collected.
+    """
+    values = range(10)
+
+    def test_parallelize_calculation_squares(self, n_cpu):
+        """
+        Verify that parallelize_calculation runs a set of no-arg worker
+        callables in parallel and that the collect_result_callback receives
+        each result.
+
+        The test uses a small deterministic set of integers and checks that
+        the collected results equal the expected squares.
+        """
+        # Create worker callables that return the square of each value.
+        workers = [lambda v=v: v * v for v in self.values]
+
+        collected = []
+        lock = threading.Lock()
+
+        def collect_result_callback(res):
+            """
+            Thread-safe collector that appends results to the shared list.
+            Using a lock makes the collector deterministic and robust across
+            backends and Python implementations, preventing flaky test failures,
+            but it's not strictly necessary in the Jdaviz context (for now).
+            """
+            with lock:
+                collected.append(res)
+
+        # Use the default number of CPUs for the test to exercise parallel execution.
+        parallelize_calculation(workers, collect_result_callback, n_cpu=n_cpu)
+
+        # After execution, collected should contain exactly the squares, in
+        # some order.
+        assert sorted(collected) == sorted([v * v for v in self.values])
+
+    def test_callback_called_once_per_worker(self, n_cpu):
+        """
+        Ensure the collect_result_callback is invoked exactly once per
+        worker. The callback records how many times each result value is
+        seen; after running, each expected result must have been seen once.
+
+        This will fail if the callback is called multiple times per worker
+        as might be the case in a concurrent execution environment should
+        something change in the future.
+        """
+        # Workers return unique values (their index) so we can count calls
+        workers = [lambda v=v: v for v in self.values]
+
+        counts = {}
+        lock = threading.Lock()
+
+        def collect_result_callback(res):
+            """
+            Record the number of times a particular result value is seen.
+            """
+            with lock:
+                counts[res] = counts.get(res, 0) + 1
+
+        parallelize_calculation(workers, collect_result_callback, n_cpu=n_cpu)
+
+        # Total callbacks must equal number of workers and each value seen once.
+        assert sum(counts.values()) == len(workers)
+        assert set(counts.keys()) == set(self.values)
+        assert all(c == 1 for c in counts.values())
+
+    def test_exception_in_worker_propagates(self, n_cpu):
+        """
+        Ensure that an exception raised in a worker propagates out of
+        `parallelize_calculation` regardless of worker sequence and that
+        since collection happens afterwards, no results are collected.
+        """
+        bad_worker_msg = 'bad worker :('
+        good_worker_msg = 'good worker :)'
+
+        def bad_worker():
+            raise ValueError(bad_worker_msg)
+
+        # A worker that would succeed if it were run.
+        def good_worker():
+            return good_worker_msg
+
+        workers1 = [bad_worker, good_worker]
+        workers2 = [good_worker, bad_worker]
+        workers3 = [good_worker, bad_worker, bad_worker]
+
+        collected = []
+
+        def collect_result_callback(res):
+            # If this is called, append to collected so we can detect it.
+            collected.append(res)
+
+        # Since we do collection after the fact, we expect the exception
+        # regardless of the worker order.
+        for workers in (workers1, workers2, workers3):
+            with pytest.raises(ValueError) as err:
+                parallelize_calculation(workers, collect_result_callback, n_cpu=n_cpu)
+
+            # The raised exception should contain our message.
+            assert bad_worker_msg in str(err.value)
+
+            # Because the bad worker raised the collect callback should
+            # not be called at all.
+            assert collected == []
