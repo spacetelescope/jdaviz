@@ -194,6 +194,22 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
     # should be available from plot options
     assert 'my_catalog' in po.layer.choices
 
+    # test that mouseover appears
+    mo = imviz_helper._coords_info
+    assert mo.dataset.selected == 'auto'
+    assert 'my_catalog' in mo.dataset.choices
+
+    mo._viewer_mouse_event(iv._obj, {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
+    assert mo.as_dict()['data_label'] == 'my_data[DATA]'
+
+    mo.dataset.selected = 'my_catalog'
+    mo._viewer_mouse_event(iv._obj, {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
+    assert mo.as_dict()['data_label'] == 'my_catalog'
+    assert mo.as_text()[0] == ''
+    assert mo.as_text()[1] == 'World 22h30m04.2007s -20d49m59.9988s (ICRS)'
+    # some floating point discrepancies in degs is acceptable, WCS tested elsewhere
+    assert len(mo.as_text()[2]) > 0
+
     # changing to pixel linking should set the layer to hidden
     # and remove from the plot options layer tabs
     imviz_helper.plugins['Orientation'].align_by = 'Pixels'

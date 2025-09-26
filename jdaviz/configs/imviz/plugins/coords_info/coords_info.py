@@ -40,7 +40,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                  MosvizProfile2DView)
 
     _viewer_classes_with_marker = (Spectrum1DViewer, Spectrum2DViewer,
-                                   RampvizProfileView, MosvizProfile2DView)
+                                   RampvizProfileView, MosvizProfile2DView,
+                                   ImvizImageView)
 
     dataset_icon = Unicode("").tag(
         sync=True
@@ -77,9 +78,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.dataset._manual_options = ['auto', 'none']
 
         self.dataset.filters = ['layer_in_viewers', 'is_not_wcs_only', 'layer_is_not_dq']
-        if self.app.config == 'imviz':
-            # filter out scatter-plot entries (from add_markers API, for example)
-            self.dataset.add_filter('is_image')
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -280,7 +278,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         elif image.ndim == 2:
             return (1, 0)  # (ix_shape, iy_shape)
         else:  # pragma: no cover
-            raise ValueError(f'does not support ndim={image.ndim}')
+            return (None, None)
 
     def _get_cube_value(self, image, arr, x, y, viewer):
         if image.ndim == 3:
@@ -355,6 +353,42 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.icon = 'mdi-cursor-default'
             self._dict['data_label'] = ''
             coords_status = False
+
+        elif getattr(image, 'meta', {}).get('_importer', '') == 'CatalogImporter':
+            # only give mouseover for scatter layers if explicitly requested
+            x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
+
+            xrange = abs(viewer.state.x_max - viewer.state.x_min)
+            yrange = abs(viewer.state.y_max - viewer.state.y_min)
+
+            scatter = layer.scatter_mark
+            lyr_x, lyr_y = scatter.x, scatter.y
+            if not len(lyr_x):
+                self.reset_coords_display()
+                return
+
+            # NOTE: unlike specviz which determines the closest point in x per-layer,
+            # this determines the closest point in x/y in pixel-space
+            distsqs = ((lyr_x - x)/xrange)**2 + ((lyr_y - y)/yrange)**2
+            cur_i = np.nanargmin(distsqs)
+            cur_x, cur_y = float(lyr_x[cur_i]), float(lyr_y[cur_i])
+
+            self._dict['axes_x'] = cur_x
+            self._dict['axes_x:unit'] = 'pix'
+            self._dict['axes_y'] = cur_y
+            self._dict['axes_y:unit'] = 'pix'
+            self._dict['data_label'] = image.label
+            self._dict['pixel_x'] = float(x)
+            self._dict['pixel_y'] = float(y)
+            self._dict['pixel:unreliable'] = False
+
+            self.row1_unreliable = False
+
+            self.marks[viewer._reference_id].update_xy([cur_x], [cur_y])  # noqa
+            self.marks[viewer._reference_id].visible = True
+
+            coords_status = True
+            sky = viewer.state.reference_data.coords.pixel_to_world(cur_x, cur_y).icrs
 
         elif isinstance(viewer, ImvizImageView):
             x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
@@ -503,6 +537,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if unreliable_pixel or any(['nan' in map(str, (x, y))]):
             row1a_text = ""
             row1a_title = ""
+        elif getattr(image, 'meta', {}).get('_importer', '') == 'CatalogImporter':
+            row1a_text = ''
+            row1a_title = ''
         else:
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
             row1a_text = fmt.format(x, y)
@@ -532,6 +569,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         if (
                 (
+                    ix_shape is not None and iy_shape is not None and
                     -0.5 < x < image.shape[ix_shape] - 0.5 and
                     -0.5 < y < image.shape[iy_shape] - 0.5
                     and hasattr(active_layer, 'attribute')
