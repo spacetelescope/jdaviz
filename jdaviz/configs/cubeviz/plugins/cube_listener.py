@@ -154,7 +154,7 @@ class CubeListenerData:
                                       spectral_axis_index=self.spectral_axis_index)
                    for spx in np.array_split(spaxels, self.n_cpu))
 
-        parallelize_calculation(workers, collect_result, framework='joblib', n_cpu=self.n_cpu)
+        parallelize_calculation(workers, collect_result, n_cpu=self.n_cpu)
 
         if self.spectral_axis_index == 2:
             self.cursig[:] = self.sigcube[0, 0, :]
