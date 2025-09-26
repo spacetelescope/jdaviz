@@ -18,7 +18,6 @@ from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image, HAS_ROMAN_DATAMODELS)
 from jdaviz.core.custom_units_and_equivs import PIX2
-from jdaviz.utils import STDATAMODELS_LT_402
 
 
 @pytest.mark.parametrize(
@@ -373,10 +372,10 @@ class TestParseImage:
     def test_parse_jwst_niriss_grism(self, imviz_helper):
         imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
-        if STDATAMODELS_LT_402:
-            comp = data.get_component('data')
-        else:
-            comp = data.get_component('SCI,1')
+        for label in ('SCI,1', 'data'):
+            if label in data.component_ids():
+                comp = data.get_component(label)
+                break
         expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_2))[0] + '[SCI,1]'
         assert data.label == expected_label
         assert data.shape == (2048, 2048)
