@@ -44,9 +44,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'wildcard_match', 'create_data_hash_from_arr',
-           'cmap_samples', 'glue_colormaps',
-           'att_to_componentid']
+           'wildcard_match', 'create_data_hash_from_arr', 'create_data_hash_from_str',
+           'cmap_samples', 'glue_colormaps', 'att_to_componentid']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -1092,6 +1091,34 @@ def create_data_hash_from_arr(data):
         except Exception:
             # ignore mask-related failures; hash already includes data
             pass
+
+    return hasher.hexdigest()
+
+
+def create_data_hash_from_str(input_data):
+    """
+    Create and return a deterministic hash for the provided string/string array.
+
+    Parameters
+    ----------
+    input_data : str or list of str
+        Input string to be hashed.
+
+    Returns
+    -------
+    str
+        Hexadecimal string of the hash.
+    """
+    if input_data is None:
+        msg = 'No data provided to create_data_hash_from_str.'
+        raise ValueError(msg)
+
+    if isinstance(input_data, (list, tuple)):
+        input_data = ''.join(input_data)
+
+    # Initialize hasher and encode the string as bytes
+    hasher = hashlib.blake2b(digest_size=16)
+    hasher.update(input_data.encode())
 
     return hasher.hexdigest()
 
