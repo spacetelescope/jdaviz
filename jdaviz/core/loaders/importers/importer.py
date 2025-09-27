@@ -1,5 +1,5 @@
 import os
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe, Dict
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
@@ -106,6 +106,8 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_default = Unicode().tag(sync=True)
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
+
+    data_in_data_collection = Dict().tag(sync=True)
 
     viewer_create_new_items = List([]).tag(sync=True)
     viewer_create_new_selected = Unicode().tag(sync=True)
@@ -214,7 +216,7 @@ class BaseImporterToDataCollection(BaseImporter):
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type
 
-    def add_to_data_collection(self, data, data_label=None,
+    def add_to_data_collection(self, data, data_label=None, data_hash=None,
                                parent=None,
                                viewer_select=None,
                                cls=None):
@@ -242,14 +244,10 @@ class BaseImporterToDataCollection(BaseImporter):
         # Compute a deterministic content hash and store it in metadata.
         # Failures are noted in metadata rather than
         # raising to avoid breaking imports for odd objects.
-        data_hash = create_data_hash_from_arr(data)
+        if not data_hash:
+            data_hash = create_data_hash_from_arr(data)
 
-        for existing_data in self.app.data_collection:
-            if data_hash == existing_data.meta.get('_data_hash', None):
-                msg = f"Warning: data '{data_label}' already imported."
-                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
-
-        data.meta['_data_hash'] = create_data_hash_from_arr(data)
+        data.meta['_data_hash'] = data_hash
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
