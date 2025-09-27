@@ -71,10 +71,18 @@
           <span v-else>{{ item }}</span>
         </div>
       </template>
-      <template #item="{ item }">
-        <span style="margin-top: 8px; margin-bottom: 0px">
-          {{ typeof item === 'string' ? item : (item.label || item.text) }}
-        </span>
+      <template #item="{ item, attrs, on }">
+        <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px">
+          <v-list-item-action style="min-width: 32px">
+            <v-icon small v-if="exists_map && (typeof item === 'string' ? exists_map[item] : exists_map[item.label || item.text])" color="green">mdi-circle</v-icon>
+            <v-icon small v-else color="grey">mdi-circle-outline</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title style="margin-top: 8px; margin-bottom: 0px">
+              {{ typeof item === 'string' ? item : (item.label || item.text) }}
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </template>
     </v-select>
     <slot> </slot>
@@ -84,15 +92,34 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading'],
+          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_map'],
   data() {
     return {
       search_query: '',
+      exists_version: 0,
     }
   },
   computed: {
     search_enabled() {
       return !!this.search;
+    },
+    existsSet() {
+      const m = this.exists_map || {};
+      return new Set(Object.keys(m).filter(k => !!m[k]));
+    },
+    itemText() {
+      // If items are objects with a label property, inform v-select to
+      // use the 'label' field; otherwise let it treat values as raw.
+      if (Array.isArray(this.items) && this.items.length > 0 && typeof this.items[0] !== 'string') {
+        return 'label';
+      }
+      return undefined;
+    },
+    itemValue() {
+      if (Array.isArray(this.items) && this.items.length > 0 && typeof this.items[0] !== 'string') {
+        return 'label';
+      }
+      return undefined;
     },
     filtered_items() {
       if (!this.search_enabled || !this.search_query) {
@@ -130,6 +157,34 @@ module.exports = {
       });
       return filtered;
     },
+  },
+  watch: {
+    exists_map: {
+      handler(val) {
+        // Dev-only logging to help debug UI updates.
+        try {
+          console.log('plugin_select: exists_map changed', val);
+        } catch (e) {
+          // ignore in environments without console
+        }
+        // Bump a small counter so the per-item key changes and Vue
+        // will re-render list item nodes when the mapping updates.
+        try {
+          this.exists_version += 1;
+        } catch (e) {}
+      },
+      deep: true,
+    },
+    items(val) {
+      try {
+        console.log('plugin_select: items changed', val && val.length);
+      } catch (e) {}
+    }
+  },
+  mounted() {
+    try {
+      console.log('plugin_select mounted, exists_map=', this.exists_map);
+    } catch (e) {}
   },
   methods: {
     on_search_input(value) {
