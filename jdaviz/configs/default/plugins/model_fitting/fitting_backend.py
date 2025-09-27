@@ -1,11 +1,12 @@
 from asteval import Interpreter
 import multiprocessing as mp
-from multiprocessing import Pool
 import numpy as np
 
 from astropy.modeling import fitting
 from specutils import Spectrum
 from specutils.fitting import fit_lines
+
+from jdaviz.utils import parallelize_calculation
 
 __all__ = ['fit_model_to_spectrum', 'generate_spaxel_list']
 
@@ -181,37 +182,27 @@ def _fit_3D(initial_model, spectrum, fitter, window=None, n_cpu=None, **kwargs):
             elif spectrum.spectral_axis_index == 0:
                 output_flux_cube[:, y, x] = fitted_values
 
-    # Run multiprocessor pool to fit each spaxel and
-    # compute model values on that same spaxel.
+    # Allow selecting a futures-based streaming backend via
+    # the `use_futures` kwarg. This preserves callback-like
+    # behavior by processing results as each worker finishes.
     if n_cpu > 1:
-        results = []
-        pool = Pool(n_cpu)
+        # Build workers (one per chunk) same as the Pool chunking
+        workers = (
+            SpaxelWorker(spectrum.flux,
+                         spectrum.spectral_axis,
+                         initial_model,
+                         fitter=fitter,
+                         param_set=spx,
+                         window=window,
+                         mask=spectrum.mask,
+                         spectral_axis_index=spectrum.spectral_axis_index,
+                         **kwargs)
+            for spx in np.array_split(spaxels, n_cpu))
 
-        # The communication overhead of spawning a process for each *individual*
-        # parameter set is prohibitively high (it's actually faster to run things
-        # sequentially). Instead, chunk the spaxel list based on the number of
-        # available processors, and have each processor do the model fitting
-        # on the entire subset of spaxel tuples, then return the set of results.
-        for spx in np.array_split(spaxels, n_cpu):
-            # Worker for the multiprocess pool.
-            worker = SpaxelWorker(spectrum.flux,
-                                  spectrum.spectral_axis,
-                                  initial_model,
-                                  fitter=fitter,
-                                  param_set=spx,
-                                  window=window,
-                                  mask=spectrum.mask,
-                                  spectral_axis_index=spectrum.spectral_axis_index,
-                                  **kwargs)
-            r = pool.apply_async(worker, callback=collect_result)
-            results.append(r)
-        for r in results:
-            r.wait()
-
-        pool.close()
+        parallelize_calculation(workers, collect_result, n_cpu=n_cpu)
 
     # This route is only for dev debugging because it is very slow
-    # but exceptions will not get swallowed up by multiprocessing.
+    # but exceptions will not get swallowed up by joblib.
     else:  # pragma: no cover
         worker = SpaxelWorker(spectrum.flux,
                               spectrum.spectral_axis,
