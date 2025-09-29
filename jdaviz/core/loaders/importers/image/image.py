@@ -20,7 +20,7 @@ from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
     PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip, create_data_hash_from_arr
+    _try_gwcs_to_fits_sip, create_data_hash
 )
 
 try:
@@ -81,7 +81,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': hdu.ver,
                                 'name_ver': f"{hdu.name},{hdu.ver}",
                                 'index': index,
-                                'data_hash': create_data_hash_from_arr(hdu),
+                                'data_hash': create_data_hash(hdu),
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
             elif input_is_roman:
@@ -91,7 +91,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': None,
                                 'name_ver': key,
                                 'index': index,
-                                'data_hash': create_data_hash_from_arr(value),
+                                'data_hash': create_data_hash(value),
                                 'obj': value}
                                for index, (key, value) in enumerate(input.items())]
             else:
@@ -108,6 +108,8 @@ class ImageImporter(BaseImporterToDataCollection):
             self.extension.selected = [self.extension.choices[0]]
         else:
             self._set_default_data_label()
+
+        self.data_in_data_collection = self.extension.data_in_data_collection
 
     @staticmethod
     def _get_supported_viewers():
@@ -284,9 +286,11 @@ class ImageImporter(BaseImporterToDataCollection):
             if self.gwcs_to_fits_sip:
                 output = self._glue_data_wcs_to_fits(output)
 
-            self.add_to_data_collection(output, data_label,
+            self.add_to_data_collection(output, data_label, item=ext_item,
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
+
+        print(self.data_in_data_collection)
 
 
 def _validate_fits_image2d(item):

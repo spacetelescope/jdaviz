@@ -65,7 +65,7 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
-    wildcard_match, CONFIGS_WITH_LOADERS
+    wildcard_match, CONFIGS_WITH_LOADERS, create_data_hash
 )
 
 
@@ -1417,10 +1417,34 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                 raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
 
 
+# class DataObject:
+#     """
+#     Simple class to hold a data object and its label, name, version, and viewer_label
+#     """
+#     def __init__(self, obj, label=None, name=None, index=None, ver=None, viewer_label=None):
+#         self.obj = obj
+#         self.data_hash = create_data_hash_from_arr(obj)
+#         self.label = label
+#         self.name = name
+#         self.index = index
+#         self.ver = ver
+#         self.name_ver = f"{name}[{ver}]" if ver is not None else name
+#         self.viewer_label = viewer_label
+
+
 class SelectFileExtensionComponent(SelectPluginComponent):
+
     def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
         super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
                          manual_options=manual_options, filters=filters)
+
+        self._generate_data_hashes()
+        self.data_in_data_collection = {label: False for label in self.labels}
+
+        for data in self.app.data_collection:
+            data_hash = data.meta.get('_data_hash', None)
+            if data_hash is not None and data_hash in self.data_hashes:
+                self.data_in_data_collection[self._hash_label_dict[data_hash]] = True
 
     @property
     def selected_index(self):
@@ -1453,18 +1477,27 @@ class SelectFileExtensionComponent(SelectPluginComponent):
         return [item.get('name_ver', None) for item in self.items]
 
     @property
-    def suffixes(self):
-        return [item.get('suffix', None) for item in self.items]
+    def viewer_labels(self):
+        return [item.get('viewer_label', None) for item in self.items]
 
+    def _generate_data_hashes(self):
+        for item in self.items:
+            item['data_hash'] = create_data_hash(item.get('obj', None))
+
+    @property
     def data_hashes(self):
         return [item.get('data_hash', None) for item in self.items]
+
+    @property
+    def _hash_label_dict(self):
+        return {item['data_hash']: item['label'] for item in self.items}
 
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
         return {k: manual_item.get(k, None)
-                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'suffix', 'data_hash')}
+                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'viewer_label', 'data_hash')}
 
     @observe('filters')
     def _update_items(self, msg={}):

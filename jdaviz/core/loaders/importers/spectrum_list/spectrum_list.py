@@ -15,7 +15,6 @@ from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.utils import create_data_hash_from_arr
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -61,28 +60,22 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 label = f"{exposure_label}, Source ID: {name}"
                 # Flipping the two from the variable naming convention
                 name_ver = f"{ver}_{name}"
-                suffix = f"EXP-{ver}_ID-{name}"
+                viewer_label = f"{self.data_label_value}_EXP-{ver}_ID-{name}"
 
             else:
                 name_ver = index
                 name = index
                 ver = index
                 label = f"1D Spectrum at index: {index}"
-                suffix = f"index-{index}"
+                viewer_label = f"{self.data_label_value}_index-{index}"
 
-            spec = self._apply_spectral_mask(spec)
-            data_hash = create_data_hash_from_arr(spec)
             sources_options.append({'label': label,
                                     'index': index,
                                     'name': str(name),
                                     'ver': str(ver),
                                     'name_ver': str(name_ver),
-                                    'suffix': suffix,
-                                    'data_hash': data_hash,
-                                    'obj': spec})
-
-            self.hash_label_dict[data_hash] = label
-            self.data_in_data_collection[label] = False
+                                    'viewer_label': viewer_label,
+                                    'obj': self._apply_spectral_mask(spec)})
 
         self.sources = SelectFileExtensionComponent(self,
                                                     items='sources_items',
@@ -91,15 +84,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     manual_options=sources_options)
 
         self.sources.selected = [self.sources.choices[0]]
-
-        # Create a new dictionary to trigger traitlet sync to frontend
-        updated_dict = self.data_in_data_collection.copy()
-        for data in self.app.data_collection:
-            dh = data.meta.get('_data_hash', None)
-            if dh and dh in self.sources.data_hashes:
-                updated_dict[self.hash_label_dict[dh]] = True
-
-        self.data_in_data_collection = updated_dict
+        self.data_in_data_collection = self.sources.data_in_data_collection
 
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
@@ -266,14 +251,9 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
-                viewer_data_label = f"{self.data_label_value}_{item_dict['suffix']}"
-                data_hash = item_dict['data_hash']
-                self.add_to_data_collection(spec_obj, viewer_data_label, data_hash=data_hash)
-
-                # Create a new dictionary to trigger traitlet sync to frontend
-                updated_dict = self.data_in_data_collection.copy()
-                updated_dict[self.hash_label_dict[data_hash]] = True
-                self.data_in_data_collection = updated_dict
+                self.add_to_data_collection(spec_obj,
+                                            item_dict.get('viewer_label', None),
+                                            item_dict)
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):

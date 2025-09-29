@@ -14,7 +14,7 @@ from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
                           CONFIGS_WITH_LOADERS,
                           SPECTRAL_AXIS_COMP_LABELS,
-                          create_data_hash_from_arr)
+                          create_data_hash)
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
            '_spectrum_assign_component_type']
@@ -107,7 +107,7 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
 
-    data_in_data_collection = Dict({}).tag(sync=True)
+    data_in_data_collection = Dict().tag(sync=True)
 
     viewer_create_new_items = List([]).tag(sync=True)
     viewer_create_new_selected = Unicode().tag(sync=True)
@@ -216,14 +216,21 @@ class BaseImporterToDataCollection(BaseImporter):
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type
 
-    def add_to_data_collection(self, data, data_label=None, data_hash=None,
+    def add_to_data_collection(self, data, data_label=None, item=None,
                                parent=None,
                                viewer_select=None,
                                cls=None):
+
+        if item is None:
+            item = {}
+
+        data_hash = item.get('data_hash', None)
+
         if data_label is None:
             data_label = self.data_label_value.strip()
         else:
             data_label = data_label.strip()
+
         if hasattr(data, 'meta'):
             try:
                 data.meta = standardize_metadata(data.meta)
@@ -241,13 +248,12 @@ class BaseImporterToDataCollection(BaseImporter):
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
 
-        # Compute a deterministic content hash and store it in metadata.
-        # Failures are noted in metadata rather than
-        # raising to avoid breaking imports for odd objects.
-        if not data_hash:
-            data_hash = create_data_hash_from_arr(data)
+        # Create a 'hash' representation of the data if not already present
+        data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
 
-        data.meta['_data_hash'] = data_hash
+        update_dict = self.data_in_data_collection.copy()
+        update_dict[item.get('label', '')] = True
+        self.data_in_data_collection = update_dict
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:

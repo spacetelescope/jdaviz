@@ -44,7 +44,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'wildcard_match', 'create_data_hash_from_arr', 'create_data_hash_from_str',
+           'wildcard_match', 'create_data_hash',
            'cmap_samples', 'glue_colormaps', 'att_to_componentid']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
@@ -1026,101 +1026,112 @@ def _clean_data_arr_for_hash(data):
     return arr, mask_arr, unit_str
 
 
-def create_data_hash_from_arr(data):
-    """
-    Create and return a deterministic hash for the provided data array.
+def create_data_hash(input_data):
 
-    The function accepts an n-dimensional array-like object. If
-    ``data`` is ``None``, it will attempt to use ``self.output`` as
-    the source. The hash covers the array's shape, dtype (including
-    endianness), the raw bytes of the array processed in chunks, and
-    when applicable, a mask and units for `astropy.units.Quantity`.
+    def _from_arr(input_data):
+        """
+        Create and return a deterministic hash for the provided data array.
 
-    Parameters
-    ----------
-    data : array-like or `astropy.units.Quantity`
-        The data array to hash. If `astropy.units.Quantity`, the unit
-        is included in the hash.
+        The function accepts an n-dimensional array-like object. If
+        ``data`` is ``None``, it will attempt to use ``self.output`` as
+        the source. The hash covers the array's shape, dtype (including
+        endianness), the raw bytes of the array processed in chunks, and
+        when applicable, a mask and units for `astropy.units.Quantity`.
 
-    Returns
-    -------
-    str
-        A hexadecimal string representing the SHA-256 hash of the data.
-    """
-    arr, mask_arr, unit_str = _clean_data_arr_for_hash(data)
+        Parameters
+        ----------
+        data : array-like or `astropy.units.Quantity`
+            The data array to hash. If `astropy.units.Quantity`, the unit
+            is included in the hash.
 
-    # Initialize hasher and include shape/dtype to avoid collisions
-    # Use blake2b and shorter digest for speed
-    hasher = hashlib.blake2b(digest_size=16)
-    hasher.update(f'shape:{arr.shape};dtype:{arr.dtype.str}'.encode())
-    if unit_str is not None:
-        hasher.update(f';unit:{unit_str}'.encode())
+        Returns
+        -------
+        function
+            A function which, when called, returns a hexadecimal string
+            representing the SHA-256 hash of the data.
+        """
+        arr, mask_arr, unit_str = _clean_data_arr_for_hash(input_data)
 
-    # Hash the main array buffer in chunks via memoryview if possible
-    try:
-        mv = memoryview(arr).cast('B')
-    except TypeError:
-        # Fallback - arr.tobytes() will create a copy but should work
+        # Initialize hasher and include shape/dtype to avoid collisions
+        # Use blake2b and shorter digest for speed
+        hasher = hashlib.blake2b(digest_size=16)
+        hasher.update(f'shape:{arr.shape};dtype:{arr.dtype.str}'.encode())
+        if unit_str is not None:
+            hasher.update(f';unit:{unit_str}'.encode())
+
+        # Hash the main array buffer in chunks via memoryview if possible
         try:
-            hasher.update(arr.tobytes())
-        except Exception as err:
-            raise RuntimeError(f'Could not obtain bytes for hashing: {err}')
-        # include mask if present
+            mv = memoryview(arr).cast('B')
+        except TypeError:
+            # Fallback - arr.tobytes() will create a copy but should work
+            try:
+                hasher.update(arr.tobytes())
+            except Exception as err:
+                raise RuntimeError(f'Could not obtain bytes for hashing: {err}')
+            # include mask if present
+            if mask_arr is not None:
+                try:
+                    hasher.update(b';mask:')
+                    hasher.update(np.ascontiguousarray(mask_arr).tobytes())
+                except Exception:
+                    # best effort: ignore mask if it cannot be serialized
+                    pass
+            return hasher.hexdigest()
+
+        chunk = 1024 * 1024
+        n = len(mv)
+        for i in range(0, n, chunk):
+            hasher.update(mv[i:i + chunk])
+
+        # Include mask bytes if present
         if mask_arr is not None:
             try:
                 hasher.update(b';mask:')
-                hasher.update(np.ascontiguousarray(mask_arr).tobytes())
+                mv_mask = memoryview(mask_arr).cast('B')
+                nm = len(mv_mask)
+                for i in range(0, nm, chunk):
+                    hasher.update(mv_mask[i:i + chunk])
             except Exception:
-                # best effort: ignore mask if it cannot be serialized
+                # ignore mask-related failures; hash already includes data
                 pass
+
         return hasher.hexdigest()
 
-    chunk = 1024 * 1024
-    n = len(mv)
-    for i in range(0, n, chunk):
-        hasher.update(mv[i:i + chunk])
+    def _from_str(input_data):
+        """
+        Create and return a deterministic hash for the provided string/string array.
 
-    # Include mask bytes if present
-    if mask_arr is not None:
-        try:
-            hasher.update(b';mask:')
-            mv_mask = memoryview(mask_arr).cast('B')
-            nm = len(mv_mask)
-            for i in range(0, nm, chunk):
-                hasher.update(mv_mask[i:i + chunk])
-        except Exception:
-            # ignore mask-related failures; hash already includes data
-            pass
+        Parameters
+        ----------
+        input_data : str or list of str
+            Input string to be hashed.
 
-    return hasher.hexdigest()
+        Returns
+        -------
+        str
+            Hexadecimal string of the hash.
+        """
+        if input_data is None:
+            msg = 'No data provided to create_data_hash_from_str.'
+            raise ValueError(msg)
 
+        if isinstance(input_data, (list, tuple)):
+            input_data = ''.join(input_data)
 
-def create_data_hash_from_str(input_data):
-    """
-    Create and return a deterministic hash for the provided string/string array.
+        # Initialize hasher and encode the string as bytes
+        hasher = hashlib.blake2b(digest_size=16)
+        hasher.update(input_data.encode())
 
-    Parameters
-    ----------
-    input_data : str or list of str
-        Input string to be hashed.
+        return hasher.hexdigest()
 
-    Returns
-    -------
-    str
-        Hexadecimal string of the hash.
-    """
-    if input_data is None:
-        msg = 'No data provided to create_data_hash_from_str.'
-        raise ValueError(msg)
+    if isinstance(input_data, (np.ndarray, Quantity, list, tuple)):
+        return _from_arr(input_data)
 
-    if isinstance(input_data, (list, tuple)):
-        input_data = ''.join(input_data)
+    elif isinstance(input_data, str):
+        return _from_str(input_data)
 
-    # Initialize hasher and encode the string as bytes
-    hasher = hashlib.blake2b(digest_size=16)
-    hasher.update(input_data.encode())
-
-    return hasher.hexdigest()
+    else:
+        return None
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
