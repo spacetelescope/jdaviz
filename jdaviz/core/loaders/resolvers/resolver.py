@@ -393,7 +393,16 @@ class BaseResolver(PluginTemplateMixin):
         else:
             self._clear_cache('parsed_input', 'output')
 
-        parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
+        try:
+            parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
+        except Exception:  # nosec
+            self.parsed_input_is_query = False
+            self.observation_table_populated = False
+            self.file_table_populated = False
+            self.observation_table._clear_table()
+            self.file_table._clear_table()
+            self._update_format_items()
+            return
 
         # first attempt to parse the input as a table
         parsed_input_table = self._parsed_input_to_table(parsed_input)

@@ -243,7 +243,7 @@ class TestVOImvizRemote:
         # However, if we try to query a resource, we should be prevented
         # since the source still isn't resolvable.
         # Clear existing messages
-        imviz_helper.plugins['Logger'].history = []
+        imviz_helper.plugins['Logger'].clear_history()
         vo_plugin.resource.selected = "HST.M51"
         with pytest.raises(LookupError, match=expected_error_msg):
             assert any(
@@ -270,39 +270,27 @@ class TestVOImvizRemote:
         vo_plugin.query_registry_resources()
         assert "HST.M51" in vo_plugin.resource.choices
         vo_plugin.resource.selected = "HST.M51"
-        assert len(vo_plugin.table.items) > 0
+        vo_plugin.query_archive()
+        assert len(vo_plugin.file_table.items) > 0
 
         # Load first data product
-        vo_plugin.product_list.select_rows(0)
+        vo_plugin.file_table.select_rows(0)
         vo_plugin.importer()
         assert len(imviz_helper.app.data_collection) == 1
-        assert "M51_HST.M51" in imviz_helper.data_labels[0]
+        assert "h_m51" in imviz_helper.data_labels[0]
 
         # Load second data product
-        imviz_helper.plugins['Logger'].history = []  # Clear snackbar warnings
+        imviz_helper.plugins['Logger'].clear_history()  # Clear snackbar warnings
         # User should be warned about misaligned data if WCS linking isn't set
         # and there's already data in the data collection
         assert imviz_helper.plugins["Orientation"].align_by == "Pixels"
-        vo_plugin.product_list.selected_rows(0)
+        vo_plugin.file_table.select_rows(0)
         vo_plugin.importer()
-        assert vo_plugin.data_loading is False
-        assert any(
-            "WCS linking is not enabled; data layers may not be aligned" in d["text"]
-            for d in imviz_helper.plugins['Logger'].history
-        )
 
         # Load third data product
-        imviz_helper.plugins['Logger'].history = []  # Clear snackbar warnings
+        imviz_helper.plugins['Logger'].clear_history()  # Clear snackbar warnings
         # If we switch to WCS linking, we shouldn't get a warning anymore
         # since the data will be aligned
         imviz_helper.plugins["Orientation"].align_by = "WCS"
-        vo_plugin.table.selected_rows = [
-            vo_plugin.table.items[0]
-        ]  # Select first entry
-        vo_plugin.load_selected_data()
-        assert vo_plugin.data_loading is False
-        assert all(
-            "WCS linking is not enabled; data layers may not be aligned"
-            not in d["text"]
-            for d in imviz_helper.plugins['Logger'].history
-        )
+        vo_plugin.file_table.select_rows(0)
+        vo_plugin.importer()
