@@ -66,7 +66,7 @@ Other Changes and Additions
 
 - Scatter viewer support in the deconfigged app instance. [#3778]
 
-4.4.1 (unreleased)
+4.4.2 (unreleased)
 ==================
 
 Bug Fixes
@@ -87,7 +87,25 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+4.4.1 (2025-09-26)
+==================
+
+Bug Fixes
+---------
+
+- Fixes cases where import data raises exception in attempting to set metadata. [#3797]
+
+Cubeviz
+^^^^^^^
+
+- Speed up loading of large cubes into cubeviz. [#3791]
+
+Specviz2d
+^^^^^^^^^
+
 - Automatic spectral extraction now works when multiple 2D spectra are loaded. [#3793]
+
+- Fixes an incorrect API hint in 2D Spectral Extraction. [#3798]
 
 4.4 (2025-09-18)
 ================
