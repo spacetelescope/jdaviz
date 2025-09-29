@@ -2,6 +2,7 @@
   <v-container>
     <plugin-select
       :items="extension_items.map(i => i.label)"
+      :exists_map="data_in_data_collection"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
       :multiselect="extension_multiselect"
