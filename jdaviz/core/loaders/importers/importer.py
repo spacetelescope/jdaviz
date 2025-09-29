@@ -107,7 +107,7 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
 
-    data_in_data_collection = Dict().tag(sync=True)
+    data_in_data_collection = Dict({}).tag(sync=True)
 
     viewer_create_new_items = List([]).tag(sync=True)
     viewer_create_new_selected = Unicode().tag(sync=True)
