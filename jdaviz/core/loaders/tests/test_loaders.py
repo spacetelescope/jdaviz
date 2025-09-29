@@ -4,8 +4,10 @@ from pathlib import Path
 from itertools import product
 
 from astropy import units as u
+from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
+from astroquery.mast import Mast, MastMissions
 from gwcs import WCS as GWCS
 from specutils import SpectralRegion, Spectrum
 
@@ -249,6 +251,66 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
         # NOTE: this test will attempt to reach out to MAST via astroquery
         # even if cache is available.
         deconfigged_helper.load('mast:invalid')
+
+
+def test_resolver_table_as_query(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['object']
+
+    obs_table = Table({'id': [1, 2, 3], 'fileSetName': ['a', 'b', 'c']})
+    file_table = Table({'id': [1, 2, 3], 'url': ['a', 'b', 'c']})
+    invalid_table = Table({'id': [1, 2, 3], 'name': ['a', 'b', 'c']})
+
+    assert ldr._obj.parsed_input_is_query is False
+
+    ldr.object = obs_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.file_table_populated is False
+
+    ldr.object = file_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is False
+    assert ldr._obj.file_table_populated is True
+
+    ldr.object = invalid_table
+    assert ldr._obj.parsed_input_is_query is False
+    assert ldr._obj.observation_table_populated is False
+    assert ldr._obj.file_table_populated is False
+
+
+@pytest.mark.remote_data
+def test_resolver_table_as_query_astroquery(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['object']
+
+    mast = Mast()
+    coords = mast.resolve_object("M101")
+
+    jwst = MastMissions(mission='JWST')
+
+    datasets = jwst.query_region(coords,
+                                 radius=3,
+                                 select_cols=["sci_stop_time", "sci_targname",
+                                              "sci_start_time", "sci_status"],
+                                 sort_by=['sci_targname'])
+
+    ldr.object = datasets
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.file_table_populated is False
+    assert len(ldr.format.choices) == 0
+
+    ldr.observation_table.select_rows(0)
+
+    assert ldr._obj.file_table_populated is True
+    assert ldr._obj.get_selected_url() is None
+
+    ldr.file_table.select_rows(0)
+    assert ldr._obj.get_selected_url() is not None
+    # we can't guarantee any specific format choices since
+    # this depends on what data is returned from MAST
+    # but let's at least make sure the download was successful
+    # and points to a local temporary cache file
+    assert len(ldr._obj.output) > 0
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
