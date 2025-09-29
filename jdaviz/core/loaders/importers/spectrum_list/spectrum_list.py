@@ -1,7 +1,7 @@
 import itertools
 import numpy as np
-from copy import deepcopy
 import warnings
+from copy import deepcopy
 
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
@@ -82,6 +82,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                     'obj': spec})
 
             self.hash_label_dict[data_hash] = label
+            self.data_in_data_collection[label] = False
 
         self.sources = SelectFileExtensionComponent(self,
                                                     items='sources_items',
@@ -90,7 +91,15 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     manual_options=sources_options)
 
         self.sources.selected = [self.sources.choices[0]]
-        self.data_in_data_collection = {label: False for label in self.sources.choices}
+
+        # Create a new dictionary to trigger traitlet sync to frontend
+        updated_dict = self.data_in_data_collection.copy()
+        for data in self.app.data_collection:
+            dh = data.meta.get('_data_hash', None)
+            if dh and dh in self.sources.data_hashes:
+                updated_dict[self.hash_label_dict[dh]] = True
+
+        self.data_in_data_collection = updated_dict
 
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
@@ -257,9 +266,10 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
-                data_label = f"{self.data_label_value}_{item_dict['suffix']}"
+                viewer_data_label = f"{self.data_label_value}_{item_dict['suffix']}"
                 data_hash = item_dict['data_hash']
-                self.add_to_data_collection(spec_obj, data_label, data_hash=data_hash)
+                self.add_to_data_collection(spec_obj, viewer_data_label, data_hash=data_hash)
+
                 # Create a new dictionary to trigger traitlet sync to frontend
                 updated_dict = self.data_in_data_collection.copy()
                 updated_dict[self.hash_label_dict[data_hash]] = True
