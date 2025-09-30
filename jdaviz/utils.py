@@ -1078,14 +1078,14 @@ def create_data_hash(input_data):
             # Fallback - arr.tobytes() will create a copy but should work
             try:
                 hasher.update(arr.tobytes())
-            except Exception as err:
+            except (AttributeError, TypeError, ValueError, MemoryError) as err:
                 raise RuntimeError(f'Could not obtain bytes for hashing: {err}')
             # include mask if present
             if mask_arr is not None:
                 try:
                     hasher.update(b';mask:')
                     hasher.update(np.ascontiguousarray(mask_arr).tobytes())
-                except Exception:
+                except (AttributeError, TypeError, ValueError, MemoryError):
                     # best effort: ignore mask if it cannot be serialized
                     pass
             return hasher.hexdigest()
@@ -1103,7 +1103,7 @@ def create_data_hash(input_data):
                 nm = len(mv_mask)
                 for i in range(0, nm, chunk):
                     hasher.update(mv_mask[i:i + chunk])
-            except Exception:
+            except (TypeError, ValueError):
                 # ignore mask-related failures; hash already includes data
                 pass
 
@@ -1138,10 +1138,8 @@ def create_data_hash(input_data):
 
     if isinstance(input_data, (np.ndarray, Quantity, Spectrum)):
         return _from_arr(input_data)
-
     elif isinstance(input_data, str):
         return _from_str(input_data)
-
     else:
         return None
 
