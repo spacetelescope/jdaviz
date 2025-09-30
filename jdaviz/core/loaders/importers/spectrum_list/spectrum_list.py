@@ -43,7 +43,6 @@ class SpectrumListImporter(BaseImporterToDataCollection):
             self.data_label_default = '1D Spectrum'
 
         sources_options = []
-        self.hash_label_dict = {}
 
         if isinstance(self.input, Spectrum):
             speclist_input = SpectrumList(self.input_to_list_of_spec(self.input))
