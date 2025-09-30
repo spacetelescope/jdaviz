@@ -35,6 +35,56 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
         self.viewer = viewer
+
+        # Store original values for reset functionality
+        if isinstance(tools_nested, list):
+            self._original_tools_nested = tools_nested.copy()
+        else:
+            self._original_tools_nested = tools_nested
+        self._original_default_tool_priority = default_tool_priority.copy()
+
+        # Build the initial toolbar
+        self._build_toolbar(tools_nested, default_tool_priority)
+
+        # toolbars in the main app viewers need to respond to the data-collection, etc,
+        # but those in plugins do not
+        if hasattr(self.viewer, 'hub'):
+            for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
+                        SpectralMarksChangedMessage, CatalogResultsChangedMessage,
+                        FootprintMarkVisibilityChangedMessage):
+                self.viewer.hub.subscribe(self, msg,
+                                          handler=lambda _: self._update_tool_visibilities())
+
+    def override_tools(self, tools_nested, default_tool_priority=[]):
+        """
+        Rebuild the toolbar with passed values.
+
+        Parameters
+        ----------
+        tools_nested : list
+            Nested list of tool configurations for the new toolbar
+        default_tool_priority : list, optional
+            Priority list for default tool selection
+        """
+        # Clear current toolbar
+        self._clear_toolbar()
+
+        # Rebuild toolbar with new configuration
+        self._build_toolbar(tools_nested, default_tool_priority)
+
+    def _build_toolbar(self, tools_nested, default_tool_priority):
+        """
+        Build the toolbar with the given configuration.
+
+        Parameters
+        ----------
+        tools_nested : list
+            Nested list of tool configurations
+        default_tool_priority : list
+            Priority list for default tool selection
+        """
+        # Store values
+        self.default_tool_priority = default_tool_priority
         self._max_menu_ind = len(tools_nested)
 
         # iterate through the nested list.  The first item in each entry
@@ -47,33 +97,32 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 subtools = [subtools]
             for i, tool_id in enumerate(subtools):
                 tool_cls = viewer_tool.members[tool_id]
-                tool = tool_cls(viewer)
+                tool = tool_cls(self.viewer)
                 self.add_tool(tool,
                               menu_ind=menu_ind,
                               has_suboptions=len(subtools) > 1,
                               primary=i == 0,
                               visible=True)
 
-        # default_tool_priority allows falling back on an existing tool
-        # if its the primary tool.  If no items in default_tool_priority
-        # are currently "primary", then either no tool will be selected
-        # or will fallback on BasicJupyterToolbar's handling of
-        # viewer._default_mouse_mode_cls (which will not show that tool as active).
-        self.default_tool_priority = default_tool_priority
-
         # handle logic for tool visibilities (which will also handle setting the primary
         # to something other than the first entry, if necessary)
         # NOTE: this will also call _handle_default_tool
         self._update_tool_visibilities()
 
-        # toolbars in the main app viewers need to respond to the data-collection, etc,
-        # but those in plugins do not
-        if hasattr(self.viewer, 'hub'):
-            for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
-                        SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                        FootprintMarkVisibilityChangedMessage):
-                self.viewer.hub.subscribe(self, msg,
-                                          handler=lambda _: self._update_tool_visibilities())
+    def restore_tools(self):
+        """
+        Restore the toolbar to its original configuration from initialization.
+        """
+        self.override_tools(self._original_tools_nested, self._original_default_tool_priority)
+
+    def _clear_toolbar(self):
+        """
+        Clear all current tools from the toolbar.
+        """
+        # Clear the tools and tools_data dictionaries
+        self.tools.clear()
+        self.tools_data = {}
+        self.active_tool_id = None
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
