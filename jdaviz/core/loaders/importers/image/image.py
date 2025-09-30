@@ -290,8 +290,6 @@ class ImageImporter(BaseImporterToDataCollection):
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
 
-        print(self.data_in_data_collection)
-
 
 def _validate_fits_image2d(item):
     hdu = item.get('obj')
