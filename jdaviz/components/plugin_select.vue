@@ -73,7 +73,7 @@
       </template>
       <template #item="{ item, attrs, on }">
         <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px">
-          <v-list-item-action style="min-width: 32px">
+          <v-list-item-action v-if="exists_map" style="min-width: 32px">
             <v-icon small v-if="existsFor(item)" color="green">mdi-circle</v-icon>
             <v-icon small v-else color="grey">mdi-circle-outline</v-icon>
           </v-list-item-action>
