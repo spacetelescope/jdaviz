@@ -199,6 +199,17 @@ class BaseImporterToDataCollection(BaseImporter):
         else:
             return {}
 
+    def check_data_hash_for_duplicate(self):
+        output_hash = create_data_hash(self.output)
+        if output_hash is None:
+            return
+        for data in self.app.data_collection:
+            if data.meta.get('_data_hash', None) == output_hash:
+                msg = f"Selected data appears to be identical to existing data '{data.label}'."  # noqa
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+                # self.data_label_invalid_msg = msg
+                return
+
     @observe('data_label_value')
     def _on_label_changed(self, msg={}):
         if not len(self.data_label_value.strip()):
@@ -232,9 +243,6 @@ class BaseImporterToDataCollection(BaseImporter):
         if item is None:
             item = {}
 
-        data_hash = item.get('data_hash', None)
-        data_loader_label = item.get('label', '')
-
         if data_label is None:
             data_label = self.data_label_value.strip()
         else:
@@ -258,8 +266,8 @@ class BaseImporterToDataCollection(BaseImporter):
         data.meta['_importer'] = self.__class__.__name__
 
         # Create a 'hash' representation of the data if not already present
-        data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
-        data.meta['_data_loader_label'] = data_loader_label
+        data.meta['_data_hash'] = create_data_hash(data)
+        data.meta['_data_loader_label'] = item.get('label', '')
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:

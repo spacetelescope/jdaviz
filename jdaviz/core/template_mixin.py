@@ -1438,15 +1438,6 @@ class SelectFileExtensionComponent(SelectPluginComponent):
         super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
                          manual_options=manual_options, filters=filters)
 
-        self._generate_data_hashes()
-        if not hasattr(self.app, 'data_in_data_collection'):
-            self.app.data_in_data_collection = {label: False for label in self.labels}
-
-        for data in self.app.data_collection:
-            data_hash = data.meta.get('_data_hash', None)
-            if data_hash is not None and data_hash in self.data_hashes:
-                self.app.data_in_data_collection[self._hash_label_dict[data_hash]] = True
-
     @property
     def selected_index(self):
         return self.selected_item.get('index', None)
@@ -1481,24 +1472,12 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def viewer_labels(self):
         return [item.get('viewer_label', None) for item in self.items]
 
-    def _generate_data_hashes(self):
-        for item in self.items:
-            item['data_hash'] = create_data_hash(item.get('obj', None))
-
-    @property
-    def data_hashes(self):
-        return [item.get('data_hash', None) for item in self.items]
-
-    @property
-    def _hash_label_dict(self):
-        return {item['data_hash']: item['label'] for item in self.items}
-
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
         return {k: manual_item.get(k, None)
-                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'viewer_label', 'data_hash')}
+                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'viewer_label')}
 
     @observe('filters')
     def _update_items(self, msg={}):

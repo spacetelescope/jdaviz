@@ -26,7 +26,7 @@ from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
-from specutils import SpectrumList, SpectrumCollection, Spectrum
+from specutils import Spectrum
 from specutils.utils.wcs_utils import SpectralGWCS
 import stdatamodels
 
@@ -1030,20 +1030,14 @@ def _clean_data_arr_for_hash(data):
 def create_data_hash(input_data):
     """
     Create and return a deterministic hash for the provided data.
-    The function accepts various data types including n-dimensional
-    array-like objects, strings, lists of arrays or strings, and FITS HDULists
-    or Spectrum objects from `specutils`. If ``input_data`` is ``None``,
-    the function will return `None`. The hash covers the array's shape,
-    dtype (including endianness), the raw bytes of the array processed in
-    chunks, and when applicable, a mask and units for `astropy.units.Quantity`.
-    For lists of arrays or strings, individual hashes are created for each
-    element and combined into a final hash.
+    The function supports various input types including numpy arrays,
+    astropy Quantities, strings, and specutils Spectrum objects. If the input
+    is `None` or of an unsupported type (e.g., a plain number), the function
+    returns `None`.
 
     Parameters
     ----------
-    input_data : array-like, `astropy.units.Quantity`, str, list, tuple,
-                    `astropy.io.fits.HDUList`, `specutils.Spectrum`,
-                    `specutils.SpectrumList`, or `specutils.SpectrumCollection`
+    input_data : array-like, str, `astropy.units.Quantity`, `specutils.Spectrum1D`, or None
         The data to hash. If a list or tuple, it may contain arrays or strings.
         If `astropy.units.Quantity`, the unit is included in the hash.
         If `None`, the function returns `None`.
@@ -1054,23 +1048,19 @@ def create_data_hash(input_data):
         A hexadecimal string representing the SHA-256 hash of the data,
         or `None` if `input_data` is `None` or of an unsupported type
         (e.g., a plain number).
-    list
-        A list of individual hashes if `input_data` is a list or tuple
-        of arrays or strings; otherwise, an empty list.
     """
     def _from_arr(input_d):
         """
         Parameters
         ----------
-        input_d : array-like or `astropy.units.Quantity`
+        input_d : array-like or `astropy.units.Quantity` or `specutils.Spectrum1D`
             The data array to hash. If `astropy.units.Quantity`, the unit
             is included in the hash.
 
         Returns
         -------
-        function
-            A function which, when called, returns a hexadecimal string
-            representing the SHA-256 hash of the data.
+        str
+            Hexadecimal string of the hash.
         """
         arr, mask_arr, unit_str = _clean_data_arr_for_hash(input_d)
 
@@ -1146,30 +1136,11 @@ def create_data_hash(input_data):
 
         return hasher.hexdigest()
 
-    if isinstance(input_data, (np.ndarray, Quantity)):
-        return [_from_arr(input_data)]
+    if isinstance(input_data, (np.ndarray, Quantity, Spectrum)):
+        return _from_arr(input_data)
 
     elif isinstance(input_data, str):
-        return [_from_str(input_data)]
-
-    # Assume lists and tuples contain arrays or strings
-    # Include Spectrum here for 2D spectra
-    elif isinstance(input_data, (fits.HDUList,
-                                 Spectrum, SpectrumList, SpectrumCollection,
-                                 list, tuple)):
-
-        # Check for 1D Spectra
-        if isinstance(input_data, Spectrum) and input_data.flux.ndim == 1:
-            input_data = [input_data]
-
-        hash_list = []
-        for i_d in input_data:
-            if isinstance(i_d, (np.ndarray, Quantity, Spectrum)):
-                hash_list.append(_from_arr(i_d))
-            elif isinstance(i_d, str):
-                hash_list.append(_from_str(i_d))
-
-        return hash_list
+        return _from_str(input_data)
 
     else:
         return None

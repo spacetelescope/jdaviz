@@ -2683,6 +2683,8 @@ class Application(VuetifyTemplate, HubListener):
                      if x['id'] == data_id), None)
 
     def _update_data_in_data_collection(self, msg, data_added):
+        # No need to initialize a dictionary of labels in data_in_data_collection
+        # since vue evaluates an empty key as undefined => False
         update_dict = self.data_in_data_collection.copy()
         data_loader_label = msg.data.meta.get('_data_loader_label', None)
         if data_loader_label is not None:
