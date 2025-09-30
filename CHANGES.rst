@@ -4,18 +4,21 @@
 New Features
 ------------
 
-- Add check for valid model fitting equation operators. [#3818]
+- Loaders now all support "observation" and "file" tables, allowing choosing which file to download
+  and import from an astroquery or MAST search. [#3769]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
 
 - Plugin-specific viewer tools (footprint, catalogs, line lists, line analysis) now have a
   toggle button in the plugin UI to enable/disable a custom toolbar specific to that context. [#3812]
 
+- Data selected for load in the UI is now checked against existing data for duplicates
+  and the user warned. [#3813]
+
+- Add check for valid model fitting equation operators. [#3818]
+
 - Viewers now support being popped out into separate window or sending to any sidecar location via `.show()`
   API. [#3821]
-
-- Loaders now all support "observation" and "file" tables, allowing choosing which file to download
-  and import from an astroquery or MAST search. [#3769]
 
 - Added descriptive hints for toggleable model fitter parameters in the Model Fitting plugin. [#3831]
 
