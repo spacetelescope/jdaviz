@@ -6,7 +6,7 @@
       style="border-top-left-radius: 24px; border-bottom-left-radius: 24px;"
     >
       <v-btn @click="restore_tools" style="background-color: #007ba1; color: white; border-bottom-right-radius: 0; border-top-right-radius: 0; padding-top: 3px">
-        <j-tooltip :tooltipcontent="`exit ${tool_override_mode} mode and restore original toolbar`" span_style="height: inherit; display: inherit; pointer-events: cursor;">
+        <j-tooltip :tooltipcontent="`exit '${tool_override_mode}' mode and restore original toolbar`" span_style="height: inherit; display: inherit; pointer-events: cursor;">
           <v-icon style="margin-left: 4px;">mdi-close</v-icon>
           <span style="color: white; margin-top: 4px">{{ tool_override_mode }}</span>
         </j-tooltip>

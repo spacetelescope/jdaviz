@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import os
 import traitlets
 
@@ -102,17 +103,20 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         # with each additional entry available from a dropdown.  For
         # backwards compatibility with BasicJupyterToolbar, single strings
         # will be treated as having no submenu.
+        tools_data = OrderedDict()
         for menu_ind, subtools in enumerate(tools_nested):
             if isinstance(subtools, str):
                 subtools = [subtools]
             for i, tool_id in enumerate(subtools):
                 tool_cls = viewer_tool.members[tool_id]
                 tool = tool_cls(self.viewer)
-                self.add_tool(tool,
-                              menu_ind=menu_ind,
-                              has_suboptions=len(subtools) > 1,
-                              primary=i == 0,
-                              visible=True)
+                tools_data = self.add_tool(tools_data,
+                                           tool=tool,
+                                           menu_ind=menu_ind,
+                                           has_suboptions=len(subtools) > 1,
+                                           primary=i == 0,
+                                           visible=True)
+        self.tools_data = tools_data
 
         # handle logic for tool visibilities (which will also handle setting the primary
         # to something other than the first entry, if necessary)
@@ -261,7 +265,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         menu_ind = self.tools_data[tool_id]['menu_ind']
         self._select_tool(tool_id, menu_ind)
 
-    def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False, visible=True):
+    def add_tool(self, tools_data, tool, menu_ind, has_suboptions=True, primary=False, visible=True):
         # NOTE: this method is essentially copied from glue-jupyter's BasicJupyterToolbar,
         # but we need extra values in the tools_data dictionary.  We could call super(),
         # but then that would create tools_data twice, which would then cause
@@ -271,8 +275,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             path = tool.icon
         else:
             path = icon_path(tool.icon, icon_format='svg')
-        self.tools_data = {
-            **self.tools_data,
+        tools_data = {
+            **tools_data,
             tool.tool_id: {
                 'tooltip': tool.tool_tip,
                 'img': read_icon(path, 'svg+xml'),
@@ -282,6 +286,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 'visible': visible
             }
         }
+        return tools_data
 
     def vue_select_primary(self, args):
         """
