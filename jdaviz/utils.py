@@ -26,6 +26,7 @@ from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
+from specutils import SpectrumList, SpectrumCollection, Spectrum
 from specutils.utils.wcs_utils import SpectralGWCS
 import stdatamodels
 
@@ -1027,20 +1028,41 @@ def _clean_data_arr_for_hash(data):
 
 
 def create_data_hash(input_data):
+    """
+    Create and return a deterministic hash for the provided data.
+    The function accepts various data types including n-dimensional
+    array-like objects, strings, lists of arrays or strings, and FITS HDULists
+    or Spectrum objects from `specutils`. If ``input_data`` is ``None``,
+    the function will return `None`. The hash covers the array's shape,
+    dtype (including endianness), the raw bytes of the array processed in
+    chunks, and when applicable, a mask and units for `astropy.units.Quantity`.
+    For lists of arrays or strings, individual hashes are created for each
+    element and combined into a final hash.
 
+    Parameters
+    ----------
+    input_data : array-like, `astropy.units.Quantity`, str, list, tuple,
+                    `astropy.io.fits.HDUList`, `specutils.Spectrum`,
+                    `specutils.SpectrumList`, or `specutils.SpectrumCollection`
+        The data to hash. If a list or tuple, it may contain arrays or strings.
+        If `astropy.units.Quantity`, the unit is included in the hash.
+        If `None`, the function returns `None`.
+
+    Returns
+    -------
+    str or None
+        A hexadecimal string representing the SHA-256 hash of the data,
+        or `None` if `input_data` is `None` or of an unsupported type
+        (e.g., a plain number).
+    list
+        A list of individual hashes if `input_data` is a list or tuple
+        of arrays or strings; otherwise, an empty list.
+    """
     def _from_arr(input_data):
         """
-        Create and return a deterministic hash for the provided data array.
-
-        The function accepts an n-dimensional array-like object. If
-        ``data`` is ``None``, it will attempt to use ``self.output`` as
-        the source. The hash covers the array's shape, dtype (including
-        endianness), the raw bytes of the array processed in chunks, and
-        when applicable, a mask and units for `astropy.units.Quantity`.
-
         Parameters
         ----------
-        data : array-like or `astropy.units.Quantity`
+        input_data : array-like or `astropy.units.Quantity`
             The data array to hash. If `astropy.units.Quantity`, the unit
             is included in the hash.
 
@@ -1124,11 +1146,34 @@ def create_data_hash(input_data):
 
         return hasher.hexdigest()
 
-    if isinstance(input_data, (np.ndarray, Quantity, list, tuple)):
-        return _from_arr(input_data)
+    hash_list = []
+
+    if isinstance(input_data, (np.ndarray, Quantity)):
+        return _from_arr(input_data), hash_list
 
     elif isinstance(input_data, str):
-        return _from_str(input_data)
+        return _from_str(input_data), hash_list
+
+    elif isinstance(input_data, (fits.HDUList,
+                                 Spectrum, SpectrumList, SpectrumCollection,
+                                 list, tuple)):
+        # Assume lists and tuples contain arrays or strings
+        if isinstance(input_data, Spectrum) and input_data.flux.ndim == 1:
+            input_data = [input_data]
+
+        final_hash = ''
+        for i_d in input_data:
+            if isinstance(i_d, (np.ndarray, Quantity)):
+                # Create hash for each array and concatenate
+                result = _from_arr(i_d)
+                hash_list.append(result)
+                final_hash += result
+            elif isinstance(i_d, str):
+                hash_list.append(_from_str(i_d))
+                # No need to hash each string, we'll hash at the end
+                final_hash += i_d
+
+        return _from_str(final_hash), hash_list
 
     else:
         return None
