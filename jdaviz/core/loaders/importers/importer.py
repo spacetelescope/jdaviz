@@ -146,6 +146,11 @@ class BaseImporterToDataCollection(BaseImporter):
                            handler=lambda _: self._on_label_changed())
         self._on_label_changed()
 
+        # Doing this in app instead of here avoids a lot of unnecessary overhead
+        # from all the importers in memory
+        self.app.observe(self._update_data_in_dc_traitlet, 'data_in_data_collection')
+        self._update_data_in_dc_traitlet()
+
         supported_viewers = self._get_supported_viewers()
         if self.app.config in ('deconfigged', 'imviz', 'lcviz'):
             self.viewer_create_new_items = supported_viewers
@@ -162,6 +167,9 @@ class BaseImporterToDataCollection(BaseImporter):
             return isinstance(viewer, tuple(classes))
         self.viewer.add_filter(viewer_in_registry_names)
         self.viewer.select_default()
+
+    def _update_data_in_dc_traitlet(self, change={}):
+        self.data_in_data_collection = self.app.data_in_data_collection
 
     @staticmethod
     def _get_supported_viewers():
@@ -218,6 +226,7 @@ class BaseImporterToDataCollection(BaseImporter):
             item = {}
 
         data_hash = item.get('data_hash', None)
+        data_loader_label = item.get('label', '')
 
         if data_label is None:
             data_label = self.data_label_value.strip()
@@ -243,10 +252,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
         # Create a 'hash' representation of the data if not already present
         data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
-
-        update_dict = self.data_in_data_collection.copy()
-        update_dict[item.get('label', '')] = True
-        self.data_in_data_collection = update_dict
+        data.meta['_data_loader_label'] = data_loader_label
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
