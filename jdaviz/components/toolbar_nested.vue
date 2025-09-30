@@ -1,9 +1,22 @@
 <template>
-  <div style="overflow: hidden">
-    <v-btn-toggle v-model="active_tool_id" class="transparent">
+  <div style="overflow: hidden; margin-right: 0px">
+    <!-- Override mode indicator -->
+    <v-btn-toggle
+      v-if="tool_override_mode.length > 0"
+      style="border-top-left-radius: 24px; border-bottom-left-radius: 24px;"
+    >
+      <v-btn @click="restore_tools" style="background-color: #007ba1; color: white; border-bottom-right-radius: 0; border-top-right-radius: 0; padding-top: 3px">
+        <j-tooltip :tooltipcontent="`exit ${tool_override_mode} mode and restore original toolbar`" span_style="height: inherit; display: inherit; pointer-events: cursor;">
+          <v-icon style="margin-left: 4px;">mdi-close</v-icon>
+          <span style="color: white; margin-top: 4px">{{ tool_override_mode }}</span>
+        </j-tooltip>
+      </v-btn>
+    </v-btn-toggle>
+
+    <v-btn-toggle v-model="active_tool_id" :style="" class="transparent">
         <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
             <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon :value="id" style="min-width: 40px !important" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+                <v-btn v-on="on" icon :value="id" :style="`min-width: 40px !important; ${tool_override_mode.length > 0 ? 'background-color: #007ba1;' : ''}`" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
                     <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
