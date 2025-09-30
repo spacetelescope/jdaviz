@@ -348,6 +348,8 @@ class Application(VuetifyTemplate, HubListener):
 
     template_file = __file__, "app.vue"
 
+    data_in_data_collection = Dict().tag(sync=True)
+
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
     api_hints_obj = Unicode("").tag(sync=True)  # will use config if not defined
@@ -2680,6 +2682,13 @@ class Application(VuetifyTemplate, HubListener):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
 
+    def _update_data_in_data_collection(self, msg, data_added):
+        update_dict = self.data_in_data_collection.copy()
+        data_loader_label = msg.data.meta.get('_data_loader_label', None)
+        if data_loader_label is not None:
+            update_dict[data_loader_label] = data_added
+            self.data_in_data_collection = update_dict
+
     def _on_data_added(self, msg):
         """
         Callback for when data is added to the internal ``DataCollection``.
@@ -2698,6 +2707,8 @@ class Application(VuetifyTemplate, HubListener):
         data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
         self._reserved_labels.add(msg.data.label)
+
+        self._update_data_in_data_collection(msg, data_added=True)
 
     def _clear_object_cache(self, data_label=None):
         if data_label is None:
@@ -2723,6 +2734,8 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.data_items.remove(data_item)
 
         self._clear_object_cache(msg.data.label)
+
+        self._update_data_in_data_collection(msg, data_added=False)
 
     def _create_data_item(self, data):
         ndims = len(data.shape)

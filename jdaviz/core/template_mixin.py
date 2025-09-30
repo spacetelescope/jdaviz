@@ -1439,12 +1439,13 @@ class SelectFileExtensionComponent(SelectPluginComponent):
                          manual_options=manual_options, filters=filters)
 
         self._generate_data_hashes()
-        self.data_in_data_collection = {label: False for label in self.labels}
+        if not hasattr(self.app, 'data_in_data_collection'):
+            self.app.data_in_data_collection = {label: False for label in self.labels}
 
         for data in self.app.data_collection:
             data_hash = data.meta.get('_data_hash', None)
             if data_hash is not None and data_hash in self.data_hashes:
-                self.data_in_data_collection[self._hash_label_dict[data_hash]] = True
+                self.app.data_in_data_collection[self._hash_label_dict[data_hash]] = True
 
     @property
     def selected_index(self):
