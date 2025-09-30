@@ -81,7 +81,6 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': hdu.ver,
                                 'name_ver': f"{hdu.name},{hdu.ver}",
                                 'index': index,
-                                'data_hash': create_data_hash(hdu),
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
             elif input_is_roman:
@@ -91,7 +90,6 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': None,
                                 'name_ver': key,
                                 'index': index,
-                                'data_hash': create_data_hash(value),
                                 'obj': value}
                                for index, (key, value) in enumerate(input.items())]
             else:
@@ -108,8 +106,6 @@ class ImageImporter(BaseImporterToDataCollection):
             self.extension.selected = [self.extension.choices[0]]
         else:
             self._set_default_data_label()
-
-        self.data_in_data_collection = self.extension.data_in_data_collection
 
     @staticmethod
     def _get_supported_viewers():
