@@ -20,7 +20,7 @@ from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
     PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip, create_data_hash
+    _try_gwcs_to_fits_sip
 )
 
 try:
