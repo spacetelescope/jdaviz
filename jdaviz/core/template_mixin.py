@@ -300,9 +300,13 @@ class CustomToolbarToggleMixin(VuetifyTemplate, HubListener):
     def custom_toolbar_tools(self, viewer):
         return None, None
 
-    def vue_toggle_custom_toolbar(self, *args):
-        """Toggle the custom toolbar mode for line selection."""
+    def toggle_custom_toolbar(self):
+        """Toggle the custom toolbar mode."""
+        # TODO: API hints?
         self.custom_toolbar.toggle()
+
+    def vue_toggle_custom_toolbar(self, *args):
+        self.toggle_custom_toolbar()
 
 
 class LoadersMixin(VuetifyTemplate, HubListener):
