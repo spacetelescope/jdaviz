@@ -1046,7 +1046,7 @@ def create_data_hash(input_data):
     -------
     str or None
         A hexadecimal string representing the SHA-256 hash of the data,
-        or `None` if `input_data` is `None` or of an unsupported type
+        or `None` if 'input_data' is `None` or of an unsupported type
         (e.g., a plain number).
     """
     def _from_arr(input_d):
