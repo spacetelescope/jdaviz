@@ -1010,10 +1010,12 @@ class Application(VuetifyTemplate, HubListener):
             The label to show in the viewer toolbar for the custom tool set.
         """
         for viewer in self._viewer_store.values():
-            tools_nested = callable(viewer)
+            tools_nested, selected_tool = callable(viewer)
             if tools_nested is None:
                 tools_nested = viewer.toolbar._original_tools_nested[:3]
             viewer.toolbar.override_tools(tools_nested, name)
+            if selected_tool is not None:
+                viewer.toolbar.active_tool_id = selected_tool
 
     def _get_wcs_from_subset(self, subset_state, data=None):
         """ Usually WCS is subset.parent.coords, except special cubeviz case."""

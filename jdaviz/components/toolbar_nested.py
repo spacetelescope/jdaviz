@@ -59,7 +59,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                                           handler=lambda _: self._update_tool_visibilities())
             # Subscribe to restore toolbar message with dedicated handler
             self.viewer.hub.subscribe(self, RestoreToolbarMessage,
-                                      handler=lambda _: self.restore_tools(all_viewers=False))
+                                      handler=lambda msg: self.restore_tools(all_viewers=False))
 
     def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[]):
         """

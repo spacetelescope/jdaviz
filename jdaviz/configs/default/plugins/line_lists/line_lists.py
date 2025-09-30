@@ -15,7 +15,7 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 AddLineListMessage,
-                                LineIdentifyMessage,
+                                LineIdentifyMessage, RestoreToolbarMessage,
                                 SnackbarMessage,
                                 RedshiftMessage,
                                 SpectralMarksChangedMessage)
@@ -27,6 +27,39 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.unit_conversion_utils import create_equivalent_spectral_axis_units_list
 
 __all__ = ['LineListTool']
+
+
+from glue.core import HubListener
+
+
+class CustomToolbarMode(HubListener):
+    def __init__(self, plugin, enabled_traitlet, callable, name):
+        super().__init__()
+        self.callable = callable
+        self.name = name
+        self.plugin = plugin
+        self.enabled_traitlet = enabled_traitlet
+
+        self.app.hub.subscribe(self, RestoreToolbarMessage,
+                               handler=self._on_restore_toolbar)
+
+    @property
+    def app(self):
+        return self.plugin.app
+
+    def toggle(self):
+        if not getattr(self.plugin, self.enabled_traitlet):
+            # TODO: allow defining a tool to be activated on init
+            self.app._override_viewer_tools(self.callable, self.name)
+            setattr(self.plugin, self.enabled_traitlet, True)
+        else:
+            # this will trigger _on_restore_toolbar and set mode_activated = False
+            self.app.hub.broadcast(RestoreToolbarMessage(sender=self))
+
+    def _on_restore_toolbar(self, msg):
+        # TODO: if someone else overrides the tools, we should know about it and act as if not activated
+        # or maybe that should send out a RestoreMessage first?
+        setattr(self.plugin, self.enabled_traitlet, False)
 
 
 @tray_registry('g-line-list', label="Line Lists", category="data:analysis")
@@ -64,10 +97,24 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
     filter_range_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'spectral_range.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
+    custom_toolbar_enabled = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.viewer.add_filter('is_spectrum_viewer')
+
+        def custom_toolbar(viewer):
+            if viewer.reference in self.viewer.choices:
+                return [['jdaviz:homezoom_matchx', 'jdaviz:homezoom', 'jdaviz:prevzoom'],
+                        ['jdaviz:boxzoom_matchx', 'jdaviz:xrangezoom_matchx', 'jdaviz:boxzoom', 'jdaviz:yrangezoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
+                        ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx', 'jdaviz:panzoom_y', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
+                        ['jdaviz:selectline']], 'jdaviz:selectline'
+            # otherwise defaults
+            return None, None
+
+        self.custom_toolbar = CustomToolbarMode(self, 'custom_toolbar_enabled',
+                                                custom_toolbar, 'Line Selection',)
 
         self._spectrum1d = None
         self.list_to_load = None
@@ -125,6 +172,10 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Plot spectral lines from preset or custom line lists.'
+
+    def vue_toggle_custom_toolbar(self, *args):
+        """Toggle the custom toolbar mode for line selection."""
+        self.custom_toolbar.toggle()
 
     def _irrelevant_msg_callback(self, *args):
         if not hasattr(self, 'viewer'):
