@@ -1058,11 +1058,11 @@ def create_data_hash(input_data):
         A list of individual hashes if `input_data` is a list or tuple
         of arrays or strings; otherwise, an empty list.
     """
-    def _from_arr(input_data):
+    def _from_arr(input_d):
         """
         Parameters
         ----------
-        input_data : array-like or `astropy.units.Quantity`
+        input_d : array-like or `astropy.units.Quantity`
             The data array to hash. If `astropy.units.Quantity`, the unit
             is included in the hash.
 
@@ -1072,7 +1072,7 @@ def create_data_hash(input_data):
             A function which, when called, returns a hexadecimal string
             representing the SHA-256 hash of the data.
         """
-        arr, mask_arr, unit_str = _clean_data_arr_for_hash(input_data)
+        arr, mask_arr, unit_str = _clean_data_arr_for_hash(input_d)
 
         # Initialize hasher and include shape/dtype to avoid collisions
         # Use blake2b and shorter digest for speed
@@ -1119,13 +1119,13 @@ def create_data_hash(input_data):
 
         return hasher.hexdigest()
 
-    def _from_str(input_data):
+    def _from_str(input_d):
         """
         Create and return a deterministic hash for the provided string/string array.
 
         Parameters
         ----------
-        input_data : str or list of str
+        input_d : str or list of str
             Input string to be hashed.
 
         Returns
@@ -1133,47 +1133,43 @@ def create_data_hash(input_data):
         str
             Hexadecimal string of the hash.
         """
-        if input_data is None:
+        if input_d is None:
             msg = 'No data provided to create_data_hash_from_str.'
             raise ValueError(msg)
 
-        if isinstance(input_data, (list, tuple)):
-            input_data = ''.join(input_data)
+        if isinstance(input_d, (list, tuple)):
+            input_d = ''.join(input_d)
 
         # Initialize hasher and encode the string as bytes
         hasher = hashlib.blake2b(digest_size=16)
-        hasher.update(input_data.encode())
+        hasher.update(input_d.encode())
 
         return hasher.hexdigest()
 
-    hash_list = []
-
     if isinstance(input_data, (np.ndarray, Quantity)):
-        return _from_arr(input_data), hash_list
+        return [_from_arr(input_data)]
 
     elif isinstance(input_data, str):
-        return _from_str(input_data), hash_list
+        return [_from_str(input_data)]
 
+    # Assume lists and tuples contain arrays or strings
+    # Include Spectrum here for 2D spectra
     elif isinstance(input_data, (fits.HDUList,
                                  Spectrum, SpectrumList, SpectrumCollection,
                                  list, tuple)):
-        # Assume lists and tuples contain arrays or strings
+
+        # Check for 1D Spectra
         if isinstance(input_data, Spectrum) and input_data.flux.ndim == 1:
             input_data = [input_data]
 
-        final_hash = ''
+        hash_list = []
         for i_d in input_data:
-            if isinstance(i_d, (np.ndarray, Quantity)):
-                # Create hash for each array and concatenate
-                result = _from_arr(i_d)
-                hash_list.append(result)
-                final_hash += result
+            if isinstance(i_d, (np.ndarray, Quantity, Spectrum)):
+                hash_list.append(_from_arr(i_d))
             elif isinstance(i_d, str):
                 hash_list.append(_from_str(i_d))
-                # No need to hash each string, we'll hash at the end
-                final_hash += i_d
 
-        return _from_str(final_hash), hash_list
+        return hash_list
 
     else:
         return None
