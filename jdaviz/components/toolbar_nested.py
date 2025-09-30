@@ -10,7 +10,7 @@ from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                                FootprintMarkVisibilityChangedMessage)
+                                FootprintMarkVisibilityChangedMessage, RestoreToolbarMessage)
 
 __all__ = ['NestedJupyterToolbar']
 
@@ -31,6 +31,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     # absolute positions to display the menu
     suboptions_x = traitlets.Float().tag(sync=True)
     suboptions_y = traitlets.Float().tag(sync=True)
+    # string indicating the current tool override mode
+    tool_override_mode = traitlets.Unicode("").tag(sync=True)
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
@@ -54,8 +56,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                         FootprintMarkVisibilityChangedMessage):
                 self.viewer.hub.subscribe(self, msg,
                                           handler=lambda _: self._update_tool_visibilities())
+            # Subscribe to restore toolbar message with dedicated handler
+            self.viewer.hub.subscribe(self, RestoreToolbarMessage,
+                                      handler=lambda _: self.restore_tools(all_viewers=False))
 
-    def override_tools(self, tools_nested, default_tool_priority=[]):
+    def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[]):
         """
         Rebuild the toolbar with passed values.
 
@@ -63,9 +68,14 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         ----------
         tools_nested : list
             Nested list of tool configurations for the new toolbar
+        tool_override_mode : str
+            String indicating the current tool override mode
         default_tool_priority : list, optional
             Priority list for default tool selection
         """
+        # Store the override mode
+        self.tool_override_mode = tool_override_mode
+
         # Clear current toolbar
         self._clear_toolbar()
 
@@ -109,11 +119,22 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         # NOTE: this will also call _handle_default_tool
         self._update_tool_visibilities()
 
-    def restore_tools(self):
+    def restore_tools(self, all_viewers=True):
         """
         Restore the toolbar to its original configuration from initialization.
         """
-        self.override_tools(self._original_tools_nested, self._original_default_tool_priority)
+        self.override_tools(self._original_tools_nested,
+                            "",
+                            self._original_default_tool_priority)
+        if all_viewers and hasattr(self.viewer, 'hub'):
+            self.viewer.hub.broadcast(RestoreToolbarMessage(sender=self))
+
+    def vue_restore_tools(self, *args):
+        """
+        Vue method to restore all toolbar instances to their original configuration.
+        Emits a RestoreToolbarMessage that all toolbar instances will respond to.
+        """
+        self.restore_tools()
 
     def _clear_toolbar(self):
         """
