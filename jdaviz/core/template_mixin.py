@@ -73,7 +73,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_not_relevant',
            'with_spinner', 'with_temp_disable',
            'WithCache', 'LoadersMixin', 'ViewerPropertiesMixin',
-           'CustomToolbarToggle',
+           'CustomToolbarToggle', 'CustomToolbarToggleMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -279,16 +279,13 @@ class CustomToolbarToggle(HubListener):
 
     def toggle(self):
         if not getattr(self.plugin, self.enabled_traitlet):
-            # TODO: allow defining a tool to be activated on init
             self.app._override_viewer_tools(self.callable, self.name)
             setattr(self.plugin, self.enabled_traitlet, True)
         else:
             # this will trigger _on_restore_toolbar and set mode_activated = False
             self.app.hub.broadcast(RestoreToolbarMessage(sender=self))
 
-    def _on_restore_toolbar(self, msg):
-        # TODO: if someone else overrides the tools, we should know about it and act as if not activated
-        # or maybe that should send out a RestoreMessage first?
+    def _on_restore_toolbar(self, msg={}):
         setattr(self.plugin, self.enabled_traitlet, False)
 
 

@@ -265,7 +265,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         menu_ind = self.tools_data[tool_id]['menu_ind']
         self._select_tool(tool_id, menu_ind)
 
-    def add_tool(self, tools_data, tool, menu_ind, has_suboptions=True, primary=False, visible=True):
+    def add_tool(self, tools_data, tool, menu_ind, has_suboptions=True,
+                 primary=False, visible=True):
         # NOTE: this method is essentially copied from glue-jupyter's BasicJupyterToolbar,
         # but we need extra values in the tools_data dictionary.  We could call super(),
         # but then that would create tools_data twice, which would then cause

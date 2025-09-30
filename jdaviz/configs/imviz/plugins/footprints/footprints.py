@@ -214,7 +214,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
 
         def custom_toolbar(viewer):
             if viewer.reference in self.viewer.choices:
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectfootprint']], 'jdaviz:selectfootprint'
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectfootprint']], 'jdaviz:selectfootprint'  # noqa
             # otherwise defaults
             return None, None
 

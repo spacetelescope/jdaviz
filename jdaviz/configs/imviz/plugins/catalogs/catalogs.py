@@ -79,7 +79,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
 
         def custom_toolbar(viewer):
             if viewer.reference in self.viewer.choices:
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectcatalog']], 'jdaviz:selectcatalog'
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectcatalog']], 'jdaviz:selectcatalog'  # noqa
             # otherwise defaults
             return None, None
 
