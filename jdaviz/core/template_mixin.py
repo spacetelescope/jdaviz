@@ -42,7 +42,7 @@ from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, RestoreToolbarMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 ViewerVisibleLayersChangedMessage,
@@ -73,6 +73,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_not_relevant',
            'with_spinner', 'with_temp_disable',
            'WithCache', 'LoadersMixin', 'ViewerPropertiesMixin',
+           'CustomToolbarToggle',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -259,6 +260,52 @@ class WithCache:
         for attr in attrs:
             if attr in self.__dict__:
                 del self.__dict__[attr]
+
+
+class CustomToolbarToggle(HubListener):
+    def __init__(self, plugin, enabled_traitlet, callable, name):
+        super().__init__()
+        self.callable = callable
+        self.name = name
+        self.plugin = plugin
+        self.enabled_traitlet = enabled_traitlet
+
+        self.app.hub.subscribe(self, RestoreToolbarMessage,
+                               handler=self._on_restore_toolbar)
+
+    @property
+    def app(self):
+        return self.plugin.app
+
+    def toggle(self):
+        if not getattr(self.plugin, self.enabled_traitlet):
+            # TODO: allow defining a tool to be activated on init
+            self.app._override_viewer_tools(self.callable, self.name)
+            setattr(self.plugin, self.enabled_traitlet, True)
+        else:
+            # this will trigger _on_restore_toolbar and set mode_activated = False
+            self.app.hub.broadcast(RestoreToolbarMessage(sender=self))
+
+    def _on_restore_toolbar(self, msg):
+        # TODO: if someone else overrides the tools, we should know about it and act as if not activated
+        # or maybe that should send out a RestoreMessage first?
+        setattr(self.plugin, self.enabled_traitlet, False)
+
+
+class CustomToolbarToggleMixin(VuetifyTemplate, HubListener):
+    custom_toolbar_enabled = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.custom_toolbar = CustomToolbarToggle(self, 'custom_toolbar_enabled',
+                                                  self.custom_toolbar_tools, 'Custom Toolbar')
+
+    def custom_toolbar_tools(self, viewer):
+        return None, None
+
+    def vue_toggle_custom_toolbar(self, *args):
+        """Toggle the custom toolbar mode for line selection."""
+        self.custom_toolbar.toggle()
 
 
 class LoadersMixin(VuetifyTemplate, HubListener):
