@@ -148,10 +148,6 @@ module.exports = {
       const key = (typeof item === 'string')
         ? item
         : (item.label || item.text || item);
-      // Tiny debug log to help diagnose why the icon may not update.
-      // This will appear in the browser DevTools console when the
-      // dropdown renders or updates.
-      console.warn('existsFor:', key, !!map[key], map);
       return !!map[key];
     },
     on_search_input(value) {
