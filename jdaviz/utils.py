@@ -1003,26 +1003,22 @@ def _clean_data_arr_for_hash(data):
     target_for_hash : array-like
         The extracted array to be used for hashing.
     """
+    new_data = None
     if hasattr(data, 'flux'):
-        data = getattr(data, 'flux')
+        new_data = data.flux
     elif hasattr(data, 'data'):
-        data = getattr(data, 'data')
-    else:
-        data = data
+        new_data = data.data
 
-    unit_str = None
-    # Handle astropy Quantity by extracting value and recording unit
-    if isinstance(data, Quantity):
-        unit_str = str(data.unit)
-        arr = np.ascontiguousarray(data.value)
-    else:
-        arr = np.ascontiguousarray(data)
+    unit_str = getattr(data, 'unit', None) or getattr(new_data, 'unit', None)
+    unit_str = str(unit_str) if unit_str is not None else unit_str
 
-    # If it's a masked array, separate mask and data
-    mask_arr = None
-    if hasattr(arr, 'mask') and np.ma.is_masked(arr):
-        mask_arr = np.ascontiguousarray(np.asarray(arr.mask).astype('uint8'))
-        arr = np.ascontiguousarray(np.asarray(arr.data))
+    data_mask = getattr(data, 'mask', None)
+    new_data_mask = getattr(new_data, 'mask', None)
+    mask_arr = data_mask if data_mask is not None else new_data_mask
+
+    arr = np.ascontiguousarray(new_data)
+    if mask_arr is not None:
+        mask_arr = np.ascontiguousarray(mask_arr).astype('uint8') if mask_arr is not None else None
 
     return arr, mask_arr, unit_str
 
