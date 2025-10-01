@@ -347,3 +347,38 @@ def test_footprint_loaders(imviz_helper, image_2d_wcs):
     ldr.importer()
 
     assert 'imported from STCS' in plg.overlay.choices
+
+
+def test_skewer_selection_with_presets(imviz_helper):
+    wcs = WCS({
+        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+        'CRPIX1': 1, 'CRVAL1': 9.423508457380343,
+        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+        'CRPIX2': 1, 'CRVAL2': -33.71313112382379
+    })
+    arr = np.arange(40000).reshape(200, 200)
+    imviz_helper.load_data(NDData(arr, wcs=wcs))
+
+    fp = imviz_helper.plugins['Footprints']
+    toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
+    tool = toolbar.tools['jdaviz:skewerselect']
+
+    with fp.as_active():
+        # Add overlays with different presets
+        fp._obj.add_overlay("layer1")
+        fp._obj.preset_selected = "MIRI"
+
+        fp._obj.add_overlay("layer2")
+        fp._obj.preset_selected = "WFI+CGI"
+
+        # Click inside WFI+CGI
+        tool.on_mouse_event({'domain': {'x': 100, 'y': 100}})
+        assert fp._obj.overlay_selected == "layer2"
+
+        # Click inside MIRI but outside WFI+CGI
+        tool.on_mouse_event({'domain': {'x': 75, 'y': 100}})
+        assert fp._obj.overlay_selected == "layer1"
+
+        # Click inside default overlay
+        tool.on_mouse_event({'domain': {'x': 30, 'y': 130}})
+        assert fp._obj.overlay_selected == "default"
