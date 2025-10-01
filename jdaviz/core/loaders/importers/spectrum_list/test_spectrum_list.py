@@ -97,7 +97,7 @@ class TestSpectrumListImporter:
                 'ver': [ver, file_index],
                 'name_ver': [f"{ver}_{name}", file_index],
                 'index': [index, index],
-                'suffix': [f"EXP-{ver}_ID-{name}", f"index-{file_index}"],
+                'viewer_label': [f"1D Spectrum_EXP-{ver}_ID-{name}", f"1D Spectrum_index-{index}"],
                 'obj': None}
 
             assert isinstance(spec_dict, dict)
