@@ -58,21 +58,21 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 label = f"{exposure_label}, Source ID: {name}"
                 # Flipping the two from the variable naming convention
                 name_ver = f"{ver}_{name}"
-                viewer_label = f"{self.data_label_value}_EXP-{ver}_ID-{name}"
+                suffix = f"EXP-{ver}_ID-{name}"
 
             else:
                 name_ver = index
                 name = index
                 ver = index
                 label = f"1D Spectrum at index: {index}"
-                viewer_label = f"{self.data_label_value}_index-{index}"
+                suffix = f"index-{index}"
 
             sources_options.append({'label': label,
                                     'index': index,
                                     'name': str(name),
                                     'ver': str(ver),
                                     'name_ver': str(name_ver),
-                                    'viewer_label': viewer_label,
+                                    'suffix': suffix,
                                     'obj': self._apply_spectral_mask(spec)})
 
         self.sources = SelectFileExtensionComponent(self,
@@ -248,9 +248,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
-                self.add_to_data_collection(spec_obj,
-                                            item_dict.get('viewer_label', None),
-                                            item_dict)
+                data_label = f"{self.data_label_value}_{item_dict['suffix']}"
+                self.add_to_data_collection(spec_obj, data_label, item_dict)
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
