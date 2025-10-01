@@ -514,14 +514,18 @@ class TestTwo2dSpectra:
         assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
             'Extracted spectra should differ!'
 
-        # Check linking, e.g.
-        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral axis]
-        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
-        # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
-        # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
-        # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
-        # Another 2D Spectral Extraction <=> 2D Spectrum
-        assert len(dc.external_links) == 6
+        # additional links set up in specviz2d for subset linking between viewers
+        if method in ('specviz2d_alternate_order', 'specviz2d'):
+            assert len(dc.external_links) == 9
+        else:
+            # Check linking, e.g.
+            # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral axis]
+            # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
+            # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
+            # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
+            # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
+            # Another 2D Spectral Extraction <=> 2D Spectrum
+            assert len(dc.external_links) == 6
         for link in dc.external_links:
             # Check that linking is correct by confirming that both
             # are in `expected_labels`
