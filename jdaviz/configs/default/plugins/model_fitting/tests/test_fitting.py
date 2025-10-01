@@ -665,6 +665,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == expected_unit_string
 
+
 @pytest.mark.parametrize('op, allowed',[('+', True),('-', True),('*', False),('/', False),('**', False),],)  # noqa
 def test_valid_component_operators(deconfigged_helper, op, allowed):
     flux = np.ones(9) * u.Jy
@@ -682,10 +683,10 @@ def test_valid_component_operators(deconfigged_helper, op, allowed):
     mf.equation.value = f'C{op}C_1'
 
     if allowed:
-        assert mf.model_equation_invalid_msg == ''
+        assert mf._obj.model_equation_invalid_msg == ''
     else:
-        assert 'unsupported operator' in mf.model_equation_invalid_msg
-        assert op in mf.model_equation_invalid_msg
+        assert 'unsupported operator' in mf._obj.model_equation_invalid_msg
+        assert op in mf._obj.model_equation_invalid_msg
 
 
 def test_deconf_mf_with_subset(deconfigged_helper):
