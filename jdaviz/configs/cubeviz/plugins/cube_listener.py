@@ -13,7 +13,7 @@ except ImportError:
     pass
 
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import generate_spaxel_list
-from jdaviz.utils import parallelize_calculation, suppress_output
+from jdaviz.utils import parallelize_calculation
 
 #  smallest fraction of the max audio amplitude that can be represented by a 16-bit signed integer
 INT_MAX = 2**15 - 1
