@@ -355,7 +355,7 @@ class BaseResolver(PluginTemplateMixin):
             self.valid_import_formats = ''
             self.import_disabled = self.importer.import_disabled
 
-        self.importer.check_data_hash_for_duplicate()
+            self.importer.check_data_hash_for_duplicate()
 
     def close_in_tray(self, close_sidebar=False):
         """
