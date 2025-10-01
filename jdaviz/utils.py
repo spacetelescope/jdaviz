@@ -9,7 +9,6 @@ import fnmatch
 import re
 import multiprocessing as mp
 from joblib import Parallel, delayed
-import os
 
 import asdf
 import numpy as np
