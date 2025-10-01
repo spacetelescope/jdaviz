@@ -102,18 +102,14 @@
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     </v-row>
 
-    <v-row v-if="number_of_results > 0">
-      <j-tooltip :tooltipcontent="custom_toolbar_enabled ? 'Disable' : 'Enable' + ' line selection tools in spectrum viewer'">
-        <v-btn
-          :color="custom_toolbar_enabled ? 'accent' : 'default'"
-          :outlined="!custom_toolbar_enabled"
-          @click="toggle_custom_toolbar"
-        >
-          <v-icon>mdi-crosshairs-gps</v-icon>
-          {{ custom_toolbar_enabled ? 'Disable' : 'Enable' }} Interactive Selection
-        </v-btn>
-      </j-tooltip>
-    </v-row>
+    <j-custom-toolbar-toggle
+      v-if="number_of_results > 0"
+      :enabled="custom_toolbar_enabled"
+      text="catalog selection tools"
+      @toggle-custom-toolbar="toggle_custom_toolbar"
+    >
+      <v-icon>mdi-crosshairs-gps</v-icon>
+    </j-custom-toolbar-toggle>
 
     <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
 

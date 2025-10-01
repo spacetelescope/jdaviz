@@ -19,18 +19,14 @@
       :api_hints_enabled="api_hints_enabled"
     ></plugin-loaders-panel>
 
-    <v-row v-if="overlay_items.length > 1">
-      <j-tooltip :tooltipcontent="custom_toolbar_enabled ? 'Disable' : 'Enable' + ' line selection tools in spectrum viewer'">
-        <v-btn
-          :color="custom_toolbar_enabled ? 'accent' : 'default'"
-          :outlined="!custom_toolbar_enabled"
-          @click="toggle_custom_toolbar"
-        >
-          <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>
-          {{ custom_toolbar_enabled ? 'Disable' : 'Enable' }} Interactive Selection
-        </v-btn>
-      </j-tooltip>
-    </v-row>
+    <j-custom-toolbar-toggle
+      v-if="overlay_items.length > 1"
+      :enabled="custom_toolbar_enabled"
+      text="footprint selection tools"
+      @toggle-custom-toolbar="toggle_custom_toolbar"
+    >
+      <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>
+    </j-custom-toolbar-toggle>
 
     <plugin-editable-select
       :mode.sync="overlay_mode"

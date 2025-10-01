@@ -123,19 +123,14 @@
 
 
     <j-plugin-section-header>Loaded Lines</j-plugin-section-header>
-    <v-row v-if="loaded_lists.length > 0">
-      <j-tooltip :tooltipcontent="custom_toolbar_enabled ? 'Disable' : 'Enable' + ' line selection tools in spectrum viewer'">
-        <v-btn
-          :color="custom_toolbar_enabled ? 'accent' : 'default'"
-          :outlined="!custom_toolbar_enabled"
-          @click="toggle_custom_toolbar"
-        >
-          <img class="invert-if-dark" :src="identify_line_icon" width="20"/>
-          {{ custom_toolbar_enabled ? 'Disable' : 'Enable' }} Interactive Selection
-        </v-btn>
-      </j-tooltip>
-    </v-row>
-
+    <j-custom-toolbar-toggle
+      v-if="loaded_lists.length > 0"
+      :enabled="custom_toolbar_enabled"
+      text="line selection tools in spectrum viewer"
+      @toggle-custom-toolbar="toggle_custom_toolbar"
+    >
+      <img class="invert-if-dark" :src="identify_line_icon" width="20"/>
+    </j-custom-toolbar-toggle>
 
     <v-row>
       <v-expansion-panels accordion>
