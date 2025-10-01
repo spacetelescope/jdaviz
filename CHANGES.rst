@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
+
 Cubeviz
 ^^^^^^^
 
