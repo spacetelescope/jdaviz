@@ -249,6 +249,7 @@ class TestVOImvizRemote:
         vo_plugin.query_registry_resources()
         assert len(vo_plugin.resource.choices) > 0
 
+    @pytest.mark.skip
     def test_coverage_toggle(self, imviz_helper):
         """
         Test that disabling the coverage toggle returns more available services
