@@ -803,7 +803,7 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config in CONFIGS_WITH_LOADERS:
+        if self.config in CONFIGS_WITH_LOADERS and self.config != 'specviz2d':
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -835,7 +835,19 @@ class Application(VuetifyTemplate, HubListener):
 
             dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
-
+        elif self.config == 'specviz2d':
+            links = []
+            if linked_data.ndim == 2:
+                # extracted image added to data collection
+                ref_wavelength_component = ref_data.components[1]
+            else:
+                # extracted spectrum added to data collection
+                ref_wavelength_component = ref_data.components[3]
+                links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
+            links += [LinkSameWithUnits(linked_data.components[0], ref_data.components[0]),
+                      LinkSameWithUnits(linked_data.components[1], ref_wavelength_component)]
+            dc.add_link(links)
+            return
         elif (linked_data.meta.get('Plugin', None) == '3D Spectral Extraction' or
                 (linked_data.meta.get('Plugin', None) == ('Gaussian Smooth') and
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
