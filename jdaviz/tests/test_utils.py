@@ -1,14 +1,16 @@
 import os
 import warnings
+import numpy as np
 import threading
 
-from astropy.io import fits
-
 import pytest
+from astropy.io import fits
+from astropy.units.quantity import Quantity
 
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, cached_uri, escape_brackets,
-                          has_wildcard, wildcard_match, parallelize_calculation)
+                          has_wildcard, wildcard_match, _clean_data_arr_for_hash,
+                          create_data_hash, parallelize_calculation)
 
 from jdaviz.conftest import FakeSpectrumListImporter
 
@@ -311,3 +313,37 @@ class TestParallelizeCalculation:
             # Because the bad worker raised the collect callback should
             # not be called at all.
             assert collected == []
+
+
+@pytest.mark.parametrize('input_data', [np.arange(10), np.ma.masked_array(np.arange(10), mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
+                                        Quantity(np.arange(10), 'm/s'), 'spectrum1d', 'partially_masked_spectrum1d',
+                                        'spectrum2d','image_hdu_nowcs', 'image_nddata_wcs'])
+def test_clean_data_arr_for_hash(input_data, request):
+    input_data = request.getfixturevalue(input_data) if isinstance(input_data, str) else input_data
+    result_arr, result_mask_arr, result_unit_str = _clean_data_arr_for_hash(input_data)
+
+    # Main array must always be an ndarray
+    assert isinstance(result_arr, np.ndarray)
+
+    # Determine expected unit string from possible container types.
+    expected_unit = None
+    # Try for a mask whiile we're at it
+    expected_mask = getattr(input_data, 'mask', None)
+    if hasattr(input_data, 'unit'):
+        expected_unit = str(input_data.unit)
+    elif hasattr(input_data, 'flux') and hasattr(input_data.flux, 'unit'):
+        expected_unit = str(input_data.flux.unit)
+        # Spectrum objects always have a mask
+    elif hasattr(input_data, 'data') and hasattr(input_data.data, 'unit'):
+        expected_unit = str(input_data.data.unit)
+        expected_mask = expected_mask or getattr(input_data.data, 'mask', None)
+
+    assert expected_unit == result_unit_str
+    if expected_mask is not None:
+        assert np.allclose(expected_mask, result_mask_arr)
+    else:
+        assert result_mask_arr is None
+
+
+def test_create_data_hash():
+    pass
