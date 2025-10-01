@@ -76,7 +76,7 @@ extension when loading the data.
 .. code-block:: python
 
     imviz = Imviz()
-    imviz.load_data('path/to/file', ext=('SCI', 'DQ'))
+    imviz.load('path/to/file', format='Image', ext=('SCI', 'DQ'))
     imviz.show()
 
 From the API
