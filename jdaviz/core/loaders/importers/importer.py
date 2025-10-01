@@ -231,6 +231,9 @@ class BaseImporterToDataCollection(BaseImporter):
         cls = cls if cls is not None else data.__class__
         if not hasattr(data, 'meta'):
             data.meta = {}
+        if not isinstance(data.meta, dict):
+            # ensure that data.meta is a dictionary and supports item assignment
+            data.meta = dict(data.meta)
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
 
