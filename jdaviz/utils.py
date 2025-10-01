@@ -9,9 +9,7 @@ import fnmatch
 import re
 import multiprocessing as mp
 from joblib import Parallel, delayed
-import sys
 import os
-from contextlib import contextmanager
 
 import asdf
 import numpy as np
@@ -956,48 +954,6 @@ def wildcard_match(obj, value, choices=None):
             value = wildcard_match_list_of_str(choices, value)
 
     return value
-
-
-@contextmanager
-def suppress_output():
-    """
-    Suppress stdout and stderr from Python and C extensions.
-
-    This redirects both Python-level streams and the underlying file
-    descriptors to os.devnull so progress bars printed from C or
-    external libraries are also hidden.
-    """
-    old_stdout = sys.stdout
-    old_stderr = sys.stderr
-    try:
-        devnull = open(os.devnull, 'w')
-        sys.stdout = devnull
-        sys.stderr = devnull
-
-        # Save original file descriptors.
-        saved_stdout_fd = os.dup(1)
-        saved_stderr_fd = os.dup(2)
-
-        # Redirect low-level fds to devnull.
-        os.dup2(devnull.fileno(), 1)
-        os.dup2(devnull.fileno(), 2)
-
-        try:
-            yield
-        finally:
-            # Restore low-level fds.
-            os.dup2(saved_stdout_fd, 1)
-            os.dup2(saved_stderr_fd, 2)
-            os.close(saved_stdout_fd)
-            os.close(saved_stderr_fd)
-    finally:
-        # Restore Python-level streams.
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
-        try:
-            devnull.close()
-        except Exception:
-            pass
 
 
 def parallelize_calculation(workers, collect_result_callback, n_cpu=mp.cpu_count() - 1):
