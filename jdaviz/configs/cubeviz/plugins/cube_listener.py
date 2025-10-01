@@ -13,7 +13,7 @@ except ImportError:
     pass
 
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import generate_spaxel_list
-from jdaviz.utils import parallelize_calculation
+from jdaviz.utils import parallelize_calculation, suppress_output
 
 #  smallest fraction of the max audio amplitude that can be represented by a 16-bit signed integer
 INT_MAX = 2**15 - 1
@@ -154,7 +154,8 @@ class CubeListenerData:
                                       spectral_axis_index=self.spectral_axis_index)
                    for spx in np.array_split(spaxels, self.n_cpu))
 
-        parallelize_calculation(workers, collect_result, n_cpu=self.n_cpu)
+        with suppress_output():
+            parallelize_calculation(workers, collect_result, n_cpu=self.n_cpu)
 
         if self.spectral_axis_index == 2:
             self.cursig[:] = self.sigcube[0, 0, :]
