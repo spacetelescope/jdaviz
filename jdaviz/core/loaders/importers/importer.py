@@ -85,6 +85,17 @@ class BaseImporter(PluginTemplateMixin):
         # override by subclass
         return self.input
 
+    def check_data_hash_for_duplicate(self):
+        output_hash = create_data_hash(self.output)
+        if output_hash is None:
+            return
+        for data in self.app.data_collection:
+            if data.meta.get('_data_hash', None) == output_hash:
+                msg = f"Selected data appears to be identical to existing data '{data.label}'."  # noqa
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+                # self.data_label_invalid_msg = msg
+                return
+
     @property
     def target(self):
         raise NotImplementedError("Importer subclass must implement target")  # pragma: nocover
@@ -198,17 +209,6 @@ class BaseImporterToDataCollection(BaseImporter):
                     'label': self.viewer.create_new.choices[0]}
         else:
             return {}
-
-    def check_data_hash_for_duplicate(self):
-        output_hash = create_data_hash(self.output)
-        if output_hash is None:
-            return
-        for data in self.app.data_collection:
-            if data.meta.get('_data_hash', None) == output_hash:
-                msg = f"Selected data appears to be identical to existing data '{data.label}'."  # noqa
-                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
-                # self.data_label_invalid_msg = msg
-                return
 
     @observe('data_label_value')
     def _on_label_changed(self, msg={}):
