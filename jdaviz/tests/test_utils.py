@@ -318,6 +318,12 @@ class TestParallelizeCalculation:
 @pytest.mark.parametrize('input_data', [np.arange(10), np.ma.masked_array(np.arange(10), mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
                                         Quantity(np.arange(10), 'm/s'), 'spectrum1d', 'partially_masked_spectrum1d',
                                         'spectrum2d','image_hdu_nowcs', 'image_nddata_wcs'])
+@pytest.mark.parametrize('input_data',
+                         [np.arange(10),
+                          np.ma.masked_array(np.arange(10), mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
+                          Quantity(np.arange(10), 'm/s'),
+                          'spectrum1d', 'partially_masked_spectrum1d',
+                          'spectrum2d','image_hdu_nowcs', 'image_nddata_wcs'])
 def test_clean_data_arr_for_hash(input_data, request):
     input_data = request.getfixturevalue(input_data) if isinstance(input_data, str) else input_data
     result_arr, result_mask_arr, result_unit_str = _clean_data_arr_for_hash(input_data)
@@ -346,4 +352,5 @@ def test_clean_data_arr_for_hash(input_data, request):
 
 
 def test_create_data_hash():
-    pass
+    # placeholder for style
+    create_data_hash(np.array([1,2,3]))
