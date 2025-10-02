@@ -1046,7 +1046,13 @@ def create_data_hash(input_data):
     # Initialize hasher and include shape/dtype to avoid collisions
     # Use blake2b and shorter digest for speed
     arr, mask_arr, unit_str = _clean_data_for_hash(input_data)
-    if not np.any(arr):
+    try:
+        valid_arr_check = np.any(arr)
+    except TypeError:
+        # np.any(arr) may fail on some data types
+        valid_arr_check = any([bool(a) for a in arr])
+
+    if not valid_arr_check:
         return None
 
     hasher = hashlib.blake2b(digest_size=16)
