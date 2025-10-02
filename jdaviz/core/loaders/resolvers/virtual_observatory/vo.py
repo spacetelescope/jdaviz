@@ -36,7 +36,7 @@ class VOResolver(BaseResolver):
 
     waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
-    resource_filter_coverage = Bool(True).tag(sync=True)
+    resource_filter_coverage = Bool(False).tag(sync=True)
     resource_items = List([]).tag(sync=True)
     resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resources_loading = Bool(False).tag(sync=True)
@@ -343,10 +343,6 @@ class VOResolver(BaseResolver):
                             traceback=e
                         )
                     )
-                    raise LookupError(
-                        f"Unable to resolve source coordinates: {self.source}"
-                    )
-
             # Once coordinate lookup is complete, search service using these coords.
             try:
                 sia_results = sia_service.search(
@@ -371,7 +367,14 @@ class VOResolver(BaseResolver):
                         ),
                     )
                 else:
-                    raise e
+                    self.hub.broadcast(
+                        SnackbarMessage(
+                            f"Query failed: {e}",
+                            sender=self,
+                            traceback=e,
+                            color="error",
+                        )
+                    )
             if len(sia_results) == 0:
                 self.hub.broadcast(
                     SnackbarMessage(
@@ -397,8 +400,6 @@ class VOResolver(BaseResolver):
                     traceback=e
                 )
             )
-            raise
-
         try:
             self._output = sia_results.to_table()
         except Exception as e:
@@ -410,7 +411,6 @@ class VOResolver(BaseResolver):
                     traceback=e
                 )
             )
-            raise
         self._resolver_input_updated()
 
     def vue_query_archive(self, _=None):

@@ -343,7 +343,7 @@ class BaseResolver(PluginTemplateMixin):
         return getattr(self, self.default_input)
 
     def parse_input(self):
-        # override by subclass - this should return something that is either interpretted as
+        # override by subclass - this should return something that is either interpreted as
         # a products list OR something that can be passed to at least one parser
         raise NotImplementedError("Resolver subclass must implement parse_input")  # pragma: nocover
 

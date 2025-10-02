@@ -278,8 +278,9 @@ def test_resolver_table_as_query(deconfigged_helper):
     assert ldr._obj.file_table_populated is False
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 @pytest.mark.remote_data
-def test_resolver_table_as_query_astroquery(deconfigged_helper):
+def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
     ldr = deconfigged_helper.loaders['object']
 
     mast = Mast()
