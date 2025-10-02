@@ -18,8 +18,6 @@ from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-from astropy.units.quantity import Quantity
-from astropy.io.fits import ImageHDU
 from astroquery.mast import Observations, conf
 from gwcs import WCS as gwcs
 from gwcs.coordinate_frames import CompositeFrame, SpectralFrame
@@ -27,7 +25,6 @@ from matplotlib import colors as mpl_colors
 import matplotlib.cm as cm
 from photutils.utils import make_random_cmap
 from regions import CirclePixelRegion, CircleAnnulusPixelRegion
-from specutils import Spectrum
 from specutils.utils.wcs_utils import SpectralGWCS
 import stdatamodels
 
