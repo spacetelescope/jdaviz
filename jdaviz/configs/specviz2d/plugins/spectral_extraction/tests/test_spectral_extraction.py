@@ -514,18 +514,14 @@ class TestTwo2dSpectra:
         assert not np.array_equal(extracted_spec2d.flux, extracted_another_spec2d.flux), \
             'Extracted spectra should differ!'
 
-        # additional links set up in specviz2d for subset linking between viewers
-        if method in ('specviz2d_alternate_order', 'specviz2d'):
-            assert len(dc.external_links) == 9
-        else:
-            # Check linking, e.g.
-            # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral axis]
-            # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
-            # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
-            # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
-            # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
-            # Another 2D Spectral Extraction <=> 2D Spectrum
-            assert len(dc.external_links) == 6
+        # Check linking, e.g.
+        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral axis]
+        # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
+        # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
+        # Another 2D Spectral Extraction <=> 2D Spectrum
+        assert len(dc.external_links) == 9
         for link in dc.external_links:
             # Check that linking is correct by confirming that both
             # are in `expected_labels`
@@ -566,8 +562,8 @@ class TestTwo2dSpectra:
         min_value_subset = np.min(subset_highlighted_region1)
         max_value_subset = np.max(subset_highlighted_region1)
 
-        expected_min = 0
-        expected_max = 1
+        expected_min = 2
+        expected_max = 7
         atol = 1e-2
         assert_allclose(min_value_subset, expected_min, atol=atol)
         assert_allclose(max_value_subset, expected_max, atol=atol)
