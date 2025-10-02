@@ -803,7 +803,7 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config in CONFIGS_WITH_LOADERS and self.config != 'specviz2d':
+        if self.config in CONFIGS_WITH_LOADERS and self.config not in ['specviz2d', 'deconfigged']:
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -845,7 +845,8 @@ class Application(VuetifyTemplate, HubListener):
 
             dc.add_link(links)
             return
-        elif self.config == 'specviz2d' and linked_data.ndim == 1:
+        elif (self.config in ['specviz2d', 'deconfigged'] and 
+              ref_data.ndim == 2 and linked_data.ndim == 1):
             # Needed for subset linking between 1D and 2D viewers
             # Spectrum 1D: Pixel Axis 0 [x] <=> Spectrum 2D: Pixel Axis 1 [x]
             links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
