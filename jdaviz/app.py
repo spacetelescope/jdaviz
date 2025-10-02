@@ -2702,6 +2702,10 @@ class Application(VuetifyTemplate, HubListener):
         data_loader_label = msg.data.meta.get('_data_loader_label', None)
         if data_loader_label is not None:
             update_dict[data_loader_label] = data_added
+            # If data_added is false, that means the data was removed,
+            # no need to keep it around.
+            if not data_added:
+                update_dict.pop(data_loader_label)
             self.data_in_data_collection = update_dict
 
     def _on_data_added(self, msg):
