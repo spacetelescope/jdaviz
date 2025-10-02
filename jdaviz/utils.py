@@ -1008,19 +1008,16 @@ def _clean_data_for_hash(data):
         new_data = data.data
 
     unit_str = getattr(data, 'unit', None) or getattr(new_data, 'unit', None)
-    unit_str = str(unit_str) if unit_str is not None else unit_str
+    unit_str = str(unit_str) if unit_str is not None else None
 
     data_mask = getattr(data, 'mask', None)
-    new_data_mask = getattr(new_data, 'mask', None)
-    mask_arr = data_mask if data_mask is not None else new_data_mask
+    data_mask = data_mask if data_mask is not None else getattr(new_data, 'mask', None)
+    mask_arr = np.ascontiguousarray(data_mask).astype('uint8') if data_mask is not None else None
 
     try:
         arr = np.ascontiguousarray(new_data)
     except ValueError:
         arr = None
-
-    if mask_arr is not None:
-        mask_arr = np.ascontiguousarray(mask_arr).astype('uint8') if mask_arr is not None else None
 
     return arr, mask_arr, unit_str
 
