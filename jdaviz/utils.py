@@ -19,6 +19,7 @@ from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.units.quantity import Quantity
+from astropy.io.fits import ImageHDU
 from astroquery.mast import Observations, conf
 from gwcs import WCS as gwcs
 from gwcs.coordinate_frames import CompositeFrame, SpectralFrame
@@ -985,7 +986,7 @@ def parallelize_calculation(workers, collect_result_callback, n_cpu=mp.cpu_count
     _ = [collect_result_callback(r) for r in results]
 
 
-def _clean_data_arr_for_hash(data):
+def _clean_data_for_hash(data):
     """
     Extract and return the array from the data object for hashing.
     The function checks for common attributes like 'flux' or 'data' to
@@ -1003,7 +1004,7 @@ def _clean_data_arr_for_hash(data):
     target_for_hash : array-like
         The extracted array to be used for hashing.
     """
-    new_data = None
+    new_data = data
     if hasattr(data, 'flux'):
         new_data = data.flux
     elif hasattr(data, 'data'):
@@ -1045,99 +1046,54 @@ def create_data_hash(input_data):
         or `None` if 'input_data' is `None` or of an unsupported type
         (e.g., a plain number).
     """
-    def _from_arr(input_d):
-        """
-        Parameters
-        ----------
-        input_d : array-like or `astropy.units.Quantity` or `specutils.Spectrum1D`
-            The data array to hash. If `astropy.units.Quantity`, the unit
-            is included in the hash.
+    # Initialize hasher and include shape/dtype to avoid collisions
+    # Use blake2b and shorter digest for speed
+    arr, mask_arr, unit_str = _clean_data_for_hash(input_data)
+    if not np.any(arr):
+        return None
 
-        Returns
-        -------
-        str
-            Hexadecimal string of the hash.
-        """
-        arr, mask_arr, unit_str = _clean_data_arr_for_hash(input_d)
+    hasher = hashlib.blake2b(digest_size=16)
+    hasher.update(f'shape:{arr.shape};dtype:{arr.dtype.str}'.encode())
+    if unit_str is not None:
+        hasher.update(f';unit:{unit_str}'.encode())
 
-        # Initialize hasher and include shape/dtype to avoid collisions
-        # Use blake2b and shorter digest for speed
-        hasher = hashlib.blake2b(digest_size=16)
-        hasher.update(f'shape:{arr.shape};dtype:{arr.dtype.str}'.encode())
-        if unit_str is not None:
-            hasher.update(f';unit:{unit_str}'.encode())
-
-        # Hash the main array buffer in chunks via memoryview if possible
+    # Hash the main array buffer in chunks via memoryview if possible
+    try:
+        mv = memoryview(arr).cast('B')
+    except TypeError:
+        # Fallback - arr.tobytes() will create a copy but should work
         try:
-            mv = memoryview(arr).cast('B')
-        except TypeError:
-            # Fallback - arr.tobytes() will create a copy but should work
-            try:
-                hasher.update(arr.tobytes())
-            except (AttributeError, TypeError, ValueError, MemoryError) as err:
-                raise RuntimeError(f'Could not obtain bytes for hashing: {err}')
-            # include mask if present
-            if mask_arr is not None:
-                try:
-                    hasher.update(b';mask:')
-                    hasher.update(np.ascontiguousarray(mask_arr).tobytes())
-                except (AttributeError, TypeError, ValueError, MemoryError):
-                    # best effort: ignore mask if it cannot be serialized
-                    pass
-            return hasher.hexdigest()
-
-        chunk = 1024 * 1024
-        n = len(mv)
-        for i in range(0, n, chunk):
-            hasher.update(mv[i:i + chunk])
-
-        # Include mask bytes if present
+            hasher.update(arr.tobytes())
+        except (AttributeError, TypeError, ValueError, MemoryError) as err:
+            raise RuntimeError(f'Could not obtain bytes for hashing: {err}')
+        # include mask if present
         if mask_arr is not None:
             try:
                 hasher.update(b';mask:')
-                mv_mask = memoryview(mask_arr).cast('B')
-                nm = len(mv_mask)
-                for i in range(0, nm, chunk):
-                    hasher.update(mv_mask[i:i + chunk])
-            except (TypeError, ValueError):
-                # ignore mask-related failures; hash already includes data
+                hasher.update(np.ascontiguousarray(mask_arr).tobytes())
+            except (AttributeError, TypeError, ValueError, MemoryError):
+                # best effort: ignore mask if it cannot be serialized
                 pass
-
         return hasher.hexdigest()
 
-    def _from_str(input_d):
-        """
-        Create and return a deterministic hash for the provided string/string array.
+    chunk = 1024 * 1024
+    n = len(mv)
+    for i in range(0, n, chunk):
+        hasher.update(mv[i:i + chunk])
 
-        Parameters
-        ----------
-        input_d : str or list of str
-            Input string to be hashed.
+    # Include mask bytes if present
+    if mask_arr is not None:
+        try:
+            hasher.update(b';mask:')
+            mv_mask = memoryview(mask_arr).cast('B')
+            nm = len(mv_mask)
+            for i in range(0, nm, chunk):
+                hasher.update(mv_mask[i:i + chunk])
+        except (TypeError, ValueError):
+            # ignore mask-related failures; hash already includes data
+            pass
 
-        Returns
-        -------
-        str
-            Hexadecimal string of the hash.
-        """
-        if input_d is None:
-            msg = 'No data provided to create_data_hash_from_str.'
-            raise ValueError(msg)
-
-        if isinstance(input_d, (list, tuple)):
-            input_d = ''.join(input_d)
-
-        # Initialize hasher and encode the string as bytes
-        hasher = hashlib.blake2b(digest_size=16)
-        hasher.update(input_d.encode())
-
-        return hasher.hexdigest()
-
-    if isinstance(input_data, (np.ndarray, Quantity, Spectrum)):
-        return _from_arr(input_data)
-    elif isinstance(input_data, str):
-        return _from_str(input_data)
-    else:
-        return None
+    return hasher.hexdigest()
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
