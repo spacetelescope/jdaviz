@@ -1014,7 +1014,11 @@ def _clean_data_for_hash(data):
     new_data_mask = getattr(new_data, 'mask', None)
     mask_arr = data_mask if data_mask is not None else new_data_mask
 
-    arr = np.ascontiguousarray(new_data)
+    try:
+        arr = np.ascontiguousarray(new_data)
+    except ValueError:
+        arr = None
+
     if mask_arr is not None:
         mask_arr = np.ascontiguousarray(mask_arr).astype('uint8') if mask_arr is not None else None
 
