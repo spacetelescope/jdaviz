@@ -1409,7 +1409,6 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
 
 class SelectFileExtensionComponent(SelectPluginComponent):
-
     def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
         super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
                          manual_options=manual_options, filters=filters)
