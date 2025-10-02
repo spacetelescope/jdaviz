@@ -1,4 +1,5 @@
 import pytest
+from copy import deepcopy
 
 import numpy as np
 from astropy import units as u
@@ -352,3 +353,38 @@ def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote
         # Check that the server_is_remote traitlet is properly synced
         assert hasattr(loader_widget, 'server_is_remote')
         assert loader_widget.server_is_remote == server_is_remote
+
+
+# Pick a smattering of fixture/data types
+@pytest.mark.parametrize(('fixture_to_load', 'fixture_format'),
+                         [('image_hdu_wcs', 'Image'),
+                          ('image_nddata_wcs', 'Image'),
+                          ('spectrum1d', '1D Spectrum'),
+                          ('spectrum2d', '2D Spectrum'),
+                          ('premade_spectrum_list', '1D Spectrum List')])
+def test_update_data_in_data_collection(deconfigged_helper, fixture_to_load, fixture_format, request):
+    # Check that data_in_data_collection is empty to start
+    assert len(deconfigged_helper.app.data_in_data_collection) == 0
+
+    deconfigged_helper.load(request.getfixturevalue(fixture_to_load), format=fixture_format)
+    # Check that data_in_data_collection was updated upon adding data
+    assert len(deconfigged_helper.app.data_in_data_collection) > 0
+
+    # Use this data for testing
+    dc_data = deconfigged_helper.app.data_collection[0]
+
+    # Check that the update goes through
+    data_in_dc = deepcopy(deconfigged_helper.app.data_in_data_collection)
+    deconfigged_helper.app._update_data_in_data_collection(dc_data, False)
+    assert data_in_dc != deconfigged_helper.app.data_in_data_collection
+
+    data_in_dc = deepcopy(deconfigged_helper.app.data_in_data_collection)
+    dc_data_copy = deepcopy(dc_data)
+    # If this key is present, it will trigger an update so check that
+    # nothing happens when it is not present.
+    dc_data_copy.data.meta.pop('_data_loader_label')
+    deconfigged_helper.app._update_data_in_data_collection(dc_data_copy, True)
+    assert data_in_dc == deconfigged_helper.app.data_in_data_collection
+
+    # _ = deconfigged_helper.app.remove_data(dc_data.label)
+    # assert len(deconfigged_helper.app.data_in_data_collection) == 0
