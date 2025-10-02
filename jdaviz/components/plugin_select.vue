@@ -61,14 +61,17 @@
         </div>
       </template>
       <template #selection="{ item, index }">
-        <div class="single-line" style="width: 100%">
-          <span v-if="api_hints_enabled && index === 0" class="api-hint">
+        <div class="single-line" style="width: 100%; display: flex; align-items: center;">
+          <v-icon v-if="exists_map && !api_hints_enabled" small :color="existsFor(item) ? 'green' : 'grey'" style="margin-right: 8px; min-width: 16px;">
+            {{ existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline' }}
+          </v-icon>
+          <span v-if="api_hints_enabled && index === 0" class="api-hint" style="flex: 1;">
             {{ multiselect ? selected : `'${selected}'` }}
           </span>
-          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px)">
+          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px); flex: 1;">
             <span>{{ item }}</span>
           </v-chip>
-          <span v-else>{{ item }}</span>
+          <span v-else style="flex: 1;">{{ item }}</span>
         </div>
       </template>
       <template #item="{ item, attrs, on }">
