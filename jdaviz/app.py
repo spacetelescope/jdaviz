@@ -2683,6 +2683,19 @@ class Application(VuetifyTemplate, HubListener):
                      if x['id'] == data_id), None)
 
     def _update_data_in_data_collection(self, msg, data_added):
+        """
+        Update the ``data_in_data_collection`` state dictionary to reflect
+        whether data with a given label is in the internal ``DataCollection``.
+
+        Parameters
+        ----------
+        msg : `~glue.core.message.DataCollectionAddMessage` or
+              `~glue.core.message.DataCollectionDeleteMessage`
+            The Glue data collection add or delete message containing
+            information about the new or removed data.
+        data_added : bool
+            Whether data was added or removed from the ``DataCollection``.
+        """
         # No need to initialize a dictionary of labels in data_in_data_collection
         # since vue evaluates an empty key as undefined => False
         update_dict = self.data_in_data_collection.copy()
