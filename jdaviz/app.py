@@ -845,8 +845,7 @@ class Application(VuetifyTemplate, HubListener):
 
             dc.add_link(links)
             return
-        elif (self.config in ['specviz2d', 'deconfigged'] and 
-              ref_data.ndim == 2 and linked_data.ndim == 1):
+        elif (ref_data.ndim == 2 and linked_data.ndim == 1):
             # Needed for subset linking between 1D and 2D viewers
             # Spectrum 1D: Pixel Axis 0 [x] <=> Spectrum 2D: Pixel Axis 1 [x]
             links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
