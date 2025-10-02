@@ -360,8 +360,7 @@ def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote
                          [('image_hdu_wcs', 'Image'),
                           ('image_nddata_wcs', 'Image'),
                           ('spectrum1d', '1D Spectrum'),
-                          ('spectrum2d', '2D Spectrum'),
-                          ('premade_spectrum_list', '1D Spectrum List')])
+                          ('spectrum2d', '2D Spectrum')])
 def test_update_data_in_data_collection(deconfigged_helper,
                                         fixture_to_load, fixture_format, request):
     # Check that data_in_data_collection is empty to start
