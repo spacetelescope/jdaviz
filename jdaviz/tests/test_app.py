@@ -379,12 +379,11 @@ def test_update_data_in_data_collection(deconfigged_helper, fixture_to_load, fix
     assert data_in_dc != deconfigged_helper.app.data_in_data_collection
 
     data_in_dc = deepcopy(deconfigged_helper.app.data_in_data_collection)
-    dc_data_copy = deepcopy(dc_data)
     # If this key is present, it will trigger an update so check that
     # nothing happens when it is not present.
-    dc_data_copy.data.meta.pop('_data_loader_label')
-    deconfigged_helper.app._update_data_in_data_collection(dc_data_copy, True)
+    dc_data.data.meta.pop('_data_loader_label')
+    deconfigged_helper.app._update_data_in_data_collection(dc_data, True)
     assert data_in_dc == deconfigged_helper.app.data_in_data_collection
 
-    # _ = deconfigged_helper.app.remove_data(dc_data.label)
-    # assert len(deconfigged_helper.app.data_in_data_collection) == 0
+    deconfigged_helper.app.data_item_remove(dc_data.label)
+    assert len(deconfigged_helper.app.data_in_data_collection) == 0
