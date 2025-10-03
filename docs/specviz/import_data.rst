@@ -50,9 +50,25 @@ Importing data via the API
 
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Specviz helper class API. Using this API, users can
-load data into the application through code with the
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data`
-method, which takes as input a :class:`~specutils.Spectrum` object.
+load data using the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load`
+method, specifying the format explicitly:
+
+.. code-block:: python
+
+    specviz.load(data, format='1D Spectrum')
+
+Available formats include:
+
+- ``'1D Spectrum'`` - For individual 1D :class:`~specutils.Spectrum` objects or files containing a single spectrum
+- ``'1D Spectrum List'`` - For `~specutils.SpectrumList` objects or files containing multiple spectra
+- ``'1D Spectrum Concatenated'`` - For combining multiple spectra into a single spectrum
+
+It is helpful to click the :guilabel:`API Hints`
+button in the top right to discover available options
+and parameters to customize the loading process.
+
+For more information on loading data, see :ref:`import-data`.
+
 
 FITS Files
 ----------
@@ -64,15 +80,15 @@ The example below loads a FITS file into Specviz:
     from specutils import Spectrum
     spec1d = Spectrum.read("/path/to/data/file")
     specviz = Specviz()
-    specviz.load_data(spec1d, data_label="my_spec")
+    specviz.load(spec1d, format="1D Spectrum", data_label="my_spec")
     specviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum` understands directly to the
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data` method:
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load` method:
 
 .. code-block:: python
 
-    specviz.load_data("path/to/data/file")
+    specviz.load("path/to/data/file", format="1D Spectrum")
 
 Creating Your Own Array
 -----------------------
@@ -90,7 +106,7 @@ You can create your own array to load into Specviz:
     wavelength = np.arange(5100, 5300) * u.AA
     spec1d = Spectrum(spectral_axis=wavelength, flux=flux)
     specviz = Specviz()
-    specviz.load_data(spec1d, data_label="my_spec")
+    specviz.load(spec1d, format="1D Spectrum", data_label="my_spec")
     specviz.show()
 
 JWST datamodels
@@ -111,7 +127,7 @@ object, you can load it into Specviz as follows:
 
     spec1d = Spectrum(flux=flux, spectral_axis=wave)
     specviz = Specviz()
-    specviz.load_data(spec1d, data_label="MultiSpecModel")
+    specviz.load(spec1d, format="1D Spectrum", data_label="MultiSpecModel")
     specviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
@@ -122,7 +138,7 @@ is separated from the ``jwst`` pipeline package.
 Importing a SpectrumList
 ------------------------
 
-The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data` also accepts
+The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load` also accepts
 a `~specutils.SpectrumList` object, in which case it will both load the
 individual `~specutils.Spectrum` objects in the list and additionally attempt
 to stitch together the spectra into a single data object so that
@@ -132,7 +148,7 @@ they can be manipulated and analyzed in the application as a single entity:
 
     from specutils import SpectrumList
     spec_list = SpectrumList([spec1d_1, spec1d_2])
-    specviz.load_data(spec_list)
+    specviz.load(spec_list, format="1D Spectrum List")
     specviz.show()
 
 In the screenshot below, the combined spectrum is plotted in gray, and one of
@@ -145,13 +161,13 @@ end of the red region in the screenshot below:
 .. image:: img/spectrumlist_combined.png
 
 This functionality is also available in limited instances by providing a directory path
-to the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data` method. Note
+to the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load` method. Note
 that the ``read`` method of :class:`~specutils.SpectrumList` is only set up to handle
 directory input in limited cases, for example JWST MIRI MRS data, and will throw an error
 in other cases. In cases that it does work, only files in the directory level specified
 will be read, with no recursion into deeper folders.
 
-The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data` method also takes
+The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load` method also takes
 an optional keyword argument ``concat_by_file``. When set to ``True``, the spectra
 loaded in the :class:`~specutils.SpectrumList` will be concatenated together into one
 combined spectrum per loaded file, which may be useful for MIRI observations, for example.

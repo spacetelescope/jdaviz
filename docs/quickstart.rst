@@ -16,7 +16,7 @@ The power of Jdaviz is that it can integrated into your Jupyter notebook workflo
 
     imviz = Imviz()
     imviz.show()
-    imviz.load_data('filename.fits', data_label='MyData')
+    imviz.load('filename.fits', format='Image', data_label='MyData')
 
 Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
 to test the application, located in the :gh-tree:`notebooks` sub-directory of the Git repository.
