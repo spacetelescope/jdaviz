@@ -13,4 +13,5 @@ class App(ConfigHelper, LineListMixin):
         self.app.api_hints_obj = api_hints_obj
 
         # Temporary during deconfig process
+        self.load = self._load
         self.app.state.dev_loaders = True
