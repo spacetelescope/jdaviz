@@ -1,3 +1,4 @@
+from astropy.table import Table as astropyTable
 from traitlets import Any, Int
 from solara import FileDropMultiple
 from ipywidgets import widget_serialization
@@ -44,15 +45,26 @@ class FileDropResolver(BaseResolver):
             return os.path.splitext(self._file_info['name'])[0]
         return None
 
+    def _parsed_input_to_table(self, parsed_input):
+        # support loading in from file drop resolver
+        for format in ('csv', 'ascii', 'fits', 'votable'):
+            try:
+                parsed_input = astropyTable.read(parsed_input, format=format)
+                return parsed_input
+            except Exception:  # nosec
+                pass
+        return None
+
     def _on_total_progress(self, progress):
         self.progress = progress
 
     def _on_file_updated(self, file_infos):
         self.nfiles = len(file_infos)
         self._file_info = file_infos[0]
+        self._resolver_input_updated()
         self._update_format_items()
         self.progress = 100
 
-    def __call__(self, local_path=None, timeout=60):
+    def parse_input(self):
         # this will return a bytes object of the file contents
         return io.BytesIO(self._file_info.get('data'))
