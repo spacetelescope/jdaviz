@@ -265,6 +265,7 @@ class TestVOImvizRemote:
         assert len(vo_ldr.file_table._obj.items) > 0
 
         # Load first data product
+        vo_ldr.file_cache = False  # Force redownload to avoid local caching issues
         vo_ldr.file_table.select_rows(0)
         vo_ldr.format = 'Image'
         vo_ldr.importer()
