@@ -6,6 +6,8 @@ New Features
 
 - Add check for valid model fitting equation operators. [#3818]
 
+- Change parallelization framework for better performance and flexibility. [#3806]
+
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
   and import from an astroquery or MAST search. [#3769]
 

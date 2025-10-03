@@ -1,4 +1,7 @@
 import warnings
+import os
+# Ensure worker processes inherit the warning filter; set before other imports.
+os.environ['PYTHONWARNINGS'] = 'ignore'
 import numpy as np
 import pytest
 from astropy import units as u
@@ -196,7 +199,7 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     # multiprocessing for the size of the cube
     plugin._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         plugin.calculate_fit()
 
     params = cubeviz_helper.plugins['Model Fitting'].get_model_parameters()
@@ -263,7 +266,7 @@ def test_fitting_backend(n_cpu, unc):
         (1, "zeros"),
         (1, None),
         (None, "zeros"),
-        (None, None),])
+        (None, None)])
 def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
     np.random.seed(42)
 
@@ -321,7 +324,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
 
     # Fit to all spaxels.
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="The fit may be unsuccessful.*")
+        warnings.filterwarnings("ignore", message="The fit may be unsuccessful*")
         fitted_parameters, fitted_spectrum = fb.fit_model_to_spectrum(
             spectrum, model_list, expression, n_cpu=n_cpu)
 
@@ -420,7 +423,7 @@ def test_results_table(specviz_helper, spectrum1d):
     mf.add_results.label = 'linear model'
     mf._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
     mf_table = mf.export_table()
     assert len(mf_table) == 1
@@ -437,8 +440,8 @@ def test_results_table(specviz_helper, spectrum1d):
     mf.create_model_component('Gaussian1D')
     mf.add_results.label = 'composite model'
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
-        warnings.filterwarnings('ignore', message='The fit may be unsuccessful.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        warnings.filterwarnings('ignore', message='The fit may be unsuccessful*')
         mf.calculate_fit(add_data=True)
     mf_table = mf.export_table()
     assert len(mf_table) == 2
@@ -463,7 +466,7 @@ def test_results_table(specviz_helper, spectrum1d):
     mf.reestimate_model_parameters()
 
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
     assert mf_table['L:intercept_0:unit'][-1] == uc.flux_unit
@@ -506,7 +509,7 @@ def test_incompatible_units(specviz_helper, spectrum1d):
     mf.add_results.label = 'model native units'
     mf._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
     uc = specviz_helper.plugins['Unit Conversion']
@@ -521,7 +524,7 @@ def test_incompatible_units(specviz_helper, spectrum1d):
     mf.reestimate_model_parameters()
     assert mf._obj.model_equation_invalid_msg == ''
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
 
@@ -537,7 +540,7 @@ def test_cube_fit_with_nans(cubeviz_helper):
     mf._obj.parallel_n_cpu = 1
 
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
     result = cubeviz_helper.app.data_collection['model']
@@ -566,7 +569,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     mf._obj.parallel_n_cpu = 1
 
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
@@ -587,7 +590,7 @@ def test_fit_with_count_units(cubeviz_helper):
     # ensures specutils.Spectrum.with_flux_unit has access to Jdaviz custom equivalencies for
     # PIX^2 unit
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'ct / pix2'
@@ -616,7 +619,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
 
     mf._obj.parallel_n_cpu = 1
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
     # It was easier to transpose this for new data shape than rewrite it
@@ -634,7 +637,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     uc.flux_unit = 'Jy'
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == f'Jy / {solid_angle_string}'
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
@@ -659,7 +662,7 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     # running this ensures specutils.Spectrum.with_flux_unit has Jdaviz custom equivalencies
     # for spectral axis conversions and scale factor translations
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
@@ -707,7 +710,7 @@ def test_deconf_mf_with_subset(deconfigged_helper):
     mf.create_model_component()
 
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
 
@@ -730,7 +733,7 @@ def test_different_fitters(specviz_helper, spectrum1d, fitter):
         mf.fitter_parameters['parameters'][0]['value'] = 50
 
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
     result = specviz_helper.app.data_collection['model']
@@ -764,7 +767,7 @@ def test_specviz2d_linking(specviz2d_helper):
     mf = specviz2d_helper.plugins['Model Fitting']
     mf.create_model_component('Const1D')
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit()
 
     # testing to ensure a bug where the fit values create a vertical line along the
