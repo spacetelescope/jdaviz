@@ -10,7 +10,7 @@ from jdaviz.core.registries import loader_parser_registry
 __all__ = ['AstropyTableParser']
 
 
-@loader_parser_registry('Astropy Table')
+@loader_parser_registry('astropy.Table')
 class AstropyTableParser(BaseParser):
 
     @property
@@ -54,8 +54,6 @@ class AstropyTableParser(BaseParser):
         else:
             return len(table) > 0
 
-        return True
-
     @cached_property
     def output(self):
-        return QTable.read(self.input)
+        return QTable.read(self.input, format='ascii')
