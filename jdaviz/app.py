@@ -2684,7 +2684,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def _update_existing_data_in_dc(self, msg, data_added):
         """
-        Update the ``existing_data_in_dc`` state dictionary to reflect
+        Update the ``existing_data_in_dc`` state list to reflect
         whether data with a given label is in the internal ``DataCollection``.
 
         Parameters
