@@ -1,7 +1,10 @@
 import os
 import time
+import io
 from pathlib import Path
+from ipywidgets import widget_serialization
 import threading
+import solara
 
 from astropy import units as u
 from astropy.nddata import CCDData
@@ -9,7 +12,7 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 from glue_jupyter.bqplot.image import BqplotImageView
 from regions import CircleSkyRegion, EllipseSkyRegion
 from specutils import Spectrum
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.marks import ShadowMixin
@@ -119,6 +122,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # saving client-side is supported for all exports.
     serverside_enabled = Bool(True).tag(sync=True)
 
+    file_download = Any().tag(sync=True, **widget_serialization)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -126,6 +131,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'filename_default',
                                       'filename_auto',
                                       'filename_invalid_msg')
+        self.file_download = solara.FileDownload.widget(data=self.export_to_buffer,
+                                                        filename=self.filename.value,
+                                                        label="Open Browser Dialog")
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Export data/plots and other outputs to a file.'
@@ -368,6 +376,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
 
+        # Change default filename of solara's file download widget
+        if hasattr(self.file_download, 'filename'):
+            self.file_download.filename = self.filename_value
+
     def _set_subset_not_supported_msg(self, msg=None):
         """
         Check if selected subset is spectral or composite, and warn and
@@ -409,6 +421,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.data_invalid_msg = ''
 
     def _normalize_filename(self, filename=None, filetype=None, overwrite=False, default_path=False):  # noqa: E501
+        if isinstance(filename, io.BytesIO):
+            return filename
+
         # Make sure filename is valid and file does not end up in weird places in standalone mode.
         if not filename:
             raise ValueError("Invalid filename")
@@ -441,6 +456,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         return filename
 
+    def export_to_buffer(self):
+        f = io.BytesIO()  # TODO: can we reuse this or should we close/clear it?
+        self.export(filename=f)
+        return f.getvalue()
+
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
                raise_error_for_overwrite=True):
@@ -452,9 +472,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         filename : str, optional
             If not provided, plugin value will be used.
 
-        show_dialog : bool or `None`
-            If `True`, prompts dialog to save PNG/SVG from browser.
-
         overwrite : bool
             If `True`, silently overwrite an existing file.
 
@@ -463,6 +480,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             output file already exists. Otherwise, a message will be sent
             to application snackbar instead.
         """
+        if show_dialog:
+            raise ValueError("show_dialog is no longer supported, use UI to trigger browser save dialog")  # noqa
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
 
@@ -506,7 +525,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                 width=f"{self.image_width}px" if self.image_custom_size else None,
                                 height=f"{self.image_height}px" if self.image_custom_size else None)
             else:
-                self.save_figure(viewer, filename, filetype, show_dialog=show_dialog,
+                self.save_figure(viewer, filename, filetype,
                                  width=f"{self.image_width}px" if self.image_custom_size else None,
                                  height=f"{self.image_height}px" if self.image_custom_size else None)  # noqa
 
@@ -534,7 +553,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
                 return
 
-            self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
+            self.save_figure(plot, filename, filetype)
 
         elif len(self.plugin_table.selected):
             filetype = self.plugin_table_format.selected
@@ -560,7 +579,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 return
 
             if self.subset_format.selected in ('fits', 'reg'):
-                self.save_subset_as_region(selected_subset_label, filename)
+                # TODO: what format should be passed for .reg?
+                # I'm getting errors for a spatial subset
+                self.save_subset_as_region(selected_subset_label, filename,
+                                           format=self.subset_format.selected)
             elif self.subset_format.selected == 'ecsv':
                 self.save_subset_as_table(filename)
             elif self.subset_format.selected == 'stcs':
@@ -575,7 +597,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-            self.dataset.selected_obj.write(Path(filename), overwrite=True)
+            self.dataset.selected_obj.write(Path(filename)
+                                            if isinstance(filename, str) else filename,
+                                            overwrite=True, format=filetype)
         else:
             raise ValueError("nothing selected for export")
 
@@ -583,7 +607,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:
-            filename = self.export(show_dialog=True, raise_error_for_overwrite=False)
+            filename = self.export(raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self,
@@ -596,7 +620,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def vue_overwrite_from_ui(self, *args, **kwargs):
         """Attempt to force writing the output if the user confirms the desire to overwrite."""
         try:
-            filename = self.export(show_dialog=True, overwrite=True,
+            filename = self.export(overwrite=True,
                                    raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
@@ -608,7 +632,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
             self.overwrite_warn = False
 
-    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False,
+    def save_figure(self, viewer, filename=None, filetype="png",
                     width=None, height=None):
         if filename is None:
             filename = self.filename_default
@@ -688,12 +712,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             _widget_after_first_display(cloned_viewer.figure, on_figure_displayed)
             _show_hidden(cloned_viewer.figure, width, height)
         elif filetype == 'png':
-            # NOTE: get_png already check if _upload_png_callback is not None
-            get_png(viewer.figure)
+            if filename is None or isinstance(filename, io.BytesIO):
+                viewer.figure.save_png(str(filename) if isinstance(filename, Path) else filename)
+            else:
+                # NOTE: get_png already check if _upload_png_callback is not None
+                get_png(viewer.figure)
         elif filetype == 'svg':
-            if viewer.figure._upload_svg_callback is not None:
-                raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
-            viewer.figure.get_svg_data(on_img_received)
+            if filename is None or isinstance(filename, io.BytesIO):
+                viewer.figure.save_svg(str(filename) if isinstance(filename, Path) else filename)
+            else:
+                if viewer.figure._upload_svg_callback is not None:
+                    raise ValueError("previous svg export is still in progress. Wait to complete before making another call to save_figure") # noqa
+                viewer.figure.get_svg_data(on_img_received)
         else:
             raise ValueError(f"Unsupported filetype={filetype} for save_figure")
 
@@ -725,7 +755,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 slice_plg.vue_play_next()
                 cur_pngfile = Path(f"._cubeviz_movie_frame_{i}.png")
                 # TODO: skip success snackbars when exporting temp movie frames?
-                self.save_figure(viewer, filename=cur_pngfile, filetype="png", show_dialog=False,
+                self.save_figure(viewer, filename=cur_pngfile, filetype="png",
                                  width=width, height=height)
                 temp_png_files.append(cur_pngfile)
                 i += i_step
@@ -875,7 +905,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         with open(filename, 'w') as f:
             f.write(stcs_str)
 
-    def save_subset_as_region(self, selected_subset_label, filename):
+    def save_subset_as_region(self, selected_subset_label, filename, format):
         """
         Save a subset to file as a Region object in the working directory.
         Currently only enabled for non-composite spatial subsets. Can be saved
@@ -893,7 +923,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         region = region[0][f'{"sky_" if align_by == "wcs" else ""}region']
 
-        region.write(str(filename), overwrite=True)
+        region.write(str(filename), format=format, overwrite=True)
 
     def save_subset_as_table(self, filename):
         region = self.app.get_subsets(subset_name=self.subset.selected)
