@@ -74,10 +74,8 @@ Importing data via the API
 
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Cubeviz helper class API. Using this API, users can
-load data into the application through code with the :py:meth:`~jdaviz.configs.cubeviz.helper.Cubeviz.load`
+load data into the application through code with the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data`
 method, which takes as input a :class:`~specutils.Spectrum` object.
-
-For more information on loading data, see :ref:`import-data`.
 
 FITS Files
 ----------
@@ -88,8 +86,7 @@ The example below loads a FITS file into Cubeviz:
 
     from jdaviz import Cubeviz
     cubeviz = Cubeviz()
-    # Because Cubeviz only accepts 3D spectral cubes (for now), it is not required to specify format here.
-    cubeviz.load("/path/to/data/file.fits", format='3D Spectrum')
+    cubeviz.load_data("/path/to/data/file.fits")
     cubeviz.show()
 
 Spectrum (from file)
@@ -97,7 +94,7 @@ Spectrum (from file)
 
 For cases where the built-in parser is unable to understand your file format,
 you can try the `~specutils.Spectrum` parser directly and then pass the object to the
-:py:meth:`~jdaviz.configs.cubeviz.helper.Cubeviz.load` method:
+:py:meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method:
 
 .. code-block:: python
 
@@ -105,7 +102,7 @@ you can try the `~specutils.Spectrum` parser directly and then pass the object t
     from jdaviz import Cubeviz
     spec3d = Spectrum.read("/path/to/data/file.fits")
     cubeviz = Cubeviz()
-    cubeviz.load(spec3d, format='3D Spectrum', data_label='My Cube')
+    cubeviz.load_data(spec3d, data_label='My Cube')
     cubeviz.show()
 
 Spectrum (from array)
@@ -130,7 +127,7 @@ You can create your own :class:`~specutils.Spectrum` object by hand to load into
 
     cube = Spectrum(flux=flux, wcs=w)
     cubeviz = Cubeviz()
-    cubeviz.load(cube, format='3D Spectrum', data_label='My Cube')
+    cubeviz.load_data(cube, data_label='My Cube')
     cubeviz.show()
 
 JWST datamodels
@@ -171,7 +168,7 @@ object, you can load it into Cubeviz as follows:
     # Create your spectrum1
     spec3d = Spectrum(data, wcs=my_wcs)
     cubeviz = Cubeviz()
-    cubeviz.load(spec3d, format='3D Spectrum', data_label='My Cube')
+    cubeviz.load_data(spec3d, data_label='My Cube')
     cubeviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
@@ -187,7 +184,7 @@ To load a plain Numpy array without WCS:
     import numpy as np
     from jdaviz import Cubeviz
     flux = np.arange(16).reshape((2, 2, 4))  # x, y, z
-    cubeviz.load(flux, format='3D Spectrum', data_label='My Cube')
+    cubeviz.load_data(flux, data_label='My Cube')
     cubeviz.show()
 
 .. _cubeviz-import-regions-api:
