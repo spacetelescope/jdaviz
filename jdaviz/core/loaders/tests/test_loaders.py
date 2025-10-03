@@ -354,8 +354,8 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
                          meta=spectrum1d.meta)
     deconfigged_helper.load(sp1d_freq, format='1D Spectrum', data_label='sp_frequency')
 
-    # flux <> flux, uncertainty <> uncertainty, wavelength <> freq
-    assert len(deconfigged_helper.app.data_collection.external_links) == 3
+    # flux <> flux, uncertainty <> uncertainty, wavelength <> freq, Pixel 0[x] <> Pixel 1[x]
+    assert len(deconfigged_helper.app.data_collection.external_links) == 4
 
 
 def test_load_image_mult_sci_extension(imviz_helper):

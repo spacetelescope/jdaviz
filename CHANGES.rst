@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Add check for valid model fitting equation operators. [#3818]
+
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
   and import from an astroquery or MAST search. [#3769]
 
@@ -89,6 +91,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
 
 4.4.1 (2025-09-26)
 ==================
