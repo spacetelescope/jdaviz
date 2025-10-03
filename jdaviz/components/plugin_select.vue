@@ -66,17 +66,17 @@
             {{ multiselect ? selected : `'${selected}'` }}
           </span>
           <v-chip v-else-if="multiselect" style="width: calc(100% - 10px); flex: 1; display: flex; align-items: center;">
-            <j-tooltip v-if="exists_map" :tipid="existsFor(item) ? 'plugin-select-data-in-dc' : 'plugin-select-data-not-in-dc'">
-              <v-icon small :color="existsFor(item) ? 'green' : 'grey'" style="margin-right: 8px; min-width: 16px;">
-                {{ existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline' }}
+            <j-tooltip v-if="exists_map" :tipid="getExistsTooltipId(item)">
+              <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
+                {{ getExistsIcon(item) }}
               </v-icon>
             </j-tooltip>
             <span>{{ item }}</span>
           </v-chip>
           <span v-else style="flex: 1; display: flex; align-items: center;">
-            <j-tooltip v-if="exists_map && !api_hints_enabled" :tipid="existsFor(item) ? 'plugin-select-data-in-dc' : 'plugin-select-data-not-in-dc'">
-              <v-icon small :color="existsFor(item) ? 'green' : 'grey'" style="margin-right: 8px; min-width: 16px;">
-                {{ existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline' }}
+            <j-tooltip v-if="exists_map && !api_hints_enabled" :tipid="getExistsTooltipId(item)">
+              <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
+                {{ getExistsIcon(item) }}
               </v-icon>
             </j-tooltip>
             {{ item }}
@@ -86,9 +86,8 @@
       <template #item="{ item, attrs, on }">
         <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
           <v-list-item-action v-if="exists_map" style="min-width: 16px; margin-right: 8px; margin-top: 0px; margin-bottom: 0px;">
-            <j-tooltip :tipid="existsFor(item) ? 'plugin-select-data-in-dc' : 'plugin-select-data-not-in-dc'">
-              <v-icon small v-if="existsFor(item)" color="green">mdi-circle</v-icon>
-              <v-icon small v-else color="grey">mdi-circle-outline</v-icon>
+            <j-tooltip :tipid="getExistsTooltipId(item)">
+              <v-icon small :color="getExistsIconColor(item)">{{ getExistsIcon(item) }}</v-icon>
             </j-tooltip>
           </v-list-item-action>
             <v-list-item-title style="margin-top: 0px; margin-bottom: 0px">
@@ -161,6 +160,17 @@ module.exports = {
         ? item
         : (item.label || item.text || item);
       return !!map[key];
+    },
+    getExistsTooltipId(item) {
+      return this.existsFor(item)
+        ? 'plugin-select-data-in-dc'
+        : 'plugin-select-data-not-in-dc';
+    },
+    getExistsIconColor(item) {
+      return this.existsFor(item) ? 'green' : 'grey';
+    },
+    getExistsIcon(item) {
+      return this.existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline';
     },
     on_search_input(value) {
       this.search_query = value;
