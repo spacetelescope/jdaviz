@@ -22,9 +22,9 @@ method on the configuration helper, whether that's the deconfigged mode as shown
 
 .. code-block:: python
 
-    import jdaviz as jv
-    jv.show()
-    jv.load('myspectrum.fits', format='1D Spectrum')
+    import jdaviz
+    jdaviz.show()
+    jdaviz.load('myspectrum.fits', format='1D Spectrum')
     
     # Alternatively
     from jdaviz import Specviz
@@ -49,7 +49,7 @@ The loaders are accessed through the ``loaders`` property on the helper:
 .. code-block:: python
 
     # Access loaders
-    loaders = jv.loaders
+    loaders = jdaviz.loaders
     
     # Get list of available loaders
     print(loaders)
@@ -77,7 +77,12 @@ The main loaders available include:
 - ``'object'`` - Load Python objects directly (Spectrum1D, SpectrumList, NDData, etc)
 
 Each loader has its own set of parameters that can be discovered through :ref:`api-hints`
-or by accessing the loader object's attributes.
+or by accessing the loader object's attributes directly. For example, to see available formats for the object loader:
+
+.. code-block:: python
+
+    ldr.format.choices
+
 
 Available formats
 -----------------
@@ -88,8 +93,9 @@ Available formats
 - ``'Image'`` - For 2D image data
 - ``'2D Spectrum'`` - For 2D spectral data
 - ``'3D Spectrum'`` - For 3D spectral cube data
-- ``'Catalog'`` - For tabular data
 - ``'Footprint'`` - For footprint overlays on images
+- ``'Subset'`` - For loading subsets/regions
+- ``'Trace'`` - For loading spectral traces
 
 .. _api-hints:
 
@@ -101,7 +107,7 @@ parameters for loaders. You can enable API hints:
 
 .. code-block:: python
 
-    jv.toggle_api_hints()
+    jdaviz.toggle_api_hints()
 
 Or in the GUI, click the :guilabel:`API Hints` button in the top right.
 
@@ -111,7 +117,7 @@ set various loader attributes. For example:
 .. code-block:: python
 
     # When selecting a file loader, you might see:
-    ldr = jv.loaders['file']
+    ldr = jdaviz.loaders['file']
     ldr.format = '1D Spectrum'  # Set the format
     ldr.filename = 'myfile.fits'  # Set the filename
     
@@ -132,7 +138,7 @@ The ``load()`` method replaces the older ``load_data()`` method. Key differences
 4. Consistent Interface - Works consistently across different data types
 
 Differences from the Loaders API
-============================
+================================
 
 For most use cases, ``load()`` provides a simpler interface. Use the Loaders API when you need:
 
