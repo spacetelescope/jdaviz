@@ -3,7 +3,7 @@
     <plugin-select
       v-if="!disable_dropdown"
       :items="sources_items.map(i => i.label)"
-      :exists_map="data_in_data_collection"
+      :exists_in_dc="existing_data_in_dc"
       :selected.sync="sources_selected"
       :show_if_single_entry="true"
       :multiselect="sources_multiselect"

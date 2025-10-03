@@ -66,7 +66,7 @@
             {{ multiselect ? selected : `'${selected}'` }}
           </span>
           <v-chip v-else-if="multiselect" style="width: calc(100% - 10px); flex: 1; display: flex; align-items: center;">
-            <j-tooltip v-if="exists_map" :tipid="getExistsTooltipId(item)">
+            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined" :tipid="getExistsTooltipId(item)">
               <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
                 {{ getExistsIcon(item) }}
               </v-icon>
@@ -74,7 +74,7 @@
             <span>{{ item }}</span>
           </v-chip>
           <span v-else style="flex: 1; display: flex; align-items: center;">
-            <j-tooltip v-if="exists_map && !api_hints_enabled" :tipid="getExistsTooltipId(item)">
+            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined && !api_hints_enabled" :tipid="getExistsTooltipId(item)">
               <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
                 {{ getExistsIcon(item) }}
               </v-icon>
@@ -85,7 +85,7 @@
       </template>
       <template #item="{ item, attrs, on }">
         <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
-          <v-list-item-action v-if="exists_map" style="min-width: 16px; margin-right: 8px; margin-top: 0px; margin-bottom: 0px;">
+          <v-list-item-action v-if="exists_in_dc !== null && exists_in_dc !== undefined" style="min-width: 16px; margin-right: 8px; margin-top: 0px; margin-bottom: 0px;">
             <j-tooltip :tipid="getExistsTooltipId(item)">
               <v-icon small :color="getExistsIconColor(item)">{{ getExistsIcon(item) }}</v-icon>
             </j-tooltip>
@@ -104,7 +104,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_map'],
+          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_in_dc'],
   data() {
     return {
       search_query: '',
@@ -153,13 +153,12 @@ module.exports = {
   },
   methods: {
     existsFor(item) {
-      // Normalize the lookup key and coerce to boolean so the
-      // template expression is simple and robust.
-      const map = this.exists_map || {};
+      // Check if the item label exists in the list.
+      const list = this.exists_in_dc || [];
       const key = (typeof item === 'string')
         ? item
         : (item.label || item.text || item);
-      return !!map[key];
+      return list.includes(key);
     },
     getExistsTooltipId(item) {
       return this.existsFor(item)

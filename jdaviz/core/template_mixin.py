@@ -65,7 +65,7 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
-    wildcard_match, CONFIGS_WITH_LOADERS
+    wildcard_match, CONFIGS_WITH_LOADERS, create_data_hash
 )
 
 
@@ -1456,12 +1456,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def suffixes(self):
         return [item.get('suffix', None) for item in self.items]
 
+    @property
+    def data_hashes(self):
+        return [item.get('data_hash', None) for item in self.items]
+
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
         return {k: manual_item.get(k, None)
-                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'suffix')}
+                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'suffix', 'data_hash')}
 
     @observe('filters')
     def _update_items(self, msg={}):

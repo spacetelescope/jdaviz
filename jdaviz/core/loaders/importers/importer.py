@@ -1,5 +1,5 @@
 import os
-from traitlets import Any, Bool, List, Unicode, observe, Dict
+from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
@@ -49,10 +49,18 @@ class BaseImporter(PluginTemplateMixin):
     import_disabled = Bool(False).tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
+    existing_data_in_dc = List([]).tag(sync=True)
+
     def __init__(self, app, resolver, input, **kwargs):
         self._input = input
         self._resolver = resolver
         super().__init__(app, **kwargs)
+
+        self.data_hashes = [create_data_hash(self.input)]
+        # Doing this in app instead of here avoids a lot of unnecessary overhead
+        # from all the importers in memory
+        self.app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
+        self._update_existing_data_in_dc_traitlet()
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -85,16 +93,27 @@ class BaseImporter(PluginTemplateMixin):
         # override by subclass
         return self.input
 
-    def check_data_hash_for_duplicate(self):
-        output_hash = create_data_hash(self.output)
-        if output_hash is None:
-            return
+    def _update_existing_data_in_dc_traitlet(self, change={}):
+        self.existing_data_in_dc = self.app.existing_data_in_dc
+
+    def reset_and_check_existing_data_in_dc(self, change={}):
+        new_existing_data_in_dc = []
+
         for data in self.app.data_collection:
-            if data.meta.get('_data_hash', None) == output_hash:
-                msg = f"Selected data appears to be identical to existing data '{data.label}'."  # noqa
-                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
-                # self.data_label_invalid_msg = msg
-                return
+            data_hash = data.meta.get('_data_hash')
+            data_loader_label = data.meta.get('_data_loader_label')
+
+            if data_hash in self.data_hashes:
+                new_existing_data_in_dc.append(data_loader_label)
+
+        # Trigger (local) traitlet update
+        self.app.existing_data_in_dc = new_existing_data_in_dc
+
+        # Only need to display the message once
+        if len(new_existing_data_in_dc) > 0:
+            msg = f"Selected data appears to be identical to existing data."  # noqa
+            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            # self.data_label_invalid_msg = msg
 
     @property
     def target(self):
@@ -117,8 +136,6 @@ class BaseImporterToDataCollection(BaseImporter):
     data_label_default = Unicode().tag(sync=True)
     data_label_auto = Bool(True).tag(sync=True)
     data_label_invalid_msg = Unicode().tag(sync=True)
-
-    data_in_data_collection = Dict().tag(sync=True)
 
     viewer_create_new_items = List([]).tag(sync=True)
     viewer_create_new_selected = Unicode().tag(sync=True)
@@ -158,11 +175,6 @@ class BaseImporterToDataCollection(BaseImporter):
                            handler=lambda _: self._on_label_changed())
         self._on_label_changed()
 
-        # Doing this in app instead of here avoids a lot of unnecessary overhead
-        # from all the importers in memory
-        self.app.observe(self._update_data_in_dc_traitlet, 'data_in_data_collection')
-        self._update_data_in_dc_traitlet()
-
         supported_viewers = self._get_supported_viewers()
         if self.app.config in ('deconfigged', 'imviz', 'lcviz'):
             self.viewer_create_new_items = supported_viewers
@@ -179,9 +191,6 @@ class BaseImporterToDataCollection(BaseImporter):
             return isinstance(viewer, tuple(classes))
         self.viewer.add_filter(viewer_in_registry_names)
         self.viewer.select_default()
-
-    def _update_data_in_dc_traitlet(self, change={}):
-        self.data_in_data_collection = self.app.data_in_data_collection
 
     @staticmethod
     def _get_supported_viewers():
@@ -266,7 +275,7 @@ class BaseImporterToDataCollection(BaseImporter):
         data.meta['_importer'] = self.__class__.__name__
 
         # Create a 'hash' representation of the data if not already present
-        data.meta['_data_hash'] = create_data_hash(data)
+        data.meta['_data_hash'] = item.get('data_hash', create_data_hash(data))
         data.meta['_data_loader_label'] = item.get('label', '')
 
         self.app.add_data(data, data_label=data_label)

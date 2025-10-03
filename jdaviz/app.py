@@ -348,7 +348,7 @@ class Application(VuetifyTemplate, HubListener):
 
     template_file = __file__, "app.vue"
 
-    data_in_data_collection = Dict().tag(sync=True)
+    existing_data_in_dc = List([]).tag(sync=True)
 
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
@@ -2682,9 +2682,9 @@ class Application(VuetifyTemplate, HubListener):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
 
-    def _update_data_in_data_collection(self, msg, data_added):
+    def _update_existing_data_in_dc(self, msg, data_added):
         """
-        Update the ``data_in_data_collection`` state dictionary to reflect
+        Update the ``existing_data_in_dc`` state dictionary to reflect
         whether data with a given label is in the internal ``DataCollection``.
 
         Parameters
@@ -2696,17 +2696,13 @@ class Application(VuetifyTemplate, HubListener):
         data_added : bool
             Whether data was added or removed from the ``DataCollection``.
         """
-        # No need to initialize a dictionary of labels in data_in_data_collection
-        # since vue evaluates an empty key as undefined => False
-        update_dict = self.data_in_data_collection.copy()
+        new_data_in_dc = self.existing_data_in_dc.copy()
         data_loader_label = msg.data.meta.get('_data_loader_label', None)
-        if data_loader_label is not None:
-            update_dict[data_loader_label] = data_added
-            # If data_added is false, that means the data was removed,
-            # no need to keep it around.
-            if not data_added:
-                update_dict.pop(data_loader_label)
-            self.data_in_data_collection = update_dict
+        if data_added:
+            new_data_in_dc.append(data_loader_label)
+        else:
+            new_data_in_dc.remove(data_loader_label)
+        self.existing_data_in_dc = new_data_in_dc
 
     def _on_data_added(self, msg):
         """
@@ -2727,7 +2723,7 @@ class Application(VuetifyTemplate, HubListener):
         self.state.data_items.append(data_item)
         self._reserved_labels.add(msg.data.label)
 
-        self._update_data_in_data_collection(msg, data_added=True)
+        self._update_existing_data_in_dc(msg, data_added=True)
 
     def _clear_object_cache(self, data_label=None):
         if data_label is None:
@@ -2754,7 +2750,7 @@ class Application(VuetifyTemplate, HubListener):
 
         self._clear_object_cache(msg.data.label)
 
-        self._update_data_in_data_collection(msg, data_added=False)
+        self._update_existing_data_in_dc(msg, data_added=False)
 
     def _create_data_item(self, data):
         ndims = len(data.shape)
