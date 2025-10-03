@@ -97,6 +97,11 @@ class BaseImporter(PluginTemplateMixin):
         self.existing_data_in_dc = self.app.existing_data_in_dc
 
     def reset_and_check_existing_data_in_dc(self, change={}):
+        """
+        Check if the data to be imported appears to already exist in the data collection
+        based on the data hash.  If so, update the existing_data_in_dc traitlet
+        accordingly and display a warning snackbar message.
+        """
         new_existing_data_in_dc = []
 
         for data in self.app.data_collection:
@@ -113,6 +118,10 @@ class BaseImporter(PluginTemplateMixin):
         if len(new_existing_data_in_dc) > 0:
             msg = f"Selected data appears to be identical to existing data."  # noqa
             self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            # TODO: Allow for now but implement a disabled message near the import button
+            #  or indicate that the import will be a re-import And if allowing re-import,
+            #  there's a bug that needs to be squashed... (second import doesn't show in viewer)
+            #  but remains in app.
             # self.data_label_invalid_msg = msg
 
     @property
