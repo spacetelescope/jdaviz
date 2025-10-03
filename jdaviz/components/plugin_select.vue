@@ -62,34 +62,39 @@
       </template>
       <template #selection="{ item, index }">
         <div class="single-line" style="width: 100%; display: flex; align-items: center;">
-          <j-tooltip :tipid="existsFor(item) ? 'plugin-select-data-in-dc' : 'plugin-select-data-not-in-dc'">
-            <v-icon v-if="exists_map && !api_hints_enabled" small :color="existsFor(item) ? 'green' : 'grey'" style="margin-right: 8px; min-width: 16px;">
-              {{ existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline' }}
-            </v-icon>
-          </j-tooltip>
           <span v-if="api_hints_enabled && index === 0" class="api-hint" style="flex: 1;">
             {{ multiselect ? selected : `'${selected}'` }}
           </span>
-          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px); flex: 1;">
+          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px); flex: 1; display: flex; align-items: center;">
+            <j-tooltip v-if="exists_map" :tipid="existsFor(item) ? 'plugin-select-data-in-dc' : 'plugin-select-data-not-in-dc'">
+              <v-icon small :color="existsFor(item) ? 'green' : 'grey'" style="margin-right: 8px; min-width: 16px;">
+                {{ existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline' }}
+              </v-icon>
+            </j-tooltip>
             <span>{{ item }}</span>
           </v-chip>
-          <span v-else style="flex: 1;">{{ item }}</span>
+          <span v-else style="flex: 1; display: flex; align-items: center;">
+            <j-tooltip v-if="exists_map && !api_hints_enabled" :tipid="existsFor(item) ? 'plugin-select-data-in-dc' : 'plugin-select-data-not-in-dc'">
+              <v-icon small :color="existsFor(item) ? 'green' : 'grey'" style="margin-right: 8px; min-width: 16px;">
+                {{ existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline' }}
+              </v-icon>
+            </j-tooltip>
+            {{ item }}
+          </span>
         </div>
       </template>
       <template #item="{ item, attrs, on }">
-        <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px">
-          <v-list-item-action v-if="exists_map" style="min-width: 32px">
+        <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
+          <v-list-item-action v-if="exists_map" style="min-width: 16px; margin-right: 8px; margin-top: 0px; margin-bottom: 0px;">
             <j-tooltip :tipid="existsFor(item) ? 'plugin-select-data-in-dc' : 'plugin-select-data-not-in-dc'">
               <v-icon small v-if="existsFor(item)" color="green">mdi-circle</v-icon>
               <v-icon small v-else color="grey">mdi-circle-outline</v-icon>
             </j-tooltip>
           </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title style="margin-top: 8px; margin-bottom: 0px">
+            <v-list-item-title style="margin-top: 0px; margin-bottom: 0px">
               {{ typeof item === 'string' ? item : (item.label || item.text) }}
               <!-- Debug marker: visible on-screen to help diagnose matching <span style="font-size: 0.75rem; color: grey; margin-left: 6px">{{ existsFor(item) ? '✓' : '✗' }}</span>-->
               </v-list-item-title>
-          </v-list-item-content>
         </v-list-item>
       </template>
     </v-select>
