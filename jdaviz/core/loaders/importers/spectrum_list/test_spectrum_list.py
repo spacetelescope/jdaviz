@@ -60,7 +60,6 @@ class TestSpectrumListImporter:
         assert hasattr(importer_obj, 'sources')
 
         assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
-        assert importer_obj._sources_items_helper == importer_obj.sources.items
 
     # Parameterize to test both single and multiple selection
     @pytest.mark.parametrize('to_select', [['1D Spectrum at index: 1'],

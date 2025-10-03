@@ -1,4 +1,4 @@
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe, Dict
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
@@ -12,7 +12,8 @@ from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
                           CONFIGS_WITH_LOADERS,
-                          SPECTRAL_AXIS_COMP_LABELS)
+                          SPECTRAL_AXIS_COMP_LABELS,
+                          create_data_hash)
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
            '_spectrum_assign_component_type']
@@ -47,10 +48,18 @@ class BaseImporter(PluginTemplateMixin):
     import_disabled = Bool(False).tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
+    existing_data_in_dc = Dict([]).tag(sync=True)
+
     def __init__(self, app, resolver, input, **kwargs):
         self._input = input
         self._resolver = resolver
         super().__init__(app, **kwargs)
+
+        self.data_hashes = [create_data_hash(self.input)]
+        # Doing this in app instead of here avoids a lot of unnecessary overhead
+        # from all the importers in memory
+        self.app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
+        self._update_existing_data_in_dc_traitlet()
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -82,6 +91,36 @@ class BaseImporter(PluginTemplateMixin):
     def output(self):
         # override by subclass
         return self.input
+
+    def _update_existing_data_in_dc_traitlet(self, change={}):
+        self.existing_data_in_dc = self.app.existing_data_in_dc
+
+    def reset_and_check_existing_data_in_dc(self, change={}):
+        """
+        Check if the data to be imported appears to already exist in the data collection
+        based on the data hash.  If so, update the existing_data_in_dc traitlet
+        accordingly and display a warning snackbar message.
+        """
+        new_existing_data_in_dc = {dh: False for dh in self.data_hashes}
+
+        for data in self.app.data_collection:
+            data_hash = data.meta.get('_data_hash')
+
+            if data_hash in self.data_hashes:
+                new_existing_data_in_dc[data_hash] = True
+
+        # Trigger (local) traitlet update
+        self.app.existing_data_in_dc = new_existing_data_in_dc
+
+        # Only need to display the message once
+        if any(new_existing_data_in_dc.values()) > 0:
+            msg = f"Selected data appears to be identical to existing data."  # noqa
+            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            # TODO: Allow for now but implement a disabled message near the import button
+            #  or indicate that the import will be a re-import And if allowing re-import,
+            #  there's a bug that needs to be squashed... (second import doesn't show in viewer)
+            #  but remains in app.
+            # self.data_label_invalid_msg = msg
 
     @property
     def target(self):
@@ -123,6 +162,7 @@ class BaseImporterToDataCollection(BaseImporter):
                                         'data_label_default',
                                         'data_label_auto',
                                         'data_label_invalid_msg')
+
         self.data_label_default = self.app.return_unique_name(self._registry_label)
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
@@ -205,14 +245,19 @@ class BaseImporterToDataCollection(BaseImporter):
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type
 
-    def add_to_data_collection(self, data, data_label=None,
+    def add_to_data_collection(self, data, data_label=None, item=None,
                                parent=None,
                                viewer_select=None,
                                cls=None):
+
+        if item is None:
+            item = {}
+
         if data_label is None:
             data_label = self.data_label_value.strip()
         else:
             data_label = data_label.strip()
+
         if hasattr(data, 'meta'):
             try:
                 data.meta = standardize_metadata(data.meta)
@@ -229,6 +274,9 @@ class BaseImporterToDataCollection(BaseImporter):
             data.meta = dict(data.meta)
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
+
+        # Create a 'hash' representation of the data if not already present
+        data.meta['_data_hash'] = item.get('data_hash', create_data_hash(data))
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
