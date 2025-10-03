@@ -315,9 +315,6 @@ class TestParallelizeCalculation:
             assert collected == []
 
 
-@pytest.mark.parametrize('input_data', [np.arange(10), np.ma.masked_array(np.arange(10), mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
-                                        Quantity(np.arange(10), 'm/s'), 'spectrum1d', 'partially_masked_spectrum1d',
-                                        'spectrum2d','image_hdu_nowcs', 'image_nddata_wcs'])
 @pytest.mark.parametrize('input_data',
                          [np.arange(10), '12345',
                           np.ma.masked_array(np.arange(10), mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
