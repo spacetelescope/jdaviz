@@ -153,12 +153,27 @@ module.exports = {
   },
   methods: {
     existsFor(item) {
-      // Check if the item label exists in the list.
-      const list = this.exists_in_dc || [];
+      // Get the index of this item in the items array and check if
+      // that index corresponds to a true value in exists_in_dc.
+      if (!this.exists_in_dc || typeof this.exists_in_dc !== 'object') {
+        return false;
+      }
+      // Get the item's label/key
       const key = (typeof item === 'string')
         ? item
         : (item.label || item.text || item);
-      return list.includes(key);
+      // Find the index of this item in the items array
+      const item_index = this.items.findIndex(i => {
+        const i_key = (typeof i === 'string') ? i : (i.label || i.text || i);
+        return i_key === key;
+      });
+      if (item_index === -1) {
+        return false;
+      }
+      // Get all values from the dictionary in order of keys
+      const dict_values = Object.values(this.exists_in_dc);
+      // Check if the value at this index is true
+      return dict_values[item_index] === true;
     },
     getExistsTooltipId(item) {
       return this.existsFor(item)
