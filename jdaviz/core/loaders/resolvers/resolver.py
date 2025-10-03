@@ -224,8 +224,6 @@ class BaseResolver(PluginTemplateMixin):
     file_table_populated = Bool(False).tag(sync=True)
 
     # options to download selected item in products list
-    file_url_scheme = Unicode("").tag(sync=True)
-    file_url = Unicode("").tag(sync=True)
     file_cache = Bool(True).tag(sync=True)
     file_local_path = Unicode("").tag(sync=True)
     file_timeout = FloatHandleEmpty(10).tag(sync=True)

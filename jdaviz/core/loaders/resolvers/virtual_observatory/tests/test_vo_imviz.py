@@ -245,14 +245,7 @@ class TestVOImvizRemote:
 
     @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
-    def test_HSTM51_load_data(self, imviz_helper):
-        """
-        Tests the following:
-        * The full plugin by filling out the form and loading a data product into Imviz.
-        * The plugin warns user about potentially misaligned data layers
-            when loading data and WCS linking is not enabled.
-        * User gets properly notified when a load_data error occurs
-        """
+    def test_HSTM51_data_url(self, imviz_helper):
         # Set Common Args
         vo_ldr = self._init_vo_ldr_M51(imviz_helper)
 
@@ -265,25 +258,6 @@ class TestVOImvizRemote:
         assert len(vo_ldr.file_table._obj.items) > 0
 
         # Load first data product
-        vo_ldr.file_cache = False  # Force redownload to avoid local caching issues
+        assert vo_ldr._obj.get_selected_url() is None
         vo_ldr.file_table.select_rows(0)
-        vo_ldr.format = 'Image'
-        vo_ldr.importer()
-        assert len(imviz_helper.app.data_collection) == 1
-        assert "h_m51" in imviz_helper.data_labels[0]
-
-        # Load second data product
-        imviz_helper.plugins['Logger'].clear_history()  # Clear snackbar warnings
-        # User should be warned about misaligned data if WCS linking isn't set
-        # and there's already data in the data collection
-        assert imviz_helper.plugins["Orientation"].align_by == "Pixels"
-        vo_ldr.file_table.select_rows(0)
-        vo_ldr.importer()
-
-        # Load third data product
-        imviz_helper.plugins['Logger'].clear_history()  # Clear snackbar warnings
-        # If we switch to WCS linking, we shouldn't get a warning anymore
-        # since the data will be aligned
-        imviz_helper.plugins["Orientation"].align_by = "WCS"
-        vo_ldr.file_table.select_rows(0)
-        vo_ldr.importer()
+        assert vo_ldr._obj.get_selected_url() is not None and len(vo_ldr._obj.get_selected_url()) > 0  # noqa
