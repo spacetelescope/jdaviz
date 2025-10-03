@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Add check for valid model fitting equation operators. [#3818]
+
 Cubeviz
 ^^^^^^^
 
