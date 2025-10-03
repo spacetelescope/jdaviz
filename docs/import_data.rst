@@ -17,14 +17,20 @@ Jdaviz provides several ways to import data into the application. This guide wil
 Using load()
 ============
 
-The recommended way to load data is using the :py:meth:`~jdaviz.core.helpers.ConfigHelper._load`
-method on the helper. This provides a simple interface for loading data:
+The recommended way to load data is to use the :py:meth:`~jdaviz.core.helpers.ConfigHelper._load`
+method on the configuration helper, whether that's the deconfigged mode as shown below, or a specific configuration such as ``Specviz``, ``Cubeviz``, etc. This provides a simple interface for loading data:
 
 .. code-block:: python
 
     import jdaviz as jv
     jv.show()
     jv.load('myspectrum.fits', format='1D Spectrum')
+    
+    # Alternatively
+    from jdaviz import Specviz
+    specviz = Specviz()
+    specviz.show()
+    specviz.load('myspectrum.fits')
 
 
 Using Loaders API (Interactive)
@@ -34,6 +40,7 @@ For more control over the loading process, you can use the Loaders API. This pro
 
 - Select specific loaders
 - Configure import options 
+- Inspect available options from dropdowns, etc.
 - View API hints for available options
 - Preview data before importing
 
@@ -51,7 +58,7 @@ The loaders are accessed through the ``loaders`` property on the helper:
     ldr = loaders['object']  # Or file, file drop, or url
     
     # Configure loading options
-    ldr.object = my_data
+    ldr.object = my_data  # or ldr.filename, ldr.url
     ldr.format = '1D Spectrum'
     
     # Import the data
@@ -69,14 +76,14 @@ The main loaders available include:
 - ``'url'`` - Load data from remote URLs/URIs 
 - ``'object'`` - Load Python objects directly (Spectrum1D, SpectrumList, NDData, etc)
 
-Each loader has its own set of parameters that can be discovered through the :ref:`api-hints`
+Each loader has its own set of parameters that can be discovered through :ref:`api-hints`
 or by accessing the loader object's attributes.
 
 Available formats
 -----------------
 
-- ``'1D Spectrum'`` - For individual Spectrum1D objects or files containing a single spectrum
-- ``'1D Spectrum List'`` - For SpectrumList objects or files containing multiple spectra
+- ``'1D Spectrum'`` - For individual 1D :class:`~specutils.Spectrum` objects or files containing a single spectrum
+- ``'1D Spectrum List'`` - For `~specutils.SpectrumList` objects or files containing multiple spectra
 - ``'1D Spectrum Concatenated'`` - For combining multiple spectra into a single spectrum
 - ``'Image'`` - For 2D image data
 - ``'2D Spectrum'`` - For 2D spectral data
@@ -123,6 +130,9 @@ The ``load()`` method replaces the older ``load_data()`` method. Key differences
 3. Target Specification - Can direct data to specific viewers using ``target``
 
 4. Consistent Interface - Works consistently across different data types
+
+Differences from the Loaders API
+============================
 
 For most use cases, ``load()`` provides a simpler interface. Use the Loaders API when you need:
 

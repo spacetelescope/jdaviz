@@ -59,8 +59,8 @@ method, specifying the format explicitly:
 
 Available formats include:
 
-- ``'1D Spectrum'`` - For individual Spectrum1D objects or files containing a single spectrum
-- ``'1D Spectrum List'`` - For SpectrumList objects or files containing multiple spectra
+- ``'1D Spectrum'`` - For individual 1D :class:`~specutils.Spectrum` objects or files containing a single spectrum
+- ``'1D Spectrum List'`` - For `~specutils.SpectrumList` objects or files containing multiple spectra
 - ``'1D Spectrum Concatenated'`` - For combining multiple spectra into a single spectrum
 
 It is helpful to click the :guilabel:`API Hints`

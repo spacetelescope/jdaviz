@@ -13,6 +13,7 @@ that is the tool will show underneath the notebook cell it was called from:
 
     imviz = Imviz()
     imviz.show()
+    #  Because Imviz only accepts images (for now), it is not required to specify format here.
     imviz.load('filename.fits', format='Image')
 
 The height of the application in the notebook can be changed by passing an integer

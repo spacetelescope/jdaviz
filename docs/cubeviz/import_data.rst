@@ -88,6 +88,7 @@ The example below loads a FITS file into Cubeviz:
 
     from jdaviz import Cubeviz
     cubeviz = Cubeviz()
+    # Because Cubeviz only accepts 3D spectral cubes (for now), it is not required to specify format here.
     cubeviz.load("/path/to/data/file.fits", format='3D Spectrum')
     cubeviz.show()
 

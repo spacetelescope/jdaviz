@@ -74,6 +74,7 @@ the spectrum to be horizontal:
 
 .. code-block:: python
 
+    # Because Specviz2d only accepts 2D spectra (for now), it is not required to specify format here.
     specviz2d.load(filename, format='2D Spectrum', ext=7, transpose=True)
 
 Loading from a URL or URI
