@@ -368,6 +368,8 @@ class SelectLine(CheckableTool, HubListener):
                                           handler=self._on_plotted_lines_changed)
 
     def activate(self):
+        # ensure self.line_marks is populated
+        self.viewer._broadcast_plotted_lines()
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['click'])
 

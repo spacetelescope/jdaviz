@@ -19,6 +19,15 @@
       :api_hints_enabled="api_hints_enabled"
     ></plugin-loaders-panel>
 
+    <j-custom-toolbar-toggle
+      v-if="overlay_items.length > 1"
+      :enabled="custom_toolbar_enabled"
+      text="footprint selection tools"
+      @toggle-custom-toolbar="toggle_custom_toolbar"
+    >
+      <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>
+    </j-custom-toolbar-toggle>
+
     <plugin-editable-select
       :mode.sync="overlay_mode"
       :edit_value.sync="overlay_edit_value"

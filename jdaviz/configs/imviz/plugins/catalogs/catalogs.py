@@ -11,6 +11,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
+                                        CustomToolbarToggleMixin,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.events import CatalogResultsChangedMessage, CatalogSelectClickEventMessage
@@ -24,7 +25,8 @@ __all__ = ['Catalogs']
 
 @tray_registry('imviz-catalogs', label="Catalog Search",
                category="data:analysis")
-class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, TableMixin):
+class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
+               HasFileImportSelect, TableMixin, CustomToolbarToggleMixin):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
 
@@ -74,6 +76,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self._plugin_description = 'Query catalog for objects within region on sky.'
 
         self.viewer.add_filter('is_image_viewer')
+
+        def custom_toolbar(viewer):
+            if viewer.reference in self.viewer.choices:
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectcatalog']], 'jdaviz:selectcatalog'  # noqa
+            # otherwise defaults
+            return None, None
+
+        self.custom_toolbar.callable = custom_toolbar
+        self.custom_toolbar.name = "Catalog Source ID"
 
         cat_options = ['SDSS', 'Gaia']
         if not self.app.state.settings.get('server_is_remote', False):

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import os
 import traitlets
 
@@ -10,7 +11,7 @@ from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 SpectralMarksChangedMessage, CatalogResultsChangedMessage,
-                                FootprintMarkVisibilityChangedMessage)
+                                FootprintMarkVisibilityChangedMessage, RestoreToolbarMessage)
 
 __all__ = ['NestedJupyterToolbar']
 
@@ -31,40 +32,22 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     # absolute positions to display the menu
     suboptions_x = traitlets.Float().tag(sync=True)
     suboptions_y = traitlets.Float().tag(sync=True)
+    # string indicating the current tool override mode
+    tool_override_mode = traitlets.Unicode("").tag(sync=True)
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
         self.viewer = viewer
-        self._max_menu_ind = len(tools_nested)
 
-        # iterate through the nested list.  The first item in each entry
-        # is treated as the default primary tool of that subcategory,
-        # with each additional entry available from a dropdown.  For
-        # backwards compatibility with BasicJupyterToolbar, single strings
-        # will be treated as having no submenu.
-        for menu_ind, subtools in enumerate(tools_nested):
-            if isinstance(subtools, str):
-                subtools = [subtools]
-            for i, tool_id in enumerate(subtools):
-                tool_cls = viewer_tool.members[tool_id]
-                tool = tool_cls(viewer)
-                self.add_tool(tool,
-                              menu_ind=menu_ind,
-                              has_suboptions=len(subtools) > 1,
-                              primary=i == 0,
-                              visible=True)
+        # Store original values for reset functionality
+        if isinstance(tools_nested, list):
+            self._original_tools_nested = tools_nested.copy()
+        else:
+            self._original_tools_nested = tools_nested
+        self._original_default_tool_priority = default_tool_priority.copy()
 
-        # default_tool_priority allows falling back on an existing tool
-        # if its the primary tool.  If no items in default_tool_priority
-        # are currently "primary", then either no tool will be selected
-        # or will fallback on BasicJupyterToolbar's handling of
-        # viewer._default_mouse_mode_cls (which will not show that tool as active).
-        self.default_tool_priority = default_tool_priority
-
-        # handle logic for tool visibilities (which will also handle setting the primary
-        # to something other than the first entry, if necessary)
-        # NOTE: this will also call _handle_default_tool
-        self._update_tool_visibilities()
+        # Build the initial toolbar
+        self._build_toolbar(tools_nested, default_tool_priority)
 
         # toolbars in the main app viewers need to respond to the data-collection, etc,
         # but those in plugins do not
@@ -74,6 +57,97 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                         FootprintMarkVisibilityChangedMessage):
                 self.viewer.hub.subscribe(self, msg,
                                           handler=lambda _: self._update_tool_visibilities())
+            # Subscribe to restore toolbar message with dedicated handler
+            self.viewer.hub.subscribe(self, RestoreToolbarMessage,
+                                      handler=lambda msg: self.restore_tools(all_viewers=False))
+
+    def override_tools(self, tools_nested, tool_override_mode, default_tool_priority=[]):
+        """
+        Rebuild the toolbar with passed values.
+
+        Parameters
+        ----------
+        tools_nested : list
+            Nested list of tool configurations for the new toolbar
+        tool_override_mode : str
+            String indicating the current tool override mode
+        default_tool_priority : list, optional
+            Priority list for default tool selection
+        """
+        # Store the override mode
+        self.tool_override_mode = tool_override_mode
+
+        # Clear current toolbar
+        self._clear_toolbar()
+
+        # Rebuild toolbar with new configuration
+        self._build_toolbar(tools_nested, default_tool_priority)
+
+    def _build_toolbar(self, tools_nested, default_tool_priority):
+        """
+        Build the toolbar with the given configuration.
+
+        Parameters
+        ----------
+        tools_nested : list
+            Nested list of tool configurations
+        default_tool_priority : list
+            Priority list for default tool selection
+        """
+        # Store values
+        self.default_tool_priority = default_tool_priority
+        self._max_menu_ind = len(tools_nested)
+
+        # iterate through the nested list.  The first item in each entry
+        # is treated as the default primary tool of that subcategory,
+        # with each additional entry available from a dropdown.  For
+        # backwards compatibility with BasicJupyterToolbar, single strings
+        # will be treated as having no submenu.
+        tools_data = OrderedDict()
+        for menu_ind, subtools in enumerate(tools_nested):
+            if isinstance(subtools, str):
+                subtools = [subtools]
+            for i, tool_id in enumerate(subtools):
+                tool_cls = viewer_tool.members[tool_id]
+                tool = tool_cls(self.viewer)
+                tools_data = self.add_tool(tools_data,
+                                           tool=tool,
+                                           menu_ind=menu_ind,
+                                           has_suboptions=len(subtools) > 1,
+                                           primary=i == 0,
+                                           visible=True)
+        self.tools_data = tools_data
+
+        # handle logic for tool visibilities (which will also handle setting the primary
+        # to something other than the first entry, if necessary)
+        # NOTE: this will also call _handle_default_tool
+        self._update_tool_visibilities()
+
+    def restore_tools(self, all_viewers=True):
+        """
+        Restore the toolbar to its original configuration from initialization.
+        """
+        self.override_tools(self._original_tools_nested,
+                            "",
+                            self._original_default_tool_priority)
+        if all_viewers and hasattr(self.viewer, 'hub'):
+            self.viewer.hub.broadcast(RestoreToolbarMessage(sender=self))
+
+    def vue_restore_tools(self, *args):
+        """
+        Vue method to restore all toolbar instances to their original configuration.
+        Emits a RestoreToolbarMessage that all toolbar instances will respond to.
+        """
+        self.restore_tools()
+
+    def _clear_toolbar(self):
+        """
+        Clear all current tools from the toolbar.
+        """
+        # Clear the tools and tools_data dictionaries
+        self.tools.clear()
+        self.tools_data = {}
+        self.active_tool_id = None
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
@@ -191,7 +265,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         menu_ind = self.tools_data[tool_id]['menu_ind']
         self._select_tool(tool_id, menu_ind)
 
-    def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False, visible=True):
+    def add_tool(self, tools_data, tool, menu_ind, has_suboptions=True,
+                 primary=False, visible=True):
         # NOTE: this method is essentially copied from glue-jupyter's BasicJupyterToolbar,
         # but we need extra values in the tools_data dictionary.  We could call super(),
         # but then that would create tools_data twice, which would then cause
@@ -201,8 +276,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             path = tool.icon
         else:
             path = icon_path(tool.icon, icon_format='svg')
-        self.tools_data = {
-            **self.tools_data,
+        tools_data = {
+            **tools_data,
             tool.tool_id: {
                 'tooltip': tool.tool_tip,
                 'img': read_icon(path, 'svg+xml'),
@@ -212,6 +287,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                 'visible': visible
             }
         }
+        return tools_data
 
     def vue_select_primary(self, args):
         """
