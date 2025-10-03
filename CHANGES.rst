@@ -6,6 +6,8 @@ New Features
 
 - Add check for valid model fitting equation operators. [#3818]
 
+- Change parallelization framework for better performance and flexibility. [#3806]
+
 Cubeviz
 ^^^^^^^
 

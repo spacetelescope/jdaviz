@@ -1,7 +1,6 @@
 import numpy as np
 from contextlib import contextmanager
 import multiprocessing as mp
-from multiprocessing import Pool
 import sys
 import os
 
@@ -14,6 +13,7 @@ except ImportError:
     pass
 
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import generate_spaxel_list
+from jdaviz.utils import parallelize_calculation
 
 #  smallest fraction of the max audio amplitude that can be represented by a 16-bit signed integer
 INT_MAX = 2**15 - 1
@@ -148,19 +148,13 @@ class CubeListenerData:
                 elif self.spectral_axis_index == 0:
                     self.sigcube[:, y, x] = sig
 
-        results = []
-        pool = Pool(self.n_cpu)
-        for spx in np.array_split(spaxels, self.n_cpu):
-            # Worker for the multiprocess pool.
-            worker = SonifySpaxelWorker(self.cube, spx, lo2hi, self.dur, self.srate,
-                                        self.audfrqmin, self.audfrqmax, self.eln, self.maxval,
-                                        spectral_axis_index=self.spectral_axis_index)
-            r = pool.apply_async(worker, callback=collect_result)
-            results.append(r)
-        for r in results:
-            r.wait()
+        # Workers for the parallelization pool.
+        workers = (SonifySpaxelWorker(self.cube, spx, lo2hi, self.dur, self.srate,
+                                      self.audfrqmin, self.audfrqmax, self.eln, self.maxval,
+                                      spectral_axis_index=self.spectral_axis_index)
+                   for spx in np.array_split(spaxels, self.n_cpu))
 
-        pool.close()
+        parallelize_calculation(workers, collect_result, n_cpu=self.n_cpu)
 
         if self.spectral_axis_index == 2:
             self.cursig[:] = self.sigcube[0, 0, :]

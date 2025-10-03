@@ -7,6 +7,8 @@ from collections import deque
 from urllib.parse import urlparse
 import fnmatch
 import re
+import multiprocessing as mp
+from joblib import Parallel, delayed
 
 import asdf
 import numpy as np
@@ -951,6 +953,27 @@ def wildcard_match(obj, value, choices=None):
             value = wildcard_match_list_of_str(choices, value)
 
     return value
+
+
+def parallelize_calculation(workers, collect_result_callback, n_cpu=mp.cpu_count() - 1):
+    """
+    Function to perform parallel processing with joblib.
+    The function takes a list of callables (functions with no arguments
+    that return a result) and executes them in parallel.
+    The results of each callable are passed to a callback function for collection.
+
+    Parameters
+    ----------
+    workers : worker type object
+        The function to be called within the parallel backend context.
+    collect_result_callback : function
+        A callback function to collect the results of each worker.
+    n_cpu : int
+        The number of CPU cores to use for parallel processing.
+        Defaults to the total number of available CPU cores - 1.
+    """
+    results = Parallel(n_jobs=n_cpu)(delayed(worker)() for worker in workers)
+    _ = [collect_result_callback(r) for r in results]
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
