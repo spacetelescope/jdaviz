@@ -9,7 +9,7 @@ User Guide
 
   installation
   quickstart
-  import_data
+  load
   video_tutorials
   imviz/index
   specviz/index
