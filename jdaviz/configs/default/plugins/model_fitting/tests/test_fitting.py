@@ -666,6 +666,29 @@ def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     assert model_flux.units == expected_unit_string
 
 
+@pytest.mark.parametrize('op, allowed',[('+', True),('-', True),('*', False),('/', False),('**', False),],)  # noqa
+def test_valid_component_operators(deconfigged_helper, op, allowed):
+    flux = np.ones(9) * u.Jy
+    flux[7] = 10 * u.Jy
+    wavelength = np.arange(9) * u.um
+    spec = Spectrum(flux=flux, spectral_axis=wavelength)
+    deconfigged_helper.load(
+        spec, data_label='1D Spectrum', format='1D Spectrum'
+    )
+
+    mf = deconfigged_helper.plugins['Model Fitting']
+    mf.create_model_component('Const1D')
+    mf.create_model_component('Const1D')
+
+    mf.equation.value = f'C{op}C_1'
+
+    if allowed:
+        assert mf._obj.model_equation_invalid_msg == ''
+    else:
+        assert 'unsupported operator' in mf._obj.model_equation_invalid_msg
+        assert op in mf._obj.model_equation_invalid_msg
+
+
 def test_deconf_mf_with_subset(deconfigged_helper):
     flux = np.ones(9) * u.Jy
     flux[7] = 10 * u.Jy
