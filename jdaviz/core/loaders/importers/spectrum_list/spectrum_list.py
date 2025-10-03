@@ -14,6 +14,7 @@ from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.utils import create_data_hash
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -67,13 +68,15 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 label = f"1D Spectrum at index: {index}"
                 suffix = f"index-{index}"
 
+            spec = self._apply_spectral_mask(spec)
             sources_options.append({'label': label,
                                     'index': index,
                                     'name': str(name),
                                     'ver': str(ver),
                                     'name_ver': str(name_ver),
                                     'suffix': suffix,
-                                    'obj': self._apply_spectral_mask(spec)})
+                                    'data_hash': create_data_hash(spec),
+                                    'obj': spec})
 
         self.sources = SelectFileExtensionComponent(self,
                                                     items='sources_items',
@@ -82,6 +85,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     manual_options=sources_options)
 
         self.sources.selected = [self.sources.choices[0]]
+        self.data_hashes = self.sources.data_hashes
 
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
