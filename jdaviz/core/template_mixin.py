@@ -65,7 +65,7 @@ from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only, wcs_is_spectral,
     _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global,
-    wildcard_match, CONFIGS_WITH_LOADERS, create_data_hash
+    wildcard_match, CONFIGS_WITH_LOADERS
 )
 
 
