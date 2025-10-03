@@ -65,5 +65,6 @@ class ScatterViewerCreator(BaseViewerCreator):
         if self.yatt.selected != '':
             nv._obj.state.y_att = self.yatt.selected
         if self.xatt.selected != '' or self.yatt.selected != '':
-            nv._obj.reset_limits()
+            if hasattr(nv._obj, 'data'):
+                nv._obj.reset_limits()
         return nv
