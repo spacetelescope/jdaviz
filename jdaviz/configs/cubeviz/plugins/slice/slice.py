@@ -20,15 +20,15 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStat
                                 NewViewerMessage, ViewerAddedMessage, ViewerRemovedMessage,
                                 GlobalDisplayUnitChanged)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
 
 
 __all__ = ['Slice']
 
 
-@tray_registry('cube-slice', label="Slice")
-class Slice(PluginTemplateMixin):
+@tray_registry('cube-slice', label="Slice", category="app:options")
+class Slice(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Slice Plugin Documentation <slice>` for more details.
 
@@ -70,6 +70,8 @@ class Slice(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.viewer.add_filter('is_slice_selection_viewer')
+
         # description displayed under plugin title in tray
         self._plugin_description = 'Select and interact with slice of cube in image viewers.'
 
@@ -109,6 +111,9 @@ class Slice(PluginTemplateMixin):
 
         self.docs_description = 'The slice can also be changed interactively\
                                  in the spectrum viewer by activating the slice tool.'
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
 
     @property
     def _cube_viewer_default_label(self):
@@ -159,14 +164,14 @@ class Slice(PluginTemplateMixin):
     @property
     def slice_display_unit_name(self):
         # global display unit "axis" corresponding to the slice axis
-        if self.app.config == 'cubeviz':
+        if self.app.config in ('cubeviz', 'deconfigged'):
             return 'spectral'
         elif self.app.config == 'rampviz':
             return 'temporal'
 
     @property
     def valid_slice_att_names(self):
-        if self.app.config == 'cubeviz':
+        if self.app.config in ('cubeviz', 'deconfigged'):
             if len(self.app.data_collection):
                 spectral_axis = self.app.data_collection[0].meta['spectral_axis_index']
                 return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
@@ -190,10 +195,9 @@ class Slice(PluginTemplateMixin):
         return PluginUserApi(self, expose=expose)
 
     def _check_if_cube_viewer_exists(self, *args):
-        for viewer in self.app._viewer_store.values():
-            if isinstance(viewer, self._cube_viewer_cls):
-                self.cube_viewer_exists = True
-                return
+        if len(self.viewer.choices) > 0:
+            self.cube_viewer_exists = True
+            return
         self.cube_viewer_exists = False
 
     def vue_create_cube_viewer(self, *args):
