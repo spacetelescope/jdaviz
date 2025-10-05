@@ -14,6 +14,7 @@ from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
 )
 
 from jdaviz.conftest import FakeSpectrumListImporter, FakeSpectrumListConcatenatedImporter
+from jdaviz.utils import create_data_hash
 
 
 def extract_wfss_info(spec):
@@ -80,7 +81,6 @@ class TestSpectrumListImporter:
         for index, (spec_dict, spec) in enumerate(
                 zip(importer_obj.sources.manual_options, premade_spectrum_list)):
 
-            # offset to account for 0 based indexing
             file_index = str(index)
 
             # ver, name are stand-ins for exposure and source_id
@@ -90,6 +90,8 @@ class TestSpectrumListImporter:
             else:
                 ver, name = str(index), str(index)
 
+            # Apply spectral mask for the data_hash check
+            spec = importer_obj._apply_spectral_mask(spec)
             spec_keys = {
                 'label': [f"Exposure {ver}, Source ID: {name}",
                           f"1D Spectrum at index: {file_index}"],
@@ -98,6 +100,7 @@ class TestSpectrumListImporter:
                 'name_ver': [f"{ver}_{name}", file_index],
                 'index': [index, index],
                 'suffix': [f"EXP-{ver}_ID-{name}", f"index-{file_index}"],
+                'data_hash': [create_data_hash(spec), create_data_hash(spec)],
                 'obj': None}
 
             assert isinstance(spec_dict, dict)
@@ -113,9 +116,6 @@ class TestSpectrumListImporter:
                           premade_spectrum_list[index].flux[~mask])
             assert np.all(spec_dict['obj'].spectral_axis ==
                           premade_spectrum_list[index].spectral_axis[~mask])
-
-        # TODO: This triggers the strictly increasing/decreasing error
-        # assert SpectrumList(spec_dict['obj']) == spectrum_list
 
     # Method tests
     def test_is_valid(self, deconfigged_helper, premade_spectrum_list,

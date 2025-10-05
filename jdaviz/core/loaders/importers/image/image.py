@@ -106,10 +106,10 @@ class ImageImporter(BaseImporterToDataCollection):
 
             # changing selected extension will call _set_default_data_label
             self.extension.selected = [self.extension.choices[0]]
+            self.data_hashes = self.extension.data_hashes
         else:
             self._set_default_data_label()
 
-        self.data_hashes = self.extension.data_hashes
 
     @staticmethod
     def _get_supported_viewers():
