@@ -361,29 +361,32 @@ def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote
                           ('image_nddata_wcs', 'Image'),
                           ('spectrum1d', '1D Spectrum'),
                           ('spectrum2d', '2D Spectrum')])
-def test_update_data_in_data_collection(deconfigged_helper,
-                                        fixture_to_load, fixture_format, request):
-    # Check that data_in_data_collection is empty to start
-    assert len(deconfigged_helper.app.data_in_data_collection) == 0
+def test_update_existing_data_in_dc(deconfigged_helper,
+                                    fixture_to_load, fixture_format, request):
+    # Check that existing_data_in_dc is empty to start
+    assert len(deconfigged_helper.app.existing_data_in_dc) == 0
 
     deconfigged_helper.load(request.getfixturevalue(fixture_to_load), format=fixture_format)
-    # Check that data_in_data_collection was updated upon adding data
-    assert len(deconfigged_helper.app.data_in_data_collection) > 0
+    # Check that existing_data_in_dc was updated upon adding data
+    assert len(deconfigged_helper.app.existing_data_in_dc) > 0
 
     # Use this data for testing
     dc_data = deconfigged_helper.app.data_collection[0]
 
     # Check that the update goes through
-    data_in_dc = deepcopy(deconfigged_helper.app.data_in_data_collection)
-    deconfigged_helper.app._update_data_in_data_collection(dc_data, False)
-    assert data_in_dc != deconfigged_helper.app.data_in_data_collection
+    test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, False)
+    assert test_data_in_dc != deconfigged_helper.app.existing_data_in_dc
 
-    data_in_dc = deepcopy(deconfigged_helper.app.data_in_data_collection)
+    test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
     # If this key is present, it will trigger an update so check that
     # nothing happens when it is not present.
-    dc_data.data.meta.pop('_data_loader_label')
-    deconfigged_helper.app._update_data_in_data_collection(dc_data, True)
-    assert data_in_dc == deconfigged_helper.app.data_in_data_collection
+    dh = dc_data.data.meta.pop('_data_hash')
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, True)
+    assert test_data_in_dc == deconfigged_helper.app.existing_data_in_dc
 
+    # Check that removing the data updates existing_data_in_dc to False
+    len_before = len(deconfigged_helper.app.existing_data_in_dc)
     deconfigged_helper.app.data_item_remove(dc_data.label)
-    assert len(deconfigged_helper.app.data_in_data_collection) == 0
+    assert len(deconfigged_helper.app.existing_data_in_dc) == len_before
+    assert deconfigged_helper.app.existing_data_in_dc[dh] is False
