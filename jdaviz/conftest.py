@@ -313,8 +313,8 @@ def spectrum1d_cube_wcs():
 
 
 def _create_spectrum1d_with_spectral_unit(spectralunit=u.AA, spectral_mask=None, wfss=False,
-                                          exposure='0_0_0_1', source_id='0000'):
-    np.random.seed(42)
+                                          exposure='0_0_0_1', source_id='0000', seed=42):
+    np.random.seed(seed)
 
     if spectral_mask is None:
         spectral_mask = np.array([False] * SPECTRUM_SIZE)
