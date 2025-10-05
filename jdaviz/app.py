@@ -2696,8 +2696,9 @@ class Application(VuetifyTemplate, HubListener):
         data_added : bool
             Whether data was added or removed from the ``DataCollection``.
         """
-        data_hash = msg.data.meta.get('_data_hash', '')
-        self.existing_data_in_dc = {**self.existing_data_in_dc, data_hash: data_added}
+        data_hash = msg.data.meta.get('_data_hash', None)
+        if data_hash is not None:
+            self.existing_data_in_dc = {**self.existing_data_in_dc, data_hash: data_added}
 
     def _on_data_added(self, msg):
         """
