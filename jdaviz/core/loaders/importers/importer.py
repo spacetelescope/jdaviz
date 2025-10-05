@@ -115,7 +115,7 @@ class BaseImporter(PluginTemplateMixin):
 
         # Only need to display the message once
         if any(new_existing_data_in_dc.values()) > 0:
-            msg = f"Selected data appears to be identical to existing data."  # noqa
+            msg = f"Selected data appears to be identical to existing data."
             self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
             # TODO: Allow for now but implement a disabled message near the import button
             #  or indicate that the import will be a re-import And if allowing re-import,
