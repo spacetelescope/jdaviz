@@ -2,7 +2,7 @@
   <v-container>
     <plugin-select
       v-if="!disable_dropdown"
-      :items="sources_items.map(i => i.label)"
+      :items="sources_items"
       :exists_in_dc="existing_data_in_dc"
       :selected.sync="sources_selected"
       :show_if_single_entry="true"
