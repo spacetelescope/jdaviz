@@ -71,7 +71,7 @@
                 {{ getExistsIcon(item) }}
               </v-icon>
             </j-tooltip>
-            <span>{{ item }}</span>
+            <span>{{ typeof item === 'string' ? item : (item.label || item.text || item) }}</span>
           </v-chip>
           <span v-else style="flex: 1; display: flex; align-items: center;">
             <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined && !api_hints_enabled" :tipid="getExistsTooltipId(item)">
@@ -79,7 +79,7 @@
                 {{ getExistsIcon(item) }}
               </v-icon>
             </j-tooltip>
-            {{ item }}
+            {{ typeof item === 'string' ? item : (item.label || item.text || item) }}
           </span>
         </div>
       </template>
@@ -92,7 +92,6 @@
           </v-list-item-action>
             <v-list-item-title style="margin-top: 0px; margin-bottom: 0px">
               {{ typeof item === 'string' ? item : (item.label || item.text) }}
-              <!-- Debug marker: visible on-screen to help diagnose matching <span style="font-size: 0.75rem; color: grey; margin-left: 6px">{{ existsFor(item) ? '✓' : '✗' }}</span>-->
               </v-list-item-title>
         </v-list-item>
       </template>
@@ -153,27 +152,28 @@ module.exports = {
   },
   methods: {
     existsFor(item) {
-      // Get the index of this item in the items array and check if
-      // that index corresponds to a true value in exists_in_dc.
-      if (!this.exists_in_dc || typeof this.exists_in_dc !== 'object') {
+      // Check if this item's data_hash exists in the exists_in_dc list
+      if (!this.exists_in_dc || !Array.isArray(this.exists_in_dc)) {
         return false;
       }
-      // Get the item's label/key
-      const key = (typeof item === 'string')
-        ? item
-        : (item.label || item.text || item);
-      // Find the index of this item in the items array
-      const item_index = this.items.findIndex(i => {
+
+      // If item is an object with data_hash, check directly
+      if (typeof item === 'object' && item !== null && item.data_hash) {
+        return this.exists_in_dc.includes(item.data_hash);
+      }
+
+      // If item is a string (label), find the corresponding object in items
+      const key = (typeof item === 'string') ? item : (item.label || item.text || item);
+      const item_obj = this.items.find(i => {
         const i_key = (typeof i === 'string') ? i : (i.label || i.text || i);
         return i_key === key;
       });
-      if (item_index === -1) {
-        return false;
+
+      if (item_obj && typeof item_obj === 'object' && item_obj.data_hash) {
+        return this.exists_in_dc.includes(item_obj.data_hash);
       }
-      // Get all values from the dictionary in order of keys
-      const dict_values = Object.values(this.exists_in_dc);
-      // Check if the value at this index is true
-      return dict_values[item_index] === true;
+
+      return false;
     },
     getExistsTooltipId(item) {
       return this.existsFor(item)

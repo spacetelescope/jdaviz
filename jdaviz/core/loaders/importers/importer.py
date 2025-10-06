@@ -49,7 +49,7 @@ class BaseImporter(PluginTemplateMixin):
     import_disabled = Bool(False).tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
-    existing_data_in_dc = Dict([]).tag(sync=True)
+    existing_data_in_dc = List([]).tag(sync=True)
 
     def __init__(self, app, resolver, input, **kwargs):
         self._input = input
@@ -102,19 +102,12 @@ class BaseImporter(PluginTemplateMixin):
         based on the data hash.  If so, update the existing_data_in_dc traitlet
         accordingly and display a warning snackbar message.
         """
-        new_existing_data_in_dc = {dh: False for dh in self.data_hashes}
-
-        for data in self.app.data_collection:
-            data_hash = data.meta.get('_data_hash')
-
-            if data_hash in self.data_hashes:
-                new_existing_data_in_dc[data_hash] = True
-
-        # Trigger (local) traitlet update
-        self.app.existing_data_in_dc = new_existing_data_in_dc
+        self.app.existing_data_in_dc = [data.meta.get('_data_hash')
+                                        for data in self.app.data_collection
+                                        if data.meta.get('_data_hash') in self.data_hashes]
 
         # Only need to display the message once
-        if any(new_existing_data_in_dc.values()) > 0:
+        if len(self.app.existing_data_in_dc) > 0:
             msg = f"Selected data appears to be identical to existing data."
             self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
             # TODO: Allow for now but implement a disabled message near the import button
