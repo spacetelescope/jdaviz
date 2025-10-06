@@ -375,18 +375,23 @@ def test_update_existing_data_in_dc(deconfigged_helper,
 
     # Check that the update goes through
     test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
-    deconfigged_helper.app._update_existing_data_in_dc(dc_data, False)
+    # Remove some data
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=False)
     assert test_data_in_dc != deconfigged_helper.app.existing_data_in_dc
 
+    # Add it back
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=True)
+
     test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
-    # If this key is present, it will trigger an update so check that
+    # If this key is present, an update will occur so check that
     # nothing happens when it is not present.
     dh = dc_data.data.meta.pop('_data_hash')
-    deconfigged_helper.app._update_existing_data_in_dc(dc_data, True)
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=True)
     assert test_data_in_dc == deconfigged_helper.app.existing_data_in_dc
 
-    # Check that removing the data updates existing_data_in_dc to False
+    # Check that removing the data via data collection updates existing_data_in_dc
     len_before = len(deconfigged_helper.app.existing_data_in_dc)
+    deconfigged_helper.app.data_collection[0].meta['_data_hash'] = dh
     deconfigged_helper.app.data_item_remove(dc_data.label)
-    assert len(deconfigged_helper.app.existing_data_in_dc) == len_before
+    assert len(deconfigged_helper.app.existing_data_in_dc) != len_before
     assert dh not in deconfigged_helper.app.existing_data_in_dc
