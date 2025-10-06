@@ -22,7 +22,8 @@ from jdaviz.core.events import (AddDataMessage,
 from jdaviz.core.linelists import load_preset_linelist, get_linelist_metadata
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
+                                        CustomToolbarToggleMixin)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.unit_conversion_utils import create_equivalent_spectral_axis_units_list
 
@@ -30,7 +31,7 @@ __all__ = ['LineListTool']
 
 
 @tray_registry('g-line-list', label="Line Lists", category="data:analysis")
-class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
+class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"
 
@@ -68,6 +69,15 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         self.viewer.add_filter('is_spectrum_viewer')
+
+        def custom_toolbar(viewer):
+            if viewer.reference in self.viewer.choices:
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectline']], 'jdaviz:selectline'  # noqa
+            # otherwise defaults
+            return None, None
+
+        self.custom_toolbar.callable = custom_toolbar
+        self.custom_toolbar.name = "Spectral Line Selection"
 
         self._spectrum1d = None
         self.list_to_load = None
