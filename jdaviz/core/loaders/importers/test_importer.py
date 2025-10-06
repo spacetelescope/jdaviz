@@ -1,6 +1,4 @@
-import pytest
 from unittest.mock import patch
-import re
 
 from specutils import SpectrumList
 from jdaviz.core.loaders.importers.importer import BaseImporter
@@ -122,4 +120,3 @@ def test_reset_and_check_existing_data_in_dc(deconfigged_helper):
 
     test_obj.reset_and_check_existing_data_in_dc()
     assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0
-
