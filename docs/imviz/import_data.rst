@@ -6,7 +6,7 @@ Importing Data into Imviz
 
 Imviz can load data in the form of a filename (FITS, JPEG, or PNG),
 an `~astropy.nddata.NDData` object, or a NumPy array if the data is 2D.
-See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
+See :py:meth:`~jdaviz.configs.imviz.helper.Imviz.load` for more information.
 
 .. note::
 
@@ -97,10 +97,12 @@ Importing data via the API
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Imviz helper class API. Using this API, users can
 load data into the application through code with the
-:meth:`~jdaviz.configs.imviz.helper.Imviz.load_data`
+:py:meth:`~jdaviz.configs.imviz.helper.Imviz.load`
 method, which takes as input either the name of a local file, 2D NumPy array, or an
 :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
 or :class:`~astropy.io.fits.ImageHDU` object.
+
+For more information on loading data, see :ref:`import-data`.
 
 FITS Files
 ----------
@@ -111,7 +113,7 @@ The example below loads the first science extension of the given FITS file into 
 
     from jdaviz import Imviz
     imviz = Imviz()
-    imviz.load_data("/path/to/data/image.fits")
+    imviz.load('/path/to/data/image.fits', format='Image')
     imviz.show()
 
 Creating Your Own Array
@@ -126,7 +128,7 @@ You can create your own array to load into Imviz:
 
     arr = np.arange(100).reshape((10, 10))
     imviz = Imviz()
-    imviz.load_data(arr, data_label='my_array')
+    imviz.load(arr, format='Image', data_label='my_array')
     imviz.show()
 
 JWST datamodels
@@ -147,7 +149,7 @@ object, you can load it into Imviz as follows:
                  wcs=mydatamodel.meta.wcs,
                  meta=dict(mydatamodel.meta.items()))
     imviz = Imviz()
-    imviz.load_data(ndd, data_label='my_data_model')
+    imviz.load(ndd, format='Image', data_label='my_data_model')
     imviz.show()
 
 Roman datamodels
@@ -163,7 +165,7 @@ In order to load Roman files, you will need to install the :ref:`optional-deps-r
     from jdaviz import Imviz
 
     imviz = Imviz()
-    imviz.load_data("WFI01_cal.asdf")
+    imviz.load("WFI01_cal.asdf", format='Image')
     imviz.show()
 
 .. _imviz-import-catalogs-api:
@@ -173,14 +175,14 @@ Batch Loading Multiple Images
 
 To save on performance while loading multiple images into Imviz, you can optionally use the
 :meth:`~jdaviz.core.helpers.ConfigHelper.batch_load` context manager to parse all of the data first (within a
-loop, for example, or multiple calls to ``load_data``), and defer the linking and loading of the new
+loop, for example, or multiple calls to ``load``), and defer the linking and loading of the new
 data entries into the viewer until after the parsing is complete::
 
     from jdaviz import Imviz
     imviz = Imviz()
     with imviz.batch_load():
         for filepath in filepaths:
-            imviz.load_data(filepath)
+            imviz.load(filepath, format='Image')
     imviz.show()
 
 
@@ -190,7 +192,7 @@ Load data from a URI or URL
 ---------------------------
 
 The examples above import data from a local file path, and also support loading remote
-data from a URL or URI with :meth:`~jdaviz.core.helpers.ConfigHelper.load_data`.
+data from a URL or URI with :py:meth:`~jdaviz.configs.imviz.helper.Imviz.load`.
 If the input is a string with a MAST URI, the file will be retrieved via
 astroquery's `~astroquery.mast.ObservationsClass.download_file`. If the
 input string is a URL, it will be retrieved via astropy with
@@ -216,7 +218,7 @@ paths without the scheme work fine! :ref:`Cloud FITS <astropy:fits_io_cloud>` ar
     local_path = "jw01345-o001_t021_nircam_clear-f200w_i2d.fits"
 
     imviz = Imviz()
-    imviz.load_data(uri, cache=cache, local_path=local_path)
+    imviz.load(uri, format='image', cache=cache, local_path=local_path)
     imviz.show()
 
 Importing catalogs via the API
