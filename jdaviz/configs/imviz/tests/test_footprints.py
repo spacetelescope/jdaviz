@@ -313,6 +313,7 @@ def test_footprint_select(imviz_helper):
     ndd = NDData(arr, wcs=wcs)
     imviz_helper.load_data(ndd)
     fp = imviz_helper.plugins["Footprints"]
+    fp._obj.toggle_custom_toolbar()
     toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
     tool = toolbar.tools['jdaviz:selectfootprint']
     assert tool.is_visible() is False

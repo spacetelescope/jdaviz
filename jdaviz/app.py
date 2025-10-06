@@ -167,6 +167,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'j-about-menu': 'components/about_menu.vue',
+                     'j-custom-toolbar-toggle': 'components/custom_toolbar_toggle.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
@@ -1001,6 +1002,28 @@ class Application(VuetifyTemplate, HubListener):
         This is useful when reference name is `None`.
         """
         return self._viewer_store.get(vid)
+
+    def _override_viewer_tools(self, callable, name):
+        """
+        Override the default set of tools available in a viewer.
+
+        Parameters
+        ----------
+        callable : function
+            A function that takes a viewer instance as its only argument and
+            returns a list of tool instances to be used in the viewer.
+            If `None` is returned, the default tools will be used (first three sections
+            of the original tools, containing zoom/pan tools only).
+        name : str
+            The label to show in the viewer toolbar for the custom tool set.
+        """
+        for viewer in self._viewer_store.values():
+            tools_nested, selected_tool = callable(viewer)
+            if tools_nested is None:
+                tools_nested = viewer.toolbar._original_tools_nested[:3]
+            viewer.toolbar.override_tools(tools_nested, name)
+            if selected_tool is not None:
+                viewer.toolbar.active_tool_id = selected_tool
 
     def _get_wcs_from_subset(self, subset_state, data=None):
         """ Usually WCS is subset.parent.coords, except special cubeviz case."""
