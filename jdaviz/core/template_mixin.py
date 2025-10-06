@@ -5516,7 +5516,15 @@ class Table(PluginSubcomponent):
             else:
                 out_tbl = self._qtable
 
-            out_tbl.write(filename, overwrite=overwrite)
+            try:
+                out_tbl.write(filename, overwrite=overwrite)
+            except TypeError as te:
+                if 'overwrite' in str(te):
+                    # some formats (e.g. 'asdf') do not support overwrite keyword
+                    out_tbl.write(filename)
+                else:
+                    raise te
+
             return out_tbl
 
         # TODO: default to only showing selected columns?
