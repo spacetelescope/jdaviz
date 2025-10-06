@@ -34,7 +34,7 @@ def test_update_existing_data_in_dc_traitlet(deconfigged_helper, premade_spectru
     assert len(test_obj.existing_data_in_dc) == 0
     assert len(test_obj.app.existing_data_in_dc) == 0
 
-    test_obj.app.existing_data_in_dc['test_key'] = 'test_value'
+    test_obj.app.existing_data_in_dc.append('test_value')
     # Check that the observer ran and updated the importer traitlet
     assert test_obj.existing_data_in_dc == test_obj.app.existing_data_in_dc
 
@@ -55,50 +55,51 @@ def test_reset_and_check_existing_data_in_dc(deconfigged_helper):
     assert len(test_obj.existing_data_in_dc) == 0
 
     # Add some dummy data to existing_data_in_dc
-    test_obj.existing_data_in_dc['test_key'] = 'test_value'
+    test_obj.existing_data_in_dc.append('test_value')
 
     # Now reset using the method
     test_obj.reset_and_check_existing_data_in_dc()
-    assert len(test_obj.existing_data_in_dc) == len(dh_list)
-    # All values should be false since nothing is in the data collection yet
-    assert sum(test_obj.existing_data_in_dc.values()) == 0
+    # existing_data_in_dc should be cleared out and repopulated with any existing data (none)
+    assert len(test_obj.existing_data_in_dc) == 0
 
-    # Now load the data into the data collection, defaults to loading the first source
-    deconfigged_helper.load(spectrum_list, format='1D Spectrum List')
+    # Now load the data into the data collection
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = spectrum_list
+    ldr.format = '1D Spectrum List'
+    ldr.importer.sources.selected = '1D Spectrum at index: 0'
+    ldr.importer()
+
     # The data hashes update in the SpectrumList importer but are different from the
     # data hashes in our original test_obj
-    dh_list = list(test_obj.existing_data_in_dc.keys())
-    test_obj.data_hashes = list(test_obj.existing_data_in_dc.keys())
+    dh_list = ldr.importer.sources.data_hashes
+    # This would normally have all the data hashes from the SpectrumList
+    test_obj.data_hashes = dh_list
 
-    # This should happen due to `_update_existing_data_in_dc` in app
-    assert len(test_obj.existing_data_in_dc) == len(spectrum_list)
-    assert sum(test_obj.existing_data_in_dc.values()) == 1
-    assert test_obj.existing_data_in_dc[dh_list[0]] is True
+    assert len(test_obj.existing_data_in_dc) == len(test_obj.app.existing_data_in_dc) == 1
+    assert dh_list[0] in test_obj.existing_data_in_dc
 
     # Now reset again, should be the same result
     test_obj.reset_and_check_existing_data_in_dc()
-    assert len(test_obj.existing_data_in_dc) == len(spectrum_list)
-    assert test_obj.existing_data_in_dc[dh_list[0]] is True
-    assert all(v is False for k, v in test_obj.existing_data_in_dc.items() if k != dh_list[0])
+    assert len(test_obj.existing_data_in_dc) == 1
+    assert dh_list[0] in test_obj.existing_data_in_dc
 
     new_spectrum_list = SpectrumList([_create_spectrum1d_with_spectral_unit(seed=i)
                                       for i in range(5, 11)])
 
-    # Load single source by default
     # Choose a source at the end to guarantee everything is different from before
-    deconfigged_helper.load(new_spectrum_list,
-                            format='1D Spectrum List',
-                            sources='1D Spectrum at index: 5')
-    # The length of existing_data_in_dc should now match the new_spectrum_list
-    # not the combination of spectrum lists since it resets
-    assert len(test_obj.existing_data_in_dc) == len(new_spectrum_list)
+    ldr.object = new_spectrum_list
+    ldr.format = '1D Spectrum List'
+    ldr.importer.sources.selected = '1D Spectrum at index: 5'
+    ldr.importer()
 
-    new_dh_list = list(test_obj.existing_data_in_dc.keys())
-    test_obj.data_hashes = list(test_obj.existing_data_in_dc.keys())
+    dh_list = ldr.importer.sources.data_hashes
+    # This would normally have all the data hashes from the SpectrumList
+    test_obj.data_hashes = dh_list
+
     # Although two SpectrumList objects are loaded into the data collection,
     # they share no data in common so only one value should be True
-    assert sum(test_obj.existing_data_in_dc.values()) == 1
-    assert test_obj.existing_data_in_dc[new_dh_list[-1]] is True
+    assert len(test_obj.existing_data_in_dc) == len(test_obj.app.existing_data_in_dc) == 1
+    assert dh_list[-1] in test_obj.existing_data_in_dc
 
     snackbar_msg = f"Selected data appears to be identical to existing data."  # noqa
 
@@ -117,10 +118,8 @@ def test_reset_and_check_existing_data_in_dc(deconfigged_helper):
     # Again, existing_data_in_dc is updated from `_update_existing_data_in_dc`
     # in app.py, however we want to doublecheck that
     # reset_and_check_existing_data_in_dc works as expected
-    assert len(test_obj.existing_data_in_dc) == len(new_spectrum_list)
-    assert sum(test_obj.existing_data_in_dc.values()) == 0
+    assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0
 
     test_obj.reset_and_check_existing_data_in_dc()
-    assert len(test_obj.existing_data_in_dc) == len(new_spectrum_list)
-    assert sum(test_obj.existing_data_in_dc.values()) == 0
+    assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0
 

@@ -389,4 +389,4 @@ def test_update_existing_data_in_dc(deconfigged_helper,
     len_before = len(deconfigged_helper.app.existing_data_in_dc)
     deconfigged_helper.app.data_item_remove(dc_data.label)
     assert len(deconfigged_helper.app.existing_data_in_dc) == len_before
-    assert deconfigged_helper.app.existing_data_in_dc[dh] is False
+    assert dh not in deconfigged_helper.app.existing_data_in_dc
