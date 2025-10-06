@@ -2699,12 +2699,15 @@ class Application(VuetifyTemplate, HubListener):
         data_hash = msg.data.meta.get('_data_hash', None)
         if data_hash is None:
             return
+        # Need to make a copy to ensure traitlets notices the change
         new_existing_data_in_dc = self.existing_data_in_dc.copy()
 
-        if data_added and data_hash not in new_existing_data_in_dc:
-            new_existing_data_in_dc.append(data_hash)
-        elif not data_added and data_hash in new_existing_data_in_dc:
-            new_existing_data_in_dc.remove(data_hash)
+        if data_added:
+            if data_hash not in new_existing_data_in_dc:
+                new_existing_data_in_dc.append(data_hash)
+        else:
+            if data_hash in new_existing_data_in_dc:
+                new_existing_data_in_dc.remove(data_hash)
 
         self.existing_data_in_dc = new_existing_data_in_dc
 
