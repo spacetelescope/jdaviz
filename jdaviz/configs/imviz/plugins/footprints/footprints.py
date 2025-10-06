@@ -16,7 +16,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         EditableSelectPluginComponent, SelectPluginComponent,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
-                                        LoadersMixin)
+                                        CustomToolbarToggleMixin, LoadersMixin)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 
@@ -116,7 +116,8 @@ def find_closest_polygon_point(px, py, polygons):
 
 @tray_registry('imviz-footprints', label="Footprints",
                category='data:analysis')
-class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, LoadersMixin):
+class Footprints(PluginTemplateMixin, ViewerSelectMixin,
+                 HasFileImportSelect, LoadersMixin, CustomToolbarToggleMixin):
     """
     See the :ref:`Footprints Plugin Documentation <imviz-footprints>` for more details.
 
@@ -196,6 +197,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
     v3_offset = FloatHandleEmpty().tag(sync=True)
     # TODO: dithering/mosaic options?
 
+    footprint_select_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
+
     def __init__(self, *args, **kwargs):
         self._ignore_traitlet_change = False
         self._overlays = {}
@@ -208,6 +211,15 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Lo
         self.viewer.multiselect = True  # multiselect always enabled
         # require a viewer's reference data to have WCS so that footprints can be mapped to sky
         self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
+
+        def custom_toolbar(viewer):
+            if viewer.reference in self.viewer.choices:
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectfootprint']], 'jdaviz:selectfootprint'  # noqa
+            # otherwise defaults
+            return None, None
+
+        self.custom_toolbar.callable = custom_toolbar
+        self.custom_toolbar.name = "Footprint Selection"
 
         self.overlay = EditableSelectPluginComponent(self,
                                                      name='overlay',

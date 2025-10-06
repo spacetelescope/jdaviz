@@ -167,6 +167,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'j-about-menu': 'components/about_menu.vue',
+                     'j-custom-toolbar-toggle': 'components/custom_toolbar_toggle.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-select': 'components/plugin_select.vue',
@@ -298,6 +299,7 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3777
     # https://github.com/spacetelescope/jdaviz/pull/3778
     # https://github.com/spacetelescope/jdaviz/pull/3799
+    # https://github.com/spacetelescope/jdaviz/pull/3814
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
@@ -758,6 +760,7 @@ class Application(VuetifyTemplate, HubListener):
                 viewer.center_on(sky_cen)
 
     def _link_new_data_by_component_type(self, new_data_label):
+
         new_data = self.data_collection[new_data_label]
 
         if (new_data.meta.get('_importer') in ('ImageImporter', 'CatalogImporter') and
@@ -808,7 +811,7 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config in CONFIGS_WITH_LOADERS:
+        if self.config in CONFIGS_WITH_LOADERS and self.config not in ['specviz2d', 'deconfigged']:
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -840,7 +843,6 @@ class Application(VuetifyTemplate, HubListener):
 
             dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
-
         elif (linked_data.meta.get('Plugin', None) == '3D Spectral Extraction' or
                 (linked_data.meta.get('Plugin', None) == ('Gaussian Smooth') and
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
@@ -849,6 +851,12 @@ class Application(VuetifyTemplate, HubListener):
             links = [LinkSame(linked_data.components[0], ref_data.components[0]),
                      LinkSame(linked_data.components[1], ref_data.components[1])]
 
+            dc.add_link(links)
+            return
+        elif (ref_data.ndim == 2 and linked_data.ndim == 1):
+            # Needed for subset linking between 1D and 2D viewers
+            # Spectrum 1D: Pixel Axis 0 [x] <=> Spectrum 2D: Pixel Axis 1 [x]
+            links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
             dc.add_link(links)
             return
 
@@ -995,6 +1003,28 @@ class Application(VuetifyTemplate, HubListener):
         This is useful when reference name is `None`.
         """
         return self._viewer_store.get(vid)
+
+    def _override_viewer_tools(self, callable, name):
+        """
+        Override the default set of tools available in a viewer.
+
+        Parameters
+        ----------
+        callable : function
+            A function that takes a viewer instance as its only argument and
+            returns a list of tool instances to be used in the viewer.
+            If `None` is returned, the default tools will be used (first three sections
+            of the original tools, containing zoom/pan tools only).
+        name : str
+            The label to show in the viewer toolbar for the custom tool set.
+        """
+        for viewer in self._viewer_store.values():
+            tools_nested, selected_tool = callable(viewer)
+            if tools_nested is None:
+                tools_nested = viewer.toolbar._original_tools_nested[:3]
+            viewer.toolbar.override_tools(tools_nested, name)
+            if selected_tool is not None:
+                viewer.toolbar.active_tool_id = selected_tool
 
     def _get_wcs_from_subset(self, subset_state, data=None):
         """ Usually WCS is subset.parent.coords, except special cubeviz case."""
@@ -2576,10 +2606,19 @@ class Application(VuetifyTemplate, HubListener):
         if self.config in CONFIGS_WITH_LOADERS:
             data_needing_relinking = []
             for link in self.data_collection.external_links:
-                if data_to_remove == link.data1:
-                    data_needing_relinking.append(link.data2)
-                elif data_to_remove == link.data2:
-                    data_needing_relinking.append(link.data1)
+                if hasattr(link, 'data1') and hasattr(link, 'data2'):
+                    if data_to_remove == link.data1:
+                        data_needing_relinking.append(link.data2)
+                    elif data_to_remove == link.data2:
+                        data_needing_relinking.append(link.data1)
+
+                # ComponentsLink has comp_from and comp_to instead of data1 and data2,
+                # and is currently used in linking for Source Catalog
+                elif hasattr(link, 'comp_from') and hasattr(link, 'comp_to'):
+                    if data_to_remove == link.comp_from.data:
+                        data_needing_relinking.append(link.comp_to.data)
+                    elif data_to_remove == link.comp_to.data:
+                        data_needing_relinking.append(link.comp_from.data)
 
         self.data_collection.remove(data_to_remove)
 

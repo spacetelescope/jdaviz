@@ -4,6 +4,13 @@
 New Features
 ------------
 
+- Add check for valid model fitting equation operators. [#3818]
+
+- Change parallelization framework for better performance and flexibility. [#3806]
+
+- Plugin-specific viewer tools (footprint, catalogs, line lists, line analysis) now have a
+  toggle button in the plugin UI to enable/disable a custom toolbar specific to that context. [#3812]
+
 Cubeviz
 ^^^^^^^
 
@@ -86,6 +93,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
 
 4.4.1 (2025-09-26)
 ==================

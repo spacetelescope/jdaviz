@@ -16,7 +16,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
            'PluginTableAddedMessage', 'PluginTableModifiedMessage',
            'PluginPlotAddedMessage', 'PluginPlotModifiedMessage',
-           'IconsUpdatedMessage']
+           'IconsUpdatedMessage', 'RestoreToolbarMessage']
 
 
 class NewViewerMessage(Message):
@@ -542,3 +542,9 @@ class IconsUpdatedMessage(Message):
         self.icon_type = icon_type
         # icons might be a CallbackDict, cast to ensure its a dictionary
         self.icons = dict(icons)
+
+
+class RestoreToolbarMessage(Message):
+    '''Message generated to restore all toolbar instances to their original configuration'''
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

@@ -39,7 +39,7 @@
         See the <j-external-link link='https://astroquery.readthedocs.io/en/latest/gaia/gaia.html' linktext='astropy.gaia docs'></j-external-link> for details on the query defaults.
       </j-docs-link>
     </v-row>
-    
+
     <v-row v-if="catalog_selected && catalog_selected.endsWith('.ecsv')">
       <v-select
         v-model="selected_columns"
@@ -102,9 +102,18 @@
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     </v-row>
 
+    <j-custom-toolbar-toggle
+      v-if="number_of_results > 0"
+      :enabled="custom_toolbar_enabled"
+      text="catalog selection tools"
+      @toggle-custom-toolbar="toggle_custom_toolbar"
+    >
+      <v-icon>mdi-crosshairs-gps</v-icon>
+    </j-custom-toolbar-toggle>
+
     <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
 
-    <jupyter-widget :widget="table_widget"></jupyter-widget> 
+    <jupyter-widget :widget="table_widget"></jupyter-widget>
 
   </j-tray-plugin>
 </template>

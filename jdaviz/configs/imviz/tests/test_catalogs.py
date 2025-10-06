@@ -398,8 +398,12 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
     catalogs_plugin.import_catalog(tbl)
 
-    # before catalog searching, the selection tool is not available
+    # the tool isn't available in the default toolbar
     toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
+    assert 'jdaviz:selectcatalog' not in toolbar.tools
+
+    catalogs_plugin._obj.toggle_custom_toolbar()
+    assert 'jdaviz:selectcatalog' in toolbar.tools
     tool = toolbar.tools['jdaviz:selectcatalog']
     mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['imviz-0']._obj)
     assert tool.is_visible() is False
@@ -433,6 +437,10 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     assert len(catalogs_plugin.table._obj.selected_rows) == 0
     assert len(catalogs_plugin.table_selected._obj.items) == 0
     assert len(mark.x) == 0
+
+    # revert to original toolbar
+    catalogs_plugin._obj.toggle_custom_toolbar()
+    assert 'jdaviz:selectcatalog' not in toolbar.tools
 
 
 def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
