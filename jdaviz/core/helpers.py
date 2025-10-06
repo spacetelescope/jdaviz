@@ -273,7 +273,9 @@ class ConfigHelper(HubListener):
         viewers : dict
             dict of viewer objects
         """
-        return {viewer._ref_or_id: viewer.user_api
+        from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
+
+        return {viewer._ref_or_id: JdavizViewerWindow(viewer, app=self.app).user_api
                 for viewer in self.app._viewer_store.values()}
 
     def _get_clone_viewer_reference(self, reference):

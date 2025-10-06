@@ -2874,19 +2874,19 @@ class Application(VuetifyTemplate, HubListener):
         reference_data_label = getattr(reference_data, 'label', None)
         linked_by_wcs = getattr(viewer.state, 'linked_by_wcs', False)
 
+        from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
+        viewer_container = JdavizViewerWindow(viewer, app=self, reference=reference, name=name)
+
         return {
             'id': vid,
+            'reference': reference or name or vid,
             'name': name or vid,
-            'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
-            'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
-            'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            'widget': "IPY_MODEL_" + viewer_container.model_id,
             'api_methods': viewer._data_menu.api_methods if hasattr(viewer, '_data_menu') else [],
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
-            'config': self.config,  # give viewer access to app config/layout
             'collapse': True,
-            'reference': reference or name or vid,
             'linked_by_wcs': linked_by_wcs,
         }
 

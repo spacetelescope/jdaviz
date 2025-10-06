@@ -4,9 +4,9 @@ import astropy.units as u
 
 __all__ = ['UserApiWrapper', 'PluginUserApi',
            'LoaderUserApi', 'ImporterUserApi',
-           'ViewerUserApi']
+           'ViewerUserApi', 'ViewerWindowUserApi']
 
-_internal_attrs = ('_obj', '_expose', '_items', '_readonly', '_exclude_from_dict',
+_internal_attrs = ('_obj', '_expose', '_expose_nested', '_items', '_readonly', '_exclude_from_dict',
                    '__doc__', '_deprecation_msg', '_deprecated', '_repr_callable')
 
 
@@ -294,3 +294,37 @@ class ViewerUserApi(UserApiWrapper):
             warnings.warn(self._deprecation_msg, DeprecationWarning)
             super().__setattr__('_deprecation_msg', None)
         return super().__setattr__(*args, **kwargs)
+
+
+class ViewerWindowUserApi(UserApiWrapper):
+    """
+    This is an API wrapper around a viewer.  For a full list of attributes/methods,
+    call dir(viewer_object) and for help on any of those methods,
+    call help(viewer_object.attribute).
+
+    For example::
+      help(viewer_object.show)
+    """
+    def __init__(self, viewer_container, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
+        self._expose_nested = viewer_container.viewer.user_api._expose
+        expose = list(set(list(expose) + self._expose_nested))
+        super().__init__(viewer_container, expose, readonly, excl_from_dict, deprecated)
+
+    def __repr__(self):
+        return f'<{self._obj.viewer.reference} API>'
+
+    def __getattr__(self, attr):
+        if attr in _internal_attrs:
+            return super().__getattribute__(attr)
+        if attr in self._expose_nested:
+            return self._obj.viewer.user_api.__getattr__(attr)
+        else:
+            return super().__getattr__(attr)
+
+    def __setattr__(self, attr, value):
+        if attr in _internal_attrs:
+            return super().__setattr__(attr, value)
+        if attr in self._expose_nested:
+            return self._obj.viewer.user_api.__setattr__(attr, value)
+        else:
+            return super().__setattr__(attr, value)
