@@ -135,7 +135,7 @@ class AID:
             self._set_rotation(rotation)
 
         self._set_center(center)
-        self._set_fov(fov, image_label)
+        self._set_fov(fov)
 
     def _mean_pixel_scale(self, data):
         wcs = data.coords
