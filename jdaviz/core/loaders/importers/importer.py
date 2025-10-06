@@ -1,5 +1,5 @@
 import os
-from traitlets import Any, Bool, List, Unicode, observe, Dict
+from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 
@@ -108,7 +108,7 @@ class BaseImporter(PluginTemplateMixin):
 
         # Only need to display the message once
         if len(self.app.existing_data_in_dc) > 0:
-            msg = f"Selected data appears to be identical to existing data."
+            msg = "Selected data appears to be identical to existing data."
             self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
             # TODO: Allow for now but implement a disabled message near the import button
             #  or indicate that the import will be a re-import And if allowing re-import,

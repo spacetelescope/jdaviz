@@ -110,7 +110,6 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             self._set_default_data_label()
 
-
     @staticmethod
     def _get_supported_viewers():
         return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
