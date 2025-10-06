@@ -53,7 +53,7 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="plugin-expansion-panel-content">
                       <v-content>
-                        <v-row v-if="file_url_scheme !== 's3'">
+                        <v-row>
                           <v-text-field
                             v-model.number='file_timeout'
                             type="number"
@@ -65,7 +65,6 @@
                         </v-row>
 
                         <plugin-switch
-                          v-if="file_url_scheme !== 's3'"
                           :value.sync="file_cache"
                           label="Cache File"
                           api_hint="ldr.file_cache = "
@@ -133,7 +132,7 @@ module.exports = {
           'parsed_input_is_query', 'treat_table_as_query',
           'observation_table', 'observation_table_populated',
           'file_table', 'file_table_populated',
-          'file_url_scheme', 'file_cache', 'file_timeout',
+          'file_cache', 'file_timeout',
           'target_items', 'target_selected',
           'format_items', 'format_selected',
           'importer_widget', 'server_is_remote',
