@@ -475,7 +475,9 @@ class JdavizViewerMixin(WithCache):
         if len(visible_layers) == 0:
             return None
 
-        return visible_layers[-1]
+        z_order = [layer.zorder for layer in visible_layers]
+        active_index = np.argmax(z_order)
+        return visible_layers[active_index]
 
     @property
     def active_cube_layer(self):
