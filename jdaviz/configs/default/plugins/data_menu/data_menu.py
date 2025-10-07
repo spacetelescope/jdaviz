@@ -333,6 +333,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
 
+        # Avoid triggering this logic during app startup
+        if not hasattr(self, '_viewer'):
+            return
+
         # Have to count subsets + data, but not the invisible WCS layers in Imviz
         data_menu_len = len(self.existing_subset_labels) + len(self.data_labels_loaded)
 
@@ -342,8 +346,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             # immediately called again. Use this flag to prevent that.
             if self.prevent_layer_items_recursion:
                 return
+
             self.prevent_layer_items_recursion = True
-            label_order = [li['label'] for li in event["new"]]
+
+            label_order = [li['label'] for li in event["new"] if li['is_subset'] is not None]
             not_in_order = [layer.layer.label for layer in self._viewer.layers if layer.layer.label
                             not in label_order]
 
@@ -357,6 +363,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     layer.zorder = new_zorder
 
             self.prevent_layer_items_recursion = False
+
         if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
             return
         if not self._during_select_sync:
