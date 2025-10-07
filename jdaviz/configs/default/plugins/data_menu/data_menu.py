@@ -339,8 +339,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         # Have to count subsets + data, but not the invisible WCS layers in Imviz
         n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers if not
-                        (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
-                         lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
+                            (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
+                             lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
 
         if (event.get('name') == 'layer_items' and len(event['new']) == n_layers
                 and isinstance(event.get('owner'), DataMenu)):
