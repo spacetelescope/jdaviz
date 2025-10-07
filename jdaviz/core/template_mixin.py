@@ -5520,7 +5520,10 @@ class Table(PluginSubcomponent):
                 out_tbl.write(filename, overwrite=overwrite)
             except TypeError as te:
                 if 'overwrite' in str(te):
-                    # some formats (e.g. 'asdf') do not support overwrite keyword
+                    # some formats (e.g. 'asdf')  do not support overwrite keyword
+                    if not overwrite and os.path.exists(filename):
+                        raise OSError(f"File '{filename}' exists and overwrite=False")
+                    # Assume the underlying output method automatically overwrites
                     out_tbl.write(filename)
                 else:
                     raise te
