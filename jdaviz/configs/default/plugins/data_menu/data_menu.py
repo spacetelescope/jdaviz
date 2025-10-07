@@ -338,9 +338,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             return
 
         # Have to count subsets + data, but not the invisible WCS layers in Imviz
-        data_menu_len = len(self.existing_subset_labels) + len(self.data_labels_loaded)
+        n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers if not
+                        (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
+                         lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
 
-        if (event.get('name') == 'layer_items' and len(event['new']) == data_menu_len
+        if (event.get('name') == 'layer_items' and len(event['new']) == n_layers
                 and isinstance(event.get('owner'), DataMenu)):
             # Setting layer.zorder causes a change to layer_items, which causes this function to be
             # immediately called again. Use this flag to prevent that.
