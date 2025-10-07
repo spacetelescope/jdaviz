@@ -336,6 +336,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if not hasattr(self, '_viewer'):
             return
 
+        # Avoid triggering this logic during app startup
+        if not hasattr(self, '_viewer'):
+            return
+
         # Have to count subsets + data, but not the invisible WCS layers in Imviz
         n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers if not
                             (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
