@@ -689,7 +689,7 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         if viewer_id is None:
-            viewer = self._jdaviz_helper.default_viewer._obj
+            viewer = self._jdaviz_helper.default_viewer._obj.viewer
         else:
             viewer = self.get_viewer(viewer_id)
 
@@ -2936,7 +2936,7 @@ class Application(VuetifyTemplate, HubListener):
                 # adopt "linked_by_wcs" from the first (assuming all are the same)
                 # NOTE: deleting the default viewer is forbidden both by API and UI, but if
                 # for some reason that was the case here, linked_by_wcs will default to False
-                linked_by_wcs = self._jdaviz_helper.default_viewer._obj.state.linked_by_wcs
+                linked_by_wcs = self._jdaviz_helper.default_viewer._obj.viewer.state.linked_by_wcs
             else:
                 linked_by_wcs = False
             viewer.state.linked_by_wcs = linked_by_wcs
@@ -2957,7 +2957,7 @@ class Application(VuetifyTemplate, HubListener):
             # NOTE: if ever extending image rotation beyond imviz or adding non-image viewers
             # to imviz: this currently assumes that the helper has a default_viewer and that is an
             # image viewer
-            ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
+            ref_data = self._jdaviz_helper.default_viewer._obj.viewer.state.reference_data
             new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
 
             if hasattr(viewer, 'reference'):

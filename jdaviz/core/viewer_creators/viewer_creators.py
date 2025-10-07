@@ -1,5 +1,6 @@
 from traitlets import Unicode, Bool, observe
 
+from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
 from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.template_mixin import (PluginTemplateMixin, AutoTextField,
                                         DatasetMultiSelectMixin, ViewerSelectMixin)
@@ -107,7 +108,7 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
         dm = nv.data_menu
         for dataset in self.dataset.selected:
             dm.add_data(dataset)
-        return nv.user_api
+        return JdavizViewerWindow(nv, app=self.app).user_api
 
     def vue_create_clicked(self, *args):
         self.__call__()

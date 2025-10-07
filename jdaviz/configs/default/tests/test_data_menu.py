@@ -16,7 +16,7 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
 
     # check that both are enabled in the data menu
     sv = specviz_helper.viewers['spectrum-viewer']
-    dm = sv._obj.data_menu
+    dm = sv._obj.viewer.data_menu
     assert len(dm._obj.layer_items) == 2
     assert len(dm._obj.visible_layers) == 2
 
@@ -31,13 +31,13 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
 
     assert len(dm._obj.layer_items) == 3
     assert len(dm._obj.visible_layers) == 2
-    assert len(sv._obj.layers) == 4
-    assert sv._obj.layers[2].visible is True   # subset corresponding to first (visible) data entry
-    assert sv._obj.layers[3].visible is False  # subset corresponding to second (hidden) data entry
+    assert len(sv._obj.viewer.layers) == 4
+    assert sv._obj.viewer.layers[2].visible is True   # subset corresponding to first (visible) data
+    assert sv._obj.viewer.layers[3].visible is False  # subset corresponding to second (hidden) data
 
     # enable data layer from menu and subset should also become visible
     dm.toggle_layer_visibility('test2')
-    assert np.all([layer.visible for layer in sv._obj.layers])
+    assert np.all([layer.visible for layer in sv._obj.viewer.layers])
 
 
 def test_data_menu_selection(specviz_helper, spectrum1d):
@@ -47,7 +47,7 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     specviz_helper.load_data(new_spec, data_label="test2")
 
     sv = specviz_helper.viewers['spectrum-viewer']
-    dm = sv._obj.data_menu
+    dm = sv._obj.viewer.data_menu
 
     # no selection by default
     assert len(dm._obj.dm_layer_selected) == 0
@@ -75,7 +75,7 @@ def test_data_menu_add_remove_data(imviz_helper):
     for i in range(3):
         imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}', show_in_viewer=False)
 
-    dm = imviz_helper.viewers['imviz-0']._obj.data_menu
+    dm = imviz_helper.viewers['imviz-0']._obj.viewer.data_menu
     assert len(dm._obj.layer_items) == 0
     assert len(dm.layer.choices) == 0
     assert len(dm._obj.dataset.choices) == 3
@@ -105,9 +105,9 @@ def test_data_menu_add_remove_data(imviz_helper):
 
 def test_remove_all_data_cubeviz(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
-    dm1 = cubeviz_helper.viewers['flux-viewer']._obj.data_menu
-    dm2 = cubeviz_helper.viewers['uncert-viewer']._obj.data_menu
-    dm3 = cubeviz_helper.viewers['spectrum-viewer']._obj.data_menu
+    dm1 = cubeviz_helper.viewers['flux-viewer']._obj.viewer.data_menu
+    dm2 = cubeviz_helper.viewers['uncert-viewer']._obj.viewer.data_menu
+    dm3 = cubeviz_helper.viewers['spectrum-viewer']._obj.viewer.data_menu
 
     sp = cubeviz_helper.plugins['Subset Tools']
     sp.import_region(SpectralRegion(4.8 * u.um,
@@ -130,12 +130,12 @@ def test_remove_all_data_cubeviz(cubeviz_helper, image_cube_hdu_obj_microns):
 def test_data_menu_create_subset(imviz_helper):
     imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
 
-    dm = imviz_helper.viewers['imviz-0']._obj.data_menu
+    dm = imviz_helper.viewers['imviz-0']._obj.viewer.data_menu
     assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
 
     dm.create_subset('circle')
     assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
-    assert imviz_helper.viewers['imviz-0']._obj.toolbar.active_tool_id == 'bqplot:truecircle'
+    assert imviz_helper.viewers['imviz-0']._obj.viewer.toolbar.active_tool_id == 'bqplot:truecircle'
 
 
 def test_data_menu_remove_subset(specviz_helper, spectrum1d):
@@ -144,7 +144,7 @@ def test_data_menu_remove_subset(specviz_helper, spectrum1d):
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
     specviz_helper.load_data(new_spec, data_label="test2")
 
-    dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
+    dm = specviz_helper.viewers['spectrum-viewer']._obj.viewer.data_menu
     sp = specviz_helper.plugins['Subset Tools']
 
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
@@ -181,7 +181,7 @@ def test_data_menu_dq_layers(imviz_helper):
 
     imviz_helper.load_data(data, data_label="image", ext=('SCI', 'DQ'), show_in_viewer=True)
 
-    dm = imviz_helper.viewers['imviz-0']._obj.data_menu
+    dm = imviz_helper.viewers['imviz-0']._obj.viewer.data_menu
     assert dm.layer.choices == ['image[DQ,1]', 'image[SCI,1]']
     assert len(dm._obj.visible_layers) == 2
 
@@ -205,7 +205,7 @@ def test_data_menu_subset_appearance(specviz_helper, spectrum1d):
     # are two data entries, but not in this case with just one
     specviz_helper.load_data(spectrum1d, data_label="test")
 
-    dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
+    dm = specviz_helper.viewers['spectrum-viewer']._obj.viewer.data_menu
     sp = specviz_helper.plugins['Subset Tools']
 
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
@@ -221,7 +221,7 @@ def test_data_menu_view_info(specviz_helper, spectrum1d):
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
     specviz_helper.load_data(new_spec, data_label="test2")
 
-    dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
+    dm = specviz_helper.viewers['spectrum-viewer']._obj.viewer.data_menu
     mp = specviz_helper.plugins['Metadata']
     sp = specviz_helper.plugins['Subset Tools']
 

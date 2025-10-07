@@ -106,8 +106,8 @@ def test_data_quality_plugin(imviz_helper):
     assert flag_map_selected[0]['description'] == 'Bad pixel. Do not use.'
 
     # check default dq opacity is a fraction of sci data:
-    sci_alpha = imviz_helper.default_viewer._obj.layers[0].state.alpha
-    dq_alpha = imviz_helper.default_viewer._obj.layers[1].state.alpha
+    sci_alpha = imviz_helper.default_viewer._obj.viewer.layers[0].state.alpha
+    dq_alpha = imviz_helper.default_viewer._obj.viewer.layers[1].state.alpha
     assert dq_alpha == sci_alpha * dq_plugin.dq_layer_opacity
 
     plot_opts = imviz_helper.plugins['Plot Options']._obj
@@ -118,12 +118,12 @@ def test_data_quality_plugin(imviz_helper):
     # check changes to sci opacity affect dq opacity
     new_sci_opacity = 0.5
     plot_opts.image_opacity_value = new_sci_opacity
-    dq_alpha = imviz_helper.default_viewer._obj.layers[1].state.alpha
+    dq_alpha = imviz_helper.default_viewer._obj.viewer.layers[1].state.alpha
     assert dq_alpha == new_sci_opacity * dq_plugin.dq_layer_opacity
 
     # check that mouseover shows dq values on bad pixels (flag == 0):
     # check that mouseover shows dq values on bad pixels (flag == 0):
-    viewer = imviz_helper.default_viewer._obj
+    viewer = imviz_helper.default_viewer._obj.viewer
     label_mouseover = imviz_helper._coords_info
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1366, 'y': 708}})
