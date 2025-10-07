@@ -266,10 +266,10 @@ class BaseResolver(PluginTemplateMixin):
         if self.default_input is None:
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
         with self.defer_update_format_items():
-            setattr(self, self.default_input,
-                    self.default_input_cast(inp) if self.default_input_cast else inp)
+            setattr(self, self.default_input, self.default_input_cast(inp) if self.default_input_cast else inp)
             user_api = self.user_api
             for k, v in kwargs.items():
+                print("Got this far into the from_input function")
                 if hasattr(user_api, k):
                     setattr(user_api, k, v)
         return self
@@ -420,10 +420,10 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
 
         for fmt_item in this_resolver.format.items:
             if (format is not None
-                and not any([format in (fmt_item['label'],
-                                        fmt_item['parser'],
-                                        fmt_item['importer'])
-                             for format in formats])):
+                and not any([fmt in (fmt_item['label'],
+                                     fmt_item['parser'],
+                                     fmt_item['importer'])
+                             for fmt in formats])):
                 invalid_resolvers[resolver_name] = this_resolver.format._invalid_importers
                 continue
             this_resolver.format.selected = fmt_item['label']
