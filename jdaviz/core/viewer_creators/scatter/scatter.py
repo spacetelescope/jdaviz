@@ -22,7 +22,7 @@ class ScatterViewerCreator(BaseViewerCreator):
 
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
-        self.viewer_label_default = 'Scatter'  # TODO: append suffix if taken
+        self.viewer_label_default = 'Scatter'
 
         self.xatt = SelectPluginComponent(self,
                                           items='xatt_items',
