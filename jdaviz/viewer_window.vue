@@ -1,5 +1,5 @@
 <template>
-  <div class="jdaviz-viewer">
+  <div class="jdaviz-viewer-window" style="width: 100%; height: 100%; overflow: hidden;">
     <div class="jdaviz-viewer-toolbar-container">
       <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
         <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
@@ -32,13 +32,13 @@
         <j-play-pause-widget v-if="reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': id, 'method': 'next_row'})"></j-play-pause-widget>
         <v-spacer></v-spacer>
         <jupyter-widget class='jdaviz-nested-toolbar' :widget="toolbar_widget"></jupyter-widget>
-        <span style="float: right">
+        <span class='toolbar-popout-span' style="float: right; margin-top: 4px;">
           <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
         </span>
       </v-row>
     </div>
 
-    <v-card tile flat style="flex: 1; margin-top: -2px; overflow: hidden;">
+    <v-card tile flat style="width: 100%; height: calc(100% - 42px); overflow: hidden; overflow: hidden;">
       <jupyter-widget :widget="data_menu_widget"></jupyter-widget>
       <jupyter-widget
         :widget="figure_widget"
@@ -48,3 +48,9 @@
     </v-card>
   </div>
 </template>
+
+<style scoped>
+.toolbar-popout-span i {
+  color: white !important;
+}
+</style>
