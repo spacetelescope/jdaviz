@@ -6,6 +6,7 @@ from glue.core.message import (
 )
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
+from glue.core.component_link import ComponentLink
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 from glue.viewers.image.state import ImageSubsetLayerState
 from traitlets import List, Unicode, Bool, Dict, observe
@@ -701,7 +702,10 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         # We are only here to link new data with existing configuration,
         # so no need to relink existing data.
         for link in app.data_collection.external_links:
-            data_already_linked.append(link.data2)
+            if hasattr(link, 'data2'):
+                data_already_linked.append(link.data2)
+            if hasattr(link, 'comp_from'):  # for Catalogs, which are linked by ComponentLink
+                data_already_linked.append(link.comp_from.data)
     else:  # pragma: no cover
         # Everything has to be relinked.
         for viewer in image_viewers:
@@ -767,52 +771,82 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
     ndim_range = range(2)  # We only support 2D
 
     for i, data in enumerate(app.data_collection):
-        # 1. Do not link with self.
-        # 2. We are not touching any existing Subsets or Table. They keep their own links.
-        # 3. Links already exist for this entry and we're not changing the type.
-        # 4. We are not touching fake WCS layers in pixel linking.
-        # 5. We are not touching data without WCS in WCS linking.
-        if ((i == iref) or (not layer_is_2d(data)) or (data in data_already_linked) or
-                (align_by == "pixels" and data.meta.get(_wcs_only_label)) or
-                (align_by == "wcs" and not hasattr(data.coords, 'pixel_to_world'))):
+
+        # Do not link with self or existing links.
+        if i == iref or data in data_already_linked:
             continue
 
-        ids1 = data.pixel_component_ids
-        new_links = []
-        try:
-            if align_by == 'pixels':
-                new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
-            else:  # wcs
-                wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
-                if wcs_fast_approximation:
-                    try:
-                        new_links = [wcslink.as_affine_link()]
-                    except NoAffineApproximation:  # pragma: no cover
-                        new_links = [wcslink]
-                else:
-                    new_links = [wcslink]
-        except Exception as e:  # pragma: no cover
-            if align_by == 'wcs' and wcs_fallback_scheme == 'pixels':
-                try:
+        # Special handling of Catalogs: only link RA/Dec to reference WCS,
+        # and use ComponentLink instead of WCSLink because Catalogs do not
+        # have coords (wcs) attribute.
+        if data.meta.get('_importer') == 'CatalogImporter':
+            comp_labels = [str(x) for x in data.component_ids()]
+            if align_by == 'wcs':
+                if 'Right Ascension' in comp_labels and 'Declination' in comp_labels:
+                    # for an image these components should always be called
+                    # 'Lat' and 'Lon' Instead of checking for the presence of these
+                    # component labels before trying to access them, access them
+                    # by name so if there's ever a case where they are not called
+                    # 'Lat' and 'Lon', a clear error is raised and this can be made
+                    # more general.
+                    ref_labels = [str(x) for x in refdata.component_ids()]
+                    ref_ra = refdata.components[ref_labels.index('Lon')]
+                    ref_dec = refdata.components[ref_labels.index('Lat')]
+
+                    # source catalogs will always have RA/Dec components with
+                    # these exact labels, so this is safe to do with exact labels
+                    cat_ra = data.components[comp_labels.index('Right Ascension')]
+                    cat_dec = data.components[comp_labels.index('Declination')]
+
+                    links_list += [ComponentLink([ref_ra], cat_ra),
+                                   ComponentLink([ref_dec], cat_dec)]
+                    continue
+
+        else:
+            # 1. We are not touching any existing Subsets or Table. They keep their own links.
+            # 2. We are not touching fake WCS layers in pixel linking.
+            # 3. We are not touching data without WCS in WCS linking.
+            if ((not layer_is_2d(data)) or
+                    (align_by == "pixels" and data.meta.get(_wcs_only_label)) or
+                    (align_by == "wcs" and not hasattr(data.coords, 'pixel_to_world'))):
+                continue
+
+            ids1 = data.pixel_component_ids
+            new_links = []
+            try:
+                if align_by == 'pixels':
                     new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
-                except Exception as e:  # pragma: no cover
+                else:  # wcs
+                    wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
+                    if wcs_fast_approximation:
+                        try:
+                            new_links = [wcslink.as_affine_link()]
+                        except NoAffineApproximation:  # pragma: no cover
+                            new_links = [wcslink]
+                    else:
+                        new_links = [wcslink]
+            except Exception as e:  # pragma: no cover
+                if align_by == 'wcs' and wcs_fallback_scheme == 'pixels':
+                    try:
+                        new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+                    except Exception as e:  # pragma: no cover
+                        if error_on_fail:
+                            raise
+                        else:
+                            app.hub.broadcast(SnackbarMessage(
+                                f"Error linking '{data.label}' to '{refdata.label}': "
+                                f"{repr(e)}", color="warning", timeout=8000,
+                                sender=app, traceback=e))
+                            continue
+                else:  # pragma: no cover
                     if error_on_fail:
                         raise
                     else:
                         app.hub.broadcast(SnackbarMessage(
                             f"Error linking '{data.label}' to '{refdata.label}': "
-                            f"{repr(e)}", color="warning", timeout=8000,
-                            sender=app, traceback=e))
+                            f"{repr(e)}", color="warning", timeout=8000, sender=app))
                         continue
-            else:  # pragma: no cover
-                if error_on_fail:
-                    raise
-                else:
-                    app.hub.broadcast(SnackbarMessage(
-                        f"Error linking '{data.label}' to '{refdata.label}': "
-                        f"{repr(e)}", color="warning", timeout=8000, sender=app))
-                    continue
-        links_list += new_links
+            links_list += new_links
 
     if len(links_list) > 0:
         with app.data_collection.delay_link_manager_update():

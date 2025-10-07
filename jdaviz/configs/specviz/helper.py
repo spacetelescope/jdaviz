@@ -40,8 +40,29 @@ class Specviz(ConfigHelper, LineListMixin):
         # Listen for new redshifts from the redshift slider
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
-        # Temporary during deconfigging (until _load exposed to all configs)
-        self.load = self._load
+
+    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        """
+        Load data into the app.  A single valid loader/importer must be able to be
+        matched based on the input, otherwise an error will be raised suggesting
+        what further information to provide.  For an interactive approach,
+        see ``loaders``.
+
+        Parameters
+        ----------
+        inp : string or object or None
+            Input filename, url, data object, etc.
+        loader : string, optional
+            Only consider a specific loader/resolver
+        format : string, optional
+            Only consider a specific format
+        target : string, optional
+            Only consider a specific target
+        kwargs :
+            Additional kwargs are passed on to both the loader and importer, as applicable.
+            Any kwargs that do not match valid inputs are silently ignored.
+        """
+        return self._load(inp=inp, loader=loader, format=format, target=target, **kwargs)
 
     @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,

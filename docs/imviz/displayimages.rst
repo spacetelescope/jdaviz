@@ -334,7 +334,7 @@ Only after the above is done can you start Imviz and use the custom colormap:
 .. code-block:: python
 
     imviz = Imviz()
-    imviz.load_data('myimage.fits')
+    imviz.load('myimage.fits', format='Image')
     imviz.default_viewer.set_colormap('photutils_cmap')
 
 Opacity

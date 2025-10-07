@@ -42,7 +42,6 @@ class Imviz(ImageConfigHelper):
         _current_app = self
 
         # Temporary during deconfig process
-        self.load = self._load
         self.app.state.dev_loaders = True
 
     def create_image_viewer(self, viewer_name=None):
@@ -95,6 +94,29 @@ class Imviz(ImageConfigHelper):
         if viewer_id == f'{self.app.config}-0':
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
+
+    def load(self, inp=None, loader=None, format=None, target=None, **kwargs):
+        """
+        Load data into the app.  A single valid loader/importer must be able to be
+        matched based on the input, otherwise an error will be raised suggesting
+        what further information to provide.  For an interactive approach,
+        see ``loaders``.
+
+        Parameters
+        ----------
+        inp : string or object or None
+            Input filename, url, data object, etc.
+        loader : string, optional
+            Only consider a specific loader/resolver
+        format : string, optional
+            Only consider a specific format
+        target : string, optional
+            Only consider a specific target
+        kwargs :
+            Additional kwargs are passed on to both the loader and importer, as applicable.
+            Any kwargs that do not match valid inputs are silently ignored.
+        """
+        return self._load(inp=inp, loader=loader, format=format, target=target, **kwargs)
 
     @deprecated(since="4.3", alternative="load")
     def load_data(self, data, data_label=None, show_in_viewer=True,
@@ -197,21 +219,21 @@ class Imviz(ImageConfigHelper):
                                   'please use Cubeviz')
                     break
 
-                self._load(data[i, :, :],
-                           format='Image',
-                           data_label=data_label,
-                           extension=extensions,
-                           parent=kwargs.pop('parent', None),
-                           viewer=viewer,
-                           gwcs_to_fits_sip=gwcs_to_fits_sip)
+                self.load(data[i, :, :],
+                          format='Image',
+                          data_label=data_label,
+                          extension=extensions,
+                          parent=kwargs.pop('parent', None),
+                          viewer=viewer,
+                          gwcs_to_fits_sip=gwcs_to_fits_sip)
         elif isinstance(data, str) and data.endswith('.reg'):
-            self._load(data,
-                       format='Subset',
-                       data_label=data_label,
-                       extension=extensions,
-                       parent=kwargs.pop('parent', None),
-                       viewer=viewer,
-                       gwcs_to_fits_sip=gwcs_to_fits_sip)
+            self.load(data,
+                      format='Subset',
+                      data_label=data_label,
+                      extension=extensions,
+                      parent=kwargs.pop('parent', None),
+                      viewer=viewer,
+                      gwcs_to_fits_sip=gwcs_to_fits_sip)
         else:
             # if the data-label is provided but without an
             # extension in the label, maintain previous behavior of appending
@@ -231,14 +253,14 @@ class Imviz(ImageConfigHelper):
                 if data.__class__ is NDData:
                     data_label = 'NDData'
 
-            self._load(data,
-                       format='Image',
-                       data_label=data_label,
-                       data_label_as_prefix=data_label_as_prefix,
-                       extension=extensions,
-                       parent=kwargs.pop('parent', None),
-                       viewer=viewer,
-                       gwcs_to_fits_sip=gwcs_to_fits_sip)
+            self.load(data,
+                      format='Image',
+                      data_label=data_label,
+                      data_label_as_prefix=data_label_as_prefix,
+                      extension=extensions,
+                      parent=kwargs.pop('parent', None),
+                      viewer=viewer,
+                      gwcs_to_fits_sip=gwcs_to_fits_sip)
 
     def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.

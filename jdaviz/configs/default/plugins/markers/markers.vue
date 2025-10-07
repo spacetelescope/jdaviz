@@ -23,7 +23,7 @@
     <div class="jd-plugin-section">
       <div style="font-weight: bold; margin-bottom: 5px;">Distance Tool</div>
       <div class="text--secondary" style="margin-bottom: 10px;">
-        Press 'd' twice to measure; hold 'd' + 'option'/'alt' to snap.
+        Press 'd' twice to measure; hold 'option'/'alt' before pressing 'd' to snap to markers from table above.
       </div>
       <div>
         <b>Distance:</b> {{ distance_display }}

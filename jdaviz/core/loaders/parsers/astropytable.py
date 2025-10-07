@@ -36,7 +36,7 @@ class AstropyTableParser(BaseParser):
         # it as a catalog type if it opens sucessfully
         # eventually we may want to accept BinTableHDU/TableHDU
         # inside fits so this logic should be improved then
-        if isinstance(self.input, (fits.ImageHDU, fits.HDUList)):
+        if isinstance(self.input, (fits.ImageHDU, fits.HDUList, fits.PrimaryHDU, fits.CompImageHDU)):  # noqa
             return False
         try:
             f = fits.open(self.input)

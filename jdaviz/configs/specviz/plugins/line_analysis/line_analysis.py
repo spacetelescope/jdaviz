@@ -25,6 +25,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
                                         SpectralContinuumMixin,
+                                        CustomToolbarToggleMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
@@ -44,7 +45,7 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
 @tray_registry('specviz-line-analysis', label="Line Analysis", category="data:analysis")
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
-                   SpectralContinuumMixin):
+                   SpectralContinuumMixin, CustomToolbarToggleMixin):
     """
     The Line Analysis plugin returns specutils analysis for a single spectral line.
     See the :ref:`Line Analysis Plugin Documentation <line-analysis>` for more details.
@@ -100,6 +101,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, TableMixin,
 
         # continuum selection is mandatory for line-analysis
         self._continuum_remove_none_option()
+
+        def custom_toolbar(viewer):
+            if isinstance(viewer, Spectrum1DViewer):
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectline']], 'jdaviz:selectline'  # noqa
+            # otherwise defaults
+            return None, None
+
+        self.custom_toolbar.callable = custom_toolbar
+        self.custom_toolbar.name = "Spectral Line Selection"
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)

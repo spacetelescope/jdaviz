@@ -45,7 +45,7 @@ spectrum containing only your subset by running:
     spec = specviz.get_data(spectral_subset='Subset 1')
     subset_spec = Spectrum(flux=spec.flux[~spec.mask],
                              spectral_axis=spec.spectral_axis[~spec.mask])
-    specviz.load_data(subset_spec)
+    specviz.load(subset_spec, format='1D Spectrum')
 
 .. seealso::
 

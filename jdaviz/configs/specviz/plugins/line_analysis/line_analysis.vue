@@ -162,6 +162,13 @@
           <v-row>
             <j-docs-link>Assign the centroid reported above to the observed wavelength of a given line and set the resulting redshift.  Lines must be loaded and plotted through the Line Lists plugin first.</j-docs-link>
           </v-row>
+          <j-custom-toolbar-toggle
+            :enabled="custom_toolbar_enabled"
+            text="line selection tools in spectrum viewer"
+            @toggle-custom-toolbar="toggle_custom_toolbar"
+          >
+            <img class="invert-if-dark" :src="sync_identify_icon_enabled" width="20"/>
+          </j-custom-toolbar-toggle>
           <v-row class="row-no-outside-padding">
             <v-col cols=2>
               <j-tooltip tipid='plugin-line-analysis-sync-identify'>

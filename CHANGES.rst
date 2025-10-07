@@ -6,6 +6,13 @@ New Features
 
 - Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
 
+- Add check for valid model fitting equation operators. [#3818]
+
+- Change parallelization framework for better performance and flexibility. [#3806]
+
+- Plugin-specific viewer tools (footprint, catalogs, line lists, line analysis) now have a
+  toggle button in the plugin UI to enable/disable a custom toolbar specific to that context. [#3812]
+
 Cubeviz
 ^^^^^^^
 
@@ -66,7 +73,7 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-4.4.1 (unreleased)
+4.4.2 (unreleased)
 ==================
 
 Bug Fixes
@@ -86,8 +93,27 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
+
+4.4.1 (2025-09-26)
+==================
+
+Bug Fixes
+---------
+
+- Fixes cases where import data raises exception in attempting to set metadata. [#3797]
+
+Cubeviz
+^^^^^^^
+
+- Speed up loading of large cubes into cubeviz. [#3791]
+
+Specviz2d
+^^^^^^^^^
 
 - Automatic spectral extraction now works when multiple 2D spectra are loaded. [#3793]
+
+- Fixes an incorrect API hint in 2D Spectral Extraction. [#3798]
 
 4.4 (2025-09-18)
 ================

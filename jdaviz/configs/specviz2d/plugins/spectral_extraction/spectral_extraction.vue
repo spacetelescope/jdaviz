@@ -497,7 +497,7 @@
         action_tooltip="Extract 1D Spectrum"
         :action_disabled="ext_specreduce_err.length > 0"
         :action_spinner="spinner"
-        add_results_api_hint="plg.ext_results"
+        add_results_api_hint="plg.ext_add_results"
         action_api_hint="plg.export_extract_spectrum()"
         :api_hints_enabled="api_hints_enabled"
         @click:action="extract_spectrum"

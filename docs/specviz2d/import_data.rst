@@ -55,14 +55,15 @@ Importing data via the API
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Specviz2D helper class API. Using this API, users can
 load data into the application through code with the
-:meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_data`
+:py:meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load`
 method, which takes as input a :class:`~specutils.Spectrum` object or filename for the
 2D spectrum and (optionally) the 1D spectrum.
 
 .. code-block:: python
 
     specviz2d = Specviz2d()
-    specviz2d.load_data('/my/directory/2dspectrum.fits', '/my/directory/1dspectrum.fits')
+    specviz2d.load('/my/directory/2dspectrum.fits', format='2D Spectrum')
+    specviz2d.load('/my/directory/1dspectrum.fits', format='1D Spectrum')
     specviz2d.show()
 
 By default, extension 1 of the 2D
@@ -73,7 +74,8 @@ the spectrum to be horizontal:
 
 .. code-block:: python
 
-    specviz2d.load_data(filename, ext=7, transpose=True)
+    # Because Specviz2d only accepts 2D spectra (for now), it is not required to specify format here.
+    specviz2d.load(filename, format='2D Spectrum', ext=7, transpose=True)
 
 Loading from a URL or URI
 -------------------------
