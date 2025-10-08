@@ -2304,6 +2304,7 @@ class LayerSelect(SelectPluginComponent):
         else:
             return selected_obj
 
+
 class LayerSelectMixin(VuetifyTemplate, HubListener):
     """
     Applies the LayerSelect component as a mixin in the base plugin.  This
