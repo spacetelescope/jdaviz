@@ -9,6 +9,7 @@ from jdaviz.core.template_mixin import SelectPluginComponent
 
 __all__ = ['HistogramViewerCreator']
 
+
 @viewer_creator_registry('Histogram', overwrite=True)
 class HistogramViewerCreator(BaseViewerCreator):
     template_file = __file__, "histogram.vue"
@@ -50,6 +51,6 @@ class HistogramViewerCreator(BaseViewerCreator):
         nv = super().__call__()
         if self.xatt.selected != '':
             nv._obj.state.x_att = self.xatt.selected
-            if hasattr(nv._obj, 'data'):
-                nv._obj.reset_limits()
+        if len(nv._obj.layers):
+            nv._obj.reset_limits()
         return nv
