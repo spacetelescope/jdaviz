@@ -1,9 +1,11 @@
+import io
 import re
 import pytest
 import numpy as np
 import astropy.units as u
 from specutils import SpectralRegion
 
+from jdaviz.core.template_mixin import TableMixin
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
     # apply mask to spectrum to check selected subset is masked:
@@ -308,3 +310,44 @@ def test_select_plugin_component_map_value(imviz_helper, multi_extension_image_h
     selection_obj.fake_attribute = ['fake * item1', 'fake item2']
     assert selection_obj.fake_attribute == ['fake * item1', 'fake item2']
     assert selection_obj.choices == choices_before
+
+
+class FakeTable(TableMixin):
+    template = ''
+
+    def __init__(self, session, catalog, *args, **kwargs):
+        self.session = session
+        self._plugin_name = 'test-fake-table'
+        super().__init__(*args, **kwargs)
+        self.table._qtable = catalog
+
+
+def test_export_table(deconfigged_helper, source_catalog, tmp_path):
+    table_obj = FakeTable(deconfigged_helper.app.session, source_catalog)
+
+    buf = io.StringIO()
+    table_obj.table._qtable.write.list_formats(out=buf)
+    output = buf.getvalue()
+
+    # Output looks like this:
+    #            Format           Read Write Auto-identify Deprecated
+    # --------------------------- ---- ----- ------------- ----------
+    #                       ascii  Yes   Yes            No
+    #                ascii.aastex  Yes   Yes            No
+    #                 ascii.basic  Yes   Yes            No
+
+    valid_formats = []
+    for line in output.splitlines():
+        if line.strip().startswith('Format') or line.strip().startswith('-----'):
+            continue
+
+        split_line = line.strip().split()
+        if len(split_line) == 5 and split_line[-1] == 'Yes':
+            # Deprecated
+            continue
+        valid_formats.append(line.strip().split()[0])
+
+    tmp_filename = tmp_path / 'temp_table'
+
+    for vf in valid_formats:
+        table_obj.export_table(f"{tmp_filename}_{vf}", format=vf)
