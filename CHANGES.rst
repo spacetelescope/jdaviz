@@ -18,6 +18,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
 
 4.4.1 (2025-09-26)
 ==================
