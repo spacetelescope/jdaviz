@@ -450,8 +450,11 @@ def test_imviz_select_all_layers(imviz_helper):
 
     plot_options = imviz_helper.plugins['Plot Options']
 
-    plot_options.layer.multiselect = True
-    plot_options.select_all()
+    with plot_options.as_active():
+        # as_active to force stretch histogram to update
+        # as a regression test to https://github.com/spacetelescope/jdaviz/pull/3825
+        plot_options.multiselect = True
+        plot_options.select_all()
 
     # all layers selected, set stretch function to log for all
     plot_options.stretch_function = 'log'

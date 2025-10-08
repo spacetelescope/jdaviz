@@ -2295,6 +2295,14 @@ class LayerSelect(SelectPluginComponent):
         else:
             return layers
 
+    @property
+    def selected_obj_flattened(self):
+        selected_obj = self.selected_obj
+        if self.is_multiselect:
+            # flatten the list of lists
+            return [item for sublist in selected_obj for item in sublist]
+        else:
+            return selected_obj
 
 class LayerSelectMixin(VuetifyTemplate, HubListener):
     """
