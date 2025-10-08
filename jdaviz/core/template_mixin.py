@@ -5290,7 +5290,7 @@ class PluginSubcomponent(VuetifyTemplate):
 
 class Table(PluginSubcomponent):
     """
-    Table subcomponent.  For most cases where a plugin only requires a single table, use the mixin
+    Table subcomponent. For most cases where a plugin only requires a single table, use the mixin
     instead.
 
     To use in a plugin, define ``plugin.table = Table(plugin)``, create a ``table_widget`` Unicode
@@ -5497,7 +5497,7 @@ class Table(PluginSubcomponent):
     def vue_clear_table(self, data=None):
         self.clear_table()
 
-    def export_table(self, filename=None, overwrite=False):
+    def export_table(self, filename=None, **write_kwargs):
         """
         Export the QTable representation of the table.
 
@@ -5506,6 +5506,14 @@ class Table(PluginSubcomponent):
         filename : str, optional
             If provided, will write to the file, otherwise will just return the QTable
             object.
+
+        Notes
+        -----
+        Notable kwargs (either for QTable or UI purposes) include:
+        format : str, optional
+            The format to write the table in.  If not provided, will be inferred from the
+            filename extension.  See `astropy.table.QTable.write` for supported formats.
+
         overwrite : bool, optional
             If ``filename`` already exists, should it be overwritten.
         """
@@ -5516,17 +5524,15 @@ class Table(PluginSubcomponent):
             else:
                 out_tbl = self._qtable
 
-            try:
-                out_tbl.write(filename, overwrite=overwrite)
-            except TypeError as te:
-                if 'overwrite' in str(te):
-                    # some formats (e.g. 'asdf')  do not support overwrite keyword
-                    if not overwrite and os.path.exists(filename):
-                        raise OSError(f"File '{filename}' exists and overwrite=False")
-                    # Assume the underlying output method automatically overwrites
-                    out_tbl.write(filename)
-                else:
-                    raise te
+            _, ext = os.path.splitext(filename)
+            if ext == 'asdf' or write_kwargs.get('format', None) == 'asdf':
+                # NOTE: these extensions will overwrite by default and do not accept overwrite kwarg
+                # asdf is the only problem... for now
+                overwrite = write_kwargs.pop('overwrite', None)
+                if os.path.exists(filename) and overwrite is False:
+                    raise FileExistsError(f"File '{filename}' exists and overwrite=False")
+
+            out_tbl.write(filename, **write_kwargs)
 
             return out_tbl
 
@@ -5568,7 +5574,7 @@ class TableMixin(VuetifyTemplate, HubListener):
         # (to also clear markers, etc)
         self.clear_table()
 
-    def export_table(self, filename=None, overwrite=False):
+    def export_table(self, filename=None, **kwargs):
         """
         Export the QTable representation of the table.
 
@@ -5577,10 +5583,8 @@ class TableMixin(VuetifyTemplate, HubListener):
         filename : str, optional
             If provided, will write to the file, otherwise will just return the QTable
             object.
-        overwrite : bool, optional
-            If ``filename`` already exists, should it be overwritten.
         """
-        return self.table.export_table(filename=filename, overwrite=overwrite)
+        return self.table.export_table(filename=filename, **kwargs)
 
     def select_rows(self, rows):
         """
