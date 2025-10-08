@@ -160,143 +160,10 @@ class TestSpecvizSpectrum1DParser:
         assert len(viewer.data()) == 0
 
 
-class TestSplitSpectrumWith2DFluxArray:
-    """
-    Test the split_spectrum_with_2D_flux_array function.
-    """
-
-    def test_split_2d_flux_basic(self):
-        """
-        Test splitting a spectrum with 2D flux array into a list.
-        """
-        spectral_axis = np.linspace(5000, 6000, 100) * u.AA
-        flux_2d = np.random.random((5, 100)) * u.Jy
-        spec = Spectrum(spectral_axis=spectral_axis, flux=flux_2d)
-
-        result = split_spectrum_with_2D_flux_array(spec)
-
-        assert len(result) == 5
-        for i, sub_spec in enumerate(result):
-            assert sub_spec.flux.shape == (100,)
-            assert np.array_equal(sub_spec.flux.value, flux_2d[i, :].value)
-            assert np.array_equal(
-                sub_spec.spectral_axis.value,
-                spectral_axis.value
-            )
-
-    def test_split_2d_flux_with_uncertainty(self):
-        """
-        Test splitting a spectrum with uncertainty.
-        """
-        spectral_axis = np.linspace(5000, 6000, 100) * u.AA
-        flux_2d = np.random.random((3, 100)) * u.Jy
-        uncertainty_2d = StdDevUncertainty(
-            np.random.random((3, 100)) * u.Jy
-        )
-        spec = Spectrum(
-            spectral_axis=spectral_axis,
-            flux=flux_2d,
-            uncertainty=uncertainty_2d
-        )
-
-        result = split_spectrum_with_2D_flux_array(spec)
-
-        assert len(result) == 3
-        for i, sub_spec in enumerate(result):
-            assert sub_spec.uncertainty is not None
-            assert np.array_equal(
-                sub_spec.uncertainty.array,
-                uncertainty_2d.array[i, :]
-            )
-
-    def test_split_2d_flux_with_mask(self):
-        """
-        Test splitting a spectrum with mask.
-        """
-        spectral_axis = np.linspace(5000, 6000, 50) * u.AA
-        flux_2d = np.random.random((4, 50)) * u.Jy
-        mask_2d = np.zeros((4, 50), dtype=bool)
-        mask_2d[:, -5:] = True
-        spec = Spectrum(
-            spectral_axis=spectral_axis,
-            flux=flux_2d,
-            mask=mask_2d
-        )
-
-        result = split_spectrum_with_2D_flux_array(spec)
-
-        assert len(result) == 4
-        for i, sub_spec in enumerate(result):
-            assert sub_spec.mask is not None
-            assert np.array_equal(sub_spec.mask, mask_2d[i, :])
-
-    def test_split_2d_flux_with_metadata(self):
-        """
-        Test that metadata is preserved when splitting.
-        """
-        spectral_axis = np.linspace(5000, 6000, 50) * u.AA
-        flux_2d = np.random.random((2, 50)) * u.Jy
-        meta = {'TELESCOP': 'TEST', 'INSTRUME': 'FAKE'}
-        spec = Spectrum(
-            spectral_axis=spectral_axis,
-            flux=flux_2d,
-            meta=meta
-        )
-
-        result = split_spectrum_with_2D_flux_array(spec)
-
-        for sub_spec in result:
-            assert sub_spec.meta == meta
-
-    def test_split_2d_flux_no_uncertainty_or_mask(self):
-        """
-        Test splitting when uncertainty and mask are None.
-        """
-        spectral_axis = np.linspace(5000, 6000, 50) * u.AA
-        flux_2d = np.random.random((3, 50)) * u.Jy
-        spec = Spectrum(spectral_axis=spectral_axis, flux=flux_2d)
-
-        result = split_spectrum_with_2D_flux_array(spec)
-
-        assert len(result) == 3
-        for sub_spec in result:
-            assert sub_spec.uncertainty is None
-            assert sub_spec.mask is None
-
-
-# Copied and pasted from test_spectrum_list.py
-@pytest.mark.parametrize('with_uncertainty', [True, False])
-def test_combine_lists_to_1d_spectrum(with_uncertainty):
-    wl = [1, 2, 3] * u.nm
-    fnu = [10, 20, 30] * u.Jy
-    if with_uncertainty:
-        dfnu = [4, 5, 6] * u.Jy
-    else:
-        dfnu = None
-
-    spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
-    assert isinstance(spec, Spectrum)
-    assert isinstance(spec.flux, u.Quantity)
-    assert spec.flux.unit == u.Jy
-
-    assert isinstance(spec.spectral_axis, u.Quantity)
-    assert spec.spectral_axis.unit == u.nm
-
-    assert np.all(spec.flux.value == np.array([10, 20, 30]))
-    assert np.all(spec.spectral_axis.value == np.array([1, 2, 3]))
-
-    if with_uncertainty:
-        assert isinstance(spec.uncertainty, StdDevUncertainty)
-        assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
-    else:
-        assert spec.uncertainty is None
-
-
 class TestGroupSpectraByFilename:
     """
     Test the group_spectra_by_filename function.
     """
-
     def test_group_single_filename(self):
         """
         Test grouping when all spectra have the same filename.
@@ -364,3 +231,114 @@ class TestGroupSpectraByFilename:
 
         assert isinstance(result, defaultdict)
         assert len(result) == 0
+
+
+# Copied and pasted from test_spectrum_list.py
+@pytest.mark.parametrize('with_uncertainty', [True, False])
+def test_combine_lists_to_1d_spectrum(with_uncertainty):
+    wl = [1, 2, 3] * u.nm
+    fnu = [10, 20, 30] * u.Jy
+    if with_uncertainty:
+        dfnu = [4, 5, 6] * u.Jy
+    else:
+        dfnu = None
+
+    spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
+    assert isinstance(spec, Spectrum)
+    assert isinstance(spec.flux, u.Quantity)
+    assert spec.flux.unit == u.Jy
+
+    assert isinstance(spec.spectral_axis, u.Quantity)
+    assert spec.spectral_axis.unit == u.nm
+
+    assert np.all(spec.flux.value == np.array([10, 20, 30]))
+    assert np.all(spec.spectral_axis.value == np.array([1, 2, 3]))
+
+    if with_uncertainty:
+        assert isinstance(spec.uncertainty, StdDevUncertainty)
+        assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
+    else:
+        assert spec.uncertainty is None
+
+
+class TestSplitSpectrumWith2DFluxArray:
+    """
+    Test the split_spectrum_with_2D_flux_array function.
+    """
+    def test_split_2d_flux_basic(self, spectrum2d):
+        """
+        Test splitting a spectrum with 2D flux array into a list.
+        """
+        result = split_spectrum_with_2D_flux_array(spectrum2d)
+
+        assert len(result) == 5
+        for i, sub_spec in enumerate(result):
+            assert sub_spec.flux.shape == (spectrum2d.flux.shape[1],)
+            assert np.array_equal(sub_spec.flux.value, spectrum2d.flux[i, :].value)
+            assert np.array_equal(
+                sub_spec.spectral_axis.value,
+                spectrum2d.spectral_axis.value
+            )
+
+        # No uncertainty or mask in input, so none in output
+        for sub_spec in result:
+            assert sub_spec.uncertainty is None
+            assert sub_spec.mask is None
+
+    def test_split_2d_flux_with_uncertainty(self, spectrum2d):
+        """
+        Test splitting a spectrum with uncertainty.
+        """
+        uncertainty_2d = StdDevUncertainty(
+            np.random.random(spectrum2d.shape) * spectrum2d.flux.unit,
+        )
+        spec = Spectrum(
+            spectral_axis=spectrum2d.spectral_axis,
+            flux=spectrum2d.flux,
+            uncertainty=uncertainty_2d
+        )
+
+        result = split_spectrum_with_2D_flux_array(spec)
+
+        assert len(result) == spectrum2d.flux.shape[0]
+        for i, sub_spec in enumerate(result):
+            assert sub_spec.uncertainty is not None
+            assert np.array_equal(
+                sub_spec.uncertainty.array,
+                uncertainty_2d.array[i, :]
+            )
+
+    def test_split_2d_flux_with_mask(self, spectrum2d):
+        """
+        Test splitting a spectrum with mask.
+        """
+        mask_2d = np.zeros(spectrum2d.flux.shape, dtype=bool)
+        mask_2d[:, -5:] = True
+        spec = Spectrum(
+            spectral_axis=spectrum2d.spectral_axis,
+            flux=spectrum2d.flux,
+            mask=mask_2d
+        )
+
+        result = split_spectrum_with_2D_flux_array(spec)
+
+        assert len(result) == spectrum2d.flux.shape[0]
+        for i, sub_spec in enumerate(result):
+            assert sub_spec.mask is not None
+            assert np.array_equal(sub_spec.mask, mask_2d[i, :])
+
+    def test_split_2d_flux_with_metadata(self, spectrum2d):
+        """
+        Test that metadata is preserved when splitting.
+        """
+        meta = {'TELESCOPE': 'TEST', 'INSTRUMENT': 'FAKE'}
+        spec = Spectrum(
+            spectral_axis=spectrum2d.spectral_axis,
+            flux=spectrum2d.flux,
+            meta=meta
+        )
+
+        result = split_spectrum_with_2D_flux_array(spec)
+
+        for sub_spec in result:
+            assert sub_spec.meta == meta
