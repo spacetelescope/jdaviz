@@ -153,8 +153,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Parameters with type 'init' are used on initialization and ones
         # with type 'call' are used on call.
         self.parameter_hints = {'maxiter': 'Maximum number of iterations',
-                                'filter_non_finite': 'Whether or not to filter data with non-finite values (e.g., NaNs)',
-                                'calc_uncertainties': 'Whether the covariance matrix should be computed and set in fit_info'}
+                                'filter_non_finite': 'Whether or not to filter data with'
+                                ' non-finite values (e.g., NaNs)',
+                                'calc_uncertainties': 'Whether the covariance matrix should be'
+                                ' computed and set in fit_info'}
         self.all_fitters = {
             'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
                                             {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
