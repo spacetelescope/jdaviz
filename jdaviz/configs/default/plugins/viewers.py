@@ -7,12 +7,15 @@ from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
+from glue.viewers.histogram.state import HistogramViewerState
+from glue.viewers.histogram.state import HistogramLayerState as BqplotHistogramLayerState
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.utils import avoid_circular
 
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
+from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.scatter import BqplotScatterView
 from glue_jupyter.table import TableViewer
@@ -1084,4 +1087,20 @@ class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
                 ]
     _state_cls = ScatterViewerState
 
-    _native_mark_classnames = ('Image', 'ImageGL', 'Scatter', 'ScatterGL')
+    _native_mark_classnames = ('Scatter', 'ScatterGL')
+
+
+@viewer_registry("histogram-viewer", label="histogram")
+class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                    ['bqplot:xrange'],
+                    [],
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
+    _state_cls = HistogramViewerState
+
+    _native_mark_classnames = ('Bars', 'BarsGL')
