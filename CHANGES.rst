@@ -11,6 +11,9 @@ New Features
 - Plugin-specific viewer tools (footprint, catalogs, line lists, line analysis) now have a
   toggle button in the plugin UI to enable/disable a custom toolbar specific to that context. [#3812]
 
+- Viewers now support being popped out into separate window or sending to any sidecar location via `.show()`
+  API. [#3821]
+
 Cubeviz
 ^^^^^^^
 
