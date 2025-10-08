@@ -1,5 +1,5 @@
 <template>
-  <div class="jdaviz-viewer-window" style="width: 100%; height: 100%; overflow: hidden;">
+  <div ref="top" class="jdaviz-viewer-window" style="width: 100%; height: 100%; overflow: hidden;">
     <div class="jdaviz-viewer-toolbar-container">
       <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
         <j-tooltip v-if="config !== 'deconfigged'" tooltipcontent="data-menu is now opened by clicking on the legend in the top-right of the viewer">
@@ -48,6 +48,32 @@
     </v-card>
   </div>
 </template>
+
+<script>
+module.exports = {
+  mounted() {
+    this.ensureFullHeightChain();
+  },
+  methods: {
+    ensureFullHeightChain() {
+      const popoutSelector = ".jupyter-widgets-popout-container";
+      const sidecarSelector = ".lm-Panel";
+      
+      const topElement = this.$refs.top
+      const fullHeightTarget = topElement.closest(sidecarSelector) || topElement.closest(popoutSelector);
+
+      let el = topElement.parentElement;
+      /* timeout needed because the style of .lm-Widget is overwritten otherwise */
+      setTimeout(() => {
+        while (fullHeightTarget && el && el !== fullHeightTarget) {
+          el.style.height = '100%';
+          el = el.parentElement;
+        }
+      }, 0);
+    }
+  },
+}
+</script>
 
 <style scoped>
 .toolbar-popout-span i {
