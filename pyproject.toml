@@ -3,7 +3,7 @@ name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
 requires-python = ">=3.11"
 authors = [
-    { name = "JDADF Developers", email = "help@stsci.edu" },
+    { name = "JDADF Developers"},
 ]
 dependencies = [
     "packaging",
