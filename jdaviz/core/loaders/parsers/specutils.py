@@ -50,7 +50,7 @@ class SpecutilsSpectrumArrayParser(SpecutilsSpectrumParser):
         if not hasattr(arr, 'unit'):
             arr = arr << u.count
 
-        meta = standardize_metadata({'_orig_spatial_wcs': None})
+        meta = standardize_metadata({})
         # Default to last axis in array for the spectral axis
         msg = "Spectral axis index not specified, assuming last axis."
         self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color="warning"))

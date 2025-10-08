@@ -487,8 +487,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask = nddata.mask
 
         # Use the spectral coordinate from the WCS:
-        # if '_orig_spec' in cube.meta:
-        #     wcs = cube.meta['_orig_spec'].wcs.spectral
+        if '_orig_spec' in cube.meta:
+            wcs = cube.meta['_orig_spec'].wcs.spectral
         if hasattr(cube.coords, 'spectral'):
             wcs = cube.coords.spectral
         elif hasattr(cube.coords, 'spectral_wcs'):

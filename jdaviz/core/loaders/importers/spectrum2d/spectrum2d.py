@@ -17,6 +17,9 @@ from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectFileExtensionComponent)
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
+from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
+from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
+
 
 __all__ = ['Spectrum2DImporter', 'HDUListToSpectrumMixin']
 
@@ -141,7 +144,8 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
         metadata = standardize_metadata(header)
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-        wcs = WCS(header, hdulist, preserve_units=True)
+        wcs = WCS(header, hdulist)
+        print('!!!!!!!!!!!!!!!!!!!', self.extension.selected)
 
         try:
             data_unit = u.Unit(header['BUNIT'])
@@ -193,7 +197,7 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
                         wcs = None
                 else:
                     wcs = None
-            return Spectrum(flux=data * data_unit, uncertainty=unc,
+            sc = Spectrum(flux=data * data_unit, uncertainty=unc,
                             mask=mask_data, meta=metadata, wcs=wcs,
                             spectral_axis_index=self.default_spectral_axis_index)
         except ValueError:
@@ -202,16 +206,63 @@ class HDUListToSpectrumMixin(VuetifyTemplate, HubListener):
             # the Spectrum.read parser may work, so we try that next.
             # If that also fails, then drop the WCS.
             try:
-                Spectrum.read(self._resolver())
+                sc = Spectrum.read(self._resolver())
             except Exception:
                 # specutils.Spectrum reader would fail, so use no WCS
-                return Spectrum(
+                sc = Spectrum(
                     flux=data * data_unit, uncertainty=unc,
                     meta=metadata)
             else:
                 # raising an error here will consider this parser as non-valid
                 # so that specutils.Spectrum parser is preferred
                 raise
+        
+        # convert flux and uncertainty to per-pix2 if input is not a surface brightness
+        target_flux_unit = None
+        target_wave_unit = None
+        apply_pix2 = 'FLUX' in self.extension.selected or 'ERR' in self.extension.selected
+        flux = sc.flux
+        if (apply_pix2 and
+                (not check_if_unit_is_per_solid_angle(flux.unit))):
+            target_flux_unit = flux.unit / PIX2
+        elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
+            # We need to convert spaxel to pixel squared, since spaxel isn't fully supported by astropy
+            # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
+            target_flux_unit = flux.unit * u.Unit('spaxel') / PIX2
+        if target_wave_unit is None and hdulist is not None:
+            found_target = False
+            for ext in ('SCI', 'FLUX', 'PRIMARY', 'DATA'):  # In priority order
+                if found_target:
+                    break
+                if ext not in hdulist:
+                    continue
+                hdr = hdulist[ext].header
+                # The WCS could be swapped or unswapped.
+                for cunit_num in (3, 1):
+                    cunit_key = f"CUNIT{cunit_num}"
+                    ctype_key = f"CTYPE{cunit_num}"
+                    if cunit_key in hdr and 'WAV' in hdr[ctype_key]:
+                        target_wave_unit = u.Unit(hdr[cunit_key])
+                        found_target = True
+                        break
+        if target_wave_unit == sc.spectral_axis.unit:
+            target_wave_unit = None
+        if (target_wave_unit is None) and (target_flux_unit is None):  # Nothing to convert
+            new_sc = sc
+        elif target_flux_unit is None:  # Convert wavelength only
+            new_sc = sc.with_spectral_axis_unit(target_wave_unit)
+        elif target_wave_unit is None:  # Convert flux only and only PIX2 stuff
+            new_sc = sc.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
+        else:  # Convert both
+            new_sc = sc.with_spectral_axis_and_flux_units(
+                target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
+        # TODO: Seems to be problem area
+        if target_wave_unit is not None:
+            new_sc.meta['_orig_spec'] = sc  # Need this for later
+        if self._get_celestial_wcs(sc.wcs) is not None:
+            new_sc.meta['_orig_spatial_wcs'] = self._get_celestial_wcs(sc.wcs)
+
+        return new_sc
 
 
 @loader_importer_registry('2D Spectrum')
