@@ -5555,6 +5555,10 @@ class Table(PluginSubcomponent):
             write_format = write_kwargs.get('format', None)
 
             def check_ext_and_format(ext_to_check):
+                """
+                Check if either the extension or the format matches.
+                If the extension and format do not match, the format takes precedence.
+                """
                 return ((ext == ext_to_check and 'format' not in write_kwargs)
                         or write_format == ext_to_check)
 
