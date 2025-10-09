@@ -102,19 +102,19 @@ class BaseImporter(PluginTemplateMixin):
         based on the data hash.  If so, update the existing_data_in_dc traitlet
         accordingly and display a warning snackbar message.
         """
-        loader_labels = []
-        existing_data_in_dc = [(data.meta.get('_data_hash'), data.meta.get('_loader_label'))
+        dc_labels = []
+        existing_data_in_dc = [(data.meta.get('_data_hash'), data.label)
                                for data in self.app.data_collection
                                if data.meta.get('_data_hash') in self.data_hashes]
 
         if len(existing_data_in_dc) > 0:
-            existing_data_in_dc, loader_labels = zip(*existing_data_in_dc)
+            existing_data_in_dc, dc_labels = zip(*existing_data_in_dc)
         self.app.existing_data_in_dc = list(existing_data_in_dc)
 
         # Only need to display the message once
-        if len(loader_labels) > 0:
-            loader_labels = ', '.join(loader_labels)
-            msg = f"Selected data ({loader_labels}) appears to be identical to existing data."
+        if len(dc_labels) > 0:
+            dc_labels = ', '.join(dc_labels)
+            msg = f"Selected data appears to be identical to existing data ({dc_labels})."
             self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
             # TODO: Allow for now but implement a disabled message near the import button
             #  or indicate that the import will be a re-import And if allowing re-import,
@@ -283,7 +283,6 @@ class BaseImporterToDataCollection(BaseImporter):
 
         # Create a 'hash' representation of the data if not already present
         data.meta['_data_hash'] = item.get('data_hash', create_data_hash(data))
-        data.meta['_loader_label'] = item.get('label', '')
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
