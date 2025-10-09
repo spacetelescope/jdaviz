@@ -5526,20 +5526,19 @@ class Table(PluginSubcomponent):
 
     def export_table(self, filename=None, **write_kwargs):
         """
-        Export the QTable representation of the table.
+        Export the Astropy Table representation of the table.
 
         Parameters
         ----------
         filename : str, optional
-            If provided, will write to the file, otherwise will just return the QTable
+            If provided, will write to the file, otherwise will just return the Table
             object.
 
-        Notes
-        -----
-        Notable kwargs (either for QTable or UI purposes) include:
+        Other Parameters
+        ----------
         format : str, optional
-            The format to write the table in.  If not provided, will be inferred from the
-            filename extension.  See `astropy.table.QTable.write` for supported formats.
+            The format to write the table in. If not provided, will be inferred from the
+            filename extension.  See :func:`astropy.table.Table.write` for supported formats.
 
         overwrite : bool, optional
             If ``filename`` already exists, should it be overwritten.
