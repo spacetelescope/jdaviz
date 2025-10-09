@@ -41,6 +41,9 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     assert_coordinate_close(viewport['center'], expected_center)
     assert_angle_close(viewport['fov'], expected_fov)
 
+    expected_rotation = 360 * u.deg
+    assert_angle_close(viewport['rotation'], expected_rotation, atol=0.001*u.deg)
+
     assert viewport['image_label'] == expected_image_label
 
 
@@ -52,7 +55,7 @@ def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
     # change only the center:
     new_viewport_settings = dict(
         center=SkyCoord(ra=337.5, dec=-20.8, unit='deg'),
-        fov=0.01 * u.deg
+        fov=0.01 * u.deg,
     )
     viewer.aid.set_viewport(**new_viewport_settings)
     new_viewport = viewer.aid.get_viewport('sky')
@@ -64,6 +67,25 @@ def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
 
     with pytest.raises(ValueError, match='The AID API supports `center` arguments as'):
         viewer.aid.set_viewport(center=u.Quantity([0, 1]))
+
+
+def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
+    imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+    viewer = imviz_helper.app.get_viewer('imviz-0')
+
+    # change only the center:
+    new_viewport_settings = dict(
+        rotation=90 * u.deg
+    )
+    viewer.aid.set_viewport(**new_viewport_settings)
+    new_viewport = viewer.aid.get_viewport('sky')
+
+    assert_angle_close(
+        new_viewport['rotation'],
+        new_viewport_settings['rotation'],
+        atol=0.001*u.deg
+    )
 
 
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
