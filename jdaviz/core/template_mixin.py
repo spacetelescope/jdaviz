@@ -5521,7 +5521,6 @@ class Table(PluginSubcomponent):
         for old, new in mapping.items():
             table_copy.rename_column(old, new)
 
-        table_copy.meta.setdefault('original_colnames', list(mapping.keys()))
         return table_copy
 
     def export_table(self, filename=None, **write_kwargs):
