@@ -17,6 +17,13 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     template_file = __file__, "./catalog.vue"
 
+    # # a source catalog must have source positions. either an RA and Dec column
+    # # pair or a X and Y column pair must be selected from the input table. An
+    # # attempt will be made to guess the RA and Dec columns or X / Y from the input
+    # # columns (defering to the current link type if both are present).
+    align_by = Unicode().tag(sync=True)
+
+    # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
     col_ra_selected = Unicode().tag(sync=True)
 
@@ -31,6 +38,17 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_dec_unit_items = List().tag(sync=True)
     col_dec_unit_selected = Unicode().tag(sync=True)
 
+    # for catalogs with source positions in pixel coordinates
+    col_x_items = List().tag(sync=True)
+    col_x_selected = Unicode().tag(sync=True)
+    col_y_items = List().tag(sync=True)
+    col_y_selected = Unicode().tag(sync=True)
+
+    # additional (optional) non-position columns to load (e.g. flux, id)
+    col_other_items = List().tag(sync=True)
+    col_other_selected = List().tag(sync=True)
+    col_other_multiselect = Bool(True).tag(sync=True)
+
     # for non- ra and dec columns that the user wants to load
     col_other_items = List().tag(sync=True)
     col_other_selected = List().tag(sync=True)
@@ -42,19 +60,16 @@ class CatalogImporter(BaseImporterToDataCollection):
         if not self.is_valid:
             return
 
+        # for tables with RA / Dec source positions
         self.col_ra = SelectPluginComponent(self,
                                             items='col_ra_items',
                                             selected='col_ra_selected',
-                                            manual_options=self._guess_ra_dec_cols('ra'))
+                                            manual_options=self._guess_coord_cols('ra'))
         self.col_dec = SelectPluginComponent(self,
                                              items='col_dec_items',
                                              selected='col_dec_selected',
-                                             manual_options=self._guess_ra_dec_cols('dec'))
+                                             manual_options=self._guess_coord_cols('dec'))
 
-        # making these a dropdown for now with some hard-coded unit choices
-        # this could either be more flexible with a text input field which
-        # is then validated as a unit, or a note to use a quantity table
-        # if you want other units
         self.col_ra_unit = SelectPluginComponent(self,
                                                  items='col_ra_unit_items',
                                                  selected='col_ra_unit_selected',
@@ -63,6 +78,16 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
+        
+        # for tables with pixel source positions
+        self.col_x = SelectPluginComponent(self,
+                                           items='col_x_items',
+                                           selected='col_y_selected',
+                                           manual_options=self.input.colnames)
+        self.col_y = SelectPluginComponent(self,
+                                           items='col_y_items',
+                                           selected='col_y_selected',
+                                           manual_options=self.input.colnames)
 
         self.col_other = SelectPluginComponent(self,
                                                items='col_other_items',
@@ -70,7 +95,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
 
-    def _guess_ra_dec_cols(self, col):
+    def _guess_coord_cols(self, col):
         """
         Rough guess at detecting ra, dec columns from input table by checking
         for the presence of a SkyCoord column, and if none exists then checking
