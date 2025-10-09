@@ -5525,7 +5525,7 @@ class Table(PluginSubcomponent):
                 out_tbl = self._qtable
 
             _, ext = os.path.splitext(filename)
-            if ext == 'asdf' or write_kwargs.get('format', None) == 'asdf':
+            if (ext == 'asdf' and not 'format' in write_kwargs) or write_kwargs.get('format', None) == 'asdf':  # noqa
                 # NOTE: these extensions will overwrite by default and do not accept overwrite kwarg
                 # asdf is the only problem... for now
                 overwrite = write_kwargs.pop('overwrite', None)
