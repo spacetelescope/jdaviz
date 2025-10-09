@@ -107,6 +107,7 @@ class AID:
         elif label in orientation._obj.orientation.choices:
             orientation._obj.orientation.selected = label
         else:
+            orientation._obj.orientation.selected = "Default orientation"
             orientation.add_orientation(
                 east_left=True,
                 set_on_create=True,
