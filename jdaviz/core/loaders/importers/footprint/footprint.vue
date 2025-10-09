@@ -19,7 +19,7 @@
         :api_hints_enabled="api_hints_enabled"
         @click="import_clicked">
         {{ api_hints_enabled ?
-          'ldr.importer()'
+          'ldr.load()'
           :
           'Import'
         }}

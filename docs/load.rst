@@ -7,8 +7,8 @@ Importing Data
 .. note::
 
     ``jdaviz`` is undergoing constant development. The latest enhancement is deconfigged mode
-    where a user can load data into ``jdaviz`` - as shown below - and specify in what format the data 
-    should be parsed. Viewers are created based on the data loaded and user input. 
+    where a user can load data into ``jdaviz`` - as shown below - and specify in what format the data
+    should be parsed. Viewers are created based on the data loaded and user input.
     If you uncover any issues or bugs, you can
     `open a GitHub issue <https://github.com/spacetelescope/jdaviz/issues/new/choose>`_.
 
@@ -25,7 +25,7 @@ method on the configuration helper, whether that's the deconfigged mode as shown
     import jdaviz
     jdaviz.show()
     jdaviz.load('myspectrum.fits', format='1D Spectrum')
-    
+
     # Alternatively
     from jdaviz import Specviz
     specviz = Specviz()
@@ -39,7 +39,7 @@ Using Loaders API (Interactive)
 For more control over the loading process, you can use the Loaders API. This provides an interactive way to:
 
 - Select specific loaders
-- Configure import options 
+- Configure import options
 - Inspect available options from dropdowns, etc.
 - View API hints for available options
 - Preview data before importing
@@ -50,19 +50,19 @@ The loaders are accessed through the ``loaders`` property on the helper:
 
     # Access loaders
     loaders = jdaviz.loaders
-    
+
     # Get list of available loaders
     print(loaders)
-    
+
     # Use a specific loader
     ldr = loaders['object']  # Or file, file drop, or url
-    
+
     # Configure loading options
     ldr.object = my_data  # or ldr.filename, ldr.url
     ldr.format = '1D Spectrum'
-    
+
     # Import the data
-    ldr.importer()
+    ldr.load()
 
 The loaders interface provides access to parameters and options that control how the
 data is loaded and processed.
@@ -73,7 +73,7 @@ Available Loaders
 The main loaders available include:
 
 - ``'file'`` - Load data from local files
-- ``'url'`` - Load data from remote URLs/URIs 
+- ``'url'`` - Load data from remote URLs/URIs
 - ``'object'`` - Load Python objects directly (Spectrum1D, SpectrumList, NDData, etc)
 
 Each loader has its own set of parameters that can be discovered through :ref:`api-hints`
@@ -111,7 +111,7 @@ parameters for loaders. You can enable API hints:
 
 Or in the GUI, click the :guilabel:`API Hints` button in the top right.
 
-When API hints are enabled, you'll see Python code snippets showing how to access and 
+When API hints are enabled, you'll see Python code snippets showing how to access and
 set various loader attributes. For example:
 
 .. code-block:: python
@@ -120,7 +120,7 @@ set various loader attributes. For example:
     ldr = jdaviz.loaders['file']
     ldr.format = '1D Spectrum'  # Set the format
     ldr.filename = 'myfile.fits'  # Set the filename
-    
+
 The hints update as you interact with the GUI, showing you the exact Python code
 needed to reproduce your actions programmatically.
 
@@ -131,7 +131,7 @@ The ``load()`` method replaces the older ``load_data()`` method. Key differences
 
 1. Loader Auto-detection - ``load()`` attempts to auto-detect the appropriate loader based on the input
 
-2. Format Selection - Provides more control over data format via the ``format`` parameter 
+2. Format Selection - Provides more control over data format via the ``format`` parameter
 
 3. Target Specification - Can direct data to specific viewers using ``target``
 

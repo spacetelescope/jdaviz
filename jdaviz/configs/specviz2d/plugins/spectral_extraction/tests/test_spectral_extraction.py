@@ -453,7 +453,7 @@ class TestTwo2dSpectra:
             ldr.object = spectrum2d
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
-            ldr.importer()
+            ldr.load()
             self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[:2]
 
             self.setup_another_2d_spectrum(spectrum2d)
@@ -462,7 +462,7 @@ class TestTwo2dSpectra:
             ldr.importer.auto_extract = True
             ldr.importer.data_label = self.another_spec2d_label
             ldr.importer.ext_data_label = self.another_spec2d_ext_label
-            ldr.importer()
+            ldr.load()
 
         elif method == 'loader_infrastructure_alternate_order':
             self.setup_another_2d_spectrum(spectrum2d)
@@ -474,13 +474,13 @@ class TestTwo2dSpectra:
             ldr.importer.auto_extract = True
             ldr.importer.data_label = self.another_spec2d_label
             ldr.importer.ext_data_label = self.another_spec2d_ext_label
-            ldr.importer()
+            ldr.load()
 
             # Allow this to use the default label
             ldr.object = spectrum2d
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
-            ldr.importer()
+            ldr.load()
             self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[-2:]
 
         else:
