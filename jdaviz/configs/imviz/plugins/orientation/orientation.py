@@ -372,7 +372,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 else:
                     raise ValueError(msg)
                 return
-        rotation_angle_deg = self.rotation_angle_deg()
+        rotation_angle_deg = self.rotation_angle_deg(rotation_angle)
         if east_left is None:
             east_left = self.east_left
         if label is None:
