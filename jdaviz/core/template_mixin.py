@@ -5537,7 +5537,7 @@ class Table(PluginSubcomponent):
         ----------
         format : str, optional
             The format to write the table in. If not provided, will be inferred from the
-            filename extension.  See :meth:`astropy.table.Table.write` for supported formats.
+            filename extension.  See ``astropy.table.Table.write`` for supported formats.
 
         overwrite : bool, optional
             If ``filename`` already exists, should it be overwritten.
