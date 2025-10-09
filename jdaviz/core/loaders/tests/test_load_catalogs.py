@@ -175,3 +175,25 @@ def test_invalid(imviz_helper, tmp_path):
     ldr.object = fits.ImageHDU(np.ones((32, 25)))
     assert 'Image' in ldr.format.choices
     assert 'Catalog' not in ldr.format.choices
+
+
+def test_scatter_viewer(deconfigged_helper):
+    deconfigged_helper.app.state.catalogs_in_dc = True
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = _make_catalog(with_units=True)
+    ldr.format = 'Catalog'
+
+    assert 'Scatter' in ldr.importer.viewer.create_new.choices
+    ldr.importer.viewer.create_new = 'Scatter'
+    ldr.importer()
+
+    assert 'Scatter' in deconfigged_helper.viewers
+    assert 'Scatter' in deconfigged_helper.new_viewers
+
+    nv = deconfigged_helper.new_viewers['Scatter']
+    nv.dataset = ['Catalog']
+    nv.viewer_label = 'Added Scatter Viewer'
+    nv()
+
+    assert 'Added Scatter Viewer' in deconfigged_helper.viewers

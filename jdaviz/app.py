@@ -297,6 +297,7 @@ class ApplicationState(State):
     # catalogs_in_dc PRs (include in changelog when removing the dev-flag):
     # https://github.com/spacetelescope/jdaviz/pull/3761
     # https://github.com/spacetelescope/jdaviz/pull/3777
+    # https://github.com/spacetelescope/jdaviz/pull/3778
     # https://github.com/spacetelescope/jdaviz/pull/3799
     # https://github.com/spacetelescope/jdaviz/pull/3814
     catalogs_in_dc = CallbackProperty(
@@ -2113,6 +2114,7 @@ class Application(VuetifyTemplate, HubListener):
                     result = find_viewer_item(stack_item.get('children'))
                     if result is not None:
                         return result
+            return None
 
         viewer_item = find_viewer_item(self.state.stack_items)
 

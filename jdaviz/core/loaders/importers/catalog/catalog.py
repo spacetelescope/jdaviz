@@ -180,7 +180,8 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @staticmethod
     def _get_supported_viewers():
-        return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
+        return [{'label': 'Image', 'reference': 'imviz-image-viewer'},
+                {'label': 'Scatter', 'reference': 'scatter-viewer'}]
 
     @property
     def user_api(self):
