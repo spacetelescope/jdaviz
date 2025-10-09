@@ -2,7 +2,7 @@
   <v-container>
     <j-plugin-section-header>Flux Cube</j-plugin-section-header>
     <plugin-select
-      v-if="input_hdulist"
+      v-if="input_has_extensions"
       :items="extension_items.map(i => i.label)"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
@@ -43,7 +43,7 @@
     <div v-if="has_unc">
       <j-plugin-section-header>Uncertainty Cube</j-plugin-section-header>
       <plugin-select
-        v-if="input_hdulist"
+        v-if="input_has_extensions"
         :items="unc_extension_items.map(i => i.label)"
         :selected.sync="unc_extension_selected"
         :show_if_single_entry="true"
@@ -85,7 +85,7 @@
     <div v-if="has_mask">
       <j-plugin-section-header>Mask Cube</j-plugin-section-header>
       <plugin-select
-        v-if="input_hdulist"
+        v-if="input_has_extensions"
         :items="mask_extension_items.map(i => i.label)"
         :selected.sync="mask_extension_selected"
         :show_if_single_entry="true"

@@ -1,4 +1,5 @@
 from .importer import *  # noqa
+from .spectrum_common import *  # noqa
 from .spectrum1d import *  # noqa
 from .spectrum2d import *  # noqa
 from .spectrum3d import *  # noqa

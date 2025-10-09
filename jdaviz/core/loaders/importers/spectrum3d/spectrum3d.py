@@ -7,8 +7,8 @@ from specutils import Spectrum
 from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
-from jdaviz.core.loaders.importers import BaseImporterToDataCollection
-from jdaviz.core.loaders.importers.spectrum2d import HDUListToSpectrumMixin
+from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
+                                           SpectrumInputExtensionsMixin)
 from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew)
@@ -21,7 +21,7 @@ __all__ = ['Spectrum3DImporter']
 
 
 @loader_importer_registry('3D Spectrum')
-class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
+class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum3d.vue"
     parser_preference = ['fits', 'specutils.Spectrum']
 
@@ -216,7 +216,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
             expose += ['unc_data_label', 'unc_viewer']
         if self.has_mask:
             expose += ['mask_data_label', 'mask_viewer']
-        if self.input_hdulist:
+        if self.input_has_extensions:
             expose += ['extension']
             if self.has_unc:
                 expose += ['unc_extension']
@@ -260,7 +260,6 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
     def output(self):
         sp = self.spectrum
 
-
         # convert flux and uncertainty to per-pix2 if input is not a surface brightness
         if not check_if_unit_is_per_solid_angle(sp.flux.unit):
             target_flux_unit = sp.flux.unit / PIX2
@@ -277,7 +276,6 @@ class Spectrum3DImporter(BaseImporterToDataCollection, HDUListToSpectrumMixin):
 
         if target_flux_unit == sp.flux.unit:
             return sp
-
 
         return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
 
