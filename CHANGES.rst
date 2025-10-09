@@ -11,6 +11,9 @@ New Features
 - Plugin-specific viewer tools (footprint, catalogs, line lists, line analysis) now have a
   toggle button in the plugin UI to enable/disable a custom toolbar specific to that context. [#3812]
 
+- Loaders now all support "observation" and "file" tables, allowing choosing which file to download
+  and import from an astroquery or MAST search. [#3769]
+
 Cubeviz
 ^^^^^^^
 
@@ -18,6 +21,8 @@ Imviz
 ^^^^^
 
 - Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
+
+- Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769]
 
 Mosviz
 ^^^^^^
