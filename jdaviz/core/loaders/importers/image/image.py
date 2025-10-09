@@ -120,7 +120,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube

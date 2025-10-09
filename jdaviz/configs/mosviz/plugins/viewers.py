@@ -190,7 +190,7 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
 
         # plugin data entries: select all in new row, deselect all others
         for data_item in self.jdaviz_app.data_collection:
-            if data_item.meta.get('Plugin') is not None:
+            if data_item.meta.get('plugin') is not None:
                 if data_item.meta.get('mosviz_row') == selected_index:
                     self.session.hub.broadcast(AddDataToViewerMessage(
                         self._default_spectrum_viewer_reference_name, data_item.label, sender=self))

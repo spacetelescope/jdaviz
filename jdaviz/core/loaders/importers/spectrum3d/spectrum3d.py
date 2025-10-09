@@ -326,7 +326,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
                                                  add_data=False)
             # we'll add the data manually instead of through add_results_from_plugin
             # but still want to preserve the plugin metadata
-            ext.meta['Plugin'] = spext._plugin_name
+            ext.meta['plugin'] = spext._plugin_name
         except Exception:
             ext = None
             msg = SnackbarMessage(

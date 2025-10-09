@@ -159,8 +159,26 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         metadata = standardize_metadata(header)
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-        wcs = WCS(header, hdulist)
-        print('!!!!!!!!!!!!!!!!!!!', self.extension.selected)
+
+        # Check for data types that have a GWCS stored in ASDF
+        telescop = metadata[PRIHDR_KEY].get('TELESCOP', '').lower()
+        exptype = metadata[PRIHDR_KEY].get('EXP_TYPE', '').lower()
+        # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
+        # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
+        filetype = metadata[PRIHDR_KEY].get('FILETYPE', '').lower()
+        if telescop == 'jwst' and ('ifu' in exptype or
+                                    'mrs' in exptype or
+                                    filetype == '3d ifu cube'):
+            from stdatamodels import asdf_in_fits
+            tree = asdf_in_fits.open(hdulist).tree
+            if 'meta' in tree and 'wcs' in tree['meta']:
+                wcs = tree["meta"]["wcs"]
+                if isinstance(wcs, list):
+                    wcs = wcs[0]
+            else:
+                wcs = None
+        else:
+            wcs = WCS(header, hdulist)
 
         try:
             data_unit = u.Unit(header['BUNIT'])
@@ -196,25 +214,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             unc = None
 
         try:
-            if wcs.world_axis_physical_types == [None, None]:
-                # This may be a JWST file with WCS stored in ASDF
-                if 'ASDF' in hdulist:
-                    try:
-                        from stdatamodels import asdf_in_fits
-                        tree = asdf_in_fits.open(hdulist).tree
-                        if 'meta' in tree and 'wcs' in tree['meta']:
-                            wcs = tree["meta"]["wcs"]
-                            if isinstance(wcs, list):
-                                wcs = wcs[0]
-                        else:
-                            wcs = None
-                    except ValueError:
-                        wcs = None
-                else:
-                    wcs = None
             sc = Spectrum(flux=data * data_unit, uncertainty=unc,
-                          mask=mask_data, meta=metadata, wcs=wcs,
-                          spectral_axis_index=self.default_spectral_axis_index)
+                          mask=mask_data, meta=metadata, wcs=wcs)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,

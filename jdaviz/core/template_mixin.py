@@ -2019,7 +2019,7 @@ class LayerSelect(SelectPluginComponent):
                     if zorder is None:
                         zorder = layer.state.zorder
                     if from_plugin is None:
-                        from_plugin = layer.layer.data.meta.get('Plugin', None)
+                        from_plugin = layer.layer.data.meta.get('plugin', None)
                     if live_plugin_results is None:
                         live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None  # noqa
 
@@ -4151,18 +4151,18 @@ class DatasetSelect(SelectPluginComponent):
 
     def _is_valid_item(self, data):
         def from_plugin(data):
-            return data.meta.get('Plugin', None) is not None
+            return data.meta.get('plugin', None) is not None
 
         def not_from_plugin(data):
-            return data.meta.get('Plugin', None) is None
+            return data.meta.get('plugin', None) is None
 
         def not_from_this_plugin(data):
             if self.plugin._plugin_name is None:
                 return True
-            return data.meta.get('Plugin', None) != self.plugin._plugin_name
+            return data.meta.get('plugin', None) != self.plugin._plugin_name
 
         def not_from_plugin_model_fitting(data):
-            return data.meta.get('Plugin', None) != 'Model Fitting'
+            return data.meta.get('plugin', None) != 'Model Fitting'
 
         def has_metadata(data):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
@@ -4597,7 +4597,7 @@ class AddResults(BasePluginComponent):
 
         for data in self.app.data_collection:
             if self.label == data.label:
-                if data.meta.get('Plugin', None) == self._plugin._plugin_name or\
+                if data.meta.get('plugin', None) == self._plugin._plugin_name or\
                         data.label in self.label_whitelist_overwrite:
                     self.label_invalid_msg = ''
                     self.label_overwrite = True
@@ -4664,7 +4664,7 @@ class AddResults(BasePluginComponent):
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
-        data_item.meta['Plugin'] = self.plugin._plugin_name
+        data_item.meta['plugin'] = self.plugin._plugin_name
         if self.app.config == 'mosviz':
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
 
