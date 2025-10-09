@@ -1,24 +1,41 @@
+print("--- LOADING CUSTOM PARSERS.PY (CORRECTED local_path=None VERSION) ---")
 import os
 import pathlib
 from collections import defaultdict
 
 import numpy as np
+from astropy.io import registry as _io_registry
 from astropy.io.registry import IORegistryError
 from astropy.nddata import StdDevUncertainty
 from astropy.io import fits
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.core.registries import data_parser_registry
+from jdaviz.core.registries import data_parser_registry, loader_importer_registry
 from jdaviz.utils import standardize_metadata, download_uri_to_path
 
+import asdf
+from astropy import units as u
+from .roman_helpers import is_roman_asdf, load_roman_asdf_spectrum
+from .roman_asdf_importer import RomanAsdfImporter
 
 __all__ = ["specviz_spectrum1d_parser"]
 
+# --- Register a specutils reader/identifier for Roman ASDF ---
+
+def _roman_asdf_identify(origin, *args, **kwargs):
+    if not args:
+        return False
+    return is_roman_asdf(args[0])
+
+_io_registry.register_reader('roman-asdf', Spectrum, load_roman_asdf_spectrum, force=True)
+_io_registry.register_identifier('roman-asdf', Spectrum, _roman_asdf_identify, force=True)
+
+# --- Main parser ---------------------------------------------------------------
 
 @data_parser_registry("specviz-spectrum1d-parser")
-def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None,
+def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,#os.curdir
+                              concat_by_file=False, cache=None, local_path=None, timeout=None,
                               load_as_list=False):
     """
     Loads a data file or `~specutils.Spectrum` object into Specviz.
@@ -79,7 +96,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, list):
         # special processing for HDUList
         if isinstance(data, fits.HDUList):
-            data = [Spectrum.read(data)]
+            data = [Spectrum.read(data, format=format)]
             data_label = [data_label]
         else:
             # list treated as SpectrumList if not an HDUList
@@ -96,17 +113,23 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 raise ValueError(f"`specutils.SpectrumList.read('{str(path)}')` "
                                  "returned an empty list")
         elif path.is_file():
-            try:
-                data = Spectrum.read(str(path), format=format)
-                if data.flux.ndim == 2:
-                    data = split_spectrum_with_2D_flux_array(data)
-                else:
-                    data = [data]
-                    data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
-
-            except IORegistryError:
-                # Multi-extension files may throw a registry error
-                data = SpectrumList.read(str(path), format=format)
+            # NOTE: thanks to the registered reader/identifier above,
+            # Spectrum.read(str(path)) will auto-detect Roman ASDF and return a Spectrum.
+            if is_roman_asdf(str(path)):
+                data = load_roman_asdf_spectrum(str(path))
+                if not isinstance(data, Spectrum):
+                    raise TypeError("Expected Spectrum1D but got:", type(data))
+            else:
+                try:
+                    spec = Spectrum.read(str(path), format=format)
+                    if spec.flux.ndim == 2:
+                        data = split_spectrum_with_2D_flux_array(spec)
+                        data_label = [f"{data_label} [{i}]" for i in range(len(data))]
+                    else:
+                        data = [spec]
+                        data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+                except IORegistryError:
+                    data = SpectrumList.read(str(path), format=format)
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
@@ -172,6 +195,10 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         app.hub.broadcast(SnackbarMessage(msg, color="warning", sender=app))
 
     with app.data_collection.delay_link_manager_update():
+        # normalize to list
+        if isinstance(data, Spectrum):
+            data = [data]
+
         for i, spec in enumerate(data):
             # note: if SpectrumList, this is just going to be the last unit when
             # combined in the next block. should put a check here to make sure
@@ -297,3 +324,10 @@ def split_spectrum_with_2D_flux_array(data):
                                  uncertainty=unc, mask=mask, meta=data.meta))
 
     return new_data
+
+
+# # --- Register the Roman Importer ---
+# Registration is now handled by the @loader_importer_registry decorator in roman_asdf_importer.py
+# loader_importer_registry.add("roman-asdf-importer", RomanAsdfImporter)
+# print("✅ RomanAsdfImporter registered from separate file.")
+

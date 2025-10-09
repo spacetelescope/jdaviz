@@ -21,14 +21,17 @@ from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.unit_conversion_utils import (spectral_axis_conversion,
                                                flux_conversion_general,
                                                all_flux_unit_conversion_equivs)
-from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
+# from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
+# from jdaviz.core.spectral_axes import SPECTRAL_AXIS_COMP_LABELS
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
+
+SPECTRAL_AXIS_COMP_LABELS = ('spectral_axis', 'World 0')
 
 __all__ = ['Spectrum1DViewer', 'Spectrum2DViewer']
 
 
-@viewer_registry("spectrum-1d-viewer", label="1D Spectrum")
+@viewer_registry("spectrum-1d-viewer", label="1D Spectrum", overwrite=True)
 class Spectrum1DViewer(JdavizProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
@@ -296,7 +299,7 @@ class Spectrum1DViewer(JdavizProfileView):
         self.figure.axes[1].num_ticks = 5
 
 
-@viewer_registry('spectrum-2d-viewer', label="2D Spectrum")
+@viewer_registry('spectrum-2d-viewer', label="2D Spectrum", overwrite=True)
 class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
