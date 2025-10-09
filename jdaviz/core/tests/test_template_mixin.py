@@ -8,6 +8,7 @@ from specutils import SpectralRegion
 
 from jdaviz.core.template_mixin import TableMixin
 
+
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
     # apply mask to spectrum to check selected subset is masked:
     mask = spectrum1d.flux < spectrum1d.flux.mean()
