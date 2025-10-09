@@ -30,7 +30,7 @@
       <v-expansion-panels accordion>
         <v-expansion-panel>
           <v-expansion-panel-header v-slot="{ open }">
-            <span style="padding: 6px">Viewer bounds</span>
+            <span style="padding: 6px">Viewer Bounds</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <glue-state-sync-wrapper :sync="x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('x_min')">
@@ -123,6 +123,82 @@
                 }}
               </plugin-action-button>
             </v-row>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+        <v-expansion-panel v-if="hist_xlog_sync.in_subscribed_states || hist_ylog_sync.in_subscribed_states || hist_n_bin_sync.in_subscribed_states || hist_x_min_sync.in_subscribed_states || hist_x_max_sync.in_subscribed_states || hist_cumulative_sync.in_subscribed_states || hist_normalize_sync.in_subscribed_states || hist_update_bins_on_reset_limits_sync.in_subscribed_states">
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Histogram Options</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
+            <glue-state-sync-wrapper v-if="hist_xlog_sync.in_subscribed_states" :sync="hist_xlog_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_xlog')">
+              <plugin-switch
+                label="X Log Scale"
+                :value.sync="hist_xlog_value"
+                api_hint='plg.hist_xlog = '
+                :api_hints_enabled="api_hints_enabled"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper v-if="hist_ylog_sync.in_subscribed_states" :sync="hist_ylog_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_ylog')">
+              <plugin-switch
+                label="Y Log Scale"
+                :value.sync="hist_ylog_value"
+                api_hint='plg.hist_ylog = '
+                :api_hints_enabled="api_hints_enabled"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper v-if="hist_n_bin_sync.in_subscribed_states" :sync="hist_n_bin_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_n_bin')">
+              <glue-float-field
+                ref="hist_n_bin"
+                :label="api_hints_enabled ? 'plg.hist_n_bin =' : 'Number of Bins'"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                :value.sync="hist_n_bin_value"
+                type="number"
+                step="1"
+                min="1"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper v-if="hist_x_min_sync.in_subscribed_states" :sync="hist_x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_x_min')">
+              <glue-float-field
+                ref="hist_x_min"
+                :label="api_hints_enabled ? 'plg.hist_x_min =' : 'X Min'"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                :value.sync="hist_x_min_value"
+                type="number"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper v-if="hist_x_max_sync.in_subscribed_states" :sync="hist_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_x_max')">
+              <glue-float-field
+                ref="hist_x_max"
+                :label="api_hints_enabled ? 'plg.hist_x_max =' : 'X Max'"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                :value.sync="hist_x_max_value"
+                type="number"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper v-if="hist_cumulative_sync.in_subscribed_states" :sync="hist_cumulative_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_cumulative')">
+              <plugin-switch
+                label="Cumulative"
+                :value.sync="hist_cumulative_value"
+                api_hint='plg.hist_cumulative = '
+                :api_hints_enabled="api_hints_enabled"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper v-if="hist_normalize_sync.in_subscribed_states" :sync="hist_normalize_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_normalize')">
+              <plugin-switch
+                label="Normalize"
+                :value.sync="hist_normalize_value"
+                api_hint='plg.hist_normalize = '
+                :api_hints_enabled="api_hints_enabled"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper v-if="hist_update_bins_on_reset_limits_sync.in_subscribed_states" :sync="hist_update_bins_on_reset_limits_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_update_bins_on_reset_limits')">
+              <plugin-switch
+                label="Update Bins on Reset Limits"
+                :value.sync="hist_update_bins_on_reset_limits_value"
+                api_hint='plg.hist_update_bins_on_reset_limits = '
+                :api_hints_enabled="api_hints_enabled"
+              />
+            </glue-state-sync-wrapper>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -252,7 +328,7 @@
       no layers selected
     </div>
     <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; margin-right: -24px; padding-right: 24px; border-bottom: 2px solid #00617E">
-      <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states || sonified_audible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
+      <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || marker_visible_sync.in_subscribed_states || hist_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states || sonified_audible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
         <plugin-switch
           :value.sync="marker_visible_value"
@@ -268,6 +344,16 @@
           :value.sync="line_visible_value"
           label="Show Line"
           api_hint='plg.line_visible = '
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="hist_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('hist_visible')">
+        <plugin-switch
+          :value.sync="hist_visible_value"
+          label="Show Histogram Layer"
+          api_hint='plg.hist_visible = '
           :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
@@ -532,6 +618,34 @@
           ></v-text-field>
         </glue-state-sync-wrapper>
       </div>
+
+      <!-- HISTOGRAM -->
+      <div v-if="hist_visible_sync.in_subscribed_states  && (!hist_visible_sync.in_subscribed_states || hist_visible_value)">
+        <j-plugin-section-header>Histogram</j-plugin-section-header>
+        <glue-state-sync-wrapper v-if="hist_visible_value" :sync="hist_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('hist_opacity')">
+          <plugin-slider
+            label='Opacity'
+            api_hint="plg.hist_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="hist_opacity_value"
+          />
+        </glue-state-sync-wrapper>
+
+        <glue-state-sync-wrapper v-if="hist_visible_value" :sync="hist_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('hist_color')">
+          <plugin-color-picker
+            label='Color'
+            api_hint="plg.hist_color = "
+            :api_hints_enabled="api_hints_enabled"
+            :value="hist_color_value"
+            @color-update="throttledSetValue('hist_color_value', $event.hexa)"
+          />
+        </glue-state-sync-wrapper>
+      </div>
+
+
 
       <!-- IMAGE -->
       <!-- IMAGE:IMAGE -->
