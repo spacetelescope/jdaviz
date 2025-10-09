@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 from specutils import SpectrumList
@@ -49,7 +48,8 @@ class TestResetAndCheckExistingDataInDC:
     def test_reset_and_check_basic(self, deconfigged_helper):
         # Can't use a premade_spectrum_list here because the flux data is duplicated
         # and so the data hashes are not unique
-        spectrum_list = SpectrumList([_create_spectrum1d_with_spectral_unit(seed=i) for i in range(5)])
+        spectrum_list = SpectrumList([_create_spectrum1d_with_spectral_unit(seed=i)
+                                      for i in range(5)])
 
         test_obj = TestBaseImporter(app=deconfigged_helper.app,
                                     resolver=deconfigged_helper.loaders['object']._obj,
@@ -127,10 +127,10 @@ class TestResetAndCheckExistingDataInDC:
         # Again, existing_data_in_dc is updated from _update_existing_data_in_dc
         # in app.py, however we want to doublecheck that
         # reset_and_check_existing_data_in_dc works as expected
-        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0
+        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0  # noqa
 
         test_obj.reset_and_check_existing_data_in_dc()
-        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0
+        assert len(test_obj.existing_data_in_dc) == len(deconfigged_helper.app.existing_data_in_dc) == 0  # noqa
 
     def test_reset_and_check_all_importers(self, deconfigged_helper,
                                            image_hdu_wcs, spectrum1d, spectrum2d,
