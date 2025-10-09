@@ -5,6 +5,8 @@ import warnings
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum, SpectrumList, SpectrumCollection
 from traitlets import List, Bool, Any, observe
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage)
 
 from jdaviz.core.unit_conversion_utils import (to_flux_density_unit,
                                                spectrum_ensure_flux_density_unit)
@@ -301,6 +303,12 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.composed_data_hash_map = {}
+
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=lambda _: self._on_dc_changed())
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=lambda _: self._on_dc_changed())
 
         self.select_all_for_concatenation = False
 
@@ -353,9 +361,52 @@ class SpectrumListConcatenatedImporter(SpectrumListImporter):
                                             wave_units,
                                             flux_units)
 
+    def reset_and_check_existing_data_in_dc(self, change={}, raise_snackbar=True):
+        """
+        Check if the data to be imported appears to already exist in the data collection
+        based on the data hash.  If so, update the existing_data_in_dc traitlet
+        accordingly and display a warning snackbar message.
+        """
+        existing_data_in_dc = []
+        all_composed_labels = []
+        all_data_labels = []
+        for data in self.app.data_collection:
+            composed_hashes, composed_labels = self.composed_data_hash_map.get(
+                data.meta.get('_data_hash'), (None, None))
+
+            if composed_hashes is not None:
+                existing_data_in_dc.extend(composed_hashes)
+                all_composed_labels.extend(composed_labels)
+                all_data_labels.append(data.label)
+
+        self.app.existing_data_in_dc = existing_data_in_dc
+
+        if len(existing_data_in_dc) > 0 and raise_snackbar:
+            msg = (f"The concatenation of selected data ({', '.join(all_composed_labels)}) "
+                   f"appears to be identical to existing data ({', '.join(all_data_labels)}).")
+
+            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            # TODO: Allow for now but implement a disabled message near the import button
+            #  or indicate that the import will be a re-import And if allowing re-import,
+            #  there's a bug that needs to be squashed... (second import doesn't show in viewer)
+            #  but remains in app.
+            # self.data_label_invalid_msg = msg
+
+    def _on_dc_changed(self, msg={}):
+        self.reset_and_check_existing_data_in_dc(raise_snackbar=False)
+
     def __call__(self):
+        # TODO: There's an issue when the first data item is removed and another is added
+        #  somehow the label isn't iterating correctly.
         data_label = self.data_label_value
+
+        new_dh = create_data_hash(self.output)
+        selected_hashes = [dh for dh, label in self.hash_map_to_label.items()
+                           if label in self.sources.selected]
+        self.composed_data_hash_map[new_dh] = (selected_hashes, self.sources.selected)
+
         self.add_to_data_collection(self.output, f"{data_label}")
+        self.reset_and_check_existing_data_in_dc(raise_snackbar=False)
 
         # Do we need to reset in case user switches back to Spectrum List?
         # self.sources.selected = []
