@@ -8,6 +8,7 @@ from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.utils import create_data_hash
 
 __all__ = ['CatalogImporter']
 
@@ -70,14 +71,16 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
 
+        self.data_hashes = [create_data_hash(self.output)]
+
     def _guess_ra_dec_cols(self, col):
         """
         Rough guess at detecting ra, dec columns from input table by checking
         for the presence of a SkyCoord column, and if none exists then checking
         against some common source catalog column names, to determine initial
         selection for the column select dropdown. If no good candidate is found,
-        the initial selection in the drop down for ra, dec columns will be the
-        0th and 1stcolumns , respectivley.
+        the initial selection in the dropdown for ra, dec columns will be the
+        0th and 1st columns, respectively.
         """
 
         tab = self.input
