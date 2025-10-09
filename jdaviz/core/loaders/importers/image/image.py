@@ -107,6 +107,7 @@ class ImageImporter(BaseImporterToDataCollection):
             # changing selected extension will call _set_default_data_label
             self.extension.selected = [self.extension.choices[0]]
             self.data_hashes = self.extension.data_hashes
+            self.hash_map_to_label = dict(zip(self.extension.data_hashes, self.extension.labels))
         else:
             self._set_default_data_label()
 

@@ -86,6 +86,7 @@ class SpectrumListImporter(BaseImporterToDataCollection):
 
         self.sources.selected = [self.sources.choices[0]]
         self.data_hashes = self.sources.data_hashes
+        self.hash_map_to_label = dict(zip(self.sources.data_hashes, self.sources.labels))
 
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
