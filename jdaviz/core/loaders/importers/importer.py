@@ -120,7 +120,7 @@ class BaseImporter(PluginTemplateMixin):
         # Only need to display the message once
         if len(dc_labels) > 0:
             if any(self.hash_map_to_label.values()):
-                msg = f"Selected data appears to be identical to existing data.\n"
+                msg = 'Selected data appears to be identical to existing data.\n'
                 for dc_label, loader_label in zip(dc_labels, loader_labels):
                     msg += f"{loader_label} <=> {dc_label}\n"
             else:
