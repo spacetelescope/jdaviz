@@ -3,6 +3,7 @@ from unittest.mock import patch
 from specutils import SpectrumList
 from jdaviz.core.loaders.importers.importer import BaseImporter
 from jdaviz.conftest import _create_spectrum1d_with_spectral_unit
+from jdaviz.utils import create_data_hash
 
 
 # Create a minimal test class that mimics the importer behavior
@@ -51,7 +52,7 @@ def test_reset_and_check_existing_data_in_dc(deconfigged_helper):
                                 resolver=deconfigged_helper.loaders['object']._obj,
                                 input=spectrum_list)
 
-    dh_list = test_obj.data_hashes
+    dh_list = [create_data_hash(spec) for spec in spectrum_list]
     assert len(dh_list) > 0
     # Not populated yet
     assert len(test_obj.existing_data_in_dc) == 0

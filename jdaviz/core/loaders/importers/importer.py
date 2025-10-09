@@ -56,7 +56,7 @@ class BaseImporter(PluginTemplateMixin):
         self._resolver = resolver
         super().__init__(app, **kwargs)
 
-        self.data_hashes = [create_data_hash(self.input)]
+        # self.data_hashes = [create_data_hash(self.input)]
         # Doing this in app instead of here avoids a lot of unnecessary overhead
         # from all the importers in memory
         self.app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
@@ -102,6 +102,11 @@ class BaseImporter(PluginTemplateMixin):
         based on the data hash.  If so, update the existing_data_in_dc traitlet
         accordingly and display a warning snackbar message.
         """
+        if not hasattr(self, 'data_hashes'):
+            # If we do this here instead of at init, then we shouldn't get errors
+            # from attempting to access unavailable importer attributes from 'output'
+            self.data_hashes = [create_data_hash(self.output)]
+
         if not hasattr(self, 'hash_map_to_label'):
             self.hash_map_to_label = {dh: '' for dh in self.data_hashes}
 
