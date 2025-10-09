@@ -1,5 +1,6 @@
 import inspect
 import os
+import re
 import threading
 import time
 import warnings
@@ -5497,6 +5498,32 @@ class Table(PluginSubcomponent):
     def vue_clear_table(self, data=None):
         self.clear_table()
 
+    def _sanitize_colnames_for_ipac_export(self, table_copy):
+        """
+        Sanitize table column names to be alphanumeric only for ipac formats.
+        Use a copy because column name replacement happens in place.
+
+        Parameters
+        ----------
+        table_copy : astropy.table.Table
+            Copy of the table for column name replacement with alphanumeric-only
+            (and '_') characters.
+
+        Returns
+        -------
+        table_copy : astropy.table.Table
+            Table with sanitized column names.
+        """
+        # Sub bad characters for empty string and spaces with _
+        mapping = {colname: re.sub(r'[^0-9A-Za-z_]', '', re.sub(r'\s+', '_', colname))  # noqa
+                   for colname in table_copy.colnames}
+
+        for old, new in mapping.items():
+            table_copy.rename_column(old, new)
+
+        table_copy.meta.setdefault('original_colnames', list(mapping.keys()))
+        return table_copy
+
     def export_table(self, filename=None, **write_kwargs):
         """
         Export the QTable representation of the table.
@@ -5525,12 +5552,44 @@ class Table(PluginSubcomponent):
                 out_tbl = self._qtable
 
             _, ext = os.path.splitext(filename)
-            if (ext == 'asdf' and not 'format' in write_kwargs) or write_kwargs.get('format', None) == 'asdf':  # noqa
-                # NOTE: these extensions will overwrite by default and do not accept overwrite kwarg
-                # asdf is the only problem... for now
+            write_format = write_kwargs.get('format', None)
+
+            def check_ext_and_format(ext_to_check):
+                return ((ext == ext_to_check and 'format' not in write_kwargs)
+                        or write_format == ext_to_check)
+
+            # FORMATS WITH KNOWN ISSUES
+            # Attempt to correct for these here and let tests catch notify of future issues
+            if check_ext_and_format('asdf'):
+                # NOTE: these extensions will overwrite by default
+                # and do not accept overwrite kwarg
                 overwrite = write_kwargs.pop('overwrite', None)
                 if os.path.exists(filename) and overwrite is False:
                     raise FileExistsError(f"File '{filename}' exists and overwrite=False")
+
+            if check_ext_and_format('parquet') or write_format == 'votable.parquet':
+                if write_format == 'votable.parquet':
+                    write_kwargs['column_metadata'] = None
+
+                try:
+                    out_tbl.write(filename, **write_kwargs)
+
+                except Exception as e:
+                    # Currently: 'pyarrow is required to read and write parquet files'
+                    if 'pyarrow' in str(e):
+                        msg = f"This is not a default dependency of jdaviz. "\
+                              f"Please export the table to an object and write it "\
+                              f"to parquet manually (see astropy documentation on "\
+                              f"writing a table)."
+                        raise ModuleNotFoundError(f"{e}. {msg}")
+                    else:
+                        raise e
+
+                else:
+                    return out_tbl
+
+            if check_ext_and_format('ipac') or write_format == 'ascii.ipac':
+                out_tbl = self._sanitize_colnames_for_ipac_export(out_tbl.copy())
 
             out_tbl.write(filename, **write_kwargs)
 

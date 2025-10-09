@@ -1,4 +1,5 @@
 import io
+import os
 import re
 import pytest
 import numpy as np
@@ -338,7 +339,7 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path):
 
     valid_formats = []
     for line in output.splitlines():
-        if line.strip().startswith('Format') or line.strip().startswith('-----'):
+        if line.strip().startswith('Format') or line.strip().startswith('--------'):
             continue
 
         split_line = line.strip().split()
@@ -350,4 +351,11 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path):
     tmp_filename = tmp_path / 'temp_table'
 
     for vf in valid_formats:
+        if 'parquet' in vf:
+            # Check for partial match for pyarrow module
+            with pytest.raises(ModuleNotFoundError, match=r'pyarrow'):
+                table_obj.export_table(f"{tmp_filename}_{vf}", format=vf)
+            continue
+
         table_obj.export_table(f"{tmp_filename}_{vf}", format=vf)
+        assert os.path.isfile(f"{tmp_filename}_{vf}")
