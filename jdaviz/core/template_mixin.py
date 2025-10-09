@@ -5581,10 +5581,10 @@ class Table(PluginSubcomponent):
                 except Exception as e:
                     # Currently: 'pyarrow is required to read and write parquet files'
                     if 'pyarrow' in str(e):
-                        msg = f"This is not a default dependency of jdaviz. "\
-                              f"Please export the table to an object and write it "\
-                              f"to parquet manually (see astropy documentation on "\
-                              f"writing a table)."
+                        msg = "This is not a default dependency of jdaviz. "\
+                              "Please export the table to an object and write it "\
+                              "to parquet manually (see astropy documentation on "\
+                              "writing a table)."
                         raise ModuleNotFoundError(f"{e}. {msg}")
                     else:
                         raise e
