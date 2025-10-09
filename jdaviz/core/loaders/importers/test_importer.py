@@ -74,15 +74,18 @@ def test_reset_and_check_existing_data_in_dc(deconfigged_helper):
     # The data hashes update in the SpectrumList importer but are different from the
     # data hashes in our original test_obj
     dh_list = ldr.importer.sources.data_hashes
-    # The obj would otherwise have all the data hashes from the SpectrumList
+    labels_list = ldr.importer.sources.labels
+    # The obj would otherwise have all the data hashes/labels from the SpectrumList
     test_obj.data_hashes = dh_list
+    test_obj.hash_map_to_label = dict(zip(dh_list, labels_list))
 
     # These *should* be the same thanks to the observer on the app traitlet
     assert len(test_obj.existing_data_in_dc) == len(test_obj.app.existing_data_in_dc) == 1
     assert dh_list[0] in test_obj.existing_data_in_dc
 
     # Now reset again, should be the same result
-    snackbar_msg = 'Selected data appears to be identical to existing data (1D Spectrum_index-0).'  # noqa
+    snackbar_msg = ('Selected data appears to be identical to existing data.\n'
+                    '1D Spectrum at index: 0 <=> 1D Spectrum_index-0')  # noqa
 
     # Mock the broadcast method to catch the snackbar message that will pop out
     # when we run the reset and check again

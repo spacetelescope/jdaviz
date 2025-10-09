@@ -102,20 +102,32 @@ class BaseImporter(PluginTemplateMixin):
         based on the data hash.  If so, update the existing_data_in_dc traitlet
         accordingly and display a warning snackbar message.
         """
+        if not hasattr(self, 'hash_map_to_label'):
+            self.hash_map_to_label = {dh: '' for dh in self.data_hashes}
+
         dc_labels = []
-        existing_data_in_dc = [(data.meta.get('_data_hash'), data.label)
+        loader_labels = []
+        existing_data_in_dc = [(data.meta.get('_data_hash'),
+                                data.label,
+                                self.hash_map_to_label[data.meta.get('_data_hash')])
                                for data in self.app.data_collection
                                if data.meta.get('_data_hash') in self.data_hashes]
 
         if len(existing_data_in_dc) > 0:
-            existing_data_in_dc, dc_labels = zip(*existing_data_in_dc)
+            existing_data_in_dc, dc_labels, loader_labels = zip(*existing_data_in_dc)
         self.app.existing_data_in_dc = list(existing_data_in_dc)
 
         # Only need to display the message once
         if len(dc_labels) > 0:
-            dc_labels = ', '.join(dc_labels)
-            msg = f"Selected data appears to be identical to existing data ({dc_labels})."
-            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
+            if any(self.hash_map_to_label.values()):
+                msg = f"Selected data appears to be identical to existing data.\n"
+                for dc_label, loader_label in zip(dc_labels, loader_labels):
+                    msg += f"{loader_label} <=> {dc_label}\n"
+            else:
+                msg = (f"Selected data appears to be identical "
+                       f"to existing data ({', '.join(dc_labels)}).")
+
+            self.app.hub.broadcast(SnackbarMessage(msg.rstrip('\n'), sender=self, color='warning'))
             # TODO: Allow for now but implement a disabled message near the import button
             #  or indicate that the import will be a re-import And if allowing re-import,
             #  there's a bug that needs to be squashed... (second import doesn't show in viewer)
