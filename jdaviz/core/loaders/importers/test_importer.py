@@ -82,7 +82,7 @@ def test_reset_and_check_existing_data_in_dc(deconfigged_helper):
     assert dh_list[0] in test_obj.existing_data_in_dc
 
     # Now reset again, should be the same result
-    snackbar_msg = f"Selected data appears to be identical to existing data."  # noqa
+    snackbar_msg = 'Selected data (1D Spectrum at index: 0) appears to be identical to existing data.'  # noqa
 
     # Mock the broadcast method to catch the snackbar message that will pop out
     # when we run the reset and check again
