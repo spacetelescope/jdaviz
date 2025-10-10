@@ -2,6 +2,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable
 import astropy.units as u
 import numpy as np
+from regions import PixCoord
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
@@ -20,7 +21,7 @@ class CatalogImporter(BaseImporterToDataCollection):
     # # a source catalog must have source positions. either an RA and Dec column
     # # pair or a X and Y column pair must be selected from the input table. An
     # # attempt will be made to guess the RA and Dec columns or X / Y from the input
-    # # columns (defering to the current link type if both are present).
+    # # columns (defering to the current link type if both are present). 
     align_by = Unicode().tag(sync=True)
 
     # for catalogs with source positions in sky coordinates
@@ -59,6 +60,8 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         if not self.is_valid:
             return
+        
+        self.align_by = getattr(self.app, '_align_by', None)
 
         # for tables with RA / Dec source positions
         self.col_ra = SelectPluginComponent(self,
@@ -82,18 +85,28 @@ class CatalogImporter(BaseImporterToDataCollection):
         # for tables with pixel source positions
         self.col_x = SelectPluginComponent(self,
                                            items='col_x_items',
-                                           selected='col_y_selected',
-                                           manual_options=self.input.colnames)
+                                           selected='col_x_selected',
+                                           manual_options=self._guess_coord_cols('x'))
         self.col_y = SelectPluginComponent(self,
                                            items='col_y_items',
                                            selected='col_y_selected',
-                                           manual_options=self.input.colnames)
+                                           manual_options=self._guess_coord_cols('y'))
 
         self.col_other = SelectPluginComponent(self,
                                                items='col_other_items',
                                                selected='col_other_selected',
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
+        
+    def on_align_by_changed(self, msg):
+        """
+        This method should be called when orientation is changed, and update
+        the importers 'align_by_wcs' trait accordingly. This is important in the
+        case where you have the file import open with a catalog selected, and
+        then change the link type via API, so that the UI will show the correct
+        RA/Dec vs X/Y selection options.
+        """
+        pass
 
     def _guess_coord_cols(self, col):
         """
@@ -111,24 +124,43 @@ class CatalogImporter(BaseImporterToDataCollection):
         if colnames is None:
             return
 
-        col_is_sc = [isinstance(tab[colnames[i]], SkyCoord) for i in range(len(colnames))]
+        idx = None
+        # if there is a SkyCoord or Pixcoord column, use that
+        if col in ['ra', 'dec']:
+            col_is_sc = [isinstance(tab[colnames[i]], SkyCoord) for i in range(len(colnames))]
+            if np.any(col_is_sc):
+                idx = np.where(col_is_sc)[0][0]
+        elif col in ['x', 'y']:
+            col_is_pc = [isinstance(tab[colnames[i]], PixCoord) for i in range(len(colnames))]
+            if np.any(col_is_pc):
+                idx = np.where(col_is_pc)[0][0]
 
-        if np.any(col_is_sc):
-            idx = np.where(col_is_sc)[0][0]
-
-        else:
-            all_column_names = np.array(x.lower() for x in colnames)
+        if idx is None:
+            all_column_names = np.array([x.lower() for x in colnames])
+            # ignore different separators
+            all_column_names = [x.replace(' ', '').replace('-', '').replace('_', '') for x in all_column_names]
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
             if col == 'ra':
-                col_possibilities = ['right ascension', 'ra', 'ra_deg', 'radeg',
-                                     'radegrees', 'right ascension (degrees)',
-                                     'ra_obj', 'raj2000', 'ra2000']
+                col_possibilities = ['rightascension', 'ra', 'radeg',
+                                     'radegrees', 'rightascension(degrees)',
+                                     'raobj', 'objra', 'raj2000', 'ra2000']
                 idx = get_idx(all_column_names, col_possibilities, 0)
             elif col == 'dec':
-                col_possibilities = ['declination', 'dec', 'dec_deg', 'decdeg',
-                                     'decdegrees', 'declination (degrees)',
-                                     'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
+                col_possibilities = ['declination', 'dec', 'decdeg',
+                                     'decdegrees', 'declination(degrees)',
+                                     'decobj', 'objdec', 'decj2000', 'dec2000']
+                idx = get_idx(all_column_names, col_possibilities, 1)
+            elif col == 'x':
+                col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
+                                     "xpixel", "xpix", "ximage", "ximg"
+                                     "xcoord", "xcoordinate", "sourcex", "xsource"]
+
+                idx = get_idx(all_column_names, col_possibilities, 0)
+            elif col == 'y':
+                col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
+                                     "ypixel", "ypix", "yimage", "yimg"
+                                     "ycoord", "ycoordinate", "sourcey", "ysource"]
                 idx = get_idx(all_column_names, col_possibilities, 1)
 
         return colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
