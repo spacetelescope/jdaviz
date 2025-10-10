@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
+
 - Add check for valid model fitting equation operators. [#3818]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
