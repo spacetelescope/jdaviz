@@ -396,7 +396,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
     # Check Cubeviz roundtrip. This should automatically go through wcs1d-fits reader.
     cubeviz_helper.load_data(out_fn)
     assert len(cubeviz_helper.app.data_collection) == 3
-    data_sci = cubeviz_helper.app.data_collection["fitted_cube.fits[SCI]"]
+    data_sci = cubeviz_helper.app.data_collection["fitted_cube"]
     flux_sci = data_sci.get_component("flux")
     assert_allclose(flux_sci.data, fitted_spectrum.flux.value)
     # now that the flux cube was loaded into cubeviz, there will be a factor
@@ -406,7 +406,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
     assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
     assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
                     [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
-    data_mask = cubeviz_helper.app.data_collection["fitted_cube.fits[MASK]"]
+    data_mask = cubeviz_helper.app.data_collection["fitted_cube [MASK]"]
     flux_mask = data_mask.get_component("flux")
     assert_array_equal(flux_mask.data, mask)
 

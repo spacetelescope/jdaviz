@@ -18,7 +18,7 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     assert po.viewer.multiselect is False
     assert po.layer.multiselect is False
     assert po.viewer.selected == 'flux-viewer'
-    assert po.layer.selected == 'Unknown spectrum object[FLUX]'
+    assert po.layer.selected == '3D Spectrum [FLUX]'
 
     # deprecated functionality to toggle both at once, replace with setting
     # individually when removing
