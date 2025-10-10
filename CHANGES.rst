@@ -78,6 +78,8 @@ Other Changes and Additions
 4.4.2 (unreleased)
 ==================
 
+- Fixes traceback raised by the stretch histogram in plot options when entering multiselect mode. [#3825]
+
 Bug Fixes
 ---------
 
