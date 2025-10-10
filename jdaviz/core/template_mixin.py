@@ -5576,9 +5576,14 @@ class Table(PluginSubcomponent):
                 if os.path.exists(filename) and overwrite is False:
                     raise FileExistsError(f"File '{filename}' exists and overwrite=False")
 
-            if check_ext_and_format('parquet') or write_format == 'votable.parquet':
+            if (check_ext_and_format('parquet') or
+                    write_format in ['votable.parquet', 'parquet.votable']):
+
                 if write_format == 'votable.parquet':
-                    write_kwargs['column_metadata'] = None
+                    write_kwargs['column_metadata'] = {col: '0' for col in out_tbl.colnames}
+
+                elif write_format == 'parquet.votable':
+                    write_kwargs['metadata'] = {'_jdaviz_export': {'_jdaviz_export' : 'true'}}
 
                 try:
                     out_tbl.write(filename, **write_kwargs)
@@ -5586,11 +5591,11 @@ class Table(PluginSubcomponent):
                 except Exception as e:
                     # Currently: 'pyarrow is required to read and write parquet files'
                     if 'pyarrow' in str(e):
-                        raise ModuleNotFoundError(f"{e}. "
+                        raise ModuleNotFoundError(f"{e}\n"
                                                   f"This is not a default dependency of jdaviz. "
                                                   f"{msg}.")
                     else:
-                        raise Exception(f"{e}. {msg}.")  # pragma: no cover
+                        raise Exception(f"{e}\n{msg}.")  # pragma: no cover
 
                 else:
                     return out_tbl  # pragma: no cover
@@ -5602,7 +5607,7 @@ class Table(PluginSubcomponent):
             try:
                 out_tbl.write(filename, **write_kwargs)
             except Exception as e:
-                raise Exception(f"{e}. {msg}.")
+                raise Exception(f"{e}\n{msg}.")
 
             return out_tbl
 
