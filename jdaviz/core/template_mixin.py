@@ -5576,13 +5576,9 @@ class Table(PluginSubcomponent):
                 if os.path.exists(filename) and overwrite is False:
                     raise FileExistsError(f"File '{filename}' exists and overwrite=False")
 
-            if (check_ext_and_format('parquet') or
-                    write_format in ['votable.parquet', 'parquet.votable']):
+            if check_ext_and_format('parquet') or write_format == 'parquet.votable':
 
-                if write_format == 'votable.parquet':
-                    write_kwargs['column_metadata'] = {col: '0' for col in out_tbl.colnames}
-
-                elif write_format == 'parquet.votable':
+                if write_format == 'parquet.votable':
                     write_kwargs['metadata'] = {'_jdaviz_export': {'_jdaviz_export': 'true'}}
 
                 try:

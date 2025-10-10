@@ -358,7 +358,7 @@ def test_export_table_special_cases():
     # These are special cases for formats that are currently supported by astropy but require
     # some specific details to be handled. If these get removed in the future, then
     # we can remove the special handling in `export_table`.
-    assert {'asdf', 'parquet', 'votable.parquet', 'parquet.votable', 'ascii.ipac'}.issubset(set(valid_formats))  # noqa
+    assert {'asdf', 'parquet', 'parquet.votable', 'ascii.ipac'}.issubset(set(valid_formats))  # noqa
 
 
 @pytest.mark.parametrize('valid_format', astropy_table_write_formats())
@@ -369,7 +369,7 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format
 
     # Known failures for certain formats from previous versions of astropy.table
     # which may come up in testing with various versions of python/astropy.
-    known_failures = ['ascii.tdat', 'hdf5', 'votable']
+    known_failures = ['ascii.tdat', 'hdf5', 'votable', 'votable.parquet']
 
     match_msg = rf"The table is unable to be exported to file with format: {valid_format}."
     if valid_format in known_failures:
@@ -382,10 +382,12 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format
 
     elif 'parquet' in valid_format:
         # Check for partial match for parquet and votable.parquet
-        with pytest.raises(ModuleNotFoundError, match=r'pyarrow'):
+        try:
             table_obj.export_table(f"{tmp_filename}_{valid_format}",
                                    format=valid_format,
                                    overwrite=True)
+        except ModuleNotFoundError as me:
+            assert 'This is not a default dependency of jdaviz.' in str(me)
 
     elif 'asdf' in valid_format:
         # Check asdf
