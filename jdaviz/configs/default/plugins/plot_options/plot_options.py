@@ -1209,7 +1209,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     def _layer_is_image_layer(self):
         from glue_jupyter.bqplot.image.state import BqplotImageLayerState
         return np.all([isinstance(lyr.state, BqplotImageLayerState)
-                       for lyr in self.layer.selected_obj])
+                       for lyr in self.layer.selected_obj_flattened])
 
     def image_segmentation_map_presets(self, *args, **kwargs):
         # if 'Random' colormap is used for visualizing image segmentation,
