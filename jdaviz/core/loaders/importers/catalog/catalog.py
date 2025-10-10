@@ -22,7 +22,7 @@ class CatalogImporter(BaseImporterToDataCollection):
     # # a source catalog must have source positions. either an RA and Dec column
     # # pair or a X and Y column pair must be selected from the input table. An
     # # attempt will be made to guess the RA and Dec columns or X / Y from the input
-    # # columns (defering to the current link type if both are present). 
+    # # columns (defering to the current link type if both are present).
     align_by = Unicode().tag(sync=True)
 
     # for catalogs with source positions in sky coordinates
@@ -61,7 +61,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         if not self.is_valid:
             return
-        
+
         self.align_by = getattr(self.app, '_align_by', None)
 
         self.hub.subscribe(self, LinkUpdatedMessage,
@@ -85,7 +85,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
-        
+
         # for tables with pixel source positions
         self.col_x = SelectPluginComponent(self,
                                            items='col_x_items',
@@ -101,7 +101,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                selected='col_other_selected',
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
-        
+
     def _on_align_by_changed(self, event={}):
         """
         This method should be called when orientation is changed, and update
@@ -143,7 +143,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         if idx is None:
             all_column_names = np.array([x.lower() for x in colnames])
             # ignore different separators
-            all_column_names = [x.replace(' ', '').replace('-', '').replace('_', '') for x in all_column_names]
+            all_column_names = [x.replace(' ', '').replace('-', '').replace('_', '') for x in all_column_names]  # noqa
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
             if col == 'ra':
@@ -275,39 +275,55 @@ class CatalogImporter(BaseImporterToDataCollection):
     @property
     def output(self):
 
-        if (self.col_ra_selected not in self.input.colnames) or (self.col_dec_selected not in self.input.colnames):  # noqa
-            return
-
-        table = self.input[self.output_cols]
         output_table = QTable()
 
-        # rename RA and Dec columns so that table in data collection always has
-        # the same RA, Dec column names internally, add and units if they weren't
-        # loaded in with units assigned (QTable)
-        ra = None
-        dec = None
-        if isinstance(self.input[self.col_ra_selected], SkyCoord):
-            ra = self.input[self.col_ra_selected].ra
-        if isinstance(self.input[self.col_dec_selected], SkyCoord):
-            dec = self.input[self.col_dec_selected].dec
+        if self.align_by == 'wcs':
+            if (self.col_ra_selected not in self.input.colnames) or (self.col_dec_selected not in self.input.colnames):  # noqa
+                return
 
-        if ra is not None:
-            output_table['Right Ascension'] = ra
-        else:
-            output_table['Right Ascension'] = table[self.col_ra_selected]
-            # add units to ra if they weren't loaded in with units assigned
-            if not self.col_ra_has_unit:
-                output_table['Right Ascension'] *= u.Unit(self.col_ra_unit_selected)
-        if dec is not None:
-            output_table['Declination'] = dec
-        else:
-            output_table['Declination'] = table[self.col_dec_selected]
-            if not self.col_dec_has_unit:
-                output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
+            table = self.input[self.output_cols]
 
-        # add additional columns to output table
-        for col in self.output_cols:
-            if col not in output_table.colnames + [self.col_ra_selected, self.col_dec_selected]:
-                output_table[col] = table[col]
+            # rename RA and Dec columns so that table in data collection always has
+            # the same RA, Dec column names internally, add and units if they weren't
+            # loaded in with units assigned (QTable)
+            ra = None
+            dec = None
+            if isinstance(self.input[self.col_ra_selected], SkyCoord):
+                ra = self.input[self.col_ra_selected].ra
+            if isinstance(self.input[self.col_dec_selected], SkyCoord):
+                dec = self.input[self.col_dec_selected].dec
+
+            if ra is not None:
+                output_table['Right Ascension'] = ra
+            else:
+                output_table['Right Ascension'] = table[self.col_ra_selected]
+                # add units to ra if they weren't loaded in with units assigned
+                if not self.col_ra_has_unit:
+                    output_table['Right Ascension'] *= u.Unit(self.col_ra_unit_selected)
+            if dec is not None:
+                output_table['Declination'] = dec
+            else:
+                output_table['Declination'] = table[self.col_dec_selected]
+                if not self.col_dec_has_unit:
+                    output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
+
+            # add additional columns to output table
+            for col in self.output_cols:
+                if col not in output_table.colnames + [self.col_ra_selected, self.col_dec_selected]:
+                    output_table[col] = table[col]
+
+        elif self.align_by == 'pixels':
+            if (self.col_x_selected not in self.input.colnames) or (self.col_y_selected not in self.input.colnames):  # noqa
+                return
+
+            table = self.input[self.output_cols]
+
+            output_table['X'] = table[self.col_x_selected]
+            output_table['Y'] = table[self.col_y_selected]
+
+            # add additional columns to output table
+            for col in self.output_cols:
+                if col not in output_table.colnames + [self.col_x_selected, self.col_y_selected]:
+                    output_table[col] = table[col]
 
         return output_table
