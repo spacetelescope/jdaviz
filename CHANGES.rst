@@ -33,6 +33,9 @@ Specviz2d
 API Changes
 -----------
 
+- Adds `ldr.load()` method to the loaders API and suggests using this in API hints over `ldr.importer()`
+  (which will continue to exist). [#3832]
+
 Cubeviz
 ^^^^^^^
 
