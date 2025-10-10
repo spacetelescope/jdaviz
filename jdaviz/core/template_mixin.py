@@ -5628,7 +5628,7 @@ class Table(PluginSubcomponent):
             try:
                 out_tbl.write(filename, **write_kwargs)
             except Exception as e:
-                # Currently: 'pyarrow is required to read and write parquet files'
+                # 'pyarrow is required to read and write parquet files'
                 if 'pyarrow' in str(e):
                     raise ModuleNotFoundError(f"{e}\n"
                                               f"This is not a default dependency of jdaviz. "
