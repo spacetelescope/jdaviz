@@ -389,7 +389,7 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format
             table_obj.export_table(f"{tmp_filename}_{valid_format}",
                                    format=valid_format,
                                    overwrite=False)
-            
+
     else:
         table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
         assert os.path.isfile(f"{tmp_filename}_{valid_format}")
