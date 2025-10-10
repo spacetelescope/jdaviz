@@ -1,4 +1,5 @@
 import pytest
+from copy import deepcopy
 
 import numpy as np
 from astropy import units as u
@@ -352,3 +353,45 @@ def test_remote_server_settings_deconfigged(deconfigged_helper, server_is_remote
         # Check that the server_is_remote traitlet is properly synced
         assert hasattr(loader_widget, 'server_is_remote')
         assert loader_widget.server_is_remote == server_is_remote
+
+
+# Pick a smattering of fixture/data types
+@pytest.mark.parametrize(('fixture_to_load', 'fixture_format'),
+                         [('image_hdu_wcs', 'Image'),
+                          ('image_nddata_wcs', 'Image'),
+                          ('spectrum1d', '1D Spectrum'),
+                          ('spectrum2d', '2D Spectrum')])
+def test_update_existing_data_in_dc(deconfigged_helper,
+                                    fixture_to_load, fixture_format, request):
+    # Check that existing_data_in_dc is empty to start
+    assert len(deconfigged_helper.app.existing_data_in_dc) == 0
+
+    deconfigged_helper.load(request.getfixturevalue(fixture_to_load), format=fixture_format)
+    # Check that existing_data_in_dc was updated upon adding data
+    assert len(deconfigged_helper.app.existing_data_in_dc) > 0
+
+    # Use this data for testing
+    dc_data = deconfigged_helper.app.data_collection[0]
+
+    # Check that the update goes through
+    test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
+    # Remove some data
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=False)
+    assert test_data_in_dc != deconfigged_helper.app.existing_data_in_dc
+
+    # Add it back
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=True)
+
+    test_data_in_dc = deepcopy(deconfigged_helper.app.existing_data_in_dc)
+    # If this key is present, an update will occur so check that
+    # nothing happens when it is not present.
+    dh = dc_data.data.meta.pop('_data_hash')
+    deconfigged_helper.app._update_existing_data_in_dc(dc_data, data_added=True)
+    assert test_data_in_dc == deconfigged_helper.app.existing_data_in_dc
+
+    # Check that removing the data via data collection updates existing_data_in_dc
+    len_before = len(deconfigged_helper.app.existing_data_in_dc)
+    deconfigged_helper.app.data_collection[0].meta['_data_hash'] = dh
+    deconfigged_helper.app.data_item_remove(dc_data.label)
+    assert len(deconfigged_helper.app.existing_data_in_dc) != len_before
+    assert dh not in deconfigged_helper.app.existing_data_in_dc
