@@ -122,6 +122,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     fitter_items = List().tag(sync=True)
     fitter_selected = Unicode().tag(sync=True)
     fitter_parameters = Dict().tag(sync=True)
+    parameter_hints = Dict().tag(sync=True)
     fitter_error = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -151,6 +152,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # All possible fitter options available with parameters for each.
         # Parameters with type 'init' are used on initialization and ones
         # with type 'call' are used on call.
+        self.parameter_hints = {'maxiter': 'Maximum number of iterations',
+                                'filter_non_finite': 'Whether or not to filter data with'
+                                ' non-finite values (e.g., NaNs)',
+                                'calc_uncertainties': 'Whether the covariance matrix should be'
+                                ' computed and set in fit_info'}
         self.all_fitters = {
             'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
                                             {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa

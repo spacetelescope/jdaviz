@@ -11,6 +11,8 @@ New Features
 - Plugin-specific viewer tools (footprint, catalogs, line lists, line analysis) now have a
   toggle button in the plugin UI to enable/disable a custom toolbar specific to that context. [#3812]
 
+- Added descriptive hints for toggleable model fitter parameters in the Model Fitting plugin. [#3831]
+
 Cubeviz
 ^^^^^^^
 
