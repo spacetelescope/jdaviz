@@ -322,7 +322,7 @@ class BaseResolver(PluginTemplateMixin):
         """
         Import into jdaviz with all selected options.
         """
-        return self.load()
+        return self.importer()
 
     @observe('target_selected')
     def _on_target_selected_changed(self, change={}):
