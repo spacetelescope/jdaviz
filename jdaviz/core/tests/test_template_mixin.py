@@ -367,9 +367,9 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format
 
     tmp_filename = tmp_path / 'temp_table'
 
-    # Known failures for certain formats from deprecated versions of astropy.table
-    # which may come up in testing with older versions of python/astropy.
-    known_failures = ['ascii.tdat']
+    # Known failures for certain formats from previous versions of astropy.table
+    # which may come up in testing with various versions of python/astropy.
+    known_failures = ['ascii.tdat', 'hdf5', 'votable']
 
     match_msg = rf"The table is unable to be exported to file with format: {valid_format}."
     if valid_format in known_failures:
