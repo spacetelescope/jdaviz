@@ -4,6 +4,7 @@ import re
 import pytest
 import numpy as np
 import astropy.units as u
+from astropy.table import Table
 from specutils import SpectralRegion
 
 from jdaviz.core.template_mixin import TableMixin
@@ -324,11 +325,10 @@ class FakeTable(TableMixin):
         self.table._qtable = catalog
 
 
-def test_export_table(deconfigged_helper, source_catalog, tmp_path):
-    table_obj = FakeTable(deconfigged_helper.app.session, source_catalog)
-
+def astropy_table_write_formats():
+    table_obj = Table({'a': [1, 2], 'b': [3, 4]})
     buf = io.StringIO()
-    table_obj.table._qtable.write.list_formats(out=buf)
+    table_obj.write.list_formats(out=buf)
     output = buf.getvalue()
 
     # Output looks like this:
@@ -349,14 +349,47 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path):
             continue
         valid_formats.append(line.strip().split()[0])
 
+    return valid_formats
+
+
+def test_export_table_special_cases():
+    valid_formats = astropy_table_write_formats()
+
+    # These are special cases for formats that are currently supported by astropy but require
+    # some specific details to be handled. If these get removed in the future, then
+    # we can remove the special handling in `export_table`.
+    assert {'asdf', 'parquet', 'votable.parquet', 'ascii.ipac'}.issubset(set(valid_formats))
+
+
+@pytest.mark.parametrize('valid_format', astropy_table_write_formats())
+def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format):
+    table_obj = FakeTable(deconfigged_helper.app.session, source_catalog)
+
     tmp_filename = tmp_path / 'temp_table'
 
-    for vf in valid_formats:
-        if 'parquet' in vf:
-            # Check for partial match for pyarrow module
-            with pytest.raises(ModuleNotFoundError, match=r'pyarrow'):
-                table_obj.export_table(f"{tmp_filename}_{vf}", format=vf)
-            continue
+    # Known failures for certain formats from deprecated versions of astropy.table
+    # which may come up in testing with older versions of python/astropy.
+    known_failures = ['ascii.tdat']
 
-        table_obj.export_table(f"{tmp_filename}_{vf}", format=vf)
-        assert os.path.isfile(f"{tmp_filename}_{vf}")
+    match_msg = rf"The table is unable to be exported to file with format: {valid_format}."
+    if valid_format in known_failures:
+        with pytest.raises(Exception, match=match_msg):
+            table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
+
+    elif 'parquet' in valid_format:
+        # Check for partial match for parquet and votable.parquet
+        with pytest.raises(ModuleNotFoundError, match=r'pyarrow'):
+            table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
+
+    elif 'asdf' in valid_format:
+        # Check asdf
+        table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
+        assert os.path.isfile(f"{tmp_filename}_{valid_format}")
+        with pytest.raises(FileExistsError, match=r'exists and overwrite=False'):
+            table_obj.export_table(f"{tmp_filename}_{valid_format}",
+                                   format=valid_format,
+                                   overwrite=False)
+            
+    else:
+        table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
+        assert os.path.isfile(f"{tmp_filename}_{valid_format}")

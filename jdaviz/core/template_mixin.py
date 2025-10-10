@@ -5533,6 +5533,12 @@ class Table(PluginSubcomponent):
             If provided, will write to the file, otherwise will just return the Table
             object.
 
+        Returns
+        -------
+        out_tbl : astropy.table.Table
+            The table object that was written to file or the current table if no filename
+            was provided.
+
         Other Parameters
         ----------
         format : str, optional
@@ -5560,7 +5566,12 @@ class Table(PluginSubcomponent):
                 return ((ext == ext_to_check and 'format' not in write_kwargs)
                         or write_format == ext_to_check)
 
-            # FORMATS WITH KNOWN ISSUES
+            msg = (f"The table is unable to be exported to file with format: {write_format}. "
+                   f"Please execute this function with no arguments to retrieve the table object "
+                   f"and write to file manually (see "
+                   f"https://docs.astropy.org/en/stable/io/unified_table.html#read-write-tables)")
+
+            # SUPPORTED FORMATS WITH KNOWN ISSUES
             # Attempt to correct for these here and let tests catch notify of future issues
             if check_ext_and_format('asdf'):
                 # NOTE: these extensions will overwrite by default
@@ -5579,21 +5590,23 @@ class Table(PluginSubcomponent):
                 except Exception as e:
                     # Currently: 'pyarrow is required to read and write parquet files'
                     if 'pyarrow' in str(e):
-                        msg = "This is not a default dependency of jdaviz. "\
-                              "Please export the table to an object and write it "\
-                              "to parquet manually (see astropy documentation on "\
-                              "writing a table)."
-                        raise ModuleNotFoundError(f"{e}. {msg}")
+                        raise ModuleNotFoundError(f"{e}. "
+                                                  f"This is not a default dependency of jdaviz. "
+                                                  f"{msg}.")
                     else:
-                        raise e
+                        raise Exception(f"{e}. {msg}.")  # pragma: no cover
 
                 else:
-                    return out_tbl
+                    return out_tbl  # pragma: no cover
 
             if check_ext_and_format('ipac') or write_format == 'ascii.ipac':
                 out_tbl = self._sanitize_colnames_for_ipac_export(out_tbl.copy())
 
-            out_tbl.write(filename, **write_kwargs)
+            # Another try/except to catch deprecated/non-covered formats and advise
+            try:
+                out_tbl.write(filename, **write_kwargs)
+            except Exception as e:
+                raise Exception(f"{e}. {msg}.")
 
             return out_tbl
 
