@@ -5572,83 +5572,83 @@ class Table(PluginSubcomponent):
             The table object that was written to file or the current table if no filename
             was provided.
         """
-        if filename is not None:
-            if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:
-                out_tbl = self._qtable[self._qtable.meta["_orig_colnames_for_jdaviz_export"]]
-                del out_tbl.meta["_orig_colnames_for_jdaviz_export"]
-            else:
-                out_tbl = self._qtable
+        if filename is None:
+            # TODO: default to only showing selected columns?
+            return self._qtable
 
-            _, ext = os.path.splitext(filename)
-            write_format = write_kwargs.get('format', None)
+        if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:
+            out_tbl = self._qtable[self._qtable.meta["_orig_colnames_for_jdaviz_export"]]
+            del out_tbl.meta["_orig_colnames_for_jdaviz_export"]
+        else:
+            out_tbl = self._qtable
 
-            def check_ext_and_format(ext_to_check):
-                """
-                Check if either the extension or the format matches.
-                If the extension and format do not match, the format takes precedence.
-                """
-                return ((ext == ext_to_check and 'format' not in write_kwargs)
-                        or write_format == ext_to_check)
+        _, ext = os.path.splitext(filename)
+        write_format = write_kwargs.get('format', None)
 
-            msg = (f"The table is unable to be exported to file with format: {write_format}. "
-                   f"Please execute this function with no arguments to retrieve the table object "
-                   f"and write to file manually (see "
-                   f"https://docs.astropy.org/en/stable/io/unified_table.html#read-write-tables)")
+        def check_ext_and_format(ext_to_check):
+            """
+            Check if either the extension or the format matches.
+            If the extension and format do not match, the format takes precedence.
+            """
+            return ((ext == ext_to_check and 'format' not in write_kwargs)
+                    or write_format == ext_to_check)
 
-            # SUPPORTED FORMATS WITH KNOWN ISSUES
-            # Attempt to correct for these here and let tests catch notify of future issues
-            if check_ext_and_format('asdf'):
-                # NOTE: these extensions will overwrite by default
-                # and do not accept overwrite kwarg
-                overwrite = write_kwargs.pop('overwrite', None)
-                if os.path.exists(filename) and overwrite is False:
-                    raise FileExistsError(f"File '{filename}' exists and overwrite=False")
+        msg = (f"The table is unable to be exported to file with format: {write_format}. "
+               f"Please execute this function with no arguments to retrieve the table object "
+               f"and write to file manually (see "
+               f"https://docs.astropy.org/en/stable/io/unified_table.html#read-write-tables)")
 
-            elif check_ext_and_format('hdf5'):
-                write_kwargs['serialize_meta'] = True
-                write_kwargs['path'] = 'data'  # default path within hdf5 file
+        # SUPPORTED FORMATS WITH KNOWN ISSUES
+        # Attempt to correct for these here and let tests catch notify of future issues
+        if check_ext_and_format('asdf'):
+            # NOTE: these extensions will overwrite by default
+            # and do not accept overwrite kwarg
+            overwrite = write_kwargs.pop('overwrite', None)
+            if os.path.exists(filename) and overwrite is False:
+                raise FileExistsError(f"File '{filename}' exists and overwrite=False")
 
-            elif write_format == 'ascii.tdat':
-                out_tbl.meta['table_name'] = self._table_name
+        elif check_ext_and_format('hdf5'):
+            write_kwargs['serialize_meta'] = True
+            write_kwargs['path'] = 'data'  # default path within hdf5 file
 
-            elif (check_ext_and_format('parquet') or check_ext_and_format('votable') or
-                    write_format in ['parquet.votable', 'votable.parquet']):
+        elif write_format == 'ascii.tdat':
+            out_tbl.meta['table_name'] = self._table_name
 
-                metadata = {col: {'unit': '', 'ucd': '', 'utype': ''} for col in out_tbl.colnames}
-                if write_format == 'parquet.votable':
-                    write_kwargs['metadata'] = metadata
+        elif (check_ext_and_format('parquet') or check_ext_and_format('votable') or
+                write_format in ['parquet.votable', 'votable.parquet']):
 
-                elif write_format in ['votable.parquet']:
-                    write_kwargs['column_metadata'] = metadata
+            metadata = {col: {'unit': '', 'ucd': '', 'utype': ''} for col in out_tbl.colnames}
+            if write_format == 'parquet.votable':
+                write_kwargs['metadata'] = metadata
 
-                out_tbl = self._sanitize_units_for_votable_export(out_tbl.copy())
-                try:
-                    out_tbl.write(filename, **write_kwargs)
-                except Exception as e:
-                    # Currently: 'pyarrow is required to read and write parquet files'
-                    if 'pyarrow' in str(e):
-                        raise ModuleNotFoundError(f"{e}\n"
-                                                  f"This is not a default dependency of jdaviz. "
-                                                  f"{msg}.")
-                    else:
-                        raise Exception(f"{e}\n{msg}.")  # pragma: no cover
+            elif write_format in ['votable.parquet']:
+                write_kwargs['column_metadata'] = metadata
 
-                else:
-                    return out_tbl  # pragma: no cover
-
-            if check_ext_and_format('ipac') or write_format == 'ascii.ipac':
-                out_tbl = self._sanitize_colnames_for_ipac_export(out_tbl.copy())
-
-            # Another try/except to catch deprecated/non-covered formats and advise
+            out_tbl = self._sanitize_units_for_votable_export(out_tbl.copy())
             try:
                 out_tbl.write(filename, **write_kwargs)
             except Exception as e:
-                raise Exception(f"{e}\n{msg}.")
+                # Currently: 'pyarrow is required to read and write parquet files'
+                if 'pyarrow' in str(e):
+                    raise ModuleNotFoundError(f"{e}\n"
+                                              f"This is not a default dependency of jdaviz. "
+                                              f"{msg}.")
+                else:
+                    raise Exception(f"{e}\n{msg}.")  # pragma: no cover
 
-            return out_tbl
+            else:
+                return out_tbl  # pragma: no cover
 
-        # TODO: default to only showing selected columns?
-        return self._qtable
+        elif check_ext_and_format('ipac') or write_format == 'ascii.ipac':
+            out_tbl = self._sanitize_colnames_for_ipac_export(out_tbl.copy())
+
+        # Another try/except to catch deprecated/non-covered formats and advise
+        try:
+            out_tbl.write(filename, **write_kwargs)
+        except Exception as e:
+            raise Exception(f"{e}\n{msg}.")
+
+        return out_tbl
 
 
 class TableMixin(VuetifyTemplate, HubListener):
