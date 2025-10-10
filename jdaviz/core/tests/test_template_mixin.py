@@ -371,9 +371,11 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format
     table_obj = FakeTable(deconfigged_helper.app.session, source_catalog)
 
     tmp_filename = tmp_path / 'temp_table'
+    filename = f"{tmp_filename}_{valid_format}"
 
     # Known failures for certain formats from previous versions of astropy.table
-    # which may come up in testing with various versions of python/astropy.
+    # which may come up in testing with various versions of python/astropy. If they run
+    # successfully, they still get checked for file creation.
     known_failures = ['ascii.tdat', 'hdf5']
 
     match_msg = rf"The table is unable to be exported to file with format: {valid_format}."
@@ -381,28 +383,30 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format
         try:
             # Use try except instead of 'with pytest.raises' so that if the issue is due
             # to deprecation, it won't fail on different versions of python/astropy
-            table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
+            table_obj.export_table(filename, format=valid_format)
+            assert os.path.isfile(filename)
         except Exception as e:
             assert match_msg in str(e)
 
     elif 'parquet' in valid_format:
         # Check for partial match for parquet and votable.parquet
         try:
-            table_obj.export_table(f"{tmp_filename}_{valid_format}",
+            table_obj.export_table(filename,
                                    format=valid_format,
                                    overwrite=True)
+            assert os.path.isfile(filename)
         except ModuleNotFoundError as me:
             assert 'This is not a default dependency of jdaviz.' in str(me)
 
     elif 'asdf' in valid_format:
         # Check asdf
-        table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
-        assert os.path.isfile(f"{tmp_filename}_{valid_format}")
+        table_obj.export_table(filename, format=valid_format)
+        assert os.path.isfile(filename)
         with pytest.raises(FileExistsError, match=r'exists and overwrite=False'):
-            table_obj.export_table(f"{tmp_filename}_{valid_format}",
+            table_obj.export_table(filename,
                                    format=valid_format,
                                    overwrite=False)
 
     else:
-        table_obj.export_table(f"{tmp_filename}_{valid_format}", format=valid_format)
-        assert os.path.isfile(f"{tmp_filename}_{valid_format}")
+        table_obj.export_table(filename, format=valid_format)
+        assert os.path.isfile(filename)
