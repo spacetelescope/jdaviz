@@ -5,6 +5,7 @@ import numpy as np
 from regions import PixCoord
 from traitlets import Bool, List, Unicode, observe
 
+from jdaviz.core.events import LinkUpdatedMessage
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
@@ -63,6 +64,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         
         self.align_by = getattr(self.app, '_align_by', None)
 
+        self.hub.subscribe(self, LinkUpdatedMessage,
+                           handler=self._on_align_by_changed)
+
         # for tables with RA / Dec source positions
         self.col_ra = SelectPluginComponent(self,
                                             items='col_ra_items',
@@ -98,7 +102,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
         
-    def on_align_by_changed(self, msg):
+    def _on_align_by_changed(self, event={}):
         """
         This method should be called when orientation is changed, and update
         the importers 'align_by_wcs' trait accordingly. This is important in the
@@ -106,16 +110,17 @@ class CatalogImporter(BaseImporterToDataCollection):
         then change the link type via API, so that the UI will show the correct
         RA/Dec vs X/Y selection options.
         """
-        pass
+        self.align_by = getattr(self.app, '_align_by', None)
 
     def _guess_coord_cols(self, col):
         """
-        Rough guess at detecting ra, dec columns from input table by checking
-        for the presence of a SkyCoord column, and if none exists then checking
-        against some common source catalog column names, to determine initial
-        selection for the column select dropdown. If no good candidate is found,
-        the initial selection in the drop down for ra, dec columns will be the
-        0th and 1stcolumns , respectivley.
+        Rough guess at detecting RA/Dec/X/Y columns from input table to determine
+        the initial selections for the column select dropdown. This starts
+        by checking for the presence of a SkyCoord (if col is 'ra' or 'dec') or
+        PixCoord column (if col is 'x' or 'y'), and next checking
+        against some common source catalog column names. If no good candidate
+        column is found, the initial selection in the drop down for RA/x, dec/y
+        columns will be the 0th and 1st columns, respectivley.
         """
 
         tab = self.input
@@ -166,7 +171,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         return colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
 
     def _valid_coord_units(self, coord):
-        """Valid choices for Ra, Dec units."""
+        """Valid choices for RA or Dec units."""
 
         choices = ['deg', 'rad', 'arcmin', 'arcsec']
 
@@ -179,7 +184,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @observe('col_ra_selected')
     def _on_ra_col_selected(self, msg):
-        """Check if the selected 'ra' column has units assigned already"""
+        """Check if the selected 'RA' column has units assigned already"""
 
         ra = self.col_ra_selected
         dec = self.col_dec_selected
@@ -259,8 +264,11 @@ class CatalogImporter(BaseImporterToDataCollection):
     @property
     def output_cols(self):
 
-        # we will always have RA and Dec
-        cols_all = [self.col_ra_selected, self.col_dec_selected] + self.col_other_selected
+        # we will always have RA and Dec OR X and Y columns
+        if self.align_by == 'wcs':
+            cols_all = [self.col_ra_selected, self.col_dec_selected] + self.col_other_selected
+        elif self.align_by == 'pixels':
+            cols_all = [self.col_x_selected, self.col_y_selected] + self.col_other_selected
 
         return [col for col in set(cols_all) if col in self.input.colnames]
 
