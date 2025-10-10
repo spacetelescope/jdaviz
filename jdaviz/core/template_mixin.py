@@ -5532,21 +5532,17 @@ class Table(PluginSubcomponent):
         filename : str, optional
             If provided, will write to the file, otherwise will just return the Table
             object.
+        format : str, optional
+            The format to write the table in. If not provided, will be inferred from the
+            filename extension.  See ``astropy.table.Table.write`` for supported formats.
+        overwrite : bool, optional
+            If ``filename`` already exists, should it be overwritten.
 
         Returns
         -------
         out_tbl : astropy.table.Table
             The table object that was written to file or the current table if no filename
             was provided.
-
-        Other Parameters
-        ----------
-        format : str, optional
-            The format to write the table in. If not provided, will be inferred from the
-            filename extension.  See ``astropy.table.Table.write`` for supported formats.
-
-        overwrite : bool, optional
-            If ``filename`` already exists, should it be overwritten.
         """
         if filename is not None:
             if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:
