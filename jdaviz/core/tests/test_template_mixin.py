@@ -1,8 +1,13 @@
+import io
+import os
 import re
 import pytest
 import numpy as np
 import astropy.units as u
+from astropy.table import Table
 from specutils import SpectralRegion
+
+from jdaviz.core.template_mixin import TableMixin
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -308,3 +313,87 @@ def test_select_plugin_component_map_value(imviz_helper, multi_extension_image_h
     selection_obj.fake_attribute = ['fake * item1', 'fake item2']
     assert selection_obj.fake_attribute == ['fake * item1', 'fake item2']
     assert selection_obj.choices == choices_before
+
+
+class FakeTable(TableMixin):
+    template = ''
+
+    def __init__(self, session, catalog, *args, **kwargs):
+        self.session = session
+        self._plugin_name = 'test-fake-table'
+        super().__init__(*args, **kwargs)
+        self.table._qtable = catalog
+
+
+def astropy_table_write_formats():
+    table_obj = Table({'a': [1, 2], 'b': [3, 4]})
+    buf = io.StringIO()
+    table_obj.write.list_formats(out=buf)
+    output = buf.getvalue()
+
+    # Output looks like this:
+    #            Format           Read Write Auto-identify Deprecated
+    # --------------------------- ---- ----- ------------- ----------
+    #                       ascii  Yes   Yes            No
+    #                ascii.aastex  Yes   Yes            No
+    #                 ascii.basic  Yes   Yes            No
+
+    valid_formats = []
+    for line in output.splitlines():
+        if line.strip().startswith('Format') or line.strip().startswith('--------'):
+            continue
+
+        split_line = line.strip().split()
+        if len(split_line) == 5 and split_line[-1] == 'Yes':
+            # Deprecated
+            continue
+        valid_formats.append(line.strip().split()[0])
+
+    return valid_formats
+
+
+def test_export_table_special_cases():
+    valid_formats = astropy_table_write_formats()
+
+    # These are special cases for formats that are currently supported by astropy but require
+    # some specific details to be handled. If these get removed in the future, then
+    # we can remove the special handling in `export_table`.
+    assert {'asdf',
+            'hdf5',
+            'ascii.tdat',
+            'votable',
+            'parquet',
+            'parquet.votable',
+            'votable.parquet',
+            'ascii.ipac'}.issubset(set(valid_formats))
+
+
+@pytest.mark.parametrize('valid_format', astropy_table_write_formats())
+def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format):
+    table_obj = FakeTable(deconfigged_helper.app.session, source_catalog)
+
+    tmp_filename = tmp_path / 'temp_table'
+    filename = f"{tmp_filename}_{valid_format}"
+
+    if 'parquet' in valid_format:
+        # Check for partial match for parquet and votable.parquet
+        try:
+            table_obj.export_table(filename,
+                                   format=valid_format,
+                                   overwrite=True)
+            assert os.path.isfile(filename)
+        except ModuleNotFoundError as me:
+            assert 'This is not a default dependency of jdaviz.' in str(me)
+
+    elif 'asdf' in valid_format:
+        # Check asdf
+        table_obj.export_table(filename, format=valid_format)
+        assert os.path.isfile(filename)
+        with pytest.raises(FileExistsError, match=r'exists and overwrite=False'):
+            table_obj.export_table(filename,
+                                   format=valid_format,
+                                   overwrite=False)
+
+    else:
+        table_obj.export_table(filename, format=valid_format)
+        assert os.path.isfile(filename)
