@@ -22,13 +22,13 @@ from astropy.nddata import (
 )
 from specutils import Spectrum
 
-from traitlets import Unicode
+from traitlets import Bool, Unicode
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
-from jdaviz.core.events import SnackbarMessage, NewViewerMessage, ViewerVisibleLayersChangedMessage
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage, ViewerRemovedMessage, ViewerVisibleLayersChangedMessage
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
@@ -542,6 +542,8 @@ class JdavizViewerWindow(TemplateMixin):
     toolbar_widget = Unicode().tag(sync=True)
     data_menu_widget = Unicode().tag(sync=True)
 
+    viewer_destroyed = Bool(False).tag(sync=True)
+
     def __init__(self, viewer, *args, reference="", name="", **kwargs):
         super().__init__(*args, **kwargs)
         self.viewer = viewer
@@ -555,11 +557,17 @@ class JdavizViewerWindow(TemplateMixin):
         self.toolbar_widget = "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else ''
         self.data_menu_widget = 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else ''  # noqa
 
+        self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
+
     @property
     def user_api(self):
         # expose show methods at this level and redirect others to the underlying viewers
         from jdaviz.core.user_api import ViewerWindowUserApi
         return ViewerWindowUserApi(self, expose=['show'])
+
+    def _on_viewer_removed(self, msg):
+        if msg.viewer_id == self.id:
+            self.viewer_destroyed = True
 
     def show(self, loc="inline", title=None, height=None):  # pragma: no cover
         """Display the viewer window UI.
