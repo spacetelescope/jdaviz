@@ -58,9 +58,10 @@ module.exports = {
     ensureFullHeightChain() {
       const popoutSelector = ".jupyter-widgets-popout-container";
       const sidecarSelector = ".lm-Panel";
-      
-      const topElement = this.$refs.top
+
+      const topElement = this.$refs.top;
       const fullHeightTarget = topElement.closest(sidecarSelector) || topElement.closest(popoutSelector);
+      const fullWidthTarget = topElement.closest(".lm-Widget");
 
       let el = topElement.parentElement;
       /* timeout needed because the style of .lm-Widget is overwritten otherwise */
@@ -68,6 +69,10 @@ module.exports = {
         while (fullHeightTarget && el && el !== fullHeightTarget) {
           el.style.height = '100%';
           el = el.parentElement;
+        }
+        // Set width only on the first ancestor with class .lm-Widget
+        if (fullWidthTarget) {
+          fullWidthTarget.style.width = '100%';
         }
       }, 0);
     }
@@ -79,4 +84,5 @@ module.exports = {
 .toolbar-popout-span i {
   color: white !important;
 }
+
 </style>

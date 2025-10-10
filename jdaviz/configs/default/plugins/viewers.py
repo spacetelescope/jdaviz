@@ -561,7 +561,7 @@ class JdavizViewerWindow(TemplateMixin):
         from jdaviz.core.user_api import ViewerWindowUserApi
         return ViewerWindowUserApi(self, expose=['show'])
 
-    def show(self, loc="inline", title=None):  # pragma: no cover
+    def show(self, loc="inline", title=None, height=None):  # pragma: no cover
         """Display the viewer window UI.
 
         Parameters
@@ -601,13 +601,17 @@ class JdavizViewerWindow(TemplateMixin):
 
             NOTE: Only applicable to a "sidecar" display.
 
+        height : int, optional
+            The height of the viewer display, in pixels.  Only applicable if loc is "inline".
+
         Notes
         -----
         If "sidecar" is requested in the "classic" Jupyter notebook, the viewer will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
         title = title if title is not None else self.name
-        show_widget(self, loc=loc, title=title)
+
+        show_widget(self, loc=loc, title=title, height=height)
 
 
 @viewer_registry("jdaviz-profile-viewer", label="Profile 1D")
