@@ -5523,6 +5523,34 @@ class Table(PluginSubcomponent):
 
         return table_copy
 
+    def _sanitize_units_for_votable_export(self, table_copy):
+        """
+        Sanitize table column units for VOTable export.
+
+        VOTable format no longer supports certain deprecated units like 'erg'.
+        This method converts those units to their VOTable-compliant equivalents.
+
+        Parameters
+        ----------
+        table_copy : astropy.table.Table
+            Copy of the table for unit replacement.
+
+        Returns
+        -------
+        table_copy : astropy.table.Table
+            Table with sanitized column units.
+        """
+        for col in table_copy.colnames:
+            if table_copy[col].unit is not None:
+                unit_str = str(table_copy[col].unit)
+
+                # Replace 'erg' with its SI base unit equivalent
+                if 'erg' in unit_str:
+                    unit_str_sanitized = unit_str.replace('erg', 'cm2 g s-2')
+                    table_copy[col].unit = u.Unit(unit_str_sanitized)
+
+        return table_copy
+
     def export_table(self, filename=None, **write_kwargs):
         """
         Export the Astropy Table representation of the table.
@@ -5576,10 +5604,18 @@ class Table(PluginSubcomponent):
                 if os.path.exists(filename) and overwrite is False:
                     raise FileExistsError(f"File '{filename}' exists and overwrite=False")
 
-            if check_ext_and_format('parquet') or write_format == 'parquet.votable':
+            if check_ext_and_format('votable'):
+                out_tbl = self._sanitize_units_for_votable_export(out_tbl.copy())
+
+            if (check_ext_and_format('parquet') or
+                    write_format in ['parquet.votable', 'votable.parquet']):
 
                 if write_format == 'parquet.votable':
-                    write_kwargs['metadata'] = {'_jdaviz_export': {'_jdaviz_export': 'true'}}
+                    write_kwargs['metadata'] = {'description': {'description': None}}
+
+                if write_format == 'votable.parquet':
+                    write_kwargs['column_metadata'] = {col: {'unit': '', 'ucd': '', 'utype': ''}
+                                                       for col in out_tbl.colnames}
 
                 try:
                     out_tbl.write(filename, **write_kwargs)

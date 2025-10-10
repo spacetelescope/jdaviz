@@ -358,7 +358,12 @@ def test_export_table_special_cases():
     # These are special cases for formats that are currently supported by astropy but require
     # some specific details to be handled. If these get removed in the future, then
     # we can remove the special handling in `export_table`.
-    assert {'asdf', 'parquet', 'parquet.votable', 'ascii.ipac'}.issubset(set(valid_formats))  # noqa
+    assert {'asdf',
+            'votable',
+            'parquet',
+            'parquet.votable',
+            'votable.parquet',
+            'ascii.ipac'}.issubset(set(valid_formats))
 
 
 @pytest.mark.parametrize('valid_format', astropy_table_write_formats())
@@ -369,7 +374,7 @@ def test_export_table(deconfigged_helper, source_catalog, tmp_path, valid_format
 
     # Known failures for certain formats from previous versions of astropy.table
     # which may come up in testing with various versions of python/astropy.
-    known_failures = ['ascii.tdat', 'hdf5', 'votable', 'votable.parquet']
+    known_failures = ['ascii.tdat', 'hdf5']
 
     match_msg = rf"The table is unable to be exported to file with format: {valid_format}."
     if valid_format in known_failures:
