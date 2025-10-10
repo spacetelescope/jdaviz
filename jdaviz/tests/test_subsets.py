@@ -475,7 +475,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # If handled correctly, it won't change much.
     # But if not, it move down by 7 pix or so (229.05, 145.92) and fails the test.
-    xy = imviz_helper.default_viewer._obj._get_real_xy(
+    xy = imviz_helper.default_viewer._obj.viewer._get_real_xy(
         imviz_helper.app.data_collection[0], *subset_plugin.get_center())[:2]
     assert_allclose(xy, (229.067822, 152.371943))
 
@@ -490,7 +490,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
     for _ in range(5):
         subset_plugin._obj.recenter()
 
-    xy = imviz_helper.default_viewer._obj._get_real_xy(
+    xy = imviz_helper.default_viewer._obj.viewer._get_real_xy(
         imviz_helper.app.data_collection[0], *subset_plugin.get_center("Subset 2"))[:2]
     assert_allclose(xy, (145.593022, 172.515541))
 

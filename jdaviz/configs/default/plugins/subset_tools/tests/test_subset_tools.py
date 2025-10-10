@@ -363,7 +363,7 @@ def test_get_regions_composite(imviz_helper):
     imviz_helper.app.session.edit_subset_mode._mode = NewMode
     subset_groups = imviz_helper.app.data_collection.subset_groups
     new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
-    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+    imviz_helper.default_viewer._obj.viewer.apply_subset_state(new_subset)
 
     # call get_regions and make sure Subset 3, the composite subset, is retrieved,
     # but as a list of tuples of  individual subsets and their combination modes,
@@ -388,7 +388,7 @@ def test_get_regions_composite(imviz_helper):
     imviz_helper.app.session.edit_subset_mode._mode = NewMode
     subset_groups = imviz_helper.app.data_collection.subset_groups
     new_subset = subset_groups[3].subset_state & ~subset_groups[4].subset_state
-    imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+    imviz_helper.default_viewer._obj.viewer.apply_subset_state(new_subset)
 
     # now, when get_regions is called, the combined subset should be represented as a
     # CircleAnnulusPixelRegion rather than two circlular subsets
@@ -400,7 +400,7 @@ def test_get_regions_composite(imviz_helper):
     for sub, op in [('7', operator.and_), ('8', operator.or_), ('9', operator.xor)]:
         imviz_helper.app.session.edit_subset_mode._mode = NewMode
         new_subset = op(subset_groups[3].subset_state, subset_groups[4].subset_state)
-        imviz_helper.default_viewer._obj.apply_subset_state(new_subset)
+        imviz_helper.default_viewer._obj.viewer.apply_subset_state(new_subset)
         regions = plg.get_regions()
         assert isinstance(regions[f'Subset {sub}'], CompoundPixelRegion)
 

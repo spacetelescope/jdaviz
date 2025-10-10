@@ -9,7 +9,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, create_example_g
 
 class TestPanZoomTools(BaseImviz_WCS_WCS):
     def test_panzoom_tools(self):
-        v = self.imviz.default_viewer._obj
+        v = self.imviz.default_viewer._obj.viewer
         v2 = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI,1]')
 
@@ -76,7 +76,7 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
 @pytest.mark.parametrize("align_by", ["Pixels", "WCS"])
 def test_panzoom_click_center_linking(imviz_helper, align_by):
     """https://github.com/spacetelescope/jdaviz/issues/2749"""
-    v = imviz_helper.default_viewer._obj
+    v = imviz_helper.default_viewer._obj.viewer
 
     # Since we are not really displaying, need this to test pan/zoom.
     v.shape = (100, 100)
@@ -114,7 +114,7 @@ def test_panzoom_click_center_linking(imviz_helper, align_by):
 
 
 def test_blink(imviz_helper):
-    viewer = imviz_helper.default_viewer._obj
+    viewer = imviz_helper.default_viewer._obj.viewer
 
     for i in range(3):
         imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}')
@@ -153,7 +153,7 @@ def test_compass_open_while_load(imviz_helper):
 
 def test_tool_visibility(imviz_helper):
     imviz_helper.load_data(np.ones((2, 2)))
-    tb = imviz_helper.default_viewer._obj.toolbar
+    tb = imviz_helper.default_viewer._obj.viewer.toolbar
 
     assert not tb.tools_data['jdaviz:boxzoommatch']['visible']
 
