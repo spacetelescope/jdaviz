@@ -5583,7 +5583,7 @@ class Table(PluginSubcomponent):
                     write_kwargs['column_metadata'] = {col: '0' for col in out_tbl.colnames}
 
                 elif write_format == 'parquet.votable':
-                    write_kwargs['metadata'] = {'_jdaviz_export': {'_jdaviz_export' : 'true'}}
+                    write_kwargs['metadata'] = {'_jdaviz_export': {'_jdaviz_export': 'true'}}
 
                 try:
                     out_tbl.write(filename, **write_kwargs)
