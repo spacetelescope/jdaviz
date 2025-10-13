@@ -514,7 +514,7 @@ def test_spectra_incompatible_flux(specviz_helper):
 
     # all 3 load into data-collection, but only two in the viewer (with snackbar error)
     assert len(specviz_helper.app.data_collection.labels) == 3
-    assert len(specviz_helper.viewers['spectrum-viewer']._obj.viewer.layers) == 2
+    assert len(specviz_helper.viewers['spectrum-viewer']._obj.glue_viewer.layers) == 2
 
 
 def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):

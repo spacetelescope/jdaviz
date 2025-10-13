@@ -849,7 +849,7 @@ class ImageConfigHelper(ConfigHelper):
 
         # Subset is global but reference data is viewer-dependent.
         if refdata_label is None:
-            data = self.default_viewer._obj.viewer.state.reference_data
+            data = self.default_viewer._obj.glue_viewer.state.reference_data
         else:
             data = self.app.data_collection[refdata_label]
 
@@ -891,7 +891,7 @@ class ImageConfigHelper(ConfigHelper):
 
                 # TODO: Do we want user to specify viewer? Does it matter?
                 self.app.session.edit_subset_mode._mode = NewMode
-                self.default_viewer._obj.viewer.apply_roi(state)
+                self.default_viewer._obj.glue_viewer.apply_roi(state)
                 self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
             # Last resort: Masked Subset that is static (if data is not a cube)
@@ -976,7 +976,7 @@ class ImageConfigHelper(ConfigHelper):
         to_sky = self.app._align_by == 'wcs'
 
         # Subset is global, so we just use default viewer.
-        for lyr in self.default_viewer._obj.viewer.layers:
+        for lyr in self.default_viewer._obj.glue_viewer.layers:
             if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
                     or lyr.layer.ndim not in (2, 3)):
                 continue

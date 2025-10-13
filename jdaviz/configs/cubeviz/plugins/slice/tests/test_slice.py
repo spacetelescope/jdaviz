@@ -24,7 +24,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     app.add_data_to_viewer("flux-viewer", "test[FLUX]")
     app.add_data_to_viewer("uncert-viewer", "test[FLUX]")
     app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
-    sv = cubeviz_helper.viewers['spectrum-viewer']._obj.viewer
+    sv = cubeviz_helper.viewers['spectrum-viewer']._obj.glue_viewer
 
     # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
     assert len(sv.slice_values) == 2

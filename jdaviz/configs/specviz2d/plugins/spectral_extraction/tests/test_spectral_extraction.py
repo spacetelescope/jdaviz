@@ -397,7 +397,7 @@ def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
             with spext.as_active():
                 spext.interactive_extract = interactive_extract
                 assert len([
-                    mark for mark in viewer._obj.viewer.custom_marks
+                    mark for mark in viewer._obj.glue_viewer.custom_marks
                     if mark.visible and isinstance(mark, Lines) and
                        len(mark.x) == len(spectrum2d.spectral_axis)]) == int(interactive_extract)
 

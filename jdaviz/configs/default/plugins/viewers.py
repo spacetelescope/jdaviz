@@ -553,7 +553,7 @@ class JdavizViewerWindow(TemplateMixin):
 
     def __init__(self, viewer, *args, reference="", name="", **kwargs):
         super().__init__(*args, **kwargs)
-        self.viewer = viewer
+        self.glue_viewer = viewer
         self.config = self.app.config
 
         vid = viewer._reference_id

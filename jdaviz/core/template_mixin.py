@@ -3004,7 +3004,7 @@ class ApertureSubsetSelect(SubsetSelect):
         multiselect = getattr(self, 'multiselect', False)
 
         if viewer is None:
-            viewer = self.app._jdaviz_helper.default_viewer._obj.viewer
+            viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
         if selected is None:
             selected = self.selected
             objs = self.selected_obj if multiselect else [self.selected_obj]

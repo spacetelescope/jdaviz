@@ -306,18 +306,18 @@ class ViewerWindowUserApi(UserApiWrapper):
       help(viewer_object.show)
     """
     def __init__(self, viewer_container, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
-        self._expose_nested = viewer_container.viewer.user_api._expose
+        self._expose_nested = viewer_container.glue_viewer.user_api._expose
         expose = list(set(list(expose) + self._expose_nested))
         super().__init__(viewer_container, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):
-        return f'<{self._obj.viewer.reference} API>'
+        return f'<{self._obj.glue_viewer.reference} API>'
 
     def __getattr__(self, attr):
         if attr in _internal_attrs:
             return super().__getattribute__(attr)
         if attr in self._expose_nested:
-            return self._obj.viewer.user_api.__getattr__(attr)
+            return self._obj.glue_viewer.user_api.__getattr__(attr)
         else:
             return super().__getattr__(attr)
 
@@ -325,6 +325,6 @@ class ViewerWindowUserApi(UserApiWrapper):
         if attr in _internal_attrs:
             return super().__setattr__(attr, value)
         if attr in self._expose_nested:
-            return self._obj.viewer.user_api.__setattr__(attr, value)
+            return self._obj.glue_viewer.user_api.__setattr__(attr, value)
         else:
             return super().__setattr__(attr, value)

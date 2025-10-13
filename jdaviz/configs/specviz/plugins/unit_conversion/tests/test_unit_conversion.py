@@ -293,7 +293,7 @@ def test_image_deconfigged(deconfigged_helper, image_nddata_wcs):
 
     assert plg.flux_unit == "Jy"
 
-    label_mouseover._viewer_mouse_event(viewer._obj.viewer,
+    label_mouseover._viewer_mouse_event(viewer._obj.glue_viewer,
                                         {'event': 'mousemove',
                                          'domain': {'x': 1, 'y': 1}})
     assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.00000e+00 Jy',
@@ -305,7 +305,7 @@ def test_image_deconfigged(deconfigged_helper, image_nddata_wcs):
 
     assert plg.flux_unit == "MJy"
 
-    label_mouseover._viewer_mouse_event(viewer._obj.viewer,
+    label_mouseover._viewer_mouse_event(viewer._obj.glue_viewer,
                                         {'event': 'mousemove',
                                          'domain': {'x': 1, 'y': 1}})
     assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.00000e-06 MJy',
