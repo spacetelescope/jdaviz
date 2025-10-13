@@ -1,10 +1,10 @@
 from zipfile import ZipFile
-
 import numpy as np
 import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils.exceptions import AstropyDeprecationWarning
 from specutils import Spectrum, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
 
@@ -538,3 +538,422 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     # Check that the reparenting and coordinate recalculations happened
     assert subset1.subset_state.att.parent.label == "my_spec_nm"
     np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (620, 700))
+
+
+def test_load_data_with_format_raises_error(specviz_helper, spectrum1d):
+    """
+    Test that passing format parameter raises NotImplementedError.
+    """
+    with pytest.raises(NotImplementedError, match='format is ignored'):
+        specviz_helper.load_data(spectrum1d, format='some_format')
+
+
+def test_load_data_both_load_as_list_and_concat_raises_error(
+        specviz_helper, spectrum1d):
+    """
+    Test that setting both load_as_list and concat_by_file raises
+    ValueError.
+    """
+    with pytest.raises(ValueError, match='Cannot set both'):
+        specviz_helper.load_data(
+            spectrum1d, load_as_list=True, concat_by_file=True)
+
+
+def test_load_data_with_cache_timeout_local_path(
+        specviz_helper, spectrum1d):
+    """
+    Test load_data with cache, timeout, and local_path kwargs.
+    """
+    specviz_helper.load_data(
+        spectrum1d,
+        data_label='test_cache',
+        cache=True,
+        timeout=30,
+        local_path='/tmp/test'
+    )
+    assert 'test_cache' in specviz_helper.app.data_collection.labels
+
+
+def test_load_data_with_sources_and_exposures(specviz_helper):
+    """
+    Test load_data with sources and exposures kwargs.
+    """
+    spec_list = SpectrumList([
+        Spectrum(
+            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
+            flux=np.ones(10) * u.Jy
+        ),
+        Spectrum(
+            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
+            flux=np.ones(10) * 2 * u.Jy
+        )
+    ])
+    specviz_helper.load_data(
+        spec_list,
+        sources='*',
+        exposures=['exp1', 'exp2']
+    )
+    assert len(specviz_helper.app.data_collection) >= 2
+
+
+def test_load_data_show_in_viewer_false(specviz_helper, spectrum1d):
+    """
+    Test load_data with show_in_viewer=False.
+    """
+    specviz_helper.load_data(
+        spectrum1d,
+        data_label='hidden_spec',
+        show_in_viewer=False
+    )
+    assert 'hidden_spec' in specviz_helper.app.data_collection.labels
+
+
+def test_load_data_concat_by_file(specviz_helper):
+    """
+    Test load_data with concat_by_file=True.
+    """
+    spec_list = SpectrumList([
+        Spectrum(
+            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
+            flux=np.ones(10) * u.Jy
+        ),
+        Spectrum(
+            spectral_axis=np.linspace(6000, 7000, 10) * u.AA,
+            flux=np.ones(10) * u.Jy
+        )
+    ])
+    initial_count = len(specviz_helper.app.data_collection)
+    with pytest.warns(UserWarning, match='default source selection'):
+        specviz_helper.load_data(
+            spec_list,
+            data_label='concatenated',
+            concat_by_file=True
+        )
+    assert len(specviz_helper.app.data_collection) > initial_count
+
+
+def test_load_data_with_load_as_list(specviz_helper):
+    """
+    Test load_data with load_as_list=True.
+    """
+    spec_list = SpectrumList([
+        Spectrum(
+            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
+            flux=np.ones(10) * u.Jy
+        ),
+        Spectrum(
+            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
+            flux=np.ones(10) * 2 * u.Jy
+        )
+    ])
+    with pytest.warns(UserWarning, match='default source selection'):
+        specviz_helper.load_data(
+            spec_list,
+            data_label='as_list',
+            load_as_list=True
+        )
+    assert 'as_list_index-0' in specviz_helper.app.data_collection.labels
+
+
+def test_get_spectra_with_spectral_subset(specviz_helper, spectrum1d):
+    """
+    Test get_spectra with spectral_subset parameter.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    subset = SpectralRegion(
+        6200 * spectrum1d.spectral_axis.unit,
+        7000 * spectrum1d.spectral_axis.unit
+    )
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
+
+    # Get spectra with the spectral subset applied
+    spectra = specviz_helper.get_spectra(
+        spectral_subset='Subset 1',
+        apply_slider_redshift=False
+    )
+
+    assert 'test_spec' in spectra
+
+
+def test_get_spectra_with_data_label_and_spectral_subset(
+        specviz_helper, spectrum1d):
+    """
+    Test get_spectra with both data_label and spectral_subset.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    subset = SpectralRegion(
+        6200 * spectrum1d.spectral_axis.unit,
+        7000 * spectrum1d.spectral_axis.unit
+    )
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
+
+    spectrum = specviz_helper.get_spectra(
+        data_label='test_spec',
+        spectral_subset='Subset 1',
+        apply_slider_redshift=False
+    )
+
+    assert isinstance(spectrum, Spectrum)
+
+
+def test_get_spectral_regions_deprecated(specviz_helper, spectrum1d):
+    """
+    Test deprecated get_spectral_regions method.
+    """
+    specviz_helper.load_data(spectrum1d)
+
+    subset = SpectralRegion(
+        6200 * spectrum1d.spectral_axis.unit,
+        7000 * spectrum1d.spectral_axis.unit
+    )
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
+
+    with pytest.warns(AstropyDeprecationWarning):
+        regions = specviz_helper.get_spectral_regions()
+
+    assert 'Subset 1' in regions
+
+
+def test_get_spectral_regions_use_display_units(
+        specviz_helper, spectrum1d):
+    """
+    Test deprecated get_spectral_regions with use_display_units.
+    """
+    specviz_helper.load_data(spectrum1d)
+
+    subset = SpectralRegion(
+        6200 * spectrum1d.spectral_axis.unit,
+        7000 * spectrum1d.spectral_axis.unit
+    )
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
+
+    with pytest.warns(AstropyDeprecationWarning):
+        regions = specviz_helper.get_spectral_regions(
+            use_display_units=True)
+
+    assert 'Subset 1' in regions
+
+
+def test_x_limits_deprecated_getter(specviz_helper, spectrum1d):
+    """
+    Test deprecated x_limits method as getter.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        scale = specviz_helper.x_limits()
+
+    assert scale is not None
+
+
+def test_x_limits_deprecated_setter_with_values(
+        specviz_helper, spectrum1d):
+    """
+    Test deprecated x_limits method with min/max values.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.x_limits(x_min=6000, x_max=7000)
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_x.min == 6000
+    assert sv.scale_x.max == 7000
+
+
+def test_x_limits_deprecated_with_quantity(specviz_helper, spectrum1d):
+    """
+    Test deprecated x_limits with astropy Quantity.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.x_limits(x_min=6000*u.AA, x_max=7000*u.AA)
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_x.min == 6000
+    assert sv.scale_x.max == 7000
+
+
+def test_x_limits_deprecated_with_spectral_region(
+        specviz_helper, spectrum1d):
+    """
+    Test deprecated x_limits with SpectralRegion.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    region = SpectralRegion(6000*u.AA, 7000*u.AA)
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.x_limits(x_min=region)
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_x.min == 6000
+    assert sv.scale_x.max == 7000
+
+
+def test_y_limits_deprecated_getter(specviz_helper, spectrum1d):
+    """
+    Test deprecated y_limits method as getter.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        scale = specviz_helper.y_limits()
+
+    assert scale is not None
+
+
+def test_y_limits_deprecated_setter_with_values(
+        specviz_helper, spectrum1d):
+    """
+    Test deprecated y_limits method with min/max values.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.y_limits(y_min=0, y_max=20)
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_y.min == 0
+    assert sv.scale_y.max == 20
+
+
+def test_y_limits_deprecated_with_quantity(specviz_helper, spectrum1d):
+    """
+    Test deprecated y_limits with astropy Quantity.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.y_limits(y_min=0*u.Jy, y_max=20*u.Jy)
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_y.min == 0
+    assert sv.scale_y.max == 20
+
+
+def test_y_limits_deprecated_with_auto(specviz_helper, spectrum1d):
+    """
+    Test deprecated y_limits with 'auto' parameter.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.y_limits(y_min='auto', y_max='auto')
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_y.min is not None
+    assert sv.scale_y.max is not None
+
+
+def test_x_limits_deprecated_with_auto(specviz_helper, spectrum1d):
+    """
+    Test deprecated x_limits with 'auto' parameter.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.x_limits(x_min='auto', x_max='auto')
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_x.min is not None
+    assert sv.scale_x.max is not None
+
+
+def test_autoscale_x_deprecated(specviz_helper, spectrum1d):
+    """
+    Test deprecated autoscale_x method.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.autoscale_x()
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_x.min is not None
+    assert sv.scale_x.max is not None
+
+
+def test_autoscale_y_deprecated(specviz_helper, spectrum1d):
+    """
+    Test deprecated autoscale_y method.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.autoscale_y()
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    assert sv.scale_y.min is not None
+    assert sv.scale_y.max is not None
+
+
+def test_flip_x_deprecated(specviz_helper, spectrum1d):
+    """
+    Test deprecated flip_x method.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    original_min = sv.scale_x.min
+    original_max = sv.scale_x.max
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.flip_x()
+
+    assert sv.scale_x.min == original_max
+    assert sv.scale_x.max == original_min
+
+
+def test_flip_y_deprecated(specviz_helper, spectrum1d):
+    """
+    Test deprecated flip_y method.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    original_min = sv.scale_y.min
+    original_max = sv.scale_y.max
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.flip_y()
+
+    assert sv.scale_y.min == original_max
+    assert sv.scale_y.max == original_min
+
+
+def test_set_spectrum_tick_format_deprecated_x_axis(
+        specviz_helper, spectrum1d):
+    """
+    Test deprecated set_spectrum_tick_format for x-axis.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.set_spectrum_tick_format('0.2f', axis=0)
+
+
+def test_set_spectrum_tick_format_deprecated_y_axis(
+        specviz_helper, spectrum1d):
+    """
+    Test deprecated set_spectrum_tick_format for y-axis.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        specviz_helper.set_spectrum_tick_format('0.1e', axis=1)
+
+
+def test_set_spectrum_tick_format_deprecated_invalid_axis(
+        specviz_helper, spectrum1d):
+    """
+    Test deprecated set_spectrum_tick_format with invalid axis.
+    """
+    specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+    with pytest.warns(AstropyDeprecationWarning):
+        with pytest.warns(UserWarning, match='Please use either 0 or 1'):
+            specviz_helper.set_spectrum_tick_format('0.2f', axis=2)
