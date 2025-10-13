@@ -167,8 +167,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
         filetype = metadata[PRIHDR_KEY].get('FILETYPE', '').lower()
         if telescop == 'jwst' and ('ifu' in exptype or
-                                    'mrs' in exptype or
-                                    filetype == '3d ifu cube'):
+                                   'mrs' in exptype or
+                                   filetype == '3d ifu cube'):
             from stdatamodels import asdf_in_fits
             tree = asdf_in_fits.open(hdulist).tree
             if 'meta' in tree and 'wcs' in tree['meta']:
