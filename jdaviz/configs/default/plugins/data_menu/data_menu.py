@@ -369,7 +369,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     layer.zorder = new_zorder
 
             self.prevent_layer_items_recursion = False
-        
+
         # Causes occasional slight flicker in the UI but ensures correct state by updating the
         # layer items
         self.layer._update_items()
