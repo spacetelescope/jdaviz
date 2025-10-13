@@ -369,6 +369,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     layer.zorder = new_zorder
 
             self.prevent_layer_items_recursion = False
+        
+        # Causes occasional slight flicker in the UI but ensures correct state by updating the
+        # layer items
+        self.layer._update_items()
 
             # Only trigger if the order expected in the message and the actual order differ
             if label_order != [li['label'] for li in self.layer_items if li['is_subset'] is not None]:  # noqa
