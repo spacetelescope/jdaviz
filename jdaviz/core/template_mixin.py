@@ -5607,7 +5607,7 @@ class Table(PluginSubcomponent):
             if os.path.exists(filename) and overwrite is False:
                 raise FileExistsError(f"File '{filename}' exists and overwrite=False")
 
-        elif check_ext_and_format('hdf5'):
+        elif check_ext_and_format('hdf5') and 'path' not in write_kwargs:
             write_kwargs['serialize_meta'] = True
             write_kwargs['path'] = 'data'  # default path within hdf5 file
 
@@ -5618,10 +5618,10 @@ class Table(PluginSubcomponent):
                 write_format in ['parquet.votable', 'votable.parquet']):
 
             metadata = {col: {'unit': '', 'ucd': '', 'utype': ''} for col in out_tbl.colnames}
-            if write_format == 'parquet.votable':
+            if write_format == 'parquet.votable' and 'metadata' not in write_kwargs:
                 write_kwargs['metadata'] = metadata
 
-            elif write_format in ['votable.parquet']:
+            elif write_format in ['votable.parquet'] and 'column_metadata' not in write_kwargs:
                 write_kwargs['column_metadata'] = metadata
 
             out_tbl = self._sanitize_units_for_votable_export(out_tbl.copy())
