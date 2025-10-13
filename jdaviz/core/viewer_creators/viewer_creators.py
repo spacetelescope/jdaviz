@@ -25,6 +25,8 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
         self.close_callback = kwargs.pop('close_callback', None)
         super().__init__(app, **kwargs)
         self.dataset.multiselect = True
+        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer']
+
         self.viewer_type = self._registry_label
 
         self.viewer_label = AutoTextField(self, 'viewer_label_value',
@@ -84,6 +86,8 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
 
     @observe('viewer_label_value', 'viewer_items')
     def _viewer_label_value_changed(self, *args):
+        if not hasattr(self, 'viewer'):
+            return
         # forbid using an existing viewer label
         if self.viewer_label_value in self.viewer.choices:
             self.viewer_label_invalid_msg = f"Viewer label '{self.viewer_label_value}' already in use."  # noqa
@@ -92,6 +96,8 @@ class BaseViewerCreator(PluginTemplateMixin, DatasetMultiSelectMixin, ViewerSele
 
     @observe('viewer_items')
     def _viewer_items_changed(self, *args):
+        if not hasattr(self, 'viewer'):
+            return
         if self.viewer_label_default in self.viewer.choices:
             self.viewer_label_default = self.app.return_unique_name(self.viewer_label_default, 'viewer')  # noqa
 

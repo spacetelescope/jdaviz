@@ -345,6 +345,6 @@ def test_footprint_loaders(imviz_helper, image_2d_wcs):
     ldr = plg.loaders['object']
     ldr.object = 'POLYGON ICRS 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
     ldr.importer.footprint_label = 'imported from STCS'
-    ldr.importer()
+    ldr.load()
 
     assert 'imported from STCS' in plg.overlay.choices

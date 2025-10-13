@@ -318,6 +318,12 @@ class BaseResolver(PluginTemplateMixin):
             raise ValueError("must select a format before accessing importer")
         return self.format._importers[self.format.selected]
 
+    def load(self):
+        """
+        Import into jdaviz with all selected options.
+        """
+        return self.importer()
+
     @observe('target_selected')
     def _on_target_selected_changed(self, change={}):
         def matches_target_factory(target):

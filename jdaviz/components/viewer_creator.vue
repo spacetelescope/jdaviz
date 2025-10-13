@@ -8,7 +8,6 @@
       </v-card-title>
       <v-card-text>
         <v-container>
-          <slot></slot>
 
           <plugin-dataset-select
             :items="dataset_items"
@@ -21,6 +20,8 @@
             :api_hints_enabled="api_hints_enabled"
             hint="Select data to load into new viewer."
           ></plugin-dataset-select>
+
+          <slot></slot>
 
           <plugin-auto-label
             :value.sync="viewer_label_value"

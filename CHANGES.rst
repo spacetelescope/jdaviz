@@ -36,6 +36,9 @@ Specviz2d
 API Changes
 -----------
 
+- Adds `ldr.load()` method to the loaders API and suggests using this in API hints over `ldr.importer()`
+  (which will continue to exist). [#3832]
+
 Cubeviz
 ^^^^^^^
 
@@ -74,8 +77,14 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759]
+
+- Scatter viewer support in the deconfigged app instance. [#3778]
+
 4.4.2 (unreleased)
 ==================
+
+- Fixes traceback raised by the stretch histogram in plot options when entering multiselect mode. [#3825]
 
 Bug Fixes
 ---------
