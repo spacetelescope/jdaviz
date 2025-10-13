@@ -61,10 +61,10 @@ class ScatterViewerCreator(BaseViewerCreator):
     def __call__(self):
         nv = super().__call__()
         if self.xatt.selected != '':
-            nv._obj.state.x_att = self.xatt.selected
+            nv._obj.viewer.state.x_att = self.xatt.selected
         if self.yatt.selected != '':
-            nv._obj.state.y_att = self.yatt.selected
+            nv._obj.viewer.state.y_att = self.yatt.selected
         if self.xatt.selected != '' or self.yatt.selected != '':
             if hasattr(nv._obj, 'data'):
-                nv._obj.reset_limits()
+                nv._obj.viewer.reset_limits()
         return nv
