@@ -28,7 +28,10 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
-from jdaviz.core.events import SnackbarMessage, NewViewerMessage, ViewerRemovedMessage, ViewerVisibleLayersChangedMessage
+from jdaviz.core.events import (SnackbarMessage,
+                                NewViewerMessage,
+                                ViewerRemovedMessage,
+                                ViewerVisibleLayersChangedMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
