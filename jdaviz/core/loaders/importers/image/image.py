@@ -286,7 +286,7 @@ class ImageImporter(BaseImporterToDataCollection):
             if self.gwcs_to_fits_sip:
                 output = self._glue_data_wcs_to_fits(output)
 
-            self.add_to_data_collection(output, data_label, item=ext_item,
+            self.add_to_data_collection(output, data_label, data_hash=ext_item.get('data_hash'),
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
 

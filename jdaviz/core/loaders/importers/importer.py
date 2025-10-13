@@ -56,7 +56,6 @@ class BaseImporter(PluginTemplateMixin):
         self._resolver = resolver
         super().__init__(app, **kwargs)
 
-        # self.data_hashes = [create_data_hash(self.input)]
         # Doing this in app instead of here avoids a lot of unnecessary overhead
         # from all the importers in memory
         self.app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
@@ -268,13 +267,10 @@ class BaseImporterToDataCollection(BaseImporter):
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type
 
-    def add_to_data_collection(self, data, data_label=None, item=None,
+    def add_to_data_collection(self, data, data_label=None, data_hash=None,
                                parent=None,
                                viewer_select=None,
                                cls=None):
-
-        if item is None:
-            item = {}
 
         if data_label is None:
             data_label = self.data_label_value.strip()
@@ -298,8 +294,8 @@ class BaseImporterToDataCollection(BaseImporter):
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
 
-        # Create a 'hash' representation of the data if not already present
-        data.meta['_data_hash'] = item.get('data_hash', create_data_hash(data))
+        # Create a hashed representation of the data if not already present
+        data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
@@ -370,6 +366,9 @@ class BaseImporterToDataCollection(BaseImporter):
             raise ValueError(self.data_label_invalid_msg)
         if self.viewer.create_new.selected != '' and self.viewer_label_invalid_msg:
             raise ValueError(self.viewer_label_invalid_msg)
+        # NOTE: if data hashing performance becomes an issue for importers that
+        # don't overwrite __call__, we can pass the pre-computed hash from
+        # self.data_hashes as a kwarg here
         self.add_to_data_collection(self.output)
 
 
