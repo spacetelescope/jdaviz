@@ -83,7 +83,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     ldr.object = trace
     assert ldr.format == 'Trace'
     ldr.importer.data_label = 'Trace 1'
-    ldr.importer()
+    ldr.load()
     assert specviz2d_helper.app.data_collection[-1].label == 'Trace 1'
 
     # import through load method
@@ -104,7 +104,7 @@ def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     assert ldr.importer.ext_viewer == []
 
     assert ldr.importer.auto_extract
-    ldr.importer()
+    ldr.load()
 
     # created 2D Spectrum viewer, did auto-extract,
     # but did not create 1D Spectrum viewer
@@ -136,7 +136,7 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert ldr.importer._obj.input_has_extensions is True
     ldr.format = '2D Spectrum'
 
-    ldr.importer()
+    ldr.load()
 
     # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
     sp2d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d')  # noqa
@@ -159,7 +159,7 @@ def test_jwst_wfss_bsub(deconfigged_helper):
 
     assert ldr.format == '2D Spectrum'
 
-    ldr.importer()
+    ldr.load()
 
     sp1d = deconfigged_helper.get_data('k5l446jid348jk343m8r4vvbkzk4syom (auto-ext)')  # noqa
     assert isinstance(sp1d, Spectrum)
@@ -182,7 +182,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
     number_combos = product((1, 2), (9, 17, 23))
     sources_obj.selected = [f'Exposure {e_num}, Source ID: {s_id}'
                             for e_num, s_id in number_combos]
-    ldr.importer()
+    ldr.load()
 
     assert len(deconfigged_helper.data_labels) == len(sources_obj.selected)
     dc = deconfigged_helper.app.data_collection
@@ -241,7 +241,7 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     assert len(deconfigged_helper.app.data_collection) == 0
     assert len(deconfigged_helper.viewers) == 0
 
-    loader.importer()
+    loader.load()
 
     # 2D spectrum and auto-extracted 1D spectrum
     assert len(deconfigged_helper.app.data_collection) == 2
@@ -327,7 +327,7 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     loader.filepath = local_path
     assert len(loader.format.choices) > 0
 
-    loader.importer()
+    loader.load()
 
 
 @pytest.mark.parametrize('order', ([0, 1, 2], [0, 2, 1], [2, 0, 1], [2, 1, 0], [1, 2, 0]))
@@ -420,7 +420,7 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
     ldr.url = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/imviz_test_data/jw00042001001_01101_00001_nrcb5_cal.fits'  # noqa
     ldr.importer.gwcs_to_fits_sip = gwcs_to_fits_sip
 
-    ldr.importer()
+    ldr.load()
 
     data = deconfigged_helper.app.data_collection[0]
     assert isinstance(data.coords, expected_cls)
