@@ -1,5 +1,3 @@
-import pytest
-from astropy import units as u
 from numpy.testing import assert_allclose
 
 
@@ -161,11 +159,9 @@ class TestMapLimits:
         assert components is not None
 
         # Verify the for loop can iterate through components
-        found_spectral = False
         for key in components.keys():
             strkey = str(key)
             if 'Wavelength' in strkey or 'Wave' in strkey:
-                found_spectral = True
                 break
 
         # At least verify we can access components
@@ -235,7 +231,9 @@ class TestMapLimits:
         """
         Test that _map_limits handles unit conversions correctly.
         """
-        spectrum_viewer, spectrum2d_viewer, tool = self._setup(deconfigged_helper, spectrum2d, 'boxzoom_matchx')
+        spectrum_viewer, spectrum2d_viewer, tool = self._setup(deconfigged_helper,
+                                                               spectrum2d,
+                                                               'boxzoom_matchx')
         for viewer in [spectrum_viewer, spectrum2d_viewer]:
             # Change to different spectral unit
             uc = deconfigged_helper.plugins['Unit Conversion']
