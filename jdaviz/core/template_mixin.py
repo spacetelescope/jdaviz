@@ -5608,7 +5608,7 @@ class Table(PluginSubcomponent):
                 raise FileExistsError(f"File '{filename}' exists and overwrite=False")
 
         elif check_ext_and_format('hdf5'):
-            write_kwargs.setdefault('path', 'data') # default path within hdf5 file
+            write_kwargs.setdefault('path', 'data')  # default path within hdf5 file
             write_kwargs.setdefault('serialize_meta', True)
 
         elif write_format == 'ascii.tdat':
@@ -5621,7 +5621,7 @@ class Table(PluginSubcomponent):
             # parquet.votable and votable.parquet are (unfortunately) not the same
             if write_format == 'parquet.votable':
                 write_kwargs.setdefault('metadata', metadata)
-                
+
             elif write_format == 'votable.parquet':
                 write_kwargs.setdefault('column_metadata', metadata)
 
