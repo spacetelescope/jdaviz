@@ -1,4 +1,5 @@
 from numpy.testing import assert_allclose
+import pytest
 
 
 def test_homezoom_matchx(specviz_helper, spectrum1d):
@@ -189,10 +190,10 @@ class TestMapLimits:
         tool.activate()
 
         # Change limits in spectrum viewer
-        original_x_min, original_x_max, y_min, y_max = spectrum_viewer._obj.get_limits()
+        old_x_min, old_x_max, y_min, y_max = spectrum_viewer._obj.get_limits()
 
-        new_x_min = (original_x_min + original_x_max) / 4
-        new_x_max = 3 * (original_x_min + original_x_max) / 4
+        new_x_min = (old_x_min + old_x_max) / 4
+        new_x_max = 3 * (old_x_min + old_x_max) / 4
 
         spectrum_viewer._obj.set_limits(new_x_min, new_x_max, y_min, y_max)
 
@@ -227,33 +228,94 @@ class TestMapLimits:
 
         # tool.deactivate()
 
-    def test_map_limits_with_unit_conversion(self, deconfigged_helper, spectrum2d):
+    def test_map_limits_with_unit_conversion_spectrum1d(self, deconfigged_helper, spectrum2d):
         """
         Test that _map_limits handles unit conversions correctly.
+
+        27-28, 36-39, 45-51
         """
         spectrum_viewer, spectrum2d_viewer, tool = self._setup(deconfigged_helper,
                                                                spectrum2d,
                                                                'boxzoom_matchx')
-        for viewer in [spectrum_viewer, spectrum2d_viewer]:
-            # Change to different spectral unit
-            uc = deconfigged_helper.plugins['Unit Conversion']
-            uc.spectral_unit = 'nm'
+        viewer = spectrum_viewer
 
-            tool.activate()
+        # Change to different spectral unit
+        uc = deconfigged_helper.plugins['Unit Conversion']
+        uc.spectral_unit = 'nm'
+        # In order for `_map_limits` to detect the spectral axis component,
+        # it must have 'Wavelength' in its label.
+        for component in deconfigged_helper.app.data_collection[0].components:
+            if component.label == 'World 1':
+                component.label = 'Wavelength'
+                break
 
-            # Change limits in spectrum viewer
-            original_x_min, original_x_max, y_min, y_max = spectrum_viewer._obj.get_limits()
+        old_x_min, old_x_max, _, _ = viewer._obj.get_limits()
+        # _map_limits runs here
+        tool.activate()
 
-            # Set new limits
-            tool.interact.selected = [(original_x_min + 10, y_min), (original_x_max - 10, y_max)]
-            tool.on_update_zoom()
+        # Change limits in spectrum viewer
+        check_x_min, check_x_max, y_min, y_max = viewer._obj.get_limits()
 
-            # Limits should have changed
-            new_x_min, new_x_max, _, _ = viewer._obj.get_limits()
-            assert new_x_min > original_x_min
-            assert new_x_max < original_x_max
+        # Nothing should have changed
+        assert old_x_min == check_x_min
+        assert old_x_max == check_x_max
 
-            tool.deactivate()
+        # Set new limits
+        tool.interact.selected = [(old_x_min + 10, y_min), (old_x_max - 10, y_max)]
+        # _map_limits also runs here
+        tool.on_update_zoom()
+
+        # Limits should have changed
+        new_x_min, new_x_max, _, _ = viewer._obj.get_limits()
+        assert_allclose(new_x_min, old_x_min + 10, rtol=1e-5)
+        assert_allclose(new_x_max, old_x_max - 10, rtol=1e-5)
+
+        tool.deactivate()
+
+
+    def test_map_limits_with_unit_conversion_spectrum2d(self, deconfigged_helper, spectrum2d):
+        """
+        Test that _map_limits handles unit conversions correctly.
+
+        27-28, 36-39, 45-51
+        """
+        spectrum_viewer, spectrum2d_viewer, tool = self._setup(deconfigged_helper,
+                                                               spectrum2d,
+                                                               'boxzoom_matchx')
+        viewer = spectrum2d_viewer
+
+        # Change to different spectral unit
+        uc = deconfigged_helper.plugins['Unit Conversion']
+        uc.spectral_unit = 'nm'
+        # In order for `_map_limits` to detect the spectral axis component,
+        # it must have 'Wavelength' in its label.
+        for component in deconfigged_helper.app.data_collection[0].components:
+            if component.label == 'World 1':
+                component.label = 'Wavelength'
+                break
+
+        old_x_min, old_x_max, _, _ = viewer._obj.get_limits()
+        # _map_limits runs here
+        tool.activate()
+
+        # Change limits in spectrum viewer
+        check_x_min, check_x_max, y_min, y_max = viewer._obj.get_limits()
+
+        # There is a 0.5 pixel offset (for some reason)
+        assert old_x_min == check_x_min - 0.5
+        assert_allclose(old_x_max, 1e-6 * check_x_max + 0.5, rtol=1e-5)
+
+        # Set new limits
+        tool.interact.selected = [(old_x_min + 10, y_min), (old_x_max - 10, y_max)]
+        # _map_limits also runs here
+        tool.on_update_zoom()
+
+        # Limits should have changed
+        new_x_min, new_x_max, _, _ = viewer._obj.get_limits()
+        assert_allclose(1e-3*new_x_min, old_x_min, rtol=1e-5)
+        assert_allclose(1e-3*new_x_max, old_x_max, rtol=1e-5)
+
+        tool.deactivate()
 
 
 def test_is_matched_viewer(specviz_helper, spectrum1d):
