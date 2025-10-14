@@ -16,7 +16,7 @@ from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
 
 # This applies to all viz but testing with Imviz should be enough.
 def test_viewer_calling_app(imviz_helper):
-    viewer = imviz_helper.default_viewer._obj
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
     assert viewer.session.jdaviz_app is imviz_helper.app
 
 

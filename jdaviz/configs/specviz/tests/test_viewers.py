@@ -52,16 +52,19 @@ def test_limits_on_unit_change(specviz_helper, spectrum1d):
     sv = specviz_helper.viewers['spectrum-viewer']
 
     assert uc.spectral_unit == "Angstrom"
-    assert np.allclose(sv._obj.get_limits(), (6000.0, 8000.0,
-                                              12.30618014327326, 16.542560043585965))
+    assert np.allclose(sv._obj.glue_viewer.get_limits(),
+                       (6000.0, 8000.0,
+                        12.30618014327326, 16.542560043585965))
 
     uc.spectral_unit = 'Ci'
-    assert np.allclose(sv._obj.get_limits(), (10128.0, 13504.164774774774,
-                                              12.30618014327326, 16.542560043585965))
+    assert np.allclose(sv._obj.glue_viewer.get_limits(),
+                       (10128.0, 13504.164774774774,
+                        12.30618014327326, 16.542560043585965))
 
     uc.spectral_unit = 'erg'
-    assert np.allclose(sv._obj.get_limits(), (2.4830270237304e-12, 3.3107430952482144e-12,
-                                              12.30618014327326, 16.542560043585965))
+    assert np.allclose(sv._obj.glue_viewer.get_limits(),
+                       (2.4830270237304e-12, 3.3107430952482144e-12,
+                        12.30618014327326, 16.542560043585965))
 
 
 class TestResetLimitsTwoTests:

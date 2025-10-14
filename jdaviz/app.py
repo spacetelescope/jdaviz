@@ -690,7 +690,7 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         if viewer_id is None:
-            viewer = self._jdaviz_helper.default_viewer._obj
+            viewer = self._jdaviz_helper.default_viewer._obj.glue_viewer
         else:
             viewer = self.get_viewer(viewer_id)
 
@@ -2876,19 +2876,19 @@ class Application(VuetifyTemplate, HubListener):
         reference_data_label = getattr(reference_data, 'label', None)
         linked_by_wcs = getattr(viewer.state, 'linked_by_wcs', False)
 
+        from jdaviz.configs.default.plugins.viewers import JdavizViewerWindow
+        viewer_container = JdavizViewerWindow(viewer, app=self, reference=reference, name=name)
+
         return {
             'id': vid,
+            'reference': reference or name or vid,
             'name': name or vid,
-            'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
-            'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
-            'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            'widget': "IPY_MODEL_" + viewer_container.model_id,
             'api_methods': viewer._data_menu.api_methods if hasattr(viewer, '_data_menu') else [],
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
-            'config': self.config,  # give viewer access to app config/layout
             'collapse': True,
-            'reference': reference or name or vid,
             'linked_by_wcs': linked_by_wcs,
         }
 
@@ -2938,7 +2938,7 @@ class Application(VuetifyTemplate, HubListener):
                 # adopt "linked_by_wcs" from the first (assuming all are the same)
                 # NOTE: deleting the default viewer is forbidden both by API and UI, but if
                 # for some reason that was the case here, linked_by_wcs will default to False
-                linked_by_wcs = self._jdaviz_helper.default_viewer._obj.state.linked_by_wcs
+                linked_by_wcs = self._jdaviz_helper.default_viewer._obj.glue_viewer.state.linked_by_wcs  # noqa
             else:
                 linked_by_wcs = False
             viewer.state.linked_by_wcs = linked_by_wcs
@@ -2959,7 +2959,7 @@ class Application(VuetifyTemplate, HubListener):
             # NOTE: if ever extending image rotation beyond imviz or adding non-image viewers
             # to imviz: this currently assumes that the helper has a default_viewer and that is an
             # image viewer
-            ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
+            ref_data = self._jdaviz_helper.default_viewer._obj.glue_viewer.state.reference_data
             new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
 
             if hasattr(viewer, 'reference'):

@@ -111,9 +111,10 @@ if 'histogram' not in viewer_registry.members.keys():
         pass
 
 
-def show_widget(widget, loc, title):  # pragma: no cover
+def show_widget(widget, loc, title, height=None):  # pragma: no cover
     from IPython import get_ipython
     from IPython.display import display
+    import ipywidgets as widgets
 
     # Check if the user is running Jdaviz in the correct environments.
     # If not, provide a friendly msg to guide them!
@@ -129,6 +130,11 @@ def show_widget(widget, loc, title):  # pragma: no cover
                            "https://jdaviz.readthedocs.io")
 
     if loc == "inline":
+        if height is not None:
+            if isinstance(height, int):
+                height = f"{height}px"
+            widget = widgets.Box([widget], layout=widgets.Layout(height=height, width="100%"))
+
         display(widget)
 
     elif loc.startswith('sidecar'):
@@ -2998,7 +3004,7 @@ class ApertureSubsetSelect(SubsetSelect):
         multiselect = getattr(self, 'multiselect', False)
 
         if viewer is None:
-            viewer = self.app._jdaviz_helper.default_viewer._obj
+            viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
         if selected is None:
             selected = self.selected
             objs = self.selected_obj if multiselect else [self.selected_obj]
