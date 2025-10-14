@@ -172,9 +172,16 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
             results = self.spectral_smooth()
 
         if add_data:
+            load_kwargs = {}
+            # Don't auto-extract in Cubeviz
+            if self.config == 'cubeviz' and self.dataset.selected_obj.flux.ndim == 3:
+                load_kwargs['auto_extract'] = False
+                load_kwargs['flux_only'] = True
             # add data to the collection/viewer
             self.add_results.add_results_from_plugin(results,
-                                                     format=('1D Spectrum', '2D Spectrum'))
+                                                     format=('1D Spectrum', '2D Spectrum',
+                                                             '3D Spectrum'),
+                                                     load_kwargs=load_kwargs)
             self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(

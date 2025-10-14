@@ -4610,7 +4610,8 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item, replace=None, label=None, format=None):
+    def add_results_from_plugin(self, data_item, replace=None, label=None, format=None,
+                                load_kwargs={}):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
@@ -4678,7 +4679,7 @@ class AddResults(BasePluginComponent):
         if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
             self.app._jdaviz_helper.load(data_item,
                                          loader='object', format=format,
-                                         data_label=label, viewer=[])
+                                         data_label=label, viewer=[], **load_kwargs)
         else:
             # NOTE: eventually remove this entirely once all plugins are set to go through
             # the new loaders infrastructure above

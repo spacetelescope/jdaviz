@@ -69,6 +69,8 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
     auto_extract = Bool(True).tag(sync=True)
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
+    # Don't load uncertainty and mask as separate cubes, e.g. for plugin results
+    flux_only = Bool(False).tag(sync=True)
 
     # Extracted Data
     ext_data_label_value = Unicode().tag(sync=True)
@@ -211,7 +213,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def user_api(self):
-        expose = ['auto_extract', 'ext_data_label', 'ext_viewer']
+        expose = ['auto_extract', 'ext_data_label', 'ext_viewer', 'flux_only']
         if self.has_unc:
             expose += ['unc_data_label', 'unc_viewer']
         if self.has_mask:
@@ -290,7 +292,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         # TODO: this will need to be removed when removing restriction of a single flux cube
         self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
 
-        if self.has_unc:
+        if self.has_unc and not self.flux_only:
             # TODO: detect if uncertainty exists and hide section from UI
             uncert = Spectrum(spectral_axis=self.output.spectral_axis,
                               flux=self.output.uncertainty.represent_as(StdDevUncertainty).quantity,
@@ -303,7 +305,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # TODO: this will need to be removed when removing restriction of a single flux cube
             self.app._jdaviz_helper._loaded_uncert_cube = self.app.data_collection[unc_data_label]
 
-        if self.has_mask:
+        if self.has_mask and not self.flux_only:
             mask = Spectrum(spectral_axis=self.output.spectral_axis,
                             flux=self.output.mask * u.dimensionless_unscaled,
                             wcs=self.output.wcs,
