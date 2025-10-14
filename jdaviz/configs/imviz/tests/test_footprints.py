@@ -38,7 +38,7 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         for preset in (preset for preset in plugin.preset.choices if preset != 'From File...'):
             plugin.preset = preset
 
-            viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+            viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
             assert len(viewer_marks) == len(_all_apertures.get(preset))
 
         # regression test for user-set traitlets (specifically color) being reset
@@ -50,7 +50,7 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         plugin.color = '#ffffff'
         plugin.fill_opacity = 0.5
 
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert viewer_marks[0].visible is True
         assert viewer_marks[0].colors == ['#ffffff']
         assert viewer_marks[0].fill_opacities == [0.5]
@@ -79,7 +79,7 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         assert plugin.color == '#ffffff'
 
         # test toggling visibility of markers
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert viewer_marks[0].visible is True
         plugin.visible = False
         assert viewer_marks[0].visible is False
@@ -97,12 +97,12 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         reg = plugin.overlay_regions
         plugin.import_region(reg)
         assert plugin.preset.selected == 'From File...'
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == len(reg)
         # test that importing a different region updates the marks and also that
         # a single region is supported
         plugin.import_region(reg[0])
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == 1
         # clearing the file should default to the PREVIOUS preset (last from the for-loop above)
         plugin._obj.vue_file_import_cancel()
@@ -111,32 +111,32 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         # test that importing a proper STC-S string works
         stc_s = 'POLYGON ICRS 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'POLYGON 5.023 4.992 5.024 4.991 5.029 4.995 5.026 4.998'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'CIRCLE ICRS 5.029 4.992 0.000314'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'CIRCLE 5.029 4.992 0.000314'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'ELLIPSE ICRS 5.029 4.992 0.0003143 0.00027 45.0'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == 1
 
         stc_s = 'ELLIPSE 5.029 4.992 0.0003143 0.00027 45.0'
         plugin.import_region(stc_s)
-        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
         assert len(viewer_marks) == 1
 
         tmp_file = str(tmp_path / 'test_region.reg')
@@ -194,7 +194,7 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
 
     # with the plugin no longer active, marks should not be visible
     assert plugin._obj.is_active is False
-    viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+    viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
     assert viewer_marks[0].visible is False
 
 
@@ -287,7 +287,7 @@ def test_footprint_updates_on_rotation(imviz_helper):
     assert not miri_region.contains(rectangle_center, image_2d_wcs)
     assert miri_region.contains(opposite_corner, image_2d_wcs)
 
-    marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+    marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
 
     # check that the rectangle region appears near the bottom of the viewer:
     assert np.concatenate([marks[0].y, marks[1].y]).min() < -3
@@ -300,7 +300,7 @@ def test_footprint_updates_on_rotation(imviz_helper):
     # mark should still be centered low. If the footprint
     # orientations aren't updated, both footprints will be
     # at the top of the viewer, and this test will fail.
-    marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+    marks = _get_markers_from_viewer(imviz_helper.default_viewer._obj.glue_viewer)
     assert np.concatenate([marks[0].y, marks[1].y]).min() < -3
 
 
