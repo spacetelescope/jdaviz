@@ -5,6 +5,7 @@ from jdaviz.core.user_api import ViewerCreatorUserApi
 from jdaviz.core.viewer_creators import BaseViewerCreator
 from jdaviz.core.registries import viewer_creator_registry
 from jdaviz.core.template_mixin import SelectPluginComponent
+from jdaviz.utils import att_to_componentid
 
 
 __all__ = ['HistogramViewerCreator']
@@ -49,8 +50,9 @@ class HistogramViewerCreator(BaseViewerCreator):
 
     def __call__(self):
         nv = super().__call__()
+        gv_state = nv._obj.glue_viewer.state
         if self.xatt.selected != '':
-            nv._obj.state.x_att = self.xatt.selected
+            gv_state.x_att = att_to_componentid(gv_state.x_att_helper, self.xatt.selected)
         if len(nv._obj.layers):
             nv._obj.reset_limits()
         return nv
