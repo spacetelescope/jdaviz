@@ -54,22 +54,22 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # Link cube 3D x, y, z to plugin 3D x, y, z
 
     # Link 2:
-    # Pixel Axis 0 [z] from cube.pixel_component_ids[0]
-    # Pixel Axis 0 [z] from plugin.pixel_component_ids[0]
-    assert dc.external_links[1].cids1[0] == dc[0].pixel_component_ids[0]
-    assert dc.external_links[1].cids2[0] == dc[-1].pixel_component_ids[0]
+    # RA from cube.world_component_ids[0]
+    # RA from plugin.world_component_ids[0]
+    assert dc.external_links[1].cids1[0] == dc[-1].world_component_ids[0]
+    assert dc.external_links[1].cids2[0] == dc[0].world_component_ids[0]
 
     # Link 3:
-    # Pixel Axis 1 [y] from cube.pixel_component_ids[1]
-    # Pixel Axis 1 [y] from plugin.pixel_component_ids[1]
-    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[1]
-    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[1]
+    # Declination from cube.world_component_ids[1]
+    # Declination from plugin.world_component_ids[1]
+    assert dc.external_links[2].cids1[0] == dc[-1].world_component_ids[1]
+    assert dc.external_links[2].cids2[0] == dc[0].world_component_ids[1]
 
     # Link 4:
-    # Pixel Axis 2 [x] from cube.pixel_component_ids[2]
-    # Pixel Axis 2 [x] from plugin.pixel_component_ids[2]
-    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[2]
-    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[2]
+    # Wavelength from cube.world_component_ids[2]
+    # Wavelength from plugin.world_component_ids[2]
+    assert dc.external_links[3].cids1[0] == dc[-1].world_component_ids[2]
+    assert dc.external_links[3].cids2[0] == dc[0].world_component_ids[2]
 
     # Spectral smooth the input SPECTRUM
     gs.dataset_selected = 'Spectrum (sum)'

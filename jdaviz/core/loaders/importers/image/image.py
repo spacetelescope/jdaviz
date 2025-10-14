@@ -126,7 +126,7 @@ class ImageImporter(BaseImporterToDataCollection):
         # flat image, not a cube
         # isinstance NDData
         return (isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                        NDData, np.ndarray, asdf.AsdfFile)) or
+                                        NDData, np.ndarray, asdf.AsdfFile, Data)) or
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))))
 
     def _glue_data_wcs_to_fits(self, glue_data):
@@ -188,7 +188,10 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([self.input])
 
-        if isinstance(input, NDData):
+        if isinstance(input, Data):
+            # Already a Glue object
+            data = [input,]
+        elif isinstance(input, NDData):
             data = _nddata_to_glue_data(input)  # list of Data
         elif isinstance(input, np.ndarray):
             data = [_ndarray_to_glue_data(input)]
