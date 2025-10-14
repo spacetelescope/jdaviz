@@ -8,7 +8,6 @@ from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.viewers.histogram.state import HistogramViewerState
-from glue.viewers.histogram.state import HistogramLayerState as BqplotHistogramLayerState
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.utils import avoid_circular

@@ -215,7 +215,8 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       only exposed for deconfigged. Controls cumulative histogram display.
     * ``hist_normalize`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for deconfigged. Controls histogram normalization.
-    * ``hist_update_bins_on_reset_limits`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+    * ``hist_update_bins_on_reset_limits``
+      (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for deconfigged. Controls automatic bin updates when limits are reset.
     * ``marker_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for Imviz and deconfigged. Whether markers are visible.
@@ -720,12 +721,12 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                  state_filter=is_histogram)
 
         self.hist_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
-                                                'hist_opacity_value', 'hist_opacity_sync',
-                                                state_filter=is_histogram)
+                                                 'hist_opacity_value', 'hist_opacity_sync',
+                                                 state_filter=is_histogram)
 
         self.hist_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
-                                              'hist_color_value', 'hist_color_sync',
-                                              state_filter=is_histogram)
+                                               'hist_color_value', 'hist_color_sync',
+                                               state_filter=is_histogram)
 
         # Axes options:
         # axes_visible hidden for imviz in plot_options.vue

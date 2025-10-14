@@ -29,6 +29,7 @@ class HistogramViewerCreator(BaseViewerCreator):
     @property
     def user_api(self):
         return ViewerCreatorUserApi(self, expose=('xatt',))
+
     @property
     def viewer_class(self):
         return HistogramViewer
