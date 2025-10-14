@@ -5,6 +5,7 @@ from jdaviz.core.user_api import ViewerCreatorUserApi
 from jdaviz.core.viewer_creators import BaseViewerCreator
 from jdaviz.core.registries import viewer_creator_registry
 from jdaviz.core.template_mixin import SelectPluginComponent
+from jdaviz.utils import att_to_componentid
 
 
 __all__ = ['ScatterViewerCreator']
@@ -60,10 +61,11 @@ class ScatterViewerCreator(BaseViewerCreator):
 
     def __call__(self):
         nv = super().__call__()
+        gv_state = nv._obj.glue_viewer.state
         if self.xatt.selected != '':
-            nv._obj.glue_viewer.state.x_att = self.xatt.selected
+            gv_state.x_att = att_to_componentid(gv_state.x_att_helper, self.xatt.selected)
         if self.yatt.selected != '':
-            nv._obj.glue_viewer.state.y_att = self.yatt.selected
+            gv_state.y_att = att_to_componentid(gv_state.y_att_helper, self.yatt.selected)
         if self.xatt.selected != '' or self.yatt.selected != '':
             if hasattr(nv._obj, 'data'):
                 nv._obj.glue_viewer.reset_limits()
