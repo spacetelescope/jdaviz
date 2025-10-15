@@ -767,6 +767,9 @@ class Application(VuetifyTemplate, HubListener):
         for new_comp in new_data.components:
             if getattr(new_comp, '_component_type', None) in (None, 'unknown'):
                 continue
+            # Don't link flux to flux in cubes
+            elif new_comp.label.lower() in ('flux', 'uncertainty', 'mask') and new_data.ndim == 3:
+                continue
 
             found_match = False
             for existing_data in self.data_collection:
@@ -886,7 +889,7 @@ class Application(VuetifyTemplate, HubListener):
         for ind, pixel_coord in enumerate(pc_ref):
             ref_index = ind
             if (len_linked_pixel == 2 and
-                    (linked_data.meta.get("Plugin", None) in
+                    (linked_data.meta.get('plugin', None) in
                      ['Moment Maps', 'Collapse', 'Sonify Data'])):
 
                 if spectral_axis_index in (2, -1):
