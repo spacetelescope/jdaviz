@@ -225,3 +225,5 @@ def test_histogram_viewer(deconfigged_helper):
     po = deconfigged_helper.plugins['Plot Options']
     po.viewer = 'Added Histogram Viewer'
     po.xatt = 'Right Ascension'
+
+    assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'Right Ascension'  # noqa
