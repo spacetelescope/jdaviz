@@ -7,6 +7,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from specutils import Spectrum, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
+from regions import CirclePixelRegion, PixCoord
 
 from jdaviz.app import Application
 from jdaviz.core.marks import LineUncertainties
@@ -540,144 +541,124 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (620, 700))
 
 
-def test_load_data_with_format_raises_error(specviz_helper, spectrum1d):
-    """
-    Test that passing format parameter raises NotImplementedError.
-    """
-    with pytest.raises(NotImplementedError, match='format is ignored'):
-        specviz_helper.load_data(spectrum1d, format='some_format')
+# TODO: Delete on full deprecation of load_data
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+class TestLoadData:
+    def test_load_data_errors(self, specviz_helper, spectrum1d):
+        """
+        Test that errors from load_data.
+        """
+        with pytest.raises(NotImplementedError, match='format is ignored'):
+            specviz_helper.load_data(spectrum1d, format='some_format')
 
+        with pytest.raises(ValueError, match='Cannot set both'):
+            specviz_helper.load_data(spectrum1d, load_as_list=True, concat_by_file=True)
 
-def test_load_data_both_load_as_list_and_concat_raises_error(
-        specviz_helper, spectrum1d):
-    """
-    Test that setting both load_as_list and concat_by_file raises
-    ValueError.
-    """
-    with pytest.raises(ValueError, match='Cannot set both'):
+    def test_load_data_with_cache_timeout_local_path(self, specviz_helper, spectrum1d):
+        """
+        Test load_data with cache, timeout, and local_path kwargs.
+        """
         specviz_helper.load_data(
-            spectrum1d, load_as_list=True, concat_by_file=True)
-
-
-def test_load_data_with_cache_timeout_local_path(
-        specviz_helper, spectrum1d):
-    """
-    Test load_data with cache, timeout, and local_path kwargs.
-    """
-    specviz_helper.load_data(
-        spectrum1d,
-        data_label='test_cache',
-        cache=True,
-        timeout=30,
-        local_path='/tmp/test'
-    )
-    assert 'test_cache' in specviz_helper.app.data_collection.labels
-
-
-def test_load_data_with_sources_and_exposures(specviz_helper):
-    """
-    Test load_data with sources and exposures kwargs.
-    """
-    spec_list = SpectrumList([
-        Spectrum(
-            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
-            flux=np.ones(10) * u.Jy
-        ),
-        Spectrum(
-            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
-            flux=np.ones(10) * 2 * u.Jy
+            spectrum1d,
+            data_label='test_cache',
+            cache=True,
+            timeout=30,
+            local_path='/tmp/test'
         )
-    ])
-    specviz_helper.load_data(
-        spec_list,
-        sources='*',
-        exposures=['exp1', 'exp2']
-    )
-    assert len(specviz_helper.app.data_collection) >= 2
+        assert 'test_cache' in specviz_helper.app.data_collection.labels
+        assert len(specviz_helper.app.data_collection) == 1
 
+    def test_load_data_with_sources_and_exposures(self, specviz_helper, premade_spectrum_list):
+        """
+        Test load_data with sources and exposures kwargs.
+        """
+        specviz_helper.load_data(premade_spectrum_list, sources='*')
+        assert len(specviz_helper.app.data_collection) == 5
 
-def test_load_data_show_in_viewer_false(specviz_helper, spectrum1d):
-    """
-    Test load_data with show_in_viewer=False.
-    """
-    specviz_helper.load_data(
-        spectrum1d,
-        data_label='hidden_spec',
-        show_in_viewer=False
-    )
-    assert 'hidden_spec' in specviz_helper.app.data_collection.labels
-
-
-def test_load_data_concat_by_file(specviz_helper):
-    """
-    Test load_data with concat_by_file=True.
-    """
-    spec_list = SpectrumList([
-        Spectrum(
-            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
-            flux=np.ones(10) * u.Jy
-        ),
-        Spectrum(
-            spectral_axis=np.linspace(6000, 7000, 10) * u.AA,
-            flux=np.ones(10) * u.Jy
-        )
-    ])
-    initial_count = len(specviz_helper.app.data_collection)
-    with pytest.warns(UserWarning, match='default source selection'):
+    def test_load_data_show_in_viewer_false(self, specviz_helper, spectrum1d):
+        """
+        Test load_data with show_in_viewer=False.
+        """
         specviz_helper.load_data(
-            spec_list,
-            data_label='concatenated',
-            concat_by_file=True
+            spectrum1d,
+            data_label='hidden_spec',
+            show_in_viewer=False
         )
-    assert len(specviz_helper.app.data_collection) > initial_count
+        assert 'hidden_spec' in specviz_helper.app.data_collection.labels
+
+    def test_load_data_concat_by_file(self, specviz_helper, premade_spectrum_list):
+        """
+        Test load_data with concat_by_file=True.
+        """
+        initial_count = len(specviz_helper.app.data_collection)
+        with pytest.warns(UserWarning, match='default source selection'):
+            specviz_helper.load_data(
+                premade_spectrum_list,
+                data_label='concatenated',
+                concat_by_file=True
+            )
+        assert len(specviz_helper.app.data_collection) > initial_count
+
+    def test_load_data_with_load_as_list(self, specviz_helper, premade_spectrum_list):
+        """
+        Test load_data with load_as_list=True.
+        """
+        with pytest.warns(UserWarning, match='default source selection'):
+            specviz_helper.load_data(
+                premade_spectrum_list,
+                data_label='as_list',
+                load_as_list=True
+            )
+        assert 'as_list_index-0' in specviz_helper.app.data_collection.labels
 
 
-def test_load_data_with_load_as_list(specviz_helper):
+def test_get_spectra_no_viewer_reference(specviz_helper):
     """
-    Test load_data with load_as_list=True.
+    Test _spectrum_viewer and get_spectra with no reference viewer.
     """
-    spec_list = SpectrumList([
-        Spectrum(
-            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
-            flux=np.ones(10) * u.Jy
-        ),
-        Spectrum(
-            spectral_axis=np.linspace(5000, 6000, 10) * u.AA,
-            flux=np.ones(10) * 2 * u.Jy
-        )
-    ])
-    with pytest.warns(UserWarning, match='default source selection'):
-        specviz_helper.load_data(
-            spec_list,
-            data_label='as_list',
-            load_as_list=True
-        )
-    assert 'as_list_index-0' in specviz_helper.app.data_collection.labels
+    # Get spectra without a reference viewer
+    specviz_helper.app._viewer_store.pop('specviz-0')  # remove the default viewer
+    assert specviz_helper._spectrum_viewer is None
+    assert specviz_helper.get_spectra() == {}
 
 
 def test_get_spectra_with_spectral_subset(specviz_helper, spectrum1d):
     """
     Test get_spectra with spectral_subset parameter.
+
+    When spectral_subset is provided with data_label, get_spectra
+    returns a spectrum with a mask applied (not extracted/cropped).
     """
     specviz_helper.load_data(spectrum1d, data_label='test_spec')
 
+    # Original spectrum from the fixture has 10 points
+    original_length = len(spectrum1d.spectral_axis)
+
+    # Create a subset from 6200-7000 Angstrom
     subset = SpectralRegion(
         6200 * spectrum1d.spectral_axis.unit,
         7000 * spectrum1d.spectral_axis.unit
     )
     specviz_helper.plugins['Subset Tools'].import_region(subset)
 
-    # Get spectra with the spectral subset applied
-    spectra = specviz_helper.get_spectra(
+    # Get spectra with the spectral subset applied along with data_label
+    result = specviz_helper.get_spectra(
+        data_label='test_spec',
         spectral_subset='Subset 1',
         apply_slider_redshift=False
     )
 
-    assert 'test_spec' in spectra
+    # When both data_label and spectral_subset are provided,
+    # the result is a Spectrum object (not a dict) with a mask applied
+    assert isinstance(result, Spectrum)
+
+    # The mask should be True for points outside the subset (6200-7000 Angstrom)
+    # Points at 6000 and 8000 should be masked, points around 6222-6888 should not be
+    assert np.array_equal(result.mask,
+                          [True, False, False, False, False, True, True, True, True, True])
 
 
-def test_get_spectra_with_data_label_and_spectral_subset(
-        specviz_helper, spectrum1d):
+def test_get_spectra_with_data_label_and_spectral_subset(specviz_helper, spectrum1d):
     """
     Test get_spectra with both data_label and spectral_subset.
     """
