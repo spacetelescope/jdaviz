@@ -5,7 +5,6 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
-from astropy.utils.exceptions import AstropyDeprecationWarning
 from specutils import Spectrum, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
 
