@@ -9,6 +9,8 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
                                            SpectrumInputExtensionsMixin)
+from jdaviz.core.loaders.importers.spectrum_common import _spectrum_assign_component_type
+from jdaviz.core.loaders.importers.image.image import _spatial_assign_component_type
 from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew)
@@ -346,3 +348,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         if ext is not None:
             self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
+
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        comp_type = _spatial_assign_component_type(comp_id, comp, units, physical_type)
+        return _spectrum_assign_component_type(comp_id, comp, units, comp_type)

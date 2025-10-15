@@ -43,7 +43,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
-           'att_to_componentid']
+           'att_to_componentid',
+           'RA_COMPS', 'DEC_COMPS', 'SPECTRAL_AXIS_COMP_LABELS']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -59,6 +60,12 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
+RA_COMPS = ['right ascension', 'ra', 'ra_deg', 'radeg',
+            'radegrees', 'right ascension (degrees)',
+            'ra_obj', 'raj2000', 'ra2000']
+DEC_COMPS = ['declination', 'dec', 'dec_deg', 'decdeg',
+             'decdegrees', 'declination (degrees)',
+             'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
 
 
 class SnackbarQueue:

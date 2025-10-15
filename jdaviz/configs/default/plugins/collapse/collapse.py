@@ -105,7 +105,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         else:
             w = data.coords
         if isinstance(w, GWCS):
-            data_wcs =  WCS(w.to_fits_sip())
+            data_wcs = WCS(w.to_fits_sip())
         else:
             data_wcs = getattr(w, 'celestial', None)
 

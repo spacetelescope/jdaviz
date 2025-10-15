@@ -790,15 +790,6 @@ class Application(VuetifyTemplate, HubListener):
 
                     # Create link if component-types match
                     if new_comp._component_type == existing_comp._component_type:
-                        # For RA and Dec, need to match the component label not just type
-                        # for configs with image viewers but no Orientation plugin.
-                        ra_labels = ('ra', 'right ascension')
-                        dec_labels = {'dec', 'declination'}
-                        new_lower = new_comp.label.lower()
-                        existing_lower = existing_comp.label.lower()
-                        if ((new_lower in ra_labels and existing_lower not in ra_labels) or
-                                (new_lower in dec_labels and existing_lower not in dec_labels)):
-                            continue
                         msg_text = f"Creating link {new_data.label}:{new_comp.label}({new_comp._component_type}) > {existing_data.label}:{existing_comp.label}({existing_comp._component_type})"  # noqa
                         msg = SnackbarMessage(text=msg_text,
                                               color='info', sender=self)

@@ -20,7 +20,7 @@ from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
     PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip
+    _try_gwcs_to_fits_sip, RA_COMPS, DEC_COMPS
 )
 
 try:
@@ -31,7 +31,20 @@ else:
     HAS_ROMAN_DATAMODELS = True
 
 
-__all__ = ['ImageImporter']
+__all__ = ['ImageImporter', '_spatial_assign_component_type']
+
+
+def _spatial_assign_component_type(comp_id, comp, units, physical_type):
+    if str(comp_id).startswith('Pixel Axis'):
+        physical_type = 'pixel'
+        return f'{str(comp_id)[-2]}:pixel'
+
+    if str(comp_id).lower() in RA_COMPS and physical_type == 'angle':
+        return f'RA:{physical_type}'
+    elif str(comp_id).lower() in DEC_COMPS and physical_type == 'angle':
+        return f'DEC:{physical_type}'
+
+    return physical_type
 
 
 @loader_importer_registry('Image')
@@ -288,6 +301,9 @@ class ImageImporter(BaseImporterToDataCollection):
             self.add_to_data_collection(output, data_label,
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
+
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return _spatial_assign_component_type(comp_id, comp, units, physical_type)
 
 
 def _validate_fits_image2d(item):
