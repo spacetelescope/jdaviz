@@ -4,8 +4,10 @@ from pathlib import Path
 from itertools import product
 
 from astropy import units as u
+from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
+from astroquery.mast import Mast, MastMissions
 from gwcs import WCS as GWCS
 from specutils import SpectralRegion, Spectrum
 
@@ -81,7 +83,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
     ldr.object = trace
     assert ldr.format == 'Trace'
     ldr.importer.data_label = 'Trace 1'
-    ldr.importer()
+    ldr.load()
     assert specviz2d_helper.app.data_collection[-1].label == 'Trace 1'
 
     # import through load method
@@ -102,7 +104,7 @@ def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     assert ldr.importer.ext_viewer == []
 
     assert ldr.importer.auto_extract
-    ldr.importer()
+    ldr.load()
 
     # created 2D Spectrum viewer, did auto-extract,
     # but did not create 1D Spectrum viewer
@@ -134,7 +136,7 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert ldr.importer._obj.input_has_extensions is True
     ldr.format = '2D Spectrum'
 
-    ldr.importer()
+    ldr.load()
 
     # ensure get_data works, retrieves a Spectrum1D object, and has spectral WCS attached correctly
     sp2d = deconfigged_helper.get_data('jw02123-o001_v000000353_nirspec_f170lp-g235h_s2d')  # noqa
@@ -157,7 +159,7 @@ def test_jwst_wfss_bsub(deconfigged_helper):
 
     assert ldr.format == '2D Spectrum'
 
-    ldr.importer()
+    ldr.load()
 
     sp1d = deconfigged_helper.get_data('k5l446jid348jk343m8r4vvbkzk4syom (auto-ext)')  # noqa
     assert isinstance(sp1d, Spectrum)
@@ -180,7 +182,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
     number_combos = product((1, 2), (9, 17, 23))
     sources_obj.selected = [f'Exposure {e_num}, Source ID: {s_id}'
                             for e_num, s_id in number_combos]
-    ldr.importer()
+    ldr.load()
 
     assert len(deconfigged_helper.data_labels) == len(sources_obj.selected)
     dc = deconfigged_helper.app.data_collection
@@ -239,7 +241,7 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     assert len(deconfigged_helper.app.data_collection) == 0
     assert len(deconfigged_helper.viewers) == 0
 
-    loader.importer()
+    loader.load()
 
     # 2D spectrum and auto-extracted 1D spectrum
     assert len(deconfigged_helper.app.data_collection) == 2
@@ -249,6 +251,67 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
         # NOTE: this test will attempt to reach out to MAST via astroquery
         # even if cache is available.
         deconfigged_helper.load('mast:invalid')
+
+
+def test_resolver_table_as_query(deconfigged_helper):
+    ldr = deconfigged_helper.loaders['object']
+
+    obs_table = Table({'id': [1, 2, 3], 'fileSetName': ['a', 'b', 'c']})
+    file_table = Table({'id': [1, 2, 3], 'url': ['a', 'b', 'c']})
+    invalid_table = Table({'id': [1, 2, 3], 'name': ['a', 'b', 'c']})
+
+    assert ldr._obj.parsed_input_is_query is False
+
+    ldr.object = obs_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.file_table_populated is False
+
+    ldr.object = file_table
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is False
+    assert ldr._obj.file_table_populated is True
+
+    ldr.object = invalid_table
+    assert ldr._obj.parsed_input_is_query is False
+    assert ldr._obj.observation_table_populated is False
+    assert ldr._obj.file_table_populated is False
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.remote_data
+def test_resolver_table_as_query_astroquery(deconfigged_helper, tmp_path):
+    ldr = deconfigged_helper.loaders['object']
+
+    mast = Mast()
+    coords = mast.resolve_object("M101")
+
+    jwst = MastMissions(mission='JWST')
+
+    datasets = jwst.query_region(coords,
+                                 radius=3,
+                                 select_cols=["sci_stop_time", "sci_targname",
+                                              "sci_start_time", "sci_status"],
+                                 sort_by=['sci_targname'])
+
+    ldr.object = datasets
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.file_table_populated is False
+    assert len(ldr.format.choices) == 0
+
+    ldr.observation_table.select_rows(0)
+
+    assert ldr._obj.file_table_populated is True
+    assert ldr._obj.get_selected_url() is None
+
+    ldr.file_table.select_rows(0)
+    assert ldr._obj.get_selected_url() is not None
+    # we can't guarantee any specific format choices since
+    # this depends on what data is returned from MAST
+    # but let's at least make sure the download was successful
+    # and points to a local temporary cache file
+    assert len(ldr._obj.output) > 0
 
 
 def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
@@ -264,7 +327,7 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     loader.filepath = local_path
     assert len(loader.format.choices) > 0
 
-    loader.importer()
+    loader.load()
 
 
 @pytest.mark.parametrize('order', ([0, 1, 2], [0, 2, 1], [2, 0, 1], [2, 1, 0], [1, 2, 0]))
@@ -291,8 +354,8 @@ def test_freq_wavelength_linking(deconfigged_helper, spectrum1d):
                          meta=spectrum1d.meta)
     deconfigged_helper.load(sp1d_freq, format='1D Spectrum', data_label='sp_frequency')
 
-    # flux <> flux, uncertainty <> uncertainty, wavelength <> freq
-    assert len(deconfigged_helper.app.data_collection.external_links) == 3
+    # flux <> flux, uncertainty <> uncertainty, wavelength <> freq, Pixel 0[x] <> Pixel 1[x]
+    assert len(deconfigged_helper.app.data_collection.external_links) == 4
 
 
 def test_load_image_mult_sci_extension(imviz_helper):
@@ -357,7 +420,7 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
     ldr.url = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/imviz_test_data/jw00042001001_01101_00001_nrcb5_cal.fits'  # noqa
     ldr.importer.gwcs_to_fits_sip = gwcs_to_fits_sip
 
-    ldr.importer()
+    ldr.load()
 
     data = deconfigged_helper.app.data_collection[0]
     assert isinstance(data.coords, expected_cls)

@@ -31,10 +31,10 @@ class BaseLinkHandler:
 
     @property
     def default_viewer_limits(self):
-        return (self.imviz.default_viewer._obj.state.x_min,
-                self.imviz.default_viewer._obj.state.x_max,
-                self.imviz.default_viewer._obj.state.y_min,
-                self.imviz.default_viewer._obj.state.y_max)
+        return (self.imviz.default_viewer._obj.glue_viewer.state.x_min,
+                self.imviz.default_viewer._obj.glue_viewer.state.x_max,
+                self.imviz.default_viewer._obj.glue_viewer.state.y_min,
+                self.imviz.default_viewer._obj.glue_viewer.state.y_max)
 
 
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
@@ -323,4 +323,4 @@ def test_imviz_no_data(imviz_helper):
     assert len(links) == 0
 
     with pytest.raises(ValueError, match='No reference data for link look-up'):
-        imviz_helper.default_viewer._obj.get_alignment_method('foo')
+        imviz_helper.default_viewer._obj.glue_viewer.get_alignment_method('foo')

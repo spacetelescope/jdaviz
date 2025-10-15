@@ -64,7 +64,7 @@ class BaseImviz_WCS_NoWCS:
 
         self.wcs = WCS(hdu_wcs.header)
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
         self.subset_plugin = self.imviz.plugins['Subset Tools']
 
         # Since we are not really displaying, need this to test zoom.
@@ -99,7 +99,7 @@ class BaseImviz_WCS_WCS:
         self.wcs_1 = WCS(hdu1.header)
         self.wcs_2 = WCS(hdu2.header)
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
@@ -155,7 +155,7 @@ class BaseImviz_WCS_GWCS:
         self.wcs_1 = w_fits
         self.wcs_2 = w_gwcs
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
@@ -205,7 +205,7 @@ class BaseImviz_GWCS_GWCS:
         self.wcs_1 = w_gwcs_1
         self.wcs_2 = w_gwcs_2
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer._obj
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)

@@ -7,6 +7,8 @@ from collections import deque
 from urllib.parse import urlparse
 import fnmatch
 import re
+import multiprocessing as mp
+from joblib import Parallel, delayed
 
 import asdf
 import numpy as np
@@ -40,7 +42,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'wildcard_match', 'cmap_samples', 'glue_colormaps']
+           'wildcard_match', 'cmap_samples', 'glue_colormaps',
+           'att_to_componentid']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -721,8 +724,8 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
     cache_none_msg = (
         "You may be querying for a remote file "
-        f"at '{possible_uri}', but the `cache` argument was not "
-        f"in the call to `load_data`. Unless you set `cache` "
+        f"at '{possible_uri}', but the `cache` argument was not used."
+        f"Unless you set `cache` "
         f"explicitly, remote files will be cached locally and "
         f"this warning will be raised."
     )
@@ -789,9 +792,6 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
     else:
         raise ValueError(f"URI {possible_uri} with scheme {parsed_uri.scheme} is not "
                          f"currently supported.")
-
-    # assume this isn't a URI after all:
-    return possible_uri
 
 
 def layer_is_2d(layer):
@@ -953,6 +953,35 @@ def wildcard_match(obj, value, choices=None):
             value = wildcard_match_list_of_str(choices, value)
 
     return value
+
+
+def att_to_componentid(att_helper, att):
+    # get a glue state component id from an attribute helper and an attribute name
+    for choice in att_helper.choices:
+        if str(choice) == att:
+            return choice
+    raise ValueError(f"Could not find component ID for attribute '{att}'")
+
+
+def parallelize_calculation(workers, collect_result_callback, n_cpu=mp.cpu_count() - 1):
+    """
+    Function to perform parallel processing with joblib.
+    The function takes a list of callables (functions with no arguments
+    that return a result) and executes them in parallel.
+    The results of each callable are passed to a callback function for collection.
+
+    Parameters
+    ----------
+    workers : worker type object
+        The function to be called within the parallel backend context.
+    collect_result_callback : function
+        A callback function to collect the results of each worker.
+    n_cpu : int
+        The number of CPU cores to use for parallel processing.
+        Defaults to the total number of available CPU cores - 1.
+    """
+    results = Parallel(n_jobs=n_cpu)(delayed(worker)() for worker in workers)
+    _ = [collect_result_callback(r) for r in results]
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in

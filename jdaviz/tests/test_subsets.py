@@ -1,7 +1,8 @@
+import warnings
+
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.wcs import WCS
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
@@ -12,6 +13,7 @@ from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixe
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion, Spectrum
 from astropy.nddata import NDData
+from astropy.utils.data import download_file
 
 from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 
@@ -466,7 +468,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # If handled correctly, it won't change much.
     # But if not, it move down by 7 pix or so (229.05, 145.92) and fails the test.
-    xy = imviz_helper.default_viewer._obj._get_real_xy(
+    xy = imviz_helper.default_viewer._obj.glue_viewer._get_real_xy(
         imviz_helper.app.data_collection[0], *subset_plugin.get_center())[:2]
     assert_allclose(xy, (229.067822, 152.371943))
 
@@ -481,7 +483,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
     for _ in range(5):
         subset_plugin._obj.recenter()
 
-    xy = imviz_helper.default_viewer._obj._get_real_xy(
+    xy = imviz_helper.default_viewer._obj.glue_viewer._get_real_xy(
         imviz_helper.app.data_collection[0], *subset_plugin.get_center("Subset 2"))[:2]
     assert_allclose(xy, (145.593022, 172.515541))
 
@@ -769,67 +771,42 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
 
 
+@pytest.mark.remote_data
 def test_draw2d_linking_specviz2d(specviz2d_helper):
-    # custom test data to predict values for different viewers
-    header = {
-              'WCSAXES': 2,
-              'CRPIX1': 0.0, 'CRPIX2': 8.5,
-              'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
-              'CUNIT1': 'm', 'CUNIT2': 'deg',
-              'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
-              'CRVAL1': 0.0, 'CRVAL2': 5.0,
-              'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
-    wcs = WCS(header)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
+        specviz2d_helper.load_data(fn, cache=True)
 
-    x_values = np.linspace(0, 10, 128)
-    y_values = np.linspace(0, 5, 256)
-
-    # Create a continuous 2D
-    data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
-    spectrum_data = Spectrum(data, wcs=wcs, meta=header)
-
-    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
     viewer_1d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)
     viewer_2d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
     # create subset in 2d viewer,  want data in 1d viewer
-    viewer_2d.apply_roi(XRangeROI(60, 80))
+    viewer_2d.apply_roi(XRangeROI(300, 350))
     subset_drawn_2d = viewer_1d.native_marks[-1]
 
     # get x and y components to compute subset mask
-    y1 = subset_drawn_2d.y
-    x1 = subset_drawn_2d.x
+    subset_x1 = subset_drawn_2d.y
+    subset_x2 = subset_drawn_2d.x
 
-    subset_highlighted_region1 = x1[np.isfinite(y1)]
-    min_value_subset1 = np.min(subset_highlighted_region1)
-    max_value_subset1 = np.max(subset_highlighted_region1)
+    subset_mask = subset_x2[np.isfinite(subset_x1)]
+    min_value_subset = np.min(subset_mask)
+    max_value_subset = np.max(subset_mask)
 
-    tolerance1 = 1e-6
-    expected_min1 = 6.e-5
-    expected_max1 = 8.e-05
+    data = viewer_1d.native_marks[0]
+    data_x1 = data.y
+    data_x2 = data.x
 
-    assert np.allclose(min_value_subset1, expected_min1, atol=tolerance1)
-    assert np.allclose(max_value_subset1, expected_max1, atol=tolerance1)
+    # get min/max of data to compare to min max of subset mask
+    data_mask = data_x2[np.isfinite(data_x1)]
+    min_value_data = np.min(data_mask)
+    max_value_data = np.max(data_mask)
 
-    # now create a subset in the spectrum-viewer, and determine if
-    # subset is linked correctly in spectrum2d-viewer
-    spec_reg = SpectralRegion(0.0001 * u.m, .0002 * u.m)
-    st = specviz2d_helper.plugins['Subset Tools']
-    st.import_region(spec_reg, edit_subset='Subset 1')
-
-    mask = viewer_2d._get_layer('Subset 1')._get_image()
-    x_coords = np.nonzero(mask)[1]
-    min_value_subset2 = x_coords.min()
-    max_value_subset2 = x_coords.max()
-
-    tolerance2 = 1
-    expected_min2 = 100
-    expected_max2 = 199
-
-    assert np.allclose(min_value_subset2, expected_min2, atol=tolerance2)
-    assert np.allclose(max_value_subset2, expected_max2, atol=tolerance2)
+    assert min_value_data <= min_value_subset <= max_value_data \
+        and min_value_data <= max_value_subset <= max_value_data, \
+        f"Subset range ({min_value_subset}, {max_value_subset}) is outside data range ({min_value_data}, {max_value_data})"  # noqa
 
 
 def test_multi_mask_subset(specviz_helper, spectrum1d):

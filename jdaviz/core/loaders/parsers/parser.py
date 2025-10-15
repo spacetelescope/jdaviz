@@ -23,6 +23,3 @@ class BaseParser:
     @cached_property
     def output(self):
         raise NotImplementedError("Subclasses must implement output property")  # pragma: nocover
-
-    def __call__(self):
-        return self.output

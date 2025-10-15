@@ -157,7 +157,7 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
                 continue
             slice_values = viewer.slice_values
             if len(slice_values):
-                self.value = slice_values[int(len(slice_values)/2)]
+                self.value = float(slice_values[int(len(slice_values)/2)])
                 self._indicator_initialized = True
                 return
 
@@ -241,7 +241,7 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
     def _on_select_slice_message(self, msg):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)
-            self.value = msg.value
+            self.value = float(msg.value)
 
     def _on_global_display_unit_changed(self, msg):
         if msg.axis != self.slice_display_unit_name:
@@ -255,7 +255,7 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
             return
         prev_unit = u.Unit(self.value_unit)
         self.value_unit = str(msg.unit)
-        self.value = self._convert_value_to_unit(self.value, prev_unit, msg.unit)
+        self.value = float(self._convert_value_to_unit(self.value, prev_unit, msg.unit))
 
     def _convert_value_to_unit(self, value, prev_unit, new_unit):
         return (value * prev_unit).to_value(new_unit, equivalencies=u.spectral())
@@ -347,12 +347,12 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
     def vue_goto_first(self, *args):
         if self.is_playing:
             return
-        self.value = np.nanmin(self.valid_values)
+        self.value = float(np.nanmin(self.valid_values))
 
     def vue_goto_last(self, *args):
         if self.is_playing:
             return
-        self.value = np.nanmax(self.valid_values)
+        self.value = float(np.nanmax(self.valid_values))
 
     def vue_play_prev(self, *args):
         if self.is_playing:
@@ -363,9 +363,9 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
         current_ind = np.argmin(abs(valid_values - self.value))
         if current_ind == 0:
             # wrap
-            self.value = valid_values[len(valid_values) - 1]
+            self.value = float(valid_values[len(valid_values) - 1])
         else:
-            self.value = valid_values[current_ind - 1]
+            self.value = float(valid_values[current_ind - 1])
 
     def vue_play_next(self, *args):
         if self.is_playing:
@@ -376,9 +376,9 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
         current_ind = np.argmin(abs(valid_values - self.value))
         if len(valid_values) <= current_ind + 1:
             # wrap
-            self.value = valid_values[0]
+            self.value = float(valid_values[0])
         else:
-            self.value = valid_values[current_ind + 1]
+            self.value = float(valid_values[current_ind + 1])
 
     def _player_worker(self):
         ts = float(self.play_interval) * 1e-3  # ms to s
@@ -393,9 +393,9 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
             current_ind = np.argmin(abs(valid_values - self.value))
             if len(valid_values) <= current_ind + 1:
                 # wrap
-                self.value = valid_values[0]
+                self.value = float(valid_values[0])
             else:
-                self.value = valid_values[current_ind + 1]
+                self.value = float(valid_values[current_ind + 1])
             time.sleep(ts)
 
     def vue_play_start_stop(self, *args):

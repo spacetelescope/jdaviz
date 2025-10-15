@@ -123,6 +123,15 @@
 
 
     <j-plugin-section-header>Loaded Lines</j-plugin-section-header>
+    <j-custom-toolbar-toggle
+      v-if="loaded_lists.length > 0"
+      :enabled="custom_toolbar_enabled"
+      text="line selection tools in spectrum viewer"
+      @toggle-custom-toolbar="toggle_custom_toolbar"
+    >
+      <img class="invert-if-dark" :src="identify_line_icon" width="20"/>
+    </j-custom-toolbar-toggle>
+
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="item in loaded_lists" key=":item">

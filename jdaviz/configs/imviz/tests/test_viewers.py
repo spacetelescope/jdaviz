@@ -134,9 +134,9 @@ def test_zoom_center_radius_init(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/3217"""
     arr = np.ones((10, 10))
     imviz_helper.load_data(arr, data_label='my_array')
-    assert imviz_helper.default_viewer._obj.state.zoom_center_x > 0
-    assert imviz_helper.default_viewer._obj.state.zoom_center_y > 0
-    assert imviz_helper.default_viewer._obj.state.zoom_radius > 0
+    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_x > 0
+    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_y > 0
+    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_radius > 0
 
 
 def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
@@ -147,58 +147,61 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
     # TODO: remove once dev-flag no longer required
     imviz_helper.app.state.catalogs_in_dc = True
 
-    # Load the catalog as a source catalog
-    imviz_helper.load(source_catalog, viewer=[],
-                      format='Catalog', data_label='my_catalog')
+    # Load the source catalog into the data collection, and into the image viewer
+    imviz_helper.load(source_catalog, format='Catalog', data_label='my_catalog')
 
     iv = imviz_helper.viewers['imviz-0']
     dm = iv.data_menu
     po = imviz_helper.plugins['Plot Options']
 
-    assert dm.data_labels_visible == ['my_data[DATA]']
-
-    # BEGIN TEMPORARY MANUAL LINKS
-    from glue.core.component_link import ComponentLink
-
-    data1, data2 = imviz_helper.app.data_collection[0], imviz_helper.app.data_collection[2]
-
-    # print(f"data1({data1.label}).components = {data1.components}")
-    # print(f"data2({data2.label}).components = {data2.components}")
-
-    data1_ra = data1.components[3]
-    data1_dec = data1.components[2]
-
-    data2_ra = data2.components[1]
-    data2_dec = data2.components[2]
-
-    links = [
-        ComponentLink([data1_ra], data2_ra),
-        ComponentLink([data1_dec], data2_dec)
-    ]
-
-    for link in links:
-        imviz_helper.app.data_collection.add_link(link)
-
-    # END TEMPORARY MANUAL LINKS
+    # both image and catalog should be in the data menu, able to be
+    # loaded/removed from the image viewer
+    assert dm.data_labels_visible == ['my_catalog', 'my_data[DATA]']
 
     assert imviz_helper.app.data_collection[2].label == 'my_catalog'
     assert imviz_helper.app.data_collection[2].meta.get('_importer') == 'CatalogImporter'
 
-    # should be available to be added in the image viewer since we're linked by WCS
-    assert 'my_catalog' in dm._obj.dataset.choices
-    assert 'my_catalog' not in dm.data_labels_visible
-    dm.add_data('my_catalog')
+    # since catalog is already loaded, it should not be in the "available"
+    # choices, but should be in the visible list
     assert 'my_catalog' not in dm._obj.dataset.choices
     assert 'my_catalog' in dm.data_labels_visible
 
     # should be available from plot options
     assert 'my_catalog' in po.layer.choices
 
+    # test that mouseover appears
+    mo = imviz_helper._coords_info
+    assert mo.dataset.selected == 'auto'
+    assert 'my_catalog' in mo.dataset.choices
+
+    mo._viewer_mouse_event(iv._obj.glue_viewer,
+                           {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
+    assert mo.as_dict()['data_label'] == 'my_data[DATA]'
+
+    mo.dataset.selected = 'my_catalog'
+    mo._viewer_mouse_event(iv._obj.glue_viewer,
+                           {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
+    assert mo.as_dict()['data_label'] == 'my_catalog'
+    assert mo.as_text()[0] == ''
+    assert mo.as_text()[1] == 'World 22h30m06.8256s -20d49m37.4520s (ICRS)'
+    # some floating point discrepancies in degs is acceptable, WCS tested elsewhere
+    assert len(mo.as_text()[2]) > 0
+
     # changing to pixel linking should set the layer to hidden
     # and remove from the plot options layer tabs
     imviz_helper.plugins['Orientation'].align_by = 'Pixels'
     assert 'my_catalog' not in dm.data_labels_visible
     assert 'my_catalog' not in po.layer.choices
+
+    # test loading/removing another image dataset, which involves linking
+    imviz_helper.load_data(data, data_label='my_data_2')
+    dm.layer.selected = ['my_data_2[DATA]']
+    dm.remove_from_app()
+
+    # test sucessfully removing the catalog
+    dm.layer.selected = ['my_catalog']
+    dm.remove_from_app()
+    assert 'my_catalog' not in imviz_helper.app.data_collection.labels
 
 
 class TestDeleteData(BaseImviz_WCS_NoWCS):

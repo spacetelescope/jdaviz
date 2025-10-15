@@ -200,6 +200,26 @@
         />
     </glue-state-sync-wrapper>
 
+    <glue-state-sync-wrapper v-if="xatt_value && xatt_sync.in_subscribed_states" :sync="xatt_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('xatt')">
+      <glue-state-select
+        :items="xatt_sync.choices"
+        :selected.sync="xatt_value"
+        label="Xatt"
+        api_hint="plg.xatt = "
+        :api_hints_enabled="api_hints_enabled"
+      />
+    </glue-state-sync-wrapper>
+
+    <glue-state-sync-wrapper v-if="yatt_value && yatt_sync.in_subscribed_states" :sync="yatt_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('yatt')">
+      <glue-state-select
+        :items="xatt_sync.choices"
+        :selected.sync="yatt_value"
+        label="Yatt"
+        api_hint="plg.yatt = "
+        :api_hints_enabled="api_hints_enabled"
+      />
+    </glue-state-sync-wrapper>
+
     <!-- LAYER OPTIONS -->
     <div v-if="api_hints_enabled">
       <v-row v-if="layer_items.length > 1">

@@ -1188,6 +1188,20 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if len(self.model_equation) == 0:
             self.model_equation_invalid_msg = 'model equation is required.'
             return
+
+        # check for valid operators
+        eq = self.model_equation.replace(' ', '')
+        ops = re.findall(r'(\*\*|[+\-*/^])', eq)
+        allowed_operators = {'+', '-'}
+        bad_operators = sorted({op for op in ops if op not in allowed_operators})
+        if bad_operators:
+            self.model_equation_invalid_msg = (
+                "unsupported operator(s): "
+                f"{', '.join(bad_operators)}. "
+                "Only '+' and '-' are supported."
+            )
+            return
+
         if '' in self.equation_components:
             # includes an operator without a variable (ex: 'C+')
             self.model_equation_invalid_msg = 'incomplete equation.'

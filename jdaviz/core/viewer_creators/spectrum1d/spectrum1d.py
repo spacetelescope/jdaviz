@@ -13,7 +13,7 @@ class Spectrum1DViewerCreator(BaseViewerCreator):
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
         self.dataset.filters = ['is_spectrum']
-        self.viewer_label_default = '1D Spectrum'  # TODO: append suffix if taken
+        self.viewer_label_default = '1D Spectrum'
 
     @property
     def viewer_class(self):

@@ -1,12 +1,24 @@
+import os
 import warnings
 from contextlib import contextmanager
-from traitlets import Bool, List, Unicode, observe
+from functools import cached_property
+from traitlets import Bool, Instance, List, Unicode, observe, default
+from ipywidgets import widget_serialization
 
-from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, with_spinner
+from astropy.table import Table as astropyTable
+from astroquery.mast import MastMissions
+
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        SelectPluginComponent,
+                                        Table,
+                                        with_spinner)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
+from jdaviz.utils import download_uri_to_path
 
 __all__ = ['BaseResolver', 'find_matching_resolver']
 
@@ -59,7 +71,7 @@ class FormatSelect(SelectPluginComponent):
             # NOTE: plugin is just because this inherits from SelectPluginComponent,
             # but is actually the resolver.  This calls the implemented __call__ method
             # on the parent resolver.
-            parser_input = self.plugin()
+            parser_input = self.plugin.output
         except Exception as e:
             self.items = []
             self._invalid_importers = f'resolver exception: {e}'
@@ -74,7 +86,7 @@ class FormatSelect(SelectPluginComponent):
                     self._dbg_parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
-                        importer_input = this_parser()
+                        importer_input = this_parser.output
                     else:
                         self._invalid_importers[parser_name] = 'not valid'
                         importer_input = None
@@ -194,10 +206,28 @@ class TargetSelect(SelectPluginComponent):
 
 
 class BaseResolver(PluginTemplateMixin):
-    _defer_update_format_items = False  # only use via defer_update_format_items contex manager
+    _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
     requires_api_support = False
+
+    spinner = Unicode("").tag(sync=True)
+
+    # whether the current output could be interpretted as a list of data products
+    parsed_input_is_query = Bool(False).tag(sync=True)
+    # if parsed_input_is_query is True, whether to treat it as such
+    # or pass it on directly to the parsers/importers
+    treat_table_as_query = Bool(True).tag(sync=True)
+
+    observation_table = Instance(Table).tag(sync=True, **widget_serialization)
+    observation_table_populated = Bool(False).tag(sync=True)
+    file_table = Instance(Table).tag(sync=True, **widget_serialization)
+    file_table_populated = Bool(False).tag(sync=True)
+
+    # options to download selected item in products list
+    file_cache = Bool(True).tag(sync=True)
+    file_local_path = Unicode("./").tag(sync=True)
+    file_timeout = FloatHandleEmpty(10).tag(sync=True)
 
     importer_widget = Unicode().tag(sync=True)
 
@@ -205,7 +235,6 @@ class BaseResolver(PluginTemplateMixin):
     # read-only: change via app.state.settings['server_is_remote']
     server_is_remote = Bool(False).tag(sync=True)
 
-    format_items_spinner = Bool(False).tag(sync=True)
     format_items = List().tag(sync=True)
     format_selected = Unicode().tag(sync=True)
     valid_import_formats = Unicode().tag(sync=True)
@@ -220,7 +249,21 @@ class BaseResolver(PluginTemplateMixin):
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
         super().__init__(*args, **kwargs)
 
-        # subclasses should call self._update_format_items on any change
+        self.observation_table.enable_clear = False
+        self.observation_table.show_if_empty = False
+        self.observation_table.show_rowselect = True
+        self.observation_table.item_key = "Dataset"
+        self.observation_table.multiselect = True
+        self.observation_table._selected_rows_changed_callback = self.on_observation_select_changed
+
+        self.file_table.enable_clear = False
+        self.file_table.show_if_empty = False
+        self.file_table.show_rowselect = True
+        self.file_table.item_key = "url"
+        self.file_table.multiselect = False
+        self.file_table._selected_rows_changed_callback = self.on_file_select_changed
+
+        # subclasses should call self._resolver_input_updated on any change
         # to user-inputs that might affect the available formats
         self.format = FormatSelect(self,
                                    items='format_items',
@@ -238,6 +281,18 @@ class BaseResolver(PluginTemplateMixin):
         # Listen for changes to app.state.settings and update traitlet
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
+    @default('observation_table')
+    def _default_observation_table(self):
+        return Table(self,
+                     name='observation_table',
+                     title='Observations')
+
+    @default('file_table')
+    def _default_file_table(self):
+        return Table(self,
+                     name='file_table',
+                     title='Files')
+
     def _on_app_settings_changed(self, new_settings_dict):
         """
         Update traitlet when app state settings change.
@@ -250,23 +305,23 @@ class BaseResolver(PluginTemplateMixin):
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
     @contextmanager
-    def defer_update_format_items(self):
+    def defer_resolver_input_updated(self):
         """
         Context manager to delay updating format items until multiple traitlets have been set.
         """
-        self._defer_update_format_items = True
+        self._defer_resolver_input_updated = True
         try:
             yield
         finally:
-            self._defer_update_format_items = False
-            self._update_format_items()
+            self._defer_resolver_input_updated = False
+            self._resolver_input_updated()
 
     @classmethod
     def from_input(cls, app, inp, **kwargs):
         self = cls(app=app)
         if self.default_input is None:
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
-        with self.defer_update_format_items():
+        with self.defer_resolver_input_updated():
             setattr(self, self.default_input,
                     self.default_input_cast(inp) if self.default_input_cast else inp)
             user_api = self.user_api
@@ -286,11 +341,176 @@ class BaseResolver(PluginTemplateMixin):
             raise NotImplementedError("Resolver subclass must implement default_input")
         return getattr(self, self.default_input)
 
-    def __call__(self):
-        # override by subclass - must convert any inputs into something
-        # that can be interpretted by at least one parser
-        # (generally a filepath, file object, or python object)
-        raise NotImplementedError("Resolver subclass must implement __call__")  # pragma: nocover
+    def parse_input(self):
+        # override by subclass - this should return something that is either interpreted as
+        # a products list OR something that can be passed to at least one parser
+        raise NotImplementedError("Resolver subclass must implement parse_input")  # pragma: nocover
+
+    @cached_property
+    def parsed_input(self):
+        return self.parse_input()
+
+    def _parsed_input_to_table(self, parsed_input):
+        if (isinstance(parsed_input, str)
+                and os.path.exists(parsed_input) and os.path.isfile(parsed_input)):
+            # try to read into a table which could be a products list
+            try:
+                parsed_input = astropyTable.read(parsed_input)
+            except Exception:  # nosec
+                return None
+        if isinstance(parsed_input, astropyTable):
+            return parsed_input
+        return None
+
+    def _parsed_input_to_observation_table(self, parsed_input_table):
+        if 'Dataset' in parsed_input_table.colnames:
+            return parsed_input_table
+        for map_to_ds in ('fileSetName', 'sci_data_set_name'):
+            if map_to_ds in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_ds, 'Dataset')
+                return parsed_input_table
+        return None
+
+    def _parsed_input_to_file_table(self, parsed_input_table):
+        if 'url' in parsed_input_table.colnames:
+            return parsed_input_table
+        for map_to_url in ('URL', 'uri', 'URI', 'dataURI', 'download', 'Filename'):
+            if map_to_url in parsed_input_table.colnames:
+                parsed_input_table.rename_column(map_to_url, 'url')
+                return parsed_input_table
+        return None
+
+    @observe('parsed_input_is_query', 'treat_table_as_query')
+    @with_spinner('spinner', 'parsing input...')
+    def _resolver_input_updated(self, msg={}):
+        if self._defer_resolver_input_updated:
+            return
+        if msg.get('name') == 'treat_table_as_query':
+            # the input itself has remain unchanged, but how that
+            # is mapped to output has
+            self._clear_cache('output')
+        else:
+            self._clear_cache('parsed_input', 'output')
+
+        try:
+            parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
+        except Exception:  # nosec
+            self.parsed_input_is_query = False
+            self.observation_table_populated = False
+            self.file_table_populated = False
+            self.observation_table._clear_table()
+            self.file_table._clear_table()
+            self._update_format_items()
+            return
+
+        # first attempt to parse the input as a table
+        parsed_input_table = self._parsed_input_to_table(parsed_input)
+        # if the input could be parsed as a table, try to interpret it as
+        # either an observation table or file table.  parsed_input_table
+        # will be None if it could not be parsed as a table.
+        if parsed_input_table is not None:
+            file_table = self._parsed_input_to_file_table(parsed_input_table)
+            if file_table is not None:
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+
+                for row in file_table:
+                    self.file_table.add_item(row)
+                self.parsed_input_is_query = True
+                self.observation_table_populated = False
+                self.file_table_populated = True
+                return
+
+            observation_table = self._parsed_input_to_observation_table(parsed_input_table)
+            if observation_table is not None:
+                self.observation_table._clear_table()
+                self.file_table._clear_table()
+
+                for row in observation_table:
+                    self.observation_table.add_item(row)
+                self.parsed_input_is_query = True
+                self.observation_table_populated = True
+                self.file_table_populated = False
+                return
+
+        self.parsed_input_is_query = False
+        self.observation_table_populated = False
+        self.file_table_populated = False
+        self._update_format_items()
+
+    @cached_property
+    def missions_query(self):
+        return MastMissions()
+
+    @with_spinner('spinner', 'fetching product list...')
+    def _get_product_list(self, mission, dataset):
+        self.missions_query.mission = mission
+        return self.missions_query.get_product_list(dataset)
+
+    @staticmethod
+    def guess_mission(dataset):
+        if dataset.startswith('jw'):
+            return 'jwst'
+        elif dataset.startswith('r'):
+            return 'roman'
+        else:
+            return 'hst'
+
+    def on_observation_select_changed(self, _=None):
+
+        if len(self.observation_table.selected_rows) == 0:
+            self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
+                                                   sender=self, color="warning"))
+            return
+        datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
+        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
+        file_table = self._parsed_input_to_file_table(results)
+        if file_table is not None:
+            self.file_table._clear_table()
+            for row in file_table:
+                self.file_table.add_item(row)
+            self.file_table_populated = True
+        else:
+            self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                   sender=self, color="error"))
+            self.file_table_populated = False
+
+    def on_file_select_changed(self, _=None):
+        self._clear_cache('output')
+        self._update_format_items()
+
+    @with_spinner('spinner', 'searching for valid formats...')
+    def _update_format_items(self):
+        # NOTE: this will call self.output
+        self.format._update_items()
+        self.target._update_items()  # assumes format._importers is updated from above
+        # ensure the importer updates even if the format selection remains fixed
+        self._on_format_selected_changed()
+
+    def get_selected_url(self):
+        if len(self.file_table.selected_rows) != 1:
+            return None
+        url = self.file_table.selected_rows[0]['url']
+        if not url.startswith(('http://', 'https://', 'mast:', 'ftp:', 's3:')):
+            return f'https://mast.stsci.edu/search/{self.guess_mission(url)}/api/v0.1/retrieve_product?product_name={url}'  # noqa
+        return url
+
+    @with_spinner('spinner', 'downloading file...')
+    def _download_from_file_table(self):
+        url = self.get_selected_url().strip()
+        if not url:
+            return None
+        return download_uri_to_path(url,
+                                    cache=self.file_cache,
+                                    local_path=self.file_local_path,
+                                    timeout=self.file_timeout)
+
+    @cached_property
+    def output(self):
+        if self.parsed_input_is_query and self.treat_table_as_query:
+            return self._download_from_file_table()
+        else:
+            return self.parsed_input
 
     @property
     def user_api(self):
@@ -301,16 +521,6 @@ class BaseResolver(PluginTemplateMixin):
         # override by subclass to provide a default label to the importer
         # importers can then decide whether to use this or not.
         return None
-
-    @with_spinner('format_items_spinner')
-    def _update_format_items(self):
-        if self._defer_update_format_items:
-            return
-        # NOTE: this will result in a call to the implemented __call__ on the resolver
-        self.format._update_items()
-        self.target._update_items()  # assumes format._importers is updated from above
-        # ensure the importer updates even if the format selection remains fixed
-        self._on_format_selected_changed()
 
     @property
     def parser(self):
@@ -323,6 +533,12 @@ class BaseResolver(PluginTemplateMixin):
         if not self.format.selected:
             raise ValueError("must select a format before accessing importer")
         return self.format._importers[self.format.selected]
+
+    def load(self):
+        """
+        Import into jdaviz with all selected options.
+        """
+        return self.importer()
 
     @observe('target_selected')
     def _on_target_selected_changed(self, change={}):

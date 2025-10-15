@@ -31,7 +31,7 @@ def _slice(helper, ramp_cube):
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("diff-viewer", "test[DATA]")
     app.add_data_to_viewer("integration-viewer", "Ramp (mean)")
-    sv = helper.viewers['integration-viewer']._obj
+    sv = helper.viewers['integration-viewer']._obj.glue_viewer
 
     # sample ramp only has 10 groups
     assert len(sv.slice_values) == 10

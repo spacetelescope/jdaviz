@@ -4,6 +4,19 @@
 New Features
 ------------
 
+- Add check for valid model fitting equation operators. [#3818]
+
+- Change parallelization framework for better performance and flexibility. [#3806]
+
+- Plugin-specific viewer tools (footprint, catalogs, line lists, line analysis) now have a
+  toggle button in the plugin UI to enable/disable a custom toolbar specific to that context. [#3812]
+
+- Viewers now support being popped out into separate window or sending to any sidecar location via `.show()`
+  API. [#3821]
+
+- Loaders now all support "observation" and "file" tables, allowing choosing which file to download
+  and import from an astroquery or MAST search. [#3769]
+
 Cubeviz
 ^^^^^^^
 
@@ -11,6 +24,8 @@ Imviz
 ^^^^^
 
 - Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
+
+- Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769]
 
 Mosviz
 ^^^^^^
@@ -25,6 +40,9 @@ Specviz2d
 
 API Changes
 -----------
+
+- Adds `ldr.load()` method to the loaders API and suggests using this in API hints over `ldr.importer()`
+  (which will continue to exist). [#3832]
 
 Cubeviz
 ^^^^^^^
@@ -64,11 +82,19 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-4.4.1 (unreleased)
+- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759]
+
+- Scatter viewer support in the deconfigged app instance. [#3778]
+
+4.4.2 (unreleased)
 ==================
+
+- Fixes traceback raised by the stretch histogram in plot options when entering multiselect mode. [#3825]
 
 Bug Fixes
 ---------
+
+- Add support for all valid astropy table write formats. [#3822]
 
 Cubeviz
 ^^^^^^^
@@ -84,8 +110,27 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
+
+4.4.1 (2025-09-26)
+==================
+
+Bug Fixes
+---------
+
+- Fixes cases where import data raises exception in attempting to set metadata. [#3797]
+
+Cubeviz
+^^^^^^^
+
+- Speed up loading of large cubes into cubeviz. [#3791]
+
+Specviz2d
+^^^^^^^^^
 
 - Automatic spectral extraction now works when multiple 2D spectra are loaded. [#3793]
+
+- Fixes an incorrect API hint in 2D Spectral Extraction. [#3798]
 
 4.4 (2025-09-18)
 ================

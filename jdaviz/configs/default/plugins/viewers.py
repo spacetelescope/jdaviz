@@ -7,12 +7,14 @@ from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
+from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.utils import avoid_circular
 
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.scatter import BqplotScatterView
 from glue_jupyter.table import TableViewer
 
 from astropy.utils import deprecated
@@ -22,15 +24,20 @@ from astropy.nddata import (
 )
 from specutils import Spectrum
 
+from traitlets import Bool, Unicode
+
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
-from jdaviz.core.events import SnackbarMessage, NewViewerMessage, ViewerVisibleLayersChangedMessage
+from jdaviz.core.events import (SnackbarMessage,
+                                NewViewerMessage,
+                                ViewerRemovedMessage,
+                                ViewerVisibleLayersChangedMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.template_mixin import WithCache
+from jdaviz.core.template_mixin import WithCache, TemplateMixin, show_widget
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                flux_conversion_general,
@@ -424,6 +431,8 @@ class JdavizViewerMixin(WithCache):
         # we don't have access to the actual subset yet to tell if its spectral or spatial, so
         # we'll store the name of this new subset and change the default linewidth when the
         # layers are added
+        if not hasattr(self, '_expected_subset_layers'):
+            return
         if msg.subset.label not in self._expected_subset_layers and msg.subset.label:
             self._expected_subset_layers.append(msg.subset.label)
 
@@ -522,6 +531,102 @@ class JdavizViewerMixin(WithCache):
     def set_plot_axes(self):
         # individual viewers can override to set custom axes labels/ticks/styling
         return
+
+
+class JdavizViewerWindow(TemplateMixin):
+    """
+    wraps a glue viewer in a single container that also includes
+    the toolbar and data-menu, while redirecting user_api calls
+    to the underlying viewer.
+    """
+    template_file = __file__, "../../../viewer_window.vue"
+
+    id = Unicode().tag(sync=True)
+    name = Unicode().tag(sync=True)
+    reference = Unicode().tag(sync=True)
+    config = Unicode().tag(sync=True)
+    figure_widget = Unicode().tag(sync=True)
+    toolbar_widget = Unicode().tag(sync=True)
+    data_menu_widget = Unicode().tag(sync=True)
+
+    viewer_destroyed = Bool(False).tag(sync=True)
+
+    def __init__(self, viewer, *args, reference="", name="", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.glue_viewer = viewer
+        self.config = self.app.config
+
+        vid = viewer._reference_id
+        self.id = vid
+        self.name = name or vid
+        self.reference = reference or name or vid
+        self.figure_widget = "IPY_MODEL_" + viewer.figure_widget.model_id
+        self.toolbar_widget = "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else ''
+        self.data_menu_widget = 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else ''  # noqa
+
+        self.hub.subscribe(self, ViewerRemovedMessage, self._on_viewer_removed)
+
+    @property
+    def user_api(self):
+        # expose show methods at this level and redirect others to the underlying viewers
+        from jdaviz.core.user_api import ViewerWindowUserApi
+        return ViewerWindowUserApi(self, expose=['show'])
+
+    def _on_viewer_removed(self, msg):
+        if msg.viewer_id == self.id:
+            self.viewer_destroyed = True
+
+    def show(self, loc="inline", title=None, height=None):  # pragma: no cover
+        """Display the viewer window UI.
+
+        Parameters
+        ----------
+        loc : str
+            The display location determines where to present the viewer UI.
+            Supported locations:
+
+            "inline": Display the viewer inline in a notebook.
+
+            "sidecar": Display the viewer in a separate JupyterLab window from the
+            notebook, the location of which is decided by the 'anchor.' right is the default
+
+                Other anchors:
+
+                * ``sidecar:right`` (The default, opens a tab to the right of display)
+                * ``sidecar:tab-before`` (Full-width tab before the current notebook)
+                * ``sidecar:tab-after`` (Full-width tab after the current notebook)
+                * ``sidecar:split-right`` (Split-tab in the same window right of the notebook)
+                * ``sidecar:split-left`` (Split-tab in the same window left of the notebook)
+                * ``sidecar:split-top`` (Split-tab in the same window above the notebook)
+                * ``sidecar:split-bottom`` (Split-tab in the same window below the notebook)
+
+                See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+                for the most up-to-date options.
+
+            "popout": Display the viewer in a detached display. By default, a new
+            window will open. Browser popup permissions required.
+
+                Other anchors:
+
+                * ``popout:window`` (The default, opens Jdaviz in a new, detached popout)
+                * ``popout:tab`` (Opens Jdaviz in a new, detached tab in your browser)
+
+        title : str, optional
+            The title of the sidecar tab.  Defaults to the name of the viewer.
+
+            NOTE: Only applicable to a "sidecar" display.
+
+        height : int, optional
+            The height of the viewer display, in pixels.  Only applicable if loc is "inline".
+
+        Notes
+        -----
+        If "sidecar" is requested in the "classic" Jupyter notebook, the viewer will appear inline,
+        as only JupyterLab has a mechanism to have multiple tabs.
+        """
+        title = title if title is not None else self.name
+
+        show_widget(self, loc=loc, title=title, height=height)
 
 
 @viewer_registry("jdaviz-profile-viewer", label="Profile 1D")
@@ -964,3 +1069,19 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
             for i in (0, 1):
                 self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}
+
+
+@viewer_registry("scatter-viewer", label="scatter")
+class ScatterViewer(JdavizViewerMixin, BqplotScatterView):
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                    ['bqplot:xrange', 'bqplot:yrange', 'bqplot:rectangle'],
+                    [],
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
+    _state_cls = ScatterViewerState
+
+    _native_mark_classnames = ('Image', 'ImageGL', 'Scatter', 'ScatterGL')

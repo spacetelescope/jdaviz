@@ -1,3 +1,4 @@
+import os
 from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
@@ -149,6 +150,12 @@ class BaseImporterToDataCollection(BaseImporter):
 
     @property
     def default_data_label_from_resolver(self):
+        if self._resolver.parsed_input_is_query and self._resolver.treat_table_as_query:
+            url = self._resolver.get_selected_url()
+            path = os.path.splitext(os.path.basename(url.strip()))[0]
+            if "product_name=" in path:
+                path = path.split("product_name=")[1]
+            return path
         return self._resolver.default_label
 
     @property
@@ -204,6 +211,9 @@ class BaseImporterToDataCollection(BaseImporter):
         cls = cls if cls is not None else data.__class__
         if not hasattr(data, 'meta'):
             data.meta = {}
+        if not isinstance(data.meta, dict):
+            # ensure that data.meta is a dictionary and supports item assignment
+            data.meta = dict(data.meta)
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
 

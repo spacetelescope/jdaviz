@@ -3,7 +3,7 @@ name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
 requires-python = ">=3.11"
 authors = [
-    { name = "JDADF Developers", email = "help@stsci.edu" },
+    { name = "JDADF Developers"},
 ]
 dependencies = [
     "packaging",
@@ -35,13 +35,14 @@ dependencies = [
     "regions>=0.6",
     "scikit-image",
     "sidecar>=0.5.2",
-    "ipypopout>=2.0.0",
+    "ipypopout>=2.0.1",
     "astroquery",
     "requests",
     "nbclassic",
     # pyvo pin can be removed once astroquery's pyvo dep pulls in 1.5.3
     "pyvo>=1.5.3",
-    "s3fs>=2024.10.0"
+    "s3fs>=2024.10.0",
+    "joblib>=1.3.0"
 ]
 license-files = ["LICENSE.rst", "licenses/IPYFILECHOOSER_LICENSE.rst", "licenses/IMEXAM_LICENSE.txt", "licenses/GINGA_LICENSE.txt", "licenses/TEMPLATE_LICENCE.rst"]
 dynamic = [

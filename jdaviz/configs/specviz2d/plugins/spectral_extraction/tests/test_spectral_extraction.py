@@ -16,6 +16,7 @@ from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
+from jdaviz.core.marks import Lines
 
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 
@@ -246,7 +247,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
                           flux=spec2d*u.Jy,
                           uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
 
-    specviz2d_helper.load_data(objectspec)
+    specviz2d_helper.load(objectspec)
     pext = specviz2d_helper.plugins['2D Spectral Extraction']._obj
 
     trace_fit = tracing.FitTrace(objectspec,
@@ -303,7 +304,7 @@ def test_horne_extract_self_profile(specviz2d_helper):
 
 
 def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectrum2d):
-    specviz2d_helper.load_data(mos_spectrum2d)
+    specviz2d_helper.load(mos_spectrum2d)
 
     uc = specviz2d_helper.plugins["Unit Conversion"]
     pext = specviz2d_helper.plugins['2D Spectral Extraction']
@@ -328,6 +329,77 @@ def test_spectral_extraction_flux_unit_conversions(specviz2d_helper, mos_spectru
 
         exported_extract = pext.export_extract()
         assert exported_extract.image._unit == specviz2d_helper.app._get_display_unit('flux')
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_spectral_extraction_preview(deconfigged_helper, spectrum2d):
+    # Multiple 1D viewers is a deconfigged thing so we stick with using
+    # that helper throughout.
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum')
+    # Assume auto extract is on
+    default_extraction_label = deconfigged_helper.app.data_collection.labels[1]
+    custom_extraction_label = 'custom-extraction'
+
+    # Create a custom extraction and add to a existing viewer
+    spext = deconfigged_helper.plugins['2D Spectral Extraction']
+    spext.trace_pixel = 2  # to distinguish from auto-extract
+    spext.ext_add_results.label = custom_extraction_label
+    spext.export_extract_spectrum(add_data=True)  # added as layer to "1D Spectrum" viewer
+
+    default_extraction_data = deconfigged_helper.get_data(default_extraction_label)
+    custom_extraction_data = deconfigged_helper.get_data(custom_extraction_label)
+
+    assert np.any(~np.isnan(default_extraction_data.flux))
+    assert np.any(~np.isnan(custom_extraction_data.flux))
+    # Check that the loaded spectra differ from one another, i.e. that
+    # the second spectra is being pulled in correctly.
+    assert not np.array_equal(default_extraction_data.flux, custom_extraction_data.flux)
+
+    # Check that both are in the default viewer
+    default_viewer = deconfigged_helper.viewers['1D Spectrum']
+    default_dm = default_viewer.data_menu
+    assert default_extraction_label in default_dm.layer.choices
+    assert custom_extraction_label in default_dm.layer.choices
+
+    # Remove layer from default viewer
+    default_dm.layer = [custom_extraction_label]
+    default_dm.remove_from_viewer()
+
+    # Check that only the default extraction remains in the default viewer
+    default_dm = default_viewer.data_menu
+    assert default_extraction_label in default_dm.layer.choices
+    assert custom_extraction_label not in default_dm.layer.choices
+
+    # and add to a new viewer
+    nvc = deconfigged_helper.new_viewers['1D Spectrum']
+    nvc.dataset = custom_extraction_label
+    nvc.viewer_label = 'manual-viewer'
+    new_viewer = nvc()
+
+    # Iterate through both viewers to perform the existence and preview checks.
+    # Adds the custom extraction *back* to the default viewer to check
+    # that the preview works there as well even after all the moving around.
+    for i, viewer in enumerate([new_viewer, default_viewer]):
+        dm = viewer.data_menu
+        if i == 0:
+            # Check that only the custom extraction is in the new viewer
+            assert default_extraction_label not in dm.layer.choices
+        else:
+            # re-add to old viewer and confirm that the preview appears there too
+            default_dm.add_data(custom_extraction_label)
+            assert default_extraction_label in dm.layer.choices
+
+        assert custom_extraction_label in dm.layer.choices
+
+        # check that the preview lines appear/disappear as expected
+        # (as modified from 'test_ramp_extraction.py')
+        for interactive_extract in [True, False]:
+            with spext.as_active():
+                spext.interactive_extract = interactive_extract
+                assert len([
+                    mark for mark in viewer._obj.glue_viewer.custom_marks
+                    if mark.visible and isinstance(mark, Lines) and
+                       len(mark.x) == len(spectrum2d.spectral_axis)]) == int(interactive_extract)
 
 
 class TestTwo2dSpectra:
@@ -381,7 +453,7 @@ class TestTwo2dSpectra:
             ldr.object = spectrum2d
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
-            ldr.importer()
+            ldr.load()
             self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[:2]
 
             self.setup_another_2d_spectrum(spectrum2d)
@@ -390,7 +462,7 @@ class TestTwo2dSpectra:
             ldr.importer.auto_extract = True
             ldr.importer.data_label = self.another_spec2d_label
             ldr.importer.ext_data_label = self.another_spec2d_ext_label
-            ldr.importer()
+            ldr.load()
 
         elif method == 'loader_infrastructure_alternate_order':
             self.setup_another_2d_spectrum(spectrum2d)
@@ -402,13 +474,13 @@ class TestTwo2dSpectra:
             ldr.importer.auto_extract = True
             ldr.importer.data_label = self.another_spec2d_label
             ldr.importer.ext_data_label = self.another_spec2d_ext_label
-            ldr.importer()
+            ldr.load()
 
             # Allow this to use the default label
             ldr.object = spectrum2d
             ldr.format = '2D Spectrum'
             ldr.importer.auto_extract = True
-            ldr.importer()
+            ldr.load()
             self.spec2d_label, self.spec2d_ext_label = helper.app.data_collection.labels[-2:]
 
         else:
@@ -449,7 +521,7 @@ class TestTwo2dSpectra:
         # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
         # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
         # Another 2D Spectral Extraction <=> 2D Spectrum
-        assert len(dc.external_links) == 6
+        assert len(dc.external_links) == 9
         for link in dc.external_links:
             # Check that linking is correct by confirming that both
             # are in `expected_labels`
@@ -490,8 +562,8 @@ class TestTwo2dSpectra:
         min_value_subset = np.min(subset_highlighted_region1)
         max_value_subset = np.max(subset_highlighted_region1)
 
-        expected_min = 0
-        expected_max = 1
+        expected_min = 2
+        expected_max = 7
         atol = 1e-2
         assert_allclose(min_value_subset, expected_min, atol=atol)
         assert_allclose(max_value_subset, expected_max, atol=atol)
