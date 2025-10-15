@@ -67,6 +67,5 @@ class ScatterViewerCreator(BaseViewerCreator):
         if self.yatt.selected != '':
             gv_state.y_att = att_to_componentid(gv_state.y_att_helper, self.yatt.selected)
         if self.xatt.selected != '' or self.yatt.selected != '':
-            if hasattr(nv._obj, 'data'):
-                nv._obj.glue_viewer.reset_limits()
+            nv._obj.glue_viewer.reset_limits()
         return nv

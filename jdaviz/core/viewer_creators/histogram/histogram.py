@@ -54,6 +54,6 @@ class HistogramViewerCreator(BaseViewerCreator):
         gv_state = nv._obj.glue_viewer.state
         if self.xatt.selected != '':
             gv_state.x_att = att_to_componentid(gv_state.x_att_helper, self.xatt.selected)
-        if len(nv._obj.layers):
-            nv._obj.reset_limits()
+        if len(nv._obj.glue_viewer.layers):
+            nv._obj.glue_viewer.reset_limits()
         return nv
