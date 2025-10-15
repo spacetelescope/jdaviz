@@ -35,7 +35,7 @@ dependencies = [
     "regions>=0.6",
     "scikit-image",
     "sidecar>=0.5.2",
-    "ipypopout>=2.0.0",
+    "ipypopout>=2.0.1",
     "astroquery",
     "requests",
     "nbclassic",

@@ -292,14 +292,14 @@ def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per
     assert uc_plg.spectral_y_type == 'Flux'
     assert uc_plg.flux_unit == 'Jy'
     assert uc_plg.sb_unit == "Jy / sr"
-    assert cubeviz_helper.viewers['flux-viewer']._obj.layers[0].state.attribute_display_unit == "Jy / sr"  # noqa
+    assert cubeviz_helper.viewers['flux-viewer']._obj.glue_viewer.layers[0].state.attribute_display_unit == "Jy / sr"  # noqa
     assert np.allclose(po_plg.contour_max.value, 199)
 
     uc_plg.spectral_y_type = 'Surface Brightness'
     uc_plg.flux_unit = 'MJy'
 
     assert uc_plg.sb_unit == "MJy / sr"
-    assert cubeviz_helper.viewers['flux-viewer']._obj.layers[0].state.attribute_display_unit == "MJy / sr"  # noqa
+    assert cubeviz_helper.viewers['flux-viewer']._obj.glue_viewer.layers[0].state.attribute_display_unit == "MJy / sr"  # noqa
     assert np.allclose(po_plg.contour_max.value, 1.99e-4)
 
 
@@ -381,5 +381,5 @@ def test_limits_on_unit_change(cubeviz_helper, start_unit, end_unit,
     uc_plg.flux_unit = end_unit
     uc_plg.spectral_y_type = end_spectral_y_type
 
-    new_limits = sv._obj.get_limits()
+    new_limits = sv._obj.glue_viewer.get_limits()
     assert np.allclose(new_limits, expected_limits)

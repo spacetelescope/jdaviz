@@ -134,9 +134,9 @@ def test_zoom_center_radius_init(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/3217"""
     arr = np.ones((10, 10))
     imviz_helper.load_data(arr, data_label='my_array')
-    assert imviz_helper.default_viewer._obj.state.zoom_center_x > 0
-    assert imviz_helper.default_viewer._obj.state.zoom_center_y > 0
-    assert imviz_helper.default_viewer._obj.state.zoom_radius > 0
+    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_x > 0
+    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_y > 0
+    assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_radius > 0
 
 
 def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
@@ -174,11 +174,13 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
     assert mo.dataset.selected == 'auto'
     assert 'my_catalog' in mo.dataset.choices
 
-    mo._viewer_mouse_event(iv._obj, {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
+    mo._viewer_mouse_event(iv._obj.glue_viewer,
+                           {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
     assert mo.as_dict()['data_label'] == 'my_data[DATA]'
 
     mo.dataset.selected = 'my_catalog'
-    mo._viewer_mouse_event(iv._obj, {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
+    mo._viewer_mouse_event(iv._obj.glue_viewer,
+                           {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
     assert mo.as_dict()['data_label'] == 'my_catalog'
     assert mo.as_text()[0] == ''
     assert mo.as_text()[1] == 'World 22h30m06.8256s -20d49m37.4520s (ICRS)'

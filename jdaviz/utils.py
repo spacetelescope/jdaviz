@@ -42,7 +42,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'wildcard_match', 'cmap_samples', 'glue_colormaps']
+           'wildcard_match', 'cmap_samples', 'glue_colormaps',
+           'att_to_componentid']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -953,6 +954,14 @@ def wildcard_match(obj, value, choices=None):
             value = wildcard_match_list_of_str(choices, value)
 
     return value
+
+
+def att_to_componentid(att_helper, att):
+    # get a glue state component id from an attribute helper and an attribute name
+    for choice in att_helper.choices:
+        if str(choice) == att:
+            return choice
+    raise ValueError(f"Could not find component ID for attribute '{att}'")
 
 
 def parallelize_calculation(workers, collect_result_callback, n_cpu=mp.cpu_count() - 1):

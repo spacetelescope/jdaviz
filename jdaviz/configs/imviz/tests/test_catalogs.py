@@ -67,7 +67,7 @@ class TestCatalogs:
         arr = np.ones((1489, 2048))
 
         # Since we are not really displaying, need this to test zoom.
-        viewer = imviz_helper.default_viewer._obj
+        viewer = imviz_helper.default_viewer._obj.glue_viewer
         viewer.shape = (100, 100)
         viewer.state._set_axes_aspect_ratio(1)
 
@@ -176,10 +176,10 @@ class TestCatalogs:
         assert catalogs_plugin._obj.results_available
         assert catalogs_plugin._obj.number_of_results == catalogs_plugin.max_sources
 
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 279.0
-        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 1768.0
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
-        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == 279.0
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 1768.0
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min == -0.5
+        assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max == 1488.5
 
         # Re-populate the table with a new search
         with pytest.warns(ResourceWarning):
@@ -193,13 +193,13 @@ class TestCatalogs:
         catalogs_plugin.zoom_to_selected(padding=50 / 2048)
 
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.x_min, 1046.377555, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min, 1046.377555, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.x_max, 1098.748805, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max, 1098.748805, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.y_min, 699.110485, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min, 699.110485, atol=0.1)
         assert_allclose(
-            imviz_helper.viewers['imviz-0']._obj.state.y_max, 751.481735, atol=0.1)
+            imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max, 751.481735, atol=0.1)
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
@@ -233,7 +233,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
 
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Since we are not really displaying, need this to test zoom.
-    viewer = imviz_helper.default_viewer._obj
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
     viewer.shape = (100, 100)
     viewer.state._set_axes_aspect_ratio(1)
 
@@ -291,10 +291,10 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert not catalogs_plugin._obj.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
 
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
-    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
-    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
+    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min == -0.5
+    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max == 9.5
+    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min == -0.5
+    assert imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max == 9.5
     # Re-populate the table with a new search
     out_tbl = catalogs_plugin.search()
     assert len(out_tbl) > 0
@@ -305,15 +305,19 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # test the zooming using the default 'padding' of 2% of the viewer size
     # around selected points
     catalogs_plugin.zoom_to_selected()
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_min, -0.01966, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.x_max, 0.02034, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_min, 0.980008, rtol=1e-4)
-    assert_allclose(imviz_helper.viewers['imviz-0']._obj.state.y_max, 1.020008, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_min,
+                    -0.01966, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.x_max,
+                    0.02034, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_min,
+                    0.980008, rtol=1e-4)
+    assert_allclose(imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.y_max,
+                    1.020008, rtol=1e-4)
 
 
 def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     # Since we are not really displaying, need this to test zoom.
-    viewer = imviz_helper.default_viewer._obj
+    viewer = imviz_helper.default_viewer._obj.glue_viewer
     viewer.shape = (100, 100)
     viewer.state._set_axes_aspect_ratio(1)
 
@@ -335,7 +339,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     catalogs_plugin.select_all()
 
     # check viewer limits before zoom
-    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
+    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.glue_viewer.get_limits()
     assert xmin == ymin == -0.5
     assert xmax == ymax == 499.5
 
@@ -344,7 +348,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 
     # make sure the viewer bounds reflect the zoom, which, in pixel coords,
     # should be centered at roughly pixel coords (150, 150)
-    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
+    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.glue_viewer.get_limits()
 
     assert_allclose((xmin + xmax) / 2, 150., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 150., atol=0.1)
@@ -364,7 +368,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
     catalogs_plugin.zoom_to_selected(padding=0.05)
 
     # check that zoom window is centered correctly on the source at 100, 100
-    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.get_limits()
+    xmin, xmax, ymin, ymax = imviz_helper.default_viewer._obj.glue_viewer.get_limits()
     assert_allclose((xmin + xmax) / 2, 100., atol=0.1)
     assert_allclose((ymin + ymax) / 2, 100., atol=0.1)
 
@@ -399,13 +403,13 @@ def test_select_tool(imviz_helper, image_2d_wcs):
     catalogs_plugin.import_catalog(tbl)
 
     # the tool isn't available in the default toolbar
-    toolbar = imviz_helper.viewers['imviz-0']._obj.toolbar
+    toolbar = imviz_helper.viewers['imviz-0']._obj.glue_viewer.toolbar
     assert 'jdaviz:selectcatalog' not in toolbar.tools
 
     catalogs_plugin._obj.toggle_custom_toolbar()
     assert 'jdaviz:selectcatalog' in toolbar.tools
     tool = toolbar.tools['jdaviz:selectcatalog']
-    mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['imviz-0']._obj)
+    mark = catalogs_plugin._obj._get_mark(imviz_helper.viewers['imviz-0']._obj.glue_viewer)
     assert tool.is_visible() is False
 
     catalogs_plugin.search(error_on_fail=True)
