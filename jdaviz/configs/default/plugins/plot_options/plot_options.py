@@ -747,13 +747,13 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.hist_ylog = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_log',
                                               'hist_ylog_value', 'hist_ylog_sync',
                                               state_filter=is_histogram)
-        self.hist_n_bin = PlotOptionsSyncState(self, self.viewer, self.layer, 'n_bin',
+        self.hist_n_bin = PlotOptionsSyncState(self, self.viewer, self.layer, 'hist_n_bin',
                                                'hist_n_bin_value', 'hist_n_bin_sync',
                                                state_filter=is_histogram)
-        self.hist_x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_min',
+        self.hist_x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'hist_x_min',
                                                'hist_x_min_value', 'hist_x_min_sync',
                                                state_filter=is_histogram)
-        self.hist_x_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_max',
+        self.hist_x_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'hist_x_max',
                                                'hist_x_max_value', 'hist_x_max_sync',
                                                state_filter=is_histogram)
         self.hist_cumulative = PlotOptionsSyncState(self, self.viewer, self.layer, 'cumulative',

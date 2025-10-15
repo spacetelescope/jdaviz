@@ -160,7 +160,7 @@
             <glue-state-sync-wrapper v-if="hist_x_min_sync.in_subscribed_states" :sync="hist_x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_x_min')">
               <glue-float-field
                 ref="hist_x_min"
-                :label="api_hints_enabled ? 'plg.hist_x_min =' : 'X Min'"
+                :label="api_hints_enabled ? 'plg.hist_x_min =' : 'Histogram X Min'"
                 :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="hist_x_min_value"
                 type="number"
@@ -169,7 +169,7 @@
             <glue-state-sync-wrapper v-if="hist_x_max_sync.in_subscribed_states" :sync="hist_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('hist_x_max')">
               <glue-float-field
                 ref="hist_x_max"
-                :label="api_hints_enabled ? 'plg.hist_x_max =' : 'X Max'"
+                :label="api_hints_enabled ? 'plg.hist_x_max =' : 'Histogram X Max'"
                 :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="hist_x_max_value"
                 type="number"
