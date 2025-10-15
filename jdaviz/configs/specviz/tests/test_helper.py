@@ -86,6 +86,15 @@ class TestSpecvizHelper:
             collection = SpectrumCollection([1]*u.AA)
             self.spec_app.load_data(collection)
 
+    def test_get_spectra_no_viewer_reference(self):
+        """
+        Test _spectrum_viewer and get_spectra with no reference viewer.
+        """
+        # Get spectra without a reference viewer
+        self.spec_app.app._viewer_store.pop('specviz-0')  # remove the default viewer
+        assert self.spec_app._spectrum_viewer is None
+        assert self.spec_app.get_spectra() == {}
+
     def test_get_spectra(self):
         with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
             spectra = self.spec_app.get_spectra()
@@ -118,10 +127,40 @@ class TestSpecvizHelper:
         assert_quantity_allclose(spectra.flux,
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
+    def test_get_spectra_with_spectral_subset(self):
+        """
+        Test get_spectra with a spectral_subset and data label.
+
+        When spectral_subset is provided without data_label, get_spectra
+        returns a dictionary. With, it returns a spectrum with a mask applied.
+        """
+        subset = SpectralRegion(
+            6200 * self.spec.spectral_axis.unit,
+            7000 * self.spec.spectral_axis.unit
+        )
+        self.spec_app.plugins['Subset Tools'].import_region(subset)
+
+        for data_label in [None, self.label]:
+            spectra = self.spec_app.get_spectra(
+                spectral_subset='Subset 1',
+                data_label=data_label,
+                apply_slider_redshift=False
+            )
+
+            # When data_label is None, the result is a dict of Spectrum objects
+            if data_label is None:
+                assert isinstance(spectra, dict)
+                spectra = spectra[self.label]
+
+            assert isinstance(spectra, Spectrum)
+            # Points outside the subset (6200-7000 Angstrom) should be masked (True),
+            # points inside should not be (False).
+            assert np.array_equal(spectra.mask,
+                                  [True, False, False, False, False, True, True, True, True, True])
+
     def test_get_spectral_regions_none(self):
         plg = self.spec_app.plugins['Subset Tools']
         spec_region = plg.get_regions()
-
         assert spec_region == {}
 
     def test_get_spectral_regions_one(self):
@@ -611,51 +650,6 @@ class TestLoadData:
         assert 'as_list_index-0' in specviz_helper.app.data_collection.labels
 
 
-def test_get_spectra_no_viewer_reference(specviz_helper):
-    """
-    Test _spectrum_viewer and get_spectra with no reference viewer.
-    """
-    # Get spectra without a reference viewer
-    specviz_helper.app._viewer_store.pop('specviz-0')  # remove the default viewer
-    assert specviz_helper._spectrum_viewer is None
-    assert specviz_helper.get_spectra() == {}
-
-
-def test_get_spectra_with_spectral_subset(specviz_helper, spectrum1d):
-    """
-    Test get_spectra with a spectral_subset and data label.
-
-    When spectral_subset is provided without data_label, get_spectra
-    returns a dictionary. With, it returns a spectrum with a mask applied.
-    """
-    spec_label = 'test_spec'
-    specviz_helper.load_data(spectrum1d, data_label=spec_label)
-
-    subset = SpectralRegion(
-        6200 * spectrum1d.spectral_axis.unit,
-        7000 * spectrum1d.spectral_axis.unit
-    )
-    specviz_helper.plugins['Subset Tools'].import_region(subset)
-
-    for data_label in [None, 'Subset 1 Label']:
-        spectra = specviz_helper.get_spectra(
-            spectral_subset='Subset 1',
-            data_label=data_label,
-            apply_slider_redshift=False
-        )
-
-        # When data_label is None, the result is a dict of Spectrum objects
-        if data_label is None:
-            assert isinstance(spectra, dict)
-            spectra = spectra[spec_label]
-
-        assert isinstance(spectra, Spectrum)
-        # Points outside the subset (6200-7000 Angstrom) should be masked (True),
-        # points inside should not be (False).
-        assert np.array_equal(spectra.mask,
-                              [True, False, False, False, False, True, True, True, True, True])
-
-
 # TODO: Delete on full deprecation of x_limits, y_limits, autoscale_x, autoscale_y
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.AstropyDeprecationWarning")
@@ -665,9 +659,13 @@ class TestDeprecatedLimits:
         Test deprecated x_limits.
         """
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        specviz_helper.x_limits(x_min=6000*u.AA, x_max=7000*u.AA)
-
         sv = specviz_helper.app.get_viewer('spectrum-viewer')
+
+        specviz_helper.x_limits()
+        assert sv.scale_x.min == 6000
+        assert sv.scale_x.max == 8000
+
+        specviz_helper.x_limits(x_min=6000*u.AA, x_max=7000*u.AA)
         assert sv.scale_x.min == 6000
         assert sv.scale_x.max == 7000
 
@@ -685,9 +683,13 @@ class TestDeprecatedLimits:
         Test deprecated y_limits.
         """
         specviz_helper.load_data(spectrum1d, data_label='test_spec')
-        specviz_helper.y_limits(y_min=0*u.Jy, y_max=20*u.Jy)
-
         sv = specviz_helper.app.get_viewer('spectrum-viewer')
+
+        specviz_helper.y_limits()
+        assert_allclose(sv.scale_y.min, 12, atol=1)
+        assert_allclose(sv.scale_y.max, 16.5, atol=1)
+
+        specviz_helper.y_limits(y_min=0*u.Jy, y_max=20*u.Jy)
         assert sv.scale_y.min == 0
         assert sv.scale_y.max == 20
 

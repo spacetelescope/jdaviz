@@ -131,24 +131,30 @@ class TestMapLimits:
     to ensure coverage of its logic branches.
     """
     @staticmethod
-    def _setup(deconfigged_helper, spectrum2d, tool_name='homezoom_matchx'):
-        deconfigged_helper.load(spectrum2d, format='2D Spectrum')
-        spectrum2d_viewer = deconfigged_helper.viewers['2D Spectrum']
-        spectrum_viewer = deconfigged_helper.viewers['1D Spectrum']
-        tool = spectrum_viewer._obj.toolbar.tools.get(f"jdaviz:{tool_name}")
-        return spectrum_viewer, spectrum2d_viewer, tool
+    def _setup(deconfigged_helper, spectrum, tool_name='homezoom_matchx'):
+        deconfigged_helper.load(spectrum, format='2D Spectrum')
 
-    @pytest.mark.parametrize('viewer', ('Spectrum1D->Spectrum2D', 'Spectrum2D->Spectrum1D'))
+        spectrum_viewer = deconfigged_helper.app.get_viewer('1D Spectrum')
+        spectrum2d_viewer = deconfigged_helper.app.get_viewer('2D Spectrum')
+
+        spectrum_tool = spectrum_viewer.toolbar.tools.get(f"jdaviz:{tool_name}")
+        spectrum2d_tool = spectrum2d_viewer.toolbar.tools.get(f"jdaviz:{tool_name}")
+        return spectrum_viewer, spectrum2d_viewer, spectrum_tool, spectrum2d_tool
+
+    @pytest.mark.parametrize('viewer', ['Spectrum1D->Spectrum2D', 'Spectrum2D->Spectrum1D'])
     def test_map_limits_direct_call(self, deconfigged_helper, spectrum2d, viewer):
         """Test _map_limits method directly with unit conversion."""
-        spectrum_viewer, spectrum2d_viewer, tool = self._setup(deconfigged_helper, spectrum2d)
+        spectrum_viewer, spectrum2d_viewer, spectrum1d_tool, spectrum2d_tool = (
+            self._setup(deconfigged_helper, spectrum2d))
 
         if viewer == 'Spectrum1D->Spectrum2D':
             from_viewer = spectrum_viewer
             to_viewer = spectrum2d_viewer
+            tool = spectrum1d_tool
         else:
             from_viewer = spectrum2d_viewer
             to_viewer = spectrum_viewer
+            tool = spectrum2d_tool
 
         # Change to different spectral unit
         uc = deconfigged_helper.plugins['Unit Conversion']
@@ -162,31 +168,39 @@ class TestMapLimits:
                 break
 
         test_limits = {'x_min': 1.0, 'x_max': 8.0}
-        result = tool._map_limits(from_viewer._obj, to_viewer._obj, test_limits.copy())
+        result = tool._map_limits(from_viewer, to_viewer, test_limits.copy())
 
         # Values should be the same, but units converted from um to nm
         assert_allclose(1e-3*result['x_min'], test_limits['x_min'], rtol=1e-5)
         assert_allclose(1e-3*result['x_max'], test_limits['x_max'], rtol=1e-5)
 
-    def test_map_limits_by_activation(self, deconfigged_helper, spectrum2d):
+    @pytest.mark.parametrize('spec_tool', ['spectrum1d_tool', 'spectrum2d_tool'])
+    def test_map_limits_by_activation(self, deconfigged_helper, spectrum2d, spec_tool):
         """
         Test that _map_limits handles unit conversions correctly from Spectrum1D to Spectrum2D.
         Also tests via activation.
         """
-        spectrum_viewer, spectrum2d_viewer, tool = self._setup(deconfigged_helper,
-                                                               spectrum2d,
-                                                               'boxzoom_matchx')
+        spectrum_viewer, spectrum2d_viewer, spectrum1d_tool, spectrum2d_tool = (
+            self._setup(deconfigged_helper, spectrum2d, 'boxzoom_matchx'))
 
-        old_x_min, old_x_max, _, _ = spectrum_viewer._obj.get_limits()
+        old_x_min, old_x_max, _, _ = spectrum_viewer.get_limits()
+        if spec_tool == 'spectrum1d_tool':
+            viewer = spectrum_viewer
+            tool = spectrum1d_tool
+            offset = 0
+        else:
+            viewer = spectrum2d_viewer
+            tool = spectrum2d_tool
+            offset = 0.5
         # _map_limits runs here
         tool.activate()
 
         # Change limits in spectrum viewer
-        check_x_min, check_x_max, y_min, y_max = spectrum_viewer._obj.get_limits()
+        check_x_min, check_x_max, y_min, y_max = viewer.get_limits()
 
-        # Nothing should have changed
-        assert old_x_min == check_x_min
-        assert old_x_max == check_x_max
+        # The spectrum2d tool offsets by 0.5
+        assert_allclose(old_x_min, check_x_min + offset, atol=1e-5)
+        assert_allclose(old_x_max, check_x_max - offset, atol=1e-5)
 
         # Set new limits
         tool.interact.selected = [(old_x_min + 10, y_min), (old_x_max - 10, y_max)]
@@ -194,7 +208,7 @@ class TestMapLimits:
         tool.on_update_zoom()
 
         # Limits should have changed
-        new_x_min, new_x_max, _, _ = spectrum_viewer._obj.get_limits()
+        new_x_min, new_x_max, _, _ = viewer.get_limits()
         assert_allclose(new_x_min, old_x_min + 10, rtol=1e-5)
         assert_allclose(new_x_max, old_x_max - 10, rtol=1e-5)
 
