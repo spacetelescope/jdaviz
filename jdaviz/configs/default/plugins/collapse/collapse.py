@@ -1,7 +1,9 @@
 import warnings
 
 from astropy.nddata import CCDData
+from astropy.wcs import WCS
 from glue.core import Data
+from gwcs import WCS as GWCS
 from specutils.manipulation import spectral_slab
 from traitlets import List, Unicode, observe
 
@@ -102,7 +104,10 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             w = data.meta['_orig_spec'].wcs
         else:
             w = data.coords
-        data_wcs = getattr(w, 'celestial', None)
+        if isinstance(w, GWCS):
+            data_wcs =  WCS(w.to_fits_sip())
+        else:
+            data_wcs = getattr(w, 'celestial', None)
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='No observer defined on WCS')
