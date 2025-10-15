@@ -791,9 +791,6 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         raise ValueError(f"URI {possible_uri} with scheme {parsed_uri.scheme} is not "
                          f"currently supported.")
 
-    # assume this isn't a URI after all:
-    return possible_uri
-
 
 def layer_is_2d(layer):
     # returns True for subclasses of BaseData with ndim=2, both for
