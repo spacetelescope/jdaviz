@@ -1,5 +1,6 @@
 import inspect
 import os
+import re
 import threading
 import time
 import warnings
@@ -5235,7 +5236,7 @@ class PluginSubcomponent(VuetifyTemplate):
 
 class Table(PluginSubcomponent):
     """
-    Table subcomponent.  For most cases where a plugin only requires a single table, use the mixin
+    Table subcomponent. For most cases where a plugin only requires a single table, use the mixin
     instead.
 
     To use in a plugin, define ``plugin.table = Table(plugin)``, create a ``table_widget`` Unicode
@@ -5442,30 +5443,158 @@ class Table(PluginSubcomponent):
     def vue_clear_table(self, data=None):
         self.clear_table()
 
-    def export_table(self, filename=None, overwrite=False):
+    def _sanitize_colnames_for_ipac_export(self, table_copy):
         """
-        Export the QTable representation of the table.
+        Sanitize table column names to be alphanumeric only for ipac formats.
+        Use a copy because column name replacement happens in place.
+
+        Parameters
+        ----------
+        table_copy : astropy.table.Table
+            Copy of the table for column name replacement with alphanumeric-only
+            (and '_') characters.
+
+        Returns
+        -------
+        table_copy : astropy.table.Table
+            Table with sanitized column names.
+        """
+        # Sub bad characters for empty string and spaces with _
+        mapping = {colname: re.sub(r'[^0-9A-Za-z_]', '', re.sub(r'\s+', '_', colname))  # noqa
+                   for colname in table_copy.colnames}
+
+        for old, new in mapping.items():
+            table_copy.rename_column(old, new)
+
+        return table_copy
+
+    def _sanitize_units_for_votable_export(self, table_copy):
+        """
+        Sanitize table column units for VOTable export.
+
+        VOTable format no longer supports certain deprecated units like 'erg'.
+        This method converts those units to their VOTable-compliant equivalents.
+
+        Parameters
+        ----------
+        table_copy : astropy.table.Table
+            Copy of the table for unit replacement.
+
+        Returns
+        -------
+        table_copy : astropy.table.Table
+            Table with sanitized column units.
+        """
+        for col in table_copy.colnames:
+            if table_copy[col].unit is not None:
+                unit_str = str(table_copy[col].unit)
+
+                # Replace 'erg' with its SI base unit equivalent
+                if 'erg' in unit_str:
+                    unit_str_sanitized = unit_str.replace('erg', 'cm2 g s-2')
+                    table_copy[col].unit = u.Unit(unit_str_sanitized)
+
+        return table_copy
+
+    def export_table(self, filename=None, **write_kwargs):
+        """
+        Export the Astropy Table representation of the table.
 
         Parameters
         ----------
         filename : str, optional
-            If provided, will write to the file, otherwise will just return the QTable
+            If provided, will write to the file, otherwise will just return the Table
             object.
+        format : str, optional
+            The format to write the table in. If not provided, will be inferred from the
+            filename extension.  See ``astropy.table.Table.write`` for supported formats.
         overwrite : bool, optional
             If ``filename`` already exists, should it be overwritten.
+
+        Returns
+        -------
+        out_tbl : astropy.table.Table
+            The table object that was written to file or the current table if no filename
+            was provided.
         """
-        if filename is not None:
-            if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:
-                out_tbl = self._qtable[self._qtable.meta["_orig_colnames_for_jdaviz_export"]]
-                del out_tbl.meta["_orig_colnames_for_jdaviz_export"]
+        if filename is None:
+            # TODO: default to only showing selected columns?
+            return self._qtable
+
+        if "_orig_colnames_for_jdaviz_export" in self._qtable.meta:
+            out_tbl = self._qtable[self._qtable.meta["_orig_colnames_for_jdaviz_export"]]
+            del out_tbl.meta["_orig_colnames_for_jdaviz_export"]
+        else:
+            out_tbl = self._qtable
+
+        _, ext = os.path.splitext(filename)
+        write_format = write_kwargs.get('format', None)
+
+        def check_ext_and_format(ext_to_check):
+            """
+            Check if either the extension or the format matches.
+            If the extension and format do not match, the format takes precedence.
+            """
+            return ((ext == ext_to_check and 'format' not in write_kwargs)
+                    or write_format == ext_to_check)
+
+        msg = (f"The table is unable to be exported to file with format: {write_format}. "
+               f"Please execute this function with no arguments to retrieve the table object "
+               f"and write to file manually (see "
+               f"https://docs.astropy.org/en/stable/io/unified_table.html#read-write-tables)")
+
+        # SUPPORTED FORMATS WITH KNOWN ISSUES
+        # Attempt to correct for these here and let tests catch notify of future issues
+        if check_ext_and_format('asdf'):
+            # NOTE: these extensions will overwrite by default
+            # and do not accept overwrite kwarg
+            overwrite = write_kwargs.pop('overwrite', None)
+            if os.path.exists(filename) and overwrite is False:
+                raise FileExistsError(f"File '{filename}' exists and overwrite=False")
+
+        elif check_ext_and_format('hdf5'):
+            write_kwargs.setdefault('path', 'data')  # default path within hdf5 file
+            write_kwargs.setdefault('serialize_meta', True)
+
+        elif write_format == 'ascii.tdat':
+            out_tbl.meta['table_name'] = self._table_name
+
+        elif (check_ext_and_format('parquet') or check_ext_and_format('votable') or
+                write_format in ['parquet.votable', 'votable.parquet']):
+
+            metadata = {col: {'unit': '', 'ucd': '', 'utype': ''} for col in out_tbl.colnames}
+            # parquet.votable and votable.parquet are (unfortunately) not the same
+            if write_format == 'parquet.votable':
+                write_kwargs.setdefault('metadata', metadata)
+
+            elif write_format == 'votable.parquet':
+                write_kwargs.setdefault('column_metadata', metadata)
+
+            out_tbl = self._sanitize_units_for_votable_export(out_tbl.copy())
+            try:
+                out_tbl.write(filename, **write_kwargs)
+            except Exception as e:
+                # 'pyarrow is required to read and write parquet files'
+                if 'pyarrow' in str(e):
+                    raise ModuleNotFoundError(f"{e}\n"
+                                              f"This is not a default dependency of jdaviz. "
+                                              f"{msg}.")
+                else:
+                    raise Exception(f"{e}\n{msg}.")  # pragma: no cover
+
             else:
-                out_tbl = self._qtable
+                return out_tbl  # pragma: no cover
 
-            out_tbl.write(filename, overwrite=overwrite)
-            return out_tbl
+        elif check_ext_and_format('ipac') or write_format == 'ascii.ipac':
+            out_tbl = self._sanitize_colnames_for_ipac_export(out_tbl.copy())
 
-        # TODO: default to only showing selected columns?
-        return self._qtable
+        # Another try/except to catch deprecated/non-covered formats and advise
+        try:
+            out_tbl.write(filename, **write_kwargs)
+        except Exception as e:
+            raise Exception(f"{e}\n{msg}.")
+
+        return out_tbl
 
 
 class TableMixin(VuetifyTemplate, HubListener):
@@ -5502,7 +5631,7 @@ class TableMixin(VuetifyTemplate, HubListener):
         # (to also clear markers, etc)
         self.clear_table()
 
-    def export_table(self, filename=None, overwrite=False):
+    def export_table(self, filename=None, **kwargs):
         """
         Export the QTable representation of the table.
 
@@ -5511,10 +5640,19 @@ class TableMixin(VuetifyTemplate, HubListener):
         filename : str, optional
             If provided, will write to the file, otherwise will just return the QTable
             object.
+        format : str, optional
+            The format to write the table in. If not provided, will be inferred from the
+            filename extension.  See ``astropy.table.Table.write`` for supported formats.
         overwrite : bool, optional
             If ``filename`` already exists, should it be overwritten.
+
+        Returns
+        -------
+        out_tbl : astropy.table.Table
+            The table object that was written to file or the current table if no filename
+            was provided.
         """
-        return self.table.export_table(filename=filename, overwrite=overwrite)
+        return self.table.export_table(filename=filename, **kwargs)
 
     def select_rows(self, rows):
         """
