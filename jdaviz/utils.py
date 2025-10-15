@@ -722,8 +722,8 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
     cache_none_msg = (
         "You may be querying for a remote file "
-        f"at '{possible_uri}', but the `cache` argument was not "
-        f"in the call to `load_data`. Unless you set `cache` "
+        f"at '{possible_uri}', but the `cache` argument was not used."
+        f"Unless you set `cache` "
         f"explicitly, remote files will be cached locally and "
         f"this warning will be raised."
     )
@@ -790,9 +790,6 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
     else:
         raise ValueError(f"URI {possible_uri} with scheme {parsed_uri.scheme} is not "
                          f"currently supported.")
-
-    # assume this isn't a URI after all:
-    return possible_uri
 
 
 def layer_is_2d(layer):

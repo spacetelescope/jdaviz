@@ -54,7 +54,7 @@ class URLResolver(BaseResolver):
         if '_uri_output_file' in self.__dict__ and change['name'] in ('url', 'cache'):
             del self._uri_output_file
 
-        self._update_format_items()
+        self._resolver_input_updated()
 
     @cached_property
     def _uri_output_file(self):
@@ -63,5 +63,5 @@ class URLResolver(BaseResolver):
         return download_uri_to_path(self.url.strip(), cache=self.cache,
                                     local_path=self.local_path, timeout=self.timeout)
 
-    def __call__(self):
+    def parse_input(self):
         return self._uri_output_file

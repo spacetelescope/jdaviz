@@ -546,22 +546,24 @@ def skip_if_not_relevant():
     return decorator
 
 
-def with_spinner(spinner_traitlet='spinner'):
+def with_spinner(spinner_traitlet='spinner', truthy=True):
     """
-    decorator on a plugin method to set a traitlet to True at the beginning
-    and False either on failure or successful completion.  This traitlet can
-    then be used in the UI to disable elements or display a spinner during
-    operation.  Each plugin gets a 'spinner' traitlet by default, but some plugins
+    decorator on a plugin method to set a traitlet to True (or the passed string)
+    at the beginning and False (or an empty string) either on failure or successful
+    completion.  This traitlet can then be used in the UI to disable elements or
+    display a spinner during operation.
+
+    Each plugin gets a 'spinner' traitlet by default, but some plugins
     may want different controls for different sections/actions within the plugin.
     """
     def decorator(meth):
         @wraps(meth)
         def wrapper(self, *args, **kwargs):
-            setattr(self, spinner_traitlet, True)
+            setattr(self, spinner_traitlet, truthy)
             try:
                 ret_ = meth(self, *args, **kwargs)
             finally:
-                setattr(self, spinner_traitlet, False)
+                setattr(self, spinner_traitlet, False if truthy is True else '')
             return ret_
         return wrapper
     return decorator
@@ -5324,6 +5326,7 @@ class Table(PluginSubcomponent):
     selected_rows = List().tag(sync=True)  # List of selected rows
 
     show_if_empty = Bool(True).tag(sync=True)
+    enable_clear = Bool(True).tag(sync=True)
     clear_btn_lbl = Unicode('Clear Table').tag(sync=True)
 
     def __init__(self, plugin, name='table', selected_rows_changed_callback=None,
@@ -5339,9 +5342,12 @@ class Table(PluginSubcomponent):
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, ('clear_table', 'export_table',
-                                     'select_rows', 'select_all',
-                                     'select_none'))
+        expose = ('export_table',
+                  'select_rows', 'select_all',
+                  'select_none')
+        if self.enable_clear:
+            expose += ('clear_table',)
+        return UserApiWrapper(self, expose)
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -5458,6 +5464,8 @@ class Table(PluginSubcomponent):
         """
         Clear all entries/markers from the current table.
         """
+        if not self.enable_clear:
+            raise ValueError("Table clearing is disabled.")
         self._clear_table()
         if self._clear_callback is not None:
             self._clear_callback()
@@ -5676,9 +5684,9 @@ class TableMixin(VuetifyTemplate, HubListener):
     """
     table_widget = Unicode().tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, table_attr_name='table', *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.table = Table(self, name='table')
+        self.table = Table(self, name=table_attr_name)
         self.table_widget = 'IPY_MODEL_'+self.table.model_id
 
     def clear_table(self):
