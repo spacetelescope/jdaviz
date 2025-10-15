@@ -17,6 +17,8 @@ New Features
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
   and import from an astroquery or MAST search. [#3769]
 
+- Added descriptive hints for toggleable model fitter parameters in the Model Fitting plugin. [#3831]
+
 Cubeviz
 ^^^^^^^
 
