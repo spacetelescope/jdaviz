@@ -106,6 +106,7 @@ Cubeviz
 
 Imviz
 ^^^^^
+- Add sky centroid column to Catalog Search table, so the exported table can be loaded into the app. [#3841]
 
 Mosviz
 ^^^^^^
