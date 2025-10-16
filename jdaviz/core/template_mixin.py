@@ -1456,12 +1456,16 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def suffixes(self):
         return [item.get('suffix', None) for item in self.items]
 
+    @property
+    def data_hashes(self):
+        return [item.get('data_hash', None) for item in self.items]
+
     def _to_item(self, manual_item, index=None):
         if index is None:
             # during init ignore
             return {}
         return {k: manual_item.get(k, None)
-                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'suffix')}
+                for k in ('label', 'name', 'ver', 'name_ver', 'index', 'suffix', 'data_hash')}
 
     @observe('filters')
     def _update_items(self, msg={}):

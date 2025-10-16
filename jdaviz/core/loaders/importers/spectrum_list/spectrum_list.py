@@ -1,6 +1,5 @@
 import itertools
 import numpy as np
-from copy import deepcopy
 import warnings
 
 from astropy.nddata import StdDevUncertainty
@@ -15,6 +14,7 @@ from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.utils import create_data_hash
 
 
 __all__ = ['SpectrumListImporter', 'SpectrumListConcatenatedImporter']
@@ -68,13 +68,15 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                 label = f"1D Spectrum at index: {index}"
                 suffix = f"index-{index}"
 
+            spec = self._apply_spectral_mask(spec)
             sources_options.append({'label': label,
                                     'index': index,
                                     'name': str(name),
                                     'ver': str(ver),
                                     'name_ver': str(name_ver),
                                     'suffix': suffix,
-                                    'obj': self._apply_spectral_mask(spec)})
+                                    'data_hash': create_data_hash(spec),
+                                    'obj': spec})
 
         self.sources = SelectFileExtensionComponent(self,
                                                     items='sources_items',
@@ -83,7 +85,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
                                                     manual_options=sources_options)
 
         self.sources.selected = [self.sources.choices[0]]
-        self._sources_items_helper = deepcopy(self.sources.items)
+        self.data_hashes = self.sources.data_hashes
+        self.hash_map_to_label = dict(zip(self.sources.data_hashes, self.sources.labels))
 
         # TODO: This observer will likely be removed in follow-up effort
         # If the resolver format is set to "1D Spectrum List", then we
@@ -251,7 +254,8 @@ class SpectrumListImporter(BaseImporterToDataCollection):
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.sources.selected_item_list):
                 data_label = f"{self.data_label_value}_{item_dict['suffix']}"
-                self.add_to_data_collection(spec_obj, data_label)
+                self.add_to_data_collection(spec_obj, data_label,
+                                            data_hash=item_dict.get('data_hash'))
 
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):

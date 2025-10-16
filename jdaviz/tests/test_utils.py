@@ -1,14 +1,16 @@
 import os
 import warnings
+import numpy as np
 import threading
 
-from astropy.io import fits
-
 import pytest
+from astropy.io import fits
+from astropy.units.quantity import Quantity
 
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, cached_uri, escape_brackets,
-                          has_wildcard, wildcard_match, parallelize_calculation)
+                          has_wildcard, wildcard_match, _clean_data_for_hash,
+                          create_data_hash, parallelize_calculation)
 
 from jdaviz.conftest import FakeSpectrumListImporter
 
@@ -311,3 +313,78 @@ class TestParallelizeCalculation:
             # Because the bad worker raised the collect callback should
             # not be called at all.
             assert collected == []
+
+
+@pytest.mark.parametrize('input_data',
+                         [np.arange(10), '12345',
+                          np.ma.masked_array(np.arange(10), mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 0]),
+                          Quantity(np.arange(10), 'm/s'),
+                          'spectrum1d', 'partially_masked_spectrum1d',
+                          'spectrum2d', 'image_hdu_nowcs', 'image_nddata_wcs'])
+class TestDataHash:
+    def test_clean_data_for_hash(self, input_data, request):
+        data = input_data
+        if isinstance(input_data, str) and not input_data.isnumeric():
+            data = request.getfixturevalue(input_data)
+
+        result_arr, result_mask_arr, result_unit_str = _clean_data_for_hash(data)
+
+        # Main array must always be an ndarray
+        assert isinstance(result_arr, np.ndarray)
+
+        # Determine expected unit string from possible container types.
+        expected_unit = None
+        # Try for a mask while we're at it
+        expected_mask = getattr(data, 'mask', None)
+        if hasattr(data, 'unit'):
+            expected_unit = str(data.unit)
+        elif hasattr(data, 'flux') and hasattr(data.flux, 'unit'):
+            expected_unit = str(data.flux.unit)
+            # Spectrum objects always have a mask
+        elif hasattr(data, 'data') and hasattr(data.data, 'unit'):
+            expected_unit = str(data.data.unit)
+            expected_mask = expected_mask or getattr(data.data, 'mask', None)
+
+        assert expected_unit == result_unit_str
+        if expected_mask is not None:
+            assert np.allclose(expected_mask, result_mask_arr)
+        else:
+            assert result_mask_arr is None
+
+    def test_create_data_hash(self, input_data, request):
+        """Run create_data_hash on several existing test fixtures and
+        ensure determinism (identical input -> identical hash).
+        """
+        data = input_data
+        if isinstance(input_data, str) and not input_data.isnumeric():
+            data = request.getfixturevalue(input_data)
+
+        h1 = create_data_hash(data)
+        h2 = create_data_hash(data)
+        # Determinism: repeated calls should be equal (can be None)
+        assert isinstance(h1, str)
+        try:
+            assert h1 == h2
+        except ValueError:
+            assert np.allclose(h1, h2)
+
+        try:
+            data += data
+        except TypeError:
+            pass
+        else:
+            h3 = create_data_hash(data)
+            # Changing the data should change the hash
+            try:
+                assert h1 != h3
+            except ValueError:
+                assert not np.allclose(h1, h3)
+
+
+def test_create_data_hash_none():
+    """Checks behavior for None and unsupported types."""
+    assert create_data_hash(None) is None
+    assert create_data_hash([]) is None
+    assert create_data_hash([None, None, None]) is None
+    assert create_data_hash(np.array([])) is None
+    assert create_data_hash(np.array([None, None, None])) is None

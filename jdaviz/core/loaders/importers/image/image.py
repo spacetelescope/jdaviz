@@ -20,7 +20,7 @@ from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
     PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip
+    _try_gwcs_to_fits_sip, create_data_hash
 )
 
 try:
@@ -81,6 +81,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': hdu.ver,
                                 'name_ver': f"{hdu.name},{hdu.ver}",
                                 'index': index,
+                                'data_hash': create_data_hash(hdu),
                                 'obj': hdu}
                                for index, hdu in enumerate(input)]
             elif input_is_roman:
@@ -90,6 +91,7 @@ class ImageImporter(BaseImporterToDataCollection):
                                 'ver': None,
                                 'name_ver': key,
                                 'index': index,
+                                'data_hash': create_data_hash(value),
                                 'obj': value}
                                for index, (key, value) in enumerate(input.items())]
             else:
@@ -104,6 +106,8 @@ class ImageImporter(BaseImporterToDataCollection):
 
             # changing selected extension will call _set_default_data_label
             self.extension.selected = [self.extension.choices[0]]
+            self.data_hashes = self.extension.data_hashes
+            self.hash_map_to_label = dict(zip(self.extension.data_hashes, self.extension.labels))
         else:
             self._set_default_data_label()
 
@@ -282,7 +286,7 @@ class ImageImporter(BaseImporterToDataCollection):
             if self.gwcs_to_fits_sip:
                 output = self._glue_data_wcs_to_fits(output)
 
-            self.add_to_data_collection(output, data_label,
+            self.add_to_data_collection(output, data_label, data_hash=ext_item.get('data_hash'),
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
 

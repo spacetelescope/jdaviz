@@ -61,20 +61,39 @@
         </div>
       </template>
       <template #selection="{ item, index }">
-        <div class="single-line" style="width: 100%">
-          <span v-if="api_hints_enabled && index === 0" class="api-hint">
+        <div class="single-line" style="width: 100%; display: flex; align-items: center;">
+          <span v-if="api_hints_enabled && index === 0" class="api-hint" style="flex: 1;">
             {{ multiselect ? selected : `'${selected}'` }}
           </span>
-          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px)">
-            <span>{{ item }}</span>
+          <v-chip v-else-if="multiselect" style="width: calc(100% - 10px); flex: 1; display: flex; align-items: center;">
+            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined" :tipid="getExistsTooltipId(item)">
+              <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
+                {{ getExistsIcon(item) }}
+              </v-icon>
+            </j-tooltip>
+            <span>{{ typeof item === 'string' ? item : (item.label || item.text || item) }}</span>
           </v-chip>
-          <span v-else>{{ item }}</span>
+          <span v-else style="flex: 1; display: flex; align-items: center;">
+            <j-tooltip v-if="exists_in_dc !== null && exists_in_dc !== undefined && !api_hints_enabled" :tipid="getExistsTooltipId(item)">
+              <v-icon small :color="getExistsIconColor(item)" style="margin-right: 8px; min-width: 16px;">
+                {{ getExistsIcon(item) }}
+              </v-icon>
+            </j-tooltip>
+            {{ typeof item === 'string' ? item : (item.label || item.text || item) }}
+          </span>
         </div>
       </template>
-      <template #item="{ item }">
-        <span style="margin-top: 8px; margin-bottom: 0px">
-          {{ typeof item === 'string' ? item : (item.label || item.text) }}
-        </span>
+      <template #item="{ item, attrs, on }">
+        <v-list-item v-bind="attrs" v-on="on" style="margin-top: 4px; margin-bottom: 4px; align-items: center;">
+          <v-list-item-action v-if="exists_in_dc !== null && exists_in_dc !== undefined" style="min-width: 16px; margin-right: 8px; margin-top: 0px; margin-bottom: 0px;">
+            <j-tooltip :tipid="getExistsTooltipId(item)">
+              <v-icon small :color="getExistsIconColor(item)">{{ getExistsIcon(item) }}</v-icon>
+            </j-tooltip>
+          </v-list-item-action>
+            <v-list-item-title style="margin-top: 0px; margin-bottom: 0px">
+              {{ typeof item === 'string' ? item : (item.label || item.text) }}
+              </v-list-item-title>
+        </v-list-item>
       </template>
     </v-select>
     <slot> </slot>
@@ -84,7 +103,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading'],
+          'api_hint', 'api_hints_enabled', 'dense', 'disabled', 'search', 'loading', 'exists_in_dc'],
   data() {
     return {
       search_query: '',
@@ -132,6 +151,42 @@ module.exports = {
     },
   },
   methods: {
+    existsFor(item) {
+      // Check if this item's data_hash exists in the exists_in_dc list
+      if (!this.exists_in_dc || !Array.isArray(this.exists_in_dc)) {
+        return false;
+      }
+
+      // If item is an object with data_hash, check directly
+      if (typeof item === 'object' && item !== null && item.data_hash) {
+        return this.exists_in_dc.includes(item.data_hash);
+      }
+
+      // If item is a string (label), find the corresponding object in items
+      const key = (typeof item === 'string') ? item : (item.label || item.text || item);
+      const item_obj = this.items.find(i => {
+        const i_key = (typeof i === 'string') ? i : (i.label || i.text || i);
+        return i_key === key;
+      });
+
+      if (item_obj && typeof item_obj === 'object' && item_obj.data_hash) {
+        return this.exists_in_dc.includes(item_obj.data_hash);
+      }
+
+      return false;
+    },
+    getExistsTooltipId(item) {
+      return this.existsFor(item)
+        ? 'plugin-select-data-in-dc'
+        : 'plugin-select-data-not-in-dc';
+    },
+    getExistsIconColor(item) {
+      // For now, both states use grey color but this may change in the future
+      return this.existsFor(item) ? 'grey' : 'grey';
+    },
+    getExistsIcon(item) {
+      return this.existsFor(item) ? 'mdi-check-circle' : 'mdi-circle-outline';
+    },
     on_search_input(value) {
       this.search_query = value;
     },
