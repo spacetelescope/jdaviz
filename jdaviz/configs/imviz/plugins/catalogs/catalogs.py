@@ -345,13 +345,16 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
                 x_coordinates.append(row['x_coord'])
                 y_coordinates.append(row['y_coord'])
                 row_id = row[src_id_colname]
+                sky = SkyCoord(ra=row['ra'] * u.deg, dec=row['dec'] * u.deg, frame='icrs')
                 # Check if the row contains the required keys
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
                             'Object ID': row_id.astype(str),
                             'id': len(self.table),
                             'x_coord': row['x_coord'],
-                            'y_coord': row['y_coord']}
+                            'y_coord': row['y_coord'],
+                            'sky_centroid': sky,
+                            }
                 self.table.add_item(row_info)
 
         # NOTE: If performance becomes a problem, see
@@ -365,6 +368,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
                     'id': len(self.table),
                     'x_coord': row['x_coord'],
                     'y_coord': row['y_coord'],
+                    'sky_centroid': row['sky_centroid'],
                 }
                 x_coordinates.append(row['x_coord'])
                 y_coordinates.append(row['y_coord'])
