@@ -592,7 +592,7 @@ class TestLoadData:
         with pytest.raises(ValueError, match='Cannot set both'):
             specviz_helper.load_data(spectrum1d, load_as_list=True, concat_by_file=True)
 
-    def test_load_data_with_cache_timeout_local_path(self, specviz_helper, spectrum1d):
+    def test_load_data_with_cache_timeout_local_path(self, specviz_helper, spectrum1d, tmpdir):
         """
         Test load_data with cache, timeout, and local_path kwargs.
         """
@@ -601,7 +601,7 @@ class TestLoadData:
             data_label='test_cache',
             cache=True,
             timeout=30,
-            local_path='/tmp/test'
+            local_path=tmpdir
         )
         assert 'test_cache' in specviz_helper.app.data_collection.labels
         assert len(specviz_helper.app.data_collection) == 1
