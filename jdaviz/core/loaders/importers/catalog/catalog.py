@@ -77,8 +77,8 @@ class CatalogImporter(BaseImporterToDataCollection):
         for the presence of a SkyCoord column, and if none exists then checking
         against some common source catalog column names, to determine initial
         selection for the column select dropdown. If no good candidate is found,
-        the initial selection in the drop down for ra, dec columns will be the
-        0th and 1stcolumns , respectivley.
+        the initial selection in the dropdown for ra, dec columns will be the
+        0th and 1st columns, respectively.
         """
 
         tab = self.input

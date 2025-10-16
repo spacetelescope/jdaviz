@@ -102,6 +102,8 @@ const tooltips = {
   'plugin-extract-save-fits': 'Save spectral extraction as FITS file',
   'plugin-link-apply': 'Apply linking to data',
   'plugin-footprints-color-picker': 'Change the color of the footprint overlay',
+  'plugin-select-data-in-dc': 'Data already exists in the app',
+  'plugin-select-data-not-in-dc': 'Data does not yet exist in the app',
   'plugin-dq-show-all': 'Show all quality flags',
   'plugin-dq-hide-all': 'Hide all quality flags',
   'plugin-dq-color-picker': 'Change the color of this DQ flag',

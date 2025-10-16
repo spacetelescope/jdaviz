@@ -12,7 +12,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
-                          CONFIGS_WITH_LOADERS)
+                          CONFIGS_WITH_LOADERS,
+                          create_data_hash)
 
 __all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
 
@@ -27,11 +28,18 @@ class BaseImporter(PluginTemplateMixin):
     import_disabled = Bool(False).tag(sync=True)
     import_spinner = Bool(False).tag(sync=True)
 
+    existing_data_in_dc = List([]).tag(sync=True)
+
     def __init__(self, app, resolver, parser, input, **kwargs):
         self._input = input
         self._parser = parser
         self._resolver = resolver
         super().__init__(app, **kwargs)
+
+        # Doing this in app instead of here avoids a lot of unnecessary overhead
+        # from all the importers in memory
+        self.app.observe(self._update_existing_data_in_dc_traitlet, 'existing_data_in_dc')
+        self._update_existing_data_in_dc_traitlet()
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -63,6 +71,52 @@ class BaseImporter(PluginTemplateMixin):
     def output(self):
         # override by subclass
         return self.input
+
+    def _update_existing_data_in_dc_traitlet(self, change={}):
+        self.existing_data_in_dc = self.app.existing_data_in_dc
+
+    def reset_and_check_existing_data_in_dc(self, change={}):
+        """
+        Check if the data to be imported appears to already exist in the data collection
+        based on the data hash.  If so, update the existing_data_in_dc traitlet
+        accordingly and display a warning snackbar message.
+        """
+        if not hasattr(self, 'data_hashes'):
+            # If we do this here instead of at init, then we shouldn't get errors
+            # from attempting to access unavailable importer attributes from 'output'
+            self.data_hashes = [create_data_hash(self.output)]
+
+        if not hasattr(self, 'hash_map_to_label'):
+            self.hash_map_to_label = {dh: '' for dh in self.data_hashes}
+
+        dc_labels = []
+        loader_labels = []
+        existing_data_in_dc = [(data.meta.get('_data_hash'),
+                                data.label,
+                                self.hash_map_to_label[data.meta.get('_data_hash')])
+                               for data in self.app.data_collection
+                               if data.meta.get('_data_hash') in self.data_hashes]
+
+        if len(existing_data_in_dc) > 0:
+            existing_data_in_dc, dc_labels, loader_labels = zip(*existing_data_in_dc)
+        self.app.existing_data_in_dc = list(existing_data_in_dc)
+
+        # Only need to display the message once
+        if len(dc_labels) > 0:
+            if any(self.hash_map_to_label.values()):
+                msg = 'Selected data appears to be identical to existing data.\n'
+                for dc_label, loader_label in zip(dc_labels, loader_labels):
+                    msg += f"{loader_label} <=> {dc_label}\n"
+            else:
+                msg = (f"Selected data appears to be identical "
+                       f"to existing data ({', '.join(dc_labels)}).")
+
+            self.app.hub.broadcast(SnackbarMessage(msg.rstrip('\n'), sender=self, color='warning'))
+            # TODO: Allow for now but implement a disabled message near the import button
+            #  or indicate that the import will be a re-import And if allowing re-import,
+            #  there's a bug that needs to be squashed... (second import doesn't show in viewer)
+            #  but remains in app.
+            # self.data_label_invalid_msg = msg
 
     @property
     def target(self):
@@ -104,6 +158,7 @@ class BaseImporterToDataCollection(BaseImporter):
                                         'data_label_default',
                                         'data_label_auto',
                                         'data_label_invalid_msg')
+
         self.data_label_default = self.app.return_unique_name(self._registry_label)
 
         self.viewer = ViewerSelectCreateNew(self, 'viewer_items',
@@ -192,14 +247,16 @@ class BaseImporterToDataCollection(BaseImporter):
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return physical_type
 
-    def add_to_data_collection(self, data, data_label=None,
+    def add_to_data_collection(self, data, data_label=None, data_hash=None,
                                parent=None,
                                viewer_select=None,
                                cls=None):
+
         if data_label is None:
             data_label = self.data_label_value.strip()
         else:
             data_label = data_label.strip()
+
         if hasattr(data, 'meta'):
             try:
                 data.meta = standardize_metadata(data.meta)
@@ -216,6 +273,9 @@ class BaseImporterToDataCollection(BaseImporter):
             data.meta = dict(data.meta)
         data.meta['_native_data_cls'] = cls
         data.meta['_importer'] = self.__class__.__name__
+
+        # Create a hashed representation of the data if not already present
+        data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
 
         self.app.add_data(data, data_label=data_label)
         if parent is not None:
@@ -286,6 +346,9 @@ class BaseImporterToDataCollection(BaseImporter):
             raise ValueError(self.data_label_invalid_msg)
         if self.viewer.create_new.selected != '' and self.viewer_label_invalid_msg:
             raise ValueError(self.viewer_label_invalid_msg)
+        # NOTE: if data hashing performance becomes an issue for importers that
+        # don't overwrite __call__, we can pass the pre-computed hash from
+        # self.data_hashes as a kwarg here
         self.add_to_data_collection(self.output)
 
 

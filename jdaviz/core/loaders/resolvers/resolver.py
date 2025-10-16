@@ -576,6 +576,8 @@ class BaseResolver(PluginTemplateMixin):
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
             self.valid_import_formats = ''
 
+            self.importer.reset_and_check_existing_data_in_dc()
+
     def close_in_tray(self, close_sidebar=False):
         """
         Close the loader in the sidebar/tray.

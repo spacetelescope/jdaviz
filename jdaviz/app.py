@@ -348,6 +348,8 @@ class Application(VuetifyTemplate, HubListener):
 
     template_file = __file__, "app.vue"
 
+    existing_data_in_dc = List([]).tag(sync=True)
+
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
     api_hints_obj = Unicode("").tag(sync=True)  # will use config if not defined
@@ -2683,6 +2685,35 @@ class Application(VuetifyTemplate, HubListener):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
 
+    def _update_existing_data_in_dc(self, msg, data_added):
+        """
+        Update the ``existing_data_in_dc`` state list to reflect
+        whether data with a given label is in the internal ``DataCollection``.
+
+        Parameters
+        ----------
+        msg : `~glue.core.message.DataCollectionAddMessage` or
+              `~glue.core.message.DataCollectionDeleteMessage`
+            The Glue data collection add or delete message containing
+            information about the new or removed data.
+        data_added : bool
+            Whether data was added or removed from the ``DataCollection``.
+        """
+        data_hash = msg.data.meta.get('_data_hash', None)
+        if data_hash is None:
+            return
+        # Need to make a copy to ensure traitlets notices the change
+        new_existing_data_in_dc = self.existing_data_in_dc.copy()
+
+        if data_added:
+            if data_hash not in new_existing_data_in_dc:
+                new_existing_data_in_dc.append(data_hash)
+        else:
+            if data_hash in new_existing_data_in_dc:
+                new_existing_data_in_dc.remove(data_hash)
+
+        self.existing_data_in_dc = new_existing_data_in_dc
+
     def _on_data_added(self, msg):
         """
         Callback for when data is added to the internal ``DataCollection``.
@@ -2701,6 +2732,8 @@ class Application(VuetifyTemplate, HubListener):
         data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
         self._reserved_labels.add(msg.data.label)
+
+        self._update_existing_data_in_dc(msg, data_added=True)
 
     def _clear_object_cache(self, data_label=None):
         if data_label is None:
@@ -2726,6 +2759,8 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.data_items.remove(data_item)
 
         self._clear_object_cache(msg.data.label)
+
+        self._update_existing_data_in_dc(msg, data_added=False)
 
     def _create_data_item(self, data):
         ndims = len(data.shape)
