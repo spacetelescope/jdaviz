@@ -27,7 +27,7 @@ def test_line_lists(specviz_helper):
     specviz_helper.load_line_list(lt)
 
     assert len(specviz_helper.spectral_lines) == 2
-    assert specviz_helper.spectral_lines.with_index("linename", "Halpha")["listname"] == "Custom"
+    assert specviz_helper.spectral_lines[specviz_helper.spectral_lines['linename'] == 'Halpha']['listname'][0] == 'Custom'  # noqa
     assert np.all(specviz_helper.spectral_lines["show"])
     assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is True
 
