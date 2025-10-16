@@ -202,11 +202,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 unc_data = unc_data.T
             if mask_data is not None:
                 mask_data = mask_data.T
+            wcs = wcs.swapaxes(0, 1)
             self.app.hub.broadcast(SnackbarMessage(
                 f"Transposed input data to {data.shape}",
                 sender=self, color="warning"))
-        if wcs.array_shape[0] > wcs.array_shape[1]:
-            wcs = wcs.swapaxes(0, 1)
 
         if unc_data is not None:
             unc = StdDevUncertainty(unc_data * data_unit)
