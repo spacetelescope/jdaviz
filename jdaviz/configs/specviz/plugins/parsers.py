@@ -27,7 +27,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     ----------
     data : str, `~specutils.Spectrum`, or `~specutils.SpectrumList`
         Spectrum, SpectrumList, or path to compatible data file.
-    data_label : str
+    data_label : str, list, or tuple, optional
         The Glue data label found in the ``DataCollection``.
     format : str
         Loader format specification used to indicate data format in
