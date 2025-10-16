@@ -181,10 +181,11 @@ module.exports = {
         : 'plugin-select-data-not-in-dc';
     },
     getExistsIconColor(item) {
-      return this.existsFor(item) ? 'green' : 'grey';
+      // For now, both states use grey color but this may change in the future
+      return this.existsFor(item) ? 'grey' : 'grey';
     },
     getExistsIcon(item) {
-      return this.existsFor(item) ? 'mdi-circle' : 'mdi-circle-outline';
+      return this.existsFor(item) ? 'mdi-check-circle' : 'mdi-circle-outline';
     },
     on_search_input(value) {
       this.search_query = value;
