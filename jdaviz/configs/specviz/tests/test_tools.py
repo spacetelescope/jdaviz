@@ -203,14 +203,14 @@ class TestMapLimits:
         assert_allclose(old_x_max, check_x_max - offset, atol=1e-5)
 
         # Set new limits
-        tool.interact.selected = [(old_x_min + 10, y_min), (old_x_max - 10, y_max)]
+        tool.interact.selected = [(old_x_min + 3, y_min), (old_x_max - 3, y_max)]
         # _map_limits also runs here
         tool.on_update_zoom()
 
         # Limits should have changed
         new_x_min, new_x_max, _, _ = viewer.get_limits()
-        assert_allclose(new_x_min, old_x_min + 10, rtol=1e-5)
-        assert_allclose(new_x_max, old_x_max - 10, rtol=1e-5)
+        assert_allclose(new_x_min, old_x_min + 3, rtol=1e-5)
+        assert_allclose(new_x_max, old_x_max - 3, rtol=1e-5)
 
         tool.deactivate()
 
