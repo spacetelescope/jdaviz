@@ -25,9 +25,9 @@ try:
     import strauss  # noqa
     from scipy.io.wavfile import write as write_wav
     _has_strauss = True
-except:
+except ImportError:
     _has_strauss = False
-    
+
 _has_sound = True
 try:
     import sounddevice as sd
@@ -42,10 +42,13 @@ if not _has_sound:
         class OutputStream:
             def __init__(self, **kwargs):
                 self.closed = False
+
             def stop(self):
                 self.closed = True
+
             def start(self):
                 self.closed = False
+
     sd = Empty()
     sd.default = Empty()
     sd.default.device = [-1, -1]
@@ -83,7 +86,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     has_strauss = Bool(_has_strauss).tag(sync=True)
     has_outs = Bool((sd.default.device[1] != -1)).tag(sync=True)
     scrubdx = IntHandleEmpty(0).tag(sync=True)
-    
+
     # TODO: can we refresh the list, so sounddevices are up-to-date when dropdown clicked?
     sound_devices_items = List().tag(sync=True)
     sound_devices_selected = Unicode('').tag(sync=True)
@@ -103,7 +106,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     npix = IntHandleEmpty(-1).tag(sync=True)
     nsecs = FloatHandleEmpty(-1).tag(sync=True)
     is_playing = Bool(False).tag(sync=True)
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -141,7 +144,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     @property
     def coords_info(self):
         return self.app.session.application._tools["g-coords-info"]
-        
+
     @property
     def user_api(self):
         expose = [
@@ -164,6 +167,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         """
         # Modify default label to avoid vue error from re-using label
         self.results_label_default = self.app.return_unique_name('Sonified data', typ='data')
+
     def _on_viewer_added(self, msg):
         # TODO
         pass
@@ -237,7 +241,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         # Get spectrum properties here
         spectrum = self.dataset.selected_obj
-        
+
         # Get index of selected device
         if self.sound_devices_selected:
             selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
@@ -269,20 +273,20 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # For now, this still initially adds the sonified data to flux-viewer
         self.add_results.add_results_from_plugin(sonified_cube, replace=False)
         self.add_results.viewer.selected_obj.recalculate_combined_sonified_grid()
-        
+
         t1 = time.time()
         msg = SnackbarMessage(f"'{previous_label}' sonified successfully in {t1-t0} seconds.",
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
-        
+
         self.nsamps = self.sonified_cube.sigcube.shape[spectrum.spectral_axis_index]
         self.npix = self.sonified_cube.sigcube.size // self.nsamps
         self.nsecs = self.nsamps / self.sample_rate
 
         # lets create a callback to follow the flux-viewer mouse positions
         self._create_viewer_callbacks(self.app.get_viewer("flux-viewer"))
-        
+
         if spectrum.spectral_axis_index == 0:
             # TODO - do we need to make array copy here? Don't want to touch sigcube for now
             # ensure last axis is spectral pre-flattening
@@ -311,8 +315,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         self.on_audio_data = b64encode(on_buffer.read()).decode("utf-8")
         self.first_sonification_done = True
-
-        
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label):
@@ -469,7 +471,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
         else:
             self.sound_devices_selected = ""
-            
+
     def vue_refresh_device_list_in_dropdown(self, *args):
         self.refresh_device_list()
 
