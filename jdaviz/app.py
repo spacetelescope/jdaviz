@@ -1040,8 +1040,8 @@ class Application(VuetifyTemplate, HubListener):
             parent_data = self.data_collection[data]
 
         # If 3D spectral coords, extract celestial WCS
-        if (getattr(parent_data.coords, 'world_n_dim', None) == 3 
-            and _get_celestial_wcs(parent_data.coords)):
+        if (getattr(parent_data.coords, 'world_n_dim', None) == 3
+                and _get_celestial_wcs(parent_data.coords)):
             return _get_celestial_wcs(parent_data.coords)
         # If 2D coords, return as is
         elif getattr(parent_data.coords, 'world_n_dim', None) == 2:
