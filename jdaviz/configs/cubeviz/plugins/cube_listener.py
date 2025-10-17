@@ -30,6 +30,7 @@ def suppress_stderr():
         finally:
             sys.stderr = old_stderr
 
+
 def make_notification_sounds(srate=44100, duration=0.5):
     # fifth interval - commonly evokes 'ready'
     notes = [["E3", "B3", "E4"]]
@@ -75,7 +76,8 @@ def make_notification_sounds(srate=44100, duration=0.5):
         notif_audio[k] = (INT_MAX * sig / abs(sig).max()).astype("int16")
 
     return notif_audio
-            
+
+
 def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300,
                     eln=False):
     notes = [["A2"]]
@@ -132,7 +134,7 @@ class CubeListenerData:
 
         # generate notification audio
         self.notification_sounds = make_notification_sounds(srate=44100, duration=0.5)
-        
+
         if vol is None:
             self.atten_level = 1
         else:
@@ -152,7 +154,7 @@ class CubeListenerData:
 
         # flattened index of pixel in whole cube
         self.lindx = 0
-        
+
         # do we normalise for equal loudness?
         self.eln = eln
 
@@ -160,7 +162,6 @@ class CubeListenerData:
         self.cursig = np.zeros(self.siglen, dtype="int16")
         self.newsig = np.zeros(self.siglen, dtype="int16")
 
-        
         # ensure sigcube isn't too big before we initialise it
         slices = [slice(None),]*3
         slices[spectral_axis_index] = 0
@@ -171,7 +172,7 @@ class CubeListenerData:
         sigcube_shape[spectral_axis_index] = self.siglen
         self.sigcube = np.zeros(sigcube_shape, dtype='int16')
         self.sigcube_mask = np.zeros(sigcube_shape, dtype=bool)
-        
+
     def set_wl_bounds(self, w1, w2):
         """
         set the wavelength bounds for indexing spectra
@@ -199,7 +200,7 @@ class CubeListenerData:
                 # Store fitted values
                 if self.spectral_axis_index in [2, -1]:
                     self.sigcube[x, y, :] = sig
-                    self.sigcube_mask[x, y, :] = hassig 
+                    self.sigcube_mask[x, y, :] = hassig
                 elif self.spectral_axis_index == 0:
                     self.sigcube[:, y, x] = sig
                     self.sigcube_mask[:, y, x] = hassig
