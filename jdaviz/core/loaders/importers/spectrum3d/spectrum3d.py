@@ -281,6 +281,12 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         if target_flux_unit == sp.flux.unit:
             return sp
 
+        # In the case of a np.array, it is loaded into a Spectrum without WCS,
+        # so specutils creates a SpectralGWCS by default. We need this WCS later on
+        # for spatial region handling, so we store a copy of that WCS here.
+        if '_orig_spatial_wcs' not in sp.meta:
+            sp.meta['_orig_spatial_wcs'] = sp.wcs
+
         return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
 
     def __call__(self):

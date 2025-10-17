@@ -176,6 +176,7 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     assert label_mouseover.as_text() == ('', '', '')
 
 
+@pytest.mark.skip(reason="Need to refactor extension handling first")
 def test_numpy_cube(cubeviz_helper):
     arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 

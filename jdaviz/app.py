@@ -1039,15 +1039,15 @@ class Application(VuetifyTemplate, HubListener):
         else:
             parent_data = self.data_collection[data]
 
-        # If _orig_spatial_wcs is stored, use that (cubeviz case)
-        if parent_data.meta.get("_orig_spatial_wcs"):
-            return parent_data.meta.get("_orig_spatial_wcs")
         # If 3D spectral coords, extract celestial WCS
-        elif getattr(parent_data.coords, 'world_n_dim', None) == 3:
+        if getattr(parent_data.coords, 'world_n_dim', None) == 3 and _get_celestial_wcs(parent_data.coords):
             return _get_celestial_wcs(parent_data.coords)
         # If 2D coords, return as is
         elif getattr(parent_data.coords, 'world_n_dim', None) == 2:
             return parent_data.coords
+        # If _orig_spatial_wcs is stored, use that (cubeviz case)
+        elif parent_data.meta.get("_orig_spatial_wcs"):
+            return parent_data.meta.get("_orig_spatial_wcs")
         else:
             return None
 

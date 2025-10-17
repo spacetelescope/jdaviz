@@ -222,8 +222,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             except Exception:
                 # specutils.Spectrum reader would fail, so use no WCS
                 sc = Spectrum(
-                    flux=data * data_unit, uncertainty=unc,
-                    meta=metadata)
+                        flux=data * data_unit, uncertainty=unc,
+                        meta=metadata, spectral_axis_index=self.default_spectral_axis_index)
             else:
                 # raising an error here will consider this parser as non-valid
                 # so that specutils.Spectrum parser is preferred

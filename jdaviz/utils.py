@@ -1160,8 +1160,10 @@ cmap_samples = {cmap[1].name: _hex_for_cmap(cmap[1]) for cmap in glue_colormaps.
 
 def _get_celestial_wcs(wcs):
     """ If `wcs` has a celestial component return that, otherwise return None """
-    if isinstance(wcs, gwcs):
+    if isinstance(wcs, gwcs) and not type(wcs) is SpectralGWCS:
         data_wcs = WCS(wcs.to_fits_sip())
-    else:
+    elif isinstance(wcs, WCS):
         data_wcs = getattr(wcs, 'celestial', None)
+    else:
+        return None
     return data_wcs
