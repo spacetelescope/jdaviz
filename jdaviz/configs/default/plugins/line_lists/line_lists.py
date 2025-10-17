@@ -241,9 +241,14 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
 
         # set redshift slider to redshift stored in Spectrum object
         if viewer_data.meta.get('plugin', None) is not None:
-            self.rs_redshift = (viewer_data.redshift.value
-                                if hasattr(viewer_data.redshift, 'value')
-                                else viewer_data.redshift)
+            viewer_data_redshift = (viewer_data.redshift.value
+                                    if hasattr(viewer_data.redshift, 'value')
+                                    else viewer_data.redshift)
+            # TODO: the previous line that gets 'plugin' from the metadata used
+            #  to fail because it was miscased as 'Plugin'. This is a patch until
+            #  we decide how we want this case handled.
+            if viewer_data_redshift != 0.0:
+                self.rs_redshift = viewer_data_redshift
         self._on_spectrum_viewer_limits_changed()  # will also trigger _auto_slider_step
 
         # set the choices (and default) for the units for new custom lines
