@@ -287,7 +287,10 @@
               </v-expansion-panel-header>
               <v-expansion-panel-content class="plugin-expansion-panel-content">
               <div v-for="item in fitter_parameters.parameters">
-                <v-switch v-if="isBoolean(item.value)" v-model="item.value">
+                <v-switch v-if="isBoolean(item.value)"
+                  v-model="item.value"
+                  :hint="parameter_hints[item.name]"
+                  persistent-hint>
                     <template v-slot:label>
                         <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
                           {{ item.name }}

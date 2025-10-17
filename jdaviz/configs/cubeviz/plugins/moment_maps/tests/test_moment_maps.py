@@ -113,7 +113,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
 
-    assert len(dc.links) == 18
+    assert len(dc.links) == 22
 
     # label should remain unchanged but raise overwrite warnings
     assert mm._obj.results_label == 'moment 0'
@@ -155,8 +155,8 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     mm._obj.vue_calculate_moment()
 
     assert dc[-1].label == 'moment 1'
-    assert len(dc.links) == 28
-    assert len(dc.external_links) == 6  # world linked
+    assert len(dc.links) == 34
+    assert len(dc.external_links) == 9  # world linked
     # Link 3D z to 2D x and 3D y to 2D y
     assert (dc.external_links[3].cids1[0].label == "Declination" and
             dc.external_links[3].cids2[0].label == "Declination" and
