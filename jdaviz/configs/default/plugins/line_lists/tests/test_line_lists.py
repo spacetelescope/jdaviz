@@ -1,9 +1,11 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
+import warnings
 
 import astropy.units as u
 from astropy.table import QTable
+from astropy.utils.exceptions import AstropyDeprecationWarning
 from specutils import Spectrum
 
 from jdaviz.core.marks import SpectralLine
@@ -27,7 +29,13 @@ def test_line_lists(specviz_helper):
     specviz_helper.load_line_list(lt)
 
     assert len(specviz_helper.spectral_lines) == 2
-    assert specviz_helper.spectral_lines[specviz_helper.spectral_lines['linename'] == 'Halpha']['listname'][0] == 'Custom'  # noqa
+    with warnings.catch_warnings():
+        # two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update
+        #  will be needed and is as below:
+        # Table.loc_indices.with_index(...):
+        # https://docs.astropy.org/en/latest/whatsnew/7.2.html
+        warnings.filterwarnings("ignore", category=AstropyDeprecationWarning)
+        assert specviz_helper.spectral_lines.loc["linename", "Halpha"]["listname"] == "Custom"
     assert np.all(specviz_helper.spectral_lines["show"])
     assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is True
 
