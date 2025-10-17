@@ -54,7 +54,8 @@ from jdaviz.core.registries import (tool_registry, tray_registry,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs,
                           layer_is_table_data, MultiMaskSubsetState,
-                          _wcs_only_label, CONFIGS_WITH_LOADERS)
+                          _wcs_only_label, CONFIGS_WITH_LOADERS,
+                          _get_celestial_wcs)
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
@@ -1031,18 +1032,23 @@ class Application(VuetifyTemplate, HubListener):
 
     def _get_wcs_from_subset(self, subset_state, data=None):
         """ Usually WCS is subset.parent.coords, except special cubeviz case."""
-        parent_data = subset_state.attributes[0].parent if not data else self.data_collection[data]
-
-        # 3D WCS is not yet supported so this workaround allows SkyRegions to
-        # be returned for data in cubeviz
-        if self.config == 'cubeviz':
-            wcs = parent_data.meta.get("_orig_spatial_wcs", None)
+        if data is None:
+            parent_data = self.data_collection[subset_state.attributes[0].parent.label]
         else:
-            if not hasattr(parent_data, 'coords'):
-                raise AttributeError(f'{parent_data} does not have anything set for'
-                                     f'the coords attribute, unable to extract WCS')
-            wcs = parent_data.coords
-        return wcs
+            parent_data = self.data_collection[data]
+
+        # If _orig_spatial_wcs is stored, use that (cubeviz case)
+        if parent_data.meta.get("_orig_spatial_wcs"):
+            return parent_data.meta.get("_orig_spatial_wcs")
+        # If 3D spectral coords, extract celestial WCS
+        elif getattr(parent_data.coords, 'world_n_dim', None) == 3:
+            return _get_celestial_wcs(parent_data.coords)
+        # If 2D coords, return as is
+        elif getattr(parent_data.coords, 'world_n_dim', None) == 2:
+            return parent_data.coords
+        else:
+            raise AttributeError(f'{parent_data} does not have anything set for'
+                                 f'the coords attribute, unable to extract WCS')
 
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,

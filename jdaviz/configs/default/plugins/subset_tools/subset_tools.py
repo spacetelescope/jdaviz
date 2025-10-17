@@ -36,7 +36,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
-from jdaviz.utils import MultiMaskSubsetState, _chain_regions, data_has_valid_wcs
+from jdaviz.utils import (MultiMaskSubsetState, _chain_regions, data_has_valid_wcs,
+                          _get_celestial_wcs)
 
 from jdaviz.configs.default.plugins.subset_tools import utils
 
@@ -1309,14 +1310,18 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                         RectanglePixelRegion, RectangleSkyRegion,
                                         CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
                     try:
-                        state = regions2roi(region, wcs=data.coords)
+                        if getattr(data.coords, 'world_n_dim', None) == 3:
+                            data_wcs = _get_celestial_wcs(data.coords)
+                            state = regions2roi(region, wcs=data_wcs)
+                        else:
+                            state = regions2roi(region, wcs=data.coords)
                     except ValueError:
                         if '_orig_spatial_wcs' not in data.meta:
                             bad_regions.append((region,
                                                 f'Failed to load: _orig_spatial_wcs'
                                                 f' meta tag not in {data.label}'))
                             continue
-                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'].celestial)
+                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'])
                     viewer.apply_roi(state)
 
                 elif isinstance(region, (CircularROI, CircularAnnulusROI,

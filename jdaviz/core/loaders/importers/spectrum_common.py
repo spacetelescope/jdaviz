@@ -15,7 +15,8 @@ from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.utils import (standardize_metadata,
                           PRIHDR_KEY,
-                          SPECTRAL_AXIS_COMP_LABELS)
+                          SPECTRAL_AXIS_COMP_LABELS,
+                          _get_celestial_wcs)
 
 __all__ = ['SpectrumInputExtensionsMixin', '_spectrum_assign_component_type']
 
@@ -141,10 +142,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         hdu = item.get('obj')
         return (len(getattr(hdu, 'shape', [])) == self.supported_flux_ndim
                 and hdu.header.get('EXTNAME', '') == 'MASK')
-
-    def _get_celestial_wcs(self, wcs):
-        """ If `wcs` has a celestial component return that, otherwise return None """
-        return wcs.celestial if hasattr(wcs, 'celestial') else None
 
     @cached_property
     def spectrum(self):
@@ -273,10 +270,13 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:  # Convert both
             new_sc = sc.with_spectral_axis_and_flux_units(
                 target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
-        # TODO: Seems to be problem area
         if target_wave_unit is not None:
-            new_sc.meta['_orig_spec'] = sc  # Need this for later
-        if self._get_celestial_wcs(sc.wcs) is not None:
-            new_sc.meta['_orig_spatial_wcs'] = self._get_celestial_wcs(sc.wcs)
+            new_sc.meta['_orig_spec'] = sc
+        # Since we create a new Spectrum, we need to copy over any original WCS info
+        # since the WCS will be replaced by a SpectralGWCS object instead of the original
+        # astropy.wcs.WCS object.
+        # This is needed for the subset tools to work properly.
+        if _get_celestial_wcs(sc.wcs) is not None:
+            new_sc.meta['_orig_spatial_wcs'] = _get_celestial_wcs(sc.wcs)
 
         return new_sc

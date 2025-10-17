@@ -280,7 +280,6 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         if target_flux_unit == sp.flux.unit:
             return sp
-        sp.meta['_orig_spatial_wcs'] = sp.wcs
 
         return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
 
