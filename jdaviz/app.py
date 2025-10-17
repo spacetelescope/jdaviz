@@ -1049,8 +1049,7 @@ class Application(VuetifyTemplate, HubListener):
         elif getattr(parent_data.coords, 'world_n_dim', None) == 2:
             return parent_data.coords
         else:
-            raise AttributeError(f'{parent_data} does not have anything set for'
-                                 f'the coords attribute, unable to extract WCS')
+            return None
 
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,
