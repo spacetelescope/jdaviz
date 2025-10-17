@@ -1396,7 +1396,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             snack_color = "success"
         self.app.hub.broadcast(SnackbarMessage(
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
-            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+            f"bad={n_reg_bad}", color=snack_color,
+            traceback=[(str(bad_region[0]), bad_region[1]) for bad_region in bad_regions],
+            timeout=8000, sender=self.app))
 
         if return_bad_regions:
             return bad_regions
