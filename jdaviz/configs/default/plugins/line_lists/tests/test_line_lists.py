@@ -1,11 +1,9 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
-import warnings
 
 import astropy.units as u
 from astropy.table import QTable
-from astropy.utils.exceptions import AstropyDeprecationWarning
 from specutils import Spectrum
 
 from jdaviz.core.marks import SpectralLine
@@ -20,6 +18,7 @@ pytestmark = pytest.mark.filterwarnings(
     "ignore:Calling `Table\\.loc/iloc/loc_indices\\[index_id, item\\]`.*:"
     "astropy.utils.exceptions.AstropyDeprecationWarning"
 )
+
 
 def test_line_lists(specviz_helper):
     spec = Spectrum(flux=np.random.rand(100)*u.Jy,
