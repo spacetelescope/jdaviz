@@ -11,32 +11,51 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SpectralSubsetSelectMixin, with_spinner,
-                                        AddResultsMixin)
+                                        AddResultsMixin, ViewerSelectMixin)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.events import SnackbarMessage, AddDataMessage
 from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, INT_MAX
 from jdaviz.core.sonified_layers import SonifiedLayerState
+from io import BytesIO
+from base64 import b64encode
 
 __all__ = ['SonifyData']
 
 try:
     import strauss  # noqa
+    from scipy.io.wavfile import write as write_wav
+    _has_strauss = True
+except:
+    _has_strauss = False
+    
+_has_sound = True
+try:
     import sounddevice as sd
-except ImportError:
+    if sd.default.device["output"] < 0:
+        _has_sound = False
+except (ImportError, OSError):
+    _has_sound = False
+
+if not _has_sound:
+    # Some dummy objects in case sounddevice not available
     class Empty:
-        pass
+        class OutputStream:
+            def __init__(self, **kwargs):
+                self.closed = False
+            def stop(self):
+                self.closed = True
+            def start(self):
+                self.closed = False
     sd = Empty()
     sd.default = Empty()
     sd.default.device = [-1, -1]
-    _has_strauss = False
-else:
-    _has_strauss = True
+    sd.query_devices = lambda: []
 
 
 @tray_registry('cubeviz-sonify-data', label="Sonify Data",
                category="data:analysis")
 class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
-                 AddResultsMixin):
+                 AddResultsMixin, ViewerSelectMixin):
     """
     See the :ref:`Sonify Data Plugin Documentation <cubeviz-sonify-data>` for more details.
 
@@ -50,7 +69,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     template_file = __file__, "sonify_data.vue"
 
     # Removing UI option to vary these for now
-    sample_rate = 44100  # IntHandleEmpty(44100).tag(sync=True)
+    sample_rate = IntHandleEmpty(44100).tag(sync=True)
     buffer_size = 2048  # IntHandleEmpty(2048).tag(sync=True)
     assidx = FloatHandleEmpty(2.5).tag(sync=True)
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
@@ -62,22 +81,39 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     volume = IntHandleEmpty(100).tag(sync=True)
     stream_active = Bool(True).tag(sync=True)
     has_strauss = Bool(_has_strauss).tag(sync=True)
-
-    # TODO: can we referesh the list, so sounddevices are up-to-date when dropdown clicked?
+    has_outs = Bool((sd.default.device[1] != -1)).tag(sync=True)
+    scrubdx = IntHandleEmpty(0).tag(sync=True)
+    
+    # TODO: can we refresh the list, so sounddevices are up-to-date when dropdown clicked?
     sound_devices_items = List().tag(sync=True)
     sound_devices_selected = Unicode('').tag(sync=True)
 
+    # SFX
+    sound_in = Unicode("").tag(sync=True)
+    sound_out = Unicode("").tag(sync=True)
+    on_audio_data = Unicode("").tag(sync=True)
+    cube_audio_data = Unicode("").tag(sync=True)
+
+    # some addiional attributes for JS
+    first_sonification_done = Bool(False).tag(sync=True)
+    x_pos = IntHandleEmpty(-1).tag(sync=True)
+    y_pos = IntHandleEmpty(-1).tag(sync=True)
+    lindx = IntHandleEmpty(-1).tag(sync=True)
+    nsamps = IntHandleEmpty(-1).tag(sync=True)
+    npix = IntHandleEmpty(-1).tag(sync=True)
+    nsecs = FloatHandleEmpty(-1).tag(sync=True)
+    is_playing = Bool(False).tag(sync=True)
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._plugin_description = 'Sonify a data cube'
         self.docs_description = 'Sonify a data cube using the Strauss package.'
-        if not self.has_strauss or sd.default.device[1] < 0:
+        if not self.has_strauss:
             self.disabled_msg = ('To use Sonify Data, install strauss and restart Jdaviz. You '
                                  'can do this by running pip install strauss in the command'
                                  ' line and then launching Jdaviz. Currently, this plugin only'
                                  ' works on devices with valid sound output.')
-
         else:
             self.sound_device_indexes = None
             self.refresh_device_list()
@@ -103,8 +139,22 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
+    def coords_info(self):
+        return self.app.session.application._tools["g-coords-info"]
+        
+    @property
     def user_api(self):
-        expose = ['sonify_cube']
+        expose = [
+            "sonify_cube",
+            "lindx",
+            "x_pos",
+            "y_pos",
+            "nsamps",
+            "nsecs",
+            "sample_rate",
+            "is_playing",
+            "volume",
+        ]
         return PluginUserApi(self, expose)
 
     @observe('results_label_invalid_msg')
@@ -114,6 +164,36 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         """
         # Modify default label to avoid vue error from re-using label
         self.results_label_default = self.app.return_unique_name('Sonified data', typ='data')
+    def _on_viewer_added(self, msg):
+        # TODO
+        pass
+
+    def _create_viewer_callbacks(self, viewer):
+        mm_callback = self._viewer_callback(viewer, self._on_viewer_mouse_move)
+        me_callback = self._viewer_callback(viewer, self._on_viewer_mouse_enter)
+        ml_callback = self._viewer_callback(viewer, self._on_viewer_mouse_leave)
+        viewer.add_event_callback(mm_callback, events=["mousemove"])
+        viewer.add_event_callback(me_callback, events=["mouseenter"])
+        viewer.add_event_callback(ml_callback, events=["mouseleave"])
+
+    def _on_viewer_mouse_move(self, viewer, data):
+        if data["event"] == "mousemove":
+            pixel_data = self.coords_info.as_dict()
+            self.x_pos, self.y_pos = int(pixel_data["axes_x"]), int(
+                pixel_data["axes_y"]
+            )
+            self.lindx = int(
+                self.x_pos * self.sonified_cube.sigcube.shape[1]
+                + self.y_pos
+            )
+
+    def _on_viewer_mouse_enter(self, viewer, data):
+        if data["event"] == "mouseenter":
+            self.is_playing = True
+
+    def _on_viewer_mouse_leave(self, viewer, data):
+        if data["event"] == "mouseleave":
+            self.is_playing = False
 
     def _data_added_to_viewer(self, msg):
         # Keep track of the volume attribute for each layer.
@@ -155,7 +235,14 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         if self.disabled_msg:
             raise ValueError('Unable to sonify cube')
 
+        # Get spectrum properties here
+        spectrum = self.dataset.selected_obj
+        
         # Get index of selected device
+        if self.sound_devices_selected:
+            selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
+        else:
+            selected_device_index = None
         selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
 
         # Apply spectral subset bounds
@@ -182,12 +269,50 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # For now, this still initially adds the sonified data to flux-viewer
         self.add_results.add_results_from_plugin(sonified_cube, replace=False)
         self.add_results.viewer.selected_obj.recalculate_combined_sonified_grid()
-
+        
         t1 = time.time()
         msg = SnackbarMessage(f"'{previous_label}' sonified successfully in {t1-t0} seconds.",
                               color='success',
                               sender=self)
         self.app.hub.broadcast(msg)
+        
+        self.nsamps = self.sonified_cube.sigcube.shape[spectrum.spectral_axis_index]
+        self.npix = self.sonified_cube.sigcube.size // self.nsamps
+        self.nsecs = self.nsamps / self.sample_rate
+
+        # lets create a callback to follow the flux-viewer mouse positions
+        self._create_viewer_callbacks(self.app.get_viewer("flux-viewer"))
+        
+        if spectrum.spectral_axis_index == 0:
+            # TODO - do we need to make array copy here? Don't want to touch sigcube for now
+            # ensure last axis is spectral pre-flattening
+            orderedcube = np.moveaxis(self.sonified_cube.sigcube.copy(), 0, -1)
+        else:
+            orderedcube = self.sonified_cube.sigcube
+        flatcube = orderedcube.flatten()
+
+        cube_buffer = BytesIO()
+        write_wav(
+            cube_buffer,
+            self.sample_rate,
+            flatcube,
+        )
+        cube_buffer.seek(0)
+        self.cube_audio_data = b64encode(cube_buffer.read()).decode("utf-8")
+
+        # In-memory WAV file
+        on_buffer = BytesIO()
+        write_wav(
+            on_buffer,
+            self.sample_rate,
+            self.sonified_cube.notification_sounds["on"].astype("int16"),
+        )
+        on_buffer.seek(0)
+
+        self.on_audio_data = b64encode(on_buffer.read()).decode("utf-8")
+        self.first_sonification_done = True
+
+        
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln, use_pccut, results_label):
@@ -340,8 +465,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         devices, indexes = self.build_device_lists()
         self.sound_device_indexes = dict(zip(devices, indexes))
         self.sound_devices_items = devices
-        self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
-
+        if len(devices) > 0:
+            self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
+        else:
+            self.sound_devices_selected = ""
+            
     def vue_refresh_device_list_in_dropdown(self, *args):
         self.refresh_device_list()
 

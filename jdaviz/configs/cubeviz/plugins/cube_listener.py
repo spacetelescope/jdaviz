@@ -8,7 +8,7 @@ try:
     from strauss.sonification import Sonification
     from strauss.sources import Events
     from strauss.score import Score
-    from strauss.generator import Spectralizer
+    from strauss.generator import Spectralizer, Synthesizer
 except ImportError:
     pass
 
@@ -30,7 +30,52 @@ def suppress_stderr():
         finally:
             sys.stderr = old_stderr
 
+def make_notification_sounds(srate=44100, duration=0.5):
+    # fifth interval - commonly evokes 'ready'
+    notes = [["E3", "B3", "E4"]]
+    score = Score(notes, duration)
+    generator = Synthesizer(samprate=srate)
 
+    generator.load_preset("pitch_mapper")
+
+    # play interval in sequence
+    data_on = {"time": [0, 0.2, 0.4], "pitch": [0, 1, 2]}
+    data_off = {"time": [0.4, 0.2, 0.0], "pitch": [0, 1, 2]}
+    lims = {"time": (0, 1)}
+    generator.modify_preset(
+        {
+            "note_length": 1,
+            "filter": "on",
+            "cutoff": 0.6,
+            "volume_envelope": {"use": "on", "A": 0.02, "D": 0.2, "S": 0},
+        }
+    )
+    # set up source
+    sources_on = Events(data_on.keys())
+    sources_on.fromdict(data_on)
+    sources_on.apply_mapping_functions(map_lims=lims)
+
+    sources_off = Events(data_off.keys())
+    sources_off.fromdict(data_off)
+    sources_off.apply_mapping_functions(map_lims=lims)
+
+    # render and play sonification!
+    on = Sonification(score, sources_on, generator, "mono", samprate=srate)
+    off = Sonification(score, sources_off, generator, "mono", samprate=srate)
+    on.render()
+    off.render()
+
+    notif_audio = {
+        "on": on.out_channels["0"].values,
+        "off": off.out_channels["0"].values,
+    }
+
+    for k in notif_audio.keys():
+        sig = notif_audio[k]
+        notif_audio[k] = (INT_MAX * sig / abs(sig).max()).astype("int16")
+
+    return notif_audio
+            
 def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300,
                     eln=False):
     notes = [["A2"]]
@@ -39,17 +84,17 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     generator = Spectralizer(samprate=srate)
 
     # Lets pick the mapping frequency range for the spectrum...
-    generator.modify_preset({'min_freq': fmin, 'max_freq': fmax,
-                             'fit_spec_multiples': False,
-                             'interpolation_type': 'preserve_power',
-                             'equal_loudness_normalisation': eln})
+    generator.modify_preset({"min_freq": fmin, "max_freq": fmax,
+                             "fit_spec_multiples": False,
+                             "interpolation_type": "preserve_power",
+                             "equal_loudness_normalisation": eln})
 
-    data = {'spectrum': [spec], 'pitch': [1]}
+    data = {"spectrum": [spec], "pitch": [1]}
 
     # set range in spectral flux representing the maximum and minimum sound frequency power:
     # 0 (numeric): absolute 0 in flux units, such that any flux above 0 will sound.
-    # '100' (string): 100th percentile (i.e. maximum value) in spectral flux.
-    lims = {'spectrum': (0, '%100')}
+    # '100'm (string): 100th percentile (i.e. maximum value) in spectral flux.
+    lims = {'spectrum': (0, "100%")}
 
     # set up source
     sources = Events(data.keys())
@@ -61,7 +106,7 @@ def sonify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     soni.render()
     soni._make_seamless(overlap)
 
-    return soni.loop_channels['0'].values
+    return soni.loop_channels["0"].values
 
 
 class CubeListenerData:
@@ -85,6 +130,9 @@ class CubeListenerData:
         spatial_inds.remove(self.spectral_axis_index)
         self.spatial_inds = spatial_inds
 
+        # generate notification audio
+        self.notification_sounds = make_notification_sounds(srate=44100, duration=0.5)
+        
         if vol is None:
             self.atten_level = 1
         else:
@@ -102,13 +150,17 @@ class CubeListenerData:
         self.audfrqmin = audfrqmin
         self.audfrqmax = audfrqmax
 
+        # flattened index of pixel in whole cube
+        self.lindx = 0
+        
         # do we normalise for equal loudness?
         self.eln = eln
 
         self.cbuff = False
-        self.cursig = np.zeros(self.siglen, dtype='int16')
-        self.newsig = np.zeros(self.siglen, dtype='int16')
+        self.cursig = np.zeros(self.siglen, dtype="int16")
+        self.newsig = np.zeros(self.siglen, dtype="int16")
 
+        
         # ensure sigcube isn't too big before we initialise it
         slices = [slice(None),]*3
         slices[spectral_axis_index] = 0
@@ -118,7 +170,8 @@ class CubeListenerData:
         sigcube_shape = list(self.cube.shape)
         sigcube_shape[spectral_axis_index] = self.siglen
         self.sigcube = np.zeros(sigcube_shape, dtype='int16')
-
+        self.sigcube_mask = np.zeros(sigcube_shape, dtype=bool)
+        
     def set_wl_bounds(self, w1, w2):
         """
         set the wavelength bounds for indexing spectra
@@ -141,12 +194,15 @@ class CubeListenerData:
                 x = results['x'][i]
                 y = results['y'][i]
                 sig = results['sig'][i]
+                hassig = results['mask'][i]
 
                 # Store fitted values
                 if self.spectral_axis_index in [2, -1]:
                     self.sigcube[x, y, :] = sig
+                    self.sigcube_mask[x, y, :] = hassig 
                 elif self.spectral_axis_index == 0:
                     self.sigcube[:, y, x] = sig
+                    self.sigcube_mask[:, y, x] = hassig
 
         # Workers for the parallelization pool.
         workers = (SonifySpaxelWorker(self.cube, spx, lo2hi, self.dur, self.srate,
@@ -205,7 +261,7 @@ class SonifySpaxelWorker:
         self.spectral_axis_index = spectral_axis_index
 
     def __call__(self):
-        results = {'x': [], 'y': [], 'sig': []}
+        results = {'x': [], 'y': [], 'sig': [], 'mask': []}
 
         for spaxel in self.spaxel_set:
             x = spaxel[0]
@@ -216,13 +272,16 @@ class SonifySpaxelWorker:
                 flux = self.cube[self.lo2hi, y, x]
 
             if flux.any():
-                sig = sonify_spectrum(flux, self.dur,
-                                      srate=self.srate,
-                                      fmin=self.audfrqmin,
-                                      fmax=self.audfrqmax,
-                                      eln=self.eln)
+                with suppress_stderr():
+                    sig = sonify_spectrum(flux, self.dur,
+                                          srate=self.srate,
+                                          fmin=self.audfrqmin,
+                                          fmax=self.audfrqmax,
+                                          eln=self.eln)
                 sig = (sig*self.maxval).astype('int16')
+                results['mask'].append(True)
             else:
+                results['mask'].append(False)
                 continue
 
             results['x'].append(x)
