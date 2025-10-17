@@ -409,7 +409,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             #  data for this application. This section will need to be updated
             #  when that is no longer true.
             # Hack to insert WCS for generated 2D and 3D images using FLUX cube WCS.
-            if 'Plugin' in getattr(image, 'meta', {}) and not image.coords:
+            if 'plugin' in getattr(image, 'meta', {}) and not image.coords:
                 coo_data = self.app.data_collection[0]
             else:
                 coo_data = image

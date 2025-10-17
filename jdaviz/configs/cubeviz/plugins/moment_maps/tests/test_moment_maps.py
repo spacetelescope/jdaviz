@@ -113,7 +113,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
 
-    assert len(dc.links) == 17
+    assert len(dc.links) == 22
 
     # label should remain unchanged but raise overwrite warnings
     assert mm._obj.results_label == 'moment 0'
@@ -155,13 +155,13 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     mm._obj.vue_calculate_moment()
 
     assert dc[-1].label == 'moment 1'
-    assert len(dc.links) == 25
-    assert len(dc.external_links) == 5  # pixel linked
+    assert len(dc.links) == 34
+    assert len(dc.external_links) == 9  # world linked
     # Link 3D z to 2D x and 3D y to 2D y
-    assert (dc.external_links[3].cids1[0].label == "Pixel Axis 1 [y]" and
-            dc.external_links[3].cids2[0].label == "Pixel Axis 0 [y]" and
-            dc.external_links[4].cids1[0].label == "Pixel Axis 2 [x]" and
-            dc.external_links[4].cids2[0].label == "Pixel Axis 1 [x]")
+    assert (dc.external_links[3].cids1[0].label == "Declination" and
+            dc.external_links[3].cids2[0].label == "Declination" and
+            dc.external_links[4].cids1[0].label == "Right Ascension" and
+            dc.external_links[4].cids2[0].label == "Right Ascension")
 
     # Coordinate display should be unaffected.
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',

@@ -169,6 +169,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     # that has `choices` works as expected
     fake_importer = FakeSpectrumListImporter(app=deconfigged_helper.app,
                                              resolver=deconfigged_helper.loaders['object']._obj,
+                                             parser=None,
                                              input=premade_spectrum_list)
     test_obj = fake_importer.sources
 

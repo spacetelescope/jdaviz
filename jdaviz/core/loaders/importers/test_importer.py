@@ -29,6 +29,7 @@ def test_update_existing_data_in_dc_traitlet(deconfigged_helper, premade_spectru
     # Test the sync
     test_obj = TestBaseImporter(app=deconfigged_helper.app,
                                 resolver=deconfigged_helper.loaders['object']._obj,
+                                parser=None,
                                 input=premade_spectrum_list)
 
     assert len(test_obj.existing_data_in_dc) == 0
@@ -53,6 +54,7 @@ class TestResetAndCheckExistingDataInDC:
 
         test_obj = TestBaseImporter(app=deconfigged_helper.app,
                                     resolver=deconfigged_helper.loaders['object']._obj,
+                                    parser=None,
                                     input=spectrum_list)
 
         dh_list = [create_data_hash(spec) for spec in spectrum_list]

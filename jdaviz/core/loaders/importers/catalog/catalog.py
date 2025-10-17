@@ -8,6 +8,7 @@ from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.utils import RA_COMPS, DEC_COMPS
 
 __all__ = ['CatalogImporter']
 
@@ -96,15 +97,9 @@ class CatalogImporter(BaseImporterToDataCollection):
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
             if col == 'ra':
-                col_possibilities = ['right ascension', 'ra', 'ra_deg', 'radeg',
-                                     'radegrees', 'right ascension (degrees)',
-                                     'ra_obj', 'raj2000', 'ra2000']
-                idx = get_idx(all_column_names, col_possibilities, 0)
+                idx = get_idx(all_column_names, RA_COMPS, 0)
             elif col == 'dec':
-                col_possibilities = ['declination', 'dec', 'dec_deg', 'decdeg',
-                                     'decdegrees', 'declination (degrees)',
-                                     'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
-                idx = get_idx(all_column_names, col_possibilities, 1)
+                idx = get_idx(all_column_names, DEC_COMPS, 1)
 
         return colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
 

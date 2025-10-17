@@ -35,7 +35,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.viewer.add_filter('is_image_viewer')
+        self.viewer.add_filter('is_imviz_image_viewer')
 
         # description displayed under plugin title in tray
         self._plugin_description = 'Show active data label, compass, and zoom box.'

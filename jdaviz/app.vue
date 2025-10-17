@@ -49,12 +49,12 @@
       <v-toolbar-items v-for="(item, index) in state.tool_items">
         <!-- this logic assumes the first entry is g-data-tools, if that changes, this may need to be modified -->
         <v-divider v-if="config !== 'deconfigged' && index > 1" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="item.name === 'g-data-tools' && ['cubeviz', 'mosviz', 'rampviz'].indexOf(config) === -1" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
+        <j-tooltip v-if="item.name === 'g-data-tools' && ['mosviz', 'rampviz'].indexOf(config) === -1" tooltipcontent="Open data menu in sidebar (this button will be removed in a future release)">
           <v-btn tile depressed color="turquoise" @click="state.drawer_content = 'loaders'">
             Import Data
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-else-if="['cubeviz', 'mosviz'].indexOf(config) !== -1 && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
+        <j-tooltip v-else-if="['mosviz', 'rampviz'].indexOf(config) !== -1 && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
         <j-tooltip v-else :tipid="item.name">
           <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
         </j-tooltip>
@@ -77,7 +77,7 @@
           </v-btn>
         </j-tooltip>
         <v-divider v-if="state.show_toolbar_buttons" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="(state.dev_loaders || ['cubeviz', 'mosviz', 'rampviz'].indexOf(config) === -1) && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0 && (!state.settings.server_is_remote || state.settings.remote_enable_importers)" tipid="app-toolbar-loaders">
+        <j-tooltip v-if="(state.dev_loaders || ['mosviz', 'rampviz'].indexOf(config) === -1) && (state.show_toolbar_buttons || state.drawer_content === 'loaders') && state.loader_items.length > 0" tipid="app-toolbar-loaders">
           <v-btn icon @click="() => {if (state.drawer_content === 'loaders') {state.drawer_content = ''} else {state.drawer_content = 'loaders'}}" :class="{active : state.drawer_content === 'loaders'}">
             <v-icon medium style="padding-top: 2px">mdi-plus-box</v-icon>
           </v-btn>

@@ -329,7 +329,7 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
     assert_allclose(cr.center.dec.deg, sr1.center.dec.deg)
     assert_allclose(cr.radius, sr1.radius)
 
-    sky_regs = plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')
+    sky_regs = plg.get_regions(wrt_data='3D Spectrum [FLUX]')
     cr2 = sky_regs['Subset 2']
     assert isinstance(cr2, CirclePixelRegion)
     assert cr2 == spatial_reg
@@ -340,7 +340,7 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
     with pytest.raises(ValueError, match="`region_type` must be 'spectral', 'spatial', or None for any."):  # noqa E501
         plg.get_regions(region_type='fail')
     with pytest.raises(ValueError, match='Unable to retrieve SkyRegion objects for spectral subsets'):  # noqa E501
-        plg.get_regions(region_type='spectral', wrt_data='Unknown spectrum object[FLUX]')
+        plg.get_regions(region_type='spectral', wrt_data='3D Spectrum [FLUX]')
 
 
 def test_get_regions_composite(imviz_helper):
