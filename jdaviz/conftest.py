@@ -2,7 +2,7 @@
 # test infrastructure. It needs to live inside the package in order for it to
 # get picked up when running the tests inside an interpreter using
 # packagename.test
-import time
+
 import os
 import warnings
 
