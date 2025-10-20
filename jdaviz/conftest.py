@@ -150,10 +150,11 @@ def deconfigged_helper():
 
 
 @pytest.fixture
-def vo_delay():
+def request_delay():
     """
-    Add delay between VO registry queries to avoid rate limiting.
+    Add delay between generic requests to avoid rate limiting.
 
+    For VO:
     This fixture aims to prevent intermittent warnings about non-standard
     XML elements (like <limits>) that may be returned by VO services
     when rate limits are approached.

@@ -184,7 +184,7 @@ class TestVOImvizRemote:
     # @pytest.mark.filterwarnings(
     #     "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
     # )
-    def test_coverage_toggle(self, imviz_helper, vo_delay):
+    def test_coverage_toggle(self, imviz_helper, request_delay):
         """
         Test that disabling the coverage toggle returns more available services
 
