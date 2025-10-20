@@ -218,7 +218,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             # the Spectrum.read parser may work, so we try that next.
             # If that also fails, then drop the WCS.
             try:
-                sc = Spectrum.read(self._resolver())
+                sc = Spectrum.read(self._parser.input)
             except Exception:
                 # specutils.Spectrum reader would fail, so use no WCS
                 sc = Spectrum(
