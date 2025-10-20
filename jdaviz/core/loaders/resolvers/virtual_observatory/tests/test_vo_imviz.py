@@ -131,7 +131,6 @@ def test_link_type_autocoord(imviz_helper):
     np.testing.assert_allclose(float(dec_str), -9.905948925234416, atol=30)
 
 
-@pytest.mark.remote_data
 class TestVOXMLInjectionWarning:
     """
     Test class for VO XML Injection warning scenarios.
