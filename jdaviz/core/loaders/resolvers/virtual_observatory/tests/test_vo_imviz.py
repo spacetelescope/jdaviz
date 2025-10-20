@@ -179,12 +179,10 @@ class TestVOImvizRemote:
         vo_ldr.resource_filter_coverage = False
         assert len(vo_ldr.resource.choices) > 0
 
-    # This warning suppression can be re-instated if the delay stops functioning
-    # The warning itself is harmless for this test so we can simply ignore it
-    # @pytest.mark.filterwarnings(
-    #     "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
-    # )
-    def test_coverage_toggle(self, imviz_helper, request_delay):
+    @pytest.mark.filterwarnings(
+        "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
+    )
+    def test_coverage_toggle(self, imviz_helper):
         """
         Test that disabling the coverage toggle returns more available services
 
@@ -206,7 +204,8 @@ class TestVOImvizRemote:
         assert vo_ldr._obj.resources_loading is False
         nonfiltered_resources = vo_ldr.resource.choices
         # Even if the warning is triggered, this line should still pass
-        # because the execution should still continue
+        # because the execution should still continue. If it doesn't,
+        # then we know the warning solution did not work.
         assert len(nonfiltered_resources) > 0
 
         # Nonfiltered resources should be more than filtered resources
