@@ -165,19 +165,7 @@ class TestVOXMLInjectionWarning:
             </capabilities>"""
 
     def test_direct_xml_parsing_triggers_warning(self):
-        """
-        Parse XML with <limits> and check the warning.
-
-        In CI where pytest's filterwarnings=['error'] is enforced through
-        astropy's VO warning system, this would fail. Locally it may pass
-        if the warning isn't being converted to an exception.
-
-        This test documents the behavior difference between local and CI.
-        """
-        # In CI, this would raise UnknownElementWarning as an exception
-        # due to pytest's filterwarnings=['error'] configuration.
-        # Locally, it may just issue a warning and continue.
-        # We catch it to prevent test failure in either environment.
+        """Parse XML with <limits> and check the warning."""
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             result = parse_capabilities(BytesIO(self.xml_with_limits))
@@ -195,7 +183,7 @@ class TestVOXMLInjectionWarning:
             assert "Unknown element limits" in str(limits_warnings[0].message)
 
             # Assert parsing still succeeded
-            assert result is not None
+            assert len(result) > 0
 
     @pytest.mark.filterwarnings(
         "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
@@ -205,16 +193,13 @@ class TestVOXMLInjectionWarning:
         Parse XML with <limits> WITH the warning filter decorator.
 
         This test should pass because the decorator filters the
-        UnknownElementWarning, just like it does in test_coverage_toggle.
+        UnknownElementWarning, just like it sometimes does in test_coverage_toggle.
         """
         # This should NOT fail because the decorator filters the warning
         result = parse_capabilities(BytesIO(self.xml_with_limits))
 
         # Verify parsing succeeded and we got a result
-        assert result is not None
         assert len(result) > 0
-
-        # Success! The filter worked
 
 
 @pytest.mark.remote_data
