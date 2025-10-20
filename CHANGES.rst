@@ -94,7 +94,7 @@ Other Changes and Additions
 
 - Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759]
 
-- Scatter viewer support in the deconfigged app instance. [#3778]
+- Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
 
 4.4.2 (unreleased)
 ==================

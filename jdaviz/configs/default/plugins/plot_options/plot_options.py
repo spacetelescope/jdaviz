@@ -9,6 +9,8 @@ from echo import delay_callback
 from astropy.visualization import ManualInterval, ContrastBiasStretch
 from glue.core.subset_group import GroupedSubset
 from glue.config import stretches as glue_stretches
+from glue.viewers.histogram.state import HistogramViewerState
+from glue.viewers.histogram.state import HistogramLayerState as BqplotHistogramLayerState
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState, ImageViewerState
@@ -188,6 +190,56 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
       not exposed for Specviz. Set the volume for the selected sonified layer.
     * ``sonified_audible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. Set if the selected sonified layer will output audio.
+    * ``xatt`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls the x-axis attribute for scatter
+      and histogram plots.
+    * ``yatt`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls the y-axis attribute for scatter plots.
+    * ``hist_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Whether histogram is visible.
+    * ``hist_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls histogram color.
+    * ``hist_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls histogram opacity.
+    * ``hist_xlog`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls x-axis log scaling for histograms.
+    * ``hist_ylog`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls y-axis log scaling for histograms.
+    * ``hist_n_bin`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls number of bins for histograms.
+    * ``hist_x_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls x-axis minimum value for histograms.
+    * ``hist_x_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls x-axis maximum value for histograms.
+    * ``hist_cumulative`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls cumulative histogram display.
+    * ``hist_normalize`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls histogram normalization.
+    * ``hist_update_bins_on_reset_limits``
+      (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for deconfigged. Controls automatic bin updates when limits are reset.
+    * ``marker_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Whether markers are visible.
+    * ``marker_fill`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker fill.
+    * ``marker_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker opacity.
+    * ``marker_size`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker size.
+    * ``marker_size_scale`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker size scaling.
+    * ``marker_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker color mode.
+    * ``marker_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker color.
+    * ``marker_color_col`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker color column.
+    * ``marker_colormap`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker colormap.
+    * ``marker_colormap_vmin`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker colormap minimum value.
+    * ``marker_colormap_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only exposed for Imviz and deconfigged. Controls marker colormap maximum value.
     """
     template_file = __file__, "plot_options.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -392,6 +444,39 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     sonified_audible_value = Bool(False).tag(sync=True)
     sonified_audible_sync = Dict().tag(sync=True)
 
+    hist_visible_value = Bool().tag(sync=True)
+    hist_visible_sync = Dict().tag(sync=True)
+
+    hist_opacity_value = Float().tag(sync=True)
+    hist_opacity_sync = Dict().tag(sync=True)
+
+    hist_color_value = Any().tag(sync=True)
+    hist_color_sync = Dict().tag(sync=True)
+
+    hist_xlog_value = Bool().tag(sync=True)
+    hist_xlog_sync = Dict().tag(sync=True)
+
+    hist_ylog_value = Bool().tag(sync=True)
+    hist_ylog_sync = Dict().tag(sync=True)
+
+    hist_n_bin_value = Int().tag(sync=True)
+    hist_n_bin_sync = Dict().tag(sync=True)
+
+    hist_x_min_value = Float().tag(sync=True)
+    hist_x_min_sync = Dict().tag(sync=True)
+
+    hist_x_max_value = Float().tag(sync=True)
+    hist_x_max_sync = Dict().tag(sync=True)
+
+    hist_cumulative_value = Bool().tag(sync=True)
+    hist_cumulative_sync = Dict().tag(sync=True)
+
+    hist_normalize_value = Bool().tag(sync=True)
+    hist_normalize_sync = Dict().tag(sync=True)
+
+    hist_update_bins_on_reset_limits_value = Bool().tag(sync=True)
+    hist_update_bins_on_reset_limits_sync = Dict().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -419,6 +504,12 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         def is_scatter(state):
             return isinstance(state, (ScatterViewerState, BqplotScatterLayerState))
+
+        def is_histogram(state):
+            return isinstance(state, (HistogramViewerState, BqplotHistogramLayerState))
+
+        def is_scatter_or_histogram(state):
+            return is_scatter(state) or is_histogram(state)
 
         def supports_line(state):
             return is_profile(state) or is_scatter(state)
@@ -473,7 +564,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         self.xatt = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_att',
                                          'xatt_value', 'xatt_sync',
-                                         state_filter=is_scatter)
+                                         state_filter=is_scatter_or_histogram)
 
         self.yatt = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_att',
                                          'yatt_value', 'yatt_sync',
@@ -624,6 +715,19 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                                      'sonified_audible_sync',
                                                      state_filter=is_sonified)
 
+        # Histogram layer options:
+        self.hist_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
+                                                 'hist_visible_value', 'hist_visible_sync',
+                                                 state_filter=is_histogram)
+
+        self.hist_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
+                                                 'hist_opacity_value', 'hist_opacity_sync',
+                                                 state_filter=is_histogram)
+
+        self.hist_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
+                                               'hist_color_value', 'hist_color_sync',
+                                               state_filter=is_histogram)
+
         # Axes options:
         # axes_visible hidden for imviz in plot_options.vue
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
@@ -635,6 +739,33 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                                   self._on_global_display_unit_changed)
             sv.state.add_callback('y_display_unit',
                                   self._on_global_display_unit_changed)
+
+        # Histogram axes options:
+        self.hist_xlog = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_log',
+                                              'hist_xlog_value', 'hist_xlog_sync',
+                                              state_filter=is_histogram)
+        self.hist_ylog = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_log',
+                                              'hist_ylog_value', 'hist_ylog_sync',
+                                              state_filter=is_histogram)
+        self.hist_n_bin = PlotOptionsSyncState(self, self.viewer, self.layer, 'hist_n_bin',
+                                               'hist_n_bin_value', 'hist_n_bin_sync',
+                                               state_filter=is_histogram)
+        self.hist_x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'hist_x_min',
+                                               'hist_x_min_value', 'hist_x_min_sync',
+                                               state_filter=is_histogram)
+        self.hist_x_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'hist_x_max',
+                                               'hist_x_max_value', 'hist_x_max_sync',
+                                               state_filter=is_histogram)
+        self.hist_cumulative = PlotOptionsSyncState(self, self.viewer, self.layer, 'cumulative',
+                                                    'hist_cumulative_value', 'hist_cumulative_sync',
+                                                    state_filter=is_histogram)
+        self.hist_normalize = PlotOptionsSyncState(self, self.viewer, self.layer, 'normalize',
+                                                   'hist_normalize_value', 'hist_normalize_sync',
+                                                   state_filter=is_histogram)
+        self.hist_update_bins_on_reset_limits = PlotOptionsSyncState(self, self.viewer, self.layer, 'update_bins_on_reset_limits',  # noqa
+                                                                     'hist_update_bins_on_reset_limits_value',  # noqa
+                                                                     'hist_update_bins_on_reset_limits_sync',  # noqa
+                                                                     state_filter=is_histogram)
 
         # Add layer callback to image viewers to track active layer
         for viewer in self.app._viewer_store.values():
@@ -670,7 +801,9 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
                        'stretch_curve_visible', 'apply_RGB_presets']
         if self.config == 'deconfigged':
-            expose += ['xatt', 'yatt']
+            expose += ['xatt', 'yatt', 'hist_visible', 'hist_color', 'hist_opacity',
+                       'hist_xlog', 'hist_ylog', 'hist_n_bin', 'hist_x_min', 'hist_x_max',
+                       'hist_cumulative', 'hist_normalize', 'hist_update_bins_on_reset_limits']
         if self.config in ('imviz', 'deconfigged'):
             expose += ['marker_visible', 'marker_fill', 'marker_opacity',
                        'marker_size', 'marker_size_scale',

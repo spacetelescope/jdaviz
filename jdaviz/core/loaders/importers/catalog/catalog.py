@@ -176,7 +176,8 @@ class CatalogImporter(BaseImporterToDataCollection):
     @staticmethod
     def _get_supported_viewers():
         return [{'label': 'Image', 'reference': 'imviz-image-viewer'},
-                {'label': 'Scatter', 'reference': 'scatter-viewer'}]
+                {'label': 'Scatter', 'reference': 'scatter-viewer'},
+                {'label': 'Histogram', 'reference': 'histogram-viewer'}]
 
     @property
     def user_api(self):
