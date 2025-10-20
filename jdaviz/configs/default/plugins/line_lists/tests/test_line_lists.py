@@ -10,16 +10,6 @@ from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
 
 
-# two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update
-#  will be needed and is as below:
-# Table.loc_indices.with_index(...):
-# https://docs.astropy.org/en/latest/whatsnew/7.2.html
-pytestmark = pytest.mark.filterwarnings(
-    "ignore:Calling `Table\\.loc/iloc/loc_indices\\[index_id, item\\]`.*:"
-    "astropy.utils.exceptions.AstropyDeprecationWarning"
-)
-
-
 def test_line_lists(specviz_helper):
     spec = Spectrum(flux=np.random.rand(100)*u.Jy,
                     spectral_axis=np.arange(6000, 7000, 10)*u.AA)
