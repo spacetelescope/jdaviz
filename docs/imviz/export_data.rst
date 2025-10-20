@@ -28,7 +28,8 @@ See :ref:`astropy:astropy-modeling` on how to manipulate the model:
 
 .. code-block:: python
 
-    my_gaussian1d = imviz.app.fitted_models['phot_radial_profile']
+    ap_phot = imviz.plugins['Aperture Photometry']
+    my_gaussian1d = ap_phot.fitted_models['phot_radial_profile']
 
 The bottom of the plugin shows a table of past results, along with the subset
 and data used to compute them.  These results can be exported as an `~astropy.table.QTable`
