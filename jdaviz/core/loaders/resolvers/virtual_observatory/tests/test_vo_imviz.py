@@ -205,6 +205,8 @@ class TestVOImvizRemote:
         vo_ldr.resource_filter_coverage = False
         assert vo_ldr._obj.resources_loading is False
         nonfiltered_resources = vo_ldr.resource.choices
+        # Even if the warning is triggered, this line should still pass
+        # because the execution should still continue
         assert len(nonfiltered_resources) > 0
 
         # Nonfiltered resources should be more than filtered resources
