@@ -205,6 +205,7 @@ class TestVOImvizRemote:
         vo_ldr.resource_filter_coverage = False
         assert vo_ldr._obj.resources_loading is False
         nonfiltered_resources = vo_ldr.resource.choices
+        assert len(nonfiltered_resources) > 0
 
         # Nonfiltered resources should be more than filtered resources
         assert len(nonfiltered_resources) > len(filtered_resources)
