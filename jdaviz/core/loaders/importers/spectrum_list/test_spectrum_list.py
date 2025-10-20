@@ -407,13 +407,19 @@ def test_combine_lists_to_1d_spectrum(with_uncertainty):
     spec = combine_lists_to_1d_spectrum(wl, fnu, dfnu, u.nm, u.Jy)
     assert isinstance(spec, Spectrum)
     assert isinstance(spec.flux, u.Quantity)
+    assert spec.flux.unit == u.Jy
+
     assert isinstance(spec.spectral_axis, u.Quantity)
+    assert spec.spectral_axis.unit == u.nm
+
     assert np.all(spec.flux.value == np.array([10, 20, 30]))
     assert np.all(spec.spectral_axis.value == np.array([1, 2, 3]))
 
     if with_uncertainty:
         assert isinstance(spec.uncertainty, StdDevUncertainty)
         assert np.all(spec.uncertainty.array == np.array([4, 5, 6]))
+    else:
+        assert spec.uncertainty is None
 
 
 class TestSpectrumListConcatenatedImporter:
