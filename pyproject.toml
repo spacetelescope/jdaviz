@@ -162,6 +162,10 @@ filterwarnings = [
     # This warning will not fail in CI, but causes issues running tests locally on Windows so test locally if considering
     # removing this in the future
     "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",
+    # two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update will be needed and is as below:
+    # Table.loc_indices.with_index(...):
+    # https://docs.astropy.org/en/latest/whatsnew/7.2.html
+    "ignore:Calling `Table\\.loc/iloc/loc_indices\\[index_id, item\\]`.*:astropy.utils.exceptions.AstropyDeprecationWarning",
 ]
 
 
