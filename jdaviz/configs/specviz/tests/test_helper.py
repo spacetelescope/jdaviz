@@ -1,6 +1,6 @@
 from zipfile import ZipFile
-
 import numpy as np
+from numpy.testing import assert_allclose
 import pytest
 from astropy import units as u
 from astropy.io import fits
@@ -86,6 +86,15 @@ class TestSpecvizHelper:
             collection = SpectrumCollection([1]*u.AA)
             self.spec_app.load_data(collection)
 
+    def test_get_spectra_no_viewer_reference(self):
+        """
+        Test _spectrum_viewer and get_spectra with no reference viewer.
+        """
+        # Get spectra without a reference viewer
+        self.spec_app.app._viewer_store.pop('specviz-0')  # remove the default viewer
+        assert self.spec_app._spectrum_viewer is None
+        assert self.spec_app.get_spectra() == {}
+
     def test_get_spectra(self):
         with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
             spectra = self.spec_app.get_spectra()
@@ -118,10 +127,40 @@ class TestSpecvizHelper:
         assert_quantity_allclose(spectra.flux,
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
+    def test_get_spectra_with_spectral_subset(self):
+        """
+        Test get_spectra with a spectral_subset and data label.
+
+        When spectral_subset is provided without data_label, get_spectra
+        returns a dictionary. With, it returns a spectrum with a mask applied.
+        """
+        subset = SpectralRegion(
+            6200 * self.spec.spectral_axis.unit,
+            7000 * self.spec.spectral_axis.unit
+        )
+        self.spec_app.plugins['Subset Tools'].import_region(subset)
+
+        for data_label in [None, self.label]:
+            spectra = self.spec_app.get_spectra(
+                spectral_subset='Subset 1',
+                data_label=data_label,
+                apply_slider_redshift=False
+            )
+
+            # When data_label is None, the result is a dict of Spectrum objects
+            if data_label is None:
+                assert isinstance(spectra, dict)
+                spectra = spectra[self.label]
+
+            assert isinstance(spectra, Spectrum)
+            # Points outside the subset (6200-7000 Angstrom) should be masked (True),
+            # points inside should not be (False).
+            assert np.array_equal(spectra.mask,
+                                  [True, False, False, False, False, True, True, True, True, True])
+
     def test_get_spectral_regions_none(self):
         plg = self.spec_app.plugins['Subset Tools']
         spec_region = plg.get_regions()
-
         assert spec_region == {}
 
     def test_get_spectral_regions_one(self):
@@ -530,11 +569,210 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     assert len(specviz_helper.app.data_collection.subset_groups) == 1
     subset1 = specviz_helper.app.data_collection.subset_groups[0]
     assert subset1.subset_state.att.parent.label == "my_spec_AA"
-    np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
+    assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (6200, 7000))
 
     specviz_helper.app.remove_data_from_viewer('spectrum-viewer', "my_spec_AA")
     specviz_helper.app.data_item_remove("my_spec_AA")
 
     # Check that the reparenting and coordinate recalculations happened
     assert subset1.subset_state.att.parent.label == "my_spec_nm"
-    np.testing.assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (620, 700))
+    assert_allclose((subset1.subset_state.lo, subset1.subset_state.hi), (620, 700))
+
+
+# TODO: Delete on full deprecation of load_data
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+class TestLoadData:
+    def test_load_data_errors(self, specviz_helper, spectrum1d):
+        """
+        Test that errors from load_data.
+        """
+        with pytest.raises(NotImplementedError, match='format is ignored'):
+            specviz_helper.load_data(spectrum1d, format='some_format')
+
+        with pytest.raises(ValueError, match='Cannot set both'):
+            specviz_helper.load_data(spectrum1d, load_as_list=True, concat_by_file=True)
+
+    def test_load_data_with_cache_timeout_local_path(self, specviz_helper, spectrum1d, tmpdir):
+        """
+        Test load_data with cache, timeout, and local_path kwargs.
+        """
+        specviz_helper.load_data(
+            spectrum1d,
+            data_label='test_cache',
+            cache=True,
+            timeout=30,
+            local_path=tmpdir
+        )
+        assert 'test_cache' in specviz_helper.app.data_collection.labels
+        assert len(specviz_helper.app.data_collection) == 1
+
+    def test_load_data_with_sources_and_exposures(self, specviz_helper, premade_spectrum_list):
+        """
+        Test load_data with sources and exposures kwargs.
+        """
+        specviz_helper.load_data(premade_spectrum_list, sources='*')
+        assert len(specviz_helper.app.data_collection) == 5
+
+    def test_load_data_show_in_viewer_false(self, specviz_helper, spectrum1d):
+        """
+        Test load_data with show_in_viewer=False.
+        """
+        specviz_helper.load_data(
+            spectrum1d,
+            data_label='hidden_spec',
+            show_in_viewer=False
+        )
+        assert 'hidden_spec' in specviz_helper.app.data_collection.labels
+
+    def test_load_data_concat_by_file(self, specviz_helper, premade_spectrum_list):
+        """
+        Test load_data with concat_by_file=True.
+        """
+        initial_count = len(specviz_helper.app.data_collection)
+        with pytest.warns(UserWarning, match='default source selection'):
+            specviz_helper.load_data(
+                premade_spectrum_list,
+                data_label='concatenated',
+                concat_by_file=True
+            )
+        assert len(specviz_helper.app.data_collection) > initial_count
+
+    def test_load_data_with_load_as_list(self, specviz_helper, premade_spectrum_list):
+        """
+        Test load_data with load_as_list=True.
+        """
+        with pytest.warns(UserWarning, match='default source selection'):
+            specviz_helper.load_data(
+                premade_spectrum_list,
+                data_label='as_list',
+                load_as_list=True
+            )
+        assert 'as_list_index-0' in specviz_helper.app.data_collection.labels
+
+
+# TODO: Delete on full deprecation of x_limits, y_limits, autoscale_x, autoscale_y
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.AstropyDeprecationWarning")
+class TestDeprecatedLimits:
+    def test_x_limits(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated x_limits.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+
+        specviz_helper.x_limits()
+        assert sv.scale_x.min == 6000
+        assert sv.scale_x.max == 8000
+
+        specviz_helper.x_limits(x_min=6000*u.AA, x_max=7000*u.AA)
+        assert sv.scale_x.min == 6000
+        assert sv.scale_x.max == 7000
+
+        region = SpectralRegion(6500 * u.AA, 6600 * u.AA)
+        specviz_helper.x_limits(x_min=region)
+        assert sv.scale_x.min == 6500
+        assert sv.scale_x.max == 6600
+
+        specviz_helper.x_limits(x_min='auto', x_max='auto')
+        assert sv.scale_x.min == 6000
+        assert sv.scale_x.max == 8000
+
+    def test_y_limits(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated y_limits.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+
+        specviz_helper.y_limits()
+        assert_allclose(sv.scale_y.min, 12, atol=1)
+        assert_allclose(sv.scale_y.max, 16.5, atol=1)
+
+        specviz_helper.y_limits(y_min=0*u.Jy, y_max=20*u.Jy)
+        assert sv.scale_y.min == 0
+        assert sv.scale_y.max == 20
+
+        region = SpectralRegion(5 * u.Jy, 10 * u.Jy)
+        specviz_helper.y_limits(y_min=region)
+
+        assert sv.scale_y.min == 5
+        assert sv.scale_y.max == 10
+
+        specviz_helper.y_limits(y_min='auto', y_max='auto')
+        assert_allclose(sv.scale_y.min, 12, atol=1)
+        assert_allclose(sv.scale_y.max, 16.5, atol=1)
+
+    def test_autoscale_x_deprecated(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated autoscale_x method.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        specviz_helper.autoscale_x()
+
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        assert sv.scale_x.min == 6000
+        assert sv.scale_x.max == 8000
+
+    def test_autoscale_y_deprecated(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated autoscale_y method.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        specviz_helper.autoscale_y()
+
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        assert_allclose(sv.scale_y.min, 12, atol=1)
+        assert_allclose(sv.scale_y.max, 16.5, atol=1)
+
+    def test_flip_x(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated flip_x method.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        original_min = sv.scale_x.min
+        original_max = sv.scale_x.max
+
+        specviz_helper.flip_x()
+
+        assert sv.scale_x.min == original_max
+        assert sv.scale_x.max == original_min
+
+    def test_flip_y(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated flip_y method.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+
+        sv = specviz_helper.app.get_viewer('spectrum-viewer')
+        original_min = sv.scale_y.min
+        original_max = sv.scale_y.max
+
+        specviz_helper.flip_y()
+
+        assert sv.scale_y.min == original_max
+        assert sv.scale_y.max == original_min
+
+    def test_set_spectrum_tick_format_x_axis(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated set_spectrum_tick_format for x-axis.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        specviz_helper.set_spectrum_tick_format('0.2f', axis=0)
+
+    def test_set_spectrum_tick_format_y_axis(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated set_spectrum_tick_format for y-axis.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        specviz_helper.set_spectrum_tick_format('0.1e', axis=1)
+
+    def test_set_spectrum_tick_format_invalid_axis(self, specviz_helper, spectrum1d):
+        """
+        Test deprecated set_spectrum_tick_format with invalid axis.
+        """
+        specviz_helper.load_data(spectrum1d, data_label='test_spec')
+        with pytest.warns(UserWarning, match='Please use either 0 or 1'):
+            specviz_helper.set_spectrum_tick_format('0.2f', axis=2)
