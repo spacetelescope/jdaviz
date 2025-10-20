@@ -150,20 +150,6 @@ def deconfigged_helper():
 
 
 @pytest.fixture
-def request_delay():
-    """
-    Add delay between generic requests to avoid rate limiting.
-
-    For VO:
-    This fixture aims to prevent intermittent warnings about non-standard
-    XML elements (like <limits>) that may be returned by VO services
-    when rate limits are approached.
-    """
-    yield
-    time.sleep(1.0)  # 1-second delay between tests
-
-
-@pytest.fixture
 def roman_level_1_ramp():
     from roman_datamodels.datamodels import RampModel
     rng = np.random.default_rng(seed=42)

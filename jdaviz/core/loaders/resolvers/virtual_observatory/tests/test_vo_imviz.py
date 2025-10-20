@@ -1,6 +1,11 @@
 from astropy.io import fits
 import numpy as np
 import pytest
+import warnings
+from io import BytesIO
+
+from pyvo.utils.xml.exceptions import UnknownElementWarning
+from pyvo.io.vosi.endpoint import parse_capabilities
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
@@ -124,6 +129,92 @@ def test_link_type_autocoord(imviz_helper):
     # Truth values may need to be reevaluated
     np.testing.assert_allclose(float(ra_str), 239.18585, atol=30)
     np.testing.assert_allclose(float(dec_str), -9.905948925234416, atol=30)
+
+
+@pytest.mark.remote_data
+class TestVOXMLInjectionWarning:
+    """
+    Test class for VO XML Injection warning scenarios.
+
+    This class contains tests that demonstrate the behavior of
+    UnknownElementWarning when parsing XML with non-standard elements.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        """
+        Setup method to initialize common XML data for tests.
+        """
+        # XML with non-standard <limits> element
+        self.xml_with_limits = b"""<?xml version="1.0" encoding="UTF-8"?>
+            <capabilities xmlns="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
+                          xmlns:vr="http://www.ivoa.net/xml/VOResource/v1.0"
+                          xmlns:tr="http://www.ivoa.net/xml/TAPRegExt/v1.0"
+                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <capability standardID="ivo://ivoa.net/std/TAP" xsi:type="tr:TableAccess">
+                <interface xsi:type="vr:WebService" role="std">
+                  <accessURL use="base">http://example.com/tap</accessURL>
+                </interface>
+                <limits>
+                  <default>
+                    <executionDuration>3600</executionDuration>
+                    <outputLimit unit="row">10000</outputLimit>
+                  </default>
+                </limits>
+              </capability>
+            </capabilities>"""
+
+    def test_direct_xml_parsing_triggers_warning(self):
+        """
+        Parse XML with <limits> and check the warning.
+
+        In CI where pytest's filterwarnings=['error'] is enforced through
+        astropy's VO warning system, this would fail. Locally it may pass
+        if the warning isn't being converted to an exception.
+
+        This test documents the behavior difference between local and CI.
+        """
+        # In CI, this would raise UnknownElementWarning as an exception
+        # due to pytest's filterwarnings=['error'] configuration.
+        # Locally, it may just issue a warning and continue.
+        # We catch it to prevent test failure in either environment.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            result = parse_capabilities(BytesIO(self.xml_with_limits))
+
+            # Verify the warning was triggered
+            limits_warnings = [
+                warning for warning in w
+                if issubclass(warning.category, UnknownElementWarning)
+                and 'limits' in str(warning.message).lower()
+            ]
+
+            # Assert we got the warning
+            assert len(limits_warnings) == 1
+            assert limits_warnings[0].category == UnknownElementWarning
+            assert "Unknown element limits" in str(limits_warnings[0].message)
+
+            # Assert parsing still succeeded
+            assert result is not None
+
+    @pytest.mark.filterwarnings(
+        "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
+    )
+    def test_xml_parsing_with_filter_passes(self):
+        """
+        Parse XML with <limits> WITH the warning filter decorator.
+
+        This test should pass because the decorator filters the
+        UnknownElementWarning, just like it does in test_coverage_toggle.
+        """
+        # This should NOT fail because the decorator filters the warning
+        result = parse_capabilities(BytesIO(self.xml_with_limits))
+
+        # Verify parsing succeeded and we got a result
+        assert result is not None
+        assert len(result) > 0
+
+        # Success! The filter worked
 
 
 @pytest.mark.remote_data
