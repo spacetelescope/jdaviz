@@ -2,7 +2,7 @@
 # test infrastructure. It needs to live inside the package in order for it to
 # get picked up when running the tests inside an interpreter using
 # packagename.test
-
+import time
 import os
 import warnings
 
@@ -147,6 +147,19 @@ def rampviz_helper():
 @pytest.fixture
 def deconfigged_helper():
     return App()
+
+
+@pytest.fixture
+def vo_delay():
+    """
+    Add delay between VO registry queries to avoid rate limiting.
+
+    This fixture aims to prevent intermittent warnings about non-standard
+    XML elements (like <limits>) that may be returned by VO services
+    when rate limits are approached.
+    """
+    yield
+    time.sleep(1.0)  # 1-second delay between tests
 
 
 @pytest.fixture

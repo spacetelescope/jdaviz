@@ -179,12 +179,17 @@ class TestVOImvizRemote:
         vo_ldr.resource_filter_coverage = False
         assert len(vo_ldr.resource.choices) > 0
 
-    def test_coverage_toggle(self, imviz_helper):
+    # This warning suppression can be re-instated if the delay stops functioning
+    # The warning itself is harmless for this test so we can simply ignore it
+    # @pytest.mark.filterwarnings(
+    #     "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
+    # )
+    def test_coverage_toggle(self, imviz_helper, vo_delay):
         """
         Test that disabling the coverage toggle returns more available services
 
         NOTE: This does assume there exists at least one survey that does NOT report coverage
-        within a 1 degree circle around the above-defined source position. Otherwise, returned
+        within a 1-degree circle around the above-defined source position. Otherwise, returned
         resource lists will be identical.
         """
         # Set Common Args
@@ -192,13 +197,13 @@ class TestVOImvizRemote:
 
         # Retrieve registry options with filtering on
         vo_ldr.resource_filter_coverage = True
-        # assert vo_ldr.resources_loading is False
+        assert vo_ldr._obj.resources_loading is False
         filtered_resources = vo_ldr.resource.choices
         assert len(filtered_resources) > 0
 
         # Retrieve registry options with filtering off
         vo_ldr.resource_filter_coverage = False
-        # assert vo_ldr.resources_loading is False
+        assert vo_ldr._obj.resources_loading is False
         nonfiltered_resources = vo_ldr.resource.choices
 
         # Nonfiltered resources should be more than filtered resources
@@ -242,10 +247,8 @@ class TestVOImvizRemote:
             for d in imviz_helper.plugins['Logger'].history
         )
 
-    @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
     def test_HSTM51_data_url(self, imviz_helper):
-        # Set Common Args
         vo_ldr = self._init_vo_ldr_M51(imviz_helper)
 
         # Select HST.M51 survey
