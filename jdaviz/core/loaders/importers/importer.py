@@ -144,6 +144,10 @@ class BaseImporterToDataCollection(BaseImporter):
 
         supported_viewers = self._get_supported_viewers()
         if self.app.config in ('deconfigged', 'imviz', 'lcviz'):
+            if self.app.config == 'imviz':
+                # only allow image viewers
+                supported_viewers = [item for item in supported_viewers
+                                     if item.get('reference') == 'imviz-image-viewer']
             self.viewer_create_new_items = supported_viewers
 
         # for now, we'll use the same list of viewers that can be created
