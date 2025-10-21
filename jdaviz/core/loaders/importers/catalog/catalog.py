@@ -120,63 +120,47 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         return choices
 
-    @observe('col_ra_selected')
-    def _on_ra_col_selected(self, msg):
-        """Check if the selected 'ra' column has units assigned already"""
+    @observe('col_ra_selected', 'col_dec_selected')
+    def _on_ra_or_dec_col_selected(self, msg):
+        """
+        Check if the newly selected 'ra' or 'dec' column has units assigned
+        already, to set the col_ra_has_unit and col_dec_has_unit traitlets. Also
+        make sure that ra and dec columns are not the same (unless SkyCoord) and
+        disable the import button if they are the same.
+        """
 
         ra = self.col_ra_selected
         dec = self.col_dec_selected
 
-        if ra == dec and not isinstance(self.input[ra], SkyCoord):
-            self.resolver.import_disabled = True
-        else:
-            self.resolver.import_disabled = False
+        axis = ra if msg['name'] == 'col_ra_selected' else dec
 
         has_units = False
-        if hasattr(self.input[ra], 'unit'):
-            if self.input[ra].unit is not None:
-                has_units = True
-                # ra column unit must be an angle unit
-                if self.input[ra].unit.physical_type != 'angle':
-                    has_units = False
 
-        elif isinstance(self.input[self.col_ra_selected], SkyCoord):
+        if isinstance(self.input[axis], SkyCoord):
             has_units = True
 
-        if ra == dec and not isinstance(self.input[dec], SkyCoord):
-            self.import_disabled = True
-        else:
-            self.import_disabled = False
-
-        self.col_ra_has_unit = has_units
-
-    @observe('col_dec_selected')
-    def _on_dec_col_selected(self, msg):
-        """Check if the selected 'dec' column has units assigned already"""
-
-        ra = self.col_ra_selected
-        dec = self.col_dec_selected
-
-        if ra == dec:
-            self.import_disabled = False
-
-        has_units = False
-        if hasattr(self.input[dec], 'unit'):
-            if self.input[dec].unit is not None:
+        elif hasattr(self.input[axis], 'unit'):
+            if self.input[axis].unit is not None:
                 has_units = True
-                # dec column unit must be an angle unit
-                if self.input[dec].unit.physical_type != 'angle':
+                # unit must be an angle unit
+                if self.input[axis].unit.physical_type != 'angle':
                     has_units = False
 
-        elif isinstance(self.input[dec], SkyCoord):
-            has_units = True
+        # set the 'has units' traitlets for ra/dec, which determine if the unit
+        # selection dropdowns should be exposed
+        if msg['name'] == 'col_ra_selected':
+            self.col_ra_has_unit = has_units
+        elif msg['name'] == 'col_dec_selected':
+            self.col_dec_has_unit = has_units
 
-        if ra == dec and not isinstance(self.input[dec], SkyCoord):
-            self.import_disabled = True
-        else:
-            self.import_disabled = False
+        if ra is not None and dec is not None:
+            # disable import if the same ra and dec columns are selected
+            # and they are NOT a SkyCoord column (which contains both RA and Dec)
+            if ra == dec and not isinstance(self.input[axis], SkyCoord):
+                self.import_disabled = True
+            else:
+                self.import_disabled = False
 
-        self.col_dec_has_unit = has_units
 
     @staticmethod
     def _get_supported_viewers():
