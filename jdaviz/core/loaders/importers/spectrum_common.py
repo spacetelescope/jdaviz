@@ -201,6 +201,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                         # about the wavelength solution for now
                         if len(wcs.forward_transform.inputs) == 5:
                             wcs = None
+                    else:
+                        wcs = None
                 except ValueError:
                     wcs = None
             else:
