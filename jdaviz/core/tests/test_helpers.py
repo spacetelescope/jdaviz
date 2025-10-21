@@ -219,7 +219,8 @@ class TestConfigHelperSubsets:
         self.config_helper = cubeviz_helper
         # self.config_helper.load(image_cube_hdu_obj, format='Spectral Cube')
         self.config_helper.load_data(image_cube_hdu_obj)
-        self.label = self.config_helper.app.data_collection[0].label
+        self.data = self.config_helper.app.data_collection[0]
+        self.label = self.data.label
 
         subset_plugin = self.config_helper.plugins['Subset Tools']
         # Subset 1, Spatial
@@ -263,65 +264,44 @@ class TestConfigHelperSubsets:
             # The mask should have some True values (masked regions)
             assert np.any(result.mask)
 
-    def test_get_data_spectral_subset_with_mask_subset_error(self):
-        """
-        Test _get_data: spectral_subset with mask_subset raises ValueError.
-        """
+    # TODO: May have to change cls=Spectrum to something else
+    #  once we adjust the logic for deconfigged
+    @pytest.mark.parametrize(
+        ('spatial_subset', 'spectral_subset', 'temporal_subset', 'mask_subset', 'cls',
+         'error_type', 'error_msg'), [
+            (None, 'Subset 2', None, 'Subset 2', Spectrum,
+             ValueError, 'cannot use both mask_subset and spectral_subset'),
+            (None, None, 'Subset 1', 'Subset 2', Spectrum,
+             ValueError, 'cannot use both mask_subset and temporal_subset'),
+            ('Subset 1', None, None, None, None,
+             AttributeError, 'A valid cls must be provided to apply subset'),
+            (None, None, None, 'Subset 2', None,
+             AttributeError, 'A valid cls must be provided to apply subset'),
+            ('Subset 2', None, None, None, Spectrum,
+             ValueError, 'is not a spatial subset'),
+            (None, 'Subset 1', None, None, Spectrum,
+             ValueError, 'is not a spectral subset'),
+        ])
+    def test_get_data_subset_errors(self,
+                                    spatial_subset, spectral_subset,
+                                    temporal_subset, mask_subset, cls,
+                                    error_type, error_msg):
+        if cls is None:
+            # Injecting a 'Trace' key in meta is the only way to
+            # get past the cls check and into the subset application code
+            self.data.meta['Trace'] = True
+
         with pytest.raises(
-                ValueError,
-                match="cannot use both mask_subset and spectral_subset"
+                error_type,
+                match=error_msg
         ):
             self.config_helper._get_data(
                 data_label=self.label,
-                spectral_subset='Subset 1',
-                mask_subset='Subset 2'
-            )
-
-    def test_get_data_temporal_subset_with_mask_subset_error(self):
-        """
-        Test _get_data: temporal_subset with mask_subset raises ValueError.
-        """
-        with pytest.raises(
-                ValueError,
-                match="cannot use both mask_subset and temporal_subset"
-        ):
-            self.config_helper._get_data(
-                data_label=self.label,
-                temporal_subset='Subset 1',
-                mask_subset='Subset 2'
-            )
-
-    def test_get_data_spatial_subset_not_region_error(self):
-        """
-        Test _get_data: spatial_subset that is not a Region raises ValueError.
-        """
-        # 'Subset 1' is a spectral subset, not spatial
-        with pytest.raises(
-                ValueError, match="is not a spatial subset"
-        ):
-            self.config_helper._get_data(
-                data_label=self.label,
-                spatial_subset='Subset 2',
-                cls=Spectrum
-            )
-
-    def test_get_data_spectral_subset_not_spectral_region_error(self):
-        """
-        Test _get_data: spectral_subset that is not a SpectralRegion raises ValueError.
-        """
-        # Create a non-spectral subset and try to use it as spectral
-        data = self.config_helper.app.data_collection[self.label]
-        subset_state = data.id['flux'] > 5
-        _ = self.config_helper.app.data_collection.new_subset_group(
-            'not_spectral', subset_state
-        )
-
-        with pytest.raises(
-                ValueError, match="is not a spectral subset"
-        ):
-            self.config_helper._get_data(
-                data_label=self.label,
-                spectral_subset='not_spectral'
+                spatial_subset=spatial_subset,
+                spectral_subset=spectral_subset,
+                temporal_subset=temporal_subset,
+                mask_subset=mask_subset,
+                cls=cls
             )
 
 
