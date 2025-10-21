@@ -1,8 +1,11 @@
 import pytest
 
+import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
-from specutils import SpectralRegion
+from astropy.nddata import CCDData, NDDataArray
+from glue.core import ComponentID
+from specutils import SpectralRegion, Spectrum
 
 from jdaviz.core.helpers import _next_subset_num
 
@@ -93,3 +96,239 @@ class TestConfigHelper:
     def test_get_data_invald_subset_name(self, specviz_helper):
         with pytest.raises(ValueError, match="not in list of valid subset names"):
             specviz_helper.get_data('Test 1D Spectrum', spectral_subset="Fail")
+
+
+class TestGetCloneViewerReference:
+    """
+    Test coverage for _get_clone_viewer_reference function.
+    """
+
+    def test_get_clone_viewer_reference_no_clones(self, specviz_helper):
+        """
+        Test _get_clone_viewer_reference when no clones exist.
+        """
+        ref = specviz_helper._get_clone_viewer_reference(
+            'spectrum-viewer'
+        )
+        assert ref == 'spectrum-viewer[1]'
+
+
+class TestSetDataComponent:
+    """
+    Test coverage for _set_data_component function.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_data(self, specviz_helper, spectrum1d):
+        """
+        Set up test data.
+        """
+        self.helper = specviz_helper
+        self.label = 'Test Spectrum'
+        self.helper.load_data(spectrum1d, data_label=self.label)
+        self.data = self.helper.app.data_collection[self.label]
+
+    def test_set_data_component_new_component(self):
+        """
+        Test _set_data_component with a new component label.
+        """
+        original_n_components = len(self.data.components)
+
+        new_values = np.ones(len(self.data.get_object().flux))
+        self.helper._set_data_component(
+            self.data, 'test_component', new_values
+        )
+
+        assert len(self.data.components) == original_n_components + 1
+        assert 'test_component' in self.helper._component_ids
+
+    def test_set_data_component_update_existing(self):
+        """
+        Test _set_data_component updating an existing component.
+        """
+        # First add a component
+        new_values = np.ones(len(self.data.get_object().flux))
+        self.helper._set_data_component(
+            self.data, 'test_component', new_values
+        )
+        n_components_after_add = len(self.data.components)
+
+        # Now update it
+        updated_values = np.ones(len(self.data.get_object().flux)) * 2
+        self.helper._set_data_component(
+            self.data, 'test_component', updated_values
+        )
+
+        # Should not add a new component, just update
+        assert len(self.data.components) == n_components_after_add
+
+    def test_set_data_component_existing_in_data_not_in_cache(self):
+        """
+        Test _set_data_component with component in data but not cache.
+        """
+        # Add a component directly to data, bypassing the cache
+        comp_id = ComponentID('direct_component')
+        values = np.ones(len(self.data.get_object().flux))
+        self.data.add_component(values, comp_id)
+
+        # Now use _set_data_component with the same label
+        updated_values = np.ones(len(self.data.get_object().flux)) * 3
+        self.helper._set_data_component(
+            self.data, 'direct_component', updated_values
+        )
+
+        # Should update, not add a duplicate
+        component_labels = [c.label for c in self.data.components]
+        assert component_labels.count('direct_component') == 1
+
+    def test_set_data_component_cached_component_id(self):
+        """
+        Test _set_data_component uses cached ComponentID.
+        """
+        # Add a component to populate the cache
+        values = np.ones(len(self.data.get_object().flux))
+        self.helper._set_data_component(
+            self.data, 'cached_comp', values
+        )
+
+        # Get the cached component ID
+        cached_id = self.helper._component_ids['cached_comp']
+
+        # Update the component
+        new_values = np.ones(len(self.data.get_object().flux)) * 5
+        self.helper._set_data_component(
+            self.data, 'cached_comp', new_values
+        )
+
+        # Should still use the same component ID
+        assert self.helper._component_ids['cached_comp'] == cached_id
+
+
+class TestGetDataSpecificLines:
+    """
+    Test coverage for specific lines in _get_data function.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_data(self, specviz_helper, spectrum1d):
+        """
+        Set up test data with subsets.
+        """
+        self.helper = specviz_helper
+        self.label = 'Test Spectrum'
+        self.helper.load_data(spectrum1d, data_label=self.label)
+
+        # Add spectral subsets
+        self.helper.plugins['Subset Tools'].import_region(
+            SpectralRegion(6000*u.AA, 6500*u.AA)
+        )
+        self.helper.plugins['Subset Tools'].import_region(
+            SpectralRegion(7000*u.AA, 7500*u.AA),
+            combination_mode='new'
+        )
+
+    def test_get_data_spectral_subset_with_mask_subset_error(self):
+        """
+        Test _get_data line 597: spectral_subset with mask_subset
+        raises ValueError.
+        """
+        with pytest.raises(
+            ValueError,
+            match="cannot use both mask_subset and spectral_subset"
+        ):
+            self.helper._get_data(
+                data_label=self.label,
+                spectral_subset='Subset 1',
+                mask_subset='Subset 2'
+            )
+
+    def test_get_data_temporal_subset_with_mask_subset_error(self):
+        """
+        Test _get_data lines 603-606: temporal_subset with mask_subset
+        raises ValueError.
+        """
+        with pytest.raises(
+            ValueError,
+            match="cannot use both mask_subset and temporal_subset"
+        ):
+            self.helper._get_data(
+                data_label=self.label,
+                temporal_subset='Subset 1',
+                mask_subset='Subset 2'
+            )
+
+    def test_get_data_spatial_subset_not_region_error(self):
+        """
+        Test _get_data line 658: spatial_subset that is not a Region
+        raises ValueError.
+        """
+        # 'Subset 1' is a spectral subset, not spatial
+        with pytest.raises(
+            ValueError, match="is not a spatial subset"
+        ):
+            self.helper._get_data(
+                data_label=self.label,
+                spatial_subset='Subset 1',
+                cls=Spectrum
+            )
+
+    def test_get_data_spectral_subset_not_spectral_region_error(self):
+        """
+        Test _get_data line 674: spectral_subset that is not a
+        SpectralRegion raises ValueError.
+        """
+        # Create a non-spectral subset and try to use it as spectral
+        data = self.helper.app.data_collection[self.label]
+        subset_state = data.id['flux'] > 5
+        subset_group = self.helper.app.data_collection.new_subset_group(
+            'not_spectral', subset_state
+        )
+
+        with pytest.raises(
+            ValueError, match="is not a spectral subset"
+        ):
+            self.helper._get_data(
+                data_label=self.label,
+                spectral_subset='not_spectral'
+            )
+
+
+class TestGetDataClsInference:
+    """
+    Test coverage for cls inference in _get_data (lines 616, 618, 623).
+    """
+
+    def test_get_data_cls_spectrum_from_cube(
+        self, cubeviz_helper, image_cube_hdu_obj
+    ):
+        """
+        Test _get_data line 626: cls inferred as Spectrum for 3D
+        cube in cubeviz.
+        """
+        cubeviz_helper.load_data(image_cube_hdu_obj)
+        # Get the actual label from data collection after loading
+        label = cubeviz_helper.app.data_collection[0].label
+
+        data = cubeviz_helper.app.data_collection[label]
+        assert data.ndim == 3
+
+        result = cubeviz_helper._get_data(data_label=label)
+        assert isinstance(result, Spectrum)
+
+    def test_get_data_cls_nddataarray_for_rampviz(
+        self, rampviz_helper, jwst_level_1b_ramp
+    ):
+        """
+        Test _get_data line 623: cls inferred as NDDataArray for
+        rampviz config.
+        """
+        rampviz_helper.load_data(jwst_level_1b_ramp)
+        # Get the actual label from data collection
+        label = rampviz_helper.app.data_collection[0].label
+
+        data = rampviz_helper.app.data_collection[label]
+
+        # Rampviz should infer NDDataArray for multi-dimensional data
+        result = rampviz_helper._get_data(data_label=label)
+        assert isinstance(result, NDDataArray)
+
