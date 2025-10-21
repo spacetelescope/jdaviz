@@ -5,7 +5,6 @@ import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.nddata import CCDData, NDDataArray
-from astropy.wcs import WCS
 from glue.core import ComponentID
 from glue.core.roi import CircularROI
 from specutils import SpectralRegion, Spectrum
@@ -132,7 +131,7 @@ class TestConfigHelperSpec:
                 base_viewer_name
             )
             assert result == f"{base_viewer_name}[4]"
-            
+
     def test_set_data_component_new_component(self):
         """
         Test _set_data_component with a new component label.
@@ -348,8 +347,6 @@ def test_get_data_cls_nddataarray_for_rampviz(rampviz_helper, jwst_level_1b_ramp
     rampviz_helper.load_data(jwst_level_1b_ramp)
     # Get the actual label from data collection
     label = rampviz_helper.app.data_collection[0].label
-
-    data = rampviz_helper.app.data_collection[label]
 
     # Rampviz should infer NDDataArray for multi-dimensional data
     result = rampviz_helper.get_data(data_label=label)
