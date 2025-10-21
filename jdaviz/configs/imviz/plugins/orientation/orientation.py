@@ -801,6 +801,23 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                     links_list += [ComponentLink([ref_ra], cat_ra),
                                    ComponentLink([ref_dec], cat_dec)]
                     continue
+            elif align_by == 'pixels':
+                if 'X' in comp_labels and 'Y' in comp_labels:
+                    # Image components should always be called 'Pixel Axis 1 [x]'
+                    # and 'Pixel Axis 0 [y]' If an error ever arises from trying
+                    # to access these directly, generalize it, but this should be safe.
+                    ref_labels = [str(x) for x in refdata.component_ids()]
+                    ref_x = refdata.components[ref_labels.index('Pixel Axis 1 [x]')]
+                    ref_y = refdata.components[ref_labels.index('Pixel Axis 0 [y]')]
+
+                    # source catalogs will always have X/Y components with
+                    # these exact labels, so this is safe to do with exact labels
+                    cat_x = data.components[comp_labels.index('X')]
+                    cat_y = data.components[comp_labels.index('Y')]
+
+                    links_list += [ComponentLink([ref_x], cat_x),
+                                   ComponentLink([ref_y], cat_y)]
+                    continue
 
         else:
             # 1. We are not touching any existing Subsets or Table. They keep their own links.

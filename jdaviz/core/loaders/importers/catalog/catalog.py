@@ -100,12 +100,13 @@ class CatalogImporter(BaseImporterToDataCollection):
         if colnames is None:
             return
 
-        col_is_sc = [isinstance(tab[colnames[i]], SkyCoord) for i in range(len(colnames))]
+        idx = None
+        if col in ['ra', 'dec']:
+            col_is_sc = [isinstance(tab[colnames[i]], SkyCoord) for i in range(len(colnames))]
+            if np.any(col_is_sc):
+                idx = np.where(col_is_sc)[0][0]
 
-        if np.any(col_is_sc):
-            idx = np.where(col_is_sc)[0][0]
-
-        else:
+        if idx is None:
             all_column_names = np.array([x.lower() for x in colnames])
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
@@ -299,9 +300,8 @@ class CatalogImporter(BaseImporterToDataCollection):
             # rename X and Y columns so that table in data collection always has
             # the same X, Y column names for consistency when accessing elsewhere
             pass
-            # output_table['X'] = table[self.col_x_selected]
-            # output_table['Y'] = table[self.col_y_selected]
-
+            output_table['X'] = table[self.col_x_selected]
+            output_table['Y'] = table[self.col_y_selected]
 
         # add additional columns to output table
         for col in self.output_cols:
