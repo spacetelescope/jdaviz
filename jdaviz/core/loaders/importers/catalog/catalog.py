@@ -51,11 +51,11 @@ class CatalogImporter(BaseImporterToDataCollection):
         self.col_ra = SelectPluginComponent(self,
                                             items='col_ra_items',
                                             selected='col_ra_selected',
-                                            manual_options=self._guess_ra_dec_cols('ra'))
+                                            manual_options=self._guess_coord_cols('ra'))
         self.col_dec = SelectPluginComponent(self,
                                              items='col_dec_items',
                                              selected='col_dec_selected',
-                                             manual_options=self._guess_ra_dec_cols('dec'))
+                                             manual_options=self._guess_coord_cols('dec'))
 
         self.col_ra_unit = SelectPluginComponent(self,
                                                  items='col_ra_unit_items',
@@ -65,13 +65,16 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
-        print(self._guess_ra_dec_cols('dec'))
         
         # dropdowns for tables with pixel source positions
         self.col_x = SelectPluginComponent(self,
                                            items='col_x_items',
                                            selected='col_x_selected',
-                                           manual_options=['---', 'x'])
+                                           manual_options=self._guess_coord_cols('x'))
+        self.col_x = SelectPluginComponent(self,
+                                           items='col_y_items',
+                                           selected='col_y_selected',
+                                           manual_options=self._guess_coord_cols('y'))
 
         # dropdowns for (optional) additional columns
         self.col_other = SelectPluginComponent(self,
@@ -80,14 +83,15 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                manual_options=self.input.colnames,
                                                multiselect='col_other_multiselect')
 
-    def _guess_ra_dec_cols(self, col):
+    def _guess_coord_cols(self, col):
         """
-        Rough guess at detecting ra, dec columns from input table by checking
-        for the presence of a SkyCoord column, and if none exists then checking
-        against some common source catalog column names, to determine initial
-        selection for the column select dropdown. If no good candidate is found,
-        the initial selection in the dropdown for ra, dec columns will be the
-        0th and 1st columns, respectively.
+        Rough guess at detecting RA/Dec/X/Y columns from input table to determine
+        the initial selections for the column select dropdown. This starts
+        by checking for the presence of a SkyCoord (if col is 'ra' or 'dec') or
+        PixCoord column (if col is 'x' or 'y'), and next checking
+        against some common source catalog column names. If no good candidate
+        column is found, the initial selection in the drop down for RA/x, dec/y
+        columns will be '---' (no selection)
         """
 
         tab = self.input
@@ -115,13 +119,22 @@ class CatalogImporter(BaseImporterToDataCollection):
                                      'decdegrees', 'declination (degrees)',
                                      'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
                 idx = get_idx(all_column_names, col_possibilities, None)
+            elif col == 'x':
+                col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
+                                     "xpixel", "xpix", "ximage", "ximg"
+                                     "xcoord", "xcoordinate", "sourcex", "xsource"]
+                idx = get_idx(all_column_names, col_possibilities, None)
+            elif col == 'y':
+                col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
+                                     "ypixel", "ypix", "yimage", "yimg"
+                                     "ycoord", "ycoordinate", "sourcey", "ysource"]
+                idx = get_idx(all_column_names, col_possibilities, None)
 
         # if no good candidate found, default to '---' (no selection) for
         # the default selection.
-        print('IDX:', idx)
         if idx is None:
             return ['---'] + colnames
-        return colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
+        return colnames if idx == 0 else (colnames[idx:] + colnames[:idx]) + ['---']
 
     def _valid_coord_units(self, coord):
         """Valid choices for Ra, Dec units."""
@@ -138,12 +151,13 @@ class CatalogImporter(BaseImporterToDataCollection):
     @observe('col_ra_selected', 'col_dec_selected')
     def _on_ra_or_dec_col_selected(self, msg):
         """
-        Check if the newly selected 'ra' or 'dec' column has units assigned
-        already, to set the col_ra_has_unit and col_dec_has_unit traitlets. Also
-        make sure that ra and dec columns are not the same (unless SkyCoord) and
+        - Check if the newly selected 'ra' or 'dec' column has units assigned
+        already, to set the col_ra_has_unit and col_dec_has_unit traitlets.
+        -  Make sure that ra and dec columns are not the same (unless SkyCoord) and
         disable the import button if they are the same.
+        - Check if only RA or Dec is selected without the other, and disable import
+        in that case.
         """
-
 
         ra = self.col_ra_selected
         dec = self.col_dec_selected
@@ -151,6 +165,14 @@ class CatalogImporter(BaseImporterToDataCollection):
         axis = ra if msg['name'] == 'col_ra_selected' else dec
 
         if axis == '---':
+            # no selection, assume 'has units' to disable unit selection dropdown
+            if msg['name'] == 'col_ra_selected':
+                self.col_ra_has_unit = True
+            elif msg['name'] == 'col_dec_selected':
+                self.col_dec_has_unit = True
+            # disable import if RA is selected but Dec is not (or vice versa)
+            if (ra in ['---', ''] or ra is None)!= (dec in ['---', ''] or dec is None):
+                self.import_disabled = True
             return
 
         has_units = False
@@ -172,13 +194,16 @@ class CatalogImporter(BaseImporterToDataCollection):
         elif msg['name'] == 'col_dec_selected':
             self.col_dec_has_unit = has_units
 
-        if ra is not None and dec is not None:
-            # disable import if the same ra and dec columns are selected
-            # and they are NOT a SkyCoord column (which contains both RA and Dec)
-            if ra == dec and not isinstance(self.input[axis], SkyCoord):
-                self.import_disabled = True
-            else:
-                self.import_disabled = False
+        # disable import if the same ra and dec columns are selected
+        # and they are NOT a SkyCoord column (which contains both RA and Dec),
+        if ra == dec and not isinstance(self.input[axis], SkyCoord):
+            self.import_disabled = True
+        else:
+            self.import_disabled = False
+
+        # disable import if RA is selected but Dec is not (or vice versa)
+        if (ra in ['---', ''] or ra is None)!= (dec in ['---', ''] or dec is None):
+            self.import_disabled = True
 
 
     @staticmethod
