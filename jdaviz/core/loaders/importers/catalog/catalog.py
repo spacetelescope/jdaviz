@@ -148,8 +148,8 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         return choices
 
-    @observe('col_ra_selected', 'col_dec_selected')
-    def _on_ra_or_dec_col_selected(self, msg):
+    @observe('col_ra_selected', 'col_dec_selected', 'col_x_selected', 'col_y_selected')
+    def _on_coordinate_column_selected(self, msg):
         """
         - Check if the newly selected 'ra' or 'dec' column has units assigned
         already, to set the col_ra_has_unit and col_dec_has_unit traitlets.
@@ -161,49 +161,68 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         ra = self.col_ra_selected
         dec = self.col_dec_selected
+        x = self.col_x_selected
+        y = self.col_y_selected
 
-        axis = ra if msg['name'] == 'col_ra_selected' else dec
+        # if ra, dec and x, y are all unselected, disable import. at least one pair
+        # of coordinates must be selected.(checks for ra selected but not dec or
+        # x but not y, and vice versa, are done in their respective sections below)
+        if (x in ['---', ''] or x is None) and (y in ['---', ''] or y is None) and \
+           (ra in ['---', ''] or ra is None) and (dec in ['---', ''] or dec is None):
+            import_disabled = True
+        else:
+            import_disabled = False
 
-        if axis == '---':
-            # no selection, assume 'has units' to disable unit selection dropdown
+        if msg['name'] in ('col_ra_selected', 'col_dec_selected'):
+
+            axis = ra if msg['name'] == 'col_ra_selected' else dec
+            if axis == '---':
+                # no selection, assume 'has units' to disable unit selection dropdown
+                if msg['name'] == 'col_ra_selected':
+                    self.col_ra_has_unit = True
+                elif msg['name'] == 'col_dec_selected':
+                    self.col_dec_has_unit = True
+                # disable import if RA is selected but Dec is not (or vice versa)
+                if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
+                    self.import_disabled = True
+                return
+
+            has_units = False
+            if isinstance(self.input[axis], SkyCoord):
+                has_units = True
+            elif hasattr(self.input[axis], 'unit'):
+                if self.input[axis].unit is not None:
+                    has_units = True
+                    # unit must be an angle unit
+                    if self.input[axis].unit.physical_type != 'angle':
+                        has_units = False
+
+            # set the 'has units' traitlets for ra/dec, which determine if the unit
+            # selection dropdowns should be exposed
             if msg['name'] == 'col_ra_selected':
-                self.col_ra_has_unit = True
+                self.col_ra_has_unit = has_units
             elif msg['name'] == 'col_dec_selected':
-                self.col_dec_has_unit = True
+                self.col_dec_has_unit = has_units
+
+            # disable import if the same ra and dec columns are selected
+            # and they are NOT a SkyCoord column (which contains both RA and Dec),
+            if ra == dec and not isinstance(self.input[axis], SkyCoord):
+                import_disabled = True
+            else:
+                import_disabled = False
+
             # disable import if RA is selected but Dec is not (or vice versa)
             if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
-                self.import_disabled = True
-            return
+                import_disabled = True
 
-        has_units = False
+        elif msg['name'] in ('col_x_selected', 'col_y_selected'):
+            # disable import if RA is selected but Dec is not (or vice versa)
+            if (x in ['---', ''] or x is None) != (y in ['---', ''] or y is None):
+                import_disabled = True
 
-        if isinstance(self.input[axis], SkyCoord):
-            has_units = True
-
-        elif hasattr(self.input[axis], 'unit'):
-            if self.input[axis].unit is not None:
-                has_units = True
-                # unit must be an angle unit
-                if self.input[axis].unit.physical_type != 'angle':
-                    has_units = False
-
-        # set the 'has units' traitlets for ra/dec, which determine if the unit
-        # selection dropdowns should be exposed
-        if msg['name'] == 'col_ra_selected':
-            self.col_ra_has_unit = has_units
-        elif msg['name'] == 'col_dec_selected':
-            self.col_dec_has_unit = has_units
-
-        # disable import if the same ra and dec columns are selected
-        # and they are NOT a SkyCoord column (which contains both RA and Dec),
-        if ra == dec and not isinstance(self.input[axis], SkyCoord):
-            self.import_disabled = True
-        else:
-            self.import_disabled = False
-
-        # disable import if RA is selected but Dec is not (or vice versa)
-        if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
-            self.import_disabled = True
+        # finally, set the import_disabled traitlet based on what was determined
+        # from the checks above
+        self.import_disabled = import_disabled
 
     @staticmethod
     def _get_supported_viewers():
@@ -230,43 +249,59 @@ class CatalogImporter(BaseImporterToDataCollection):
     @property
     def output_cols(self):
 
-        # we will always have RA and Dec
-        cols_all = [self.col_ra_selected, self.col_dec_selected] + self.col_other_selected
+        coordinate_cols = []
+        for col in [self.col_ra_selected, self.col_dec_selected, self]:
+            if col not in ['---', ''] and col is not None:
+                coordinate_cols.append(col)
+
+        cols_all = coordinate_cols + self.col_other_selected
 
         return [col for col in set(cols_all) if col in self.input.colnames]
 
     @property
     def output(self):
 
-        if (self.col_ra_selected not in self.input.colnames) or (self.col_dec_selected not in self.input.colnames):  # noqa
-            return
+        # print('self.col_ra_selected:', self.col_ra_selected)
 
         table = self.input[self.output_cols]
         output_table = QTable()
 
-        # rename RA and Dec columns so that table in data collection always has
-        # the same RA, Dec column names internally, add and units if they weren't
-        # loaded in with units assigned (QTable)
-        ra = None
-        dec = None
-        if isinstance(self.input[self.col_ra_selected], SkyCoord):
-            ra = self.input[self.col_ra_selected].ra
-        if isinstance(self.input[self.col_dec_selected], SkyCoord):
-            dec = self.input[self.col_dec_selected].dec
+        if (self.col_ra_selected in self.input.colnames) and (self.col_dec_selected in self.input.colnames):  # noqa
+            # handle output construction for RA and Dec coordinate columns, if selected
 
-        if ra is not None:
-            output_table['Right Ascension'] = ra
-        else:
-            output_table['Right Ascension'] = table[self.col_ra_selected]
-            # add units to ra if they weren't loaded in with units assigned
-            if not self.col_ra_has_unit:
-                output_table['Right Ascension'] *= u.Unit(self.col_ra_unit_selected)
-        if dec is not None:
-            output_table['Declination'] = dec
-        else:
-            output_table['Declination'] = table[self.col_dec_selected]
-            if not self.col_dec_has_unit:
-                output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
+            # rename RA and Dec columns so that table in data collection always has
+            # the same RA, Dec column names for consistency when accessing elsewhere
+            # also add and units if they weren't loaded in with units assigned (QTable)
+            ra = None
+            dec = None
+            if isinstance(self.input[self.col_ra_selected], SkyCoord):
+                ra = self.input[self.col_ra_selected].ra
+            if isinstance(self.input[self.col_dec_selected], SkyCoord):
+                dec = self.input[self.col_dec_selected].dec
+
+            if ra is not None:
+                output_table['Right Ascension'] = ra
+            else:
+                output_table['Right Ascension'] = table[self.col_ra_selected]
+                # add units to ra if they weren't loaded in with units assigned
+                if not self.col_ra_has_unit:
+                    output_table['Right Ascension'] *= u.Unit(self.col_ra_unit_selected)
+            if dec is not None:
+                output_table['Declination'] = dec
+            else:
+                output_table['Declination'] = table[self.col_dec_selected]
+                if not self.col_dec_has_unit:
+                    output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
+
+        if (self.col_x_selected in self.input.colnames) and (self.col_y_selected in self.input.colnames):
+            # handle output construction for X and Y coordinate columns, if selected
+
+            # rename X and Y columns so that table in data collection always has
+            # the same X, Y column names for consistency when accessing elsewhere
+            pass
+            # output_table['X'] = table[self.col_x_selected]
+            # output_table['Y'] = table[self.col_y_selected]
+
 
         # add additional columns to output table
         for col in self.output_cols:
