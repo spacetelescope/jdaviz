@@ -185,7 +185,7 @@ module.exports = {
       return this.existsFor(item) ? '#3395B4' : 'grey';
     },
     getExistsIcon(item) {
-      return this.existsFor(item) ? 'mdi-check' : 'mdi-check';
+      return this.existsFor(item) ? 'mdi-check-bold' : 'mdi-check';
     },
     on_search_input(value) {
       this.search_query = value;
