@@ -182,7 +182,7 @@ module.exports = {
     },
     getExistsIconColor(item) {
       // For now, both states use grey color but this may change in the future
-      return this.existsFor(item) ? 'green' : 'grey';
+      return this.existsFor(item) ? '#3395B4' : 'grey';
     },
     getExistsIcon(item) {
       return this.existsFor(item) ? 'mdi-check' : 'mdi-check';
