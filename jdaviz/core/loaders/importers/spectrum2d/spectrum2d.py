@@ -27,6 +27,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     ext_viewer_create_new_items = List([]).tag(sync=True)
     ext_viewer_create_new_selected = Unicode().tag(sync=True)
+    # No uncertainty viewer for 2D
+    has_unc = Bool(False).tag(sync=True)
 
     ext_viewer_items = List([]).tag(sync=True)
     ext_viewer_selected = Any([]).tag(sync=True)
