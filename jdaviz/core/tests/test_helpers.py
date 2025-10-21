@@ -227,14 +227,14 @@ class TestConfigHelperSubsets:
         # Subset 2, Spectral
         subset_plugin.import_region(SpectralRegion(4.6e-7 * u.m, 4.8e-7 * u.m))
 
-    @pytest.mark.parametrize(('spatial_subset', 'spectral_subset',
-                              'temporal_subset', 'mask_subset'),
-                             [('Subset 1', None, None, None),
-                              (None, 'Subset 2', None, None),
-                              (None, None, 'Subset 1', None),
-                              (None, None, None, 'Subset 2'),
-                              ('Subset 1', 'Subset 2', None, None)]
-                             )
+    @pytest.mark.parametrize(
+        ('spatial_subset', 'spectral_subset', 'temporal_subset', 'mask_subset'),
+        [('Subset 1', None, None, None),
+         (None, 'Subset 2', None, None),
+         (None, None, 'Subset 1', None),
+         (None, None, None, 'Subset 2'),
+         ('Subset 1', 'Subset 2', None, None)
+         ])
     def test_get_data_spatial_spectral_subsets(self,
                                                spatial_subset, spectral_subset,
                                                temporal_subset, mask_subset):
