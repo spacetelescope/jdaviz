@@ -65,7 +65,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
-        
+
         # dropdowns for tables with pixel source positions
         self.col_x = SelectPluginComponent(self,
                                            items='col_x_items',
@@ -171,7 +171,7 @@ class CatalogImporter(BaseImporterToDataCollection):
             elif msg['name'] == 'col_dec_selected':
                 self.col_dec_has_unit = True
             # disable import if RA is selected but Dec is not (or vice versa)
-            if (ra in ['---', ''] or ra is None)!= (dec in ['---', ''] or dec is None):
+            if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
                 self.import_disabled = True
             return
 
@@ -202,9 +202,8 @@ class CatalogImporter(BaseImporterToDataCollection):
             self.import_disabled = False
 
         # disable import if RA is selected but Dec is not (or vice versa)
-        if (ra in ['---', ''] or ra is None)!= (dec in ['---', ''] or dec is None):
+        if (ra in ['---', ''] or ra is None) != (dec in ['---', ''] or dec is None):
             self.import_disabled = True
-
 
     @staticmethod
     def _get_supported_viewers():
