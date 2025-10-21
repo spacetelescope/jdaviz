@@ -163,9 +163,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
         # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
         filetype = metadata[PRIHDR_KEY].get('FILETYPE', '').lower()
-        if telescop == 'jwst' and ('ifu' in exptype or
-                                   'mrs' in exptype or
-                                   filetype == '3d ifu cube'):
+        if telescop == 'jwst' and 'ASDF' in hdulist:
             from stdatamodels import asdf_in_fits
             tree = asdf_in_fits.open(hdulist).tree
             if 'meta' in tree and 'wcs' in tree['meta']:
@@ -193,25 +191,32 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:
             mask_data = None
 
-        if self.supported_flux_ndim == 2 and data.shape[0] > data.shape[1]:
-            data = data.T
-            if unc_data is not None:
-                unc_data = unc_data.T
-            if mask_data is not None:
-                mask_data = mask_data.T
-            wcs = wcs.swapaxes(0, 1)
-            self.app.hub.broadcast(SnackbarMessage(
-                f"Transposed input data to {data.shape}",
-                sender=self, color="warning"))
+        spectral_axis_index = None
+
+        if self.supported_flux_ndim == 2:
+            spectral_axis_index = 1
+            if data.shape[0] > data.shape[1]:
+                data = data.T
+                if unc_data is not None:
+                    unc_data = unc_data.T
+                if mask_data is not None:
+                    mask_data = mask_data.T
+                wcs = wcs.swapaxes(0, 1)
+                self.app.hub.broadcast(SnackbarMessage(
+                    f"Transposed input data to {data.shape}",
+                    sender=self, color="warning"))
 
         if unc_data is not None:
             unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
 
+        print(wcs)
+
         try:
             sc = Spectrum(flux=data * data_unit, uncertainty=unc,
-                          mask=mask_data, meta=metadata, wcs=wcs)
+                          mask=mask_data, meta=metadata, wcs=wcs,
+                          spectral_axis_index=spectral_axis_index)
         except ValueError:
             # In some cases, the above call to Spectrum will fail if no
             # spectral axis is found in the WCS. Even without a spectral axis,
@@ -275,7 +280,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         # since the WCS will be replaced by a SpectralGWCS object instead of the original
         # astropy.wcs.WCS object.
         # This is needed for the subset tools to work properly.
-        if _get_celestial_wcs(sc.wcs) is not None:
+        if new_sc.flux.ndim == 3 and _get_celestial_wcs(sc.wcs) is not None:
             new_sc.meta['_orig_spatial_wcs'] = _get_celestial_wcs(sc.wcs)
 
         return new_sc
