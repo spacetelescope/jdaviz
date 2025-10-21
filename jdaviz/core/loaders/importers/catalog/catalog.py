@@ -294,7 +294,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                 if not self.col_dec_has_unit:
                     output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
 
-        if (self.col_x_selected in self.input.colnames) and (self.col_y_selected in self.input.colnames):
+        if (self.col_x_selected in self.input.colnames) and (self.col_y_selected in self.input.colnames):  # noqa
             # handle output construction for X and Y coordinate columns, if selected
 
             # rename X and Y columns so that table in data collection always has
