@@ -33,7 +33,7 @@ def test_next_subset_num(label, prefix, answer):
     assert _next_subset_num(prefix, mocked_group) == answer
 
 
-class TestConfigHelper:
+class TestConfigHelperSpec:
     @pytest.fixture(autouse=True)
     def setup_class(self, deconfigged_helper, spectrum1d, spectrum2d, multi_order_spectrum_list):
         self.config_helper = deconfigged_helper
@@ -58,9 +58,6 @@ class TestConfigHelper:
         self.config_helper.plugins['Subset Tools'].import_region(
             SpectralRegion(8200*spectral_axis_unit, 8800*spectral_axis_unit),
             combination_mode='new')
-
-        # flux_viewer = self.config_helper.app.get_viewer('Spectral Cube')
-        # flux_viewer.apply_roi(CircularROI(5, 5, 3))
 
         self.data = self.config_helper.app.data_collection[self.label]
 
@@ -211,13 +208,68 @@ class TestConfigHelper:
         # Should still use the same component ID
         assert self.config_helper._component_ids['cached_comp'] == cached_id
 
+
+class TestConfigHelperSubsets:
+    @pytest.fixture(autouse=True)
+    def setup_class(self, cubeviz_helper, deconfigged_helper, image_cube_hdu_obj):
+        """
+        Set up test data with spatial subsets.
+        """
+        # self.config_helper = deconfigged_helper
+        self.config_helper = cubeviz_helper
+        # self.config_helper.load(image_cube_hdu_obj, format='Spectral Cube')
+        self.config_helper.load_data(image_cube_hdu_obj)
+        self.label = self.config_helper.app.data_collection[0].label
+
+        subset_plugin = self.config_helper.plugins['Subset Tools']
+        # Subset 1, Spatial
+        subset_plugin.import_region(CircularROI(5, 5, 3))
+        # Subset 2, Spectral
+        subset_plugin.import_region(SpectralRegion(4.6e-7 * u.m, 4.8e-7 * u.m))
+
+    @pytest.mark.parametrize(('spatial_subset', 'spectral_subset',
+                              'temporal_subset', 'mask_subset'),
+                             [('Subset 1', None, None, None),
+                              (None, 'Subset 2', None, None),
+                              (None, None, 'Subset 1', None),
+                              (None, None, None, 'Subset 2'),
+                              ('Subset 1', 'Subset 2', None, None)]
+                             )
+    def test_get_data_spatial_spectral_subsets(self,
+                                               spatial_subset, spectral_subset,
+                                               temporal_subset, mask_subset):
+        """
+        Test _get_data spatial subset code path
+        (exception handling is difficult to test without deep mocking).
+        """
+        # Verify the spatial subset code path executes without error
+        result = self.config_helper._get_data(
+            data_label=self.label,
+            spatial_subset=spatial_subset,
+            spectral_subset=spectral_subset,
+            temporal_subset=temporal_subset,
+            mask_subset=mask_subset,
+            cls=Spectrum
+        )
+
+        # Verify we got a result
+        assert isinstance(result, Spectrum)
+
+        spatial_spectral_combo = spatial_subset is not None and spectral_subset is not None
+        if mask_subset is not None or temporal_subset is not None or spatial_spectral_combo:
+            # Verify that result is a Spectrum with a mask applied
+            assert hasattr(result, 'mask')
+            assert result.mask is not None
+            # The mask should have some True values (masked regions)
+            assert np.any(result.mask)
+
     def test_get_data_spectral_subset_with_mask_subset_error(self):
         """
         Test _get_data: spectral_subset with mask_subset raises ValueError.
         """
         with pytest.raises(
-            ValueError,
-            match="cannot use both mask_subset and spectral_subset"
+                ValueError,
+                match="cannot use both mask_subset and spectral_subset"
         ):
             self.config_helper._get_data(
                 data_label=self.label,
@@ -230,8 +282,8 @@ class TestConfigHelper:
         Test _get_data: temporal_subset with mask_subset raises ValueError.
         """
         with pytest.raises(
-            ValueError,
-            match="cannot use both mask_subset and temporal_subset"
+                ValueError,
+                match="cannot use both mask_subset and temporal_subset"
         ):
             self.config_helper._get_data(
                 data_label=self.label,
@@ -239,30 +291,17 @@ class TestConfigHelper:
                 mask_subset='Subset 2'
             )
 
-    def test_get_data_temporal_subset_assignment(self):
-        """
-        Test _get_data: temporal_subset is assigned to mask_subset.
-        """
-        # This tests that temporal_subset flows through as mask_subset
-        result = self.config_helper._get_data(
-            data_label=self.label,
-            temporal_subset='Subset 1'
-        )
-        # Verify the mask was applied (temporal_subset treated as mask)
-        assert hasattr(result, 'mask')
-        assert result.mask is not None
-
     def test_get_data_spatial_subset_not_region_error(self):
         """
         Test _get_data: spatial_subset that is not a Region raises ValueError.
         """
         # 'Subset 1' is a spectral subset, not spatial
         with pytest.raises(
-            ValueError, match="is not a spatial subset"
+                ValueError, match="is not a spatial subset"
         ):
             self.config_helper._get_data(
                 data_label=self.label,
-                spatial_subset='Subset 1',
+                spatial_subset='Subset 2',
                 cls=Spectrum
             )
 
@@ -278,100 +317,12 @@ class TestConfigHelper:
         )
 
         with pytest.raises(
-            ValueError, match="is not a spectral subset"
+                ValueError, match="is not a spectral subset"
         ):
             self.config_helper._get_data(
                 data_label=self.label,
                 spectral_subset='not_spectral'
             )
-
-    def test_get_data_spatial_subset_code_path(self):
-        """
-        Test _get_data spatial subset code path
-        (exception handling is difficult to test without deep mocking).
-        """
-        # Create a spatial subset using proper glue ROI
-        # TODO: will likely have to adjust viewer name
-        # flux_viewer = self.config_helper.app.get_viewer('Spectral Cube')
-        # flux_viewer.apply_roi(CircularROI(5, 5, 3))
-
-        # Verify the spatial subset code path executes without error
-        result = self.config_helper._get_data(
-            data_label=self.label,
-            spatial_subset='Subset 1',
-            cls=Spectrum
-        )
-
-        # Verify we got a result (successful path through lines 660-667)
-        assert isinstance(result, Spectrum)
-
-@pytest.mark.skip(reason="TODO: unskip once cube loaders are have been implemented")
-class TestGetDataSubsetExceptionHandling:
-    """
-    Test coverage for exception handling in subset operations.
-    """
-    @pytest.fixture(autouse=True)
-    def setup_data(self, deconfigged_helper, image_cube_hdu_obj):
-        """
-        Set up test data with spatial subsets.
-        """
-        self.config_helper = deconfigged_helper
-        deconfigged_helper.load(image_cube_hdu_obj, format='Spectral Cube')
-        self.label = deconfigged_helper.app.data_collection[0].label
-
-
-
-    def test_get_data_mask_subset_code_path(self):
-        """
-        Test _get_data lines 684-687: mask subset code path
-        (exception handling is difficult to test without deep mocking).
-        """
-        subset_plugin = self.config_helper.plugins['Subset Tools']
-        subset_plugin.import_region(SpectralRegion(4.6e-7*u.m, 4.8e-7*u.m))
-
-        # Verify the mask subset code path executes without error
-        result = self.config_helper._get_data(
-            data_label=self.label,
-            mask_subset='Subset 1',
-            cls=Spectrum
-        )
-
-        # Verify we got a result (successful path through lines 684-687)
-        assert isinstance(result, Spectrum)
-        assert hasattr(result, 'mask')
-
-    def test_get_data_spatial_and_spectral_subset_combined(self):
-        """
-        Test _get_data line 690: spatial_subset with spectral_subset
-        applies mask to data.
-        """
-        # Create spatial subset using proper glue ROI
-        flux_viewer = self.config_helper.app.get_viewer('flux-viewer')
-        flux_viewer.apply_roi(CircularROI(5, 5, 3))
-
-        # Create spectral subset
-        subset_plugin = self.config_helper.plugins['Subset Tools']
-        subset_plugin.import_region(
-            SpectralRegion(4.6e-7*u.m, 4.8e-7*u.m),
-            combination_mode='new'
-        )
-
-        # Get data with both subsets
-        result = self.config_helper._get_data(
-            data_label=self.label,
-            spatial_subset='Subset 1',
-            spectral_subset='Subset 2',
-            cls=Spectrum
-        )
-
-        # Verify that result is a Spectrum with a mask applied
-        assert isinstance(result, Spectrum)
-        assert hasattr(result, 'mask')
-        assert result.mask is not None
-        # The mask should have some True values (masked regions)
-        assert np.any(result.mask)
-
-
 
 
 @pytest.mark.skip(reason="TODO: need to adjust logic for deconfigged (lines 611-626)")
