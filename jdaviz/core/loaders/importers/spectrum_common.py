@@ -157,23 +157,54 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
 
+        wcs = WCS(header, hdulist)
+
+        spectral_axis_index = None
+
+        if self.supported_flux_ndim == 2:
+            spectral_axis_index = 1
+            if data.shape[0] > data.shape[1]:
+                data = data.T
+                if unc_data is not None:
+                    unc_data = unc_data.T
+                if mask_data is not None:
+                    mask_data = mask_data.T
+                wcs = wcs.swapaxes(0, 1)
+                self.app.hub.broadcast(SnackbarMessage(
+                    f"Transposed input data to {data.shape}",
+                    sender=self, color="warning"))
+
         # Check for data types that have a GWCS stored in ASDF
         telescop = metadata[PRIHDR_KEY].get('TELESCOP', '').lower()
         exptype = metadata[PRIHDR_KEY].get('EXP_TYPE', '').lower()
         # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
         # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
         filetype = metadata[PRIHDR_KEY].get('FILETYPE', '').lower()
-        if telescop == 'jwst' and 'ASDF' in hdulist:
-            from stdatamodels import asdf_in_fits
-            tree = asdf_in_fits.open(hdulist).tree
-            if 'meta' in tree and 'wcs' in tree['meta']:
-                wcs = tree["meta"]["wcs"]
-                if isinstance(wcs, list):
-                    wcs = wcs[0]
+
+        # Cubes and 2D data need different checks to see if we want WCS from ASDF
+        asdf_3d = (telescop == 'jwst' and ('ifu' in exptype or
+                                           'mrs' in exptype or
+                                           filetype == '3d ifu cube'))
+        asdf_2d = (wcs.world_axis_physical_types == [None, None] or
+                   (hasattr(wcs, 'spectral') and wcs.spectral.naxis == 0))
+
+        if (data.ndim == 2 and asdf_2d) or (data.ndim == 3 and asdf_3d):
+            if 'ASDF' in hdulist:
+                try:
+                    from stdatamodels import asdf_in_fits
+                    tree = asdf_in_fits.open(hdulist).tree
+                    if 'meta' in tree and 'wcs' in tree['meta']:
+                        wcs = tree["meta"]["wcs"]
+                        if isinstance(wcs, (list, tuple)):
+                            wcs = wcs[0]
+                        # Check needed for BSUB files, which we want to allow without worrying
+                        # about the wavelength solution for now
+                        if len(wcs.forward_transform.inputs) == 5:
+                            wcs = None
+                except ValueError:
+                    wcs = None
             else:
                 wcs = None
-        else:
-            wcs = WCS(header, hdulist)
 
         try:
             data_unit = u.Unit(header['BUNIT'])
@@ -191,27 +222,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:
             mask_data = None
 
-        spectral_axis_index = None
-
-        if self.supported_flux_ndim == 2:
-            spectral_axis_index = 1
-            if data.shape[0] > data.shape[1]:
-                data = data.T
-                if unc_data is not None:
-                    unc_data = unc_data.T
-                if mask_data is not None:
-                    mask_data = mask_data.T
-                wcs = wcs.swapaxes(0, 1)
-                self.app.hub.broadcast(SnackbarMessage(
-                    f"Transposed input data to {data.shape}",
-                    sender=self, color="warning"))
-
         if unc_data is not None:
             unc = StdDevUncertainty(unc_data * data_unit)
         else:
             unc = None
-
-        print(wcs)
 
         try:
             sc = Spectrum(flux=data * data_unit, uncertainty=unc,
