@@ -118,22 +118,26 @@ class TestGetCloneViewerReference:
         """
         Test _get_clone_viewer_reference with existing cloned viewers.
         """
-        # Manually add cloned viewer references to simulate existing
-        # clones
-        viewer = list(specviz_helper.app._viewer_store.values())[0]
-        from jdaviz.configs.default.plugins.viewers import (
-            JdavizViewerWindow
+        from unittest.mock import PropertyMock, patch
+
+        # Get the original viewers dict
+        original_viewers = specviz_helper.viewers
+        mock_viewers = dict(original_viewers)
+        mock_viewers['spectrum-viewer[1]'] = (
+            original_viewers['spectrum-viewer']
         )
 
-        # Simulate an existing clone by adding to viewers dict
-        # TODO: Borked
-        # viewer._ref_or_id = 'spectrum-viewer[1]'
-        # specviz_helper.app._viewer_store['spectrum-viewer[1]'] = viewer
-        #
-        # ref = specviz_helper._get_clone_viewer_reference(
-        #     'spectrum-viewer'
-        # )
-        # assert ref == 'spectrum-viewer[2]'
+        # Patch the viewers property to return our mocked dict
+        with patch.object(
+            type(specviz_helper),
+            'viewers',
+            new_callable=PropertyMock,
+            return_value=mock_viewers
+        ):
+            ref = specviz_helper._get_clone_viewer_reference(
+                'spectrum-viewer'
+            )
+            assert ref == 'spectrum-viewer[2]'
 
     def test_get_clone_viewer_reference_multiple_clones(
             self, specviz_helper
@@ -141,20 +145,27 @@ class TestGetCloneViewerReference:
         """
         Test _get_clone_viewer_reference with multiple existing clones.
         """
-        viewer = list(specviz_helper.app._viewer_store.values())[0]
+        from unittest.mock import PropertyMock, patch
 
-        # Simulate multiple clones
-        # TODO: borked
-        # for i in range(1, 4):
-        #     viewer._ref_or_id = f'spectrum-viewer[{i}]'
-        #     specviz_helper.app._viewer_store[
-        #         f'spectrum-viewer[{i}]'
-        #     ] = viewer
-        #
-        # ref = specviz_helper._get_clone_viewer_reference(
-        #     'spectrum-viewer'
-        # )
-        # assert ref == 'spectrum-viewer[4]'
+        # Get the original viewers dict
+        original_viewers = specviz_helper.viewers
+        mock_viewers = dict(original_viewers)
+        for i in range(1, 4):
+            mock_viewers[f'spectrum-viewer[{i}]'] = (
+                original_viewers['spectrum-viewer']
+            )
+
+        # Patch the viewers property to return our mocked dict
+        with patch.object(
+            type(specviz_helper),
+            'viewers',
+            new_callable=PropertyMock,
+            return_value=mock_viewers
+        ):
+            ref = specviz_helper._get_clone_viewer_reference(
+                'spectrum-viewer'
+            )
+            assert ref == 'spectrum-viewer[4]'
 
 
 class TestSetDataComponent:
@@ -355,34 +366,48 @@ class TestGetDataSpecificLines:
         Test _get_data line 644: cls=None with spatial_subset raises
         AttributeError.
         """
-        data = self.helper.app.data_collection[self.label]
-        original_meta = data.meta.copy()
+        from unittest.mock import patch
+        from regions import CirclePixelRegion, PixCoord
 
-        # Clear native_data_cls to force cls=None path
+        data = self.helper.app.data_collection[self.label]
+
+        # Create a dummy spatial subset
+        subset_state = data.id['flux'] > 0
+        subset_group = (
+            self.helper.app.data_collection.new_subset_group(
+                'spatial_test', subset_state
+            )
+        )
+
+        # Add 'Trace' to meta to force cls=None path (line 615)
+        original_meta = dict(data.meta)
+        data.meta['Trace'] = True
         if '_native_data_cls' in data.meta:
             del data.meta['_native_data_cls']
 
-        # TODO: Borked
-        # try:
-        #     # Create a dummy spatial subset
-        #     subset_state = data.id['flux'] > 0
-        #     subset_group = (
-        #         self.helper.app.data_collection.new_subset_group(
-        #             'spatial_test', subset_state
-        #         )
-        #     )
-        #
-        #     with pytest.raises(
-        #         AttributeError,
-        #         match="A valid cls must be provided"
-        #     ):
-        #         self.helper._get_data(
-        #             data_label=self.label,
-        #             spatial_subset='spatial_test',
-        #             cls=None
-        #         )
-        # finally:
-        #     data.meta = original_meta
+        try:
+            # Mock get_subsets to return a Region for spatial_test
+            mock_region = CirclePixelRegion(
+                center=PixCoord(5, 5), radius=3
+            )
+            mock_subsets = {'spatial_test': [mock_region]}
+
+            with patch.object(
+                self.helper.app, 'get_subsets', return_value=mock_subsets
+            ):
+                with pytest.raises(
+                    AttributeError,
+                    match="A valid cls must be provided"
+                ):
+                    self.helper._get_data(
+                        data_label=self.label,
+                        spatial_subset='spatial_test',
+                        cls=None
+                    )
+        finally:
+            # Restore original state
+            data.meta.clear()
+            data.meta.update(original_meta)
 
     def test_get_data_cls_none_with_mask_subset_error(self):
         """
@@ -390,25 +415,27 @@ class TestGetDataSpecificLines:
         AttributeError.
         """
         data = self.helper.app.data_collection[self.label]
-        original_meta = data.meta.copy()
 
-        # Clear native_data_cls to force cls=None path
+        # Add 'Trace' to meta to force cls=None path (line 615)
+        original_meta = dict(data.meta)
+        data.meta['Trace'] = True
         if '_native_data_cls' in data.meta:
             del data.meta['_native_data_cls']
 
-        # TODO: borked
-        # try:
-        #     with pytest.raises(
-        #         AttributeError,
-        #         match="A valid cls must be provided"
-        #     ):
-        #         self.helper._get_data(
-        #             data_label=self.label,
-        #             mask_subset='Subset 1',
-        #             cls=None
-        #         )
-        # finally:
-        #     data.meta = original_meta
+        try:
+            with pytest.raises(
+                AttributeError,
+                match="A valid cls must be provided"
+            ):
+                self.helper._get_data(
+                    data_label=self.label,
+                    mask_subset='Subset 1',
+                    cls=None
+                )
+        finally:
+            # Restore original state
+            data.meta.clear()
+            data.meta.update(original_meta)
 
 
 class TestGetDataClsInference:
