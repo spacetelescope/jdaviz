@@ -102,20 +102,25 @@ class CatalogImporter(BaseImporterToDataCollection):
             idx = np.where(col_is_sc)[0][0]
 
         else:
-            all_column_names = np.array(x.lower() for x in colnames)
+            all_column_names = np.array([x.lower() for x in colnames])
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
             if col == 'ra':
                 col_possibilities = ['right ascension', 'ra', 'ra_deg', 'radeg',
                                      'radegrees', 'right ascension (degrees)',
                                      'ra_obj', 'raj2000', 'ra2000']
-                idx = get_idx(all_column_names, col_possibilities, 0)
+                idx = get_idx(all_column_names, col_possibilities, None)
             elif col == 'dec':
                 col_possibilities = ['declination', 'dec', 'dec_deg', 'decdeg',
                                      'decdegrees', 'declination (degrees)',
                                      'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
-                idx = get_idx(all_column_names, col_possibilities, 1)
+                idx = get_idx(all_column_names, col_possibilities, None)
 
+        # if no good candidate found, default to '---' (no selection) for
+        # the default selection.
+        print('IDX:', idx)
+        if idx is None:
+            return ['---'] + colnames
         return colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
 
     def _valid_coord_units(self, coord):
@@ -139,10 +144,14 @@ class CatalogImporter(BaseImporterToDataCollection):
         disable the import button if they are the same.
         """
 
+
         ra = self.col_ra_selected
         dec = self.col_dec_selected
 
         axis = ra if msg['name'] == 'col_ra_selected' else dec
+
+        if axis == '---':
+            return
 
         has_units = False
 
