@@ -158,6 +158,9 @@ class TestVOXMLInjectionWarning:
                   <name>ADQL</name>
                   <version ivo-id="ivo://ivoa.net/std/ADQL#v2.0">2.0</version>
                 </language>
+                <outputFormat>
+                  <mime>application/x-votable+xml</mime>
+                </outputFormat>
                 <limits>
                   <default>
                     <executionDuration>3600</executionDuration>
@@ -195,7 +198,7 @@ class TestVOXMLInjectionWarning:
         """
         Parse XML with <limits> WITH the warning filter decorator.
 
-        This test should pass because the decorator filters the
+        This test should pass because the decorator filters the warning
         UnknownElementWarning, just like it sometimes does in test_coverage_toggle.
         """
         # This should NOT fail because the decorator filters the warning
