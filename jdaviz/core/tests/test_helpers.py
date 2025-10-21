@@ -112,6 +112,48 @@ class TestGetCloneViewerReference:
         )
         assert ref == 'spectrum-viewer[1]'
 
+    def test_get_clone_viewer_reference_with_existing_clones(
+        self, specviz_helper
+    ):
+        """
+        Test _get_clone_viewer_reference with existing cloned viewers.
+        """
+        # Manually add cloned viewer references to simulate existing
+        # clones
+        viewer = list(specviz_helper.app._viewer_store.values())[0]
+        from jdaviz.configs.default.plugins.viewers import (
+            JdavizViewerWindow
+        )
+
+        # Simulate an existing clone by adding to viewers dict
+        viewer._ref_or_id = 'spectrum-viewer[1]'
+        specviz_helper.app._viewer_store['spectrum-viewer[1]'] = viewer
+
+        ref = specviz_helper._get_clone_viewer_reference(
+            'spectrum-viewer'
+        )
+        assert ref == 'spectrum-viewer[2]'
+
+    def test_get_clone_viewer_reference_multiple_clones(
+            self, specviz_helper
+    ):
+        """
+        Test _get_clone_viewer_reference with multiple existing clones.
+        """
+        viewer = list(specviz_helper.app._viewer_store.values())[0]
+
+        # Simulate multiple clones
+        for i in range(1, 4):
+            viewer._ref_or_id = f'spectrum-viewer[{i}]'
+            specviz_helper.app._viewer_store[
+                f'spectrum-viewer[{i}]'
+            ] = viewer
+
+        ref = specviz_helper._get_clone_viewer_reference(
+            'spectrum-viewer'
+        )
+        assert ref == 'spectrum-viewer[4]'
+
 
 class TestSetDataComponent:
     """
@@ -292,11 +334,85 @@ class TestGetDataSpecificLines:
                 spectral_subset='not_spectral'
             )
 
+    def test_get_data_cls_none_with_spatial_subset_error(self):
+        """
+        Test _get_data line 644: cls=None with spatial_subset raises
+        AttributeError.
+        """
+        data = self.helper.app.data_collection[self.label]
+        original_meta = data.meta.copy()
+
+        # Clear native_data_cls to force cls=None path
+        if '_native_data_cls' in data.meta:
+            del data.meta['_native_data_cls']
+
+        try:
+            # Create a dummy spatial subset
+            subset_state = data.id['flux'] > 0
+            subset_group = (
+                self.helper.app.data_collection.new_subset_group(
+                    'spatial_test', subset_state
+                )
+            )
+
+            with pytest.raises(
+                AttributeError,
+                match="A valid cls must be provided"
+            ):
+                self.helper._get_data(
+                    data_label=self.label,
+                    spatial_subset='spatial_test',
+                    cls=None
+                )
+        finally:
+            data.meta = original_meta
+
+    def test_get_data_cls_none_with_mask_subset_error(self):
+        """
+        Test _get_data line 648: cls=None with mask_subset raises
+        AttributeError.
+        """
+        data = self.helper.app.data_collection[self.label]
+        original_meta = data.meta.copy()
+
+        # Clear native_data_cls to force cls=None path
+        if '_native_data_cls' in data.meta:
+            del data.meta['_native_data_cls']
+
+        try:
+            with pytest.raises(
+                AttributeError,
+                match="A valid cls must be provided"
+            ):
+                self.helper._get_data(
+                    data_label=self.label,
+                    mask_subset='Subset 1',
+                    cls=None
+                )
+        finally:
+            data.meta = original_meta
+
 
 class TestGetDataClsInference:
     """
     Test coverage for cls inference in _get_data (lines 616, 618, 623).
     """
+
+    def test_get_data_cls_ccddata_for_2d(self, cubeviz_helper):
+        """
+        Test _get_data line 616: cls inferred as CCDData for 2D data
+        (not in specviz2d).
+        """
+        # Load 2D data into cubeviz
+        flux = np.ones((10, 10))
+        ccd = CCDData(data=flux, unit=u.Jy)
+        cubeviz_helper.load_data(ccd, data_label='2d_data')
+
+        data = cubeviz_helper.app.data_collection['2d_data']
+        assert data.ndim == 2
+
+        result = cubeviz_helper._get_data(data_label='2d_data')
+        assert isinstance(result, CCDData)
 
     def test_get_data_cls_spectrum_from_cube(
         self, cubeviz_helper, image_cube_hdu_obj
