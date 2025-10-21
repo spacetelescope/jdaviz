@@ -161,6 +161,27 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
         spectral_axis_index = None
 
+        try:
+            data_unit = u.Unit(header['BUNIT'])
+        except Exception:
+            data_unit = u.count
+
+        if self.unc_extension.selected != '':
+            unc_hdu = self.unc_extension.selected_obj
+            unc_data = unc_hdu.data
+        else:
+            unc_data = None
+        if self.mask_extension.selected != '':
+            mask_hdu = self.mask_extension.selected_obj
+            mask_data = mask_hdu.data
+        else:
+            mask_data = None
+
+        if unc_data is not None:
+            unc = StdDevUncertainty(unc_data * data_unit)
+        else:
+            unc = None
+
         if self.supported_flux_ndim == 2:
             spectral_axis_index = 1
             if data.shape[0] > data.shape[1]:
@@ -207,27 +228,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     wcs = None
             else:
                 wcs = None
-
-        try:
-            data_unit = u.Unit(header['BUNIT'])
-        except Exception:
-            data_unit = u.count
-
-        if self.unc_extension.selected != '':
-            unc_hdu = self.unc_extension.selected_obj
-            unc_data = unc_hdu.data
-        else:
-            unc_data = None
-        if self.mask_extension.selected != '':
-            mask_hdu = self.mask_extension.selected_obj
-            mask_data = mask_hdu.data
-        else:
-            mask_data = None
-
-        if unc_data is not None:
-            unc = StdDevUncertainty(unc_data * data_unit)
-        else:
-            unc = None
 
         try:
             sc = Spectrum(flux=data * data_unit, uncertainty=unc,
