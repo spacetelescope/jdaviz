@@ -154,6 +154,10 @@ class TestVOXMLInjectionWarning:
                 <interface xsi:type="vr:WebService" role="std">
                   <accessURL use="base">http://example.com/tap</accessURL>
                 </interface>
+                <language>
+                  <name>ADQL</name>
+                  <version ivo-id="ivo://ivoa.net/std/ADQL#v2.0">2.0</version>
+                </language>
                 <limits>
                   <default>
                     <executionDuration>3600</executionDuration>
