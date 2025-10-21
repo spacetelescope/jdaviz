@@ -38,6 +38,15 @@
     :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
 
+  <plugin-select
+    :items="col_x_items.map(i => i.label)"
+    :selected.sync="col_x_selected"
+    label="X Column"
+    hint="Select column corresponding to X."
+    api_hint="ldr.importer.col_x ="
+    :api_hints_enabled="api_hints_enabled"
+  ></plugin-select>
+
   <j-plugin-section-header>Select Additional Columns</j-plugin-section-header>
   <plugin-select
     :items="col_other_items.map(i => i.label)"

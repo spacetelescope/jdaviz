@@ -17,21 +17,26 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     template_file = __file__, "./catalog.vue"
 
+    # for catalogs with source positions in sky coordinates
     col_ra_items = List().tag(sync=True)
     col_ra_selected = Unicode().tag(sync=True)
-
     col_dec_items = List().tag(sync=True)
     col_dec_selected = Unicode().tag(sync=True)
 
     col_ra_has_unit = Bool().tag(sync=True)  # if input already has units
     col_ra_unit_items = List().tag(sync=True)
     col_ra_unit_selected = Unicode().tag(sync=True)
-
     col_dec_has_unit = Bool().tag(sync=True)  # if input already has units
     col_dec_unit_items = List().tag(sync=True)
     col_dec_unit_selected = Unicode().tag(sync=True)
 
-    # for non- ra and dec columns that the user wants to load
+    # for catalogs with source positions in pixel coordinates
+    col_x_items = List().tag(sync=True)
+    col_x_selected = Unicode().tag(sync=True)
+    col_y_items = List().tag(sync=True)
+    col_y_selected = Unicode().tag(sync=True)
+
+    # additional (optional) non-position columns to load (e.g. flux, id)
     col_other_items = List().tag(sync=True)
     col_other_selected = List().tag(sync=True)
     col_other_multiselect = Bool(True).tag(sync=True)
@@ -42,6 +47,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         if not self.is_valid:
             return
 
+        # dropdowns for catalogs with source positions in sky coordinates
         self.col_ra = SelectPluginComponent(self,
                                             items='col_ra_items',
                                             selected='col_ra_selected',
@@ -51,10 +57,6 @@ class CatalogImporter(BaseImporterToDataCollection):
                                              selected='col_dec_selected',
                                              manual_options=self._guess_ra_dec_cols('dec'))
 
-        # making these a dropdown for now with some hard-coded unit choices
-        # this could either be more flexible with a text input field which
-        # is then validated as a unit, or a note to use a quantity table
-        # if you want other units
         self.col_ra_unit = SelectPluginComponent(self,
                                                  items='col_ra_unit_items',
                                                  selected='col_ra_unit_selected',
@@ -63,7 +65,15 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
+        print(self._guess_ra_dec_cols('dec'))
+        
+        # dropdowns for tables with pixel source positions
+        self.col_x = SelectPluginComponent(self,
+                                           items='col_x_items',
+                                           selected='col_x_selected',
+                                           manual_options=['---', 'x'])
 
+        # dropdowns for (optional) additional columns
         self.col_other = SelectPluginComponent(self,
                                                items='col_other_items',
                                                selected='col_other_selected',
