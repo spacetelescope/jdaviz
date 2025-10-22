@@ -209,7 +209,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
 
 def test_get_viewport_region(imviz_helper, image_hdu_wcs):
     imviz_helper.load(image_hdu_wcs)
-    viewer = imviz_helper.app.get_viewer('imviz-0')
+    viewer = imviz_helper.viewers['imviz-0']
     region = viewer.get_viewport_region()
 
     expected_vertices = SkyCoord(
