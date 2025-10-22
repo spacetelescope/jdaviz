@@ -29,6 +29,52 @@ def _make_catalog(with_units=u.deg, as_skycoord=False):
                    names=['RA', 'Dec', 'Obj_ID', 'flux'])
 
 
+def _make_catalog_xy_radec(with_units=True):
+
+    ra = [337.52274, 337.48273, 337.48296, 337.52333] * (u.deg if with_units else 1)
+    dec = [-20.80742, -20.80741, -20.82380, -20.82425] * (u.deg if with_units else 1)
+    x = [-7.27571754, 127.36624541, 126.57857853, -9.26004303]
+    y = [94.28695926, 94.30831263, 35.30447687, 33.69891921]
+    obj_id = ['source1', 'source2', 'source3', 'source4']
+    flux = [10, 20, 30, 40] * (u.Jy if with_units else 1)
+
+    tab_cls = QTable if with_units else Table
+
+    return tab_cls(data=[ra, dec, x, y, obj_id, flux],
+                   names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
+
+
+def test_load_catalog_xy_and_radec(imviz_helper):
+
+    imviz_helper.app.state.catalogs_in_dc = True
+
+    catalog_obj = _make_catalog_xy_radec(with_units=True)
+
+    # load catalog
+    imviz_helper.load(catalog_obj)
+
+    dc = imviz_helper.app.data_collection
+    assert len(dc) == 1
+    assert 'Catalog' in imviz_helper.app.data_collection.labels
+
+    # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
+    # in the data collection for consistency, and that the table in the data
+    # collection always has units
+    qtab = imviz_helper.app.data_collection[0].get_object(QTable)
+    assert 'Right Ascension' in qtab.colnames
+    assert 'Declination' in qtab.colnames
+    assert 'X' in qtab.colnames
+    assert 'Y' in qtab.colnames
+
+    # make sure only ra and dec loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 4
+    # and that it has the correct contents
+    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'])
+    assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'])
+    assert_quantity_allclose(qtab['X'], catalog_obj['X'])
+    assert_quantity_allclose(qtab['Y'], catalog_obj['Y'])
+
+
 @pytest.mark.parametrize("from_file", [True, False])
 @pytest.mark.parametrize("with_units", [True, False])
 def test_load_catalog(imviz_helper, tmp_path, from_file, with_units):

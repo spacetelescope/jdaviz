@@ -251,7 +251,10 @@ class CatalogImporter(BaseImporterToDataCollection):
     def output_cols(self):
 
         coordinate_cols = []
-        for col in [self.col_ra_selected, self.col_dec_selected, self]:
+        for col in [self.col_ra_selected, self.col_dec_selected]:
+            if col not in ['---', ''] and col is not None:
+                coordinate_cols.append(col)
+        for col in [self.col_x_selected, self.col_y_selected]:
             if col not in ['---', ''] and col is not None:
                 coordinate_cols.append(col)
 
@@ -267,7 +270,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         table = self.input[self.output_cols]
         output_table = QTable()
 
-        if (self.col_ra_selected in self.input.colnames) and (self.col_dec_selected in self.input.colnames):  # noqa
+        if (self.col_ra_selected in table.colnames) and (self.col_dec_selected in table.colnames):  # noqa
             # handle output construction for RA and Dec coordinate columns, if selected
 
             # rename RA and Dec columns so that table in data collection always has
@@ -294,12 +297,11 @@ class CatalogImporter(BaseImporterToDataCollection):
                 if not self.col_dec_has_unit:
                     output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
 
-        if (self.col_x_selected in self.input.colnames) and (self.col_y_selected in self.input.colnames):  # noqa
+        if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
             # handle output construction for X and Y coordinate columns, if selected
 
             # rename X and Y columns so that table in data collection always has
             # the same X, Y column names for consistency when accessing elsewhere
-            pass
             output_table['X'] = table[self.col_x_selected]
             output_table['Y'] = table[self.col_y_selected]
 

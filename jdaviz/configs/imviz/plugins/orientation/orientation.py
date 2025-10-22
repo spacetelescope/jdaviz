@@ -763,6 +763,8 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                 refdata = app.data_collection[iref]
             else:   # pragma: no cover
                 iref = app.data_collection.index(refdata)
+    print('refdata label:', refdata.label)
+    print('refdata components:', refdata.component_ids())
 
     # With reference data changed, if needed, now we relink as needed.
 
@@ -783,15 +785,13 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
             comp_labels = [str(x) for x in data.component_ids()]
             if align_by == 'wcs':
                 if 'Right Ascension' in comp_labels and 'Declination' in comp_labels:
-                    # for an image these components should always be called
-                    # 'Lat' and 'Lon' Instead of checking for the presence of these
-                    # component labels before trying to access them, access them
-                    # by name so if there's ever a case where they are not called
-                    # 'Lat' and 'Lon', a clear error is raised and this can be made
-                    # more general.
                     ref_labels = [str(x) for x in refdata.component_ids()]
-                    ref_ra = refdata.components[ref_labels.index('Lon')]
-                    ref_dec = refdata.components[ref_labels.index('Lat')]
+                    try:  # default orientation will have components named 'Lat' and 'Lon'
+                        ref_ra = refdata.components[ref_labels.index('Lon')]
+                        ref_dec = refdata.components[ref_labels.index('Lat')]
+                    except ValueError:  # image data will have these components named differently
+                        ref_ra = refdata.components[ref_labels.index('Right Ascension')]
+                        ref_dec = refdata.components[ref_labels.index('Declination')]
 
                     # source catalogs will always have RA/Dec components with
                     # these exact labels, so this is safe to do with exact labels
@@ -802,7 +802,9 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                                    ComponentLink([ref_dec], cat_dec)]
                     continue
             elif align_by == 'pixels':
+                print('here comp_labels:', comp_labels)
                 if 'X' in comp_labels and 'Y' in comp_labels:
+                    print('creating pixel links')
                     # Image components should always be called 'Pixel Axis 1 [x]'
                     # and 'Pixel Axis 0 [y]' If an error ever arises from trying
                     # to access these directly, generalize it, but this should be safe.
