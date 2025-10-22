@@ -254,7 +254,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     if layer.visible:
                         data = layer.layer.data
                         comp_labels = [str(x) for x in data.component_ids()]
-                        print('comps:', comp_labels)
                         # if layer is a catalog that has pixel coordinates, we
                         # don't need to hide the layer
                         if data.meta.get('_importer') == 'CatalogImporter' and \

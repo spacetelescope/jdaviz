@@ -71,7 +71,7 @@ class CatalogImporter(BaseImporterToDataCollection):
                                            items='col_x_items',
                                            selected='col_x_selected',
                                            manual_options=self._guess_coord_cols('x'))
-        self.col_x = SelectPluginComponent(self,
+        self.col_y = SelectPluginComponent(self,
                                            items='col_y_items',
                                            selected='col_y_selected',
                                            manual_options=self._guess_coord_cols('y'))
@@ -241,7 +241,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_other']
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_other']
         return ImporterUserApi(self, expose=expose)
 
     @property
@@ -272,8 +272,6 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
-
-        # print('self.col_ra_selected:', self.col_ra_selected)
 
         table = self.input[self.output_cols]
         output_table = QTable()

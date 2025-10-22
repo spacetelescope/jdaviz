@@ -102,29 +102,29 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.object = catalog_obj
 
     ldr.format = 'Catalog'
-    ldr.importer._obj.col_ra_selected = '---'
-    ldr.importer._obj.col_dec_selected = '---'
-    ldr.importer._obj.col_x_selected = '---'
-    ldr.importer._obj.col_y_selected = '---'
+    ldr.importer.col_ra.selected = '---'
+    ldr.importer.col_dec.selected = '---'
+    ldr.importer.col_x.selected = '---'
+    ldr.importer.col_y.selected = '---'
     # now with no coordinate column pair selected, import should be disabled
     assert ldr.importer._obj.import_disabled is True
 
     # when RA is selected but Dec is not, import should be disabled
-    ldr.importer._obj.col_ra_selected = 'RA'
+    ldr.importer.col_ra.selected = 'RA'
     assert ldr.importer._obj.import_disabled is True
     # and then when Dec is selected too, import should be enabled
-    ldr.importer._obj.col_dec_selected = 'Dec'
+    ldr.importer.col_dec.selected = 'Dec'
     assert ldr.importer._obj.import_disabled is False
 
     # reset and test the same logic for X/Y
-    ldr.importer._obj.col_ra_selected = '---'
-    ldr.importer._obj.col_dec_selected = '---'
-    ldr.importer._obj.col_x_selected = 'X'
-    ldr.importer._obj.col_y_selected = '---'
+    ldr.importer.col_ra.selected = '---'
+    ldr.importer.col_dec.selected = '---'
+    ldr.importer.col_x.selected = 'X'
+    ldr.importer.col_y.selected = '---'
     # now with no coordinate column pair selected, import should be disabled
     assert ldr.importer._obj.import_disabled is True
     # when Y is selected too, import should be enabled
-    ldr.importer._obj.col_y_selected = 'Y'
+    ldr.importer.col_y.selected = 'Y'
     assert ldr.importer._obj.import_disabled is False
 
 
