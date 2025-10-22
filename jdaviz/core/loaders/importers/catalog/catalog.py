@@ -107,18 +107,25 @@ class CatalogImporter(BaseImporterToDataCollection):
                 idx = np.where(col_is_sc)[0][0]
 
         if idx is None:
-            all_column_names = np.array([x.lower() for x in colnames])
+            # remove spaces, underscores, hyphens and make lowercase for matching
+            all_column_names = np.array([x.lower().replace(' ', '').replace('_', '').replace('-', '') for x in colnames])  # noqa
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
             if col == 'ra':
-                col_possibilities = ['right ascension', 'ra', 'ra_deg', 'radeg',
-                                     'radegrees', 'right ascension (degrees)',
-                                     'ra_obj', 'raj2000', 'ra2000']
+                col_possibilities = ['rightascension', 'ra', 'radeg',
+                                     'radegrees', 'rightascension(degrees)',
+                                     'rightascensiondeg', 'rightascension(deg)'
+                                     'rightascensiondegrees', 'sourcera',
+                                     'rasource' 'raobj', 'objra' 'raj2000',
+                                     'ra2000']
                 idx = get_idx(all_column_names, col_possibilities, None)
             elif col == 'dec':
-                col_possibilities = ['declination', 'dec', 'dec_deg', 'decdeg',
-                                     'decdegrees', 'declination (degrees)',
-                                     'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
+                col_possibilities = ['declination', 'dec', 'decdeg',
+                                     'decdegrees', 'dec(degrees)',
+                                     'declinationdeg', 'declination(deg)'
+                                     'declinationdegrees', 'sourcedec',
+                                     'decsource' 'decobj', 'objdec' 'decj2000',
+                                     'dec2000']
                 idx = get_idx(all_column_names, col_possibilities, None)
             elif col == 'x':
                 col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
