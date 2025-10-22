@@ -389,13 +389,6 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         Return a `~regions.PolygonSkyRegion` representing the perimeter of the
         viewer.
 
-        Parameters
-        ----------
-        center : bool, optional
-            If `False` (default), return a region where the vertices are the
-            the outer corners of the corner pixels; otherwise the vertices will
-            be the corner pixel centers.
-
         Returns
         -------
         `~regions.PolygonSkyRegion`
