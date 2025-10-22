@@ -48,6 +48,9 @@
         <j-tooltip tooltipcontent="rename" v-if="api_hint_rename">
           <v-icon style="cursor: pointer" @click="() => {rename_new_label = selected; rename_mode = true}">mdi-pencil</v-icon>
         </j-tooltip>
+        <j-tooltip tooltipcontent="delete">
+          <v-icon style="cursor: pointer" @click="{deleteSubset()}">mdi-trash-can</v-icon>
+        </j-tooltip>
       </template>
       <template v-slot:prepend-item v-if="multiselect">
         <v-list-item
@@ -141,6 +144,9 @@ module.exports = {
     changeCancel() {
       this.rename_new_label = ''
       this.rename_mode = false
+    },
+    deleteSubset() {
+      this.$emit('delete-subset', {'subset_label': this.selected})
     }
   }
 };
