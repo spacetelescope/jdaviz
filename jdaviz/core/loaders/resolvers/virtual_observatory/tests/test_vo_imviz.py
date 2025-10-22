@@ -1,6 +1,11 @@
 from astropy.io import fits
+from io import BytesIO
 import numpy as np
 import pytest
+import warnings
+
+from pyvo.io.vosi.endpoint import parse_capabilities
+from pyvo.utils.xml.exceptions import UnknownElementWarning
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
@@ -126,6 +131,83 @@ def test_link_type_autocoord(imviz_helper):
     np.testing.assert_allclose(float(dec_str), -9.905948925234416, atol=30)
 
 
+class TestVOXMLInjectionWarning:
+    """
+    Test class for VO XML Injection warning scenarios.
+
+    This class contains tests that demonstrate the behavior of
+    UnknownElementWarning when parsing XML with non-standard elements.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        """
+        Setup method to initialize common XML data for tests.
+        """
+        # XML with non-standard <limits> element
+        self.xml_with_limits = b"""<?xml version="1.0" encoding="UTF-8"?>
+            <capabilities xmlns="http://www.ivoa.net/xml/VOSICapabilities/v1.0"
+                          xmlns:vr="http://www.ivoa.net/xml/VOResource/v1.0"
+                          xmlns:tr="http://www.ivoa.net/xml/TAPRegExt/v1.0"
+                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <capability standardID="ivo://ivoa.net/std/TAP" xsi:type="tr:TableAccess">
+                <interface xsi:type="vr:WebService" role="std">
+                  <accessURL use="base">http://example.com/tap</accessURL>
+                </interface>
+                <language>
+                  <name>ADQL</name>
+                  <version ivo-id="ivo://ivoa.net/std/ADQL#v2.0">2.0</version>
+                </language>
+                <outputFormat>
+                  <mime>application/x-votable+xml</mime>
+                </outputFormat>
+                <limits>
+                  <default>
+                    <executionDuration>3600</executionDuration>
+                    <outputLimit unit="row">10000</outputLimit>
+                  </default>
+                </limits>
+              </capability>
+            </capabilities>"""
+
+    def test_direct_xml_parsing_triggers_warning(self):
+        """Parse XML with <limits> and check the warning."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            result = parse_capabilities(BytesIO(self.xml_with_limits))
+
+            # Verify the warning was triggered
+            limits_warnings = [
+                warning for warning in w
+                if issubclass(warning.category, UnknownElementWarning)
+                and 'limits' in str(warning.message).lower()
+            ]
+
+            # Assert we got the warning
+            assert len(limits_warnings) == 1
+            assert limits_warnings[0].category == UnknownElementWarning
+            assert "Unknown element limits" in str(limits_warnings[0].message)
+
+            # Assert parsing still succeeded
+            assert len(result) > 0
+
+    @pytest.mark.filterwarnings(
+        "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
+    )
+    def test_xml_parsing_with_filter_passes(self):
+        """
+        Parse XML with <limits> WITH the warning filter decorator.
+
+        This test should pass because the decorator filters the warning
+        UnknownElementWarning, just like it sometimes does in test_coverage_toggle.
+        """
+        # This should NOT fail because the decorator filters the warning
+        result = parse_capabilities(BytesIO(self.xml_with_limits))
+
+        # Verify parsing succeeded and we got a result
+        assert len(result) > 0
+
+
 @pytest.mark.remote_data
 class TestVOImvizRemote:
 
@@ -179,13 +261,15 @@ class TestVOImvizRemote:
         vo_ldr.resource_filter_coverage = False
         assert len(vo_ldr.resource.choices) > 0
 
-    @pytest.mark.skip
+    @pytest.mark.filterwarnings(
+        "ignore::pyvo.utils.xml.exceptions.UnknownElementWarning"
+    )
     def test_coverage_toggle(self, imviz_helper):
         """
         Test that disabling the coverage toggle returns more available services
 
         NOTE: This does assume there exists at least one survey that does NOT report coverage
-        within a 1 degree circle around the above-defined source position. Otherwise, returned
+        within a 1-degree circle around the above-defined source position. Otherwise, returned
         resource lists will be identical.
         """
         # Set Common Args
@@ -193,14 +277,18 @@ class TestVOImvizRemote:
 
         # Retrieve registry options with filtering on
         vo_ldr.resource_filter_coverage = True
-        assert vo_ldr.resources_loading is False
+        assert vo_ldr._obj.resources_loading is False
         filtered_resources = vo_ldr.resource.choices
         assert len(filtered_resources) > 0
 
         # Retrieve registry options with filtering off
         vo_ldr.resource_filter_coverage = False
-        assert vo_ldr.resources_loading is False
+        assert vo_ldr._obj.resources_loading is False
         nonfiltered_resources = vo_ldr.resource.choices
+        # Even if the warning is triggered, this line should still pass
+        # because the execution should still continue. If it doesn't,
+        # then we know the warning solution did not work.
+        assert len(nonfiltered_resources) > 0
 
         # Nonfiltered resources should be more than filtered resources
         assert len(nonfiltered_resources) > len(filtered_resources)
@@ -243,10 +331,8 @@ class TestVOImvizRemote:
             for d in imviz_helper.plugins['Logger'].history
         )
 
-    @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
     def test_HSTM51_data_url(self, imviz_helper):
-        # Set Common Args
         vo_ldr = self._init_vo_ldr_M51(imviz_helper)
 
         # Select HST.M51 survey
