@@ -84,6 +84,49 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     assert_quantity_allclose(qtab['Y'], catalog_obj['Y'])
 
 
+def test_import_enabled_disabled(imviz_helper):
+    """
+    Verify that when no coordinate column pair (RA/Dec or X/Y) is selected,
+    importing is disabled, when at least one coordinate column pair is selected
+    importing is enabled, and when RA is selected but Dec is not (and vice versa,
+    along with the same logic for X/Y) importing is disabled.
+    """
+
+    imviz_helper.app.state.catalogs_in_dc = True
+
+    catalog_obj = _make_catalog_xy_radec(with_units=True)
+
+    loaders = imviz_helper.loaders
+    ldr = loaders['object']
+    ldr.object = catalog_obj
+
+    ldr.format = 'Catalog'
+    ldr.importer._obj.col_ra_selected = '---'
+    ldr.importer._obj.col_dec_selected = '---'
+    ldr.importer._obj.col_x_selected = '---'
+    ldr.importer._obj.col_y_selected = '---'
+    # now with no coordinate column pair selected, import should be disabled
+    assert ldr.importer._obj.import_disabled is True
+
+    # when RA is selected but Dec is not, import should be disabled
+    ldr.importer._obj.col_ra_selected = 'RA'
+    assert ldr.importer._obj.import_disabled is True
+    # and then when Dec is selected too, import should be enabled
+    ldr.importer._obj.col_dec_selected = 'Dec'
+    assert ldr.importer._obj.import_disabled is False
+
+    # reset and test the same logic for X/Y
+    ldr.importer._obj.col_ra_selected = '---'
+    ldr.importer._obj.col_dec_selected = '---'
+    ldr.importer._obj.col_x_selected = 'X'
+    ldr.importer._obj.col_y_selected = '---'
+    # now with no coordinate column pair selected, import should be disabled
+    assert ldr.importer._obj.import_disabled is True
+    # when Y is selected too, import should be enabled
+    ldr.importer._obj.col_y_selected = 'Y'
+    assert ldr.importer._obj.import_disabled is False
+
+
 @pytest.mark.parametrize("from_file", [True, False])
 @pytest.mark.parametrize("with_units", [True, False])
 def test_load_catalog(imviz_helper, tmp_path, from_file, with_units):

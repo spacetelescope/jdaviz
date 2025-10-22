@@ -135,7 +135,8 @@ class CatalogImporter(BaseImporterToDataCollection):
         # the default selection.
         if idx is None:
             return ['---'] + colnames
-        return colnames if idx == 0 else (colnames[idx:] + colnames[:idx]) + ['---']
+        return_cols = colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
+        return return_cols + ['---']
 
     def _valid_coord_units(self, coord):
         """Valid choices for Ra, Dec units."""
