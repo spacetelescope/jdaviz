@@ -402,13 +402,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             Region with vertices representing the corners of the current field
             of view in the viewport.
         """
-        # get top layer's WCS:
-        for layer_artist in self.layers:
-            if layer_artist.layer.label == self.top_visible_data_label:
-                wcs = layer_artist.layer.coords
-                break
-
-        # in pixel coords on top layer:
+        wcs = self.state.reference_data.coords
         x_min, x_max, y_min, y_max = self.get_limits()
 
         # coordinates of corners, going clockwise:
