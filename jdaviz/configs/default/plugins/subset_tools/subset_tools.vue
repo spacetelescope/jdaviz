@@ -44,6 +44,7 @@
           :multiselect="multiselect"
           :show_if_single_entry="true"
           @rename-subset="rename_subset"
+          @delete-subset="delete_subset"
           label="Subset"
           api_hint="plg.subset ="
           api_hint_rename="plg.rename_subset"
@@ -51,7 +52,6 @@
           hint="Select subset to edit."
         />
       </v-col>
-
       <v-col justify="center" cols=2>
         <j-tooltip tipid='g-subset-mode'>
           <g-subset-mode></g-subset-mode>
