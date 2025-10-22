@@ -106,7 +106,8 @@ Cubeviz
 
 Imviz
 ^^^^^
-- Add sky centroid column to Catalog Search table, so the exported table can be loaded into the app. [#3841]
+- Adds ability to use Ra/Dec if there is no `sky_centroid` column in a catalog loaded from file
+  for the Catalog Search plugin, so exported catalog tables can be loaded into the app. [#3841]
 
 Mosviz
 ^^^^^^
