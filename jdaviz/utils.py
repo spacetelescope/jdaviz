@@ -835,7 +835,10 @@ def wcs_is_spectral(wcs):
         return False
     # NOTE: this may need further generalization for the GWCS but non-specutils case
     # or for the spectral cube case
-    return isinstance(wcs, SpectralGWCS) or getattr(wcs, 'has_spectral', False)
+    has_spectral_type = [ctype for ctype in wcs.world_axis_physical_types if
+                         ctype is not None and ctype[0:3] == 'em.']
+    return (isinstance(wcs, SpectralGWCS) or getattr(wcs, 'has_spectral', False) or
+            len(has_spectral_type))
 
 
 def get_top_layer_index(viewer):
