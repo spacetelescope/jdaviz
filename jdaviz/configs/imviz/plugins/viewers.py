@@ -1,8 +1,9 @@
 import numpy as np
 
 import astropy.units as u
-from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
+from astropy.wcs.utils import pixel_to_pixel
+from regions import PolygonSkyRegion
 from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
@@ -382,3 +383,40 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
         if data.coords is not None:
             return data.coords.pixel_to_world(x_cen, y_cen)
+
+    def get_viewport_region(self):
+        """
+        Return a `~regions.PolygonSkyRegion` representing the perimeter of the
+        viewer.
+
+        Parameters
+        ----------
+        center : bool, optional
+            If `False` (default), return a region where the vertices are the
+            the outer corners of the corner pixels; otherwise the vertices will
+            be the corner pixel centers.
+
+        Returns
+        -------
+        `~regions.PolygonSkyRegion`
+            Region with vertices representing the corners of the current field
+            of view in the viewport.
+        """
+        # get top layer's WCS:
+        for layer_artist in self.layers:
+            if layer_artist.layer.label == self.top_visible_data_label:
+                wcs = layer_artist.layer.coords
+                break
+
+        # in pixel coords on top layer:
+        x_min, x_max, y_min, y_max = self.get_limits()
+
+        # coordinates of corners, going clockwise:
+        corners = [
+            [x_min, x_min, x_max, x_max],
+            [y_min, y_max, y_max, y_min]
+        ]
+
+        # convert to world, make a polygon sky region:
+        viewer_corners = wcs.pixel_to_world(*corners)
+        return PolygonSkyRegion(viewer_corners)
