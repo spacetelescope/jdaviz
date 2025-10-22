@@ -800,9 +800,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                                    ComponentLink([ref_dec], cat_dec)]
                     continue
             elif align_by == 'pixels':
-                print('here comp_labels:', comp_labels)
                 if 'X' in comp_labels and 'Y' in comp_labels:
-                    print('creating pixel links')
                     # Image components should always be called 'Pixel Axis 1 [x]'
                     # and 'Pixel Axis 0 [y]' If an error ever arises from trying
                     # to access these directly, generalize it, but this should be safe.
