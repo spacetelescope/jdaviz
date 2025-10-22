@@ -763,8 +763,6 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                 refdata = app.data_collection[iref]
             else:   # pragma: no cover
                 iref = app.data_collection.index(refdata)
-    print('refdata label:', refdata.label)
-    print('refdata components:', refdata.component_ids())
 
     # With reference data changed, if needed, now we relink as needed.
 
