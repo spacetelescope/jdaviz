@@ -4,6 +4,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.io import fits
+from astropy.nddata import NDData
 import astropy.units as u
 import numpy as np
 import pytest
@@ -129,7 +130,7 @@ def test_import_enabled_disabled(imviz_helper):
 
 @pytest.mark.parametrize("from_file", [True, False])
 @pytest.mark.parametrize("with_units", [True, False])
-def test_load_catalog(imviz_helper, tmp_path, from_file, with_units):
+def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_units):
     """
     Verify the basic functionality loading catalogs into the data collection.
     Test cases cover both in-memory Astropy tables and ECSV files, and catalogs
@@ -147,18 +148,24 @@ def test_load_catalog(imviz_helper, tmp_path, from_file, with_units):
     else:
         catalog = catalog_obj
 
+    # load image and align by WCS so loading the catalog will run through the
+    # linking code to test it
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
     # load catalog
     imviz_helper.load(catalog)
 
     # ensure that it is in the data collection with the correct label "Catalog"
     dc = imviz_helper.app.data_collection
-    assert len(dc) == 1
+    assert len(dc) == 3  # image, orientation layer, and catalog
     assert 'Catalog' in imviz_helper.app.data_collection.labels
 
     # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
     # in the data collection for consistency, and that the table in the data
     # collection always has units
-    qtab = imviz_helper.app.data_collection[0].get_object(QTable)
+    qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
     assert 'Right Ascension' in qtab.colnames
     assert 'Declination' in qtab.colnames
     # make sure only ra and dec loaded, since we didn't specify more columns
@@ -183,19 +190,19 @@ def test_load_catalog(imviz_helper, tmp_path, from_file, with_units):
 
     # load it again, make sure label incremented by 1
     imviz_helper.load(catalog)
-    assert len(dc) == 2
+    assert len(dc) == 4  # image, orientation layer, and 2 catalogs
     assert 'Catalog (1)' in imviz_helper.app.data_collection.labels
 
     # load with custom label and check label
     imviz_helper.load(catalog, data_label='my_catalog')
-    assert len(dc) == 3
+    assert len(dc) == 5  # image, orientation layer, and 3 catalogs
     assert 'my_catalog' in imviz_helper.app.data_collection.labels
 
     # test other loader API options. switch RA and Dec col just to test
     # non-default column selection
     imviz_helper.load(catalog, data_label='with_flux', col_other='flux',
                       col_ra='Dec', col_dec='RA')
-    assert len(dc) == 4
+    assert len(dc) == 6  # image, orientation layer, and 4 catalogs
     assert 'flux' in dc['with_flux'].get_object(QTable).colnames
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
     assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['Dec'] * un)
