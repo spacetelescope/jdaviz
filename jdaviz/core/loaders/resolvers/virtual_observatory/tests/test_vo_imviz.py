@@ -1,11 +1,11 @@
 from astropy.io import fits
+from io import BytesIO
 import numpy as np
 import pytest
 import warnings
-from io import BytesIO
 
-from pyvo.utils.xml.exceptions import UnknownElementWarning
 from pyvo.io.vosi.endpoint import parse_capabilities
+from pyvo.utils.xml.exceptions import UnknownElementWarning
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
