@@ -44,14 +44,23 @@ def _make_catalog_xy_radec(with_units=True):
                    names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
 
 
-def test_load_catalog_xy_and_radec(imviz_helper):
+@pytest.mark.parametrize("from_file", [True, False])
+@pytest.mark.parametrize("with_units", [True, False])
+def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units):
 
     imviz_helper.app.state.catalogs_in_dc = True
 
     catalog_obj = _make_catalog_xy_radec(with_units=True)
 
+    if from_file:
+        fn = os.path.join(tmp_path, "catalog.ecsv")
+        catalog_obj.write(fn)
+        catalog = fn
+    else:
+        catalog = catalog_obj
+
     # load catalog
-    imviz_helper.load(catalog_obj)
+    imviz_helper.load(catalog)
 
     dc = imviz_helper.app.data_collection
     assert len(dc) == 1
