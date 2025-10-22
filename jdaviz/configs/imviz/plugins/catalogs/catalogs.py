@@ -349,8 +349,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
 
                 if ra_col is None or dec_col is None:
                     raise ValueError(
-                        "Catalog must contain either a 'sky_centroid' column or RA/Dec columns "
-                        "(e.g. 'Right Ascension (degrees)' and 'Declination (degrees)', or 'ra'/'dec')."
+                        "Catalog must contain either a 'sky_centroid' column or RA/Dec columns."
                     )
 
                 skycoords = SkyCoord(
@@ -395,7 +394,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
                     ra = row['sky_centroid'].ra.deg
                     dec = row['sky_centroid'].dec.deg
                 else:
-                    # fallback names that match your export format
                     if "Right Ascension (degrees)" in tbl.colnames:
                         ra = row["Right Ascension (degrees)"]
                     elif "ra" in tbl.colnames or "RA" in tbl.colnames:
