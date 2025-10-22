@@ -2,11 +2,17 @@
 <v-container>
 
   <j-plugin-section-header>Select coordinate columns</j-plugin-section-header>
+
+  <div style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
+  Select RA/Dec and/or X/Y pair to enable import. Pixel positions
+  are w.r.t the image viewer reference data.
+  </div>
+
   <plugin-select
     :items="col_ra_items.map(i => i.label)"
     :selected.sync="col_ra_selected"
     label="RA"
-    hint="Select column corresponding to RA coordinate."
+    hint="Column corresponding to RA coordinate."
     api_hint="ldr.importer.col_ra ="
     :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
@@ -15,7 +21,7 @@
     :items="col_ra_unit_items.map(i => i.label)"
     :selected.sync="col_ra_unit_selected"
     label="RA Unit"
-    hint="Select unit for RA coordinate."
+    hint="Unit for RA coordinate."
     api_hint="ldr.importer.col_ra_unit ="
     :api_hints_enabled="api_hints_enabled"
  	></plugin-select>
@@ -24,7 +30,7 @@
     :items="col_dec_items.map(i => i.label)"
     :selected.sync="col_dec_selected"
     label="Dec"
-    hint="Select column corresponding to Dec. Coordinate"
+    hint="Column corresponding to Dec. coordinate."
     api_hint="ldr.importer.col_dec ="
     :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
@@ -33,7 +39,7 @@
     :items="col_dec_unit_items.map(i => i.label)"
     :selected.sync="col_dec_unit_selected"
     label="Dec Unit"
-    hint="Select unit for Dec. coordinate"
+    hint="Unit for Dec. coordinate"
     api_hint="ldr.importer.col_dec_unit ="
     :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
@@ -42,7 +48,7 @@
     :items="col_x_items.map(i => i.label)"
     :selected.sync="col_x_selected"
     label="X Column"
-    hint="Select column corresponding to X coordinate"
+    hint="Column corresponding to X coordinate."
     api_hint="ldr.importer.col_x ="
     :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
@@ -51,7 +57,7 @@
     :items="col_y_items.map(i => i.label)"
     :selected.sync="col_y_selected"
     label="Y Column"
-    hint="Select column corresponding to Y coordinate"
+    hint="Column corresponding to Y coordinate."
     api_hint="ldr.importer.col_y ="
     :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
@@ -62,7 +68,7 @@
     :selected.sync="col_other_selected"
     :multiselect="col_other_multiselect"
     label="Other Columns"
-    hint="Select other columns to load into the app."
+    hint="Select additional columns to load."
     api_hint="ldr.importer.col_other ="
     :api_hints_enabled="api_hints_enabled"
   />
