@@ -3,8 +3,8 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
+import logging
 import os
-import sys
 import warnings
 
 import numpy as np
@@ -40,15 +40,16 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 def pytest_runtest_setup(item):
     """
-    Print the test node id right before setup runs.
+    Log the test node id right before setup runs.
 
     Parameters
     ----------
-    item : _pytest.nodes.Item
-        The test item pytest will run.
+    item :
+        The test item pyt
     """
-    print(f'RUNNING: {item.nodeid}', flush=True)
-    sys.stdout.flush()
+
+    logger = logging.getLogger('pytest-xdist-runner')
+    logger.info(f'RUNNING: {item.nodeid}')
 
 
 @pytest.fixture
