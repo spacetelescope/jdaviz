@@ -61,6 +61,9 @@ def pytest_runtest_setup(item):
     """
     Snapshot RSS and tracemalloc before each test begins.
     """
+    # Set this to always run so we can log tests even if memory profiling is off
+    logger = logging.getLogger('pytest-xdist-runner')
+    logger.info(f'RUNNING: {item.nodeid}')
     if not _enabled():
         return
     proc = psutil.Process()
@@ -71,9 +74,6 @@ def pytest_runtest_setup(item):
     item._mem_time_start = start_t
     print(f'RUNNING_MEM: {item.nodeid} start_rss={rss/1024**2:.2f}MiB',
           flush=True)
-
-    logger = logging.getLogger('pytest-xdist-runner')
-    logger.info(f'RUNNING: {item.nodeid}')
 
 
 def pytest_runtest_teardown(item):
