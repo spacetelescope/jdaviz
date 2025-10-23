@@ -60,6 +60,7 @@ def test_collapse_exception_handling(cubeviz_helper, spectral_cube_wcs):
     # And check again!
     assert coll.results_label_overwrite is False
 
+
 @pytest.mark.skip
 def test_collapsed_to_extract_plugin(cubeviz_helper, spectral_cube_wcs, tmp_path):
 
