@@ -43,6 +43,7 @@ class Imviz(ImageConfigHelper):
 
         # Temporary during deconfig process
         self.app.state.dev_loaders = True
+        self.sidecar = kwargs.get("sidecar", None)
 
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
