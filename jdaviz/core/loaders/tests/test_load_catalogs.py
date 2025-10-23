@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 
-def _make_catalog(with_units=u.deg, as_skycoord=False):
+def _make_catalog(with_units=True, as_skycoord=False):
     """
     Create a sample catalog table with optional units and SkyCoord columns
     for testing purposes.
@@ -43,6 +43,61 @@ def _make_catalog_xy_radec(with_units=True):
 
     return tab_cls(data=[ra, dec, x, y, obj_id, flux],
                    names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
+
+
+def _make_catalog_string_coord_columns():
+    # complelete nonsense coordinates, just care about parsing the units
+    ra = ['5° 55′ 55″', '5° 55′ 55″', '5° 55′ 55″']
+    dec = ['4° 44′ 44″', '4° 44′ 44″', '4° 44′ 44″']
+    x = ['1', '2', '3']
+    y = ['4', '5', '6']
+    obj_id = ['source1', 'souce2', 'source3']
+    flux = [10, 20, 30] * u.Jy
+
+    return QTable(data=[ra, dec, x, y, obj_id, flux],
+                  names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
+
+
+def test_load_catalog_with_string_coord_cols(imviz_helper):
+    """
+    Test loading a catalog with string RA/Dec columns (that can be converted
+    into units, e.g string representation of hourangle units) into the
+    Imviz helper."""
+
+    imviz_helper.app.state.catalogs_in_dc = True
+
+    catalog_obj = _make_catalog_string_coord_columns()
+
+    # load catalog
+    imviz_helper.load(catalog_obj)
+
+    dc = imviz_helper.app.data_collection
+    assert len(dc) == 1
+    assert 'Catalog' in imviz_helper.app.data_collection.labels
+
+    # make coordinate columns were renamed to Right Ascension and Declination,
+    # X and Y in the data collection for consistency, and that RA / Dec always
+    # has units
+    qtab = dc[0].get_object(QTable)
+    assert 'Right Ascension' in qtab.colnames
+    assert 'Declination' in qtab.colnames
+    assert 'X' in qtab.colnames
+    assert 'Y' in qtab.colnames
+    # make sure only ra and dec loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 4
+    # and that it has the correct contents, and always has units assigned
+    # when data is loaded from a unitless table, units should always be assigned
+    # to the catalog in the data collection based on selections in the loader
+
+    # go through SkyCoord to parse weird string format into deg units for comparison
+    sc = SkyCoord(ra=catalog_obj['RA'], dec=catalog_obj['Dec'])
+
+    assert_quantity_allclose(qtab['Right Ascension'], sc.ra.deg * u.deg)
+    assert_quantity_allclose(qtab['Declination'], sc.dec.deg * u.deg)
+
+    # cast data collection X/Y back to strings for comparison
+    assert np.all(qtab['X'].astype(str) == catalog_obj['X'])
+    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'])
 
 
 @pytest.mark.parametrize("from_file", [True, False])
