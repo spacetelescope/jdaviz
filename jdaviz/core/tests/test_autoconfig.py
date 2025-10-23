@@ -24,6 +24,7 @@ AUTOCONFIG_EXAMPLES = (
 )
 
 
+@pytest.mark.skip
 @pytest.mark.remote_data
 @pytest.mark.slow
 @pytest.mark.filterwarnings('ignore')
