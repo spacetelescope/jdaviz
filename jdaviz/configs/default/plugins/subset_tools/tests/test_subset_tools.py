@@ -585,6 +585,7 @@ def test_delete_subset(cubeviz_helper, spectrum1d_cube):
     assert plg.subset.choices == ['Create New', 'Subset 2']
     assert len(cubeviz_helper.app.data_collection) == 2
 
+
 def test_update_subset(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
