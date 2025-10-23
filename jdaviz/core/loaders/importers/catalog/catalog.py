@@ -185,6 +185,7 @@ class CatalogImporter(BaseImporterToDataCollection):
         if msg['name'] in ('col_ra_selected', 'col_dec_selected'):
 
             axis = ra if msg['name'] == 'col_ra_selected' else dec
+
             if axis == '---':
                 # no selection, assume 'has units' to disable unit selection dropdown
                 if msg['name'] == 'col_ra_selected':
@@ -277,11 +278,11 @@ class CatalogImporter(BaseImporterToDataCollection):
         output_table = QTable()
 
         if (self.col_ra_selected in table.colnames) and (self.col_dec_selected in table.colnames):  # noqa
-            # handle output construction for RA and Dec coordinate columns, if selected
+            # handle output construction for RA/Dec and/or X/Y coordinate columns.
+            # rename columns so that table in data collection always has
+            # the same column names for consistency when accessing elsewhere
+            # also add and units if they weren't loaded in with units assigned
 
-            # rename RA and Dec columns so that table in data collection always has
-            # the same RA, Dec column names for consistency when accessing elsewhere
-            # also add and units if they weren't loaded in with units assigned (QTable)
             ra = None
             dec = None
             if isinstance(self.input[self.col_ra_selected], SkyCoord):
@@ -289,6 +290,26 @@ class CatalogImporter(BaseImporterToDataCollection):
             if isinstance(self.input[self.col_dec_selected], SkyCoord):
                 dec = self.input[self.col_dec_selected].dec
 
+            # if the columns are strings, try to parse them as coordinates.
+            # To do this, we try loading it through SkyCoord, which can determine
+            # if the string format is recognizable as Lon/Lat coordinates.
+            if isinstance(self.input[self.col_ra_selected][0], str):
+                try:
+                    sc = SkyCoord(self.input[self.col_ra_selected],
+                                  self.input[self.col_ra_selected])
+                    ra = sc.ra.deg * u.deg
+                except (ValueError, u.UnitTypeError):
+                    raise ValueError("Could not parse RA column as string coordinates.")
+            if isinstance(self.input[self.col_dec_selected][0], str):
+                try:
+                    sc = SkyCoord(self.input[self.col_dec_selected],
+                                  self.input[self.col_dec_selected])
+                    dec = sc.dec.deg * u.deg
+                except (ValueError, u.UnitTypeError):
+                    raise ValueError("Could not parse Dec column as string coordinates.")
+
+            # append units to RA/Dec, if they weren't loaded in with units or
+            # assigned units above when parsing strings as units
             if ra is not None:
                 output_table['Right Ascension'] = ra
             else:
@@ -305,6 +326,17 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
             # handle output construction for X and Y coordinate columns, if selected
+            # if input is a string, try to convert to floats
+            if isinstance(self.input[self.col_x_selected][0], str):
+                try:
+                    output_table['X'] = [float(x) for x in table[self.col_x_selected]]
+                except ValueError:
+                    raise ValueError("Could not parse X column as numeric values.")
+            if isinstance(self.input[self.col_y_selected][0], str):
+                try:
+                    output_table['Y'] = [float(y) for y in table[self.col_y_selected]]
+                except ValueError:
+                    raise ValueError("Could not parse Y column as numeric values.")
 
             # rename X and Y columns so that table in data collection always has
             # the same X, Y column names for consistency when accessing elsewhere

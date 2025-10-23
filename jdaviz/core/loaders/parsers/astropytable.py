@@ -2,6 +2,7 @@ from functools import cached_property
 from astropy.io import fits
 from astropy.io.fits import VerifyError
 from astropy.table import Table, QTable
+import numpy as np
 
 from jdaviz.core.loaders.parsers import BaseParser
 from jdaviz.core.registries import loader_parser_registry
@@ -37,6 +38,10 @@ class AstropyTableParser(BaseParser):
         # eventually we may want to accept BinTableHDU/TableHDU
         # inside fits so this logic should be improved then
         if isinstance(self.input, (fits.ImageHDU, fits.HDUList, fits.PrimaryHDU, fits.CompImageHDU)):  # noqa
+            return False
+        elif isinstance(self.input, np.ndarray):
+            # arrays can be loaded as tables, skip these so images/spectra
+            # aren't mis-identified as catalogs
             return False
         try:
             f = fits.open(self.input)
