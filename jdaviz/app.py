@@ -505,9 +505,9 @@ class Application(VuetifyTemplate, HubListener):
         for data, plugin_inputs in self._iter_live_plugin_results(trigger_data_lbl, trigger_subset):
             # update and overwrite data
             # make a new instance of the plugin to avoid changing any UI settings
-            plg = self._jdaviz_helper.plugins.get(data.meta.get('Plugin'))._obj.new()
+            plg = self._jdaviz_helper.plugins.get(data.meta.get('plugin'))._obj.new()
             if not plg.supports_auto_update:
-                raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa
+                raise NotImplementedError(f"{data.meta.get('plugin')} does not support live-updates")  # noqa
             plg.user_api.from_dict(plugin_inputs)
             # keep auto-updating, even if the option is hidden from the user API
             # (can remove this line if auto_update is exposed to the user API in the future)
@@ -845,8 +845,8 @@ class Application(VuetifyTemplate, HubListener):
 
             dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
-        elif (linked_data.meta.get('Plugin', None) == '3D Spectral Extraction' or
-                (linked_data.meta.get('Plugin', None) == ('Gaussian Smooth') and
+        elif (linked_data.meta.get('plugin', None) == '3D Spectral Extraction' or
+                (linked_data.meta.get('plugin', None) == ('Gaussian Smooth') and
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                  ref_data.ndim < 3)
               ):
@@ -893,7 +893,7 @@ class Application(VuetifyTemplate, HubListener):
         for ind, pixel_coord in enumerate(pc_ref):
             ref_index = ind
             if (len_linked_pixel == 2 and
-                    (linked_data.meta.get("Plugin", None) in
+                    (linked_data.meta.get("plugin", None) in
                      ['Moment Maps', 'Collapse', 'Sonify Data'])):
 
                 if spectral_axis_index in (2, -1):
@@ -2799,7 +2799,7 @@ class Application(VuetifyTemplate, HubListener):
             Whether to expose this metadata entry from the glue data object to the vue-frontend
             via the data-item, based on the dictionary key.
             """
-            if key in ('Plugin', 'mosviz_row'):
+            if key in ('plugin', 'mosviz_row'):
                 # mosviz_row is used to hide entries from the spectrum1d/2d viewers if they
                 # do not correspond to the currently selected row
                 return True

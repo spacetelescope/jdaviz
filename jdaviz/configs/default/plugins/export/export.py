@@ -395,7 +395,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def _set_dataset_not_supported_msg(self, msg=None):
         if self.dataset.selected_obj is not None:
-            if self.dataset.selected_obj.meta.get("Plugin", None) is None:
+            if self.dataset.selected_obj.meta.get("plugin", None) is None:
                 # NOTE: should not be a valid choice due to dataset filters, but we'll include
                 # another check here.
                 self.data_invalid_msg = "Data export is only available for plugin generated data."
