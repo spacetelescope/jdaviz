@@ -4,6 +4,7 @@
 # packagename.test
 
 import os
+import sys
 import warnings
 
 import numpy as np
@@ -35,6 +36,19 @@ if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
 
 SPECTRUM_SIZE = 10  # length of spectrum
+
+
+def pytest_runtest_setup(item):
+    """
+    Print the test node id right before setup runs.
+
+    Parameters
+    ----------
+    item : _pytest.nodes.Item
+        The test item pytest will run.
+    """
+    print(f'RUNNING: {item.nodeid}', flush=True)
+    sys.stdout.flush()
 
 
 @pytest.fixture
