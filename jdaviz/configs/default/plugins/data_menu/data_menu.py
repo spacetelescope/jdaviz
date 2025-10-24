@@ -252,8 +252,16 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             for layer in self._viewer.layers:
                 if getattr(layer.layer, 'coords', None) is None:
                     if layer.visible:
-                        hiding_due_to_pixel_link.append(layer.layer.label)
-                        layer.visible = False
+                        data = layer.layer.data
+                        comp_labels = [str(x) for x in data.component_ids()]
+                        # if layer is a catalog that has pixel coordinates, we
+                        # don't need to hide the layer
+                        if data.meta.get('_importer') == 'CatalogImporter' and \
+                           'X' in comp_labels and 'Y' in comp_labels:
+                            continue
+                        else:
+                            hiding_due_to_pixel_link.append(layer.layer.label)
+                            layer.visible = False
             if len(hiding_due_to_pixel_link):
                 self.hub.broadcast(SnackbarMessage(f"Hiding layers {hiding_due_to_pixel_link} in '{self.viewer_reference}' viewer due to change in align_by to 'Pixel'.",  # noqa
                                                    color='warning', sender=self))
