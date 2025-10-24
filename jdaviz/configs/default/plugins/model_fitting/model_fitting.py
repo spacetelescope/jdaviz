@@ -632,16 +632,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
 
-        # subset-masked spectrum, if aplicable
-        subset_mask = masked_spectrum.mask
-
-        # mask out non-finite values in flux array
-        flux_nan_mask = ~np.isfinite(masked_spectrum.flux)
-
-        if subset_mask is not None:
-            mask = subset_mask | flux_nan_mask
-        else:
-            mask = flux_nan_mask if np.any(flux_nan_mask) else None
+        # subset-masked spectrum, if applicable
+        mask = masked_spectrum.mask
 
         if mask is not None:
             if mask.ndim == 3:
@@ -651,6 +643,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     spectral_mask = mask.all(axis=(1, 2))
             else:
                 spectral_mask = mask
+
             init_x = masked_spectrum.spectral_axis[~spectral_mask]
             orig_flux_shape = masked_spectrum.flux.shape
             init_y = masked_spectrum.flux[~mask]
