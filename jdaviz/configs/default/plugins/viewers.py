@@ -95,7 +95,7 @@ class JdavizViewerMixin(WithCache):
                            'stretch_options', 'stretch',
                            'autocut_options', 'cuts',
                            'marker', 'add_markers', 'remove_markers', 'reset_markers',
-                           'blink_once', 'reset_limits']
+                           'blink_once', 'reset_limits', 'get_viewport_region']
             else:
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
                 # but also shouldn't expose set_limits because of equal aspect ratio concerns
