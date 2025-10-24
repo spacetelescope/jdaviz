@@ -186,7 +186,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset',
-                  'update_subset', 'simplify_subset']
+                  'update_subset', 'simplify_subset',
+                  'delete_subset']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
@@ -1047,6 +1048,20 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
+
+    def delete_subset(self, subset_label):
+        '''
+        Method to remove an existing subset from the app.
+
+        Parameters
+        ----------
+        subset_label : str
+            The label of the subset to be deleted
+        '''
+        self.app.delete_subsets(subset_labels=subset_label)
+
+    def vue_delete_subset(self, msg):
+        self.delete_subset(msg['subset_label'])
 
     def import_region(self, region, edit_subset=None, combination_mode=None, max_num_regions=20,
                       refdata_label=None, return_bad_regions=False, region_format=None,

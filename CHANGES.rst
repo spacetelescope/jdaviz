@@ -22,6 +22,8 @@ New Features
 
 - Added descriptive hints for toggleable model fitter parameters in the Model Fitting plugin. [#3831]
 
+- Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853]
+
 Cubeviz
 ^^^^^^^
 
