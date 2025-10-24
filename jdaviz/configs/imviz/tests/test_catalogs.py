@@ -228,7 +228,11 @@ def test_from_file_parsing(imviz_helper, tmp_path):
     not_valid_table = tmp_path / 'not_valid_table.ecsv'
     qtable.write(not_valid_table, overwrite=True)
     catalogs_plugin.catalog._on_file_path_changed({'new': not_valid_table})
-    assert catalogs_plugin._obj.from_file_message == 'Table does not contain required sky_centroid column'  # noqa
+    assert catalogs_plugin._obj.from_file_message == (
+        "Table does not contain a 'sky_centroid' column or recognizable RA/Dec columns "
+        "(expected e.g. 'Right Ascension (degrees)' and 'Declination (degrees)', "
+        "or 'ra'/'dec')."
+        )
 
 
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
