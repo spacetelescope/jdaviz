@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 import astropy.units as u
@@ -15,7 +17,8 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.utils import (get_wcs_only_layer_labels, data_has_valid_wcs,
-                          layer_is_image_data, get_top_layer_index)
+                          layer_is_image_data, get_top_layer_index,
+                          _try_gwcs_to_fits_sip)
 
 __all__ = ['ImvizImageView']
 
@@ -395,7 +398,20 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             Region with vertices representing the corners of the current field
             of view in the viewport.
         """
-        wcs = self.state.reference_data.coords
+        reference_data = self.state.reference_data
+
+        if not data_has_valid_wcs(reference_data):
+            warnings.warn(
+                f"Data {reference_data.label} does not have "
+                "valid WCS.", UserWarning
+            )
+            return
+
+        # convert GWCS to FITS SIP to prevent viewer limits
+        # becoming nans when outside the bounding box:
+        wcs = _try_gwcs_to_fits_sip(reference_data.coords)
+
+        # in pixel coords on top layer:
         x_min, x_max, y_min, y_max = self.get_limits()
 
         # coordinates of corners, going clockwise:

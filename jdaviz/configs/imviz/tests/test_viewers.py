@@ -9,7 +9,9 @@ from jdaviz.app import Application
 from jdaviz.core.config import get_configuration
 from jdaviz.configs.imviz.helper import Imviz
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
+from jdaviz.configs.imviz.tests.utils import (
+    BaseImviz_WCS_NoWCS, create_example_gwcs
+)
 
 from numpy.testing import assert_allclose
 
@@ -207,7 +209,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
     assert 'my_catalog' not in imviz_helper.app.data_collection.labels
 
 
-def test_get_viewport_region(imviz_helper, image_hdu_wcs):
+def test_get_viewport_region_wcs(imviz_helper, image_hdu_wcs):
     imviz_helper.load(image_hdu_wcs)
     viewer = imviz_helper.viewers['imviz-0']
     region = viewer.get_viewport_region()
@@ -215,6 +217,27 @@ def test_get_viewport_region(imviz_helper, image_hdu_wcs):
     expected_vertices = SkyCoord(
         [337.52124634, 337.52124633, 337.51664042, 337.51664038],
         [-20.83297927, -20.83118685, -20.83118681, -20.83297923],
+        unit=u.deg
+    )
+
+    assert_allclose(
+        region.vertices.separation(expected_vertices).arcsec,
+        0, atol=5
+    )
+
+
+def test_get_viewport_region_gwcs(imviz_helper):
+    shape = (10, 10)
+    data = np.ones(shape)
+    ndd = NDData(data=data, wcs=create_example_gwcs(shape))
+
+    imviz_helper.load(ndd)
+    viewer = imviz_helper.viewers['imviz-0']
+    region = viewer.get_viewport_region()
+
+    expected_vertices = SkyCoord(
+        [197.89244966, 197.89271435, 197.89256153, 197.89229684],
+        [-1.36574339, -1.36559061, -1.36532599, -1.36547877],
         unit=u.deg
     )
 
