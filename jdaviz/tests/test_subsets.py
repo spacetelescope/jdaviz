@@ -933,7 +933,6 @@ def test_delete_subsets_app_api(cubeviz_helper, spectral_cube_wcs):
 class TestRegionsFromSubsets:
     """Tests for obtaining Sky Regions from subsets."""
 
-    @pytest.mark.skip
     def test_get_regions_from_subsets_cubeviz(self, cubeviz_helper, spectral_cube_wcs):
         """ Basic tests for retrieving Sky Regions from spatial subsets in Cubeviz.
         """
