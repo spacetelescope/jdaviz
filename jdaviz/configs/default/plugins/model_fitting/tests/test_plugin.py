@@ -172,7 +172,9 @@ def test_initialize_gaussian_with_cube(cubeviz_helper, spectrum1d_cube_larger):
 def test_fit_cube_no_wcs(cubeviz_helper):
     # This is like when user do something to a cube outside of Jdaviz
     # and then load it back into a new instance of Cubeviz for further analysis.
-    sp = Spectrum(flux=np.ones((7, 8, 9)) * u.nJy, spectral_axis_index=2)  # ny, nx, nz
+    flux = np.ones((7, 8, 9)) * u.nJy
+    flux[0, 0, 0] = np.nan
+    sp = Spectrum(flux=flux, spectral_axis_index=2)  # ny, nx, nz
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
