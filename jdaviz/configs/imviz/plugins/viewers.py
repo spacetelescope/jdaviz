@@ -5,7 +5,7 @@ import numpy as np
 import astropy.units as u
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from astropy.wcs.utils import pixel_to_pixel
-from regions import PolygonSkyRegion
+from regions import PolygonSkyRegion, PolygonPixelRegion, PixCoord
 from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
@@ -387,31 +387,59 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if data.coords is not None:
             return data.coords.pixel_to_world(x_cen, y_cen)
 
-    def get_viewport_region(self):
+    def get_viewport_region(self, sky_or_pixel='sky', data_label=None):
         """
-        Return a `~regions.PolygonSkyRegion` representing the perimeter of the
-        viewer.
+        Return a `~regions.PolygonPixelRegion` or
+        `~regions.PolygonSkyRegion` representing the perimeter
+        of the viewer.
+
+        If more than one instance of the viewer widget is open,
+        the region will be returned with coordinates specific to
+        the last viewport that was in focus.
+
+        Parameters
+        ----------
+        sky_or_pixel : str, {'sky', 'pixel'}
+            Return a `~regions.PolygonSkyRegion` with world coordinates
+            or a `~regions.PolygonPixelRegion` with pixel coordinates.
+            Default is 'sky'.
+
+        data_label : str, optional
+            Return the pixel coordinates for the data layer with this
+            label. Only used when ``sky_or_pixel`` == 'pixel'.
 
         Returns
         -------
-        `~regions.PolygonSkyRegion`
+        `~regions.PolygonPixelRegion` or `~regions.PolygonSkyRegion`
             Region with vertices representing the corners of the current field
             of view in the viewport.
         """
-        reference_data = self.state.reference_data
+        if sky_or_pixel.lower() == 'pixel':
+            if data_label:
+                for layer_artist in self.layers:
+                    data = layer_artist.layer
+                    if data.label == data_label:
+                        break
+                else:
+                    raise ValueError(f"No data found with label {data_label}")
+            else:
+                raise ValueError("`get_viewport_region` requires a data label "
+                                 "when `sky_or_pixel` is 'pixel'")
+        else:
+            data = self.state.reference_data
 
-        if not data_has_valid_wcs(reference_data):
+        if not data_has_valid_wcs(data):
             warnings.warn(
-                f"Data {reference_data.label} does not have "
+                f"Data {data.label} does not have "
                 "valid WCS.", UserWarning
             )
             return
 
         # convert GWCS to FITS SIP to prevent viewer limits
         # becoming nans when outside the bounding box:
-        wcs = _try_gwcs_to_fits_sip(reference_data.coords)
+        wcs = _try_gwcs_to_fits_sip(data.coords)
 
-        # in pixel coords on top layer:
+        # in pixel coords on refdata (sky) or layer with `data_label` (pixel)
         x_min, x_max, y_min, y_max = self.get_limits()
 
         # coordinates of corners, going clockwise:
@@ -419,6 +447,9 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             [x_min, x_min, x_max, x_max],
             [y_min, y_max, y_max, y_min]
         ]
+
+        if sky_or_pixel.lower() == 'pixel':
+            return PolygonPixelRegion(PixCoord(*corners))
 
         # convert to world, make a polygon sky region:
         viewer_corners = wcs.pixel_to_world(*corners)
