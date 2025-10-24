@@ -48,25 +48,28 @@ jobs:
             os: ubuntu-latest
             python: '3.11'
             toxenv: py311-test-alldeps-cov
-            toxposargs: --remote-data --run-slow
+            toxposargs: --remote-data --run-slow -n 1
             allow_failure: false
 
           - name: OS X - Python 3.12
             os: macos-latest
             python: '3.12'
             toxenv: py312-test
+            toxposargs: -n auto
             allow_failure: false
 
           - name: Windows - Python 3.12
             os: windows-latest
             python: '3.12'
             toxenv: py312-test
+            toxposargs: -n auto
             allow_failure: false
 
           - name: Linux - Python 3.13
             os: ubuntu-latest
             python: '3.13'
             toxenv: py313-test
+            toxposargs: -n auto
             allow_failure: false
 
           # This also runs on cron but we want to make sure new changes
@@ -75,13 +78,14 @@ jobs:
             os: ubuntu-latest
             python: '3.13'
             toxenv: py313-test-devdeps
-            toxposargs: --remote-data --run-slow
+            toxposargs: --remote-data --run-slow -n 1
             allow_failure: true
 
           - name: Python 3.11 with stable versions of dependencies and Roman
             os: ubuntu-latest
             python: '3.11'
             toxenv: py311-test-romandeps
+            toxposargs: -n auto
             allow_failure: true
 
     steps:
