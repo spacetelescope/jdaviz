@@ -18,7 +18,8 @@ AUTOCONFIG_EXAMPLES = (
     ("mast:JWST/product/jw01538160001_16101_00004_nrs1_s2d.fits", Specviz2d),
     ("mast:JWST/product/jw02727-o002_t062_nircam_clear-f090w_i2d.fits", Imviz),
     ("mast:JWST/product/jw02732004001_02103_00004_mirifushort_s3d.fits", Cubeviz),
-    ("https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits", Cubeviz)
+    # TODO: Skip for now, too big
+    # ("https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits", Cubeviz)
     # Check that MaNGA cubes go to cubeviz. This file is originally from:
     # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz)
 )
@@ -28,7 +29,7 @@ AUTOCONFIG_EXAMPLES = (
 @pytest.mark.slow
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('uris', AUTOCONFIG_EXAMPLES)
-def test_autoconfig(uris):
+def test_autoconfigs(uris):
     uri = uris[0]
     helper_class = uris[1]
 

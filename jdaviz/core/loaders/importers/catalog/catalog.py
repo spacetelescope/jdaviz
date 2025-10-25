@@ -8,6 +8,7 @@ from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.template_mixin import SelectPluginComponent
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
+from jdaviz.utils import RA_COMPS, DEC_COMPS
 
 __all__ = ['CatalogImporter']
 
@@ -112,21 +113,9 @@ class CatalogImporter(BaseImporterToDataCollection):
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
             if col == 'ra':
-                col_possibilities = ['rightascension', 'ra', 'radeg',
-                                     'radegrees', 'rightascension(degrees)',
-                                     'rightascensiondeg', 'rightascension(deg)'
-                                     'rightascensiondegrees', 'sourcera',
-                                     'rasource' 'raobj', 'objra' 'raj2000',
-                                     'ra2000']
-                idx = get_idx(all_column_names, col_possibilities, None)
+                idx = get_idx(all_column_names, RA_COMPS, None)
             elif col == 'dec':
-                col_possibilities = ['declination', 'dec', 'decdeg',
-                                     'decdegrees', 'dec(degrees)',
-                                     'declinationdeg', 'declination(deg)'
-                                     'declinationdegrees', 'sourcedec',
-                                     'decsource' 'decobj', 'objdec' 'decj2000',
-                                     'dec2000']
-                idx = get_idx(all_column_names, col_possibilities, None)
+                idx = get_idx(all_column_names, DEC_COMPS, None)
             elif col == 'x':
                 col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
                                      "xpixel", "xpix", "ximage", "ximg"

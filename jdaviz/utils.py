@@ -43,8 +43,9 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index',
            'get_reference_image_data', 'standardize_roman_metadata',
-           'wildcard_match', 'create_data_hash',
-           'cmap_samples', 'glue_colormaps', 'att_to_componentid']
+           'wildcard_match', 'cmap_samples', 'glue_colormaps',
+           'att_to_componentid', 'create_data_hash',
+           'RA_COMPS', 'DEC_COMPS', 'SPECTRAL_AXIS_COMP_LABELS']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -53,11 +54,19 @@ STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
 PRIHDR_KEY = '_primary_header'
 COMMENTCARD_KEY = '_fits_comment_card'
 
-CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz', 'specviz', 'specviz2d', 'imviz')
+CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz',
+                        'specviz', 'specviz2d',
+                        'imviz', 'cubeviz')
 SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
+RA_COMPS = ['right ascension', 'ra', 'ra_deg', 'radeg',
+            'radegrees', 'right ascension (degrees)',
+            'ra_obj', 'raj2000', 'ra2000']
+DEC_COMPS = ['declination', 'dec', 'dec_deg', 'decdeg',
+             'decdegrees', 'declination (degrees)',
+             'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
 
 
 class SnackbarQueue:
@@ -826,7 +835,10 @@ def wcs_is_spectral(wcs):
         return False
     # NOTE: this may need further generalization for the GWCS but non-specutils case
     # or for the spectral cube case
-    return isinstance(wcs, SpectralGWCS) or getattr(wcs, 'has_spectral', False)
+    has_spectral_type = [ctype for ctype in wcs.world_axis_physical_types if
+                         ctype is not None and ctype[0:3] == 'em.']
+    return (isinstance(wcs, SpectralGWCS) or getattr(wcs, 'has_spectral', False) or
+            len(has_spectral_type))
 
 
 def get_top_layer_index(viewer):
@@ -1147,3 +1159,14 @@ def _hex_for_cmap(cmap):
 
 
 cmap_samples = {cmap[1].name: _hex_for_cmap(cmap[1]) for cmap in glue_colormaps.members}
+
+
+def _get_celestial_wcs(wcs):
+    """ If `wcs` has a celestial component return that, otherwise return None """
+    if isinstance(wcs, gwcs) and not type(wcs) is SpectralGWCS:
+        data_wcs = WCS(wcs.to_fits_sip())
+    elif isinstance(wcs, WCS):
+        data_wcs = getattr(wcs, 'celestial', None)
+    else:
+        return None
+    return data_wcs

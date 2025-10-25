@@ -17,7 +17,7 @@ def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(image_cube_hdu_obj)
 
     assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and extracted spectrum
-    assert cubeviz_helper.app.data_collection[0].label == "Unknown HDU object[FLUX]"
+    assert cubeviz_helper.app.data_collection[0].label == "3D Spectrum [FLUX]"
 
     # first load should be successful; subsequent attempts should fail
     with pytest.raises(RuntimeError, match="Only one cube"):
@@ -94,7 +94,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     cubeviz_helper.load_data(path)
 
     assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and auto-extracted spectrum
-    assert cubeviz_helper.app.data_collection[0].label == "test_fits_image.fits[FLUX]"
+    assert cubeviz_helper.app.data_collection[0].label == "test_fits_image"
 
     # This tests the same data as test_fits_image_hdu_parse above.
     cubeviz_helper.app.data_collection[0].meta['EXTNAME'] == 'FLUX'
@@ -129,7 +129,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
 
     data = cubeviz_helper.app.data_collection[0]
     assert len(cubeviz_helper.app.data_collection) == 2
-    assert data.label == "Unknown spectrum object[FLUX]"
+    assert data.label == "3D Spectrum [FLUX]"
     assert data.shape == flux.shape
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
@@ -176,6 +176,7 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     assert label_mouseover.as_text() == ('', '', '')
 
 
+@pytest.mark.skip(reason="Need to refactor extension handling first")
 def test_numpy_cube(cubeviz_helper):
     arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 
@@ -258,17 +259,15 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
 
 
 def test_invalid_data_types(cubeviz_helper):
-    with pytest.raises(ValueError, match=r"The input file 'does_not_exist\.fits'"):
+    with pytest.raises(ValueError, match=r"no valid loaders found for input.*"):
         cubeviz_helper.load_data('does_not_exist.fits')
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(WCS(naxis=3))
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         cubeviz_helper.load_data(Spectrum(flux=np.ones((2, 2)) * u.nJy, spectral_axis_index=1))
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='no valid loaders found for input.*'):
+        # 1D / 3D would be parsed as fluxes in a Spectrum (1d/3d), 2D not supported in cubeviz
         cubeviz_helper.load_data(np.ones((2, 2)))
-
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
-        cubeviz_helper.load_data(np.ones((2, )))

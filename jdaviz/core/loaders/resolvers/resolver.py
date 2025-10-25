@@ -102,6 +102,7 @@ class FormatSelect(SelectPluginComponent):
                     try:
                         this_importer = Importer(app=self.plugin.app,
                                                  resolver=self.plugin,
+                                                 parser=this_parser,
                                                  input=importer_input)
                     except Exception as e:  # nosec
                         self._invalid_importers[label] = f'importer exception: {e}'
@@ -522,6 +523,11 @@ class BaseResolver(PluginTemplateMixin):
         return None
 
     @property
+    def parser(self):
+        # give access to the parser used by the selected importer
+        return self.importer._parser
+
+    @property
     def importer(self):
         # give access to the importer defined by the user-selection on format
         if not self.format.selected:
@@ -569,7 +575,6 @@ class BaseResolver(PluginTemplateMixin):
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
             self.valid_import_formats = ''
-            self.import_disabled = self.importer.import_disabled
 
             self.importer.reset_and_check_existing_data_in_dc()
 

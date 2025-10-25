@@ -395,7 +395,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def _set_dataset_not_supported_msg(self, msg=None):
         if self.dataset.selected_obj is not None:
-            if self.dataset.selected_obj.meta.get("Plugin", None) is None:
+            if self.dataset.selected_obj.meta.get('plugin', None) is None:
                 # NOTE: should not be a valid choice due to dataset filters, but we'll include
                 # another check here.
                 self.data_invalid_msg = "Data export is only available for plugin generated data."
@@ -575,7 +575,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-            self.dataset.selected_obj.write(Path(filename), overwrite=True)
+
+            # Sanitize metadata: remove keys starting with '_' from a copy
+            obj = self.dataset.selected_obj
+            if hasattr(obj, 'meta') and isinstance(obj.meta, dict):
+                meta_copy = {k: v for k, v in obj.meta.items() if not k.startswith('_')}
+                # Create a shallow copy of obj with sanitized meta
+                from copy import copy
+                obj_copy = copy(obj)
+                obj_copy.meta = meta_copy
+                obj_copy.write(Path(filename), overwrite=True)
+            else:
+                obj.write(Path(filename), overwrite=True)
         else:
             raise ValueError("nothing selected for export")
 
