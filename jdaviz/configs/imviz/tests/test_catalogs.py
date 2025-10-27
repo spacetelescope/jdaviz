@@ -235,6 +235,58 @@ def test_from_file_parsing(imviz_helper, tmp_path):
         )
 
 
+def test_catalog_reingestion(imviz_helper, tmp_path):
+    # load data that we know has Gaia sources
+    arr = np.ones((1489, 2048))
+    viewer = imviz_helper.default_viewer._obj
+    viewer.shape = (100, 100)
+    viewer.state._set_axes_aspect_ratio(1)
+    hdu1 = fits.ImageHDU(arr, name='SCI')
+    hdu1.header.update({'CTYPE1': 'RA---TAN',
+                        'CUNIT1': 'deg',
+                        'CD1_1': -7.80378407867e-05,
+                        'CD1_2': 7.74904339463e-05,
+                        'CRPIX1': 1025.0,
+                        'CRVAL1': 6.62750450757,
+                        'NAXIS1': 2048,
+                        'CTYPE2': 'DEC--TAN',
+                        'CUNIT2': 'deg',
+                        'CD2_1': 7.74973322238e-05,
+                        'CD2_2': 7.80788034973e-05,
+                        'CRPIX2': 745.0,
+                        'CRVAL2': 1.54470013629,
+                        'NAXIS2': 1489})
+    imviz_helper.load_data(hdu1, data_label='has_wcs')
+
+    catalog_plg = imviz_helper.plugins['Catalog Search']
+    export_plg = imviz_helper.plugins['Export']
+
+    # search Gaia to get exportable data
+    catalog_plg.catalog = 'Gaia'
+    catalog_plg.max_sources = 10
+    with pytest.warns(ResourceWarning):
+        catalog_plg.search(error_on_fail=True)
+
+    export_plg.plugin_table = 'Catalog Search: table'
+    export_plg.filename = 'test.ecsv'
+    export_plg.export(overwrite=True)
+
+    # clear the table so we can test to see if from From File without sky_centroid
+    # column can be loaded into plugin
+    catalog_plg.clear_table()
+    assert len(catalog_plg.table._obj.selected_rows) == 0
+
+    # load the exported file, now that Ra/Dec columns can be used to create catalog
+    # from file
+    catalog_plg.catalog = 'From File...'
+    catalog_plg.import_catalog('test.ecsv')
+    catalog_plg.search()
+
+    # verify the table was able to load
+    catalog_plg.select_all()
+    assert len(catalog_plg.table._obj.selected_rows) == 10
+
+
 def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     # Since we are not really displaying, need this to test zoom.
     viewer = imviz_helper.default_viewer._obj.glue_viewer
