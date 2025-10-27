@@ -346,7 +346,7 @@ def test_scatter_viewer(deconfigged_helper):
 
     assert 'Scatter' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Scatter'
-    ldr.importer()
+    ldr.load()
 
     assert 'Scatter' in deconfigged_helper.viewers
     assert 'Scatter' in deconfigged_helper.new_viewers
@@ -369,7 +369,7 @@ def test_histogram_viewer(deconfigged_helper):
 
     assert 'Histogram' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Histogram'
-    ldr.importer()
+    ldr.load()
 
     assert 'Histogram' in deconfigged_helper.viewers
     assert 'Histogram' in deconfigged_helper.new_viewers

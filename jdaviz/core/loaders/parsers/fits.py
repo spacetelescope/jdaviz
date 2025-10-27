@@ -34,12 +34,16 @@ class FITSParser(BaseParser):
         return fits.open(self.input)
 
     def cleanup(self):
-        try:
-            del self.output.data
-        except Exception:  # nosec
-            pass
+        if self.input is None:
+            return
+        for hdu in self.output:
+            try:
+                del hdu.data
+            except Exception:  # nosec
+                pass
         try:
             self.output.close()
         except Exception:  # nosec
             pass
+        self._clear_cache('output')
         gc.collect()

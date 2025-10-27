@@ -131,7 +131,7 @@ class BaseImporter(PluginTemplateMixin):
         return ImporterUserApi(self)
 
     def vue_import_clicked(self, *args, **kwargs):
-        self.__call__()
+        self._resolver.load()
 
 
 class BaseImporterToDataCollection(BaseImporter):

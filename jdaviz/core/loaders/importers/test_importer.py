@@ -75,7 +75,7 @@ class TestResetAndCheckExistingDataInDC:
         ldr.object = spectrum_list
         ldr.format = '1D Spectrum List'
         ldr.importer.sources.selected = '1D Spectrum at index: 0'
-        ldr.importer()
+        ldr.load()
 
         # The data hashes update in the SpectrumList importer but are different from the
         # data hashes in our original test_obj
@@ -115,7 +115,7 @@ class TestResetAndCheckExistingDataInDC:
         ldr.object = new_spectrum_list
         ldr.format = '1D Spectrum List'
         ldr.importer.sources.selected = '1D Spectrum at index: 5'
-        ldr.importer()
+        ldr.load()
 
         dh_list = ldr.importer.sources.data_hashes
         test_obj.data_hashes = dh_list
@@ -155,13 +155,13 @@ class TestResetAndCheckExistingDataInDC:
             ldr = deconfigged_helper.loaders['object']
             ldr.object = input_data[importer_name]
             ldr.format = importer_name
-            ldr.importer()
+            ldr.load()
 
             # Load the same data again
             ldr = deconfigged_helper.loaders['object']
             ldr.object = input_data[importer_name]
             ldr.format = importer_name
-            ldr.importer()
+            ldr.load()
             test_obj = ldr.importer._obj
 
             # Mock the broadcast method to catch the snackbar message that should be raised

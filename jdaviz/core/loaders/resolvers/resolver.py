@@ -60,7 +60,7 @@ class FormatSelect(SelectPluginComponent):
             return
 
         all_resolvers = []
-        self._dbg_parsers = {}
+        self._parsers = {}
         self._dbg_importers = {}
         self._invalid_importers = {}
         self._importers = {}
@@ -82,8 +82,7 @@ class FormatSelect(SelectPluginComponent):
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin.app, parser_input)
-                if self.debug:
-                    self._dbg_parsers[parser_name] = this_parser
+                self._parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
                         importer_input = this_parser.output
@@ -547,11 +546,10 @@ class BaseResolver(PluginTemplateMixin):
         Import into jdaviz with all selected options.
         """
         out = self.importer()
-        for importer in self.format._importers.values():
+        for parser in self.format._parsers.values():
             # clear the existing cache and close any open file references, etc
             # additional calls to add data collection will re-open the input file as
-            importer._parser.cleanup()
-            # importer._parser._clear_cache('output')
+            parser.cleanup()
         return out
 
     @observe('target_selected')
