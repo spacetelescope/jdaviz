@@ -234,11 +234,11 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # NOTE: temporary during deconfig process
             return False
         try:
-            sp = self.spectrum
+            if self.spectrum.flux.ndim != 3:
+                return False
         except Exception:
             return False
-        if sp.flux.ndim != 3:
-            return False
+
         try:
             self.output
         except Exception:
