@@ -751,7 +751,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if 'x' in self._units and 'y' in self._units:
             # Not populated yet on startup
             previous_x = self._units['x']
-            previous_y = self._units['y']
 
         # update internal tracking of current units
         self._units[axis] = str(unit)
