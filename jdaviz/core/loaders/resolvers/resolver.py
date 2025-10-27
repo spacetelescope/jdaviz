@@ -96,6 +96,7 @@ class FormatSelect(SelectPluginComponent):
 
                 if importer_input is None:
                     self._invalid_importers.setdefault(parser_name, 'importer_input is None')
+                    this_parser.cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
@@ -145,10 +146,11 @@ class FormatSelect(SelectPluginComponent):
                                     # this previous parser has preference over this one
                                     continue
 
-                            self._importers[importer_name] = this_importer
+                        # we'll store the importer even if it isn't valid according to the filters
+                        # so that they can be used when compiling the list of target filters
+                        self._importers[importer_name] = this_importer
                     else:
                         self._invalid_importers[label] = 'not valid'
-                del importer_input
 
         self.items = all_resolvers
         self._apply_default_selection()
@@ -544,7 +546,10 @@ class BaseResolver(PluginTemplateMixin):
         """
         Import into jdaviz with all selected options.
         """
-        return self.importer()
+        out = self.importer()
+        for importer in self.format._importers.values():
+            importer._parser.cleanup()
+        return out
 
     @observe('target_selected')
     def _on_target_selected_changed(self, change={}):

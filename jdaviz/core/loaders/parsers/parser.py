@@ -23,3 +23,7 @@ class BaseParser:
     @cached_property
     def output(self):
         raise NotImplementedError("Subclasses must implement output property")  # pragma: nocover
+
+    def cleanup(self):
+        """Cleanup any resources held by the parser."""
+        return

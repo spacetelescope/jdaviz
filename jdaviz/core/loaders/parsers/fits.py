@@ -1,3 +1,4 @@
+import gc
 from functools import cached_property
 from astropy.io import fits
 
@@ -27,3 +28,14 @@ class FITSParser(BaseParser):
     @cached_property
     def output(self):
         return fits.open(self.input)
+
+    def cleanup(self):
+        try:
+            del self.output.data
+        except Exception:  # nosec
+            pass
+        try:
+            self.output.close()
+        except Exception:  # nosec
+            pass
+        gc.collect()
