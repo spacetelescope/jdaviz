@@ -784,3 +784,47 @@ def test_specviz2d_linking(specviz2d_helper):
     assert data_x_min <= fit_x_min <= fit_x_max <= data_x_max, (
         f"Fit range [{fit_x_min},{fit_x_max}] isn't within data range [{data_x_min},{data_x_max}]"
     )
+
+
+def test_model_equation_with_different_flux_units(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+
+    mf = specviz_helper.plugins['Model Fitting']
+    uc = specviz_helper.plugins['Unit Conversion']
+
+    # Create first model component with flux unit MJy
+    uc.flux_unit = 'MJy'
+    mf.model_component = 'Linear1D'
+    mf.create_model_component()
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        mf.calculate_fit(add_data=True)
+
+    # Make sure the slope units are updating correctly
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / Angstrom'
+
+    # Create second model component with flux unit Jy
+    uc.flux_unit = 'Jy'
+    mf.model_component = 'Linear1D'
+    mf.create_model_component()
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        mf.calculate_fit(add_data=True)
+
+    # Make sure the slope units are updating correctly
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'Jy / Angstrom'
+
+    # Create third model component with flux unit W / (Hz m2)
+    uc.flux_unit = 'W / (Hz m2)'
+    mf.model_component = 'Linear1D'
+    mf.create_model_component()
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters*')
+        mf.calculate_fit(add_data=True)
+
+    # Make sure the slope units are updating correctly
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'W / (Angstrom Hz m2)'
+
+    model = specviz_helper.app.data_collection['model']
+    assert model.get_component('flux').units == 'W / (Hz m2)'

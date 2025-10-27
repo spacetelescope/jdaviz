@@ -772,17 +772,24 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 spectral_axis = self.dataset.selected_obj.spectral_axis
                 # Just need a single spectral axis value to enable spectral_density equivalency
                 equivalencies = all_flux_unit_conversion_equivs(cube_wave=spectral_axis[0])
-                if ((axis == 'y' and param['unit'] == previous_y) or
-                        (axis == 'x' and param['unit'] == previous_x)):
-                    new_quant = flux_conversion_general(current_quant.value,
-                                                        current_quant.unit,
-                                                        self._units[axis],
-                                                        equivalencies=equivalencies)  # noqa
 
-                # Some parameters have units that aren't related to x or y
-                if new_quant is not None:
-                    param['value'] = new_quant.value
-                    param['unit'] = str(new_quant.unit)
+                # Calculate what the new unit should be for this parameter
+                new_param_unit = self._param_units(param['name'], model_type=model['model_type'])
+
+                # Check if this parameter's unit needs updating
+                if param['unit'] != new_param_unit:
+                    # Try to convert the current value to the new unit
+                    try:
+                        new_quant = flux_conversion_general(current_quant.value,
+                                                            current_quant.unit,
+                                                            new_param_unit,
+                                                            equivalencies=equivalencies)
+                        param['value'] = new_quant.value
+                        param['unit'] = str(new_quant.unit)
+                    except Exception:
+                        # If conversion fails, mark as incompatible
+                        model['compat_display_units'] = False
+                        break
 
         self._check_model_component_compat([axis], [unit])
         self._update_initialized_parameters()
