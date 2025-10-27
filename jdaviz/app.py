@@ -301,6 +301,8 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3778
     # https://github.com/spacetelescope/jdaviz/pull/3799
     # https://github.com/spacetelescope/jdaviz/pull/3814
+    # https://github.com/spacetelescope/jdaviz/pull/3835
+    # https://github.com/spacetelescope/jdaviz/pull/3854
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
