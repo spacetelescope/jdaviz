@@ -3,11 +3,7 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
-import logging
 import os
-import psutil
-import time
-import tracemalloc
 import warnings
 
 import numpy as np
