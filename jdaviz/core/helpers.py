@@ -215,7 +215,10 @@ class ConfigHelper(HubListener):
 
         importer = resolver.importer
         importer._obj._apply_kwargs(kwargs)
-        return resolver.load()
+        out = resolver.load()
+        # force cleanup before returning
+        resolver._obj._cleanup()
+        return out
 
     @property
     def data_labels(self):

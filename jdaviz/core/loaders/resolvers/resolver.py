@@ -40,6 +40,8 @@ class FormatSelect(SelectPluginComponent):
         empty.
     """
     debug = Bool(False).tag(sync=True)
+    _parsers = {}
+    _importers = {}
 
     def __init__(self, plugin, items, selected, default_mode='first'):
         self._invalid_importers = {}
@@ -95,7 +97,7 @@ class FormatSelect(SelectPluginComponent):
 
                 if importer_input is None:
                     self._invalid_importers.setdefault(parser_name, 'importer_input is None')
-                    this_parser.cleanup()
+                    this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
@@ -387,6 +389,15 @@ class BaseResolver(PluginTemplateMixin):
                 return parsed_input_table
         return None
 
+    def _cleanup(self):
+        # clear the existing cache and close any open file references
+        # from referenced parsers/importers
+        for parser in self.format._parsers.values():
+            parser._cleanup()
+        for importer in self.format._importers.values():
+            importer._cleanup()
+        self._clear_cache('parsed_input', 'output')
+
     @observe('parsed_input_is_query', 'treat_table_as_query')
     @with_spinner('spinner', 'parsing input...')
     def _resolver_input_updated(self, msg={}):
@@ -397,7 +408,7 @@ class BaseResolver(PluginTemplateMixin):
             # is mapped to output has
             self._clear_cache('output')
         else:
-            self._clear_cache('parsed_input', 'output')
+            self._cleanup()
 
         try:
             parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
@@ -545,14 +556,7 @@ class BaseResolver(PluginTemplateMixin):
         """
         Import into jdaviz with all selected options.
         """
-        out = self.importer()
-        # clear the existing cache and close any open file references, etc
-        # additional calls to add data collection will re-open the input file as
-        for parser in self.format._parsers.values():
-            parser.cleanup()
-        for importer in self.format._importers.values():
-            importer.cleanup()
-        return out
+        return self.importer()
 
     @observe('target_selected')
     def _on_target_selected_changed(self, change={}):

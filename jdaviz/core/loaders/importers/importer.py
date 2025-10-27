@@ -133,7 +133,7 @@ class BaseImporter(PluginTemplateMixin):
     def vue_import_clicked(self, *args, **kwargs):
         self._resolver.load()
 
-    def cleanup(self):
+    def _cleanup(self):
         return
 
 

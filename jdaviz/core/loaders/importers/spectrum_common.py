@@ -80,7 +80,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                            manual_options=ext_options,
                                                            filters=[self.hdu_is_valid_mask])
 
-    def cleanup(self):
+    def _cleanup(self):
         for ext in (self.extension.manual_options
                     + self.unc_extension.manual_options
                     + self.mask_extension.manual_options):

@@ -25,7 +25,7 @@ class FITSParser(BaseParser):
         finally:
             # Try to remove the need for finally
             # (why isn't cleanup working elsewhere?)
-            self.cleanup()
+            self._cleanup()
 
         return True
 
@@ -33,7 +33,7 @@ class FITSParser(BaseParser):
     def output(self):
         return fits.open(self.input)
 
-    def cleanup(self):
+    def _cleanup(self):
         if self.input is None:
             return
         for hdu in self.output:

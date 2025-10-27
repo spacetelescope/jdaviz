@@ -25,6 +25,6 @@ class BaseParser(WithCache):
     def output(self):
         raise NotImplementedError("Subclasses must implement output property")  # pragma: nocover
 
-    def cleanup(self):
+    def _cleanup(self):
         """Cleanup any resources held by the parser."""
         return
