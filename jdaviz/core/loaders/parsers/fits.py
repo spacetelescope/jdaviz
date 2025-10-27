@@ -1,4 +1,5 @@
 import gc
+from functools import cached_property
 from astropy.io import fits
 
 from jdaviz.core.loaders.parsers import BaseParser
@@ -28,11 +29,9 @@ class FITSParser(BaseParser):
 
         return True
 
-    @property
+    @cached_property
     def output(self):
-        if getattr(self, '_output', None) is None:
-            self._output = fits.open(self.input)
-        return self._output
+        return fits.open(self.input)
 
     def cleanup(self):
         if self.input is None:
