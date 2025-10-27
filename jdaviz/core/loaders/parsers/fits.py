@@ -22,10 +22,6 @@ class FITSParser(BaseParser):
             self.output
         except Exception:
             return False
-        finally:
-            # Try to remove the need for finally
-            # (why isn't cleanup working elsewhere?)
-            self._cleanup()
 
         return True
 
