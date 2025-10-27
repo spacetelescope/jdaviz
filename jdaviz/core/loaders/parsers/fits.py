@@ -22,6 +22,8 @@ class FITSParser(BaseParser):
             self.output
         except Exception:
             return False
+        finally:
+            self.cleanup()
 
         return True
 

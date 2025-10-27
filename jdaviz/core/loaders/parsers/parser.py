@@ -1,9 +1,10 @@
 from functools import cached_property
+from jdaviz.core.helpers import WithCache
 
 __all__ = ['BaseParser']
 
 
-class BaseParser:
+class BaseParser(WithCache):
     def __init__(self, app, inp):
         self._app = app
         self._input = inp
