@@ -152,7 +152,7 @@ class ConfigHelper(HubListener):
 
         orig_debug = ldr.format.debug
         ldr.format.debug = True
-        parser = ldr.format._dbg_parsers[parser_name]
+        parser = ldr.format._parsers[parser_name]
         ldr.format.debug = orig_debug
         if importer_name is None:
             return parser
