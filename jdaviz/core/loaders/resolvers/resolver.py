@@ -99,6 +99,10 @@ class FormatSelect(SelectPluginComponent):
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
+                    if self.plugin._restrict_to_formats is not None and \
+                            importer_name not in self.plugin._restrict_to_formats:
+                        self._invalid_importers[label] = 'not matching format restriction'  # noqa
+                        continue
                     try:
                         this_importer = Importer(app=self.plugin.app,
                                                  resolver=self.plugin,
@@ -268,6 +272,9 @@ class BaseResolver(PluginTemplateMixin):
         self.format = FormatSelect(self,
                                    items='format_items',
                                    selected='format_selected')
+        self._restrict_to_formats = kwargs.get('format', None)
+        if isinstance(self._restrict_to_formats, str):
+            self._restrict_to_formats = [self._restrict_to_formats]
 
         self.target = TargetSelect(self,
                                    items='target_items',
@@ -317,8 +324,8 @@ class BaseResolver(PluginTemplateMixin):
             self._resolver_input_updated()
 
     @classmethod
-    def from_input(cls, app, inp, **kwargs):
-        self = cls(app=app)
+    def from_input(cls, app, inp, format=None, **kwargs):
+        self = cls(app=app, format=format)
         if self.default_input is None:
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
         with self.defer_resolver_input_updated():
@@ -616,7 +623,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             invalid_resolvers[resolver_name] = f'not {resolver}'
             continue
         try:
-            this_resolver = Resolver.from_input(app, inp, **kwargs)
+            this_resolver = Resolver.from_input(app, inp, format=format, **kwargs)
         except Exception as e:  # nosec
             invalid_resolvers[resolver_name] = f'resolver exception: {e}'
             if resolver_name == 'url' and 'timeout' in str(e):
