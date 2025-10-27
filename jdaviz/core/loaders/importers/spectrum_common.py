@@ -1,3 +1,4 @@
+import gc
 
 from astropy import units as u
 from astropy.io import fits
@@ -78,6 +79,13 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                            selected='mask_extension_selected',
                                                            manual_options=ext_options,
                                                            filters=[self.hdu_is_valid_mask])
+
+    def cleanup(self):
+        for ext in (self.extension.manual_options
+                    + self.unc_extension.manual_options
+                    + self.mask_extension.manual_options):
+            del ext['obj'].data
+        gc.collect()
 
     @property
     def supported_flux_ndim(self):

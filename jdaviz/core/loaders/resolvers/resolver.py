@@ -546,10 +546,12 @@ class BaseResolver(PluginTemplateMixin):
         Import into jdaviz with all selected options.
         """
         out = self.importer()
+        # clear the existing cache and close any open file references, etc
+        # additional calls to add data collection will re-open the input file as
         for parser in self.format._parsers.values():
-            # clear the existing cache and close any open file references, etc
-            # additional calls to add data collection will re-open the input file as
             parser.cleanup()
+        for importer in self.format._importers.values():
+            importer.cleanup()
         return out
 
     @observe('target_selected')
