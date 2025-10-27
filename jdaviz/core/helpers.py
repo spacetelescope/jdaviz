@@ -215,7 +215,9 @@ class ConfigHelper(HubListener):
 
         importer = resolver.importer
         importer._obj._apply_kwargs(kwargs)
-        return importer()
+        out = importer()
+        del resolver
+        return out
 
     @property
     def data_labels(self):

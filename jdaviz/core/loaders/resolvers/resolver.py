@@ -145,11 +145,10 @@ class FormatSelect(SelectPluginComponent):
                                     # this previous parser has preference over this one
                                     continue
 
-                        # we'll store the importer even if it isn't valid according to the filters
-                        # so that they can be used when compiling the list of target filters
-                        self._importers[importer_name] = this_importer
+                            self._importers[importer_name] = this_importer
                     else:
                         self._invalid_importers[label] = 'not valid'
+                del importer_input
 
         self.items = all_resolvers
         self._apply_default_selection()
