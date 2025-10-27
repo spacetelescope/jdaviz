@@ -23,6 +23,8 @@ class FITSParser(BaseParser):
         except Exception:
             return False
         finally:
+            # Try to remove the need for finally
+            # (why isn't cleanup working elsewhere?)
             self.cleanup()
 
         return True

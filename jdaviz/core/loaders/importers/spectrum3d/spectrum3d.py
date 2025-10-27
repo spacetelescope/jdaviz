@@ -298,7 +298,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
         super().__call__()
         # TODO: this will need to be removed when removing restriction of a single flux cube
-        if not self.app._jdaviz_helper._loaded_flux_cube:
+        if not getattr(self.app._jdaviz_helper, '_loaded_flux_cube', None):
             self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
 
         if self.has_unc and not self.flux_only:

@@ -1,5 +1,5 @@
 from functools import cached_property
-from jdaviz.core.helpers import WithCache
+from jdaviz.core.template_mixin import WithCache
 
 __all__ = ['BaseParser']
 

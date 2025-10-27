@@ -551,7 +551,7 @@ class BaseResolver(PluginTemplateMixin):
             # clear the existing cache and close any open file references, etc
             # additional calls to add data collection will re-open the input file as
             importer._parser.cleanup()
-            importer._parser._clear_cache('output')
+            # importer._parser._clear_cache('output')
         return out
 
     @observe('target_selected')
