@@ -240,7 +240,6 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
     arr = np.ones((1489, 2048))
     viewer = imviz_helper.default_viewer._obj
     viewer.shape = (100, 100)
-    viewer.state._set_axes_aspect_ratio(1)
     hdu1 = fits.ImageHDU(arr, name='SCI')
     hdu1.header.update({'CTYPE1': 'RA---TAN',
                         'CUNIT1': 'deg',
