@@ -84,6 +84,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         for attr in ('extension', 'unc_extension', 'mask_extension'):
             if not hasattr(self, attr):
                 continue
+
             for ext in getattr(self, attr).manual_options:
                 try:
                     del ext['obj'].data
@@ -97,6 +98,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 except Exception:  # nosec
                     pass
 
+        del self.spectrum
         gc.collect()
 
     @property
