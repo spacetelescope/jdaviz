@@ -87,13 +87,14 @@ def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
         atol=0.001*u.deg
     )
 
+
 def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
     # arrange
     imviz_helper.load_data(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = imviz_helper.app.get_viewer('imviz-0')
 
-    # act: update the rotation of imviz external to aida 
+    # act: update the rotation of imviz external to aida
     orientation = imviz_helper.app._jdaviz_helper.plugins.get('Orientation', None)
     orientation.add_orientation(
         east_left=True,
@@ -109,6 +110,7 @@ def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
         90.0*u.deg,
         atol=0.001*u.deg
     )
+
 
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
