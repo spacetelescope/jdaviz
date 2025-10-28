@@ -22,6 +22,8 @@ New Features
 
 - Added descriptive hints for toggleable model fitter parameters in the Model Fitting plugin. [#3831]
 
+- Add image viewer method for returning a ``PolygonSkyRegion`` that outlines the viewer limits. [#3851]
+
 Cubeviz
 ^^^^^^^
 
