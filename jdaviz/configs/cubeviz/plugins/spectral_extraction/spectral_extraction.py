@@ -255,8 +255,6 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         orig_labels = [item['label'] for item in msg['old']]
         for item in msg['new']:
             if item['label'] not in orig_labels:
-                if item.get('type') != 'spatial':
-                    continue
                 subset_lbl = item.get('label')
                 try:
                     self._extract_in_new_instance(subset_lbl=subset_lbl,
