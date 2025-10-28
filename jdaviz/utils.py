@@ -1182,7 +1182,6 @@ def _log_output_callers(note='output accessed', limit=10):
     limit : int
         Maximum number of stack frames to include.
     """
-    import inspect
     import logging
     import os
     import traceback
