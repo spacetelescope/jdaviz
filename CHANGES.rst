@@ -24,6 +24,8 @@ New Features
 
 - Add image viewer method for returning a ``PolygonSkyRegion`` that outlines the viewer limits. [#3851]
 
+- AIDA methods setting and retrieving rotation of imviz viewer [#3834]
+
 Cubeviz
 ^^^^^^^
 
