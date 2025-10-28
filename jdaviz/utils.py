@@ -10,6 +10,9 @@ import re
 import hashlib
 import multiprocessing as mp
 from joblib import Parallel, delayed
+import tracemalloc
+import psutil
+from functools import wraps
 
 import asdf
 import numpy as np
@@ -1123,6 +1126,275 @@ def create_data_hash(input_data):
             pass
 
     return hasher.hexdigest()
+
+
+def _safe_take_snapshot():
+    """
+    Take a tracemalloc snapshot, starting tracemalloc temporarily if
+    it was not already tracing.
+
+    Returns
+    -------
+    snapshot : tracemalloc.Snapshot
+        The taken snapshot.
+    started : bool
+        True if this function started tracemalloc and thus should
+        be stopped by the caller when finished.
+    """
+    was_tracing = tracemalloc.is_tracing()
+    if not was_tracing:
+        tracemalloc.start()
+    snapshot = tracemalloc.take_snapshot()
+    return snapshot, not was_tracing
+
+
+def print_memory_snapshot_diff(snapshots, limit=10):
+    """
+    Print the differences in memory allocation between two snapshots.
+
+    Parameters
+    ----------
+    snapshots : list of tracemalloc.Snapshot
+        A list of memory snapshots taken at different points in time.
+
+    limit : int
+        The maximum number of lines to display.
+    """
+    snapshots = [snapshots[i].compare_to(snapshots[i - 1], 'lineno')
+                 for i in range(1, len(snapshots))]
+
+    print(f"Top {limit} differences in memory allocation:")
+    for i, stats in enumerate(snapshots):
+        print(f" Step {i + 1}:")
+        for stat in stats[:limit]:
+            print(stat)
+        print()
+
+
+def _log_output_callers(note='output accessed', limit=10):
+    """
+    Log the Python caller stack and OS parent process when invoked.
+
+    Parameters
+    ----------
+    note : str
+        Short note to include in the log message.
+    limit : int
+        Maximum number of stack frames to include.
+    """
+    import inspect
+    import logging
+    import os
+    import traceback
+    import psutil
+
+    logger = logging.getLogger('jdaviz.debug')
+    # OS parent process info
+    ppid = os.getppid()
+    try:
+        parent = psutil.Process(ppid)
+        parent_info = f'{parent.pid} {parent.name()}'
+    except Exception:
+        parent_info = f'ppid={ppid}'
+
+    # Python call stack (exclude this helper frame)
+    stack = ''.join(traceback.format_stack(limit=limit + 1)[:-1])
+
+    logger.info(f'{note}: parent={parent_info}')
+    logger.info('caller stack:\\n%s', stack)
+
+
+def _get_output_callers(limit=10):
+    """
+    Return the parent process info and Python caller stack as strings.
+
+    This is the programmatic counterpart to `_log_output_callers` and is
+    useful when callers need to capture the values (for attaching to
+    metadata or for direct console printing) instead of having the helper
+    emit the values directly via logging.
+
+    Parameters
+    ----------
+    limit : int
+        Maximum number of stack frames to include.
+
+    Returns
+    -------
+    parent_info : str
+        A short string describing the parent process (pid and name), or
+        a fallback 'ppid=...' string.
+    stack : str
+        The formatted Python stack trace (most recent last), excluding
+        the frame for this helper.
+    """
+    import os
+    import traceback
+    import psutil
+
+    ppid = os.getppid()
+    try:
+        parent = psutil.Process(ppid)
+        parent_info = f'{parent.pid} {parent.name()}'
+    except Exception:
+        parent_info = f'ppid={ppid}'
+
+    stack = ''.join(traceback.format_stack(limit=limit + 1)[:-1])
+    return parent_info, stack
+
+
+def return_rss():
+    """
+    Return the current Resident Set Size (RSS) memory usage in MiB.
+
+    Returns
+    -------
+    begin_rss_mib : float
+        The current RSS memory usage in MiB.
+    """
+    proc = psutil.Process()
+    rss = proc.memory_info().rss
+    rss_mib = rss / 1024 ** 2
+    return rss_mib
+
+
+def diff_mem_usage(func, *func_args, label='', **func_kwargs):
+    """
+    Measure and print memory usage difference for a function call.
+
+    Parameters
+    ----------
+    func : function
+        The function to be measured. Can be a callable with no args
+        or a lambda/partial that captures arguments.
+    label : str
+        Optional label to prefix the printed memory message.
+
+    Returns
+    -------
+    result : any
+        The return value of the function.
+    """
+    proc = psutil.Process()
+    rss = proc.memory_info().rss
+    begin_rss_mib = rss / 1024 ** 2
+    result = func(*func_args, **func_kwargs)
+    proc = psutil.Process()
+    rss = proc.memory_info().rss
+    end_rss_mib = rss / 1024 ** 2
+    diff_mib = end_rss_mib - begin_rss_mib
+    print(f'{label}: Memory usage difference: {diff_mib:.2f} MiB')
+    return result
+
+
+def diff_mem_usage_decorator(func=None, *, label=''):
+    """
+    Decorate a function to measure and print memory usage difference.
+
+    Parameters
+    ----------
+    func : function or None
+        The function to be decorated when the decorator is used without
+        arguments (``@diff_mem_usage_decorator``). When the decorator is
+        called with arguments, the function is provided later.
+    label : str or None
+        Optional label to prefix the printed memory message. If provided,
+        the printed line will start with ``<label>: ``.
+
+    Returns
+    -------
+    wrapper : function
+        The decorated function with memory usage measurement.
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            return diff_mem_usage(
+                lambda: f(*args, **kwargs),
+                label=label
+            )
+        return wrapper
+
+    if callable(func):
+        return decorator(func)
+    return decorator
+
+
+class MemoryUsageContext:
+    """
+    Context manager for measuring memory usage difference.
+
+    This allows you to measure memory usage around a block of code
+    using the `with` statement.
+
+    Example
+    -------
+    with MemoryUsageContext(label='Loading data') as mem:
+        # Your code here
+        load_large_dataset()
+    # Memory difference will be printed automatically
+    """
+
+    def __init__(self, label='', with_tracemalloc=False, verbose=False):
+        """
+        Initialize the context manager.
+
+        Parameters
+        ----------
+        label : str
+            Optional label to prefix the printed memory message.
+        """
+        self.label = label
+        self.begin_rss_mib = None
+        self.end_rss_mib = None
+        self.tracemalloc = with_tracemalloc
+        self.verbose = verbose
+
+    def __enter__(self):
+        """
+        Record memory usage at the start of the context.
+        """
+        proc = psutil.Process()
+        rss = proc.memory_info().rss
+        self.begin_rss_mib = rss / 1024 ** 2
+        if self.verbose:
+            print()
+            print(f'{self.label}: Starting memory usage: {self.begin_rss_mib:.2f} MiB')
+
+        if self.tracemalloc:
+            if not tracemalloc.is_tracing():
+                #     tracemalloc.stop()
+                tracemalloc.start(20)
+            self.snapshot1 = tracemalloc.take_snapshot()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Record memory usage at the end and print the difference.
+        """
+        if self.tracemalloc:
+            snapshot2 = tracemalloc.take_snapshot()
+            top_stats = snapshot2.compare_to(self.snapshot1, 'lineno')
+
+        proc = psutil.Process()
+        rss = proc.memory_info().rss
+        self.end_rss_mib = rss / 1024 ** 2
+        self.diff_mib = abs(self.end_rss_mib - self.begin_rss_mib)
+        if self.verbose:
+            print(f'{self.label}: Ending memory usage: {self.end_rss_mib:.2f} MiB')
+
+        if self.diff_mib > 5:
+            print(
+                f'{self.label}: Memory usage difference: {self.diff_mib:.2f} MiB'
+            )
+        if self.tracemalloc:
+            threshold_10mb = 10 * 1024 ** 2
+            for stat in top_stats:
+                if stat.size > threshold_10mb:
+                    print(stat)
+            tracemalloc.stop()
+            print()
+
+        return False
 
 
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
