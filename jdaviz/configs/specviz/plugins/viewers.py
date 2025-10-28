@@ -85,7 +85,7 @@ class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
             return True
 
         self.data_menu._obj.dataset.add_filter('is_spectrum', compatible_units)
-        self.data_menu.layer.add_filter('not_trace')
+        self.data_menu.layer.add_filter('not_trace', 'not_spatial_subset_in_profile_viewer')
 
     @property
     def redshift(self):

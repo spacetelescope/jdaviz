@@ -2024,10 +2024,10 @@ class LayerSelect(SelectPluginComponent):
             return self.app._get_assoc_data_parent(lyr.label) is None
 
         def not_spatial_subset_in_profile_viewer(lyr):
-            if self.plugin.config != 'cubeviz':
+            if self.plugin.config not in ('cubeviz', 'deconfigged'):
                 return True
             # note: have to check the classname instead of isinstance to avoid circular import
-            if np.any([viewer.__class__.__name__ != 'CubevizProfileView'
+            if np.any([viewer.__class__.__name__ not in ('CubevizProfileView', 'Spectrum1DViewer')
                        for viewer in self.viewer_objs]):
                 return True
             # at this point, we are in cubeviz and ALL selected viewers are profile viewers,

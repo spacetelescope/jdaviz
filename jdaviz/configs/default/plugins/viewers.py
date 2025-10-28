@@ -364,7 +364,9 @@ class JdavizViewerMixin(WithCache):
                 prefix_icon, subset_type = _get_layer_info(layer)
                 if (
                     subset_type == 'spatial' and
-                    self.__class__.__name__ in ('CubevizProfileView', 'RampvizProfileView')
+                    self.__class__.__name__ in ('CubevizProfileView',
+                                                'RampvizProfileView',
+                                                'Spectrum1DViewer')
                 ):
                     # do not show spatial subsets in profile viewer
                     continue
