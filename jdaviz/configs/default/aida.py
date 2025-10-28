@@ -107,11 +107,12 @@ class AID:
         elif label in orientation._obj.orientation.choices:
             orientation._obj.orientation.selected = label
         else:
-            orientation.rotation_angle = rotation_angle
+            orientation._obj.orientation.selected = "Default orientation"
             orientation.add_orientation(
                 east_left=True,
                 set_on_create=True,
-                label=label
+                label=label,
+                rotation_angle=rotation_angle
             )
 
     def set_viewport(self, center=None, fov=None, rotation=None, image_label=None, **kwargs):

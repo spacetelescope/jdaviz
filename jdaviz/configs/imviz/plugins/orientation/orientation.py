@@ -373,7 +373,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                     raise ValueError(msg)
                 return
 
-        rotation_angle = self.rotation_angle_deg(rotation_angle)
+        rotation_angle_deg = self.rotation_angle_deg(rotation_angle)
         if east_left is None:
             east_left = self.east_left
         if label is None:
@@ -383,14 +383,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         degn = self._get_wcs_angles(first_loaded_image=wrt_data)[0]
 
         if east_left:
-            rotation_angle = -degn * u.deg + rotation_angle
+            rotation_angle_deg = -degn * u.deg + rotation_angle_deg
         else:
-            rotation_angle = (180 - degn) * u.deg - rotation_angle
+            rotation_angle_deg = (180 - degn) * u.deg - rotation_angle_deg
 
         ndd = _get_rotated_nddata_from_label(
             app=self.app,
             data_label=wrt_data.label,
-            rotation_angle=rotation_angle,
+            rotation_angle=rotation_angle_deg,
             target_wcs_east_left=east_left,
             target_wcs_north_up=True,
         )
@@ -403,6 +403,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self._add_data_to_viewer(label, viewer_ref)
 
         if set_on_create:
+            self.rotation_angle = rotation_angle
             self.orientation.selected = label
 
     def _ensure_layer_icon_exists(self, data_label):
