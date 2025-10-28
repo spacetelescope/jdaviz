@@ -777,6 +777,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
                 # Check if this parameter's unit needs updating
                 if param['unit'] != new_param_unit:
+                    # Store the old unit before converting
+                    old_param_unit = param['unit']
+                    
                     # Try to convert the current value to the new unit
                     try:
                         new_quant = flux_conversion_general(current_quant.value,
@@ -785,6 +788,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                             equivalencies=equivalencies)
                         param['value'] = new_quant.value
                         param['unit'] = str(new_quant.unit)
+                        
+                        # Also convert the uncertainty (std) if it exists
+                        if 'std' in param and param['std'] is not None and not np.isnan(param['std']):
+                            current_std_quant = param['std'] * u.Unit(old_param_unit)
+                            new_std = flux_conversion_general(current_std_quant.value,
+                                                            current_std_quant.unit,
+                                                            new_param_unit,
+                                                            equivalencies=equivalencies)
+                            param['std'] = new_std.value
                     except Exception:
                         # If conversion fails, mark as incompatible
                         model['compat_display_units'] = False
