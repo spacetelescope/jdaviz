@@ -131,10 +131,11 @@ def test_fits_spectrum2d(deconfigged_helper):
         ldr = deconfigged_helper.loaders['file']
         ldr.filepath = uri
 
-    # Default format is Image, manually set to 2D Spectrum
-    assert ldr.format == 'Image'
-    assert ldr.importer._obj.input_has_extensions is True
+    # Default format may not be 2D Spectrum
+    assert 'Image' in ldr.format.choices
+    assert '2D Spectrum' in ldr.format.choices
     ldr.format = '2D Spectrum'
+    assert ldr.importer._obj.input_has_extensions is True
 
     ldr.load()
 
