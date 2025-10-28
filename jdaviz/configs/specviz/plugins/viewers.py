@@ -24,18 +24,20 @@ from jdaviz.core.unit_conversion_utils import (spectral_axis_conversion,
 from jdaviz.utils import SPECTRAL_AXIS_COMP_LABELS
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
+from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
 __all__ = ['Spectrum1DViewer', 'Spectrum2DViewer']
 
 
 @viewer_registry("spectrum-1d-viewer", label="1D Spectrum")
-class Spectrum1DViewer(JdavizProfileView):
+class Spectrum1DViewer(JdavizProfileView, WithSliceIndicator):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom_matchx', 'jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom_matchx', 'jdaviz:xrangezoom_matchx', 'jdaviz:boxzoom', 'jdaviz:yrangezoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
                     ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx', 'jdaviz:panzoom_y', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
                     ['bqplot:xrange'],
+                    ['jdaviz:selectslice'],
                     ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
@@ -45,6 +47,7 @@ class Spectrum1DViewer(JdavizProfileView):
     _default_profile_subset_type = 'spectral'
 
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
 
         def compatible_units(data):
