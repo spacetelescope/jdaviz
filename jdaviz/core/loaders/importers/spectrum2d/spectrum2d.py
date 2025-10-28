@@ -14,7 +14,7 @@ __all__ = ['Spectrum2DImporter']
 
 
 @loader_importer_registry('2D Spectrum')
-class Spectrum2DImporter(SpectrumInputExtensionsMixin, BaseImporterToDataCollection):
+class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum2d.vue"
     parser_preference = ['fits', 'specutils.Spectrum']
 

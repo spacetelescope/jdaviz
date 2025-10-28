@@ -133,9 +133,6 @@ class BaseImporter(PluginTemplateMixin):
     def vue_import_clicked(self, *args, **kwargs):
         self._resolver.load()
 
-    def _cleanup(self):
-        return
-
 
 class BaseImporterToDataCollection(BaseImporter):
     data_label_value = Unicode().tag(sync=True)

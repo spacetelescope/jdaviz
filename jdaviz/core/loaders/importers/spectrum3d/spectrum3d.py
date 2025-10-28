@@ -23,7 +23,7 @@ __all__ = ['Spectrum3DImporter']
 
 
 @loader_importer_registry('3D Spectrum')
-class Spectrum3DImporter(SpectrumInputExtensionsMixin, BaseImporterToDataCollection):
+class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum3d.vue"
     parser_preference = ['fits', 'specutils.Spectrum']
 

@@ -395,7 +395,8 @@ class BaseResolver(PluginTemplateMixin):
         for parser in self.format._parsers.values():
             parser._cleanup()
         for importer in self.format._importers.values():
-            importer._cleanup()
+            if hasattr(importer, '_cleanup'):
+                importer._cleanup()
         self._clear_cache('parsed_input', 'output')
 
     @observe('parsed_input_is_query', 'treat_table_as_query')
