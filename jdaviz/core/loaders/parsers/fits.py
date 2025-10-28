@@ -30,7 +30,7 @@ class FITSParser(BaseParser):
         return fits.open(self.input)
 
     def _cleanup(self):
-        if self.input is None:
+        if 'output' not in self.__dict__:
             return
         for hdu in self.output:
             try:
