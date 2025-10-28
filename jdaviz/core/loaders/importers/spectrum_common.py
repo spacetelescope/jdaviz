@@ -81,18 +81,21 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                            filters=[self.hdu_is_valid_mask])
 
     def _cleanup(self):
-        if hasattr(self, 'extension'):
-            for ext in (self.extension.manual_options
-                        + self.unc_extension.manual_options
-                        + self.mask_extension.manual_options):
-                del ext['obj'].data
+        for attr in ('extension', 'unc_extension', 'mask_extension'):
+            if not hasattr(self, attr):
+                continue
+            for ext in getattr(self, attr).manual_options:
+                try:
+                    del ext['obj'].data
+                except Exception:  # nosec
+                    pass
 
         if self.input_has_extensions:
             for hdu in self.input:
                 try:
                     del hdu.data
                 except Exception:  # nosec
-                    print('Could not delete hdu data during cleanup')
+                    pass
 
         gc.collect()
 
