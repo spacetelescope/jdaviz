@@ -35,9 +35,6 @@ class SpecutilsSpectrumParser(BaseParser):
     def output(self):
         return self.SpecutilsCls.read(self.input)
 
-    def _cleanup(self):
-        self._clear_cache('output')
-        gc.collect()
 
 
 @loader_parser_registry('specutils.Spectrum(array)')
