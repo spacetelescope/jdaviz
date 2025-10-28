@@ -1,4 +1,3 @@
-import gc
 import numpy as np
 
 from astropy import units as u
@@ -34,7 +33,6 @@ class SpecutilsSpectrumParser(BaseParser):
     @cached_property
     def output(self):
         return self.SpecutilsCls.read(self.input)
-
 
 
 @loader_parser_registry('specutils.Spectrum(array)')
