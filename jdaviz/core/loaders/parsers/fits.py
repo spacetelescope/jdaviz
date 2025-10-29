@@ -1,4 +1,3 @@
-import gc
 from functools import cached_property
 from astropy.io import fits
 
@@ -42,4 +41,3 @@ class FITSParser(BaseParser):
         except Exception:  # nosec
             pass
         self._clear_cache('output')
-        # gc.collect()

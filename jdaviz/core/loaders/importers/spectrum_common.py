@@ -1,5 +1,3 @@
-import gc
-
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import StdDevUncertainty
@@ -99,7 +97,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     pass
 
         del self.spectrum
-        # gc.collect()
 
     @property
     def supported_flux_ndim(self):
