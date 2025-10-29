@@ -97,6 +97,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     """
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
+    subset_select_mode = Unicode().tag(sync=True)
+    subset_edit_value = Any().tag(sync=True)
     subset_items = List([]).tag(sync=True)
     subset_selected = Any().tag(sync=True)
 
@@ -159,10 +161,14 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                    handler=self._sync_available_from_state)
 
         self.subset = SubsetSelect(self,
-                                   'subset_items',
-                                   'subset_selected',
+                                   items='subset_items',
+                                   selected='subset_selected',
                                    multiselect='multiselect',
-                                   default_text="Create New")
+                                   default_text="Create New",
+                                   mode='subset_select_mode',
+                                   edit_value='subset_edit_value',
+                                   on_rename=self.rename_subset,
+                                   on_remove=self.delete_subset)
         self.subset_states = []
         self.selected_subset_group = None
         self.spectral_display_unit = None
@@ -186,7 +192,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                   'get_center', 'set_center',
                   'import_region', 'get_regions',
                   'rename_selected', 'rename_subset',
-                  'update_subset', 'simplify_subset']
+                  'update_subset', 'simplify_subset',
+                  'delete_subset']
         return PluginUserApi(self, expose)
 
     def get_regions(self, region_type=None, list_of_subset_labels=None,
@@ -1020,7 +1027,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             The new label to apply to the selected subset.
         """
         # will emit a SubsetRenameMessage and call _sync_available_from_state()
-        self.subset.rename_choice(old_label, new_label)
+        self.app._rename_subset(old_label, new_label)
 
     def vue_rename_subset(self, msg):
         try:
@@ -1047,6 +1054,20 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
 
         self.app._rename_subset(self.subset.selected, new_label, subset_group=subset_group)
         self._sync_available_from_state()
+
+    def delete_subset(self, subset_label):
+        '''
+        Method to remove an existing subset from the app.
+
+        Parameters
+        ----------
+        subset_label : str
+            The label of the subset to be deleted
+        '''
+        self.app.delete_subsets(subset_labels=subset_label)
+
+    def vue_delete_subset(self, msg):
+        self.delete_subset(msg['subset_label'])
 
     def import_region(self, region, edit_subset=None, combination_mode=None, max_num_regions=20,
                       refdata_label=None, return_bad_regions=False, region_format=None,

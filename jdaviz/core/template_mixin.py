@@ -2416,7 +2416,8 @@ class SubsetSelect(SelectPluginComponent):
     """
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
-                 default_mode='default_text', subset_selected_changed_callback=None):
+                 default_mode='default_text', subset_selected_changed_callback=None, mode=None,
+                 edit_value=None, **kwargs):
         """
         Parameters
         ----------
@@ -2448,6 +2449,10 @@ class SubsetSelect(SelectPluginComponent):
         default_mode : str, optional
             What mode to use when making the default selection.  Valid options: first, default_text,
             empty.
+        on_rename : callable
+            callback when an item is renamed, but before the selection is updated
+        on_remove : callable
+            callback when an item is removed, but before the selection is updated
         """
         super().__init__(plugin,
                          items=items,
@@ -2459,7 +2464,10 @@ class SubsetSelect(SelectPluginComponent):
                          viewers=viewers,
                          default_text=default_text,
                          manual_options=manual_options,
-                         default_mode=default_mode)
+                         default_mode=default_mode,
+                         mode=mode,
+                         edit_value=edit_value
+                         )
 
         self._cached_properties += ["selected_subset_state",
                                     "selected_spatial_region",
@@ -2473,14 +2481,19 @@ class SubsetSelect(SelectPluginComponent):
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
 
+        self.add_observe(mode, self._mode_changed)
+        self.mode = 'select'  # select, rename, remove
+        self._on_rename = kwargs.get('on_rename', lambda *args: None)
+        self._on_remove = kwargs.get('on_remove', lambda *args: None)
+
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda msg: self._update_subset(msg.subset))
         self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda msg: self._delete_subset(msg.subset))
+                           handler=lambda msg: self._on_delete_subset(msg.subset))
         self.hub.subscribe(self, SubsetRenameMessage,
-                           handler=lambda msg: self._rename_subset(msg))
+                           handler=lambda msg: self._on_subset_renamed(msg))
 
         self._initialize_choices()
 
@@ -2492,6 +2505,7 @@ class SubsetSelect(SelectPluginComponent):
 
     def _selected_changed(self, event):
         super()._selected_changed(event)
+        self.edit_value = self.selected
         self._update_has_subregions()
 
     def _on_dataset_selected_changed(self, event):
@@ -2508,7 +2522,10 @@ class SubsetSelect(SelectPluginComponent):
                     return {"label": subset.label, "color": color, "type": type}
         return {"label": subset.label, "color": False, "type": False}
 
-    def _delete_subset(self, subset):
+    def _on_delete_subset(self, subset):
+        '''
+        Handle a subset being removed from elsewhere in the app.
+        '''
         # NOTE: calling .remove will not trigger traitlet update
         self.items = [s for s in self.items
                       if s['label'] != subset.label]
@@ -2572,7 +2589,23 @@ class SubsetSelect(SelectPluginComponent):
             if self._subset_selected_changed_callback is not None:
                 self._subset_selected_changed_callback()
 
-    def _rename_subset(self, msg):
+    def _mode_changed(self, event):
+        if self.mode == 'rename:accept':
+            try:
+                self._on_rename(self.selected, self.edit_value)
+            except ValueError as e:
+                self.hub.broadcast(SnackbarMessage(f"Renaming {self.selected} failed: {e}",
+                                   sender=self, color="error", traceback=e))
+            else:
+                self.edit_value = self.selected
+            self.mode = 'select'
+        elif self.mode == 'remove:accept':
+            self._remove_subset(self.edit_value)
+            self.mode = 'select'
+
+    def _on_subset_renamed(self, msg):
+        if self.mode == 'rename:accept':
+            pass
         # See if we're renaming the selected subset
         update_selected = False
         if self.selected == msg.old_label:
@@ -2591,6 +2624,14 @@ class SubsetSelect(SelectPluginComponent):
         # Force the traitlet to update.
         self.send_state('items')
 
+    def _rename_subset(self, old_label, new_label):
+        self._on_rename(old_label, new_label)
+
+    def _remove_subset(self, label):
+        if label is None:
+            label = self.selected
+        self._on_remove(label)
+
     def rename_choice(self, old, new):
         """
         Rename an existing entry.
@@ -2602,7 +2643,7 @@ class SubsetSelect(SelectPluginComponent):
         * new : str
             new label.  Must not be another existing entry.
         """
-        self.app._rename_subset(old, new)
+        self._rename_subset(old, new)
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():

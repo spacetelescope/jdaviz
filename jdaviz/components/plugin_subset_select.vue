@@ -2,7 +2,7 @@
   <div>
   <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
-      v-if="!rename_mode"
+      v-if="mode=='select'"
       :menu-props="{ left: true }"
       attach
       :items="items"
@@ -46,7 +46,10 @@
       <template v-slot:append v-if="selected !== 'Create New' && !multiselect">
         <v-icon style="cursor: pointer">mdi-menu-down</v-icon>
         <j-tooltip tooltipcontent="rename" v-if="api_hint_rename">
-          <v-icon style="cursor: pointer" @click="() => {rename_new_label = selected; rename_mode = true}">mdi-pencil</v-icon>
+          <v-icon style="cursor: pointer" @click="modeRename">mdi-pencil</v-icon>
+        </j-tooltip>
+        <j-tooltip tooltipcontent="delete" v-if="api_hint_remove">
+          <v-icon style="cursor: pointer" @click="modeRemove">mdi-delete</v-icon>
         </j-tooltip>
       </template>
       <template v-slot:prepend-item v-if="multiselect">
@@ -79,24 +82,52 @@
         </div>
       </template>
     </v-select>
+    <v-alert
+      v-else-if="mode=='remove'"
+      type="warning"
+      style="width: 100%; padding-top: 16px; padding-bottom: 16px"
+    >
+      <span v-if="api_hints_enabled && api_hint_remove" class="api-hint">
+        {{api_hint_remove}}('{{selected}}')
+      </span>
+      <span v-else>
+        remove '{{selected}}'?
+      </span>
+      <template v-slot:append>
+        <j-tooltip tooltipcontent="cancel">
+          <v-icon style="cursor: pointer" @click="changeCancel">mdi-close</v-icon>
+        </j-tooltip>
+        <j-tooltip :tooltipcontent="'Remove '+selected+' '+label.toLowerCase()">
+          <v-icon style="cursor: pointer" @click="changeAccept">mdi-delete</v-icon>
+        </j-tooltip>
+      </template>
+    </v-alert>
     <v-text-field
-      v-if="rename_mode"
-      v-model="rename_new_label"
+      v-else-if="['rename'].indexOf(mode) !== -1"
+      v-model="edit_value"
+      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
       :label="textFieldLabel"
       :class="textFieldClass"
-      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
-      hint="Rename subset."
+      :hint="'Rename '+label.toLowerCase()"
       persistent-hint
     >
       <template v-slot:append>
         <j-tooltip v-if="items.length > 0" tooltipcontent="Cancel change">
-          <v-icon style="cursor: pointer" @click="() => {changeCancel()}">mdi-close</v-icon>
+          <v-icon style="cursor: pointer" @click="changeCancel">mdi-close</v-icon>
         </j-tooltip>
         <j-tooltip tooltipcontent="Accept change">
-          <v-icon style="cursor: pointer" @click="() => {changeAccept()}">mdi-check</v-icon>
+          <v-icon style="cursor: pointer" @click="changeAccept">mdi-check</v-icon>
         </j-tooltip>
       </template>
     </v-text-field>
+    <span v-else>
+      <v-alert
+        type="success"
+        style="width: 100%; padding-top: 16px; padding-bottom: 16px"
+      >
+        Applying changes...
+      </v-alert>
+    </span>
   </v-row>
   <v-row v-if="has_subregions_warning && has_subregions">
     <span class="v-messages v-messages__message text--secondary" style="color: red !important">
@@ -108,25 +139,19 @@
 
 <script>
 module.exports = {
-  data: function () {
-    return {
-      rename_mode: false,
-      rename_new_label: ''
-    }
-  },
   props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'api_hint_rename'
+          'api_hint', 'api_hints_enabled', 'api_hint_rename', 'api_hint_remove', 'edit_value', 'mode'
   ],
   computed: {
     textFieldLabel() {
-      if (this.api_hints_enabled && this.rename_mode && this.api_hint_rename) {
-        return this.api_hint_rename+'(\''+this.selected+'\', \''+this.rename_new_label+'\')';
+      if (this.api_hints_enabled && this.mode == 'rename' && this.api_hint_rename) {
+        return this.api_hint_rename+'(\''+this.selected+'\', \''+this.edit_value+'\')';
       } else {
         return this.label || 'Subset';
       }
     },
     textFieldClass() {
-      if (this.api_hints_enabled && this.rename_mode && this.api_hint_rename) {
+      if (this.api_hints_enabled && this.mode == 'rename' && this.api_hint_rename) {
         return 'api-hint';
       } else {
         return null;
@@ -134,13 +159,18 @@ module.exports = {
     }
   },
   methods: {
-    changeAccept() {
-      this.$emit('rename-subset', {'old_label': this.selected, 'new_label': this.rename_new_label})
-      this.rename_mode = false
-    },
     changeCancel() {
-      this.rename_new_label = ''
-      this.rename_mode = false
+      this.$emit('update:edit_value', this.selected);
+      this.$emit('update:mode', 'select');
+    },
+    changeAccept() {
+      this.$emit('update:mode', this.mode+':accept')
+    },
+    modeRename() {
+      this.$emit('update:mode', 'rename')
+    },
+    modeRemove() {
+      this.$emit('update:mode', 'remove')
     }
   }
 };

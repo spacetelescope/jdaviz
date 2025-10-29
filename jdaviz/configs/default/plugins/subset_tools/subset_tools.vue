@@ -43,15 +43,16 @@
           :selected.sync="subset_selected"
           :multiselect="multiselect"
           :show_if_single_entry="true"
-          @rename-subset="rename_subset"
+          :mode.sync="subset_select_mode"
+          :edit_value.sync="subset_edit_value"
           label="Subset"
           api_hint="plg.subset ="
           api_hint_rename="plg.rename_subset"
+          api_hint_remove="plg.delete_subset"
           :api_hints_enabled="api_hints_enabled"
           hint="Select subset to edit."
         />
       </v-col>
-
       <v-col justify="center" cols=2>
         <j-tooltip tipid='g-subset-mode'>
           <g-subset-mode></g-subset-mode>
