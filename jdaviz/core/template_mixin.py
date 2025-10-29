@@ -2449,7 +2449,7 @@ class SubsetSelect(SelectPluginComponent):
         default_mode : str, optional
             What mode to use when making the default selection.  Valid options: first, default_text,
             empty.
-                on_rename : callable
+        on_rename : callable
             callback when an item is renamed, but before the selection is updated
         on_remove : callable
             callback when an item is removed, but before the selection is updated
