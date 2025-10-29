@@ -9,7 +9,7 @@
       label="Extension"
       api_hint="ldr.extension ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extension to use from the FITS HDUList."
+      hint="Extension to use for the image."
     ></plugin-select>
     <plugin-dataset-select
       :items="parent_items"

@@ -1,5 +1,17 @@
 <template>
   <v-container>
+    <plugin-select
+      v-if="input_has_extensions"
+      :items="extension_items.map(i => i.label)"
+      :selected.sync="extension_selected"
+      :show_if_single_entry="true"
+      :multiselect="false"
+      label="Extension"
+      api_hint="ldr.extension ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Extension to use for the image."
+    ></plugin-select>
+
     <plugin-auto-label
       :value.sync="data_label_value"
       :default="data_label_default"
