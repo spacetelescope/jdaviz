@@ -48,7 +48,7 @@
         <j-tooltip tooltipcontent="rename" v-if="api_hint_rename">
           <v-icon style="cursor: pointer" @click="modeRename">mdi-pencil</v-icon>
         </j-tooltip>
-        <j-tooltip tooltipcontent="delete">
+        <j-tooltip tooltipcontent="delete" v-if="api_hint_remove">
           <v-icon style="cursor: pointer" @click="modeRemove">mdi-delete</v-icon>
         </j-tooltip>
       </template>
@@ -91,7 +91,7 @@
         {{api_hint_remove}}('{{selected}}')
       </span>
       <span v-else>
-        remove '{{selected}}' {{label.toLowerCase()}}?
+        remove '{{selected}}'?
       </span>
       <template v-slot:append>
         <j-tooltip tooltipcontent="cancel">
@@ -140,7 +140,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'api_hint_rename', 'edit_value', 'mode'
+          'api_hint', 'api_hints_enabled', 'api_hint_rename', 'api_hint_remove', 'edit_value', 'mode'
   ],
   computed: {
     textFieldLabel() {
