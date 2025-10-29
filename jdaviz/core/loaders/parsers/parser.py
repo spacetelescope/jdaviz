@@ -1,9 +1,10 @@
 from functools import cached_property
+from jdaviz.core.template_mixin import WithCache
 
 __all__ = ['BaseParser']
 
 
-class BaseParser:
+class BaseParser(WithCache):
     def __init__(self, app, inp):
         self._app = app
         self._input = inp
@@ -23,3 +24,7 @@ class BaseParser:
     @cached_property
     def output(self):
         raise NotImplementedError("Subclasses must implement output property")  # pragma: nocover
+
+    def _cleanup(self):
+        """Cleanup any resources held by the parser."""
+        return

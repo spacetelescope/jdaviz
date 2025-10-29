@@ -14,7 +14,7 @@ class WithSliceIndicator:
 
     @property
     def slice_display_unit_name(self):
-        return 'spectral' if self.jdaviz_app.config == 'cubeviz' else 'temporal'
+        return 'spectral' if self.jdaviz_app.config in ('cubeviz', 'deconfigged') else 'temporal'
 
     @cached_property
     def slice_indicator(self):
@@ -83,7 +83,7 @@ class WithSliceSelection:
 
     @property
     def slice_display_unit_name(self):
-        return 'spectral' if self.jdaviz_app.config == 'cubeviz' else 'temporal'
+        return 'spectral' if self.jdaviz_app.config in ('cubeviz', 'deconfigged') else 'temporal'
 
     @property
     def slice_values(self):

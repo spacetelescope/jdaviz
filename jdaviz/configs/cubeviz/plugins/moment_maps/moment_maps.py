@@ -30,7 +30,8 @@ moment_unit_options = {0: ["Surface Brightness"],
                        2: ["Velocity", "Velocity^N"]}
 
 
-@tray_registry('cubeviz-moment-maps', label="Moment Maps")
+@tray_registry('cubeviz-moment-maps', label="Moment Maps",
+               category="data:analysis")
 class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
                 SpectralContinuumMixin, AddResultsMixin):
     """
@@ -124,6 +125,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def _default_image_viewer_reference_name(self):
@@ -390,10 +394,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @property
     def moment_zero_unit(self):
-        if self.spectrum_viewer.state.x_display_unit is not None:
+        if not len(self.spectrum_1d_viewers):
+            return u.dimensionless_unscaled
+        if self.spectrum_1d_viewers[0].state.x_display_unit is not None:
             return (
                 u.Unit(self.app._get_display_unit('sb')) *
-                u.Unit(self.spectrum_viewer.state.x_display_unit)
+                u.Unit(self.spectrum_1d_viewers[0].state.x_display_unit)
             )
         return u.dimensionless_unscaled
 

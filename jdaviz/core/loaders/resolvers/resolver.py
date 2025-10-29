@@ -40,6 +40,8 @@ class FormatSelect(SelectPluginComponent):
         empty.
     """
     debug = Bool(False).tag(sync=True)
+    _parsers = {}
+    _importers = {}
 
     def __init__(self, plugin, items, selected, default_mode='first'):
         self._invalid_importers = {}
@@ -60,7 +62,7 @@ class FormatSelect(SelectPluginComponent):
             return
 
         all_resolvers = []
-        self._dbg_parsers = {}
+        self._parsers = {}
         self._dbg_importers = {}
         self._invalid_importers = {}
         self._importers = {}
@@ -82,8 +84,7 @@ class FormatSelect(SelectPluginComponent):
             warnings.simplefilter("ignore")
             for parser_name, Parser in loader_parser_registry.members.items():
                 this_parser = Parser(self.plugin.app, parser_input)
-                if self.debug:
-                    self._dbg_parsers[parser_name] = this_parser
+                self._parsers[parser_name] = this_parser
                 try:
                     if this_parser.is_valid:
                         importer_input = this_parser.output
@@ -96,12 +97,18 @@ class FormatSelect(SelectPluginComponent):
 
                 if importer_input is None:
                     self._invalid_importers.setdefault(parser_name, 'importer_input is None')
+                    this_parser._cleanup()
                     continue
                 for importer_name, Importer in loader_importer_registry.members.items():
                     label = f"{parser_name} > {importer_name}"
+                    if self.plugin._restrict_to_formats is not None and \
+                            importer_name not in self.plugin._restrict_to_formats:
+                        self._invalid_importers[label] = 'not matching format restriction'  # noqa
+                        continue
                     try:
                         this_importer = Importer(app=self.plugin.app,
                                                  resolver=self.plugin,
+                                                 parser=this_parser,
                                                  input=importer_input)
                     except Exception as e:  # nosec
                         self._invalid_importers[label] = f'importer exception: {e}'
@@ -267,6 +274,9 @@ class BaseResolver(PluginTemplateMixin):
         self.format = FormatSelect(self,
                                    items='format_items',
                                    selected='format_selected')
+        self._restrict_to_formats = kwargs.get('format', None)
+        if isinstance(self._restrict_to_formats, str):
+            self._restrict_to_formats = [self._restrict_to_formats]
 
         self.target = TargetSelect(self,
                                    items='target_items',
@@ -316,8 +326,8 @@ class BaseResolver(PluginTemplateMixin):
             self._resolver_input_updated()
 
     @classmethod
-    def from_input(cls, app, inp, **kwargs):
-        self = cls(app=app)
+    def from_input(cls, app, inp, format=None, **kwargs):
+        self = cls(app=app, format=format)
         if self.default_input is None:
             raise NotImplementedError("Resolver subclass must implement default_input")  # noqa pragma: nocover
         with self.defer_resolver_input_updated():
@@ -379,6 +389,16 @@ class BaseResolver(PluginTemplateMixin):
                 return parsed_input_table
         return None
 
+    def _cleanup(self):
+        # clear the existing cache and close any open file references
+        # from referenced parsers/importers
+        for parser in self.format._parsers.values():
+            parser._cleanup()
+        for importer in self.format._importers.values():
+            if hasattr(importer, '_cleanup'):
+                importer._cleanup()
+        self._clear_cache('parsed_input', 'output')
+
     @observe('parsed_input_is_query', 'treat_table_as_query')
     @with_spinner('spinner', 'parsing input...')
     def _resolver_input_updated(self, msg={}):
@@ -389,7 +409,7 @@ class BaseResolver(PluginTemplateMixin):
             # is mapped to output has
             self._clear_cache('output')
         else:
-            self._clear_cache('parsed_input', 'output')
+            self._cleanup()
 
         try:
             parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
@@ -522,6 +542,11 @@ class BaseResolver(PluginTemplateMixin):
         return None
 
     @property
+    def parser(self):
+        # give access to the parser used by the selected importer
+        return self.importer._parser
+
+    @property
     def importer(self):
         # give access to the importer defined by the user-selection on format
         if not self.format.selected:
@@ -569,7 +594,6 @@ class BaseResolver(PluginTemplateMixin):
         else:
             self.importer_widget = "IPY_MODEL_" + self.importer.model_id
             self.valid_import_formats = ''
-            self.import_disabled = self.importer.import_disabled
 
             self.importer.reset_and_check_existing_data_in_dc()
 
@@ -611,7 +635,7 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
             invalid_resolvers[resolver_name] = f'not {resolver}'
             continue
         try:
-            this_resolver = Resolver.from_input(app, inp, **kwargs)
+            this_resolver = Resolver.from_input(app, inp, format=format, **kwargs)
         except Exception as e:  # nosec
             invalid_resolvers[resolver_name] = f'resolver exception: {e}'
             if resolver_name == 'url' and 'timeout' in str(e):

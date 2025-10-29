@@ -1,9 +1,11 @@
 import warnings
 
 from astropy.nddata import CCDData
+from astropy.wcs import WCS
 from glue.core import Data
+from gwcs import WCS as GWCS
 from specutils.manipulation import spectral_slab
-from traitlets import Bool, List, Unicode, observe
+from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -18,7 +20,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Collapse']
 
 
-@tray_registry('g-collapse', label="Collapse")
+@tray_registry('g-collapse', label="Collapse", category="data:reduction")
 class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Collapse Plugin Documentation <collapse>` for more details.
@@ -39,12 +41,6 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     template_file = __file__, "collapse.vue"
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
-    filename = Unicode().tag(sync=True)
-    collapsed_flux_available = Bool(False).tag(sync=True)
-    # export_enabled controls whether saving to a file is enabled via the UI.  This
-    # is a temporary measure to allow server-installations to disable saving server-side until
-    # saving client-side is supported
-    export_enabled = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
 
@@ -62,13 +58,11 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
 
-        if self.app.state.settings.get('server_is_remote', False):
-            # when the server is remote, saving the file in python would save on the server, not
-            # on the user's machine, so export support in cubeviz should be disabled
-            self.export_enabled = False
-
         # description displayed under plugin title in tray
         self._plugin_description = 'Collapse a spectral cube along one axis.'
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -110,7 +104,10 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             w = data.meta['_orig_spec'].wcs
         else:
             w = data.coords
-        data_wcs = getattr(w, 'celestial', None)
+        if isinstance(w, GWCS):
+            data_wcs = WCS(w.to_fits_sip())
+        else:
+            data_wcs = getattr(w, 'celestial', None)
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='No observer defined on WCS')
@@ -121,9 +118,6 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
             # stuff for exporting to file
             self.collapsed_flux = CCDData(collapsed_flux, wcs=data_wcs)
-            self.collapsed_flux_available = True
-            fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
-            self.filename = f"collapsed_{self.function_selected.lower()}_{fname_label}.fits"
 
         if add_data:
             data = Data(coords=data_wcs)

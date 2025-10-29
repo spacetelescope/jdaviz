@@ -449,7 +449,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.comp_label_invalid_msg = 'label must be provided'
             return
         if self.comp_label in [cm['id'] for cm in self.component_models]:
-            self.comp_label_invalid_msg = 'label already in use'
+            self.comp_label_invalid_msg = f"comp_label='{self.comp_label}' already in use"
             return
         self.comp_label_invalid_msg = ''
 

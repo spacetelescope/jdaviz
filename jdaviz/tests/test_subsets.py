@@ -23,8 +23,6 @@ def test_region_from_subset_2d(cubeviz_helper):
 
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
 
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 2D Flux')
-
     subset_plugin.import_region(
         EllipsePixelRegion(center=PixCoord(x=1, y=3.5), width=2.4, height=6.6))
     subset_plugin.subset.selected = 'Subset 1'
@@ -65,8 +63,6 @@ def test_region_from_subset_3d(cubeviz_helper):
 
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
     assert subset_plugin._obj.subset_selected == "Create New"
-
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
     subset_plugin.import_region(RectangularROI(1, 3.5, -0.2, 3.3))
     subset_plugin.subset.selected = 'Subset 1'
@@ -259,8 +255,6 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
 def test_composite_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
 
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
-
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
 
@@ -318,7 +312,6 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
     subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
 
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
     viewer = cubeviz_helper.app.get_viewer('flux-viewer')
 
     subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))

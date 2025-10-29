@@ -32,7 +32,6 @@ class SpectrumImporter(BaseImporterToDataCollection):
     @property
     def is_valid(self):
         if self.app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
-            # cubeviz allowed for cubeviz.specviz.load_data support
             # NOTE: temporary during deconfig process
             return False
         return isinstance(self.input, Spectrum) and self.input.flux.ndim == 1

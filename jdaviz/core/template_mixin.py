@@ -41,7 +41,8 @@ from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
-from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
+                                                    WithSliceSelection)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, RestoreToolbarMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
@@ -1353,7 +1354,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                     return
                 self.selected = [s for s in self.labels if s in self.selected]
                 return
-            is_valid = False
+
         is_valid = self.selected in self.labels
         if callable(self.default_mode):
             # callable was defined and passed by the plugin or inheriting component.
@@ -2081,7 +2082,7 @@ class LayerSelect(SelectPluginComponent):
                     if zorder is None:
                         zorder = layer.state.zorder
                     if from_plugin is None:
-                        from_plugin = layer.layer.data.meta.get('Plugin', None)
+                        from_plugin = layer.layer.data.meta.get('plugin', None)
                     if live_plugin_results is None:
                         live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None  # noqa
 
@@ -3963,6 +3964,12 @@ class ViewerSelect(SelectPluginComponent):
         def is_image_viewer(viewer):
             return _is_image_viewer(viewer)
 
+        def is_imviz_image_viewer(viewer):
+            return viewer.__class__.__name__ == 'ImvizImageView'
+
+        def is_slice_selection_viewer(viewer):
+            return isinstance(viewer, WithSliceSelection)
+
         def is_slice_indicator_viewer(viewer):
             return isinstance(viewer, WithSliceIndicator)
 
@@ -4065,7 +4072,7 @@ class ViewerSelectCreateNew(ViewerSelect):
 
         for viewer in self.app._jdaviz_helper.viewers.keys():
             if self.new_label.value.strip() == viewer:
-                self.new_label.invalid_msg = 'new_label already in use'
+                self.new_label.invalid_msg = f"new_label='{self.new_label.value}' already in use"
                 return
 
         self.new_label.invalid_msg = ''
@@ -4257,18 +4264,18 @@ class DatasetSelect(SelectPluginComponent):
 
     def _is_valid_item(self, data):
         def from_plugin(data):
-            return data.meta.get('Plugin', None) is not None
+            return data.meta.get('plugin', None) is not None
 
         def not_from_plugin(data):
-            return data.meta.get('Plugin', None) is None
+            return data.meta.get('plugin', None) is None
 
         def not_from_this_plugin(data):
             if self.plugin._plugin_name is None:
                 return True
-            return data.meta.get('Plugin', None) != self.plugin._plugin_name
+            return data.meta.get('plugin', None) != self.plugin._plugin_name
 
         def not_from_plugin_model_fitting(data):
-            return data.meta.get('Plugin', None) != 'Model Fitting'
+            return data.meta.get('plugin', None) != 'Model Fitting'
 
         def has_metadata(data):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
@@ -4703,20 +4710,21 @@ class AddResults(BasePluginComponent):
 
         for data in self.app.data_collection:
             if self.label == data.label:
-                if data.meta.get('Plugin', None) == self._plugin._plugin_name or\
+                if data.meta.get('plugin', None) == self._plugin._plugin_name or\
                         data.label in self.label_whitelist_overwrite:
                     self.label_invalid_msg = ''
                     self.label_overwrite = True
                     return
                 else:
-                    self.label_invalid_msg = 'label already in use'
+                    self.label_invalid_msg = f"label='{self.label}' already in use"
                     self.label_overwrite = False
                     return
 
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item, replace=None, label=None, format=None):
+    def add_results_from_plugin(self, data_item, replace=None, label=None, format=None,
+                                load_kwargs={}):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
@@ -4770,7 +4778,7 @@ class AddResults(BasePluginComponent):
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
-        data_item.meta['Plugin'] = self.plugin._plugin_name
+        data_item.meta['plugin'] = self.plugin._plugin_name
         if self.app.config == 'mosviz':
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
 
@@ -4784,7 +4792,7 @@ class AddResults(BasePluginComponent):
         if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
             self.app._jdaviz_helper.load(data_item,
                                          loader='object', format=format,
-                                         data_label=label, viewer=[])
+                                         data_label=label, viewer=[], **load_kwargs)
         else:
             # NOTE: eventually remove this entirely once all plugins are set to go through
             # the new loaders infrastructure above

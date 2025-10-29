@@ -13,7 +13,7 @@ class FITSParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz'):
+        if self.app.config not in ('deconfigged', 'specviz2d', 'lcviz', 'imviz', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
 
@@ -27,3 +27,17 @@ class FITSParser(BaseParser):
     @cached_property
     def output(self):
         return fits.open(self.input)
+
+    def _cleanup(self):
+        if 'output' not in self.__dict__:
+            return
+        for hdu in self.output:
+            try:
+                del hdu.data
+            except Exception:  # nosec
+                pass
+        try:
+            self.output.close()
+        except Exception:  # nosec
+            pass
+        self._clear_cache('output')

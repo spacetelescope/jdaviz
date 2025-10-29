@@ -104,7 +104,7 @@
           </v-row>
           <v-row v-if="format_items.length === 1" style="margin-top: 16px; margin-left: 8px">
               <span v-if="api_hints_enabled" class="api-hint" style="margin-right: 6px">ldr.format = '{{ format_selected }}'</span>
-              <span v-else>Format: {{ format_selected }}</span>
+              <span v-else><b>Format:</b> {{ format_selected }}</span>
           </v-row>
           <plugin-select
               v-if="format_items.length >= 2"

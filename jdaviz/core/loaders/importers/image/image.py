@@ -20,7 +20,7 @@ from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
     PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip, create_data_hash
+    _try_gwcs_to_fits_sip, create_data_hash, RA_COMPS, DEC_COMPS
 )
 
 try:
@@ -31,7 +31,20 @@ else:
     HAS_ROMAN_DATAMODELS = True
 
 
-__all__ = ['ImageImporter']
+__all__ = ['ImageImporter', '_spatial_assign_component_type']
+
+
+def _spatial_assign_component_type(comp_id, comp, units, physical_type):
+    if str(comp_id).startswith('Pixel Axis'):
+        physical_type = 'pixel'
+        return f'{str(comp_id)[-2]}:pixel'
+
+    if str(comp_id).lower() in RA_COMPS and physical_type == 'angle':
+        return f'RA:{physical_type}'
+    elif str(comp_id).lower() in DEC_COMPS and physical_type == 'angle':
+        return f'DEC:{physical_type}'
+
+    return physical_type
 
 
 @loader_importer_registry('Image')
@@ -124,13 +137,13 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube
         # isinstance NDData
         return (isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                        NDData, np.ndarray, asdf.AsdfFile)) or
+                                        NDData, np.ndarray, asdf.AsdfFile, Data)) or
                 (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))))
 
     def _glue_data_wcs_to_fits(self, glue_data):
@@ -192,7 +205,10 @@ class ImageImporter(BaseImporterToDataCollection):
         if isinstance(input, fits.hdu.image.ImageHDU):
             input = fits.HDUList([self.input])
 
-        if isinstance(input, NDData):
+        if isinstance(input, Data):
+            # Already a Glue object
+            data = [input,]
+        elif isinstance(input, NDData):
             data = _nddata_to_glue_data(input)  # list of Data
         elif isinstance(input, np.ndarray):
             data = [_ndarray_to_glue_data(input)]
@@ -289,6 +305,9 @@ class ImageImporter(BaseImporterToDataCollection):
             self.add_to_data_collection(output, data_label, data_hash=ext_item.get('data_hash'),
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
+
+    def assign_component_type(self, comp_id, comp, units, physical_type):
+        return _spatial_assign_component_type(comp_id, comp, units, physical_type)
 
 
 def _validate_fits_image2d(item):

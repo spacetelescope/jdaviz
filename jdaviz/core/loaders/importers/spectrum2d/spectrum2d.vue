@@ -1,14 +1,24 @@
 <template>
   <v-container>
     <plugin-select
-      v-if="input_hdulist"
+      v-if="input_has_extensions"
       :items="extension_items.map(i => i.label)"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
       label="Extension"
-      api_hint="ldr.extension ="
+      api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"
       hint="Extension to use from the FITS HDUList."
+    />
+    <plugin-select
+      v-if="input_has_extensions && has_unc"
+      :items="unc_extension_items.map(i => i.label)"
+      :selected.sync="unc_extension_selected"
+      :show_if_single_entry="true"
+      label="Uncertainty Extension"
+      api_hint="ldr.importer.unc_extension ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Extension to use from the FITS HDUList for uncertainty."
     />
     <plugin-auto-label
       :value.sync="data_label_value"
@@ -39,12 +49,13 @@
       hint="Select the viewer to use for the new data entry."
     ></plugin-viewer-create-new>
 
+    <j-plugin-section-header>Extracted Spectrum</j-plugin-section-header>
     <plugin-switch
       :value.sync="auto_extract"
       label="Extract 1D Spectrum"
       api_hint="ldr.importer.auto_extract ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extract a 1D spectrum from the 2D data."
+      hint="Extract a 1D spectrum from the 2D data (use the 2D Spectral Extraction Plugin after importing to extract with custom aperture/options)."
     ></plugin-switch>
     <div v-if="auto_extract">
       <plugin-auto-label

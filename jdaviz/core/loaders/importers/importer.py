@@ -13,30 +13,9 @@ from jdaviz.core.user_api import ImporterUserApi
 from jdaviz.utils import (standardize_metadata,
                           _wcs_only_label,
                           CONFIGS_WITH_LOADERS,
-                          SPECTRAL_AXIS_COMP_LABELS,
                           create_data_hash)
 
-__all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin',
-           '_spectrum_assign_component_type']
-
-
-def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
-    if not len(units) and str(comp_id) == 'flux':
-        units = 'ct'
-    if units in ('ct', 'pixel'):
-        physical_type = units
-
-    if physical_type is None:
-        return None
-    if str(comp_id) in SPECTRAL_AXIS_COMP_LABELS:
-        if physical_type in ('frequency', 'length', 'pixel'):
-            # link frequency to wavelength
-            return 'spectral_axis'
-        return f'spectral_axis:{physical_type}'
-    if str(comp_id) == 'uncertainty':
-        # don't link with flux columns
-        return f'uncertainty:{physical_type}'
-    return physical_type
+__all__ = ['BaseImporter', 'BaseImporterToDataCollection', 'BaseImporterToPlugin']
 
 
 class BaseImporter(PluginTemplateMixin):
@@ -51,8 +30,9 @@ class BaseImporter(PluginTemplateMixin):
 
     existing_data_in_dc = List([]).tag(sync=True)
 
-    def __init__(self, app, resolver, input, **kwargs):
+    def __init__(self, app, resolver, parser, input, **kwargs):
         self._input = input
+        self._parser = parser
         self._resolver = resolver
         super().__init__(app, **kwargs)
 
@@ -151,7 +131,7 @@ class BaseImporter(PluginTemplateMixin):
         return ImporterUserApi(self)
 
     def vue_import_clicked(self, *args, **kwargs):
-        self.__call__()
+        self._resolver.load()
 
 
 class BaseImporterToDataCollection(BaseImporter):
@@ -172,8 +152,8 @@ class BaseImporterToDataCollection(BaseImporter):
     viewer_label_auto = Bool(True).tag(sync=True)
     viewer_label_invalid_msg = Unicode().tag(sync=True)
 
-    def __init__(self, app, resolver, input, **kwargs):
-        super().__init__(app, resolver, input, **kwargs)
+    def __init__(self, app, resolver, parser, input, **kwargs):
+        super().__init__(app, resolver, parser, input, **kwargs)
         self.data_label = AutoTextField(self, 'data_label_value',
                                         'data_label_default',
                                         'data_label_auto',
@@ -258,7 +238,7 @@ class BaseImporterToDataCollection(BaseImporter):
 
         for data in self.app.data_collection:
             if self.data_label_value == data.label:
-                self.data_label_invalid_msg = 'data_label already in use'
+                self.data_label_invalid_msg = f"data_label='{self.data_label_value}' already in use"
                 return
 
         self.data_label_invalid_msg = ''

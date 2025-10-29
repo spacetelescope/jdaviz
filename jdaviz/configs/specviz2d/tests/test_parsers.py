@@ -58,8 +58,8 @@ def test_hlsp_goods_s2d(specviz2d_helper):
     # ensure uncalibrated 2d spectrum extraction works
     assert len(specviz2d_helper.app.data_collection) == 2
 
-    # links: spectral_axis, flux, Spectrum 1D: Pixel Axis 0 [x] <=> Spectrum 2D: Pixel Axis 1 [x]
-    assert len(specviz2d_helper.app.data_collection.external_links) == 3
+    # links: (glue.core.link_helpers.LinkSameWithUnits, glue.core.link_helpers.LinkSameWithUnits)
+    assert len(specviz2d_helper.app.data_collection.external_links) == 2
 
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (27, 674)

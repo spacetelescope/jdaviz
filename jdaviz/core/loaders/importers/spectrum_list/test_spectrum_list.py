@@ -45,6 +45,7 @@ class TestSpectrumListImporter:
 
         return FakeSpectrumListImporter(app=config_helper.app,
                                         resolver=config_helper.loaders['object']._obj,
+                                        parser=None,
                                         input=input_obj)
 
     def test_spectrum_list_importer_init_attributes(self, specviz_helper, deconfigged_helper,
@@ -428,6 +429,7 @@ class TestSpectrumListConcatenatedImporter:
     def setup_importer_obj(config_helper, input_obj):
         return FakeSpectrumListConcatenatedImporter(app=config_helper.app,
                                                     resolver=config_helper.loaders['object']._obj,
+                                                    parser=None,
                                                     input=input_obj)
 
     def setup_combined_spectrum(self, with_uncertainty):

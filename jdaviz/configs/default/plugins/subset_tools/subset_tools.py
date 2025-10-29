@@ -36,7 +36,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
-from jdaviz.utils import MultiMaskSubsetState, _chain_regions, data_has_valid_wcs
+from jdaviz.utils import (MultiMaskSubsetState, _chain_regions, data_has_valid_wcs,
+                          _get_celestial_wcs)
 
 from jdaviz.configs.default.plugins.subset_tools import utils
 
@@ -271,7 +272,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         >>> plg.import_region(CirclePixelRegion(center=PixCoord(x=24.27156066879736, y=22.183517455582475), radius=4.7523674964904785))  # noqa E501
         >>> type(plg.get_regions()['Subset 1'])
         <class 'regions.shapes.circle.CircleSkyRegion'>
-        >>> type(plg.get_regions(wrt_data='Unknown spectrum object[FLUX]')['Subset 1'])
+        >>> type(plg.get_regions(wrt_data='3D Spectrum [FLUX]')['Subset 1'])
         <class 'regions.shapes.circle.CirclePixelRegion'>
         """
 
@@ -1330,14 +1331,18 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
                                         RectanglePixelRegion, RectangleSkyRegion,
                                         CircleAnnulusPixelRegion, CircleAnnulusSkyRegion))):
                     try:
-                        state = regions2roi(region, wcs=data.coords)
+                        if getattr(data.coords, 'world_n_dim', None) == 3:
+                            data_wcs = _get_celestial_wcs(data.coords)
+                            state = regions2roi(region, wcs=data_wcs)
+                        else:
+                            state = regions2roi(region, wcs=data.coords)
                     except ValueError:
                         if '_orig_spatial_wcs' not in data.meta:
                             bad_regions.append((region,
                                                 f'Failed to load: _orig_spatial_wcs'
                                                 f' meta tag not in {data.label}'))
                             continue
-                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'].celestial)
+                        state = regions2roi(region, wcs=data.meta['_orig_spatial_wcs'])
                     viewer.apply_roi(state)
 
                 elif isinstance(region, (CircularROI, CircularAnnulusROI,
@@ -1412,7 +1417,9 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             snack_color = "success"
         self.app.hub.broadcast(SnackbarMessage(
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
-            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+            f"bad={n_reg_bad}", color=snack_color,
+            traceback=[(str(bad_region[0]), bad_region[1]) for bad_region in bad_regions],
+            timeout=8000, sender=self.app))
 
         if return_bad_regions:
             return bad_regions
