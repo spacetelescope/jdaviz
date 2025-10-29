@@ -99,7 +99,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                     pass
 
         del self.spectrum
-        gc.collect()
+        # gc.collect()
 
     @property
     def supported_flux_ndim(self):
