@@ -42,4 +42,4 @@ class FITSParser(BaseParser):
         except Exception:  # nosec
             pass
         self._clear_cache('output')
-        gc.collect()
+        # gc.collect()
