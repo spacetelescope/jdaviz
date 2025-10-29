@@ -13,6 +13,7 @@ from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.default import aida
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
@@ -38,6 +39,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
     default_class = None
     _state_cls = FreezableBqplotImageViewerState
+
+    _region_overlay_lookup = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -454,3 +457,82 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         # convert to world, make a polygon sky region:
         viewer_corners = wcs.pixel_to_world(*corners)
         return PolygonSkyRegion(viewer_corners)
+
+    def _region_overlay_label_to_index(self, region_label, reindex=False):
+        if self._region_overlay_lookup is None or reindex:
+            self._update_overlay_idx_lookups()
+
+        if region_label not in self._region_overlay_lookup.keys():
+            raise ValueError(f"No RegionOverlay labeled '{region_label}'.")
+
+        return self._region_overlay_lookup[region_label]
+
+    def _update_region_overlay_lookup(self):
+        # create dictionary for looking up a region overlay's index
+        # in viewer.figure.mark. this is implemented for O(N) region
+        # lookups when possibly thousands of footprints are loaded.
+
+        self._region_overlay_lookup = dict()
+        for i, mark in enumerate(self.figure.marks):
+            if isinstance(mark, RegionOverlay):
+                self._region_overlay_lookup[mark.label] = i
+
+    def _add_region_overlay(self, region=None, region_label=None, selected=False, **style_kwargs):
+        # note: if you're adding a lot of regions, adding them as a list
+        # will be more performant (fewer reindexing calls) than calling
+        # _add_region_overlay in a loop.
+        if region is None:
+            region = len(region_label) * [None]
+        region = region if isinstance(region, (tuple, list)) else [region]
+        region_label = region_label if isinstance(region_label, (tuple, list)) else [region_label]
+
+        if not isinstance(selected, (tuple, list)):
+            selected = [selected]
+        if len(selected) < len(region_label):
+            selected = len(region_label) * selected
+
+        wcs = getattr(self.state.reference_data, 'coords', None)
+
+        existing_marks = list(self.figure.marks)
+
+        if self._region_overlay_lookup is None:
+            self._update_region_overlay_lookup()
+
+        new_marks = []
+        for reg, label, selection in zip(region, region_label, selected):
+            if label not in self._region_overlay_lookup.keys():
+                # add new marks:
+                pixel_region = reg.to_pixel(wcs)
+                x, y = pixel_region.vertices.x, pixel_region.vertices.y
+                mark = RegionOverlay(
+                    self, region, x=x, y=y,
+                    label=label,
+                    selected=selection
+                )
+                new_marks.append(mark)
+
+            else:
+                # update an existing mark:
+                mark_idx = self._region_overlay_label_to_index(label)
+                existing_marks[mark_idx].selected = selection
+                existing_marks[mark_idx].update_style(style_kwargs)
+
+        self.figure.marks = existing_marks + new_marks
+        self._update_region_overlay_lookup()
+
+    def _remove_region_overlay(self, region_label):
+        region_label = region_label if isinstance(region_label, (tuple, list)) else [region_label]
+        for label in region_label:
+            if label not in self._region_overlay_lookup.keys():
+                raise ValueError(f"No RegionOverlay labeled '{label}'.")
+
+        self.figure.marks = [
+            mark for mark in self.figure.marks if not isinstance(mark, RegionOverlay) or
+            (isinstance(mark, RegionOverlay) and mark.label not in region_label)
+        ]
+        self._update_region_overlay_lookup()
+
+    def _remove_all_region_overlays(self):
+        self.figure.marks = [
+            mark for mark in self.figure.marks if not isinstance(mark, RegionOverlay)
+        ]

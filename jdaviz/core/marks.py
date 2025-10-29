@@ -1,5 +1,6 @@
 import numpy as np
 
+from traitlets import Bool, observe
 from astropy import units as u
 from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
@@ -756,6 +757,56 @@ class FootprintOverlay(PluginLine):
             raise TypeError("is_selected must be of type bool")
 
         self.stroke_width = 4 if is_selected else 1
+
+
+class RegionOverlay(PluginLine):
+    """
+    Overlay mark representing a sky region in an image viewer,
+    specifically for use outside of the Footprints plugin.
+
+    Distinct from `FootprintOverlay`, which is meant for the marks
+    made and controlled by the Footprints plugin.
+    """
+    default_style = dict(
+        stroke_width=2,
+        colors=[accent_color],
+    )
+    selected_style = dict(
+        stroke_width=4,
+        colors=['#2fff00'],
+    )
+    selected = Bool(False).tag(sync=True)
+
+    def __init__(self, viewer, overlay, selected=False, label=None, **kwargs):
+        self._overlay = overlay
+        self.selected = selected
+
+        style = self.selected_style if selected else self.default_style
+        for attr, value in style.items():
+            kwargs.setdefault(attr, value)
+
+        if label:
+            kwargs.setdefault('label', label)
+
+        kwargs.setdefault('stroke_width', 1)
+        kwargs.setdefault('close_path', True)
+        kwargs.setdefault('opacities', [1.0])
+        kwargs.setdefault('fill', 'inside')
+        kwargs.setdefault('fill_opacities', [0])
+        super().__init__(viewer, **kwargs)
+
+    @property
+    def overlay(self):
+        return self._overlay
+
+    @observe("selected")
+    def on_selection_change(self, msg):
+        style = self.selected_style if self.selected else self.default_style
+        self.update_style(style)
+
+    def update_style(self, style):
+        for attr, value in style.items():
+            setattr(self, attr, value)
 
 
 class ApertureMark(PluginLine):
