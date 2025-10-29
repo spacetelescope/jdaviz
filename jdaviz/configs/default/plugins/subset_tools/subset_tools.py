@@ -98,7 +98,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
     subset_select_mode = Unicode().tag(sync=True)
-    subset_edit_value = Unicode().tag(sync=True)
+    subset_edit_value = Any().tag(sync=True)
     subset_items = List([]).tag(sync=True)
     subset_selected = Any().tag(sync=True)
 
