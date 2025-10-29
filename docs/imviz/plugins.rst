@@ -466,9 +466,11 @@ catalog dropdown menu.
 
 To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_,
 choose "From File..." from the menu.
-The file must be parseable by `astropy.table.Table.read` and must contain the following column(s):
+The file must be parseable by `astropy.table.Table.read` and must contain either the sky_centroid column, or Right Ascension and Declination columns:
 
-* ``'sky_centroid'``: Column with `~astropy.coordinates.SkyCoord` sky coordinates of the sources.
+* ``'sky_centroid'`` (Optional): Column with `~astropy.coordinates.SkyCoord` sky coordinates of the sources.
+* ``'Right Ascension & Declination'`` (Optional): Two separate columns giving the sky coordinates in degrees,
+  typically labeled Right Ascension (degrees) and Declination (degrees) (or simply ra/RA and dec/DEC).
 * ``'label'`` (Optional): Column with string identifiers of the sources.
   If not provided, unique string identifiers will be generated automatically.
   If you have numerical identifiers, they will be recast as strings.
