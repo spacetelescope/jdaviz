@@ -803,12 +803,12 @@ def test_model_equation_with_different_flux_units(specviz_helper, spectrum1d):
 
     # Make sure the slope values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / Angstrom'
-    assert mf._obj.component_models[0]['parameters'][0]['value'] == 2.101682793989356e-09
-    assert mf._obj.component_models[0]['parameters'][0]['std'] == 2.592595876372657e-10
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 2.101682793989356e-09)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 2.592595876372657e-10)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'MJy'
-    assert mf._obj.component_models[0]['parameters'][1]['value'] == -1.9059224944852744e-07
-    assert mf._obj.component_models[0]['parameters'][1]['std'] == 1.760378037351944e-06
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -1.9059224944852744e-07)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 1.760378037351944e-06)
 
     # Create second model component with flux unit Jy
     uc.flux_unit = 'Jy'
@@ -820,12 +820,12 @@ def test_model_equation_with_different_flux_units(specviz_helper, spectrum1d):
 
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'Jy / Angstrom'
-    assert mf._obj.component_models[0]['parameters'][0]['value'] == 72.25951885849373
-    assert mf._obj.component_models[0]['parameters'][0]['std'] == 0.00012962979344882685
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 72.25951885849373)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 0.00012962979344882685)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'Jy'
-    assert mf._obj.component_models[0]['parameters'][1]['value'] == -1.178610033562609
-    assert mf._obj.component_models[0]['parameters'][1]['std'] == 0.8801890186759704
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -1.178610033562609)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 0.8801890186759704)
 
     # Create third model component with flux unit W / (Hz m2)
     uc.flux_unit = 'W / (Hz m2)'
@@ -837,12 +837,12 @@ def test_model_equation_with_different_flux_units(specviz_helper, spectrum1d):
 
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'W / (Angstrom Hz m2)'
-    assert mf._obj.component_models[0]['parameters'][0]['value'] == 1.5145415302565086e-24
-    assert mf._obj.component_models[0]['parameters'][0]['std'] == 8.641986273329422e-31
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 1.5145415302565086e-24)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 8.641986273329422e-31)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'W / (Hz m2)'
-    assert mf._obj.component_models[0]['parameters'][1]['value'] == -1.835511944074311e-26
-    assert mf._obj.component_models[0]['parameters'][1]['std'] == 5.86792679117314e-27
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -1.835511944074311e-26)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 5.86792679117314e-27)
 
     model = specviz_helper.app.data_collection['model']
     assert model.get_component('flux').units == 'W / (Hz m2)'
