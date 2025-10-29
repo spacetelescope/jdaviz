@@ -648,8 +648,6 @@ def test_spectral_extraction_scientific_validation(
     assert median_abs_relative_dev < expected_rtol
 
 
-# TODO: Remove skip when speed/gc collection issue is resolved.
-@pytest.mark.skip
 @pytest.mark.parametrize("flux_angle_unit", [(u.Unit(x), u.sr) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS]  # noqa
                                               + [(u.Unit(x), PIX2) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])  # noqa
 def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
