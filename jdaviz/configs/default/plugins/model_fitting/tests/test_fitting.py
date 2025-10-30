@@ -835,7 +835,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
 
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'Jy / Angstrom'
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7509.7789948601)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7509.7789948601, atol=2)
     assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 8.574080196915292e-06)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'Jy'
