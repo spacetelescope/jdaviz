@@ -95,11 +95,12 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     assert 'col1' in tab.colnames
 
     # make sure linking doesn't produce any errors when alingment changes.
-    # this isn't relevant for this catalog with no source positons, 
+    # this isn't relevant for this catalog with no source positons,
     # but orientation will check for the presence of certain
     # components in a table to decide not to link and we
     # want to make sure that works correctly
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
 
 def test_load_catalog_with_string_coord_cols(imviz_helper):
     """
