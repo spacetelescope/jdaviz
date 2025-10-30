@@ -92,7 +92,7 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     assert len(dc) == 1
     assert 'Catalog' in imviz_helper.app.data_collection.labels
     tab = dc[0].get_object(Table)
-    assert 'col1' in qtab.colnames
+    assert 'col1' in tab.colnames
 
     # make sure linking doesn't produce any errors when alingment changes.
     # this isn't relevant for this catalog with no source positons, 
