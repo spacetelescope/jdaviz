@@ -75,7 +75,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Query catalog for objects within region on sky.'
 
-        self.viewer.add_filter('is_image_viewer')
+        self.viewer.add_filter('is_imviz_image_viewer')
 
         def custom_toolbar(viewer):
             if viewer.reference in self.viewer.choices:

@@ -6,7 +6,7 @@ from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
 from specutils import Spectrum
 
-from jdaviz.core.events import GlobalDisplayUnitChanged
+from jdaviz.core.events import AddDataMessage, GlobalDisplayUnitChanged, RemoveDataMessage
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
@@ -421,6 +421,10 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         viewer.session.hub.subscribe(self, SliceToolStateMessage,
                                      handler=self._on_change_state)
 
+        for msg in (AddDataMessage, RemoveDataMessage):
+            viewer.session.hub.subscribe(self, msg,
+                                         handler=lambda x: self._set_visibility())
+
         super().__init__(viewer=viewer,
                          x=[value, value],
                          stroke_width=2,
@@ -444,6 +448,15 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     @property
     def marks(self):
         return [self, self.label]
+
+    def _set_visibility(self):
+        for dc in self._viewer.jdaviz_app.data_collection:
+            if len(dc.shape) == 3:
+                self.visible = True
+                self.label.visible = self._show_value
+                return
+        self.visible = False
+        self.label.visible = False
 
     def _on_global_display_unit_changed(self, msg):
         # Updating the value is handled by the plugin itself, need to update unit string.

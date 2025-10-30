@@ -105,7 +105,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._plugin_description = 'Rotate image viewer orientation and choose alignment (pixel or sky).'  # noqa
 
         self.viewer._allow_multiselect = False
-        self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
+        self.viewer.add_filter('is_imviz_image_viewer', 'reference_has_wcs')
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
