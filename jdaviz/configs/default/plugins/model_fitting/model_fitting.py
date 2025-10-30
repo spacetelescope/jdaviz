@@ -653,7 +653,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
 
+        # subset-masked spectrum, if applicable
         mask = masked_spectrum.mask
+
         if mask is not None:
             if mask.ndim == 3:
                 if masked_spectrum.spectral_axis_index in [2, -1]:
@@ -662,6 +664,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     spectral_mask = mask.all(axis=(1, 2))
             else:
                 spectral_mask = mask
+
             init_x = masked_spectrum.spectral_axis[~spectral_mask]
             orig_flux_shape = masked_spectrum.flux.shape
             init_y = masked_spectrum.flux[~mask]

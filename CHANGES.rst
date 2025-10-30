@@ -8,6 +8,8 @@ Bug Fixes
 
 - Add support for all valid astropy table write formats. [#3822]
 
+- Fix a bug with initializing component models in Model Fitting when Cube Fit was toggle on. [#3857]
+
 Cubeviz
 ^^^^^^^
 

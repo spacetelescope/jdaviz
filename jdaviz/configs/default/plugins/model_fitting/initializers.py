@@ -82,7 +82,10 @@ class _Linear1DInitializer(object):
             axes = [0, 1, 2]
             axes.remove(spectral_axis_index)
             y = np.nanmean(y, axis=tuple(axes))
-        slope, intercept = np.polynomial.Polynomial.fit(x.value.flatten(), y.value.flatten(), 1)
+
+        good_inds = np.where(np.isfinite(y.value))
+        slope, intercept = np.polynomial.Polynomial.fit(x.value[good_inds].flatten(),
+                                                        y.value[good_inds].flatten(), 1)
 
         instance.slope.value = slope
         instance.intercept.value = intercept
@@ -125,8 +128,8 @@ class _WideBand1DInitializer(object):
             The initialized model.
         """
         y_mean = np.nanmean(y)
-        x_range = x[-1] - x[0]
-        position = x_range / 2.0 + x[0]
+        x_range = np.nanmax(x) - np.nanmin(x)
+        position = x_range / 2.0 + np.nanmin(x)
 
         name = _get_model_name(instance)
 
@@ -197,16 +200,16 @@ class _LineProfile1DInitializer(object):
             y = np.nanmean(y, axis=tuple(axes))
 
         # X centroid estimates the position
-        centroid = np.sum(x * y) / np.sum(y)
+        centroid = np.nansum(x * y) / np.nansum(y)
 
         # width can be estimated by the weighted
         # 2nd moment of the X coordinate.
         dx = x - np.nanmean(x)
-        fwhm = 2 * np.sqrt(np.sum((dx * dx) * y) / np.sum(y))
+        fwhm = 2 * np.sqrt(np.nansum((dx * dx) * y) / np.nansum(y))
 
         # amplitude is derived from area.
         delta_x = x[1:] - x[:-1]
-        sum_y = np.sum((y[1:] - np.min(y[1:])) * delta_x)
+        sum_y = np.nansum((y[1:] - np.min(y[1:])) * delta_x)
         height = sum_y / (fwhm / 2.355 * np.sqrt(2 * np.pi))
 
         name = _get_model_name(instance)
