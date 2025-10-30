@@ -785,15 +785,16 @@ class RegionOverlay(PluginLine):
         for attr, value in style.items():
             kwargs.setdefault(attr, value)
 
-        if label:
-            kwargs.setdefault('label', label)
-
         kwargs.setdefault('stroke_width', 1)
         kwargs.setdefault('close_path', True)
         kwargs.setdefault('opacities', [1.0])
         kwargs.setdefault('fill', 'inside')
         kwargs.setdefault('fill_opacities', [0])
+
         super().__init__(viewer, **kwargs)
+
+        # must be called after super()
+        self.label = label
 
     @property
     def overlay(self):
@@ -805,6 +806,9 @@ class RegionOverlay(PluginLine):
         self.update_style(style)
 
     def update_style(self, style):
+        if not len(style):
+            return
+
         for attr, value in style.items():
             setattr(self, attr, value)
 
