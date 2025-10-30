@@ -173,21 +173,13 @@ class CatalogImporter(BaseImporterToDataCollection):
         x = self.col_x_selected
         y = self.col_y_selected
 
-        # if ra, dec and x, y are all unselected, disable import. at least one pair
-        # of coordinates must be selected.(checks for ra selected but not dec or
-        # x but not y, and vice versa, are done in their respective sections below)
-        if (x in ['---', ''] or x is None) and (y in ['---', ''] or y is None) and \
-           (ra in ['---', ''] or ra is None) and (dec in ['---', ''] or dec is None):
-            import_disabled = True
-        else:
-            import_disabled = False
-
         if msg['name'] in ('col_ra_selected', 'col_dec_selected'):
 
             axis = ra if msg['name'] == 'col_ra_selected' else dec
 
             if axis == '---':
-                # no selection, assume 'has units' to disable unit selection dropdown
+                # no selection, set 'has units' to true to disable unit
+                # selection dropdown
                 if msg['name'] == 'col_ra_selected':
                     self.col_ra_has_unit = True
                 elif msg['name'] == 'col_dec_selected':

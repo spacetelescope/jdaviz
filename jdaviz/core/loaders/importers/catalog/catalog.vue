@@ -4,8 +4,8 @@
   <j-plugin-section-header>Select coordinate columns</j-plugin-section-header>
 
   <div style="font-size: 10px; color: rgba(0, 0, 0, 0.6); margin-bottom: 5px;">
-  Select RA/Dec and/or X/Y pair to enable import. Pixel positions
-  are w.r.t the image viewer reference data.
+  Select RA/Dec and/or X/Y pair to enable funcationality as a source catalog.
+  Pixel positions are w.r.t the image viewer reference data.
   </div>
 
   <plugin-select
