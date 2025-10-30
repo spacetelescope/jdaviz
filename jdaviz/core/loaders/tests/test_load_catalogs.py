@@ -58,6 +58,50 @@ def _make_catalog_string_coord_columns():
                   names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
 
 
+def _make_catalog_no_coordinates():
+    # Table to test loading catalogs that aren't 'Source Catalogs',
+    col1 = ['A', 'B', 'C']
+    col2 = [1, 2, 3]
+    col3 = [True, False, True]
+
+    return Table(data=[col1, col2, col3],
+                 names=['col1', 'col2', 'col3'])
+
+
+def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
+    """
+    A table should be able to be loaded without selecting
+    an RA/Dec or X/Y pair. This table will not have the functionality
+    of a 'Souce Catalog' that does have source positions
+    (linking, mouseover) but it may be loaded to plot for example
+    in the scatter or histrogram viewer.
+    """
+    imviz_helper.app.state.catalogs_in_dc = True
+
+    catalog_obj = _make_catalog_no_coordinates()
+
+    # load data so we can test orientation later
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    # load catalog
+    imviz_helper.load(catalog_obj)
+
+    # check for the table in the data collection
+    dc = imviz_helper.app.data_collection
+    assert len(dc) == 1
+    assert 'Catalog' in imviz_helper.app.data_collection.labels
+    tab = dc[0].get_object(Table)
+    assert 'col1' in tab.colnames
+
+    # make sure linking doesn't produce any errors when alingment changes.
+    # this isn't relevant for this catalog with no source positons,
+    # but orientation will check for the presence of certain
+    # components in a table to decide not to link and we
+    # want to make sure that works correctly
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+
 def test_load_catalog_with_string_coord_cols(imviz_helper):
     """
     Test loading a catalog with string RA/Dec columns (that can be converted
