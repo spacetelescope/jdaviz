@@ -786,9 +786,13 @@ def test_specviz2d_linking(specviz2d_helper):
     )
 
 
-def test_model_equation_with_different_flux_units(specviz_helper, spectrum1d):
+def test_model_equation_with_different_flux_units(specviz_helper):
+    wavelength = np.linspace(6000, 8000, 100) * u.AA  # 100 points for smooth line
+    flux = (2.0 * wavelength.value + 1000.0) * u.Jy  # slope=2, intercept=1000
+    uncertainty = StdDevUncertainty(np.ones_like(flux.value) * 0.1 * u.Jy)
+    spec = Spectrum(spectral_axis=wavelength, flux=flux, uncertainty=uncertainty)
     data_label = 'test'
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load_data(spec, data_label=data_label)
 
     mf = specviz_helper.plugins['Model Fitting']
     uc = specviz_helper.plugins['Unit Conversion']
@@ -797,52 +801,70 @@ def test_model_equation_with_different_flux_units(specviz_helper, spectrum1d):
     uc.flux_unit = 'MJy'
     mf.model_component = 'Linear1D'
     mf.create_model_component()
+
+    # Make sure unit conversion is correct for model component params
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'],  0.015)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], 0.002)
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
     # Make sure the slope values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / Angstrom'
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 2.101682793989356e-09)
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 2.592595876372657e-10)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'],  2.0e-06)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 1.7148160424389383e-11)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'MJy'
-    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -1.9059224944852744e-07)
-    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 1.760378037351944e-06)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], 0.001)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 1.2045294056638512e-07)
 
     # Create second model component with flux unit Jy
     uc.flux_unit = 'Jy'
     mf.model_component = 'Linear1D'
     mf.create_model_component()
+
+    # Make sure unit conversion is correct for model component params
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'],  2)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 1.7148160424389382e-05)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], 1000)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 0.12045294056638511)
+
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'Jy / Angstrom'
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 72.25951885849373)
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 0.00012962979344882685)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7509.7789948601)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 8.574080196915292e-06)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'Jy'
-    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -1.178610033562609)
-    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 0.8801890186759704)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -47.02434655704804)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 0.060226470283192564)
 
     # Create third model component with flux unit W / (Hz m2)
     uc.flux_unit = 'W / (Hz m2)'
     mf.model_component = 'Linear1D'
     mf.create_model_component()
+
+    # Make sure unit conversion is correct for model component params
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7.509778994860101e-23)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 8.574080196915293e-32)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -4.702434655704804e-25)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 6.022647028319256e-28)
+
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
 
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'W / (Angstrom Hz m2)'
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 1.5145415302565086e-24)
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 8.641986273329422e-31)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7.509778994860101e-23)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 5.716053467911415e-32)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'W / (Hz m2)'
-    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -1.835511944074311e-26)
-    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 5.86792679117314e-27)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -4.702434655704804e-25)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 4.0150980188795e-28)
 
     model = specviz_helper.app.data_collection['model']
     assert model.get_component('flux').units == 'W / (Hz m2)'
