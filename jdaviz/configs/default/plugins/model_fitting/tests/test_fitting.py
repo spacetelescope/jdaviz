@@ -803,7 +803,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     mf.create_model_component()
 
     # Make sure unit conversion is correct for model component params
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'],  0.015)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 0.015)
     assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], 0.002)
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
@@ -811,7 +811,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
 
     # Make sure the slope values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / Angstrom'
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'],  2.0e-06)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 2.0e-06)
     assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 1.7148160424389383e-11)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'MJy'
@@ -824,7 +824,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     mf.create_model_component()
 
     # Make sure unit conversion is correct for model component params
-    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'],  2)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 2)
     assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 1.7148160424389382e-05)
     assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], 1000)
     assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 0.12045294056638511)
