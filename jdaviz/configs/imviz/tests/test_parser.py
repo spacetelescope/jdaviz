@@ -117,6 +117,7 @@ class TestParseImage:
             assert data.shape == slice_shape
             assert_array_equal(comp.data, i)
 
+    @pytest.mark.filterwarnings('ignore:.*path should be string, bytes, os.PathLike or integer, not ndarray.*:DeprecationWarning')  # noqa
     def test_parse_numpy_array_3d_too_many(self, imviz_helper):
         with pytest.warns(UserWarning, match='16 or more 3D slices found'):
             imviz_helper.load_data(np.ones((17, 5, 5)))
