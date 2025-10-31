@@ -51,7 +51,6 @@ class TestLineLists:
             == "Unknown (Custom)"
         )
 
-
     def test_redshift(self, specviz_helper, spectrum1d):
         # Also test that plugin is disabled before data is loaded.
         ll_plugin = specviz_helper.plugins['Line Lists']._obj
@@ -104,7 +103,6 @@ class TestLineLists:
         assert ll_plugin.spectrum_viewer.spectral_lines is None
         assert ll_plugin.identify_label == ''
 
-
     def test_load_available_preset_lists(self, specviz_helper, spectrum1d):
         """ Loads all available line lists and checks the medium requirement """
         label = "Test 1D Spectrum"
@@ -128,7 +126,6 @@ class TestLineLists:
         for list in specviz_helper.plugins['Line Lists']._obj.list_contents.values():  # noqa
             assert 'medium' in list
 
-
     def test_line_identify(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d)
 
@@ -147,7 +144,6 @@ class TestLineLists:
         ll_plugin.vue_change_visible(('Test List', line, 0))
         assert line.get('show') is False
         assert line.get('identify', False) is False
-
 
     def test_global_redshift_applied(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d)
@@ -171,7 +167,6 @@ class TestLineLists:
             if isinstance(mark, SpectralLine)]
 
         assert np.allclose([line.redshift for line in viewer_lines], 0.01)
-
 
     def test_global_redshift_applied_to_all(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d)
