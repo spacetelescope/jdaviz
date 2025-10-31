@@ -187,7 +187,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
     mo._viewer_mouse_event(iv._obj.glue_viewer,
                            {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
     assert mo.as_dict()['data_label'] == 'my_catalog'
-    assert mo.as_text()[0] == ''
+    assert mo.as_text()[0] == 'Source ID 2'
     assert mo.as_text()[1] == 'World 22h30m06.8256s -20d49m37.4520s (ICRS)'
     # some floating point discrepancies in degs is acceptable, WCS tested elsewhere
     assert len(mo.as_text()[2]) > 0

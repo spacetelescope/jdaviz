@@ -62,6 +62,16 @@
     :api_hints_enabled="api_hints_enabled"
   ></plugin-select>
 
+  <j-plugin-section-header>Select Source ID Column</j-plugin-section-header>
+  <plugin-select
+    :items="col_id_items.map(i => i.label)"
+    :selected.sync="col_id_selected"
+    label="Source ID Column"
+    hint="Select column to use as source IDs (displayed on mouseover)."
+    api_hint="ldr.importer.col_id ="
+    :api_hints_enabled="api_hints_enabled"
+  />    
+
   <j-plugin-section-header>Select Additional Columns</j-plugin-section-header>
   <plugin-select
     :items="col_other_items.map(i => i.label)"

@@ -37,6 +37,11 @@ class CatalogImporter(BaseImporterToDataCollection):
     col_y_items = List().tag(sync=True)
     col_y_selected = Unicode().tag(sync=True)
 
+    # (optional) to select column used as source IDs, which will be what is
+    # displayed for mouseover. If None selected, an index column is used.
+    col_id_items = List().tag(sync=True)
+    col_id_selected = Unicode().tag(sync=True)
+
     # additional (optional) non-position columns to load (e.g. flux, id)
     col_other_items = List().tag(sync=True)
     col_other_selected = List().tag(sync=True)
@@ -66,6 +71,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                                                   items='col_dec_unit_items',
                                                   selected='col_dec_unit_selected',
                                                   manual_options=self._valid_coord_units('dec'))
+
+        # dropdown for source ID column
+        self.col_id = SelectPluginComponent(self,
+                                            items='col_id_items',
+                                            selected='col_id_selected',
+                                            manual_options=['Default (index)'] + self.input.colnames)  # noqa
 
         # dropdowns for tables with pixel source positions
         self.col_x = SelectPluginComponent(self,
@@ -118,12 +129,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                 idx = get_idx(all_column_names, DEC_COMPS, None)
             elif col == 'x':
                 col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
-                                     "xpixel", "xpix", "ximage", "ximg"
+                                     "xpixel", "pixelx", "xpix", "ximage", "ximg"
                                      "xcoord", "xcoordinate", "sourcex", "xsource"]
                 idx = get_idx(all_column_names, col_possibilities, None)
             elif col == 'y':
                 col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
-                                     "ypixel", "ypix", "yimage", "yimg"
+                                     "ypixel", "pixely", "ypix", "yimage", "yimg"
                                      "ycoord", "ycoordinate", "sourcey", "ysource"]
                 idx = get_idx(all_column_names, col_possibilities, None)
 
@@ -132,7 +143,9 @@ class CatalogImporter(BaseImporterToDataCollection):
         if idx is None:
             return ['---'] + colnames
         return_cols = colnames if idx == 0 else (colnames[idx:] + colnames[:idx])
-        return return_cols + ['---']
+        # non-selection is the second option, so you don't have to scroll
+        # all the way down to see that its an option not to load a column
+        return [return_cols[0]] + ['---'] + return_cols[1:]
 
     def _valid_coord_units(self, coord):
         """Valid choices for Ra, Dec units."""
@@ -255,6 +268,8 @@ class CatalogImporter(BaseImporterToDataCollection):
         for col in [self.col_x_selected, self.col_y_selected]:
             if col not in ['---', ''] and col is not None:
                 coordinate_cols.append(col)
+        if self.col_id_selected not in ['Default (index)', '', None]:
+            coordinate_cols.append(self.col_id_selected)
 
         cols_all = coordinate_cols + self.col_other_selected
 
@@ -331,6 +346,15 @@ class CatalogImporter(BaseImporterToDataCollection):
             # the same X, Y column names for consistency when accessing elsewhere
             output_table['X'] = table[self.col_x_selected]
             output_table['Y'] = table[self.col_y_selected]
+
+        # add source ID column. If no column selected, just use table index
+        # for now this will be added as a column named 'ID' in the output table,
+        # but this should be changed to adding a component label in JDAT-5716
+
+        if self.col_id_selected in table.colnames:
+            output_table['ID'] = table[self.col_id_selected]
+        else:
+            output_table['ID'] = np.arange(len(table))
 
         # add additional columns to output table
         for col in self.output_cols:
