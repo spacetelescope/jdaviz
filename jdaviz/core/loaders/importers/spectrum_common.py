@@ -56,7 +56,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        none_option = [{'label': 'None', 'name': '', 'name_ver': '', 'index': None, 'obj': None}]
         if isinstance(self.input, fits.HDUList):
             self.input_type = 'fits:hdulist'
             ext_options = [{'label': f"{index}: {hdu.name}",
@@ -66,7 +65,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                             'index': index,
                             'obj': hdu}
                            for index, hdu in enumerate(self.input)
-                           ] + none_option
+                           ]
 
         elif isinstance(self.input, AsdfFile) and 'roman' in self.input:
             self.input_type = 'asdf:roman'
@@ -76,7 +75,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                             'index': ind,
                             'obj': ext}
                            for ind, (k, ext) in enumerate(self.input['roman']['data'].items())
-                           ] + none_option
+                           ]
 
         elif isinstance(self.input, Spectrum):
             self.input_type = 'specutils:spectrum'
@@ -87,9 +86,15 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                             'obj': self.input}
                            for ind, attr in enumerate(('flux', 'uncertainty', 'mask'))
                            if getattr(self.input, attr, None) is not None
-                           ] + none_option
+                           ]
         else:
             raise TypeError("Input type not supported for SpectrumInputExtensionsMixin")
+
+        ext_options += [{'label': 'None',
+                         'name': '',
+                         'name_ver': '',
+                         'index': len(ext_options),
+                         'obj': None}]
 
         self.extension = SelectFileExtensionComponent(self,
                                                       items='extension_items',
@@ -168,8 +173,15 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                      or hdu.header.get('EXTNAME', '') == 'FLUX'))
 
     def asdf_roman_is_valid_flux(self, item):
-        return (item.get('obj') is not None
-                and all(k in item.get('obj').keys() for k in ["wl", "flux"]))
+        if item.get('label') == 'None':
+            # require selection for flux
+            return False
+        if self.supported_flux_ndim == 1:
+            return all(k in item.get('obj').keys() for k in ["wl", "flux"])
+        elif self.supported_flux_ndim == 2:
+            return all(k in item.get('obj').keys() for k in ["spectrum", "wavelength"])
+        else:
+            raise NotImplementedError("Only 1D and 2D spectra are supported for ASDF Roman data")
 
     def is_valid_unc(self, item):
         if item.get('label') == 'None':
@@ -410,15 +422,36 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             meta = roman["meta"]
             data = roman["data"]
             extension = self.extension.selected_obj
-            wavelength = np.asarray(extension["wl"])
-            flux = np.asarray(extension["flux"])
-            wl_unit = _to_unit(meta["unit_wl"])
-            flux_unit = _to_unit(meta["unit_flux"])
+            if self.supported_flux_ndim == 1:
+                wavelength = np.asarray(extension["wl"])
+                flux = np.asarray(extension["flux"])
+                wl_unit = _to_unit(meta["unit_wl"])
+                flux_unit = _to_unit(meta["unit_flux"])
 
-            # TODO: handle setting choice for uncertainty extension
-            flux_error = extension.get("flux_error", None)
-            variance = extension.get("var", None)
-            uncertainty = None
+                # TODO: expose option in unc_extension that defaults to pulling
+                # from flux extension, but also allowing user to set to "None"
+                # to skip loading uncertainty
+                flux_error = extension.get("flux_error", None)
+                variance = extension.get("var", None)
+                uncertainty = None
+            elif self.supported_flux_ndim == 2:
+                # TODO: handle detecting/selecting spectral axis?
+                flux = np.asarray(extension["spectrum"]).transpose()
+                if extension['wavelength'] is not None:
+                    wavelength = np.asarray(extension["wavelength"])
+                else:
+                    wavelength = np.arange(flux.shape[1])
+                wl_unit = u.pix
+                flux_unit = u.counts
+
+                flux_error = None
+                variance = extension.get("variance", None)
+                if variance is not None:
+                    variance = np.asarray(variance).transpose()
+                uncertainty = None
+            else:
+                raise NotImplementedError("Only 1D and 2D spectra are supported for ASDF Roman data")  # noqa
+
             if flux_error is not None:
                 uncertainty = StdDevUncertainty(np.asarray(flux_error) * flux_unit)
             elif variance is not None:
