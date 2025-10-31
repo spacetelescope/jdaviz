@@ -332,7 +332,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
-
         # Avoid triggering this logic during app startup
         if not hasattr(self, '_viewer'):
             return
