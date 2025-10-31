@@ -27,6 +27,10 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
 
 accent_color = "#c75d2c"
 
+# distinct from the jdaviz colors for backwards compat with MAST Portal:
+mast_footprint_default_color = '#FF6600'
+mast_footprint_selected_color = '#00ff00'
+
 
 class OffscreenLinesMarks(HubListener):
     def __init__(self, viewer):
@@ -769,11 +773,11 @@ class RegionOverlay(PluginLine):
     """
     default_style = dict(
         stroke_width=2,
-        colors=[accent_color],
+        colors=[mast_footprint_default_color],
     )
     selected_style = dict(
         stroke_width=4,
-        colors=['#2fff00'],
+        colors=[mast_footprint_selected_color],
     )
     selected = Bool(False).tag(sync=True)
 
