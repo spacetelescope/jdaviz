@@ -403,6 +403,16 @@ class TestRegionOverlay:
             if isinstance(mark, RegionOverlay)
         ]
 
+        region_overlay_order = [
+            mark.selected for i, mark in enumerate(self.viewer.figure.marks)
+            if isinstance(mark, RegionOverlay)
+        ]
+
+        # check that selected regions appear at the end of the
+        # marks list, so they're plotted on top of the not-selected marks
+        assert not any(sel for sel in region_overlay_order[:3])
+        assert all(sel for sel in region_overlay_order[3:])
+
         selected_marks = [
             mark for mark in region_overlay_marks if mark.selected
         ]
