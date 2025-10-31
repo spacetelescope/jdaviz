@@ -122,6 +122,9 @@ class Specviz2d(Specviz):
         if spectrum_2d is not None:
             if spectrum_2d_label is not None:
                 spectrum_2d_label = self.app.return_unique_name(spectrum_2d_label)
+            if isinstance(spectrum_2d, Spectrum):
+                # don't pass ext if input is not a file
+                ext = None
             self.load(spectrum_2d, format='2D Spectrum',
                       data_label=spectrum_2d_label,
                       ext_data_label=spectrum_1d_label,

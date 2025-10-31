@@ -8,7 +8,7 @@
       label="Extension"
       api_hint="ldr.extension ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extension to use for the image."
+      hint="Extension to use for the data."
     ></plugin-select>
 
     <plugin-auto-label
