@@ -835,7 +835,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
 
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'Jy / Angstrom'
-    # TODO: investigate why the results for the parameter values are so off
+    # TODO: Investigate why the results for the parameter values are so off
     #  depending on which version of python/numpy/astropy/something is used in CI
 
     # assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7509.7789948601,
