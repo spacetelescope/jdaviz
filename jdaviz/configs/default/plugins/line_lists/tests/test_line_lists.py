@@ -10,183 +10,189 @@ from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
 
 
-def test_line_lists(specviz_helper):
-    spec = Spectrum(flux=np.random.rand(100)*u.Jy,
-                    spectral_axis=np.arange(6000, 7000, 10)*u.AA)
-    specviz_helper.load_data(spec)
+# two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update will be needed
+# and is as below:
+# Table.loc_indices.with_index(...):
+# https://docs.astropy.org/en/latest/whatsnew/7.2.html
+@pytest.mark.filterwarnings('ignore:Calling `Table\\.loc/iloc/loc_indices\\[index_id, item\\]`.*:astropy.utils.exceptions.AstropyDeprecationWarning')  # noqa
+class TestLineLists:
+    def test_line_lists(self, specviz_helper):
+        spec = Spectrum(flux=np.random.rand(100)*u.Jy,
+                        spectral_axis=np.arange(6000, 7000, 10)*u.AA)
+        specviz_helper.load_data(spec)
 
-    lt = QTable()
-    lt['linename'] = ['O III', 'Halpha']
-    lt['rest'] = [0, 6563]*u.AA
-    with pytest.raises(ValueError, match='all rest values must be positive'):
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [0, 6563]*u.AA
+        with pytest.raises(ValueError, match='all rest values must be positive'):
+            specviz_helper.load_line_list(lt)
+
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [5007, 6563]*u.AA
         specviz_helper.load_line_list(lt)
 
-    lt = QTable()
-    lt['linename'] = ['O III', 'Halpha']
-    lt['rest'] = [5007, 6563]*u.AA
-    specviz_helper.load_line_list(lt)
+        assert len(specviz_helper.spectral_lines) == 2
+        assert specviz_helper.spectral_lines.loc["linename", "Halpha"]["listname"] == "Custom"
+        assert np.all(specviz_helper.spectral_lines["show"])
+        assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is True
 
-    assert len(specviz_helper.spectral_lines) == 2
-    assert specviz_helper.spectral_lines.loc["linename", "Halpha"]["listname"] == "Custom"
-    assert np.all(specviz_helper.spectral_lines["show"])
-    assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is True
+        specviz_helper.erase_spectral_lines()
+        assert np.all(specviz_helper.spectral_lines["show"] == False)  # noqa
+        assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is False
 
-    specviz_helper.erase_spectral_lines()
-    assert np.all(specviz_helper.spectral_lines["show"] == False)  # noqa
-    assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is False
+        specviz_helper.plot_spectral_line("Halpha")
+        specviz_helper.plot_spectral_line("O III 5007.0")
 
-    specviz_helper.plot_spectral_line("Halpha")
-    specviz_helper.plot_spectral_line("O III 5007.0")
+        assert np.all(specviz_helper.spectral_lines["show"])
 
-    assert np.all(specviz_helper.spectral_lines["show"])
-
-    assert (
-        specviz_helper.plugins["Line Lists"]._obj.list_contents["Custom"]["medium"]
-        == "Unknown (Custom)"
-    )
+        assert (
+            specviz_helper.plugins["Line Lists"]._obj.list_contents["Custom"]["medium"]
+            == "Unknown (Custom)"
+        )
 
 
-def test_redshift(specviz_helper, spectrum1d):
-    # Also test that plugin is disabled before data is loaded.
-    ll_plugin = specviz_helper.plugins['Line Lists']._obj
-    assert ll_plugin.disabled_msg
+    def test_redshift(self, specviz_helper, spectrum1d):
+        # Also test that plugin is disabled before data is loaded.
+        ll_plugin = specviz_helper.plugins['Line Lists']._obj
+        assert ll_plugin.disabled_msg
 
-    label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+        label = "Test 1D Spectrum"
+        specviz_helper.load_data(spectrum1d, data_label=label)
 
-    assert not ll_plugin.disabled_msg
+        assert not ll_plugin.disabled_msg
 
-    lt = QTable()
-    lt['linename'] = ['O III', 'Halpha']
-    lt['rest'] = [5007, 6563]*u.AA
-    lt['redshift'] = u.Quantity(0.046)
-    lt['listname'] = 'Test List'
-    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [5007, 6563]*u.AA
+        lt['redshift'] = u.Quantity(0.046)
+        lt['listname'] = 'Test List'
+        with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+            specviz_helper.load_line_list(lt)
+
+        # open the plugin so that all updates run
+        ll_plugin.plugin_opened = True
+        line = ll_plugin.list_contents['Test List']['lines'][0]
+        assert_allclose(line['obs'], line['rest'])
+        # test API access
+        specviz_helper.set_redshift(0.01)
+        specviz_helper.set_redshift_slider_bounds(range=0.5, step=0.01)
+        specviz_helper.set_redshift_slider_bounds(range='auto', step='auto')
+
+        # test plugin
+        ll_plugin.rs_redshift = 0.1
+        assert ll_plugin.rs_rv == 28487.06614479641
+
+        ll_plugin.rs_rv = 30000
+        assert ll_plugin.rs_redshift == 0.10561890816244568
+
+        # https://github.com/spacetelescope/jdaviz/issues/1692
+        # adding new data entry from a plugin should not reset redshift
+        specviz_helper.plugins['Gaussian Smooth'].smooth()
+        assert ll_plugin.rs_redshift == 0.10561890816244568
+
+        # test that setting observed wavelength works
+        ll_plugin.vue_change_line_obs({'list_name': 'Test List',
+                                       'line_ind': 0,
+                                       'obs_new': 5508})
+        assert_allclose(line['obs'], 5508)
+        assert ll_plugin.rs_redshift == 0.10005991611743559
+
+        # https://github.com/spacetelescope/jdaviz/issues/1168
+        ll_plugin.vue_set_identify(('Test List', line, 0))
+        ll_plugin.vue_remove_list('Test List')
+        assert ll_plugin.spectrum_viewer.spectral_lines is None
+        assert ll_plugin.identify_label == ''
+
+
+    def test_load_available_preset_lists(self, specviz_helper, spectrum1d):
+        """ Loads all available line lists and checks the medium requirement """
+        label = "Test 1D Spectrum"
+        specviz_helper.load_data(spectrum1d, data_label=label)
+
+        # Check to make sure we got our line lists
+        available_linelists = get_available_linelists()
+        assert len(available_linelists) > 0
+
+        for linelist in available_linelists:
+            specviz_helper.plugins['Line Lists']._obj.vue_list_selected(linelist)
+            specviz_helper.plugins['Line Lists']._obj.vue_load_list(linelist)
+
+        # Check that we loaded all the lists (+1 because of the Custom list)
+        assert (
+            len(specviz_helper.plugins['Line Lists']._obj.list_contents.keys()) ==
+            len(available_linelists) + 1
+        )
+
+        # Line list must have "medium" info to be available
+        for list in specviz_helper.plugins['Line Lists']._obj.list_contents.values():  # noqa
+            assert 'medium' in list
+
+
+    def test_line_identify(self, specviz_helper, spectrum1d):
+        specviz_helper.load_data(spectrum1d)
+
+        lt = QTable()
+        lt['linename'] = ['O III', 'Halpha']
+        lt['rest'] = [5007, 6563]*u.AA
+        lt['listname'] = 'Test List'
         specviz_helper.load_line_list(lt)
 
-    # open the plugin so that all updates run
-    ll_plugin.plugin_opened = True
-    line = ll_plugin.list_contents['Test List']['lines'][0]
-    assert_allclose(line['obs'], line['rest'])
-    # test API access
-    specviz_helper.set_redshift(0.01)
-    specviz_helper.set_redshift_slider_bounds(range=0.5, step=0.01)
-    specviz_helper.set_redshift_slider_bounds(range='auto', step='auto')
+        ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
+        line = ll_plugin.list_contents['Test List']['lines'][0]
+        assert line.get('identify', False) is False
+        ll_plugin.vue_set_identify(('Test List', line, 0))
+        assert line.get('identify', False) is True
 
-    # test plugin
-    ll_plugin.rs_redshift = 0.1
-    assert ll_plugin.rs_rv == 28487.06614479641
-
-    ll_plugin.rs_rv = 30000
-    assert ll_plugin.rs_redshift == 0.10561890816244568
-
-    # https://github.com/spacetelescope/jdaviz/issues/1692
-    # adding new data entry from a plugin should not reset redshift
-    specviz_helper.plugins['Gaussian Smooth'].smooth()
-    assert ll_plugin.rs_redshift == 0.10561890816244568
-
-    # test that setting observed wavelength works
-    ll_plugin.vue_change_line_obs({'list_name': 'Test List',
-                                   'line_ind': 0,
-                                   'obs_new': 5508})
-    assert_allclose(line['obs'], 5508)
-    assert ll_plugin.rs_redshift == 0.10005991611743559
-
-    # https://github.com/spacetelescope/jdaviz/issues/1168
-    ll_plugin.vue_set_identify(('Test List', line, 0))
-    ll_plugin.vue_remove_list('Test List')
-    assert ll_plugin.spectrum_viewer.spectral_lines is None
-    assert ll_plugin.identify_label == ''
+        ll_plugin.vue_change_visible(('Test List', line, 0))
+        assert line.get('show') is False
+        assert line.get('identify', False) is False
 
 
-def test_load_available_preset_lists(specviz_helper, spectrum1d):
-    """ Loads all available line lists and checks the medium requirement """
-    label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    def test_global_redshift_applied(self, specviz_helper, spectrum1d):
+        specviz_helper.load_data(spectrum1d)
 
-    # Check to make sure we got our line lists
-    available_linelists = get_available_linelists()
-    assert len(available_linelists) > 0
+        # Create a table with redshift included
+        lt = QTable({'linename': ['O III', 'Halpha'],
+                     'rest': [5007, 6563] * u.AA,
+                     'redshift': u.Quantity([0, 0])})
 
-    for linelist in available_linelists:
-        specviz_helper.plugins['Line Lists']._obj.vue_list_selected(linelist)
-        specviz_helper.plugins['Line Lists']._obj.vue_load_list(linelist)
+        with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+            specviz_helper.load_line_list(lt)
 
-    # Check that we loaded all the lists (+1 because of the Custom list)
-    assert (
-        len(specviz_helper.plugins['Line Lists']._obj.list_contents.keys()) ==
-        len(available_linelists) + 1
-    )
+        # Load a line, and apply redshift globally
+        specviz_helper.plot_spectral_line("Halpha")
+        specviz_helper.set_redshift(0.01)
+        # Load second line, redshift should also be applied to it
+        specviz_helper.plot_spectral_line("O III")
 
-    # Line list must have "medium" info to be available
-    for list in specviz_helper.plugins['Line Lists']._obj.list_contents.values():  # noqa
-        assert 'medium' in list
+        viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
+            specviz_helper._default_spectrum_viewer_reference_name).figure.marks
+            if isinstance(mark, SpectralLine)]
 
-
-def test_line_identify(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
-
-    lt = QTable()
-    lt['linename'] = ['O III', 'Halpha']
-    lt['rest'] = [5007, 6563]*u.AA
-    lt['listname'] = 'Test List'
-    specviz_helper.load_line_list(lt)
-
-    ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
-    line = ll_plugin.list_contents['Test List']['lines'][0]
-    assert line.get('identify', False) is False
-    ll_plugin.vue_set_identify(('Test List', line, 0))
-    assert line.get('identify', False) is True
-
-    ll_plugin.vue_change_visible(('Test List', line, 0))
-    assert line.get('show') is False
-    assert line.get('identify', False) is False
+        assert np.allclose([line.redshift for line in viewer_lines], 0.01)
 
 
-def test_global_redshift_applied(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    def test_global_redshift_applied_to_all(self, specviz_helper, spectrum1d):
+        specviz_helper.load_data(spectrum1d)
 
-    # Create a table with redshift included
-    lt = QTable({'linename': ['O III', 'Halpha'],
-                 'rest': [5007, 6563] * u.AA,
-                 'redshift': u.Quantity([0, 0])})
+        # Create a table with redshift included
+        lt = QTable({'linename': ['O III', 'Halpha', 'O I'],
+                     'rest': [5007, 6563, 6300] * u.AA,
+                     'redshift': u.Quantity([0, 0, 0])})
 
-    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
-        specviz_helper.load_line_list(lt)
+        with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+            specviz_helper.load_line_list(lt)
 
-    # Load a line, and apply redshift globally
-    specviz_helper.plot_spectral_line("Halpha")
-    specviz_helper.set_redshift(0.01)
-    # Load second line, redshift should also be applied to it
-    specviz_helper.plot_spectral_line("O III")
+        # Load a line, so we can apply redshift
+        specviz_helper.plot_spectral_line("Halpha")
+        global_redshift = 0.01
+        specviz_helper.set_redshift(global_redshift)
+        # Load remaining lines
+        specviz_helper.plot_spectral_lines(global_redshift)
 
-    viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
-        specviz_helper._default_spectrum_viewer_reference_name).figure.marks
-        if isinstance(mark, SpectralLine)]
+        viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
+            specviz_helper._default_spectrum_viewer_reference_name).figure.marks
+            if isinstance(mark, SpectralLine)]
 
-    assert np.allclose([line.redshift for line in viewer_lines], 0.01)
-
-
-def test_global_redshift_applied_to_all(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
-
-    # Create a table with redshift included
-    lt = QTable({'linename': ['O III', 'Halpha', 'O I'],
-                 'rest': [5007, 6563, 6300] * u.AA,
-                 'redshift': u.Quantity([0, 0, 0])})
-
-    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
-        specviz_helper.load_line_list(lt)
-
-    # Load a line, so we can apply redshift
-    specviz_helper.plot_spectral_line("Halpha")
-    global_redshift = 0.01
-    specviz_helper.set_redshift(global_redshift)
-    # Load remaining lines
-    specviz_helper.plot_spectral_lines(global_redshift)
-
-    viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
-        specviz_helper._default_spectrum_viewer_reference_name).figure.marks
-        if isinstance(mark, SpectralLine)]
-
-    assert np.allclose([line.redshift for line in viewer_lines], 0.01)
+        assert np.allclose([line.redshift for line in viewer_lines], 0.01)
