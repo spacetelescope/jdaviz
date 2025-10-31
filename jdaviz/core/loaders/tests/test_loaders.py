@@ -135,7 +135,7 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert 'Image' in ldr.format.choices
     assert '2D Spectrum' in ldr.format.choices
     ldr.format = '2D Spectrum'
-    assert 'fits' in ldr.importer._obj._parser.__class__.__name__
+    assert ldr.importer._obj._parser.__class__.__name__ == 'FITSParser'
 
     ldr.load()
 
