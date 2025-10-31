@@ -14,6 +14,7 @@ __all__ = ['SpectrumImporter']
 @loader_importer_registry('1D Spectrum')
 class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "../to_dc_with_label.vue"
+    parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

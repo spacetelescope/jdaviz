@@ -1,3 +1,5 @@
+import numpy as np
+
 from asdf import AsdfFile
 from astropy import units as u
 from astropy.io import fits
@@ -398,7 +400,40 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
 
             return new_sc
         elif self.input_type == 'asdf:roman':
-            raise NotImplementedError("ASDF Roman parser not yet implemented")
+            def _to_unit(x):
+                """Coerce str/bytes/Unit to astropy.units.Unit."""
+                if isinstance(x, bytes):
+                    x = x.decode()
+                return u.Unit(x)
+
+            roman = self.input["roman"]
+            meta = roman["meta"]
+            data = roman["data"]
+            extension = self.extension.selected_obj
+            wavelength = np.asarray(extension["wl"])
+            flux = np.asarray(extension["flux"])
+            wl_unit = _to_unit(meta["unit_wl"])
+            flux_unit = _to_unit(meta["unit_flux"])
+
+            # TODO: handle setting choice for uncertainty extension
+            flux_error = extension.get("flux_error", None)
+            variance = extension.get("var", None)
+            uncertainty = None
+            if flux_error is not None:
+                uncertainty = StdDevUncertainty(np.asarray(flux_error) * flux_unit)
+            elif variance is not None:
+                var = np.asarray(variance) * (flux_unit ** 2)
+                var = np.where(np.asarray(var.value) < 0, np.nan, var.value) * var.unit
+                uncertainty = StdDevUncertainty(np.sqrt(var))
+            else:
+                uncertainty = None
+
+            spectrum = Spectrum(
+                flux=flux * flux_unit,
+                spectral_axis=wavelength * wl_unit,
+                uncertainty=uncertainty
+            )
+            return spectrum
         elif self.input_type == 'specutils:spectrum':
             spectrum = self.input
             # TODO: remove uncertainty or mask if requested
