@@ -486,8 +486,10 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
     def _reindex_region_overlays(f):
         """
         Decorator that triggers reindexing for the region overlay
-        lookup dict by calling `_update_region_overlay_lookup()`
-        when `f` is completed.
+        label-to-index mapping dict by calling
+        `_update_region_overlay_lookup()` when `f` is completed.
+        This decorator is needed whenever a method changes the
+        number or order of the region overlays.
         """
         def wrapper(self, *args, **kwargs):
             result = f(self, *args, **kwargs)
@@ -596,6 +598,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             mark for mark in self.figure.marks if not isinstance(mark, RegionOverlay)
         ]
 
+    @_reindex_region_overlays
     def _change_region_overlay_selection(self, region_label, selection, **style_kwargs):
         """
         Remove a `~jdaviz.core.marks.RegionOverlay` from the viewer marks.
@@ -613,14 +616,21 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             selection = [selection]
 
         if len(selection) < len(labels):
-            selected = len(labels) * selection
+            selection = len(labels) * selection
 
-        for label, select in zip(labels, selected):
+        for label, select in zip(labels, selection):
             mark_idx = self._region_overlay_label_to_index(label)
             existing_marks[mark_idx].selected = select
             existing_marks[mark_idx].update_style(style_kwargs)
 
-        self.figure.marks = existing_marks
+        # bqplot marks are over plotted in order, with the last
+        # marks in the list appearing at the highest zorder.
+        # sort the marks by selection state, which puts selected marks
+        # at the end of the list, which plots those regions on top.
+        self.figure.marks = sorted(
+            existing_marks,
+            key=lambda m: m.selected if isinstance(m.selected, bool) else False
+        )
 
     def _select_region_overlay(self, region_label, **style_kwargs):
         """
