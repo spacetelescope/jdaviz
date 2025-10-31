@@ -146,26 +146,13 @@ filterwarnings = [
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
-    "ignore:Parsing dates involving a day of month without a year:DeprecationWarning", # ipykernel<7
     "ignore::DeprecationWarning:glue",
-    "ignore::DeprecationWarning:asteval",
-    "ignore:::specutils.spectra.spectrum1d",
-    "ignore:use_side_effect is deprecated:DeprecationWarning",
-    "ignore:.*is deprecated and will be removed in Pillow 13.*",
     "ignore:.*The TestRunner class will be deprecated in a future version.*",
     "ignore:.*The TestRunnerBase class will be deprecated in a future version.*",
-    # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
-    # and https://github.com/scipy/scipy/pull/19275
-    "ignore:.*numpy\\.core.*:DeprecationWarning",
     "ignore:The load_data function is deprecated.*",
-    "ignore:.*Set OBSGEO-L to.*",
     # This warning will not fail in CI, but causes issues running tests locally on Windows so test locally if considering
     # removing this in the future
     "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",
-    # two-argument Table.loc is deprecated as of Astropy 7.2. Syntax update will be needed and is as below:
-    # Table.loc_indices.with_index(...):
-    # https://docs.astropy.org/en/latest/whatsnew/7.2.html
-    "ignore:Calling `Table\\.loc/iloc/loc_indices\\[index_id, item\\]`.*:astropy.utils.exceptions.AstropyDeprecationWarning",
 ]
 
 
