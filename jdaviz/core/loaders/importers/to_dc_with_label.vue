@@ -1,7 +1,6 @@
 <template>
   <v-container>
     <plugin-select
-      v-if="input_has_extensions"
       :items="extension_items.map(i => i.label)"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"

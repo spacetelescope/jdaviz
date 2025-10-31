@@ -135,7 +135,7 @@ def test_fits_spectrum2d(deconfigged_helper):
     assert 'Image' in ldr.format.choices
     assert '2D Spectrum' in ldr.format.choices
     ldr.format = '2D Spectrum'
-    assert ldr.importer._obj.input_has_extensions is True
+    assert 'fits' in ldr.importer._obj._parser.__class__.__name__
 
     ldr.load()
 

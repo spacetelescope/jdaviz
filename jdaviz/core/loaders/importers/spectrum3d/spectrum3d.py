@@ -220,12 +220,11 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             expose += ['unc_data_label', 'unc_viewer']
         if self.has_mask:
             expose += ['mask_data_label', 'mask_viewer']
-        if self.input_has_extensions:
-            expose += ['extension']
-            if self.has_unc:
-                expose += ['unc_extension']
-            if self.has_mask:
-                expose += ['mask_extension']
+        expose += ['extension']
+        if self.has_unc:
+            expose += ['unc_extension']
+        if self.has_mask:
+            expose += ['mask_extension']
         return ImporterUserApi(self, expose)
 
     @property

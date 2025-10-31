@@ -1,17 +1,18 @@
 import numpy as np
-from specutils import Spectrum
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.loaders.importers import (BaseImporterToDataCollection,
+                                           SpectrumInputExtensionsMixin,
                                            _spectrum_assign_component_type)
+from jdaviz.core.user_api import ImporterUserApi
 
 
 __all__ = ['SpectrumImporter']
 
 
 @loader_importer_registry('1D Spectrum')
-class SpectrumImporter(BaseImporterToDataCollection):
+class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "../to_dc_with_label.vue"
 
     def __init__(self, *args, **kwargs):
@@ -34,7 +35,25 @@ class SpectrumImporter(BaseImporterToDataCollection):
         if self.app.config not in ('deconfigged', 'specviz', 'specviz2d', 'cubeviz'):
             # NOTE: temporary during deconfig process
             return False
-        return isinstance(self.input, Spectrum) and self.input.flux.ndim == 1
+        try:
+            if self.spectrum.flux.ndim != 1:
+                return False
+        except Exception:
+            return False
+        try:
+            self.output
+        except Exception:
+            return False
+        return True
+
+    @property
+    def user_api(self):
+        expose = ['extension', 'unc_extension', 'mask_extension']
+        return ImporterUserApi(self, expose)
+
+    @property
+    def supported_flux_ndim(self):
+        return 1
 
     @property
     def output(self):
@@ -42,7 +61,7 @@ class SpectrumImporter(BaseImporterToDataCollection):
         # work (more generally, if uncert[i] is nan/inf and flux[i] is not, fitting will
         # fail, but just deal with the all nan case here since it is straightforward).
         # set uncerts. to None if they are all nan/inf, and display a warning message.
-        data = self.input
+        data = self.spectrum
         if data.uncertainty is not None:
             uncerts_finite = np.isfinite(data.uncertainty.array)
             if not np.any(uncerts_finite):
