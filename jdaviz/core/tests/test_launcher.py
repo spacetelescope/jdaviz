@@ -8,7 +8,6 @@ import pytest
 from astropy.io.registry import IORegistryError
 from astropy.nddata import CCDData
 import numpy as np
-from pathlib import Path
 
 from jdaviz.cli import (
     DEFAULT_VERBOSITY,
@@ -51,7 +50,7 @@ class TestOpenFunction:
             ) as mock_identify:
                 mock_identify.return_value = (['imviz'], ccd)
 
-                result = jdaviz_open(
+                _ = jdaviz_open(
                     str(test_file),
                     show=False,
                     local_path='/some/path'
@@ -83,7 +82,7 @@ class TestOpenFunction:
             ) as mock_identify:
                 mock_identify.return_value = (['imviz'], ccd)
 
-                result = jdaviz_open(str(test_file), show=False)
+                _ = jdaviz_open(str(test_file), show=False)
 
                 mock_download.assert_called_once_with(
                     str(test_file),
@@ -187,7 +186,7 @@ class TestLaunchConfigWithData:
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=imviz_helper)
 
-            result = _launch_config_with_data(
+            _ = _launch_config_with_data(
                 'imviz',
                 show=False,
                 verbosity='debug',
@@ -252,7 +251,7 @@ class TestLaunchConfigWithData:
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
-            result = _launch_config_with_data(
+            _ = _launch_config_with_data(
                 'imviz',
                 data=ccd,
                 filepath=str(test_file),
@@ -293,7 +292,7 @@ class TestLaunchConfigWithData:
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
-            result = _launch_config_with_data('imviz', data='', show=False)
+            _ = _launch_config_with_data('imviz', data='', show=False)
 
             mock_helper.load_data.assert_not_called()
 
@@ -307,7 +306,7 @@ class TestLaunchConfigWithData:
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
-            result = _launch_config_with_data(
+            _ = _launch_config_with_data(
                 'imviz',
                 data=None,
                 show=False
@@ -325,7 +324,7 @@ class TestLaunchConfigWithData:
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
-            result = _launch_config_with_data('imviz', show=True)
+            _ = _launch_config_with_data('imviz', show=True)
 
             mock_helper.show.assert_called_once()
 
@@ -752,7 +751,7 @@ class TestShowLauncher:
             mock_launcher.main_with_launcher = Mock()
             mock_launcher_class.return_value = mock_launcher
 
-            with patch('jdaviz.core.launcher.show_widget') as mock_show:
+            with patch('jdaviz.core.launcher.show_widget') as _:
                 show_launcher(
                     configs=custom_configs,
                     filepath=custom_filepath,
@@ -775,7 +774,7 @@ class TestShowLauncher:
             mock_launcher.main_with_launcher = Mock()
             mock_launcher_class.return_value = mock_launcher
 
-            with patch('jdaviz.core.launcher.show_widget') as mock_show:
+            with patch('jdaviz.core.launcher.show_widget') as _:
                 show_launcher(height='100%')
 
                 mock_launcher_class.assert_called_once_with(
@@ -811,4 +810,4 @@ class TestStatusHints:
         for key, value in STATUS_HINTS.items():
             assert isinstance(value, str), \
                 f'STATUS_HINTS[{key!r}] is not a string'
-
+            

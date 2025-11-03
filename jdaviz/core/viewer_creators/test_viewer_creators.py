@@ -370,4 +370,3 @@ def test_viewer_creator_dataset_items_observer(
     # Should still be relevant with more items
     assert creator.is_relevant is True
     assert len(creator.dataset.items) > initial_item_count
-
