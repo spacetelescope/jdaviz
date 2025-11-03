@@ -58,6 +58,20 @@ def _module_setup(request, _shared_ccd):
             setattr(obj, 'test_file', test_file)
 
 
+def test_status_hints_keys():
+    """
+    Test that STATUS_HINTS contains expected keys.
+    """
+    expected_keys = {
+        'idle',
+        'identifying',
+        'invalid path',
+        'id ok',
+        'id failed'
+    }
+    assert set(STATUS_HINTS.keys()) == expected_keys
+
+
 class TestOpenFunction:
     """
     Test the open() function for automatic config detection and
@@ -214,11 +228,10 @@ class TestLauncherClass:
         assert launcher.hint == STATUS_HINTS['idle']
         assert launcher.file_chooser_visible is False
         assert launcher.valid_path is True
-        assert 'cubeviz' in launcher.config_icons
-        assert 'specviz' in launcher.config_icons
-        assert 'imviz' in launcher.config_icons
+        for config in ALL_JDAVIZ_CONFIGS:
+            assert config in launcher.config_icons
 
-    def test_launcher_init_with_custom_configs(self):
+    def test_launcher_init_with_custom_init(self):
         """
         Test Launcher initialization with custom config list.
         """
@@ -228,63 +241,25 @@ class TestLauncherClass:
         assert launcher.configs == custom_configs
         assert launcher.compatible_configs == custom_configs
 
-    def test_launcher_init_with_filepath(self, tmp_path, image_2d_wcs):
-        """
-        Test Launcher initialization with a filepath.
-        """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
-            mock_identify.return_value = (['imviz'], ccd)
-
-            launcher = Launcher(filepath=str(test_file))
-
-            assert launcher.filepath == str(test_file)
-            assert launcher.hint == STATUS_HINTS['id ok']
-            assert launcher.compatible_configs == ['imviz']
-
-    def test_launcher_init_with_height_int(self):
-        """
-        Test Launcher initialization with integer height.
-        """
         launcher = Launcher(height=600)
-
         assert launcher.height == '600px'
 
-    def test_launcher_init_with_height_string(self):
-        """
-        Test Launcher initialization with string height.
-        """
         launcher = Launcher(height='100%')
-
         assert launcher.height == '100%'
 
-    def test_launcher_init_with_main(self):
-        """
-        Test Launcher initialization with custom main widget.
-        """
         mock_main = Mock()
         launcher = Launcher(main=mock_main)
-
         assert launcher.main == mock_main
 
-    def test_launcher_vdocs_with_dev_version(self):
+    def test_launcher_vdocs(self):
         """
-        Test that vdocs is set to 'latest' for dev versions.
+        Test that vdocs is set correctly (dev vs release).
         """
+        # vdocs is set to 'latest' for dev versions.
         with patch('jdaviz.core.launcher.__version__', '1.0.dev'):
             launcher = Launcher()
             assert launcher.vdocs == 'latest'
 
-    def test_launcher_vdocs_with_release_version(self):
-        """
-        Test that vdocs is set to versioned string for releases.
-        """
         with patch('jdaviz.core.launcher.__version__', '1.2.3'):
             launcher = Launcher()
             assert launcher.vdocs == 'v1.2.3'
@@ -295,144 +270,76 @@ class TestLauncherClass:
         """
         test_dir = '/custom/start/dir'
         with patch.dict(os.environ, {'JDAVIZ_START_DIR': test_dir}):
-            with patch(
-                'jdaviz.core.launcher.FileChooser'
-            ) as mock_fc:
+            with patch('jdaviz.core.launcher.FileChooser') as mock_fc:
                 _ = Launcher()
                 mock_fc.assert_called_once_with(test_dir)
 
-    def test_filepath_changed_to_empty_string(self):
+    def test_launcher_init_with_filepath(self):
         """
-        Test that setting filepath to empty string resets to idle
-        state.
-        """
-        launcher = Launcher()
-        launcher.filepath = 'something'
-        launcher.filepath = ''
-
-        assert launcher.hint == STATUS_HINTS['idle']
-        assert launcher.compatible_configs == ALL_JDAVIZ_CONFIGS
-        assert launcher.loaded_data is None
-
-    def test_filepath_changed_to_invalid_path(self):
-        """
-        Test that setting filepath to invalid path shows error.
+        Test Launcher initialization with various filepaths.
         """
         launcher = Launcher()
-        launcher.filepath = '/this/path/does/not/exist.fits'
 
+        launcher.filepath = 'something that does not exist'
         assert launcher.hint == STATUS_HINTS['invalid path']
         assert launcher.compatible_configs == []
         assert launcher.loaded_data is None
 
-    def test_filepath_changed_to_valid_file(self, tmp_path, image_2d_wcs):
-        """
-        Test that setting filepath to valid file identifies configs.
-        """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
+        # Then reset and check that we're in an idle state
+        launcher.filepath = ''
+        assert launcher.hint == STATUS_HINTS['idle']
+        assert launcher.compatible_configs == ALL_JDAVIZ_CONFIGS
+        assert launcher.loaded_data is None
 
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
-            mock_identify.return_value = (['imviz'], ccd)
+        with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
+            mock_identify.return_value = (['imviz'], self.ccd)
 
-            launcher = Launcher()
-            launcher.filepath = str(test_file)
+            launcher = Launcher(filepath=self.test_file)
 
+            assert launcher.filepath == self.test_file
             assert launcher.hint == STATUS_HINTS['id ok']
             assert launcher.compatible_configs == ['imviz']
-            assert launcher.loaded_data == ccd
+            assert launcher.loaded_data == self.ccd
 
-    def test_filepath_changed_identify_fails(self, tmp_path, image_2d_wcs):
+    def test_filepath_changed_identify(self):
         """
         Test that identification failure shows all configs and uses
-        filepath as data.
+        filepath as data. Also test when identify_helper returns empty config list
+        with None data - should leave loaded_data as None.
         """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
+        with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
             mock_identify.side_effect = Exception('Identification failed')
 
             launcher = Launcher()
-            launcher.filepath = str(test_file)
+            launcher.filepath = self.test_file
 
             assert launcher.hint == STATUS_HINTS['id failed']
             assert launcher.compatible_configs == ALL_JDAVIZ_CONFIGS
-            assert launcher.loaded_data == str(test_file)
+            assert launcher.loaded_data == self.test_file
 
-    def test_filepath_changed_identify_returns_empty_list(
-        self, tmp_path, image_2d_wcs
-    ):
-        """
-        Test behavior when identify_helper returns empty config list
-        with None data - should leave loaded_data as None.
-        """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
+        with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
             mock_identify.return_value = ([], None)
 
             launcher = Launcher()
-            launcher.filepath = str(test_file)
+            launcher.filepath = self.test_file
 
             # When configs is empty but data is None, loaded_data stays None
             assert launcher.loaded_data is None
             assert launcher.compatible_configs == []
 
-    def test_vue_choose_file_no_file_selected(self):
+    def test_vue_choose_file(self, tmp_path):
         """
-        Test vue_choose_file when no file is selected.
+        Test vue_choose_file with various scenarios.
         """
         launcher = Launcher()
+
+        # No file
         launcher._file_chooser.file_path = None
-
         launcher.vue_choose_file()
-
         assert launcher.error_message == 'No file selected'
+        assert launcher.filepath is ''
 
-    def test_vue_choose_file_with_valid_file(
-        self, tmp_path, image_2d_wcs
-    ):
-        """
-        Test vue_choose_file with a valid file selection.
-        """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
-            mock_identify.return_value = (['imviz'], ccd)
-
-            launcher = Launcher()
-            launcher._file_chooser.file_path = str(test_file)
-
-            launcher.vue_choose_file()
-
-            assert launcher.file_chooser_visible is False
-            assert launcher.filepath == str(test_file)
-
-    def test_vue_choose_file_with_directory(self, tmp_path):
-        """
-        Test vue_choose_file when a directory is selected (should not
-        update filepath).
-        """
-        launcher = Launcher()
+        # Choose with directory (should not update filepath)
         launcher._file_chooser.file_path = str(tmp_path)
         launcher.file_chooser_visible = True
 
@@ -440,129 +347,55 @@ class TestLauncherClass:
 
         # Should not change filepath or visibility since path is not a file
         assert launcher.file_chooser_visible is True
-        assert launcher.filepath == ''
+        assert launcher.filepath is ''
 
-    def test_vue_launch_config(self, tmp_path, image_2d_wcs):
+        with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
+            mock_identify.return_value = (['imviz'], self.ccd)
+
+            launcher._file_chooser.file_path = self.test_file
+
+            launcher.vue_choose_file()
+
+            assert launcher.file_chooser_visible is False
+            assert launcher.filepath == self.test_file
+
+    @pytest.mark.parametrize('height', [600, '100%', '100vh'])
+    def test_vue_launch_config(self, height):
         """
         Test vue_launch_config method.
         """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
         mock_helper = Mock()
         mock_app = Mock()
         mock_helper.app = mock_app
-        mock_app.state.settings = {
-            'context': {'notebook': {'max_height': '800px'}}
-        }
+        default_height = '800px'
+        mock_app.state.settings = {'context': {'notebook': {'max_height': default_height}}}
         mock_app.layout = Mock()
 
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
-            mock_identify.return_value = (['imviz'], ccd)
+        with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
+            mock_identify.return_value = (['imviz'], self.ccd)
 
-            with patch(
-                'jdaviz.core.launcher._launch_config_with_data'
-            ) as mock_launch:
+            with patch('jdaviz.core.launcher._launch_config_with_data') as mock_launch:
                 mock_launch.return_value = mock_helper
 
-                # Mock the main widget to avoid trait validation errors
                 mock_main = Mock()
-                launcher = Launcher(main=mock_main, height=600)
-                launcher.filepath = str(test_file)
+                launcher = Launcher(main=mock_main, height=height)
+                launcher.filepath = self.test_file
 
                 event = {'config': 'imviz'}
                 launcher.vue_launch_config(event)
 
                 mock_launch.assert_called_once_with(
                     'imviz',
-                    ccd,
-                    filepath=str(test_file),
-                    show=False
-                )
+                    self.ccd,
+                    filepath=self.test_file,
+                    show=False)
+
                 assert launcher.main.color == 'transparent'
                 assert launcher.main.children == [mock_app]
 
-    def test_vue_launch_config_with_fullscreen_height(
-        self, tmp_path, image_2d_wcs
-    ):
-        """
-        Test vue_launch_config with fullscreen height (100%).
-        """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        mock_helper = Mock()
-        mock_app = Mock()
-        mock_helper.app = mock_app
-        mock_app.layout = Mock()
-
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
-            mock_identify.return_value = (['imviz'], ccd)
-
-            with patch(
-                'jdaviz.core.launcher._launch_config_with_data'
-            ) as mock_launch:
-                mock_launch.return_value = mock_helper
-
-                # Mock the main widget to avoid trait validation errors
-                mock_main = Mock()
-                launcher = Launcher(main=mock_main, height='100%')
-                launcher.filepath = str(test_file)
-
-                event = {'config': 'imviz'}
-                launcher.vue_launch_config(event)
-
-                # Verify the helper was launched and main was updated
-                mock_launch.assert_called_once()
-                assert launcher.main.color == 'transparent'
-                assert launcher.main.children == [mock_app]
-
-    def test_vue_launch_config_with_100vh_height(
-        self, tmp_path, image_2d_wcs
-    ):
-        """
-        Test vue_launch_config with viewport height (100vh).
-        """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        mock_helper = Mock()
-        mock_app = Mock()
-        mock_helper.app = mock_app
-        mock_app.layout = Mock()
-
-        with patch(
-            'jdaviz.core.launcher.identify_helper'
-        ) as mock_identify:
-            mock_identify.return_value = (['imviz'], ccd)
-
-            with patch(
-                'jdaviz.core.launcher._launch_config_with_data'
-            ) as mock_launch:
-                mock_launch.return_value = mock_helper
-
-                # Mock the main widget to avoid trait validation errors
-                mock_main = Mock()
-                launcher = Launcher(main=mock_main, height='100vh')
-                launcher.filepath = str(test_file)
-
-                event = {'config': 'imviz'}
-                launcher.vue_launch_config(event)
-
-                # Verify the helper was launched and main was updated
-                mock_launch.assert_called_once()
-                assert launcher.main.color == 'transparent'
-                assert launcher.main.children == [mock_app]
+                if height not in ['100%', '100vh']:
+                    assert mock_app.layout.height == default_height
+                    assert launcher.main.height == default_height
 
     def test_main_with_launcher_property(self):
         """
@@ -593,25 +426,22 @@ class TestShowLauncher:
             with patch('jdaviz.core.launcher.show_widget') as mock_show:
                 show_launcher()
 
-                mock_launcher_class.assert_called_once_with(
-                    None,
-                    ALL_JDAVIZ_CONFIGS,
-                    '',
-                    '450px'
-                )
+                mock_launcher_class.assert_called_once_with(None, ALL_JDAVIZ_CONFIGS, '', '450px')
                 mock_show.assert_called_once_with(
                     mock_launcher.main_with_launcher,
                     loc='inline',
-                    title=None
-                )
+                    title=None)
 
-    def test_show_launcher_with_custom_params(self):
+    @pytest.mark.parametrize(('height', 'str_height'),
+                             [(800, '800px'),
+                              ('100%', '100%'),
+                              ('100vh', '100vh')])
+    def test_show_launcher_with_custom_params(self, height, str_height):
         """
         Test show_launcher with custom parameters.
         """
         custom_configs = ['imviz', 'specviz']
         custom_filepath = '/path/to/file.fits'
-        custom_height = 800
 
         with patch('jdaviz.core.launcher.Launcher') as mock_launcher_class:
             mock_launcher = Mock()
@@ -619,61 +449,10 @@ class TestShowLauncher:
             mock_launcher_class.return_value = mock_launcher
 
             with patch('jdaviz.core.launcher.show_widget') as _:
-                show_launcher(
-                    configs=custom_configs,
-                    filepath=custom_filepath,
-                    height=custom_height
-                )
+                show_launcher(configs=custom_configs, filepath=custom_filepath, height=height)
 
                 mock_launcher_class.assert_called_once_with(
                     None,
                     custom_configs,
                     custom_filepath,
-                    '800px'
-                )
-
-    def test_show_launcher_with_string_height(self):
-        """
-        Test show_launcher with string height.
-        """
-        with patch('jdaviz.core.launcher.Launcher') as mock_launcher_class:
-            mock_launcher = Mock()
-            mock_launcher.main_with_launcher = Mock()
-            mock_launcher_class.return_value = mock_launcher
-
-            with patch('jdaviz.core.launcher.show_widget') as _:
-                show_launcher(height='100%')
-
-                mock_launcher_class.assert_called_once_with(
-                    None,
-                    ALL_JDAVIZ_CONFIGS,
-                    '',
-                    '100%'
-                )
-
-
-class TestStatusHints:
-    """
-    Test STATUS_HINTS dictionary completeness.
-    """
-
-    def test_status_hints_keys(self):
-        """
-        Test that STATUS_HINTS contains expected keys.
-        """
-        expected_keys = {
-            'idle',
-            'identifying',
-            'invalid path',
-            'id ok',
-            'id failed'
-        }
-        assert set(STATUS_HINTS.keys()) == expected_keys
-
-    def test_status_hints_values_are_strings(self):
-        """
-        Test that all STATUS_HINTS values are strings.
-        """
-        for key, value in STATUS_HINTS.items():
-            assert isinstance(value, str), \
-                f'STATUS_HINTS[{key!r}] is not a string'
+                    str_height)
