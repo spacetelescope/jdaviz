@@ -13,6 +13,7 @@ class TableViewerCreator(BaseViewerCreator):
 
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
+        self.dataset.filters = ['is_catalog']
         self.viewer_label_default = 'Table'
 
     @property
