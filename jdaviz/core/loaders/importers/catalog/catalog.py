@@ -240,11 +240,12 @@ class CatalogImporter(BaseImporterToDataCollection):
     def _get_supported_viewers():
         return [{'label': 'Image', 'reference': 'imviz-image-viewer'},
                 {'label': 'Scatter', 'reference': 'scatter-viewer'},
-                {'label': 'Histogram', 'reference': 'histogram-viewer'}]
+                {'label': 'Histogram', 'reference': 'histogram-viewer'},
+                {'label': 'Table', 'reference': 'table-viewer'}]
 
     @property
     def user_api(self):
-        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_other']
+        expose = ['col_ra', 'col_dec', 'col_x', 'col_y', 'col_id', 'col_other']
         return ImporterUserApi(self, expose=expose)
 
     @property

@@ -360,7 +360,7 @@
   .viewer-label-container {
     position: absolute;
     right: 0;
-    z-index: 1;
+    z-index: 999;
     width: 24px;
   }
   .viewer-label {
