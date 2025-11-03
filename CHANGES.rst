@@ -28,6 +28,8 @@ New Features
 
 - Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853]
 
+- Generalize spectrum loading logic to prepare to support Roman ASDF files. [#3864]
+
 Cubeviz
 ^^^^^^^
 
