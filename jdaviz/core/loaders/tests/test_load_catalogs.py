@@ -83,8 +83,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     assert 'Declination' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 4
+    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 5
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -131,8 +131,8 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
 
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 4
+    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 5
     # and that it has the correct contents
     assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'])
     assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'])
@@ -223,8 +223,13 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
     assert 'Right Ascension' in qtab.colnames
     assert 'Declination' in qtab.colnames
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 2
+    # there should also be an ID column
+    assert 'ID' in qtab.colnames
+    # we didn't specify a specific ID column, so it should just be the index
+    # of each source
+    assert np.all(qtab['ID'] == np.arange(len(catalog_obj)))
+    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -300,8 +305,8 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     qtab = imviz_helper.app.data_collection[0].get_object(QTable)
     assert 'Right Ascension' in qtab.colnames
     assert 'Declination' in qtab.colnames
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 2
+    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
