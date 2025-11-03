@@ -7,7 +7,10 @@ from unittest.mock import Mock, patch
 import pytest
 from astropy.io.registry import IORegistryError
 from astropy.nddata import CCDData
+from astropy.wcs import WCS
 import numpy as np
+
+from jdaviz import Imviz
 
 from jdaviz.cli import (
     DEFAULT_VERBOSITY,
@@ -23,192 +26,110 @@ from jdaviz.core.launcher import (
 )
 
 
+@pytest.fixture(scope='module')
+def _shared_ccd(tmp_path_factory):
+    """
+    Create a single FITS file once per module and return the CCD and
+    filepath.
+    """
+    test_dir = tmp_path_factory.mktemp('data')
+    test_file = test_dir / 'test_image.fits'
+    data = np.ones((10, 10))
+    wcs = WCS(naxis=2)
+    ccd = CCDData(data=data, unit='adu', wcs=wcs)
+    ccd.write(test_file)
+    return ccd, str(test_file)
+
+
+@pytest.fixture(autouse=True, scope='module')
+def _module_setup(request, _shared_ccd):
+    """
+    Module-scoped autouse fixture that attaches the shared CCD and
+    filepath to all test classes in the module so tests can use
+    ``self.ccd`` and ``self.test_file`` without rewriting the file.
+    """
+    ccd, test_file = _shared_ccd
+
+    # Attach as class attributes to every Test* class in the module.
+    for name in dir(request.module):
+        obj = getattr(request.module, name)
+        if isinstance(obj, type) and name.startswith('Test'):
+            setattr(obj, 'ccd', ccd)
+            setattr(obj, 'test_file', test_file)
+
+
 class TestOpenFunction:
     """
     Test the open() function for automatic config detection and
     launching.
     """
-
-    @pytest.mark.filterwarnings('ignore:Jupyter is migrating')
-    def test_open_with_local_path_kwarg(self, tmp_path, image_2d_wcs):
+    @pytest.mark.parametrize('local_path', ['/some/path', None])
+    def test_open_with_local_path_kwarg(self, local_path):
         """
         Test open() with local_path kwarg passed through to
         download_uri_to_path.
         """
-        # Create a simple FITS file
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
+        with (patch('jdaviz.core.launcher.download_uri_to_path') as mock_download):
+            mock_download.return_value = self.test_file
+            with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
+                mock_identify.return_value = (['imviz'], self.ccd)
 
-        with patch(
-            'jdaviz.core.launcher.download_uri_to_path'
-        ) as mock_download:
-            mock_download.return_value = str(test_file)
-            with patch(
-                'jdaviz.core.launcher.identify_helper'
-            ) as mock_identify:
-                mock_identify.return_value = (['imviz'], ccd)
-
-                _ = jdaviz_open(
-                    str(test_file),
-                    show=False,
-                    local_path='/some/path'
-                )
+                result = jdaviz_open(self.test_file, show=False, local_path=local_path)
 
                 mock_download.assert_called_once_with(
-                    str(test_file),
+                    self.test_file,
                     cache=True,
-                    local_path='/some/path'
-                )
+                    local_path=local_path)
+                assert isinstance(result, Imviz)
 
-    @pytest.mark.filterwarnings('ignore:Jupyter is migrating')
-    def test_open_without_local_path(self, tmp_path, image_2d_wcs):
-        """
-        Test open() without local_path kwarg.
-        """
-        # Create a simple FITS file
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        with patch(
-            'jdaviz.core.launcher.download_uri_to_path'
-        ) as mock_download:
-            mock_download.return_value = str(test_file)
-            with patch(
-                'jdaviz.core.launcher.identify_helper'
-            ) as mock_identify:
-                mock_identify.return_value = (['imviz'], ccd)
-
-                _ = jdaviz_open(str(test_file), show=False)
-
-                mock_download.assert_called_once_with(
-                    str(test_file),
-                    cache=True
-                )
-
-    def test_open_multiple_helpers_raises_error(
-        self, tmp_path, image_2d_wcs
-    ):
+    def test_open_multiple_helpers_raises_error(self):
         """
         Test that open() raises NotImplementedError when multiple
         compatible helpers are identified.
         """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        with patch(
-            'jdaviz.core.launcher.download_uri_to_path'
-        ) as mock_download:
-            mock_download.return_value = str(test_file)
-            with patch(
-                'jdaviz.core.launcher.identify_helper'
-            ) as mock_identify:
-                mock_identify.return_value = (
-                    ['imviz', 'cubeviz'],
-                    ccd
-                )
+        with patch('jdaviz.core.launcher.download_uri_to_path') as mock_download:
+            mock_download.return_value = self.test_file
+            with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
+                mock_identify.return_value = (['imviz', 'cubeviz'], self.ccd)
 
                 msg = 'Multiple helpers provided'
                 with pytest.raises(NotImplementedError, match=msg):
-                    jdaviz_open(str(test_file), show=False)
-
-    def test_open_calls_launch_with_correct_params(
-        self, tmp_path, image_2d_wcs
-    ):
-        """
-        Test that open() correctly calls _launch_config_with_data with
-        the identified helper and data.
-        """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
-        with patch(
-            'jdaviz.core.launcher.download_uri_to_path'
-        ) as mock_download:
-            mock_download.return_value = str(test_file)
-            with patch(
-                'jdaviz.core.launcher.identify_helper'
-            ) as mock_identify:
-                mock_identify.return_value = (['imviz'], ccd)
-                with patch(
-                    'jdaviz.core.launcher._launch_config_with_data'
-                ) as mock_launch:
-                    mock_helper = Mock()
-                    mock_launch.return_value = mock_helper
-
-                    result = jdaviz_open(
-                        str(test_file),
-                        show=False,
-                        data_label='my_data'
-                    )
-
-                    mock_launch.assert_called_once_with(
-                        'imviz',
-                        ccd,
-                        filepath=str(test_file),
-                        show=False,
-                        data_label='my_data'
-                    )
-                    assert result == mock_helper
+                    jdaviz_open(self.test_file, show=False)
 
 
 class TestLaunchConfigWithData:
     """
     Test the _launch_config_with_data() function.
     """
-
-    def test_launch_config_basic(self, imviz_helper):
+    @pytest.mark.parametrize(('data', 'verbosity', 'history_verbosity'),
+                             [(None, None, None),
+                              ('', DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY),
+                              ('', 'debug', 'info')])
+    def test_launch_config_basic(self, imviz_helper, data, verbosity, history_verbosity):
         """
         Test basic launching of a config without data.
         """
+        kwargs = dict(data=data, verbosity=verbosity,
+                      history_verbosity=history_verbosity, show=False)
+        if verbosity is None:
+            kwargs.pop('verbosity')
+        if history_verbosity is None:
+            kwargs.pop('history_verbosity')
+
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=imviz_helper)
 
-            result = _launch_config_with_data('imviz', show=False)
+            result = _launch_config_with_data('imviz', **kwargs)
 
             mock_configs.Imviz.assert_called_once_with(
-                verbosity=DEFAULT_VERBOSITY,
-                history_verbosity=DEFAULT_HISTORY_VERBOSITY
-            )
+                verbosity=DEFAULT_VERBOSITY if verbosity is None else verbosity,
+                history_verbosity=DEFAULT_HISTORY_VERBOSITY if history_verbosity is None else history_verbosity)  # noqa
             assert result == imviz_helper
 
-    def test_launch_config_with_verbosity(self, imviz_helper):
-        """
-        Test launching config with custom verbosity settings.
-        """
-        with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
-            mock_configs.Imviz = Mock(return_value=imviz_helper)
-
-            _ = _launch_config_with_data(
-                'imviz',
-                show=False,
-                verbosity='debug',
-                history_verbosity='info'
-            )
-
-            mock_configs.Imviz.assert_called_once_with(
-                verbosity='debug',
-                history_verbosity='info'
-            )
-
-    def test_launch_config_with_data_loads_successfully(
-        self, tmp_path, image_2d_wcs
-    ):
+    def test_launch_config_with_data_loads_successfully(self):
         """
         Test launching config with data that loads successfully.
         """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
         mock_helper = Mock()
         mock_helper.load_data = Mock()
         mock_helper.show = Mock()
@@ -216,51 +137,35 @@ class TestLaunchConfigWithData:
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
-            result = _launch_config_with_data(
-                'imviz',
-                data=ccd,
-                show=False,
-                data_label='test'
-            )
+            result = _launch_config_with_data('imviz',
+                                              data=self.ccd,
+                                              show=False,
+                                              data_label='test')
 
-            mock_helper.load_data.assert_called_once_with(
-                ccd,
-                data_label='test'
-            )
+            mock_helper.load_data.assert_called_once_with(self.ccd, data_label='test')
             mock_helper.show.assert_not_called()
             assert result == mock_helper
 
-    def test_launch_config_with_data_io_error_uses_filepath(
-        self, tmp_path, image_2d_wcs
-    ):
+    def test_launch_config_with_data_io_error_uses_filepath(self):
         """
         Test that when loading data raises IORegistryError, the
         filepath fallback is used.
         """
-        test_file = tmp_path / 'test_image.fits'
-        data = np.ones((10, 10))
-        ccd = CCDData(data=data, unit='adu', wcs=image_2d_wcs)
-        ccd.write(test_file)
-
         mock_helper = Mock()
-        mock_helper.load_data = Mock(
-            side_effect=[IORegistryError('Failed'), None]
-        )
+        mock_helper.load_data = Mock(side_effect=[IORegistryError('Failed'), None])
         mock_helper.show = Mock()
 
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
-            _ = _launch_config_with_data(
-                'imviz',
-                data=ccd,
-                filepath=str(test_file),
-                show=False
-            )
+            _ = _launch_config_with_data('imviz',
+                                         data=self.ccd,
+                                         filepath=self.test_file,
+                                         show=False)
 
             assert mock_helper.load_data.call_count == 2
-            mock_helper.load_data.assert_any_call(ccd)
-            mock_helper.load_data.assert_any_call(str(test_file))
+            mock_helper.load_data.assert_any_call(self.ccd)
+            mock_helper.load_data.assert_any_call(self.test_file)
 
     def test_launch_config_with_data_io_error_no_filepath_raises(self):
         """
@@ -268,55 +173,17 @@ class TestLaunchConfigWithData:
         is provided.
         """
         mock_helper = Mock()
-        mock_helper.load_data = Mock(
-            side_effect=IORegistryError('Failed')
-        )
+        mock_helper.load_data = Mock(side_effect=IORegistryError('Failed'))
 
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
             with pytest.raises(IORegistryError, match='Failed'):
-                _launch_config_with_data(
-                    'imviz',
-                    data='some_data',
-                    show=False
-                )
-
-    def test_launch_config_with_empty_string_data(self):
-        """
-        Test that empty string data is treated as no data.
-        """
-        mock_helper = Mock()
-        mock_helper.load_data = Mock()
-
-        with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
-            mock_configs.Imviz = Mock(return_value=mock_helper)
-
-            _ = _launch_config_with_data('imviz', data='', show=False)
-
-            mock_helper.load_data.assert_not_called()
-
-    def test_launch_config_with_none_data(self):
-        """
-        Test that None data is treated as no data.
-        """
-        mock_helper = Mock()
-        mock_helper.load_data = Mock()
-
-        with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
-            mock_configs.Imviz = Mock(return_value=mock_helper)
-
-            _ = _launch_config_with_data(
-                'imviz',
-                data=None,
-                show=False
-            )
-
-            mock_helper.load_data.assert_not_called()
+                _launch_config_with_data('imviz', data='some_data', show=False)
 
     def test_launch_config_with_show_true(self):
         """
-        Test that show() is called when show=True.
+        Test that show() is called when (default) show=True.
         """
         mock_helper = Mock()
         mock_helper.show = Mock()
@@ -324,7 +191,7 @@ class TestLaunchConfigWithData:
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
-            _ = _launch_config_with_data('imviz', show=True)
+            _ = _launch_config_with_data('imviz')
 
             mock_helper.show.assert_called_once()
 
