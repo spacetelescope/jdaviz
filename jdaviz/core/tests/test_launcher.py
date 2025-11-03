@@ -337,7 +337,7 @@ class TestLauncherClass:
         launcher._file_chooser.file_path = None
         launcher.vue_choose_file()
         assert launcher.error_message == 'No file selected'
-        assert launcher.filepath is ''
+        assert launcher.filepath == ''
 
         # Choose with directory (should not update filepath)
         launcher._file_chooser.file_path = str(tmp_path)
@@ -347,7 +347,7 @@ class TestLauncherClass:
 
         # Should not change filepath or visibility since path is not a file
         assert launcher.file_chooser_visible is True
-        assert launcher.filepath is ''
+        assert launcher.filepath == ''
 
         with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
             mock_identify.return_value = (['imviz'], self.ccd)
