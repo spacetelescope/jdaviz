@@ -80,6 +80,8 @@ Bug Fixes
 
 - Fixes in model fitting plugin to work better with nonfinite data. [#3792]
 
+- Fixes in model fitting plugin to correctly update parameter units and values upon unit conversion. [#3858]
+
 Cubeviz
 ^^^^^^^
 
