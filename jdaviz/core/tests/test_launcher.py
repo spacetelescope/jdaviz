@@ -431,7 +431,7 @@ class TestLauncherClass:
             with patch(
                 'jdaviz.core.launcher.FileChooser'
             ) as mock_fc:
-                launcher = Launcher()
+                _ = Launcher()
                 mock_fc.assert_called_once_with(test_dir)
 
     def test_filepath_changed_to_empty_string(self):
@@ -810,4 +810,3 @@ class TestStatusHints:
         for key, value in STATUS_HINTS.items():
             assert isinstance(value, str), \
                 f'STATUS_HINTS[{key!r}] is not a string'
-            
