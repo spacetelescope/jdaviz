@@ -442,7 +442,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 else:
                     wavelength = np.arange(flux.shape[1])
                 wl_unit = u.pix
-                flux_unit = u.counts
+                flux_unit = u.count
 
                 flux_error = None
                 variance = extension.get("variance", None)
