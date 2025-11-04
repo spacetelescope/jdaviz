@@ -3663,8 +3663,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             return None, None, None
 
         if per_pixel:
-            if self.app.config != 'cubeviz':
-                raise ValueError("per-pixel only supported for cubeviz")
+            if self.app.config not in ('cubeviz', 'deconfigged'):
+                raise ValueError("per-pixel only supported for cubeviz/deconfigged")
             full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
                                                              use_display_units=True)
         else:
