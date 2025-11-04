@@ -39,7 +39,6 @@ def spectral_region():
     return SpectralRegion(5000 * u.AA, 6000 * u.AA)
 
 
-
 class TestSubsetImporterValidation:
     """
     Test SubsetImporter input validation.
@@ -93,7 +92,6 @@ class TestSubsetImporterValidation:
         )
 
         assert importer.is_valid is False
-
 
 
 class TestSubsetImporterLabelValidation:
@@ -337,4 +335,3 @@ class TestSubsetImporterEdgeCases:
         # Should have AutoTextField attached
         assert hasattr(importer, 'subset_label')
         assert importer.subset_label is not None
-

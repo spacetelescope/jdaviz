@@ -12,7 +12,7 @@ Test coverage includes:
 - Multiple file handling
 - Edge cases and error handling
 """
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 import pytest
 import io
 from astropy.table import Table
@@ -591,4 +591,3 @@ class TestFileDropResolverIntegration:
                 )
                 # Either returns None or a table (astropy is very lenient)
                 assert table is None or isinstance(table, Table)
-
