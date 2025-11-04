@@ -41,7 +41,7 @@ Imviz
 
 - Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
 
-- Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769]
+- Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769, #3872]
 
 Mosviz
 ^^^^^^
