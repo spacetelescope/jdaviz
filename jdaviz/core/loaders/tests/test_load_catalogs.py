@@ -84,14 +84,14 @@ def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
     imviz_helper.load(data)
 
-    # load catalog
-    imviz_helper.load(catalog_obj)
+    # load catalog, all columns
+    imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'])
 
     # check for the table in the data collection
     dc = imviz_helper.app.data_collection
-    assert len(dc) == 1
+    assert len(dc) == 2
     assert 'Catalog' in imviz_helper.app.data_collection.labels
-    tab = dc[0].get_object(Table)
+    tab = imviz_helper.app.data_collection[1].get_object(Table)
     assert 'col1' in tab.colnames
 
     # make sure linking doesn't produce any errors when alingment changes.
@@ -127,8 +127,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     assert 'Declination' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 4
+    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 5
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -175,8 +175,8 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
 
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 4
+    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 5
     # and that it has the correct contents
     assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'])
     assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'])
@@ -205,8 +205,8 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = '---'
     ldr.importer.col_y.selected = '---'
-    # now with no coordinate column pair selected, import should be disabled
-    assert ldr.importer._obj.import_disabled is True
+    # no coordinate column pair selected, import should still be enabled
+    assert ldr.importer._obj.import_disabled is False
 
     # when RA is selected but Dec is not, import should be disabled
     ldr.importer.col_ra.selected = 'RA'
@@ -267,8 +267,13 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
     assert 'Right Ascension' in qtab.colnames
     assert 'Declination' in qtab.colnames
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 2
+    # there should also be an ID column
+    assert 'ID' in qtab.colnames
+    # we didn't specify a specific ID column, so it should just be the index
+    # of each source
+    assert np.all(qtab['ID'] == np.arange(len(catalog_obj)))
+    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -344,8 +349,8 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     qtab = imviz_helper.app.data_collection[0].get_object(QTable)
     assert 'Right Ascension' in qtab.colnames
     assert 'Declination' in qtab.colnames
-    # make sure only ra and dec loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 2
+    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -390,7 +395,7 @@ def test_scatter_viewer(deconfigged_helper):
 
     assert 'Scatter' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Scatter'
-    ldr.importer()
+    ldr.load()
 
     assert 'Scatter' in deconfigged_helper.viewers
     assert 'Scatter' in deconfigged_helper.new_viewers
@@ -413,7 +418,7 @@ def test_histogram_viewer(deconfigged_helper):
 
     assert 'Histogram' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Histogram'
-    ldr.importer()
+    ldr.load()
 
     assert 'Histogram' in deconfigged_helper.viewers
     assert 'Histogram' in deconfigged_helper.new_viewers
