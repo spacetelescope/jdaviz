@@ -9,6 +9,7 @@ from astropy.io.registry import IORegistryError
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 import numpy as np
+from ipywidgets import widgets
 
 from jdaviz import Imviz
 
@@ -359,17 +360,17 @@ class TestLauncherClass:
             assert launcher.file_chooser_visible is False
             assert launcher.filepath == self.test_file
 
-    @pytest.mark.parametrize('height', [600, '100%', '100vh'])
-    def test_vue_launch_config(self, height):
+    @pytest.mark.parametrize('height', ['600', '100%', '100vh'])
+    def test_vue_launch_config(self, deconfigged_helper, height):
         """
         Test vue_launch_config method.
         """
         mock_helper = Mock()
-        mock_app = Mock()
-        mock_helper.app = mock_app
+        dcf_app = deconfigged_helper.app
+        mock_helper.app = dcf_app
         default_height = '800px'
-        mock_app.state.settings = {'context': {'notebook': {'max_height': default_height}}}
-        mock_app.layout = Mock()
+        dcf_app.state.settings = {'context': {'notebook': {'max_height': default_height}}}
+        dcf_app.layout = widgets.Layout(height=height, width="100%")
 
         with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
             mock_identify.return_value = (['imviz'], self.ccd)
@@ -377,8 +378,7 @@ class TestLauncherClass:
             with patch('jdaviz.core.launcher._launch_config_with_data') as mock_launch:
                 mock_launch.return_value = mock_helper
 
-                mock_main = Mock()
-                launcher = Launcher(main=mock_main, height=height)
+                launcher = Launcher(height=height)
                 launcher.filepath = self.test_file
 
                 event = {'config': 'imviz'}
@@ -391,10 +391,10 @@ class TestLauncherClass:
                     show=False)
 
                 assert launcher.main.color == 'transparent'
-                assert launcher.main.children == [mock_app]
+                assert launcher.main.children == [dcf_app]
 
                 if height not in ['100%', '100vh']:
-                    assert mock_app.layout.height == default_height
+                    assert dcf_app.layout.height == default_height
                     assert launcher.main.height == default_height
 
     def test_main_with_launcher_property(self):
