@@ -15,40 +15,20 @@ Test coverage includes:
 from unittest.mock import Mock, MagicMock, patch
 import pytest
 import io
-import os
 from astropy.table import Table
-import numpy as np
 
-from jdaviz.core.loaders.resolvers.file_drop.file_drop import (
-    FileDropResolver
-)
+from jdaviz.core.loaders.resolvers.file_drop.file_drop import (FileDropResolver)
 
 
 @pytest.fixture
-def mock_app():
-    """
-    Create a mock application instance.
-    """
-    app = Mock()
-    app.state = Mock()
-    app.state.settings = {'configuration': 'default'}
-    app.state.show_api_hints = False
-    app.api_hints_obj = ''
-    app.vdocs = ''
-    return app
-
-
-@pytest.fixture
-def file_drop_resolver(mock_app):
+def file_drop_resolver(deconfigged_helper):
     """
     Create a FileDropResolver instance with mocked dependencies.
     """
-    with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.'
-               'FileDropMultiple'):
-        with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.'
-                   'reacton') as mock_reacton:
+    with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.FileDropMultiple'):
+        with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.reacton') as mock_reacton:
             mock_reacton.render.return_value = (Mock(), Mock())
-            resolver = FileDropResolver(app=mock_app)
+            resolver = FileDropResolver(app=deconfigged_helper.app)
             return resolver
 
 
@@ -101,7 +81,7 @@ class TestFileDropResolverInitialization:
         assert file_drop_resolver.progress == 100
         assert file_drop_resolver.nfiles == 0
 
-    def test_init_creates_widget(self, mock_app):
+    def test_init_creates_widget(self, deconfigged_helper):
         """
         Test that initialization creates file drop widget.
         """
@@ -111,7 +91,7 @@ class TestFileDropResolverInitialization:
                        'file_drop.reacton') as mock_reacton:
                 mock_reacton.render.return_value = (Mock(), Mock())
 
-                resolver = FileDropResolver(app=mock_app)
+                _ = FileDropResolver(app=deconfigged_helper.app)
 
                 # Check that widget was created with correct parameters
                 mock_widget.assert_called_once()
