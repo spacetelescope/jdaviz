@@ -150,8 +150,9 @@ class FormatSelect(SelectPluginComponent):
                                     continue
 
                         else:
-                            # we'll store the importer even if it isn't valid according to the filters
-                            # so that they can be used when compiling the list of target filters
+                            # we'll store the importer even if it isn't valid according to the
+                            # filters so that they can be used when compiling the list of
+                            # target filters
                             self._importers[importer_name] = this_importer
                     else:
                         self._invalid_importers[label] = 'not valid'
