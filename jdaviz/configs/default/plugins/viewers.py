@@ -1109,13 +1109,8 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
                     ['jdaviz:viewer_clone']
-                ]
+                   ]
 
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
