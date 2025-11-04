@@ -6,7 +6,6 @@ import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.nddata import CCDData, NDDataArray
-from astropy.wcs import WCS
 from glue.core import ComponentID
 from glue.core.roi import CircularROI
 from specutils import SpectralRegion, Spectrum
