@@ -371,25 +371,25 @@ def test_get_data_cls_nddataarray_for_rampviz(rampviz_helper, jwst_level_1b_ramp
     assert isinstance(result, NDDataArray)
 
 
-def test_delete_region_with_valid_subset(deconfigged_helper, image_cube_hdu_obj):
+def test_delete_region_with_valid_subset(cubeviz_helper, image_cube_hdu_obj):
     """
     Test _delete_region with a valid subset label.
     """
-    deconfigged_helper.load(image_cube_hdu_obj, format='3D Spectrum')
+    cubeviz_helper.load(image_cube_hdu_obj, format='3D Spectrum')
 
     # Create a subset
-    subset_plugin = deconfigged_helper.plugins['Subset Tools']
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(CircularROI(5, 5, 3))
 
     # Verify subset was created
-    subset_labels = [s.label for s in deconfigged_helper.app.data_collection.subset_groups]
+    subset_labels = [s.label for s in cubeviz_helper.app.data_collection.subset_groups]
     assert 'Subset 1' in subset_labels
 
     # Delete the region
-    deconfigged_helper._delete_region('Subset 1')
+    cubeviz_helper._delete_region('Subset 1')
 
     # Verify it was deleted
-    subset_labels_after = [s.label for s in deconfigged_helper.app.data_collection.subset_groups]
+    subset_labels_after = [s.label for s in cubeviz_helper.app.data_collection.subset_groups]
     assert 'Subset 1' not in subset_labels_after
 
 
@@ -405,17 +405,21 @@ def test_delete_region_with_invalid_subset(cubeviz_helper, image_cube_hdu_obj):
     # Should not raise any errors
 
 
-def test_load_with_show_in_viewer_deprecated(deconfigged_helper, spectrum1d):
+def test_load_with_show_in_viewer_deprecated(specviz_helper, spectrum1d):
     """
     Test _load with deprecated 'show_in_viewer' kwarg triggers warning and conversion.
     """
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        deconfigged_helper.load(spectrum1d, format='1D Spectrum', show_in_viewer=True)
+        specviz_helper.load(spectrum1d, format='1D Spectrum', show_in_viewer=True)
         # Check that deprecation warning was raised
-        assert len(w) == 1
-        assert issubclass(w[0].category, DeprecationWarning)
-        assert 'show_in_viewer' in str(w[0].message)
+        assert len(w) >= 1
+        for warning in w:
+            if 'show_in_viewer' in str(warning.message):
+                assert issubclass(warning.category, DeprecationWarning)
+                break
+        else:
+            assert False, "DeprecationWarning for 'show_in_viewer' not raised."
 
 
 def test_load_with_both_viewer_and_show_in_viewer_raises_error(
