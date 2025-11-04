@@ -58,6 +58,50 @@ def _make_catalog_string_coord_columns():
                   names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
 
 
+def _make_catalog_no_coordinates():
+    # Table to test loading catalogs that aren't 'Source Catalogs',
+    col1 = ['A', 'B', 'C']
+    col2 = [1, 2, 3]
+    col3 = [True, False, True]
+
+    return Table(data=[col1, col2, col3],
+                 names=['col1', 'col2', 'col3'])
+
+
+def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
+    """
+    A table should be able to be loaded without selecting
+    an RA/Dec or X/Y pair. This table will not have the functionality
+    of a 'Souce Catalog' that does have source positions
+    (linking, mouseover) but it may be loaded to plot for example
+    in the scatter or histrogram viewer.
+    """
+    imviz_helper.app.state.catalogs_in_dc = True
+
+    catalog_obj = _make_catalog_no_coordinates()
+
+    # load data so we can test orientation later
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    # load catalog
+    imviz_helper.load(catalog_obj)
+
+    # check for the table in the data collection
+    dc = imviz_helper.app.data_collection
+    assert len(dc) == 1
+    assert 'Catalog' in imviz_helper.app.data_collection.labels
+    tab = dc[0].get_object(Table)
+    assert 'col1' in tab.colnames
+
+    # make sure linking doesn't produce any errors when alingment changes.
+    # this isn't relevant for this catalog with no source positons,
+    # but orientation will check for the presence of certain
+    # components in a table to decide not to link and we
+    # want to make sure that works correctly
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+
 def test_load_catalog_with_string_coord_cols(imviz_helper):
     """
     Test loading a catalog with string RA/Dec columns (that can be converted
@@ -83,8 +127,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     assert 'Declination' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
-    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 5
+    # make sure only ra and dec loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 4
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -131,8 +175,8 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
 
-    # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 5
+    # make sure only ra and dec loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 4
     # and that it has the correct contents
     assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'])
     assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'])
@@ -223,13 +267,8 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
     assert 'Right Ascension' in qtab.colnames
     assert 'Declination' in qtab.colnames
-    # there should also be an ID column
-    assert 'ID' in qtab.colnames
-    # we didn't specify a specific ID column, so it should just be the index
-    # of each source
-    assert np.all(qtab['ID'] == np.arange(len(catalog_obj)))
-    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 3
+    # make sure only ra and dec loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 2
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -305,8 +344,8 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     qtab = imviz_helper.app.data_collection[0].get_object(QTable)
     assert 'Right Ascension' in qtab.colnames
     assert 'Declination' in qtab.colnames
-    # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
-    assert len(qtab.colnames) == 3
+    # make sure only ra and dec loaded, since we didn't specify more columns
+    assert len(qtab.colnames) == 2
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
@@ -351,7 +390,7 @@ def test_scatter_viewer(deconfigged_helper):
 
     assert 'Scatter' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Scatter'
-    ldr.load()
+    ldr.importer()
 
     assert 'Scatter' in deconfigged_helper.viewers
     assert 'Scatter' in deconfigged_helper.new_viewers
@@ -374,7 +413,7 @@ def test_histogram_viewer(deconfigged_helper):
 
     assert 'Histogram' in ldr.importer.viewer.create_new.choices
     ldr.importer.viewer.create_new = 'Histogram'
-    ldr.load()
+    ldr.importer()
 
     assert 'Histogram' in deconfigged_helper.viewers
     assert 'Histogram' in deconfigged_helper.new_viewers
