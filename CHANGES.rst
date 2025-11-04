@@ -36,6 +36,9 @@ Cubeviz
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3748]
 
+- Fix bug so cube image viewers in the deconfigged app update the mouseover surface brightness 
+  unit/value on unit changes. [#3874]
+
 Imviz
 ^^^^^
 
