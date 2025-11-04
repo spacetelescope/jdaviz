@@ -116,6 +116,9 @@ Bug Fixes
 
 - Fix a bug with initializing component models in Model Fitting when Cube Fit was toggle on. [#3857]
 
+- Fixes a bug in parser preference where sometimes an input would go through the specutils parser
+  instead of the fits parser. [#3869]
+
 Cubeviz
 ^^^^^^^
 
