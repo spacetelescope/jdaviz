@@ -61,7 +61,7 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection()
             return
 
-        all_resolvers = []
+        all_formats = []
         self._parsers = {}
         self._dbg_importers = {}
         self._invalid_importers = {}
@@ -128,32 +128,35 @@ class FormatSelect(SelectPluginComponent):
                                     'target': this_importer.target}
                             parser_pref = this_importer.parser_preference
                             if importer_name not in self._importers:
-                                all_resolvers.append(item)
+                                all_formats.append(item)
+                                self._importers[importer_name] = this_importer
                             elif not len(parser_pref) or parser_name not in parser_pref:
                                 # default to the previous (or first) found match
                                 continue
                             else:
                                 # then there was already a match from an earlier parser.  Compare
                                 # to see which has preference and replace if necessary.
-                                item_importers = [i['importer'] for i in all_resolvers]
+                                item_importers = [i['importer'] for i in all_formats]
                                 item_index = item_importers.index(importer_name)
-                                prev_parser = all_resolvers[item_index]['parser']
+                                prev_parser = all_formats[item_index]['parser']
                                 parser_pref = this_importer.parser_preference
                                 if (prev_parser not in parser_pref or
                                         parser_pref.index(prev_parser) > parser_pref.index(parser_name)):  # noqa
                                     # this parser has preference over the previous one
-                                    all_resolvers[item_index] = item
+                                    all_formats[item_index] = item
+                                    self._importers[importer_name] = this_importer
                                 else:
                                     # this previous parser has preference over this one
                                     continue
 
-                        # we'll store the importer even if it isn't valid according to the filters
-                        # so that they can be used when compiling the list of target filters
-                        self._importers[importer_name] = this_importer
+                        else:
+                            # we'll store the importer even if it isn't valid according to the filters
+                            # so that they can be used when compiling the list of target filters
+                            self._importers[importer_name] = this_importer
                     else:
                         self._invalid_importers[label] = 'not valid'
 
-        self.items = all_resolvers
+        self.items = all_formats
         self._apply_default_selection()
 
 
