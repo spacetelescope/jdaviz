@@ -26,7 +26,7 @@ New Features
 
 - AIDA methods setting and retrieving rotation of imviz viewer [#3834]
 
-- Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853]
+- Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853, #3870]
 
 Cubeviz
 ^^^^^^^
