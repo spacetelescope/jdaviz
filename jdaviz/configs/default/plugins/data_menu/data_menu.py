@@ -81,6 +81,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     orientation_layer_items = List().tag(sync=True)
     orientation_layer_selected = Unicode().tag(sync=True)
 
+    viewer_supports_visible_toggle = Bool(True).tag(sync=True)
     disabled_layers_due_to_pixel_link = List().tag(sync=True)
 
     cmap_samples = Dict(cmap_samples).tag(sync=True)
@@ -111,6 +112,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         super().__init__(*args, **kwargs)
         self._viewer = viewer
         self._during_select_sync = False
+
+        from jdaviz.configs.default.plugins.viewers import JdavizTableViewer
+        self.viewer_supports_visible_toggle = not isinstance(self._viewer, JdavizTableViewer)
 
         # TODO: refactor how this is applied by default to go through filters directly
         self.layer.remove_filter('filter_is_root')
@@ -166,6 +170,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
+        if not self.viewer_supports_visible_toggle:
+            expose = [e for e in expose
+                      if e not in ('set_layer_visibility', 'toggle_layer_visibility',
+                                   'create_subset', 'modify_subset')]
         readonly = ['data_labels_loaded', 'data_labels_visible', 'data_labels_unloaded']
         if self.app.config in ('imviz', 'deconfigged'):
             expose += ['orientation']

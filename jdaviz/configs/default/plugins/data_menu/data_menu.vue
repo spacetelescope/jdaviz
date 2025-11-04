@@ -198,7 +198,7 @@
                     </v-btn>
                   </j-tooltip>
                   <j-tooltip
-                    v-else
+                    v-else-if="viewer_supports_visible_toggle"
                     :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
                     >
                     <plugin-switch
