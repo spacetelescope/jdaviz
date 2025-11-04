@@ -1,15 +1,18 @@
 import pytest
 from unittest.mock import PropertyMock, patch
+import warnings
 
 import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.nddata import CCDData, NDDataArray
+from astropy.wcs import WCS
 from glue.core import ComponentID
 from glue.core.roi import CircularROI
 from specutils import SpectralRegion, Spectrum
 
 from jdaviz.core.helpers import _next_subset_num
+from jdaviz.core.loaders import ObjectResolver, ObjectParser
 
 
 class MockGroupItem:
@@ -312,8 +315,8 @@ class TestConfigHelperSubsets:
                           ('mos_spectrum1d', '1D Spectrum', Spectrum),
                           ('mos_spectrum2d', '2D Spectrum', Spectrum),
                           # TODO: enable when spectral cube loader is ready
-                          # ('spectral_cube_wcs', 'Spectral Cube', Spectrum),
-                          # ('image_cube_hdu_obj', 'Spectral Cube', Spectrum),
+                          ('spectral_cube_wcs', 'Spectral Cube', Spectrum),
+                          ('image_cube_hdu_obj', 'Spectral Cube', Spectrum),
                           # TODO: enable when rampviz loader is ready
                           # ('jwst_level_1b_ramp', 'Ramp', NDDataArray),
                           ]
@@ -342,6 +345,19 @@ def test_get_data_cls(deconfigged_helper, request, data_tuple):
     assert isinstance(result, expected_cls)
 
 
+def test_get_data_cls_spectrum_for_specviz2d(specviz2d_helper, spectrum2d):
+    """
+    Test _get_data: cls inferred as Spectrum for specviz2d config.
+    """
+    specviz2d_helper.load_data(spectrum2d)
+    # Get the actual label from data collection
+    label = specviz2d_helper.app.data_collection[0].label
+
+    # Spectrum should infer Spectrum2d for multi-dimensional data
+    result = specviz2d_helper.get_data(data_label=label)
+    assert isinstance(result, Spectrum)
+
+
 def test_get_data_cls_nddataarray_for_rampviz(rampviz_helper, jwst_level_1b_ramp):
     """
     Test _get_data: cls inferred as NDDataArray for rampviz config.
@@ -353,3 +369,83 @@ def test_get_data_cls_nddataarray_for_rampviz(rampviz_helper, jwst_level_1b_ramp
     # Rampviz should infer NDDataArray for multi-dimensional data
     result = rampviz_helper.get_data(data_label=label)
     assert isinstance(result, NDDataArray)
+
+
+def test_delete_region_with_valid_subset(deconfigged_helper, image_cube_hdu_obj):
+    """
+    Test _delete_region with a valid subset label.
+    """
+    deconfigged_helper.load(image_cube_hdu_obj, format='3D Spectrum')
+
+    # Create a subset
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']
+    subset_plugin.import_region(CircularROI(5, 5, 3))
+
+    # Verify subset was created
+    subset_labels = [s.label for s in deconfigged_helper.app.data_collection.subset_groups]
+    assert 'Subset 1' in subset_labels
+
+    # Delete the region
+    deconfigged_helper._delete_region('Subset 1')
+
+    # Verify it was deleted
+    subset_labels_after = [s.label for s in deconfigged_helper.app.data_collection.subset_groups]
+    assert 'Subset 1' not in subset_labels_after
+
+
+def test_delete_region_with_invalid_subset(cubeviz_helper, image_cube_hdu_obj):
+    """
+    Test _delete_region with an invalid subset label (early return).
+    """
+    cubeviz_helper.load_data(image_cube_hdu_obj)
+
+    # Try to delete a non-existent subset (should not raise error, just return)
+    cubeviz_helper._delete_region('NonExistentSubset')
+
+    # Should not raise any errors
+
+
+def test_load_with_show_in_viewer_deprecated(deconfigged_helper, spectrum1d):
+    """
+    Test _load with deprecated 'show_in_viewer' kwarg triggers warning and conversion.
+    """
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always')
+        deconfigged_helper.load(spectrum1d, format='1D Spectrum', show_in_viewer=True)
+        # Check that deprecation warning was raised
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+        assert 'show_in_viewer' in str(w[0].message)
+
+
+def test_load_with_both_viewer_and_show_in_viewer_raises_error(
+    deconfigged_helper, spectrum1d
+):
+    """
+    Test _load with both 'viewer' and 'show_in_viewer' raises ValueError.
+    """
+    with pytest.raises(ValueError, match='Cannot specify both'):
+        deconfigged_helper.load(
+            spectrum1d, format='1D Spectrum', viewer='spectrum-viewer', show_in_viewer=True)
+
+
+def test_loaders_not_implemented_without_dev_flag(deconfigged_helper, mosviz_helper):
+    """
+    Test loaders property raises NotImplementedError without dev flag/or for configs
+    not in CONFIGS_WITH_LOADERS.
+    """
+    # Mosviz is not in CONFIGS_WITH_LOADERS (for now)
+    with pytest.raises(NotImplementedError, match='loaders is under active development'):
+        _ = mosviz_helper.loaders
+
+
+def test_get_loader_default_args(deconfigged_helper, spectrum1d):
+    """
+    Test _get_loader with parser_name is None
+    """
+    deconfigged_helper.load(spectrum1d, data_label='test', format='1D Spectrum')
+    resolver = deconfigged_helper._get_loader('object')
+    assert isinstance(resolver, ObjectResolver)
+
+    parser = deconfigged_helper._get_loader('object', parser_name='object')
+    assert isinstance(parser, ObjectParser)
