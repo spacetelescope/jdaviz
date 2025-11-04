@@ -200,7 +200,7 @@
                           @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
                           @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
                           :api_hints_enabled="false"
-                          :use_eye_icon="true"
+                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
                         />
                       </j-tooltip>
                     </v-list-item-action>
