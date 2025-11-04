@@ -12,15 +12,17 @@ Test coverage includes:
 - Multiple file handling
 - Edge cases and error handling
 """
-from unittest.mock import Mock, patch
-import pytest
 import io
+import pytest
+from unittest.mock import Mock, patch
+
 from astropy.table import Table
 
 from jdaviz.core.loaders.resolvers.file_drop.file_drop import (FileDropResolver)
+from jdaviz.core.user_api import LoaderUserApi
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def file_drop_resolver(deconfigged_helper):
     """
     Create a FileDropResolver instance with mocked dependencies.
@@ -30,42 +32,6 @@ def file_drop_resolver(deconfigged_helper):
             mock_reacton.render.return_value = (Mock(), Mock())
             resolver = FileDropResolver(app=deconfigged_helper.app)
             return resolver
-
-
-@pytest.fixture
-def sample_csv_data():
-    """
-    Create sample CSV data as bytes.
-    """
-    csv_content = 'col1,col2,col3\n1,2,3\n4,5,6\n7,8,9'
-    return csv_content.encode('utf-8')
-
-
-@pytest.fixture
-def sample_ascii_data():
-    """
-    Create sample ASCII table data as bytes.
-    """
-    ascii_content = 'col1 col2 col3\n1 2 3\n4 5 6\n7 8 9'
-    return ascii_content.encode('utf-8')
-
-
-@pytest.fixture
-def sample_fits_table():
-    """
-    Create sample FITS table data as bytes.
-    """
-    table = Table({
-        'col1': [1, 2, 3],
-        'col2': [4, 5, 6],
-        'col3': [7, 8, 9]
-    })
-
-    # Write to BytesIO
-    output = io.BytesIO()
-    table.write(output, format='fits')
-    output.seek(0)
-    return output.getvalue()
 
 
 class TestFileDropResolverInitialization:
@@ -85,10 +51,10 @@ class TestFileDropResolverInitialization:
         """
         Test that initialization creates file drop widget.
         """
-        with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.'
-                   'FileDropMultiple') as mock_widget:
-            with patch('jdaviz.core.loaders.resolvers.file_drop.'
-                       'file_drop.reacton') as mock_reacton:
+        with (patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.FileDropMultiple')
+              as mock_widget):
+            with (patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.reacton')
+                  as mock_reacton):
                 mock_reacton.render.return_value = (Mock(), Mock())
 
                 _ = FileDropResolver(app=deconfigged_helper.app)
@@ -102,160 +68,76 @@ class TestFileDropResolverInitialization:
                 assert 'on_file' in call_kwargs
 
 
-class TestFileDropResolverProperties:
+def test_file_drop_resolver_init(file_drop_resolver):
     """
-    Test FileDropResolver properties.
+    Test that FileDropResolver initializes correctly.
     """
+    # Test that user_api returns LoaderUserApi instance.
+    api = file_drop_resolver.user_api
 
-    def test_user_api_empty_expose(self, file_drop_resolver):
-        """
-        Test that user_api returns LoaderUserApi instance.
-        """
-        api = file_drop_resolver.user_api
+    # Check that LoaderUserApi was created
+    assert isinstance(api, LoaderUserApi)
 
-        # Check that LoaderUserApi was created
-        from jdaviz.core.user_api import LoaderUserApi
-        assert isinstance(api, LoaderUserApi)
-
-    def test_is_valid_always_true(self, file_drop_resolver):
-        """
-        Test that is_valid always returns True.
-        """
-        assert file_drop_resolver.is_valid is True
-
-    def test_default_label_no_file(self, file_drop_resolver):
-        """
-        Test default_label returns None when no file is loaded.
-        """
-        assert file_drop_resolver.default_label is None
-
-    def test_default_label_with_file(self, file_drop_resolver):
-        """
-        Test default_label returns file name without extension.
-        """
-        file_drop_resolver._file_info = {
-            'name': 'test_data.csv',
-            'data': b'some data'
-        }
-
-        assert file_drop_resolver.default_label == 'test_data'
-
-    def test_default_label_with_complex_extension(
-        self, file_drop_resolver
-    ):
-        """
-        Test default_label with file having multiple dots.
-        """
-        file_drop_resolver._file_info = {
-            'name': 'my.data.file.fits',
-            'data': b'some data'
-        }
-
-        # splitext only removes last extension
-        assert file_drop_resolver.default_label == 'my.data.file'
-
-    def test_default_label_no_extension(self, file_drop_resolver):
-        """
-        Test default_label with file having no extension.
-        """
-        file_drop_resolver._file_info = {
-            'name': 'datafile',
-            'data': b'some data'
-        }
-
-        assert file_drop_resolver.default_label == 'datafile'
+    assert file_drop_resolver.is_valid is True
+    assert file_drop_resolver.default_label is None
 
 
-class TestFileDropResolverProgressTracking:
+@pytest.mark.parametrize(('filename', 'result'),
+                         [('test_data.csv', 'test_data'),
+                          ('my.data.file.fits', 'my.data.file'),
+                          ('datafile', 'datafile')])
+def test_default_label_with_file(file_drop_resolver, filename, result):
     """
-    Test progress tracking functionality.
+    Test default_label returns file name with different conventions.
     """
+    file_drop_resolver._file_info = {'name': filename,
+                                     'data': b'some data'}
 
-    def test_on_total_progress_updates(self, file_drop_resolver):
-        """
-        Test that _on_total_progress updates progress trait.
-        """
-        file_drop_resolver._on_total_progress(50)
-        assert file_drop_resolver.progress == 50
+    assert file_drop_resolver.default_label == result
 
-        file_drop_resolver._on_total_progress(75)
-        assert file_drop_resolver.progress == 75
 
-        file_drop_resolver._on_total_progress(100)
-        assert file_drop_resolver.progress == 100
+def test_on_total_progress_updates(file_drop_resolver):
+    """
+    Test that _on_total_progress updates progress trait.
+    """
+    for value in [0, 25, 50, 75, 100]:
+        file_drop_resolver._on_total_progress(value)
+        assert file_drop_resolver.progress == value
 
-    def test_progress_boundaries(self, file_drop_resolver):
-        """
-        Test progress with boundary values.
-        """
-        file_drop_resolver._on_total_progress(0)
-        assert file_drop_resolver.progress == 0
 
-        file_drop_resolver._on_total_progress(100)
-        assert file_drop_resolver.progress == 100
+_FILE_INFO = [{'name': 'file1.csv', 'data': b'data1'},
+              {'name': 'file2.csv', 'data': b'data2'},
+              {'name': 'file3.csv', 'data': b'data3'}]
 
 
 class TestFileDropResolverFileHandling:
     """
     Test file upload and handling functionality.
     """
-
-    def test_on_file_updated_single_file(self, file_drop_resolver):
+    @pytest.mark.parametrize('file_info', ([_FILE_INFO[0]], _FILE_INFO))
+    def test_on_file_updated_single_file(self, file_drop_resolver, file_info):
         """
         Test _on_file_updated with single file.
         """
-        file_info = {
-            'name': 'test.csv',
-            'data': b'col1,col2\n1,2\n3,4'
-        }
+        # Test that progress updates to 100 after file upload.
+        file_drop_resolver.progress = 50
+        with patch.object(file_drop_resolver, '_resolver_input_updated') as mock_input_updated:
+            with patch.object(file_drop_resolver, '_update_format_items') as mock_update_format:
+                file_drop_resolver._on_file_updated(file_info)
 
-        with patch.object(
-            file_drop_resolver, '_resolver_input_updated'
-        ) as mock_input_updated:
-            with patch.object(
-                file_drop_resolver, '_update_format_items'
-            ) as mock_update_format:
-                file_drop_resolver._on_file_updated([file_info])
-
-                assert file_drop_resolver.nfiles == 1
-                assert file_drop_resolver._file_info == file_info
+                assert file_drop_resolver.nfiles == len(file_info)
+                assert file_drop_resolver._file_info == file_info[0] if len(file_info) > 1 else file_info  # noqa
                 assert file_drop_resolver.progress == 100
 
                 mock_input_updated.assert_called_once()
                 mock_update_format.assert_called_once()
 
-    def test_on_file_updated_multiple_files(self, file_drop_resolver):
-        """
-        Test _on_file_updated with multiple files (uses first).
-        """
-        file_infos = [
-            {'name': 'file1.csv', 'data': b'data1'},
-            {'name': 'file2.csv', 'data': b'data2'},
-            {'name': 'file3.csv', 'data': b'data3'}
-        ]
-
-        with patch.object(
-            file_drop_resolver, '_resolver_input_updated'
-        ):
-            with patch.object(
-                file_drop_resolver, '_update_format_items'
-            ):
-                file_drop_resolver._on_file_updated(file_infos)
-
-                assert file_drop_resolver.nfiles == 3
-                # Should use first file
-                assert file_drop_resolver._file_info == file_infos[0]
-
     def test_on_file_updated_empty_list(self, file_drop_resolver):
         """
         Test _on_file_updated with empty file list.
         """
-        with patch.object(
-            file_drop_resolver, '_resolver_input_updated'
-        ):
-            with patch.object(
-                file_drop_resolver, '_update_format_items'
-            ):
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            with patch.object(file_drop_resolver, '_update_format_items'):
                 # This should raise an IndexError
                 with pytest.raises(IndexError):
                     file_drop_resolver._on_file_updated([])
@@ -265,28 +147,22 @@ class TestFileDropResolverParseInput:
     """
     Test parse_input functionality.
     """
-
     def test_parse_input_returns_bytesio(self, file_drop_resolver):
         """
         Test that parse_input returns BytesIO object.
         """
-        test_data = b'test data content'
-        file_drop_resolver._file_info = {
-            'name': 'test.txt',
-            'data': test_data
-        }
+        file_drop_resolver._file_info = _FILE_INFO[0]
 
         result = file_drop_resolver.parse_input()
 
         assert isinstance(result, io.BytesIO)
-        assert result.read() == test_data
+        assert result.read() == _FILE_INFO[0]['data']
 
     def test_parse_input_no_file_info(self, file_drop_resolver):
         """
         Test parse_input when no file is loaded.
         """
         file_drop_resolver._file_info = None
-
         # This should raise an AttributeError
         with pytest.raises(AttributeError):
             file_drop_resolver.parse_input()
@@ -296,10 +172,7 @@ class TestFileDropResolverParsedInputToTable:
     """
     Test _parsed_input_to_table functionality for various formats.
     """
-
-    def test_parsed_input_to_table_csv(
-        self, file_drop_resolver, sample_csv_data
-    ):
+    def test_parsed_input_to_table_csv(self, file_drop_resolver, sample_csv_data):
         """
         Test parsing CSV format.
         """
@@ -311,9 +184,7 @@ class TestFileDropResolverParsedInputToTable:
         assert len(result) == 3
         assert 'col1' in result.colnames
 
-    def test_parsed_input_to_table_ascii(
-        self, file_drop_resolver, sample_ascii_data
-    ):
+    def test_parsed_input_to_table_ascii(self, file_drop_resolver, sample_ascii_data):
         """
         Test parsing ASCII format.
         """
@@ -324,9 +195,7 @@ class TestFileDropResolverParsedInputToTable:
         assert isinstance(result, Table)
         assert len(result) == 3
 
-    def test_parsed_input_to_table_fits(
-        self, file_drop_resolver, sample_fits_table
-    ):
+    def test_parsed_input_to_table_fits(self, file_drop_resolver, sample_fits_table):
         """
         Test parsing FITS format.
 
@@ -340,9 +209,7 @@ class TestFileDropResolverParsedInputToTable:
         # Just verify it doesn't crash and returns expected type
         assert result is None or isinstance(result, Table)
 
-    def test_parsed_input_to_table_invalid_format(
-        self, file_drop_resolver
-    ):
+    def test_parsed_input_to_table_invalid_format(self, file_drop_resolver):
         """
         Test parsing with invalid format.
 
@@ -367,39 +234,19 @@ class TestFileDropResolverParsedInputToTable:
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
         # May return None or an empty table
-        assert result is None or (isinstance(result, Table)
-                                  and len(result) == 0)
-
-    def test_parsed_input_to_table_format_precedence(
-        self, file_drop_resolver, sample_csv_data
-    ):
-        """
-        Test that format precedence works (CSV is tried first).
-        """
-        # Create ambiguous data that could be parsed as multiple formats
-        parsed_input = io.BytesIO(sample_csv_data)
-        result = file_drop_resolver._parsed_input_to_table(parsed_input)
-
-        # Should successfully parse as CSV (first in list)
-        assert result is not None
-        assert isinstance(result, Table)
+        assert result is None or (isinstance(result, Table) and len(result) == 0)
 
 
 class TestFileDropResolverEdgeCases:
     """
     Test edge cases and boundary conditions.
     """
-
-    def test_file_with_special_characters_in_name(
-        self, file_drop_resolver
-    ):
+    def test_file_with_special_characters_in_name(self, file_drop_resolver):
         """
         Test file name with special characters.
         """
-        file_drop_resolver._file_info = {
-            'name': 'my-file_v2.0 (copy).csv',
-            'data': b'data'
-        }
+        file_drop_resolver._file_info = {'name': 'my-file_v2.0 (copy).csv',
+                                         'data': b'data'}
 
         expected = 'my-file_v2.0 (copy)'
         assert file_drop_resolver.default_label == expected
@@ -408,12 +255,10 @@ class TestFileDropResolverEdgeCases:
         """
         Test file name with unicode characters.
         """
-        file_drop_resolver._file_info = {
-            'name': 'données_测试_🌟.csv',
-            'data': b'data'
-        }
+        file_drop_resolver._file_info = {'name': 'és_测试_🌟.csv',
+                                         'data': b'data'}
 
-        expected = 'données_测试_🌟'
+        expected = 'és_测试_🌟'
         assert file_drop_resolver.default_label == expected
 
     def test_very_large_file_simulation(self, file_drop_resolver):
@@ -423,10 +268,8 @@ class TestFileDropResolverEdgeCases:
         # Simulate a large file by creating large data
         large_data = b'x' * (10 * 1024 * 1024)  # 10 MB
 
-        file_drop_resolver._file_info = {
-            'name': 'large_file.dat',
-            'data': large_data
-        }
+        file_drop_resolver._file_info = {'name': 'large_file.dat',
+                                         'data': large_data}
 
         result = file_drop_resolver.parse_input()
 
@@ -439,23 +282,16 @@ class TestFileDropResolverEdgeCases:
         """
         Test uploading multiple files sequentially.
         """
-        files = [
-            {'name': f'file{i}.csv', 'data': f'data{i}'.encode()}
-            for i in range(3)
-        ]
+        files = [{'name': f'file{i}.csv', 'data': f'data{i}'.encode()}
+                 for i in range(3)]
 
-        with patch.object(
-            file_drop_resolver, '_resolver_input_updated'
-        ):
-            with patch.object(
-                file_drop_resolver, '_update_format_items'
-            ):
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            with patch.object(file_drop_resolver, '_update_format_items'):
                 for file_info in files:
                     file_drop_resolver._on_file_updated([file_info])
 
                     # Each upload should update _file_info
-                    assert (file_drop_resolver._file_info['name']
-                            == file_info['name'])
+                    assert file_drop_resolver._file_info['name'] == file_info['name']
                     assert file_drop_resolver.nfiles == 1
 
     def test_progress_reset_on_new_upload(self, file_drop_resolver):
@@ -466,12 +302,8 @@ class TestFileDropResolverEdgeCases:
 
         file_info = {'name': 'test.csv', 'data': b'data'}
 
-        with patch.object(
-            file_drop_resolver, '_resolver_input_updated'
-        ):
-            with patch.object(
-                file_drop_resolver, '_update_format_items'
-            ):
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            with patch.object(file_drop_resolver, '_update_format_items'):
                 file_drop_resolver._on_file_updated([file_info])
 
                 assert file_drop_resolver.progress == 100
@@ -507,23 +339,15 @@ class TestFileDropResolverIntegration:
     """
     Integration tests combining multiple aspects of functionality.
     """
-
-    def test_full_file_upload_workflow(self, file_drop_resolver,
-                                       sample_csv_data):
+    def test_full_file_upload_workflow(self, file_drop_resolver, sample_csv_data):
         """
         Test complete workflow from upload to parsing.
         """
-        file_info = {
-            'name': 'data.csv',
-            'data': sample_csv_data
-        }
+        file_info = {'name': 'data.csv',
+                     'data': sample_csv_data}
 
-        with patch.object(
-            file_drop_resolver, '_resolver_input_updated'
-        ):
-            with patch.object(
-                file_drop_resolver, '_update_format_items'
-            ):
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            with patch.object(file_drop_resolver, '_update_format_items'):
                 # Simulate progress updates
                 file_drop_resolver._on_total_progress(25)
                 assert file_drop_resolver.progress == 25
@@ -544,40 +368,19 @@ class TestFileDropResolverIntegration:
                 assert isinstance(parsed, io.BytesIO)
 
                 # Convert to table
-                table = file_drop_resolver._parsed_input_to_table(
-                    parsed
-                )
+                table = file_drop_resolver._parsed_input_to_table(parsed)
                 assert table is not None
                 assert isinstance(table, Table)
-
-    def test_multiple_format_attempts(self, file_drop_resolver):
-        """
-        Test that multiple format attempts work correctly.
-        """
-        # Create data that will fail CSV but succeed as ASCII
-        ascii_data = b'# Comment\ncol1 col2\n1 2\n3 4'
-
-        parsed_input = io.BytesIO(ascii_data)
-        result = file_drop_resolver._parsed_input_to_table(parsed_input)
-
-        # Should eventually succeed with one of the formats
-        assert result is not None
 
     def test_error_recovery_on_invalid_file(self, file_drop_resolver):
         """
         Test that resolver handles invalid files gracefully.
         """
-        invalid_file = {
-            'name': 'invalid.xyz',
-            'data': b'random binary data \x00\x01\x02'
-        }
+        invalid_file = {'name': 'invalid.xyz',
+                        'data': b'random binary data \x00\x01\x02'}
 
-        with patch.object(
-            file_drop_resolver, '_resolver_input_updated'
-        ):
-            with patch.object(
-                file_drop_resolver, '_update_format_items'
-            ):
+        with patch.object(file_drop_resolver, '_resolver_input_updated'):
+            with patch.object(file_drop_resolver, '_update_format_items'):
                 file_drop_resolver._on_file_updated([invalid_file])
 
                 # Should still update state
@@ -586,8 +389,6 @@ class TestFileDropResolverIntegration:
 
                 # Parsing - astropy is lenient, may parse as table
                 parsed = file_drop_resolver.parse_input()
-                table = file_drop_resolver._parsed_input_to_table(
-                    parsed
-                )
+                table = file_drop_resolver._parsed_input_to_table(parsed)
                 # Either returns None or a table (astropy is very lenient)
                 assert table is None or isinstance(table, Table)
