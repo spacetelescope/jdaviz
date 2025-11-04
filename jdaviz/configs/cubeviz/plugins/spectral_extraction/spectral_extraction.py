@@ -252,6 +252,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
         if not hasattr(self, 'aperture'):
             return
+        if not len(self.dataset_items):
+            return
         orig_labels = [item['label'] for item in msg['old']]
         for item in msg['new']:
             if item['label'] not in orig_labels:
