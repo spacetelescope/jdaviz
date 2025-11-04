@@ -64,7 +64,7 @@ class SelectSlice(CheckableTool):
     def is_visible(self):
         # visible if any cube-like data is present
         for dc in self.viewer.jdaviz_app.data_collection:
-            if len(dc.shape) == 3:
+            if dc.ndim == 3:
                 return True
         return False
 

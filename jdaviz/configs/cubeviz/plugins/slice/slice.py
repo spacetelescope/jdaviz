@@ -173,7 +173,7 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
     def valid_slice_att_names(self):
         if self.app.config in ('cubeviz', 'deconfigged'):
             for dc in self.app.data_collection:
-                if 'spectral_axis_index' in dc.meta:
+                if dc.ndim == 3 and 'spectral_axis_index' in dc.meta:
                     spectral_axis = dc.meta['spectral_axis_index']
                     return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
             return _spectral_axis_names
