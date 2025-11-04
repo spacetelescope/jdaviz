@@ -172,9 +172,10 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def valid_slice_att_names(self):
         if self.app.config in ('cubeviz', 'deconfigged'):
-            if len(self.app.data_collection):
-                spectral_axis = self.app.data_collection[0].meta['spectral_axis_index']
-                return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
+            for dc in self.app.data_collection:
+                if 'spectral_axis_index' in dc.meta:
+                    spectral_axis = dc.meta['spectral_axis_index']
+                    return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
             return _spectral_axis_names
         elif self.app.config == 'rampviz':
             return _temporal_axis_names + ['Pixel Axis 2 [x]']
