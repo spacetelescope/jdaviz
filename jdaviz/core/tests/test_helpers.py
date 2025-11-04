@@ -289,6 +289,8 @@ class TestConfigHelperSubsets:
             # Injecting a 'Trace' key in meta is the only way to
             # get past the cls check and into the subset application code
             self.data.meta['Trace'] = True
+            if '_native_data_cls' in self.data.meta:
+                self.data.meta.pop('_native_data_cls')
 
         with pytest.raises(
                 error_type,
