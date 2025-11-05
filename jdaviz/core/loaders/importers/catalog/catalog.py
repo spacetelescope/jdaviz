@@ -119,22 +119,31 @@ class CatalogImporter(BaseImporterToDataCollection):
                 idx = np.where(col_is_sc)[0][0]
 
         if idx is None:
-            # remove spaces/underscores/hyphens/quotes and make lowercase for matching
-            all_column_names = np.array([x.lower().replace(' ', '').replace('_', '').replace('-', '').replace('"', '') for x in colnames])  # noqa
+            # remove spaces/underscores/hyphens/quotes/parentheses and make lowercase for matching
+            all_column_names = np.array([
+                x.lower()
+                 .replace(' ', '')
+                 .replace('_', '')
+                 .replace('-', '')
+                 .replace('"', '')
+                 .replace('(', '')
+                 .replace(')', '')
+                for x in colnames
+            ])
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
-
             if col == 'ra':
                 idx = get_idx(all_column_names, RA_COMPS, None)
             elif col == 'dec':
                 idx = get_idx(all_column_names, DEC_COMPS, None)
             elif col == 'x':
                 col_possibilities = ["x", "xpos", "xcentroid", "xcenter",
-                                     "xpixel", "pixelx", "xpix", "ximage", "ximg"
+                                     "xpixel", "pixelx", "xpix", "ximage", "ximg",
                                      "xcoord", "xcoordinate", "sourcex", "xsource"]
                 idx = get_idx(all_column_names, col_possibilities, None)
+                print('idx', idx)
             elif col == 'y':
                 col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
-                                     "ypixel", "pixely", "ypix", "yimage", "yimg"
+                                     "ypixel", "pixely", "ypix", "yimage", "yimg",
                                      "ycoord", "ycoordinate", "sourcey", "ysource"]
                 idx = get_idx(all_column_names, col_possibilities, None)
 
