@@ -45,6 +45,8 @@ class Rampviz(CubeConfigHelper):
             Extra keywords accepted by Jdaviz application-level parser.
         """  # noqa
         if data_label:
+            if not data_label.endswith('[DATA]'):
+                data_label += '[DATA]'
             kwargs['data_label'] = data_label
 
         self._load(data, format='Ramp', **kwargs)
