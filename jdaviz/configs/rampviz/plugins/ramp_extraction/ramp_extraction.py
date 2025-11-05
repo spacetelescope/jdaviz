@@ -5,7 +5,7 @@ from astropy.nddata import NDDataArray
 from functools import cached_property
 from traitlets import Bool, Float, List, Unicode, observe, Int
 from glue.core.message import (
-    DataCollectionAddMessage, SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
+    SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 )
 
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
@@ -114,9 +114,6 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
-        self.session.hub.subscribe(self, DataCollectionAddMessage,
-                                   handler=self._on_data_added)
-
         self.session.hub.subscribe(self, SubsetCreateMessage,
                                    handler=self._on_subset_update)
 
@@ -139,12 +136,6 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.app._jdaviz_helper._default_integration_viewer_reference_name
         )
         return viewer
-
-    def _on_data_added(self, msg={}):
-        # only perform the default collapse after the first data load:
-        if len(self.app._jdaviz_helper.cube_cache) and not self.extraction_available:
-            self.extract(add_data=True)
-            self.integration_viewer._initialize_x_axis()
 
     def _on_subset_update(self, msg={}):
         if not hasattr(self.app._jdaviz_helper, 'cube_cache'):
