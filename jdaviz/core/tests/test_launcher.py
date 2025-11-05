@@ -1,30 +1,25 @@
 """
 Test the launcher module functionality.
 """
+from ipywidgets import widgets
 import os
+import pytest
 from unittest.mock import Mock, patch
 
-import pytest
 from astropy.io.registry import IORegistryError
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 import numpy as np
-from ipywidgets import widgets
 
 from jdaviz import Imviz
-
-from jdaviz.cli import (
-    DEFAULT_VERBOSITY,
-    DEFAULT_HISTORY_VERBOSITY,
-    ALL_JDAVIZ_CONFIGS
-)
-from jdaviz.core.launcher import (
-    open as jdaviz_open,
-    _launch_config_with_data,
-    Launcher,
-    show_launcher,
-    STATUS_HINTS
-)
+from jdaviz.cli import (DEFAULT_VERBOSITY,
+                        DEFAULT_HISTORY_VERBOSITY,
+                        ALL_JDAVIZ_CONFIGS)
+from jdaviz.core.launcher import (open as jdaviz_open,
+                                  _launch_config_with_data,
+                                  Launcher,
+                                  show_launcher,
+                                  STATUS_HINTS)
 
 
 @pytest.fixture(scope='module')
@@ -63,13 +58,11 @@ def test_status_hints_keys():
     """
     Test that STATUS_HINTS contains expected keys.
     """
-    expected_keys = {
-        'idle',
-        'identifying',
-        'invalid path',
-        'id ok',
-        'id failed'
-    }
+    expected_keys = {'idle',
+                     'identifying',
+                     'invalid path',
+                     'id ok',
+                     'id failed'}
     assert set(STATUS_HINTS.keys()) == expected_keys
 
 
@@ -91,10 +84,9 @@ class TestOpenFunction:
 
                 result = jdaviz_open(self.test_file, show=False, local_path=local_path)
 
-                mock_download.assert_called_once_with(
-                    self.test_file,
-                    cache=True,
-                    local_path=local_path)
+                mock_download.assert_called_once_with(self.test_file,
+                                                      cache=True,
+                                                      local_path=local_path)
                 assert isinstance(result, Imviz)
 
     def test_open_multiple_helpers_raises_error(self):
@@ -215,7 +207,6 @@ class TestLauncherClass:
     """
     Test the Launcher class.
     """
-
     def test_launcher_init_default(self):
         """
         Test Launcher initialization with default parameters.
@@ -384,11 +375,10 @@ class TestLauncherClass:
                 event = {'config': 'imviz'}
                 launcher.vue_launch_config(event)
 
-                mock_launch.assert_called_once_with(
-                    'imviz',
-                    self.ccd,
-                    filepath=self.test_file,
-                    show=False)
+                mock_launch.assert_called_once_with('imviz',
+                                                    self.ccd,
+                                                    filepath=self.test_file,
+                                                    show=False)
 
                 assert launcher.main.color == 'transparent'
                 assert launcher.main.children == [dcf_app]
