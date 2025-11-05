@@ -36,7 +36,7 @@ class Spectrum1DViewer(JdavizProfileView):
                     ['jdaviz:boxzoom_matchx', 'jdaviz:xrangezoom_matchx', 'jdaviz:boxzoom', 'jdaviz:yrangezoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
                     ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx', 'jdaviz:panzoom_y', 'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
                     ['bqplot:xrange'],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
     default_class = Spectrum
@@ -310,7 +310,7 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
                     ['jdaviz:panzoom_matchx', 'jdaviz:panzoomx_matchx',
                      'jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
-                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
     _state_cls = FreezableBqplotImageViewerState
