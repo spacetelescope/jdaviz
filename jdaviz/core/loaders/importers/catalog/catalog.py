@@ -119,8 +119,8 @@ class CatalogImporter(BaseImporterToDataCollection):
                 idx = np.where(col_is_sc)[0][0]
 
         if idx is None:
-            # remove spaces, underscores, hyphens and make lowercase for matching
-            all_column_names = np.array([x.lower().replace(' ', '').replace('_', '').replace('-', '') for x in colnames])  # noqa
+            # remove spaces/underscores/hyphens/quotes and make lowercase for matching
+            all_column_names = np.array([x.lower().replace(' ', '').replace('_', '').replace('-', '').replace('"', '') for x in colnames])  # noqa
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
 
             if col == 'ra':
