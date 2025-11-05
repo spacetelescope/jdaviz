@@ -140,7 +140,6 @@ class CatalogImporter(BaseImporterToDataCollection):
                                      "xpixel", "pixelx", "xpix", "ximage", "ximg",
                                      "xcoord", "xcoordinate", "sourcex", "xsource"]
                 idx = get_idx(all_column_names, col_possibilities, None)
-                print('idx', idx)
             elif col == 'y':
                 col_possibilities = ["y", "ypos", "ycentroid", "ycenter",
                                      "ypixel", "pixely", "ypix", "yimage", "yimg",
