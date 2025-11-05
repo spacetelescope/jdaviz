@@ -58,7 +58,6 @@ class TestSubsetImporter:
         """
         Test that initialization creates default label and subset_label should be set
         """
-
         importer = self.generate_importer(regions_input)
 
         # Should have default label set
@@ -73,7 +72,6 @@ class TestSubsetImporter:
         """
         Test is_valid for various scenarios.
         """
-
         importer = self.generate_importer(regions_input)
 
         assert importer.is_valid is True
@@ -89,7 +87,6 @@ class TestSubsetImporter:
         """
         Test that label validation works correctly.
         """
-
         importer = self.generate_importer(regions_input)
 
         for label_value in ('', '    '):
@@ -132,7 +129,6 @@ class TestSubsetImporter:
         """
         Test that the label_invalid_msg is set for an invalid subset label.
         """
-
         importer = self.generate_importer(regions_input)
 
         # Set label to non-default valid label
@@ -168,7 +164,6 @@ class TestSubsetImporter:
         """
         Test that calling with invalid label raises ValueError.
         """
-
         importer = self.generate_importer(regions_input)
 
         error_msg = 'Invalid label'
