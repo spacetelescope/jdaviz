@@ -1,6 +1,8 @@
 import numpy as np
+import warnings
 from traitlets import Any, Bool, List, Unicode, observe
 from astropy import units as u
+from astropy.io import fits
 from astropy.nddata import NDDataArray
 
 try:
@@ -20,7 +22,9 @@ from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew)
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import standardize_metadata, standardize_roman_metadata
+from jdaviz.utils import (standardize_metadata,
+                          standardize_roman_metadata,
+                          PRIHDR_KEY)
 
 
 __all__ = ['RampImporter']
@@ -181,7 +185,10 @@ class RampImporter(BaseImporterToDataCollection):
             # NOTE: temporary during deconfig process
             return False
 
-        if not isinstance(self.input, (Level1bModel, RampModel)):
+        if not isinstance(self.input, (Level1bModel, RampModel, fits.HDUList)):
+            return False
+
+        if isinstance(self.input, fits.HDUList) and self.input[1].header['NAXIS'] != 4:
             return False
 
         try:
@@ -212,6 +219,29 @@ class RampImporter(BaseImporterToDataCollection):
         elif isinstance(self.input, RampModel):
             meta = standardize_roman_metadata(self.input)
             ramp_data = self.input.data
+        elif isinstance(self.input, fits.HDUList):
+            # TODO: extension selection (didn't exist previously)
+            hdulist = self.input
+            hdu = hdulist[1]  # extension containing the ramp
+
+            if 'BUNIT' in hdu.header:
+                try:
+                    flux_unit = u.Unit(hdu.header['BUNIT'])
+                except Exception:
+                    warnings.warn("Invalid BUNIT, using DN as data unit", UserWarning)
+                    flux_unit = u.DN
+            else:
+                warnings.warn("Invalid BUNIT, using DN as data unit", UserWarning)
+                flux_unit = u.DN
+
+            # index the ramp array by the integration to load. returns all groups and pixels.
+            # cast from uint16 to integers:
+            ramp_data = hdu.data[integration].astype(int) * flux_unit
+
+            metadata = standardize_metadata(hdu.header)
+            if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+                metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
+
         else:
             raise NotImplementedError("Unsupported input for RampImporter")
 
