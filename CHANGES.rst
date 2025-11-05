@@ -54,6 +54,11 @@ Specviz2d
 
 - Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
 
+Rampviz
+^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure. [#3878]
+
 API Changes
 -----------
 
