@@ -190,6 +190,32 @@ class TestSubsetImporterLabelValidation:
         # Should be Subset 2 since we created one subset
         assert importer.subset_label_default == 'Subset 2'
 
+    def test_invalid_subset_label(self, specviz_helper, regions_input):
+        """
+        Test that the label_invalid_msg is set for an invalid subset label.
+        """
+        app = specviz_helper.app
+
+        importer = SubsetImporter(
+            app=app,
+            resolver=None,
+            parser=None,
+            input=regions_input
+        )
+
+        # Set label to non-default valid label
+        importer.subset_label_value = 'Subset 2'
+        importer._on_label_changed()
+
+        # Attempt to set an invalid label
+        importer.subset_label_value = 'Subset 2'
+        importer._on_label_changed()
+
+        # Default label should be valid
+        assert importer.subset_label_invalid_msg == ("invalid subset_label: "
+                                                     "The pattern 'Subset N' "
+                                                     "is reserved for auto-generated labels")
+
 
 class TestSubsetImporterImportDisabled:
     """
