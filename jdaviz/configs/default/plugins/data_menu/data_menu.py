@@ -355,13 +355,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                             not in label_order]
 
             for layer in self._viewer.layers:
-                # Prevent changing order of WCS-only layers in Imviz
-                if not is_not_wcs_only(layer):
-                    continue
                 if layer.layer.label in label_order:
-                    new_zorder = len(label_order) - label_order.index(layer.layer.label)
+                    new_zorder = len(not_in_order) + len(label_order) - label_order.index(layer.layer.label)
                 else:
-                    new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
+                    new_zorder = not_in_order.index(layer.layer.label)
 
                 if new_zorder != layer.zorder:
                     layer.zorder = new_zorder
