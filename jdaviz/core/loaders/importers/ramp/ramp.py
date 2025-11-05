@@ -185,7 +185,7 @@ class RampImporter(BaseImporterToDataCollection):
             # NOTE: temporary during deconfig process
             return False
 
-        if not isinstance(self.input, (Level1bModel, RampModel, fits.HDUList)):
+        if not isinstance(self.input, (Level1bModel, RampModel, fits.HDUList, np.ndarray)):
             return False
 
         if isinstance(self.input, fits.HDUList) and self.input[1].header['NAXIS'] != 4:
@@ -241,7 +241,10 @@ class RampImporter(BaseImporterToDataCollection):
             metadata = standardize_metadata(hdu.header)
             if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
                 metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
-
+        elif isinstance(self.input, np.ndarray):
+            ramp_data = self.input
+            flux_unit = getattr(ramp_data, 'unit', u.DN)
+            meta = {}
         else:
             raise NotImplementedError("Unsupported input for RampImporter")
 
