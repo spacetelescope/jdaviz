@@ -75,8 +75,7 @@ class TestConfigHelperSpec:
          ('Test 1D Spectrum 2', 'Subset 2',
           [False, True, True, True, True, True, True, True, True, True]),
          ('Test 1D Spectrum 2', 'Subset 3',
-          [True, True, True, True, True, True, False, False, False, True])
-         ])
+          [True, True, True, True, True, True, False, False, False, True])])
     def test_get_data_with_one_subset_per_data(self, label, subset_name, answer):
         results = self.config_helper._get_data(data_label=label, spectral_subset=subset_name)
         assert list(results.mask) == answer
@@ -118,20 +117,14 @@ class TestConfigHelperSpec:
         original_viewers = self.config_helper.viewers
         mock_viewers = dict(original_viewers)
         for i in range(1, 4):
-            mock_viewers[f"{base_viewer_name}[{i}]"] = (
-                original_viewers[base_viewer_name]
-            )
+            mock_viewers[f"{base_viewer_name}[{i}]"] = original_viewers[base_viewer_name]
 
         # Patch the viewers property to return our mocked dict
-        with patch.object(
-            type(self.config_helper),
-            'viewers',
-            new_callable=PropertyMock,
-            return_value=mock_viewers
-        ):
-            result = self.config_helper._get_clone_viewer_reference(
-                base_viewer_name
-            )
+        with patch.object(type(self.config_helper),
+                          'viewers',
+                          new_callable=PropertyMock,
+                          return_value=mock_viewers):
+            result = self.config_helper._get_clone_viewer_reference(base_viewer_name)
             assert result == f"{base_viewer_name}[4]"
 
     def test_set_data_component_new_component(self):
@@ -141,9 +134,7 @@ class TestConfigHelperSpec:
         original_n_components = len(self.data.components)
 
         new_values = np.ones(len(self.data.get_object().flux))
-        self.config_helper._set_data_component(
-            self.data, 'test_component', new_values
-        )
+        self.config_helper._set_data_component(self.data, 'test_component', new_values)
 
         assert len(self.data.components) == original_n_components + 1
         assert 'test_component' in self.config_helper._component_ids
@@ -154,16 +145,12 @@ class TestConfigHelperSpec:
         """
         # First add a component
         new_values = np.ones(len(self.data.get_object().flux))
-        self.config_helper._set_data_component(
-            self.data, 'test_component', new_values
-        )
+        self.config_helper._set_data_component(self.data, 'test_component', new_values)
         n_components_after_add = len(self.data.components)
 
         # Now update it
         updated_values = np.ones(len(self.data.get_object().flux)) * 2
-        self.config_helper._set_data_component(
-            self.data, 'test_component', updated_values
-        )
+        self.config_helper._set_data_component(self.data, 'test_component', updated_values)
 
         # Should not add a new component, just update
         assert len(self.data.components) == n_components_after_add
@@ -179,9 +166,7 @@ class TestConfigHelperSpec:
 
         # Now use _set_data_component with the same label
         updated_values = np.ones(len(self.data.get_object().flux)) * 3
-        self.config_helper._set_data_component(
-            self.data, 'direct_component', updated_values
-        )
+        self.config_helper._set_data_component(self.data, 'direct_component', updated_values)
 
         # Should update, not add a duplicate
         component_labels = [c.label for c in self.data.components]
@@ -193,18 +178,14 @@ class TestConfigHelperSpec:
         """
         # Add a component to populate the cache
         values = np.ones(len(self.data.get_object().flux))
-        self.config_helper._set_data_component(
-            self.data, 'cached_comp', values
-        )
+        self.config_helper._set_data_component(self.data, 'cached_comp', values)
 
         # Get the cached component ID
         cached_id = self.config_helper._component_ids['cached_comp']
 
         # Update the component
         new_values = np.ones(len(self.data.get_object().flux)) * 5
-        self.config_helper._set_data_component(
-            self.data, 'cached_comp', new_values
-        )
+        self.config_helper._set_data_component(self.data, 'cached_comp', new_values)
 
         # Should still use the same component ID
         assert self.config_helper._component_ids['cached_comp'] == cached_id
@@ -235,8 +216,7 @@ class TestConfigHelperSubsets:
          (None, 'Subset 2', None, None),
          (None, None, 'Subset 1', None),
          (None, None, None, 'Subset 2'),
-         ('Subset 1', 'Subset 2', None, None)
-         ])
+         ('Subset 1', 'Subset 2', None, None)])
     def test_get_data_spatial_spectral_subsets(self,
                                                spatial_subset, spectral_subset,
                                                temporal_subset, mask_subset):
@@ -245,14 +225,12 @@ class TestConfigHelperSubsets:
         (exception handling is difficult to test without deep mocking).
         """
         # Verify the spatial subset code path executes without error
-        result = self.config_helper._get_data(
-            data_label=self.label,
-            spatial_subset=spatial_subset,
-            spectral_subset=spectral_subset,
-            temporal_subset=temporal_subset,
-            mask_subset=mask_subset,
-            cls=Spectrum
-        )
+        result = self.config_helper._get_data(data_label=self.label,
+                                              spatial_subset=spatial_subset,
+                                              spectral_subset=spectral_subset,
+                                              temporal_subset=temporal_subset,
+                                              mask_subset=mask_subset,
+                                              cls=Spectrum)
 
         # Verify we got a result
         assert isinstance(result, Spectrum)
@@ -281,8 +259,7 @@ class TestConfigHelperSubsets:
             ('Subset 2', None, None, None, Spectrum,
              ValueError, 'is not a spatial subset'),
             (None, 'Subset 1', None, None, Spectrum,
-             ValueError, 'is not a spectral subset'),
-        ])
+             ValueError, 'is not a spectral subset')])
     def test_get_data_subset_errors(self,
                                     spatial_subset, spectral_subset,
                                     temporal_subset, mask_subset, cls,
@@ -294,18 +271,13 @@ class TestConfigHelperSubsets:
             if '_native_data_cls' in self.data.meta:
                 self.data.meta.pop('_native_data_cls')
 
-        with pytest.raises(
-                error_type,
-                match=error_msg
-        ):
-            self.config_helper._get_data(
-                data_label=self.label,
-                spatial_subset=spatial_subset,
-                spectral_subset=spectral_subset,
-                temporal_subset=temporal_subset,
-                mask_subset=mask_subset,
-                cls=cls
-            )
+        with pytest.raises(error_type, match=error_msg):
+            self.config_helper._get_data(data_label=self.label,
+                                         spatial_subset=spatial_subset,
+                                         spectral_subset=spectral_subset,
+                                         temporal_subset=temporal_subset,
+                                         mask_subset=mask_subset,
+                                         cls=cls)
 
 
 @pytest.mark.skip(reason="TODO: need to adjust logic for deconfigged (lines 611-626)")
@@ -313,13 +285,11 @@ class TestConfigHelperSubsets:
                          [('mos_image', 'Image', CCDData),
                           ('mos_spectrum1d', '1D Spectrum', Spectrum),
                           ('mos_spectrum2d', '2D Spectrum', Spectrum),
-                          # TODO: enable when spectral cube loader is ready
                           ('spectral_cube_wcs', 'Spectral Cube', Spectrum),
                           ('image_cube_hdu_obj', 'Spectral Cube', Spectrum),
                           # TODO: enable when rampviz loader is ready
                           # ('jwst_level_1b_ramp', 'Ramp', NDDataArray),
-                          ]
-                         )
+                          ])
 def test_get_data_cls(deconfigged_helper, request, data_tuple):
     """
     Test _get_data cls inference.
@@ -421,9 +391,7 @@ def test_load_with_show_in_viewer_deprecated(specviz_helper, spectrum1d):
             assert False, "DeprecationWarning for 'show_in_viewer' not raised."
 
 
-def test_load_with_both_viewer_and_show_in_viewer_raises_error(
-    deconfigged_helper, spectrum1d
-):
+def test_load_with_both_viewer_and_show_in_viewer_raises_error(deconfigged_helper, spectrum1d):
     """
     Test _load with both 'viewer' and 'show_in_viewer' raises ValueError.
     """
