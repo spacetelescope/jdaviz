@@ -850,7 +850,7 @@ def get_top_layer_index(viewer):
     associations = viewer.jdaviz_app._data_associations
 
     visible_image_layers = [
-        i for i, lyr in enumerate(viewer.layers)
+        i for i, lyr in enumerate(viewer.state.layers)
         if (
             lyr.visible and
             layer_is_image_data(lyr.layer) and
