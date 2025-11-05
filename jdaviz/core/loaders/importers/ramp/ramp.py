@@ -20,7 +20,7 @@ from jdaviz.core.template_mixin import (AutoTextField,
                                         SelectPluginComponent,
                                         ViewerSelectCreateNew)
 from jdaviz.core.user_api import ImporterUserApi
-from jdaviz.utils import standardize_metadata
+from jdaviz.utils import standardize_metadata, standardize_roman_metadata
 
 
 __all__ = ['RampImporter']
@@ -134,6 +134,9 @@ class RampImporter(BaseImporterToDataCollection):
             selected='function_selected',
             manual_options=['Mean', 'Median', 'Min', 'Max', 'Sum']
         )
+        # the default collapse function in the profile viewer is "sum",
+        # but for ramp files, "median" is more useful:
+        self.function.selected = 'Median'
 
         self.ext_data_label = AutoTextField(self,
                                             'ext_data_label_value',
@@ -196,27 +199,39 @@ class RampImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
-        meta = standardize_metadata({
-            key: value for key, value in self.input.to_flat_dict(
-                include_arrays=False)
-            .items()
-            if key.startswith('meta')
-        })
+        if isinstance(self.input, Level1bModel):
+            meta = standardize_metadata({
+                key: value for key, value in self.input.to_flat_dict(
+                    include_arrays=False)
+                .items()
+                if key.startswith('meta')
+            })
 
-        integration = 0  # TODO: integration/extension select
-        ramp_cube_data = self.input.data[integration]
-        flux_unit = u.DN
+            integration = 0  # TODO: integration/extension select
+            ramp_data = self.input.data[integration]
+        elif isinstance(self.input, RampModel):
+            meta = standardize_roman_metadata(self.input)
+            ramp_data = self.input.data
+        else:
+            raise NotImplementedError("Unsupported input for RampImporter")
 
         # last axis is the group axis, first two are spatial axes:
         diff_data = np.vstack([
             # begin with a group of zeros, so
             # that `diff_data.ndim == data.ndim`
-            np.zeros((1, *ramp_cube_data[0].shape)),
-            np.diff(ramp_cube_data, axis=0)
+            np.zeros((1, *ramp_data[0].shape)),
+            np.diff(ramp_data, axis=0)
         ])
 
-        ramp_cube = NDDataArray(move_group_axis_last(ramp_cube_data), unit=flux_unit, meta=meta)
-        diff_cube = NDDataArray(move_group_axis_last(diff_data), unit=flux_unit, meta=meta)
+        # if the ramp cube has no units, assume DN:
+        flux_unit = getattr(ramp_data, 'unit', u.DN)
+
+        ramp_cube = NDDataArray(move_group_axis_last(ramp_data),
+                                unit=flux_unit,
+                                meta=meta)
+        diff_cube = NDDataArray(move_group_axis_last(diff_data),
+                                unit=flux_unit,
+                                meta=meta)
 
         return ramp_cube, diff_cube
 
