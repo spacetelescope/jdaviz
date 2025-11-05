@@ -81,7 +81,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
-        if self.config in ["cubeviz", 'deconfigged']:
+        if self.config in ("cubeviz", 'deconfigged'):
             self.hub.subscribe(
                 self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
             )
