@@ -182,7 +182,7 @@ class TestFileDropResolverParsedInputToTable:
     """
     Test _parsed_input_to_table functionality for various formats.
     """
-    def create_sample_fits_table(self):
+    def _create_sample_fits_table(self):
         """
         Create sample FITS table data as bytes.
         """
@@ -198,7 +198,7 @@ class TestFileDropResolverParsedInputToTable:
         output.seek(0)
         return output.getvalue()
 
-    def create_sample_ascii_data(self):
+    def _create_sample_ascii_data(self):
         """
         Create sample ASCII table data as bytes.
         """
@@ -221,7 +221,7 @@ class TestFileDropResolverParsedInputToTable:
         """
         Test parsing ASCII format.
         """
-        parsed_input = io.BytesIO(self.create_sample_ascii_data())
+        parsed_input = io.BytesIO(self._create_sample_ascii_data())
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
         assert result is not None
@@ -232,7 +232,7 @@ class TestFileDropResolverParsedInputToTable:
         """
         Test parsing FITS format.
         """
-        parsed_input = io.BytesIO(self.create_sample_fits_table())
+        parsed_input = io.BytesIO(self._create_sample_fits_table())
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
         assert result is not None
@@ -276,11 +276,11 @@ class TestFileDropResolverParsedInputToTable:
 
 class TestFileDropResolverEdgeCases:
     """
-    Test edge cases and boundary conditions.
+    Test edge cases.
     """
-    def test_file_with_special_characters_in_name(self, file_drop_resolver):
+    def test_file_with_special_conditions(self, file_drop_resolver):
         """
-        Test file name with special characters.
+        Test file name with special characters, unicode, and 'large' data.
         """
         file_drop_resolver._file_info = {'name': 'my-file_v2.0 (copy).csv',
                                          'data': b'data'}
@@ -288,26 +288,16 @@ class TestFileDropResolverEdgeCases:
         expected = 'my-file_v2.0 (copy)'
         assert file_drop_resolver.default_label == expected
 
-    def test_file_with_unicode_name(self, file_drop_resolver):
-        """
-        Test file name with unicode characters.
-        """
+        # Now test with unicode characters
         file_drop_resolver._file_info = {'name': 'és_测试_🌟.csv',
                                          'data': b'data'}
-
         expected = 'és_测试_🌟'
         assert file_drop_resolver.default_label == expected
 
-    def test_very_large_file_simulation(self, file_drop_resolver):
-        """
-        Test handling of large file (simulated).
-        """
         # Simulate a large file by creating 'large' data
         large_data = b'x' * (10 * 1024 * 1024)  # 10 MB
-
         file_drop_resolver._file_info = {'name': 'large_file.dat',
                                          'data': large_data}
-
         result = file_drop_resolver.parse_input()
 
         assert isinstance(result, io.BytesIO)
@@ -325,42 +315,26 @@ class TestFileDropResolverEdgeCases:
         with patch.object(file_drop_resolver, '_resolver_input_updated'):
             with patch.object(file_drop_resolver, '_update_format_items'):
                 for file_info in files:
+                    file_drop_resolver.progress = 50
                     file_drop_resolver._on_file_updated([file_info])
 
                     # Each upload should update _file_info
                     assert file_drop_resolver._file_info['name'] == file_info['name']
                     assert file_drop_resolver.nfiles == 1
+                    # Check that progress is reset to 100 after each upload
+                    assert file_drop_resolver.progress == 100
 
-    def test_progress_reset_on_new_upload(self, file_drop_resolver):
+    def test_file_info_missing_keys(self, file_drop_resolver):
         """
-        Test that progress is reset to 100 after file upload.
+        Test behavior when file_info is missing name/data keys.
         """
-        file_drop_resolver.progress = 50
-
-        file_info = {'name': 'test.csv', 'data': b'data'}
-
-        with patch.object(file_drop_resolver, '_resolver_input_updated'):
-            with patch.object(file_drop_resolver, '_update_format_items'):
-                file_drop_resolver._on_file_updated([file_info])
-
-                assert file_drop_resolver.progress == 100
-
-    def test_file_info_missing_name_key(self, file_drop_resolver):
-        """
-        Test behavior when file_info is missing 'name' key.
-        """
+        # Missing 'name' key
         file_drop_resolver._file_info = {'data': b'some data'}
 
         # default_label should return None
         assert file_drop_resolver.default_label is None
 
-    def test_file_info_missing_data_key(self, file_drop_resolver):
-        """
-        Test parse_input when file_info is missing 'data' key.
-
-        Note: .get('data') returns None, and io.BytesIO(None) creates
-        an empty BytesIO object (doesn't raise error).
-        """
+        # Now with missing 'data' key
         file_drop_resolver._file_info = {'name': 'test.csv'}
 
         # parse_input uses .get() which returns None
