@@ -49,7 +49,10 @@ class Rampviz(CubeConfigHelper):
                 data_label += '[DATA]'
             kwargs['data_label'] = data_label
 
-        self._load(data, format='Ramp', **kwargs)
+        try:
+            self._load(data, format='Ramp', **kwargs)
+        except Exception:
+            self._load(data, format='Image', **kwargs)
         self._set_x_axis()
 
     def _set_x_axis(self, msg={}):

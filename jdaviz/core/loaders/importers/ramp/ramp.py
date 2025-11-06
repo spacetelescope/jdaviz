@@ -205,6 +205,8 @@ class RampImporter(BaseImporterToDataCollection):
 
     @property
     def output(self):
+        integration = 0  # TODO: integration/extension select
+
         if isinstance(self.input, Level1bModel):
             meta = standardize_metadata({
                 key: value for key, value in self.input.to_flat_dict(
@@ -213,7 +215,6 @@ class RampImporter(BaseImporterToDataCollection):
                 if key.startswith('meta')
             })
 
-            integration = 0  # TODO: integration/extension select
             ramp_data = self.input.data[integration]
         elif isinstance(self.input, RampModel):
             meta = standardize_roman_metadata(self.input)

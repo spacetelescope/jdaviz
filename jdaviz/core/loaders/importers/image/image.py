@@ -124,8 +124,9 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             self._set_default_data_label()
 
-    @staticmethod
-    def _get_supported_viewers():
+    def _get_supported_viewers(self):
+        if self.config == 'rampviz':
+            return [{'label': 'level-2', 'reference': 'imviz-image-viewer'}]
         return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
 
     @property
@@ -137,7 +138,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube

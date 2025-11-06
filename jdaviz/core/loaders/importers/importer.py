@@ -179,7 +179,7 @@ class BaseImporterToDataCollection(BaseImporter):
         self._on_label_changed()
 
         supported_viewers = self._get_supported_viewers()
-        if self.app.config in ('deconfigged', 'imviz', 'lcviz'):
+        if self.app.config in ('deconfigged', 'imviz', 'lcviz', 'rampviz'):
             if self.app.config == 'imviz':
                 # only allow image viewers
                 supported_viewers = [item for item in supported_viewers
