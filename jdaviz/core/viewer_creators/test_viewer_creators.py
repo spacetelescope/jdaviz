@@ -68,7 +68,8 @@ class TestViewerCreatorObject:
 
     def test_viewer_creator_open_in_tray_callbacks(self):
         """
-        Test that open_in_tray raises error without set_active_callback.
+        Test that open_in_tray raises error without set_active_callback
+        and succeeds with proper callbacks.
         """
         # Remove the callback to test error handling
         original_callback = self.creator.set_active_callback
@@ -78,13 +79,7 @@ class TestViewerCreatorObject:
         with pytest.raises(NotImplementedError, match=msg):
             self.creator.open_in_tray()
 
-        # Restore callback
-        self.creator.set_active_callback = original_callback
-
-    def test_viewer_creator_open_in_tray_with_callback(self):
-        """
-        Test that open_in_tray works with proper callbacks.
-        """
+        # Now test with proper callbacks
         callback_called = []
 
         def mock_set_active(label):
@@ -123,6 +118,9 @@ class TestViewerCreatorObject:
 
         # Try to create another with the same label
         creator = self.dcf_helper.new_viewers['1D Spectrum']._obj
+        # The default should update to avoid conflict
+        assert creator.viewer_label_default != '1D Spectrum'
+
         creator.viewer_label_value = '1D Spectrum'
 
         msg = "Viewer label '1D Spectrum' already in use."
@@ -132,49 +130,70 @@ class TestViewerCreatorObject:
         with pytest.raises(ValueError, match=msg):
             creator()
 
-    def test_viewer_label_auto_update(self):
-        """
-        Test that viewer label default updates to avoid conflicts.
-        """
-        # Create first viewer with default label
-        viewer1 = self.dcf_helper.new_viewers['1D Spectrum']()
-        assert viewer1._obj.id == '1D Spectrum (1)'
-
-        # Get creator for next viewer
-        creator = self.dcf_helper.new_viewers['1D Spectrum']._obj
-
-        # The default should update to avoid conflict
-        assert creator.viewer_label_default != '1D Spectrum'
-
     def test_viewer_creator_with_datasets(self):
         """
-        Test creating viewer with pre-selected datasets.
+        Test creating viewer with single/multiple selected datasets.
         """
         # Select dataset
         self.creator.dataset.selected = ['1D Spectrum']
 
         # Create viewer
         viewer = self.creator()
-
         # Viewer should have the dataset loaded
-        assert len(viewer._obj.data_collection) > 0
+        assert len(viewer._obj.data_collection) == 1
 
-    def test_viewer_creator_with_multiple_datasets(self):
-        """
-        Test creating viewer with multiple selected datasets.
-        """
+        # Load in a second spectrum but first check that the observer works
+        assert self.creator.is_relevant is True
+        initial_item_count = len(self.creator.dataset.items)
         # Load another one in
         self.dcf_helper.load(self.spectrum1d_nm, format='1D Spectrum')
+
+        # Should still be relevant with more items per the observer
+        assert self.creator.is_relevant is True
+        assert len(self.creator.dataset.items) > initial_item_count
 
         # Select multiple datasets
         available_datasets = [item['label'] for item in self.creator.dataset.items]
         self.creator.dataset.selected = available_datasets[:2]
-
-        # Create viewer
         viewer = self.creator()
 
         # Viewer should have both datasets
-        assert len(viewer._obj.data_collection) >= 2
+        assert len(viewer._obj.data_collection) == 2
+
+    def test_viewer_creator_observer_without_viewer_attribute(self):
+        """
+        Test that observers handle missing viewer attribute gracefully.
+        """
+        # Temporarily remove viewer attribute if it exists
+        had_viewer = hasattr(self.creator, 'viewer')
+        original_viewer = None
+        if had_viewer:
+            original_viewer = self.creator.viewer
+            delattr(self.creator, 'viewer')
+
+        # These should not raise errors
+        self.creator._viewer_label_value_changed()
+        self.creator._viewer_items_changed()
+
+        # Restore viewer attribute
+        if had_viewer and original_viewer is not None:
+            self.creator.viewer = original_viewer
+
+    def test_multiple_viewer_types(self):
+        """
+        Test that multiple viewer types can coexist.
+        """
+        self.dcf_helper.load(self.spectrum2d, format='2D Spectrum')
+
+        # Should have multiple viewer types available
+        assert '1D Spectrum' in self.dcf_helper.new_viewers
+        assert '2D Spectrum' in self.dcf_helper.new_viewers
+
+        # Create viewers of different types
+        viewer1d = self.dcf_helper.new_viewers['1D Spectrum']()
+        viewer2d = self.dcf_helper.new_viewers['2D Spectrum']()
+
+        assert viewer1d._obj.id != viewer2d._obj.id
 
     def test_vue_create_clicked(self):
         """
@@ -205,52 +224,3 @@ class TestViewerCreatorObject:
 
         # Should have custom label
         assert viewer._obj.id == custom_label
-
-    def test_multiple_viewer_types(self):
-        """
-        Test that multiple viewer types can coexist.
-        """
-        self.dcf_helper.load(self.spectrum2d, format='2D Spectrum')
-
-        # Should have multiple viewer types available
-        assert '1D Spectrum' in self.dcf_helper.new_viewers
-        assert '2D Spectrum' in self.dcf_helper.new_viewers
-
-        # Create viewers of different types
-        viewer1d = self.dcf_helper.new_viewers['1D Spectrum']()
-        viewer2d = self.dcf_helper.new_viewers['2D Spectrum']()
-
-        assert viewer1d._obj.id != viewer2d._obj.id
-
-    def test_viewer_creator_observer_without_viewer_attribute(self):
-        """
-        Test that observers handle missing viewer attribute gracefully.
-        """
-        # Temporarily remove viewer attribute if it exists
-        had_viewer = hasattr(self.creator, 'viewer')
-        original_viewer = None
-        if had_viewer:
-            original_viewer = self.creator.viewer
-            delattr(self.creator, 'viewer')
-
-        # These should not raise errors
-        self.creator._viewer_label_value_changed()
-        self.creator._viewer_items_changed()
-
-        # Restore viewer attribute
-        if had_viewer and original_viewer is not None:
-            self.creator.viewer = original_viewer
-
-    def test_viewer_creator_dataset_items_observer(self):
-        """
-        Test that dataset_items observer updates relevance.
-        """
-        assert self.creator.is_relevant is True
-        initial_item_count = len(self.creator.dataset.items)
-
-        # Load second spectrum
-        self.dcf_helper.load(self.spectrum1d_nm, format='1D Spectrum')
-
-        # Should still be relevant with more items
-        assert self.creator.is_relevant is True
-        assert len(self.creator.dataset.items) > initial_item_count
