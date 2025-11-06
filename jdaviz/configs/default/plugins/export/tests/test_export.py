@@ -24,7 +24,7 @@ class TestExportSubsets:
 
         data = NDData(np.ones((500, 500)) * u.nJy)
 
-        imviz_helper.load_data(data)
+        imviz_helper.load(data)
         subset_plugin = imviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
@@ -91,7 +91,7 @@ class TestExportSubsets:
 
         data = Spectrum(flux=np.ones((500, 500, 2)) * u.nJy,
                         wcs=spectral_cube_wcs)
-        cubeviz_helper.load_data(data)
+        cubeviz_helper.load(data)
         subset_plugin = cubeviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=255, yc=255, radius=50))
         subset_plugin.import_region(CircularROI(xc=200, yc=250, radius=50), edit_subset='Subset 1',
@@ -110,8 +110,8 @@ class TestExportSubsets:
 
         data = NDData(np.ones((500, 500)) * u.nJy, wcs=wcs)
 
-        imviz_helper.load_data(data)  # load data twice so we can link them
-        imviz_helper.load_data(data)
+        imviz_helper.load(data)  # load data twice so we can link them
+        imviz_helper.load(data)
 
         imviz_helper.link_data(align_by='wcs')
         subset_plugin = imviz_helper.plugins['Subset Tools']
@@ -136,7 +136,7 @@ class TestExportSubsets:
         data = Spectrum(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
 
         # Subset 1, Spatial Subset
-        cubeviz_helper.load_data(data)
+        cubeviz_helper.load(data)
         subset_plugin = cubeviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=50, yc=50, radius=10))
 
@@ -283,7 +283,7 @@ class TestExportSubsets:
                    'CRPIX2': 1, 'CRVAL2': -33.71313112382379})
         arr = np.arange(40000).reshape(200, 200)
         ndd = NDData(arr, wcs=wcs)
-        imviz_helper.load_data(ndd)
+        imviz_helper.load(ndd)
         imviz_helper.link_data(align_by='wcs')
 
         subset_plugin = imviz_helper.plugins['Subset Tools']
@@ -320,7 +320,7 @@ class TestExportSubsets:
 
 @pytest.mark.usefixtures('_jail')
 def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    cubeviz_helper.load(spectrum1d_cube, data_label='test')
 
     ep = cubeviz_helper.plugins["Export"]
     ep.viewer = 'spectrum-viewer'
@@ -333,7 +333,7 @@ def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube):
 
 @pytest.mark.usefixtures('_jail')
 def test_export_data(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    cubeviz_helper.load(spectrum1d_cube, data_label='test')
     mm = cubeviz_helper.plugins["Moment Maps"]
     mm.dataset = 'test[FLUX]'
     mm._obj.dataset_selected = 'test[FLUX]'
@@ -358,7 +358,7 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
     data = Spectrum(flux=data*dn_per_s, spectral_axis=data[3]*u.um)
-    specviz2d_helper.load_data(data)
+    specviz2d_helper.load(data)
 
     gs = specviz2d_helper.plugins["Gaussian Smooth"]
     smooth_source_dataset = "Spectrum 1D"
@@ -385,7 +385,7 @@ class TestExportPluginPlots:
         """
         data = NDData(np.ones((500, 500)) * u.nJy)
 
-        imviz_helper.load_data(data)
+        imviz_helper.load(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
         export_plugin.plugin_plot.selected = 'Plot Options: stretch_hist'
@@ -416,7 +416,7 @@ class TestExportPluginPlots:
 
         data = NDData(np.ones((500, 500)) * u.nJy)
 
-        imviz_helper.load_data(data)
+        imviz_helper.load(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
         subset_plugin = imviz_helper.plugins['Subset Tools']
@@ -445,7 +445,7 @@ class TestExportPluginPlots:
 
         data = NDData(np.ones((500, 500)) * u.nJy)
 
-        imviz_helper.load_data(data)
+        imviz_helper.load(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
 
@@ -459,7 +459,7 @@ class TestExportPluginPlots:
 
     def test_filepath_convention(self, imviz_helper):
         data = NDData(np.ones((500, 500)) * u.nJy)
-        imviz_helper.load_data(data)
+        imviz_helper.load(data)
         export_plugin = imviz_helper.plugins['Export']._obj
 
         # Set filename value using OS-independent Path methods

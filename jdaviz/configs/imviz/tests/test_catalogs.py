@@ -47,7 +47,7 @@ class TestCatalogs:
         arr = np.ones((10, 10))
         ndd = NDData(arr, wcs=image_2d_wcs)
 
-        imviz_helper.load_data(ndd, data_label='no_results_data')
+        imviz_helper.load(ndd, data_label='no_results_data')
 
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
@@ -87,7 +87,7 @@ class TestCatalogs:
                             'CRPIX2': 745.0,
                             'CRVAL2': 1.54470013629,
                             'NAXIS2': 1489})
-        imviz_helper.load_data(hdu1, data_label='has_wcs')
+        imviz_helper.load(hdu1, data_label='has_wcs')
 
         catalogs_plugin = imviz_helper.plugins["Catalog Search"]
         catalogs_plugin._obj.plugin_opened = True
@@ -255,7 +255,7 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
                         'CRPIX2': 745.0,
                         'CRVAL2': 1.54470013629,
                         'NAXIS2': 1489})
-    imviz_helper.load_data(hdu1, data_label='has_wcs')
+    imviz_helper.load(hdu1, data_label='has_wcs')
 
     catalog_plg = imviz_helper.plugins['Catalog Search']
     export_plg = imviz_helper.plugins['Export']
@@ -298,7 +298,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     n_entries = len(tbl)
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    imviz_helper.load(ndd, data_label='data_with_wcs')
     assert len(imviz_helper.app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
@@ -378,7 +378,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd)
 
     # sources at pixel coords ~(100, 100), ~(200, 200)
     sky_coord = SkyCoord(ra=[337.49056532, 337.46086081],
@@ -443,7 +443,7 @@ def test_zoom_to_selected(imviz_helper, image_2d_wcs):
 def test_select_tool(imviz_helper, image_2d_wcs):
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd)
 
     # write out catalog to file so we can read it back in
     # todo: if tables can be loaded directly at some point, do that
@@ -516,7 +516,7 @@ def test_offline_ecsv_catalog_with_extra_columns(imviz_helper, image_2d_wcs):
     })
 
     ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    imviz_helper.load(ndd, data_label='data_with_wcs')
     assert len(imviz_helper.app.data_collection) == 1
 
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
@@ -541,7 +541,7 @@ def test_select_catalog_table_rows(imviz_helper, image_2d_wcs):
 
     arr = np.ones((500, 500))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd)
 
     sky_coord = SkyCoord(ra=[337.49, 337.46, 337.47, 337.48, 337.49, 337.50],
                          dec=[-20.81, -20.78, -20.79, -20.80, -20.77, -20.76],

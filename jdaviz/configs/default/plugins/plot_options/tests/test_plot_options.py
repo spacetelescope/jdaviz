@@ -11,7 +11,7 @@ from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStret
 
 @pytest.mark.filterwarnings('ignore')
 def test_multiselect(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
 
     # default selection for viewer should be flux-viewer (first in list) and nothing for layer
@@ -74,7 +74,7 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
 
 @pytest.mark.filterwarnings('ignore')
 def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
-    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
+    cubeviz_helper.load(spectrum1d_cube_with_uncerts)
     po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
     po.plugin_opened = True
 
@@ -149,7 +149,7 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
 
 @pytest.mark.filterwarnings('ignore')
 def test_user_api(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     po = cubeviz_helper.plugins['Plot Options']
 
     assert po.multiselect is False
@@ -206,7 +206,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
 def test_stretch_spline(imviz_helper):
     image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
     # Load the test data into imviz
-    imviz_helper.load_data(image_1)
+    imviz_helper.load(image_1)
     po = imviz_helper.plugins['Plot Options']
 
     # Configure initial stretch options and select "Spline" function
@@ -274,7 +274,7 @@ def test_apply_presets(imviz_helper):
     # Test applying presets with < 6 layers
 
     for i in range(4):
-        imviz_helper.load_data(arr, data_label=f"array_{i}")
+        imviz_helper.load(arr, data_label=f"array_{i}")
 
     po.image_color_mode = "Color"
     po.apply_RGB_presets()
@@ -288,7 +288,7 @@ def test_apply_presets(imviz_helper):
     # Test applying presets with > 5 layers
 
     for i in range(4):
-        imviz_helper.load_data(arr, data_label=f"array_{i+4}")
+        imviz_helper.load(arr, data_label=f"array_{i+4}")
 
     po.layer = "array_5"
     po.image_visible = False
@@ -330,7 +330,7 @@ def test_track_mixed_states(imviz_helper):
     rgb_colors = ["#ff0000", "#00ff00", "#0000ff"]
 
     for i in range(3):
-        imviz_helper.load_data(arr, data_label=f"array_{i}")
+        imviz_helper.load(arr, data_label=f"array_{i}")
 
     po.image_color_mode_value = 'One color per layer'
     for i in range(3):
@@ -419,7 +419,7 @@ def test_segmentation_image(imviz_helper):
     in_circle = np.hypot(xx - x0, yy - y0) < radius
     segmentation_map[in_circle] = 1
 
-    imviz_helper.load_data(segmentation_map)
+    imviz_helper.load(segmentation_map)
 
     plot_opts = imviz_helper.plugins['Plot Options']
     plot_opts.image_colormap = 'Random'
@@ -446,7 +446,7 @@ def test_imviz_select_all_layers(imviz_helper):
     # load three images in one viewer
     with imviz_helper.batch_load():
         for i in range(3):
-            imviz_helper.load_data(arr, data_label=f"data_{i}")
+            imviz_helper.load(arr, data_label=f"data_{i}")
 
     plot_options = imviz_helper.plugins['Plot Options']
 

@@ -116,7 +116,7 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
     spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
-    specviz2d_helper.load_data(spectrum2d)
+    specviz2d_helper.load(spectrum2d)
 
 
 @pytest.mark.remote_data
@@ -320,7 +320,7 @@ def test_invoke_from_plugin(specviz_helper, spectrum1d, tmp_path):
     local_path = str(tmp_path / 'spectral_region.ecsv')
     s.write(local_path)
 
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load(spectrum1d)
 
     loader = specviz_helper.plugins['Subset Tools'].loaders['file']
 
@@ -371,7 +371,7 @@ def test_load_image_mult_sci_extension(imviz_helper):
                          ])
 
     # imviz_helper._load(hdul, extension=('SCI,1', 'SCI,2', 'ERR,2'))
-    imviz_helper.load_data(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
+    imviz_helper.load(hdul, ext=('SCI,1', 'SCI,2', 'ERR,2'))
 
     assert len(imviz_helper.app.data_collection) == 3
     assert [d.label for d in imviz_helper.app.data_collection] == ['Image[SCI,1]', 'Image[SCI,2]', 'Image[ERR,2]']  # noqa

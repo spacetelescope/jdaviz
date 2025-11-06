@@ -92,7 +92,7 @@ def test_link_type_autocoord(imviz_helper):
             "NAXIS2": 10,
         }
     )
-    imviz_helper.load_data(hdu1, data_label="has_wcs_1")
+    imviz_helper.load(hdu1, data_label="has_wcs_1")
 
     # Second data with WCS, similar to above but dithered by 1 pixel in X.
     hdu2 = fits.ImageHDU(np.ones((10, 10)), name="SCI")
@@ -112,7 +112,7 @@ def test_link_type_autocoord(imviz_helper):
             "NAXIS2": 10,
         }
     )
-    imviz_helper.load_data(hdu2, data_label="has_wcs_2")
+    imviz_helper.load(hdu2, data_label="has_wcs_2")
 
     vo_ldr = imviz_helper.loaders["virtual observatory"]._obj
     vo_ldr.viewer.selected = "imviz-0"

@@ -5,7 +5,7 @@ from regions import RectanglePixelRegion
 
 
 def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts):
-    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts, data_label='test')
+    cubeviz_helper.load(spectrum1d_cube_with_uncerts, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
@@ -92,7 +92,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
         cube = spectrum1d_cube
         cube_unit = 'Jy / pix2'
 
-    cubeviz_helper.load_data(cube, data_label='test')
+    cubeviz_helper.load(cube, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
@@ -165,7 +165,7 @@ def test_spectrum_at_spaxel_with_2d(cubeviz_helper):
     # Use cube with single slice
     x = np.array([[[1, 2, 3], [4, 5, 6]]])
 
-    cubeviz_helper.load_data(x, data_label='test')
+    cubeviz_helper.load(x, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")

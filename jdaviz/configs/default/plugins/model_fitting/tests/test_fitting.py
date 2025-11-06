@@ -62,7 +62,7 @@ def test_model_params():
 
 
 def test_check_poly_order_function(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load(spectrum1d)
     plugin = specviz_helper.plugins["Model Fitting"]._obj
     plugin.dataset_selected = '1D Spectrum'
 
@@ -109,7 +109,7 @@ def test_check_poly_order_function(specviz_helper, spectrum1d):
 
 
 def test_check_poly_order_observer(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load(spectrum1d)
     plugin = specviz_helper.plugins["Model Fitting"]._obj
     plugin.dataset_selected = '1D Spectrum'
 
@@ -153,7 +153,7 @@ def test_check_poly_order_observer(specviz_helper, spectrum1d):
 
 
 def test_model_ids(cubeviz_helper, spectral_cube_wcs):
-    cubeviz_helper.load_data(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
+    cubeviz_helper.load(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
                              data_label='test')
     plugin = cubeviz_helper.plugins["Model Fitting"]._obj
     plugin.dataset_selected = 'Spectrum (sum)'
@@ -181,7 +181,7 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
 
     flux = np.ones((3, 4, 5))
     flux[2, 2, :] = [1, 2, 3, 4, 5]
-    cubeviz_helper.load_data(Spectrum(flux=flux * flux_unit, wcs=spectral_cube_wcs),
+    cubeviz_helper.load(Spectrum(flux=flux * flux_unit, wcs=spectral_cube_wcs),
                              data_label='test')
 
     plugin = cubeviz_helper.plugins["Model Fitting"]
@@ -394,7 +394,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
                         [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
 
     # Check Cubeviz roundtrip. This should automatically go through wcs1d-fits reader.
-    cubeviz_helper.load_data(out_fn)
+    cubeviz_helper.load(out_fn)
     assert len(cubeviz_helper.app.data_collection) == 3
     data_sci = cubeviz_helper.app.data_collection["fitted_cube"]
     flux_sci = data_sci.get_component("flux")
@@ -413,7 +413,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, n_cpu, tmp_path):
 
 def test_results_table(specviz_helper, spectrum1d):
     data_label = 'test'
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
 
     mf = specviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
@@ -474,7 +474,7 @@ def test_results_table(specviz_helper, spectrum1d):
 
 def test_equation_validation(specviz_helper, spectrum1d):
     data_label = 'test'
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
 
     mf = specviz_helper.plugins['Model Fitting']
     mf.create_model_component('Const1D')
@@ -501,7 +501,7 @@ def test_equation_validation(specviz_helper, spectrum1d):
 
 def test_incompatible_units(specviz_helper, spectrum1d):
     data_label = 'test'
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
 
     mf = specviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
@@ -532,7 +532,7 @@ def test_cube_fit_with_nans(cubeviz_helper):
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
     spec = Spectrum(flux=flux, spectral_axis_index=2)
-    cubeviz_helper.load_data(spec, data_label="test")
+    cubeviz_helper.load(spec, data_label="test")
 
     mf = cubeviz_helper.plugins["Model Fitting"]
     mf.cube_fit = True
@@ -557,7 +557,7 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     flux[:, :, 0] = np.nan
     spec = Spectrum(flux=flux, spectral_axis_index=2)
     spec.flux[5, 5, 7] = 10 * u.nJy
-    cubeviz_helper.load_data(spec, data_label="test")
+    cubeviz_helper.load(spec, data_label="test")
 
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
     sv.apply_roi(XRangeROI(0, 5))
@@ -580,7 +580,7 @@ def test_fit_with_count_units(cubeviz_helper):
     spectral_axis = np.linspace(4000, 5000, flux.shape[-1]) * u.AA
 
     spec = Spectrum(flux=flux, spectral_axis=spectral_axis, spectral_axis_index=2)
-    cubeviz_helper.load_data(spec, data_label="test")
+    cubeviz_helper.load(spec, data_label="test")
 
     mf = cubeviz_helper.plugins["Model Fitting"]
     mf.cube_fit = True
@@ -603,7 +603,7 @@ def test_fit_with_count_units(cubeviz_helper):
 def test_cube_fit_after_unit_change(cubeviz_helper, solid_angle_unit):
     cube = _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy / solid_angle_unit, shape=(10, 4, 5),
                                                  with_uncerts=True)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
     solid_angle_string = str(solid_angle_unit)
 
     uc = cubeviz_helper.plugins['Unit Conversion']
@@ -719,7 +719,7 @@ def test_deconf_mf_with_subset(deconfigged_helper):
                                     'SimplexLSQFitter'])
 def test_different_fitters(specviz_helper, spectrum1d, fitter):
     data_label = 'test'
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
 
     mf = specviz_helper.plugins['Model Fitting']._obj
     if fitter == 'SimplexLSQFitter':
@@ -759,7 +759,7 @@ def test_specviz2d_linking(specviz2d_helper):
     # Create a continuous 2D
     data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
     spectrum_data = Spectrum(data, wcs=wcs, meta=header)
-    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
+    specviz2d_helper.load(spectrum_2d=spectrum_data)
 
     viewer_1d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)
@@ -792,7 +792,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     uncertainty = StdDevUncertainty(np.ones_like(flux.value) * 0.1 * u.Jy)
     spec = Spectrum(spectral_axis=wavelength, flux=flux, uncertainty=uncertainty)
     data_label = 'test'
-    specviz_helper.load_data(spec, data_label=data_label)
+    specviz_helper.load(spec, data_label=data_label)
 
     mf = specviz_helper.plugins['Model Fitting']
     uc = specviz_helper.plugins['Unit Conversion']

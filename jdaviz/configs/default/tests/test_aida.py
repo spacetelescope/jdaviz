@@ -19,7 +19,7 @@ def assert_angle_close(angle1, angle2, atol=1 * u.arcsec):
 
 
 def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.load(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     viewer = imviz_helper.app.get_viewer('imviz-0')
@@ -48,7 +48,7 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
 
 
 def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.load(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = imviz_helper.app.get_viewer('imviz-0')
 
@@ -70,7 +70,7 @@ def test_set_viewport_sky(imviz_helper, image_hdu_wcs):
 
 
 def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.load(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = imviz_helper.app.get_viewer('imviz-0')
 
@@ -90,7 +90,7 @@ def test_set_viewport_sky_rotation(imviz_helper, image_hdu_wcs):
 
 def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
     # arrange
-    imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.load(image_hdu_wcs)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
     viewer = imviz_helper.app.get_viewer('imviz-0')
 
@@ -113,7 +113,7 @@ def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
 
 
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
-    imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.load(image_hdu_wcs)
 
     viewer = imviz_helper.app.get_viewer('imviz-0')
 

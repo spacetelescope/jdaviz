@@ -37,7 +37,7 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     w, wcs_dict = cubeviz_wcs_dict()
     flux = np.ones((3, 4, 5), dtype=np.float32)
     cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
     viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
     # get all available flux units for translation. Since cube is loaded
@@ -136,7 +136,7 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
     flux = np.zeros((3, 4, 5), dtype=np.float32)
     # load cube in flux_unit, will become cube in flux_unit / pix2
     cube = Spectrum(flux=flux * flux_unit, wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube)
+    cubeviz_helper.load(cube)
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 
@@ -153,7 +153,7 @@ def test_unit_translation(cubeviz_helper, angle_unit):
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     center = PixCoord(5, 10)
     cubeviz_helper.plugins['Subset Tools'].import_region(CirclePixelRegion(center, radius=2.5))
@@ -199,7 +199,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
@@ -280,7 +280,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
 
 def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
     # custom cube to have Surface Brightness units
-    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
+    cubeviz_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
@@ -320,7 +320,7 @@ def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * (u.ct / angle_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
@@ -372,7 +372,7 @@ def test_limits_on_unit_change(cubeviz_helper, start_unit, end_unit,
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * u.Unit(start_unit), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     sv = cubeviz_helper.viewers['spectrum-viewer']

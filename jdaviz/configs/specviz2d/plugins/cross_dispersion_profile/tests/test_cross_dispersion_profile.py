@@ -19,7 +19,7 @@ def test_cross_dispersion_profile(specviz2d_helper):
         arr[:, i] = Gaussian1D(amplitude=i, mean=5, stddev=1)(y)
 
     data = Spectrum(flux=arr * u.Jy, spectral_axis=x * u.nm)
-    specviz2d_helper.load_data(data)
+    specviz2d_helper.load(data)
 
     cdp = specviz2d_helper.plugins['Cross Dispersion Profile']
     cdp.open_in_tray()

@@ -148,7 +148,7 @@ class TestLineProfileXYWCSLinked(BaseImviz_WCS_WCS):
 def test_line_profile_with_nan(imviz_helper):
     arr = np.ones((10, 10))
     arr[5, 5] = np.nan
-    imviz_helper.load_data(arr)
+    imviz_helper.load(arr)
 
     lp_plugin = imviz_helper.plugins['Image Profiles (XY)']._obj
     lp_plugin.plugin_opened = True
