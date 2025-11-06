@@ -151,42 +151,6 @@ def deconfigged_helper():
 
 
 @pytest.fixture
-def sample_csv_data():
-    """
-    Create sample CSV data as bytes.
-    """
-    csv_content = 'col1,col2,col3\n1,2,3\n4,5,6\n7,8,9'
-    return csv_content.encode('utf-8')
-
-
-@pytest.fixture
-def sample_ascii_data():
-    """
-    Create sample ASCII table data as bytes.
-    """
-    ascii_content = 'col1 col2 col3\n1 2 3\n4 5 6\n7 8 9'
-    return ascii_content.encode('utf-8')
-
-
-@pytest.fixture
-def sample_fits_table():
-    """
-    Create sample FITS table data as bytes.
-    """
-    table = Table({
-        'col1': [1, 2, 3],
-        'col2': [4, 5, 6],
-        'col3': [7, 8, 9]
-    })
-
-    # Write to BytesIO
-    output = io.BytesIO()
-    table.write(output, format='fits')
-    output.seek(0)
-    return output.getvalue()
-
-
-@pytest.fixture
 def roman_level_1_ramp():
     from roman_datamodels.datamodels import RampModel
     rng = np.random.default_rng(seed=42)

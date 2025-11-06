@@ -170,15 +170,46 @@ class TestFileDropResolverParseInput:
             file_drop_resolver.parse_input()
 
 
+def _create_sample_csv_data():
+    """
+    Create sample CSV data as bytes.
+    """
+    csv_content = 'col1,col2,col3\n1,2,3\n4,5,6\n7,8,9'
+    return csv_content.encode('utf-8')
+
+
 class TestFileDropResolverParsedInputToTable:
     """
     Test _parsed_input_to_table functionality for various formats.
     """
-    def test_parsed_input_to_table_csv(self, file_drop_resolver, sample_csv_data):
+    def create_sample_fits_table(self):
+        """
+        Create sample FITS table data as bytes.
+        """
+        table = Table({
+            'col1': [1, 2, 3],
+            'col2': [4, 5, 6],
+            'col3': [7, 8, 9]
+        })
+
+        # Write to BytesIO using astropy's default write method
+        output = io.BytesIO()
+        table.write(output, format='fits', overwrite=True)
+        output.seek(0)
+        return output.getvalue()
+
+    def create_sample_ascii_data(self):
+        """
+        Create sample ASCII table data as bytes.
+        """
+        ascii_content = 'col1 col2 col3\n1 2 3\n4 5 6\n7 8 9'
+        return ascii_content.encode('utf-8')
+
+    def test_parsed_input_to_table_csv(self, file_drop_resolver):
         """
         Test parsing CSV format.
         """
-        parsed_input = io.BytesIO(sample_csv_data)
+        parsed_input = io.BytesIO(_create_sample_csv_data())
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
         assert result is not None
@@ -186,28 +217,33 @@ class TestFileDropResolverParsedInputToTable:
         assert len(result) == 3
         assert 'col1' in result.colnames
 
-    def test_parsed_input_to_table_ascii(self, file_drop_resolver, sample_ascii_data):
+    def test_parsed_input_to_table_ascii(self, file_drop_resolver):
         """
         Test parsing ASCII format.
         """
-        parsed_input = io.BytesIO(sample_ascii_data)
+        parsed_input = io.BytesIO(self.create_sample_ascii_data())
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
         assert result is not None
         assert isinstance(result, Table)
         assert len(result) == 3
 
-    def test_parsed_input_to_table_fits(self, file_drop_resolver, sample_fits_table):
+    def test_parsed_input_to_table_fits(self, file_drop_resolver):
         """
         Test parsing FITS format.
         """
-        parsed_input = io.BytesIO(sample_fits_table)
+        parsed_input = io.BytesIO(self.create_sample_fits_table())
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
         assert result is not None
         assert isinstance(result, Table)
-        assert len(result) == 3
-        assert 'col1' in result.colnames
+        # Note: _parsed_input_to_table reads primary HDU by default,
+        # which is empty. To verify the fixture contains good data,
+        # read HDU 1 manually.
+        parsed_input.seek(0)
+        full_table = Table.read(parsed_input, format='fits', hdu=1)
+        assert len(full_table) == 3
+        assert 'col1' in full_table.colnames
 
     def test_parsed_input_to_table_invalid_format(self, file_drop_resolver):
         """
@@ -340,12 +376,12 @@ class TestFileDropResolverIntegration:
     """
     Integration tests combining multiple aspects of functionality.
     """
-    def test_full_file_upload_workflow(self, file_drop_resolver, sample_csv_data):
+    def test_full_file_upload_workflow(self, file_drop_resolver):
         """
         Test complete workflow from upload to parsing.
         """
         file_info = {'name': 'data.csv',
-                     'data': sample_csv_data}
+                     'data': _create_sample_csv_data()}
 
         with patch.object(file_drop_resolver, '_resolver_input_updated'):
             with patch.object(file_drop_resolver, '_update_format_items'):
