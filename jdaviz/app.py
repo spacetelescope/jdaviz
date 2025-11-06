@@ -839,14 +839,19 @@ class Application(VuetifyTemplate, HubListener):
         if self.config == 'mosviz':
             # In Mosviz, first data is always MOS Table. Use the next data
             default_refdata_index = 1
-        elif self.config == 'cubeviz':
-            spectral_axis_index = dc[0].meta['spectral_axis_index']
+        elif self.config in ('cubeviz', 'deconfigged'):
+            cube_data = None
+            for data in dc:
+                if 'spectral_axis_index' in data.meta and data.ndim == 3:
+                    cube_data = data
+                    spectral_axis_index = cube_data.meta['spectral_axis_index']
+                    break
         ref_data = dc[reference_data] if reference_data else dc[default_refdata_index]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        if self.config == 'cubeviz' and linked_data.ndim == 1:
+        if self.config in ('cubeviz', 'deconfigged') and linked_data.ndim == 1 and cube_data is not None:  # noqa
             # Don't want to use negative indices in case there are extra components like a mask
-            ref_wavelength_component = dc[0].components[spectral_axis_index]
+            ref_wavelength_component = cube_data.components[spectral_axis_index]
             # May need to update this for specutils 2
             linked_wavelength_component = linked_data.components[1]
 
