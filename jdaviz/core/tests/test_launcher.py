@@ -77,8 +77,10 @@ class TestOpenFunction:
         Test open() with local_path kwarg passed through to
         download_uri_to_path.
         """
+        # Mock the download to avoid actual network calls.
         with (patch('jdaviz.core.launcher.download_uri_to_path') as mock_download):
             mock_download.return_value = self.test_file
+            # mock the identify_helper to force imviz to be used with the ccd data
             with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
                 mock_identify.return_value = (['imviz'], self.ccd)
 
@@ -123,6 +125,9 @@ class TestLaunchConfigWithData:
         if history_verbosity is None:
             kwargs.pop('history_verbosity')
 
+        # mock the config class, but we can use the imviz_helper fixture here
+        # (as opposed to the test below which also mocks the helper)
+        # since we're not actually attempting to load anything.
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=imviz_helper)
 
@@ -141,6 +146,9 @@ class TestLaunchConfigWithData:
         mock_helper.load_data = Mock()
         mock_helper.show = Mock()
 
+        # mock the config class to return our mock helper
+        # so that we don't have to worry about the actual loading logic
+        # from load_data.
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
             mock_configs.Imviz = Mock(return_value=mock_helper)
 
@@ -155,8 +163,8 @@ class TestLaunchConfigWithData:
 
     def test_launch_config_with_data_io_error_uses_filepath(self):
         """
-        Test that when loading data raises IORegistryError, the
-        filepath fallback is used.
+        Test that when loading data raises IORegistryError,
+        the filepath fallback is used.
         """
         mock_helper = Mock()
         mock_helper.load_data = Mock(side_effect=[IORegistryError('Failed'), None])
@@ -176,8 +184,7 @@ class TestLaunchConfigWithData:
 
     def test_launch_config_with_data_io_error_no_filepath_raises(self):
         """
-        Test that IORegistryError is raised when no filepath fallback
-        is provided.
+        Test that IORegistryError is raised when no filepath fallback is provided.
         """
         mock_helper = Mock()
         mock_helper.load_data = Mock(side_effect=IORegistryError('Failed'))
@@ -261,6 +268,7 @@ class TestLauncherClass:
         Test that JDAVIZ_START_DIR environment variable is respected.
         """
         test_dir = '/custom/start/dir'
+        # Use patch.dict to temporarily set the environment variable.
         with patch.dict(os.environ, {'JDAVIZ_START_DIR': test_dir}):
             with patch('jdaviz.core.launcher.FileChooser') as mock_fc:
                 _ = Launcher()
@@ -403,16 +411,18 @@ class TestShowLauncher:
     """
     Test the show_launcher() function.
     """
-
     def test_show_launcher_default(self):
         """
         Test show_launcher with default parameters.
         """
+        # Patch the Launcher class to avoid full initialization
+        # and unintended side effects.
         with patch('jdaviz.core.launcher.Launcher') as mock_launcher_class:
             mock_launcher = Mock()
             mock_launcher.main_with_launcher = Mock()
             mock_launcher_class.return_value = mock_launcher
 
+            # Patch show_widget to avoid display calls.
             with patch('jdaviz.core.launcher.show_widget') as mock_show:
                 show_launcher()
 
