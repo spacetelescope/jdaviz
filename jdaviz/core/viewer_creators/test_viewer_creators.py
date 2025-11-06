@@ -72,7 +72,6 @@ class TestViewerCreatorObject:
         and succeeds with proper callbacks.
         """
         # Remove the callback to test error handling
-        original_callback = self.creator.set_active_callback
         self.creator.set_active_callback = None
 
         msg = 'set_active_callback must be set to open dialog to specific tab'
