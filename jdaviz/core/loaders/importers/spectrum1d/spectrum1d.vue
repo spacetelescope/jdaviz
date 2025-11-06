@@ -35,7 +35,7 @@
       :multiselect="viewer_multiselect"
       :show_multiselect_toggle="false"
       label="Viewer"
-      api_hint='ldr.importer.viewer = '
+      api_hint="ldr.importer.viewer ="
       :api_hints_enabled="api_hints_enabled"
       :show_if_single_entry="true"
       hint="Select the viewer to use for the new data entry."

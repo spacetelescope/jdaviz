@@ -33,7 +33,7 @@
       :multiselect="viewer_multiselect"
       :show_multiselect_toggle="false"
       label="Viewer for Flux Cube"
-      api_hint='ldr.importer.viewer = '
+      api_hint="ldr.importer.viewer ="
       :api_hints_enabled="api_hints_enabled"
       :show_if_single_entry="true"
       hint="Select the viewer to use for the imported flux/science cube."
@@ -74,7 +74,7 @@
           :multiselect="unc_viewer_multiselect"
           :show_multiselect_toggle="false"
           label="Viewer for Uncertainty Cube"
-          api_hint='ldr.importer.unc_viewer = '
+          api_hint="ldr.importer.unc_viewer = "
           :api_hints_enabled="api_hints_enabled"
           :show_if_single_entry="true"
           hint="Select the viewer to use for the imported uncertainty cube."
@@ -117,7 +117,7 @@
           :multiselect="mask_viewer_multiselect"
           :show_multiselect_toggle="false"
           label="Viewer for Mask Cube"
-          api_hint='ldr.importer.mask_viewer = '
+          api_hint="ldr.importer.mask_viewer ="
           :api_hints_enabled="api_hints_enabled"
           :show_if_single_entry="true"
           hint="Select the viewer to use for the imported mask cube."
@@ -166,7 +166,7 @@
         :multiselect="ext_viewer_multiselect"
         :show_multiselect_toggle="false"
         label="Viewer for Extracted Spectrum"
-        api_hint='ldr.importer.ext_viewer = '
+        api_hint="ldr.importer.ext_viewer ="
         :api_hints_enabled="api_hints_enabled"
         :show_if_single_entry="true"
         hint="Select the viewer to use for the new extracted 1D Spectrum data entry."
