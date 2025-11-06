@@ -199,7 +199,6 @@ class RampImporter(BaseImporterToDataCollection):
 
     @observe('data_label_value', 'function_selected')
     def _data_label_changed(self, msg={}):
-        # on main: Level1bModel[DATA], Level1bModel[DIFF], Ramp (mean)
         base = self.data_label_value.strip('[DATA]').strip()
         self.diff_data_label_default = f"{base}[DIFF]"
         self.ext_data_label_default = f"{base} ({self.function_selected.lower()})"
