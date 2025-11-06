@@ -8,6 +8,8 @@ Bug Fixes
 
 - Add support for all valid astropy table write formats. [#3822]
 
+- Fixes an issue where loader widgets were showing outside the app when the entire app was wrapped in a solara component. [#3877]
+
 Cubeviz
 ^^^^^^^
 
