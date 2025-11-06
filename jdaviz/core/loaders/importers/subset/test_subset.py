@@ -54,19 +54,42 @@ class TestSubsetImporter:
                               parser=None,
                               input=input_data)
 
-    def test_initialization_creates_default_labels(self, regions_input):
+    def test_label_generation_and_validity(self, regions_input):
         """
-        Test that initialization creates default label and subset_label should be set
+        Test label things and subsequent valid calls/error messages.
         """
         importer = self.generate_importer(regions_input)
 
-        # Should have default label set
-        assert importer.subset_label_default == 'Subset 1'
-        assert importer.subset_label_auto is True
+        # Test that default label (Subset N) passes validation.
+        importer.subset_label_value = 'Subset 1'
+        importer._on_label_changed()
 
-        # subset_label should be set
-        assert hasattr(importer, 'subset_label')
-        assert importer.subset_label is not None
+        # Default label should be valid
+        assert importer.subset_label_invalid_msg == ''
+        assert importer.import_disabled is False
+
+        # Label validation works correctly.
+        for label_value in ('', '    '):
+            importer.subset_label_value = label_value
+            importer._on_label_changed()
+            assert importer.subset_label_invalid_msg == 'subset_label must be provided'
+
+        # Test that the label_invalid_msg is set for an invalid subset label.
+        importer.subset_label_value = 'Subset 2'
+        importer._on_label_changed()
+
+        # Default label should be invalid
+        error_msg = ("invalid subset_label: "
+                     "The pattern 'Subset N' "
+                     "is reserved for auto-generated labels")
+        assert importer.subset_label_invalid_msg == error_msg
+
+        # check import_disabled updates correctly
+        assert importer.import_disabled is True
+
+        # test that calling with invalid label raises ValueError
+        with pytest.raises(ValueError, match=error_msg):
+            importer()
 
     def test_is_valid(self, regions_input, spectral_region):
         """
@@ -83,35 +106,19 @@ class TestSubsetImporter:
         importer = self.generate_importer('not a region')
         assert importer.is_valid is False
 
-    def test_label_validation(self, regions_input):
-        """
-        Test that label validation works correctly.
-        """
-        importer = self.generate_importer(regions_input)
-
-        for label_value in ('', '    '):
-            importer.subset_label_value = label_value
-            importer._on_label_changed()
-
-            assert importer.subset_label_invalid_msg == 'subset_label must be provided'
-
-    def test_default_label_validation(self, regions_input):
-        """
-        Test that default label (Subset N) passes validation.
-        """
-        importer = self.generate_importer(regions_input)
-
-        # Set label to default
-        importer.subset_label_value = 'Subset 1'
-        importer._on_label_changed()
-
-        # Default label should be valid
-        assert importer.subset_label_invalid_msg == ''
-
     def test_label_default_updates_with_subset_count(self, regions_input, spectral_region):
         """
         Test that default label updates based on subset count.
         """
+        importer = self.generate_importer(regions_input)
+        # Should have default label set
+        assert importer.subset_label_default == 'Subset 1'
+        assert importer.subset_label_auto is True
+
+        # subset_label should be set
+        assert hasattr(importer, 'subset_label')
+        assert importer.subset_label is not None
+
         # Create a subset first
         subset_plugin = self.dcf_helper.plugins['Subset Tools']
         subset_plugin.import_region(spectral_region)
@@ -124,53 +131,6 @@ class TestSubsetImporter:
 
         # Should be Subset 2 since we created one subset
         assert importer.subset_label_default == 'Subset 2'
-
-    def test_invalid_subset_label(self, regions_input):
-        """
-        Test that the label_invalid_msg is set for an invalid subset label.
-        """
-        importer = self.generate_importer(regions_input)
-
-        # Set label to non-default valid label
-        importer.subset_label_value = 'Subset 2'
-        importer._on_label_changed()
-
-        # Attempt to set an invalid label
-        importer.subset_label_value = 'Subset 2'
-        importer._on_label_changed()
-
-        # Default label should be valid
-        assert importer.subset_label_invalid_msg == ("invalid subset_label: "
-                                                     "The pattern 'Subset N' "
-                                                     "is reserved for auto-generated labels")
-
-    def test_import_enabled_disabled_on_label(self, regions_input):
-        """
-        Test that import is enabled/disabled when label is valid/invalid.
-        """
-        importer = self.generate_importer(regions_input)
-
-        importer.subset_label_invalid_msg = ''
-        importer._set_import_disabled()
-
-        assert importer.import_disabled is False
-
-        importer.subset_label_invalid_msg = 'Some error'
-        importer._set_import_disabled()
-
-        assert importer.import_disabled is True
-
-    def test_call_with_invalid_label_raises_error(self, regions_input):
-        """
-        Test that calling with invalid label raises ValueError.
-        """
-        importer = self.generate_importer(regions_input)
-
-        error_msg = 'Invalid label'
-        importer.subset_label_invalid_msg = error_msg
-
-        with pytest.raises(ValueError, match=error_msg):
-            importer()
 
     def test_call_creates_subset(self, spectral_region):
         """
