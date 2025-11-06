@@ -40,8 +40,6 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
     default_class = None
     _state_cls = FreezableBqplotImageViewerState
 
-    _region_overlay_lookup = None
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # provide reference from state back to viewer to use for zoom syncing
@@ -458,46 +456,15 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         viewer_corners = wcs.pixel_to_world(*corners)
         return PolygonSkyRegion(viewer_corners)
 
-    def _region_overlay_label_to_index(self, region_label, reindex=False):
-        if self._region_overlay_lookup is None or reindex:
-            self._update_overlay_idx_lookups()
-
-        if region_label not in self._region_overlay_lookup.keys():
-            raise ValueError(f"No RegionOverlay labeled '{region_label}'.")
-
-        return self._region_overlay_lookup[region_label]
-
-    def _update_region_overlay_lookup(self):
+    def _get_region_overlay_labels(self):
         """
-        Store a dictionary in ``viewer._region_overlay_lookup`` which
-        maps `~jdaviz.core.marks.RegionOverlay` labels to indices in the
-        `viewer.figure.marks` list. Used for efficient lookups without
-        many calls to loops. Must be called each time the marks are changed.
+        Get ``label`` from each ``RegionOverlay`` mark in the figure
         """
-        # create dictionary for looking up a region overlay's index
-        # in viewer.figure.mark. this is implemented for O(N) region
-        # lookups when possibly thousands of footprints are loaded.
+        return [
+            getattr(mark, 'label', None) for mark in self.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
 
-        self._region_overlay_lookup = dict()
-        for i, mark in enumerate(self.figure.marks):
-            if isinstance(mark, RegionOverlay):
-                self._region_overlay_lookup[mark.label] = i
-
-    def _reindex_region_overlays(f):
-        """
-        Decorator that triggers reindexing for the region overlay
-        label-to-index mapping dict by calling
-        `_update_region_overlay_lookup()` when `f` is completed.
-        This decorator is needed whenever a method changes the
-        number or order of the region overlays.
-        """
-        def wrapper(self, *args, **kwargs):
-            result = f(self, *args, **kwargs)
-            self._update_region_overlay_lookup()
-            return result
-        return wrapper
-
-    @_reindex_region_overlays
     def _add_region_overlay(self, region=None, region_label=None, selected=False, **style_kwargs):
         """
         Add a `~jdaviz.core.marks.RegionOverlay` mark for ``region`` in the viewer.
@@ -539,17 +506,15 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         wcs = getattr(self.state.reference_data, 'coords', None)
 
         existing_marks = list(self.figure.marks)
-
-        if self._region_overlay_lookup is None:
-            self._update_region_overlay_lookup()
+        existing_mark_labels = self._get_region_overlay_labels()
 
         new_marks = []
         for reg, label, selection in zip(region, region_label, selected):
-            if (
-                    label not in self._region_overlay_lookup.keys() and
-                    isinstance(reg, PolygonSkyRegion)
-            ):
+            if label not in existing_mark_labels:
                 # add new marks:
+                if not isinstance(reg, PolygonSkyRegion):
+                    raise NotImplementedError()
+
                 pixel_region = reg.to_pixel(wcs)
                 x, y = pixel_region.vertices.x, pixel_region.vertices.y
                 mark = RegionOverlay(
@@ -563,13 +528,12 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
             else:
                 # update an existing mark:
-                mark_idx = self._region_overlay_label_to_index(label)
-                existing_marks[mark_idx].selected = selection
-                existing_marks[mark_idx].update_style(style_kwargs)
+                idx = existing_mark_labels.index(label)
+                existing_marks[idx].selected = selection
+                existing_marks[idx].update_style(style_kwargs)
 
         self.figure.marks = existing_marks + new_marks
 
-    @_reindex_region_overlays
     def _remove_region_overlay(self, region_label):
         """
         Remove a `~jdaviz.core.marks.RegionOverlay` from the viewer marks.
@@ -580,8 +544,10 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             String label(s) for each region.
         """
         region_label = region_label if isinstance(region_label, (tuple, list)) else [region_label]
+
+        existing_mark_labels = self._get_region_overlay_labels()
         for label in region_label:
-            if label not in self._region_overlay_lookup.keys():
+            if label not in existing_mark_labels:
                 raise ValueError(f"No RegionOverlay labeled '{label}'.")
 
         self.figure.marks = [
@@ -589,7 +555,6 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             (isinstance(mark, RegionOverlay) and mark.label not in region_label)
         ]
 
-    @_reindex_region_overlays
     def _remove_all_region_overlays(self):
         """
         Remove all `~jdaviz.core.marks.RegionOverlay` marks from the viewer.
@@ -598,7 +563,6 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             mark for mark in self.figure.marks if not isinstance(mark, RegionOverlay)
         ]
 
-    @_reindex_region_overlays
     def _change_region_overlay_selection(self, region_label, selection, **style_kwargs):
         """
         Remove a `~jdaviz.core.marks.RegionOverlay` from the viewer marks.
@@ -608,7 +572,15 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         region_label : str, list of str, or None
             String label(s) for each region.
         """
-        existing_marks = list(self.figure.marks)
+        existing_marks = [
+            mark for mark in self.figure.marks
+            if not isinstance(mark, RegionOverlay)
+        ]
+        existing_region_overlays = [
+            mark for mark in self.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+        existing_region_overlay_labels = self._get_region_overlay_labels()
 
         labels = region_label if isinstance(region_label, (tuple, list)) else [region_label]
 
@@ -618,17 +590,19 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if len(selection) < len(labels):
             selection = len(labels) * selection
 
-        for label, select in zip(labels, selection):
-            mark_idx = self._region_overlay_label_to_index(label)
-            existing_marks[mark_idx].selected = select
-            existing_marks[mark_idx].update_style(style_kwargs)
+        for label, selected in zip(labels, selection):
+            idx = existing_region_overlay_labels.index(label)
+            if isinstance(existing_region_overlays[idx], RegionOverlay):
+                existing_region_overlays[idx].selected = selected
+                existing_region_overlays[idx].update_style(style_kwargs)
 
         # bqplot marks are over plotted in order, with the last
         # marks in the list appearing at the highest zorder.
         # sort the marks by selection state, which puts selected marks
         # at the end of the list, which plots those regions on top.
         self.figure.marks = sorted(
-            existing_marks,
+            existing_marks + existing_region_overlays,
+            # this lambda function allows `m.selected = None` to act as `False`
             key=lambda m: m.selected if isinstance(m.selected, bool) else False
         )
 
@@ -662,14 +636,18 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         """
         Select all `~jdaviz.core.marks.RegionOverlay` marks in the viewer.
         """
+        existing_mark_labels = self._get_region_overlay_labels()
+
         self._select_region_overlay(
-            region_label=list(self._region_overlay_lookup.keys()),
+            region_label=existing_mark_labels,
         )
 
     def _deselect_all_region_overlays(self):
         """
         Deselect all `~jdaviz.core.marks.RegionOverlay` marks in the viewer.
         """
+        existing_mark_labels = self._get_region_overlay_labels()
+
         self._deselect_region_overlay(
-            region_label=list(self._region_overlay_lookup.keys()),
+            region_label=existing_mark_labels,
         )

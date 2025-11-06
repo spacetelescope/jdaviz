@@ -347,7 +347,6 @@ class TestRegionOverlay:
 
     def test_add_remove_region_overlay(self):
 
-        n_marks_init = len(self.viewer.figure.marks)
         self.viewer._add_region_overlay(
             region=self.regions,
             region_label=self.region_labels,
@@ -367,10 +366,6 @@ class TestRegionOverlay:
 
         labels_found = [mark.label for mark in region_overlay_marks]
         assert self.region_labels == labels_found
-
-        # check that indices are mapped correctly
-        assert self.viewer._region_overlay_label_to_index(0) == n_marks_init
-        assert self.viewer._region_overlay_label_to_index(1) == n_marks_init + 1
 
         # remove a region:
         self.viewer._remove_region_overlay(3)
@@ -393,7 +388,7 @@ class TestRegionOverlay:
             selected=False
         )
 
-        select_labels_expected = [1, 2]
+        select_labels_expected = [0, 1]
         self.viewer._select_region_overlay(
             region_label=select_labels_expected
         )
@@ -403,15 +398,17 @@ class TestRegionOverlay:
             if isinstance(mark, RegionOverlay)
         ]
 
-        region_overlay_order = [
-            mark.selected for i, mark in enumerate(self.viewer.figure.marks)
-            if isinstance(mark, RegionOverlay)
-        ]
+        # check selected status is correct
+        for mark in region_overlay_marks:
+            if mark.label in select_labels_expected:
+                assert mark.selected
+            else:
+                assert not mark.selected
 
         # check that selected regions appear at the end of the
         # marks list, so they're plotted on top of the not-selected marks
-        assert not any(sel for sel in region_overlay_order[:3])
-        assert all(sel for sel in region_overlay_order[3:])
+        assert select_labels_expected == [mark.label for mark in region_overlay_marks[-2:]]
+        assert [2, 3, 4] == [mark.label for mark in region_overlay_marks[:-2]]
 
         selected_marks = [
             mark for mark in region_overlay_marks if mark.selected
