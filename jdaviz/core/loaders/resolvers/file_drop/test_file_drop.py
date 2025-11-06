@@ -122,6 +122,8 @@ class TestFileDropResolverFileHandling:
         """
         # Test that progress updates to 100 after file upload.
         file_drop_resolver.progress = 50
+        # Mock the internal methods to track calls but avoid any unintended
+        # side effects that we don't need to check here.
         with patch.object(file_drop_resolver, '_resolver_input_updated') as mock_input_updated:
             with patch.object(file_drop_resolver, '_update_format_items') as mock_update_format:
                 file_drop_resolver._on_file_updated(file_info)
