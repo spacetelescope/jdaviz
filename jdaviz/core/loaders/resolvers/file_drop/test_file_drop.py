@@ -27,9 +27,11 @@ def file_drop_resolver(deconfigged_helper):
     """
     Create a FileDropResolver instance with mocked dependencies.
     """
+    # Mock these to avoid (GUI) widget creation and whatever comes along with that
     with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.FileDropMultiple'):
         with patch('jdaviz.core.loaders.resolvers.file_drop.file_drop.reacton') as mock_reacton:
             mock_reacton.render.return_value = (Mock(), Mock())
+            # We could also mock the app if needed
             resolver = FileDropResolver(app=deconfigged_helper.app)
             return resolver
 
@@ -38,10 +40,9 @@ class TestFileDropResolverInitialization:
     """
     Test FileDropResolver initialization.
     """
-
     def test_init_basic(self, file_drop_resolver):
         """
-        Test basic initialization of FileDropResolver.
+        Test basic initialization of traitlets in FileDropResolver.
         """
         assert file_drop_resolver._file_info is None
         assert file_drop_resolver.progress == 100
@@ -163,7 +164,6 @@ class TestFileDropResolverParseInput:
         Test parse_input when no file is loaded.
         """
         file_drop_resolver._file_info = None
-        # This should raise an AttributeError
         with pytest.raises(AttributeError):
             file_drop_resolver.parse_input()
 
@@ -198,16 +198,14 @@ class TestFileDropResolverParsedInputToTable:
     def test_parsed_input_to_table_fits(self, file_drop_resolver, sample_fits_table):
         """
         Test parsing FITS format.
-
-        Note: FITS parsing behavior may vary based on file structure.
-        We just verify it returns a table or None without crashing.
         """
         parsed_input = io.BytesIO(sample_fits_table)
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
-        # FITS parsing may succeed or fail depending on format
-        # Just verify it doesn't crash and returns expected type
-        assert result is None or isinstance(result, Table)
+        assert result is not None
+        assert isinstance(result, Table)
+        assert len(result) == 3
+        assert 'col1' in result.colnames
 
     def test_parsed_input_to_table_invalid_format(self, file_drop_resolver):
         """
@@ -220,8 +218,9 @@ class TestFileDropResolverParsedInputToTable:
         parsed_input = io.BytesIO(invalid_data)
         result = file_drop_resolver._parsed_input_to_table(parsed_input)
 
-        # May return None or a table depending on astropy's parsing
         assert result is None or isinstance(result, Table)
+        if result is not None:
+            assert isinstance(result.colnames, list)
 
     def test_parsed_input_to_table_empty_data(self, file_drop_resolver):
         """
@@ -265,7 +264,7 @@ class TestFileDropResolverEdgeCases:
         """
         Test handling of large file (simulated).
         """
-        # Simulate a large file by creating large data
+        # Simulate a large file by creating 'large' data
         large_data = b'x' * (10 * 1024 * 1024)  # 10 MB
 
         file_drop_resolver._file_info = {'name': 'large_file.dat',
