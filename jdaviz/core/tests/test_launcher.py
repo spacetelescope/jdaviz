@@ -75,7 +75,7 @@ class TestOpenFunction:
     def test_open_with_local_path_kwarg(self, local_path):
         """
         Test open() with local_path kwarg passed through to
-        download_uri_to_path.
+        download_uri_to_path and with multiple compatible helpers.
         """
         # Mock the download to avoid actual network calls.
         with (patch('jdaviz.core.launcher.download_uri_to_path') as mock_download):
@@ -91,14 +91,7 @@ class TestOpenFunction:
                                                       local_path=local_path)
                 assert isinstance(result, Imviz)
 
-    def test_open_multiple_helpers_raises_error(self):
-        """
-        Test that open() raises NotImplementedError when multiple
-        compatible helpers are identified.
-        """
-        with patch('jdaviz.core.launcher.download_uri_to_path') as mock_download:
-            mock_download.return_value = self.test_file
-            with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
+                # When multiple compatible helpers are found, NotImplementedError is raised.
                 mock_identify.return_value = (['imviz', 'cubeviz'], self.ccd)
 
                 msg = 'Multiple helpers provided'
@@ -161,10 +154,10 @@ class TestLaunchConfigWithData:
             mock_helper.show.assert_not_called()
             assert result == mock_helper
 
-    def test_launch_config_with_data_io_error_uses_filepath(self):
+    def test_launch_config_with_data_io_errors(self):
         """
-        Test that when loading data raises IORegistryError,
-        the filepath fallback is used.
+        Test that when loading data raises IORegistryError.
+        Check with filepath fallback and without.
         """
         mock_helper = Mock()
         mock_helper.load_data = Mock(side_effect=[IORegistryError('Failed'), None])
@@ -175,18 +168,15 @@ class TestLaunchConfigWithData:
 
             _ = _launch_config_with_data('imviz',
                                          data=self.ccd,
-                                         filepath=self.test_file,
-                                         show=False)
+                                         filepath=self.test_file)
 
             assert mock_helper.load_data.call_count == 2
+            # Check that show is called because show=True (default)
+            mock_helper.show.assert_called_once()
             mock_helper.load_data.assert_any_call(self.ccd)
             mock_helper.load_data.assert_any_call(self.test_file)
 
-    def test_launch_config_with_data_io_error_no_filepath_raises(self):
-        """
-        Test that IORegistryError is raised when no filepath fallback is provided.
-        """
-        mock_helper = Mock()
+        # Now check that without filepath, the error is raised.
         mock_helper.load_data = Mock(side_effect=IORegistryError('Failed'))
 
         with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
@@ -194,20 +184,6 @@ class TestLaunchConfigWithData:
 
             with pytest.raises(IORegistryError, match='Failed'):
                 _launch_config_with_data('imviz', data='some_data', show=False)
-
-    def test_launch_config_with_show_true(self):
-        """
-        Test that show() is called when (default) show=True.
-        """
-        mock_helper = Mock()
-        mock_helper.show = Mock()
-
-        with patch('jdaviz.core.launcher.jdaviz_configs') as mock_configs:
-            mock_configs.Imviz = Mock(return_value=mock_helper)
-
-            _ = _launch_config_with_data('imviz')
-
-            mock_helper.show.assert_called_once()
 
 
 class TestLauncherClass:
@@ -246,14 +222,15 @@ class TestLauncherClass:
         launcher = Launcher(height='100%')
         assert launcher.height == '100%'
 
+        # Test main_with_launcher property returns main with launcher as child.
+        result = launcher.main_with_launcher
+        assert result == launcher.main
+        assert launcher.main.children == [launcher]
+
         mock_main = Mock()
         launcher = Launcher(main=mock_main)
         assert launcher.main == mock_main
 
-    def test_launcher_vdocs(self):
-        """
-        Test that vdocs is set correctly (dev vs release).
-        """
         # vdocs is set to 'latest' for dev versions.
         with patch('jdaviz.core.launcher.__version__', '1.0.dev'):
             launcher = Launcher()
@@ -263,10 +240,7 @@ class TestLauncherClass:
             launcher = Launcher()
             assert launcher.vdocs == 'v1.2.3'
 
-    def test_launcher_jdaviz_start_dir_env_var(self):
-        """
-        Test that JDAVIZ_START_DIR environment variable is respected.
-        """
+        # Test that JDAVIZ_START_DIR environment variable is respected.
         test_dir = '/custom/start/dir'
         # Use patch.dict to temporarily set the environment variable.
         with patch.dict(os.environ, {'JDAVIZ_START_DIR': test_dir}):
@@ -394,17 +368,6 @@ class TestLauncherClass:
                 if height not in ['100%', '100vh']:
                     assert dcf_app.layout.height == default_height
                     assert launcher.main.height == default_height
-
-    def test_main_with_launcher_property(self):
-        """
-        Test main_with_launcher property returns main with launcher as
-        child.
-        """
-        launcher = Launcher()
-        result = launcher.main_with_launcher
-
-        assert result == launcher.main
-        assert launcher.main.children == [launcher]
 
 
 class TestShowLauncher:
