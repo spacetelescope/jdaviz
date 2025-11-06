@@ -26,7 +26,7 @@ New Features
 
 - AIDA methods setting and retrieving rotation of imviz viewer [#3834]
 
-- Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853]
+- Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853, #3870]
 
 - Generalize spectrum loading logic to prepare to support Roman ASDF files. [#3864]
 
@@ -82,6 +82,8 @@ Bug Fixes
 
 - Fixes in model fitting plugin to work better with nonfinite data. [#3792]
 
+- Fixes in model fitting plugin to correctly update parameter units and values upon unit conversion. [#3858]
+
 Cubeviz
 ^^^^^^^
 
@@ -113,6 +115,10 @@ Bug Fixes
 ---------
 
 - Add support for all valid astropy table write formats. [#3822]
+
+- Fix a bug with initializing component models in Model Fitting when Cube Fit was toggle on. [#3857]
+
+- Fixes an issue where loader widgets were showing outside the app when the entire app was wrapped in a solara component. [#3877]
 
 Cubeviz
 ^^^^^^^

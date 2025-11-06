@@ -81,7 +81,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
-        if self.config == "cubeviz":
+        if self.config in ("cubeviz", 'deconfigged'):
             self.hub.subscribe(
                 self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
             )
@@ -538,8 +538,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             row1a_text = ""
             row1a_title = ""
         elif getattr(image, 'meta', {}).get('_importer', '') == 'CatalogImporter':
-            row1a_text = ''
-            row1a_title = ''
+            row1a_text = str(image.data['ID'][cur_i])
+            row1a_title = 'Source ID'
         else:
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
             row1a_text = fmt.format(x, y)

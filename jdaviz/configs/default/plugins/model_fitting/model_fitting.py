@@ -632,16 +632,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
 
-        # subset-masked spectrum, if aplicable
-        subset_mask = masked_spectrum.mask
-
-        # mask out non-finite values in flux array
-        flux_nan_mask = ~np.isfinite(masked_spectrum.flux)
-
-        if subset_mask is not None:
-            mask = subset_mask | flux_nan_mask
-        else:
-            mask = flux_nan_mask if np.any(flux_nan_mask) else None
+        # subset-masked spectrum, if applicable
+        mask = masked_spectrum.mask
 
         if mask is not None:
             if mask.ndim == 3:
@@ -651,6 +643,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     spectral_mask = mask.all(axis=(1, 2))
             else:
                 spectral_mask = mask
+
             init_x = masked_spectrum.spectral_axis[~spectral_mask]
             orig_flux_shape = masked_spectrum.flux.shape
             init_y = masked_spectrum.flux[~mask]
@@ -758,7 +751,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if 'x' in self._units and 'y' in self._units:
             # Not populated yet on startup
             previous_x = self._units['x']
-            previous_y = self._units['y']
 
         # update internal tracking of current units
         self._units[axis] = str(unit)
@@ -779,17 +771,37 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 spectral_axis = self.dataset.selected_obj.spectral_axis
                 # Just need a single spectral axis value to enable spectral_density equivalency
                 equivalencies = all_flux_unit_conversion_equivs(cube_wave=spectral_axis[0])
-                if ((axis == 'y' and param['unit'] == previous_y) or
-                        (axis == 'x' and param['unit'] == previous_x)):
-                    new_quant = flux_conversion_general(current_quant.value,
-                                                        current_quant.unit,
-                                                        self._units[axis],
-                                                        equivalencies=equivalencies)  # noqa
 
-                # Some parameters have units that aren't related to x or y
-                if new_quant is not None:
-                    param['value'] = new_quant.value
-                    param['unit'] = str(new_quant.unit)
+                # Calculate what the new unit should be for this parameter
+                new_param_unit = self._param_units(param['name'], model_type=model['model_type'])
+
+                # Check if this parameter's unit needs updating
+                if param['unit'] != new_param_unit:
+                    # Store the old unit before converting
+                    old_param_unit = param['unit']
+
+                    # Try to convert the current value to the new unit
+                    try:
+                        new_quant = flux_conversion_general(current_quant.value,
+                                                            current_quant.unit,
+                                                            new_param_unit,
+                                                            equivalencies=equivalencies)
+                        param['value'] = new_quant.value
+                        param['unit'] = str(new_quant.unit)
+
+                        # Also convert the uncertainty (std) if it exists
+                        if ('std' in param and param['std'] is not None
+                                and not np.isnan(param['std'])):
+                            current_std_quant = param['std'] * u.Unit(old_param_unit)
+                            new_std = flux_conversion_general(current_std_quant.value,
+                                                              current_std_quant.unit,
+                                                              new_param_unit,
+                                                              equivalencies=equivalencies)
+                            param['std'] = new_std.value
+                    except Exception:
+                        # If conversion fails, mark as incompatible
+                        model['compat_display_units'] = False
+                        break
 
         self._check_model_component_compat([axis], [unit])
         self._update_initialized_parameters()

@@ -303,6 +303,7 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3814
     # https://github.com/spacetelescope/jdaviz/pull/3835
     # https://github.com/spacetelescope/jdaviz/pull/3854
+    # https://github.com/spacetelescope/jdaviz/pull/3856
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
@@ -838,14 +839,19 @@ class Application(VuetifyTemplate, HubListener):
         if self.config == 'mosviz':
             # In Mosviz, first data is always MOS Table. Use the next data
             default_refdata_index = 1
-        elif self.config == 'cubeviz':
-            spectral_axis_index = dc[0].meta['spectral_axis_index']
+        elif self.config in ('cubeviz', 'deconfigged'):
+            cube_data = None
+            for data in dc:
+                if 'spectral_axis_index' in data.meta and data.ndim == 3:
+                    cube_data = data
+                    spectral_axis_index = cube_data.meta['spectral_axis_index']
+                    break
         ref_data = dc[reference_data] if reference_data else dc[default_refdata_index]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        if self.config == 'cubeviz' and linked_data.ndim == 1:
+        if self.config in ('cubeviz', 'deconfigged') and linked_data.ndim == 1 and cube_data is not None:  # noqa
             # Don't want to use negative indices in case there are extra components like a mask
-            ref_wavelength_component = dc[0].components[spectral_axis_index]
+            ref_wavelength_component = cube_data.components[spectral_axis_index]
             # May need to update this for specutils 2
             linked_wavelength_component = linked_data.components[1]
 
@@ -3146,22 +3152,23 @@ class Application(VuetifyTemplate, HubListener):
             self.state.loader_selected = resolver
 
         # registry will be populated at import
-        import jdaviz.core.loaders  # noqa
-        for name, Resolver in loader_resolver_registry.members.items():
-            loader = Resolver(app=self,
-                              open_callback=open,
-                              close_callback=close,
-                              set_active_loader_callback=set_active_loader)
-            self.state.loader_items.append({
-                'name': name,
-                'label': name,
-                'requires_api_support': loader.requires_api_support,
-                'widget': "IPY_MODEL_" + loader.model_id,
-                'api_methods': loader.api_methods,
-            })
-        # initialize selection (tab) to first entry
-        if len(self.state.loader_items):
-            self.state.loader_selected = self.state.loader_items[0]['name']
+        if self.config in CONFIGS_WITH_LOADERS:
+            import jdaviz.core.loaders  # noqa
+            for name, Resolver in loader_resolver_registry.members.items():
+                loader = Resolver(app=self,
+                                  open_callback=open,
+                                  close_callback=close,
+                                  set_active_loader_callback=set_active_loader)
+                self.state.loader_items.append({
+                    'name': name,
+                    'label': name,
+                    'requires_api_support': loader.requires_api_support,
+                    'widget': "IPY_MODEL_" + loader.model_id,
+                    'api_methods': loader.api_methods,
+                })
+            # initialize selection (tab) to first entry
+            if len(self.state.loader_items):
+                self.state.loader_selected = self.state.loader_items[0]['name']
 
         # Tray plugins
         if self.config == 'deconfigged':
