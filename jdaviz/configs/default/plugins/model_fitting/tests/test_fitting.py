@@ -154,9 +154,9 @@ def test_check_poly_order_observer(specviz_helper, spectrum1d):
 
 def test_model_ids(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.load(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
-                             data_label='test')
+                        data_label='test')
     plugin = cubeviz_helper.plugins["Model Fitting"]._obj
-    plugin.dataset_selected = 'Spectrum (sum)'
+    plugin.dataset_selected = 'test (sum)'
     plugin.component_models = [{'id': 'valid_string_already_exists'}]
     plugin.model_comp_selected = 'Linear1D'
 
@@ -759,7 +759,7 @@ def test_specviz2d_linking(specviz2d_helper):
     # Create a continuous 2D
     data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
     spectrum_data = Spectrum(data, wcs=wcs, meta=header)
-    specviz2d_helper.load(spectrum_2d=spectrum_data)
+    specviz2d_helper.load(spectrum_data)
 
     viewer_1d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)

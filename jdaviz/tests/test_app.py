@@ -17,7 +17,7 @@ from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
 
 # This applies to all viz but testing with Imviz should be enough.
 def test_viewer_calling_app(imviz_helper):
-    viewer = imviz_helper.default_viewer._obj.glue_viewer
+    viewer = imviz_helper.viewers['Image']._obj.glue_viewer
     assert viewer.session.jdaviz_app is imviz_helper.app
 
 
@@ -190,19 +190,19 @@ def test_data_associations(imviz_helper):
     data_parent = np.ones(shape, dtype=float)
     data_child = np.zeros(shape, dtype=int)
 
-    imviz_helper.load(data_parent, data_label='parent_data')
-    imviz_helper.load(data_child, data_label='child_data', parent='parent_data')
+    imviz_helper.load(data_parent, format='Image', data_label='parent_data')
+    imviz_helper.load(data_child, format='Image', data_label='child_data', parent='parent_data')
 
     assert imviz_helper.app._get_assoc_data_children('parent_data') == ['child_data']
     assert imviz_helper.app._get_assoc_data_parent('child_data') == 'parent_data'
 
     with pytest.raises(ValueError):
         # we don't (yet) allow children of children:
-        imviz_helper.load(data_child, data_label='grandchild_data', parent='child_data')
+        imviz_helper.load(data_child, format='Image', data_label='grandchild_data', parent='child_data')
 
     with pytest.raises(ValueError):
         # ensure the parent actually exists:
-        imviz_helper.load(data_child, data_label='child_data', parent='absent parent')
+        imviz_helper.load(data_child, format='Image', data_label='child_data', parent='absent parent')
 
 
 def test_to_unit(cubeviz_helper):

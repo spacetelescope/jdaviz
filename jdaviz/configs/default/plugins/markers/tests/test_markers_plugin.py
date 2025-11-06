@@ -28,7 +28,7 @@ def _assert_dict_allclose(dict1, dict2):
 
 
 def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, data_label="test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
     sb_unit = 'Jy / pix2'  # cubes loaded in Jy have sb unit of Jy / pix2

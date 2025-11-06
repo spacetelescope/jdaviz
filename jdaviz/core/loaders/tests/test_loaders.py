@@ -116,7 +116,7 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper, spectrum2d):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
     spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
-    specviz2d_helper.load(spectrum2d)
+    specviz2d_helper.load(spectrum2d, format='2D Spectrum')
 
 
 @pytest.mark.remote_data

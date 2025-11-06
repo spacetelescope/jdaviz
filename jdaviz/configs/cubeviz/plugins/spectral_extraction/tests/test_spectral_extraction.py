@@ -25,10 +25,9 @@ calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_ca
 
 def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # Also test that plugin is disabled before data is loaded.
-    plg = cubeviz_helper.plugins['3D Spectral Extraction']
-    assert plg._obj.disabled_msg != ''
-
+    assert '3D Spectral Extraction' not in cubeviz_helper.plugins
     cubeviz_helper.load(spectrum1d_cube_with_uncerts)
+    assert '3D Spectral Extraction' in cubeviz_helper.plugins
 
     spectral_cube = cubeviz_helper.app.data_collection[0].get_object(NDDataArray)
     uncert_cube = cubeviz_helper.app.data_collection[1].get_object(StdDevUncertainty)
