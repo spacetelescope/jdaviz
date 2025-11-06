@@ -53,12 +53,11 @@ class TestConfigHelperSpec:
         # Add 3 subsets to cover different parts of spec and spec2
         self.config_helper.plugins['Subset Tools'].import_region(
             SpectralRegion(6000*spectral_axis_unit, 6500*spectral_axis_unit))
+        # combination_mode = 'new' is the default, so no need to specify
         self.config_helper.plugins['Subset Tools'].import_region(
-            SpectralRegion(6700*spectral_axis_unit, 7200*spectral_axis_unit),
-            combination_mode='new')
+            SpectralRegion(6700*spectral_axis_unit, 7200*spectral_axis_unit))
         self.config_helper.plugins['Subset Tools'].import_region(
-            SpectralRegion(8200*spectral_axis_unit, 8800*spectral_axis_unit),
-            combination_mode='new')
+            SpectralRegion(8200*spectral_axis_unit, 8800*spectral_axis_unit))
 
         self.data = self.config_helper.app.data_collection[self.label]
 
