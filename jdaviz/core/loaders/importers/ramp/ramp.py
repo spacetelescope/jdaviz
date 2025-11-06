@@ -41,6 +41,10 @@ def move_group_axis_last(x):
 class RampImporter(BaseImporterToDataCollection):
     template_file = __file__, "./ramp.vue"
 
+    # INTEGRATION SELECT
+    integration_items = List().tag(sync=True)
+    integration_selected = Unicode().tag(sync=True)
+
     # DIFF CUBE
     diff_data_label_value = Unicode().tag(sync=True)
     diff_data_label_default = Unicode().tag(sync=True)
@@ -90,6 +94,18 @@ class RampImporter(BaseImporterToDataCollection):
                            for item in supported_viewers]
                 return isinstance(viewer, tuple(classes))
             return viewer_filter
+
+        if isinstance(self.input, Level1bModel):
+            integration_options = [str(i) for i in range(len(self.input.data))]
+        elif isinstance(self.input, fits.HDUList):
+            # TODO: this will need to be adjusted if adding extension selection
+            integration_options = [str(i) for i in range(len(self.input[1].data))]
+        else:
+            integration_options = []
+        self.integration = SelectPluginComponent(self,
+                                                 items='integration_items',
+                                                 selected='integration_selected',
+                                                 manual_options=integration_options)
 
         # RAMP GROUP CUBE
         if self.default_data_label_from_resolver:
@@ -177,6 +193,8 @@ class RampImporter(BaseImporterToDataCollection):
     def user_api(self):
         expose = ['diff_data_label', 'diff_viewer',
                   'auto_extract', 'function', 'ext_data_label', 'ext_viewer']
+        if len(self.integration_items) > 0:
+            expose += ['integration']
         return ImporterUserApi(self, expose)
 
     @property
@@ -207,6 +225,9 @@ class RampImporter(BaseImporterToDataCollection):
     def output(self):
         integration = 0  # TODO: integration/extension select
 
+        # NOTE: each if-statement should provide meta and ramp_data
+        # if there is specific handling for flux_unit, ramp_data should
+        # be a quantity with the unit attached
         if isinstance(self.input, Level1bModel):
             meta = standardize_metadata({
                 key: value for key, value in self.input.to_flat_dict(
@@ -224,6 +245,10 @@ class RampImporter(BaseImporterToDataCollection):
             hdulist = self.input
             hdu = hdulist[1]  # extension containing the ramp
 
+            meta = standardize_metadata(hdu.header)
+            if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+                meta[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
+
             if 'BUNIT' in hdu.header:
                 try:
                     flux_unit = u.Unit(hdu.header['BUNIT'])
@@ -237,14 +262,9 @@ class RampImporter(BaseImporterToDataCollection):
             # index the ramp array by the integration to load. returns all groups and pixels.
             # cast from uint16 to integers:
             ramp_data = hdu.data[integration].astype(int) * flux_unit
-
-            metadata = standardize_metadata(hdu.header)
-            if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-                metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
         elif isinstance(self.input, np.ndarray):
-            ramp_data = self.input
-            flux_unit = getattr(ramp_data, 'unit', u.DN)
             meta = {}
+            ramp_data = self.input
         else:
             raise NotImplementedError("Unsupported input for RampImporter")
 

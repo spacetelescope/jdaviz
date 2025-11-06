@@ -1,5 +1,16 @@
 <template>
   <v-container>
+    <plugin-select
+      v-if="integration_items.length > 0"
+      :items="integration_items.map(i => i.label)"
+      :selected.sync="integration_selected"
+      :show_if_single_entry="false"
+      label="Integration"
+      api_hint="ldr.importer.integration ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Select the integration to use from the ramp data."
+    ></plugin-select>
+
     <j-plugin-section-header>Ramp Cube</j-plugin-section-header>
     <plugin-auto-label
       :value.sync="data_label_value"
