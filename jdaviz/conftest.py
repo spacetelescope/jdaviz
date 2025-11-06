@@ -3,7 +3,6 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
-import io
 import os
 import warnings
 
