@@ -28,6 +28,8 @@ New Features
 
 - Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853, #3870]
 
+- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
+
 Cubeviz
 ^^^^^^^
 
@@ -305,8 +307,6 @@ New Features
 - Aperture Photometry public API exposed, added API hints to plugin. [#3617]
 
 - Allow custom resolutions when exporting viewers to png or mp4. [#3478]
-
-- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
 
 Cubeviz
 ^^^^^^^
