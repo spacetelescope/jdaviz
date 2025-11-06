@@ -36,7 +36,7 @@ def test_next_subset_num(label, prefix, answer):
 
 class TestConfigHelperSpec:
     @pytest.fixture(autouse=True)
-    def setup_class(self, deconfigged_helper, spectrum1d, spectrum2d, multi_order_spectrum_list):
+    def _setup_class(self, deconfigged_helper, spectrum1d, spectrum2d, multi_order_spectrum_list):
         self.config_helper = deconfigged_helper
 
         self.spec = spectrum1d
@@ -79,13 +79,24 @@ class TestConfigHelperSpec:
         results = self.config_helper._get_data(data_label=label, spectral_subset=subset_name)
         assert list(results.mask) == answer
 
-    def test_get_data_no_label_multiple_in_dc(self):
+    def test_get_data_errors(self):
+        # multiple data, no label
         with pytest.raises(ValueError, match='data_label must be set if more'):
             self.config_helper._get_data()
 
-    def test_get_data_label_not_in_dc(self):
+        # data label not in data collection
         with pytest.raises(ValueError, match='Blah not in '):
             self.config_helper._get_data(data_label="Blah")
+
+        # invalid cls type
+        self.config_helper.app.data_collection.remove(
+            self.config_helper.app.data_collection[self.label2])
+        with pytest.raises(TypeError, match="cls in get_data must be a class or None."):
+            self.config_helper._get_data('Test 1D Spectrum', cls=42)
+
+        # spectral subset name not in data collection
+        with pytest.raises(ValueError, match="not in list of valid subset names"):
+            self.config_helper._get_data('Test 1D Spectrum', spectral_subset="Fail")
 
     def test_get_data_no_label_one_in_dc(self):
         self.config_helper.app.data_collection.remove(
@@ -93,16 +104,6 @@ class TestConfigHelperSpec:
         results = self.config_helper._get_data()
         assert_quantity_allclose(results.flux,
                                  self.spec.flux, atol=1e-5 * u.Unit(self.spec.flux.unit))
-
-    def test_get_data_invalid_cls_class(self, specviz_helper):
-        self.config_helper.app.data_collection.remove(
-            self.config_helper.app.data_collection[self.label2])
-        with pytest.raises(TypeError, match="cls in get_data must be a class or None."):
-            self.config_helper._get_data('Test 1D Spectrum', cls=42)
-
-    def test_get_data_invalid_subset_name(self):
-        with pytest.raises(ValueError, match="not in list of valid subset names"):
-            self.config_helper._get_data('Test 1D Spectrum', spectral_subset="Fail")
 
     def test_get_clone_viewer_reference(self):
         """
@@ -126,9 +127,9 @@ class TestConfigHelperSpec:
             result = self.config_helper._get_clone_viewer_reference(base_viewer_name)
             assert result == f"{base_viewer_name}[4]"
 
-    def test_set_data_component_new_component(self):
+    def test_set_data_component(self):
         """
-        Test _set_data_component with a new component label.
+        Test _set_data_component with a new component label and update it.
         """
         original_n_components = len(self.data.components)
 
@@ -138,15 +139,8 @@ class TestConfigHelperSpec:
         assert len(self.data.components) == original_n_components + 1
         assert 'test_component' in self.config_helper._component_ids
 
-    def test_set_data_component_update_existing(self):
-        """
-        Test _set_data_component updating an existing component.
-        """
-        # First add a component
-        new_values = np.ones(len(self.data.get_object().flux))
-        self.config_helper._set_data_component(self.data, 'test_component', new_values)
+        # Now check updating existing component
         n_components_after_add = len(self.data.components)
-
         # Now update it
         updated_values = np.ones(len(self.data.get_object().flux)) * 2
         self.config_helper._set_data_component(self.data, 'test_component', updated_values)
