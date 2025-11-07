@@ -185,7 +185,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.fitter_component = SelectPluginComponent(self,
                                                       items='fitter_items',
                                                       selected='fitter_selected')
-        self._enforce_spline_mode()
+        self._enforce_spline_fitter()
 
         if self.config == 'cubeviz':
             # use mean whenever extracting the 1D spectrum of a cube to initialize model params
@@ -528,7 +528,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         return temp_models
 
-    def _enforce_spline_mode(self):
+    def _enforce_spline_fitter(self):
         has_spline = any(cm.get('model_type') == 'Spline1D' for cm in self.component_models)
         if has_spline:
             self.fitter_items = [
@@ -598,7 +598,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._update_comp_label_default()
         self._update_model_equation_default()
         self._update_fitter_error()
-        self._enforce_spline_mode()
+        self._enforce_spline_fitter()
 
     def _initialize_model_component(self, model_comp, comp_label, poly_order=None):
         new_model = {"id": comp_label, "model_type": model_comp,
@@ -861,7 +861,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         del self._initialized_models[model_component_label]
         self._update_comp_label_default()
         self._update_model_equation_default()
-        self._enforce_spline_mode()
+        self._enforce_spline_fitter()
 
     def get_model_component(self, model_component_label, parameter=None):
         """
@@ -976,7 +976,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # model units may have changed, need to re-check their compatibility with display units
         self._check_model_component_compat()
-        self._enforce_spline_mode()
+        self._enforce_spline_fitter()
 
         # return user-friendly info on revised model
         return self.get_model_component(model_component_label)
