@@ -156,7 +156,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                 'filter_non_finite': 'Whether or not to filter data with'
                                 ' non-finite values (e.g., NaNs)',
                                 'calc_uncertainties': 'Whether the covariance matrix should be'
-                                ' computed and set in fit_info'}
+                                ' computed and set in fit_info',
+                                's': 'Smoothing factor for SplineSmoothingFitter',}
         self.all_fitters = {
             'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
                                             {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
@@ -172,11 +173,19 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                {'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},  # noqa
             'LinearLSQFitter': {'parameters': [{'name': 'calc_uncertainties', 'value': True, 'type': 'init'}]},  # noqa
             'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
-            'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]}
+            'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
+            'SplineSmoothingFitter' : {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},  # noqa
+                                                      {'name': 's', 'value': 1.0, 'type': 'call'},
+                                                      {'name': 'degree', 'value': 3.0, 'type': 'call'},]},
         }
-        self.fitter_component = SelectPluginComponent(self, items='fitter_items',
-                                                      selected='fitter_selected',
-                                                      manual_options=list(self.all_fitters.keys()))
+        self.fitter_items = [{"label": k, "value": k} for k in self.all_fitters.keys()]
+        self.fitter_selected = "LevMarLSQFitter"
+        # allows for Spline1D case, updating the fitters in the 
+        # dropdown depending on the model selected
+        self.fitter_component = SelectPluginComponent(self,
+                                                      items='fitter_items',
+                                                      selected='fitter_selected')
+        self._enforce_spline_mode()
 
         if self.config == 'cubeviz':
             # use mean whenever extracting the 1D spectrum of a cube to initialize model params
@@ -466,6 +475,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._update_fitter_error()
 
     def _update_fitter_error(self):
+        if any(cm.get('model_type') == 'Spline1D' for cm in self.component_models):
+            self.fitter_error = None
+            return
         kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
               if param['type'] == 'call'}
         init_kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
@@ -504,12 +516,37 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 fixed[p["name"]] = p["fixed"]
 
             # Have to initialize with fixed dictionary
-            temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed,
+            if m["model_type"] == 'Spline1D':
+                temp_model = MODELS[m["model_type"]](name=m["id"],
+                                                **initial_values, **m.get("model_kwargs", {}))
+            else:
+                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed,
                                                  **initial_values, **m.get("model_kwargs", {}))
 
             temp_models.append(temp_model)
 
         return temp_models
+    
+    def _enforce_spline_mode(self):
+        has_spline = any(cm.get('model_type') == 'Spline1D' for cm in self.component_models)
+        if has_spline:
+            # lock to smoothing fitter only
+            self.fitter_items = [
+                {"label": "SplineSmoothingFitter", "value": "SplineSmoothingFitter"}
+            ]
+            self.fitter_selected = "SplineSmoothingFitter"
+            self.fitter_parameters = self.all_fitters["SplineSmoothingFitter"]
+            # optional: splines are 1-D only in this ticket
+            if self.cube_fit:
+                self.cube_fit = False
+        else:
+            # restore the normal fitter menu
+            self.fitter_items = [
+                {"label": k, "value": k} for k in self.all_fitters.keys()
+            ]
+            if self.fitter_selected not in self.all_fitters:
+                self.fitter_selected = "LevMarLSQFitter"
+            self.fitter_parameters = self.all_fitters[self.fitter_selected]
 
     def create_model_component(self, model_component=None, model_component_label=None,
                                poly_order=None):
@@ -563,6 +600,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._update_comp_label_default()
         self._update_model_equation_default()
         self._update_fitter_error()
+        self._enforce_spline_mode()
 
     def _initialize_model_component(self, model_comp, comp_label, poly_order=None):
         new_model = {"id": comp_label, "model_type": model_comp,
@@ -587,9 +625,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         elif model_comp == "BlackBody":
             new_model["model_kwargs"] = {"output_units": self._units["y"],
                                          "bounds": {"scale": (0.0, None)}}
+        elif model_comp == "Spline1D":
+            new_model["model_kwargs"] = {"degree": 3}
 
         initial_values = {}
-        for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
+        for param_name in self._safe_param_names(model_cls, new_model["model_kwargs"]):
             # access the default value from the model class itself
             default_param = getattr(model_cls, param_name, _EmptyParam(0))
             default_units = self._param_units(param_name,
@@ -682,7 +722,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # need to loop over parameters again as the initializer may have overridden
         # the original default value. However, if we toggled cube_fit, we may need to override
-        for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
+        for param_name in self._safe_param_names(model_cls, new_model["model_kwargs"]):
             param_quant = getattr(initialized_model, param_name)
             new_model["parameters"].append({"name": param_name,
                                             "value": param_quant.value,
@@ -823,6 +863,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         del self._initialized_models[model_component_label]
         self._update_comp_label_default()
         self._update_model_equation_default()
+        self._enforce_spline_mode()
 
     def get_model_component(self, model_component_label, parameter=None):
         """
@@ -1164,6 +1205,19 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     param_units[key].get(param_name, None))
 
         return parameters_cube
+    
+    def _safe_param_names(self, model_cls, model_kwargs):
+        """Return a list of parameter names or [] if non-iterable (e.g., Spline1D)."""
+        try:
+            names = get_model_parameters(model_cls, model_kwargs)
+        except Exception:
+            return []
+        if isinstance(names, (list, tuple)):
+            return list(names)
+        try:
+            return list(names)  # will TypeError for 'property'
+        except Exception:
+            return []
 
     def get_model_parameters(self, model_label=None, x=None, y=None):
         """
@@ -1200,12 +1254,25 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def vue_remove_model(self, event):
         self.remove_model_component(event)
 
-    @observe('model_equation')
+    @observe('model_equation', 'cube_fit')
     def _check_model_equation_invalid(self, event=None):
         # Length is a dummy check to test the infrastructure
         if len(self.model_equation) == 0:
             self.model_equation_invalid_msg = 'model equation is required.'
             return
+
+        # Disable computing model if cube_fit is active and 
+        # Spline1D component is present in the equation
+        if self.cube_fit:
+            id_to_type = {cm['id']: cm.get('model_type') for cm in self.component_models}
+            has_spline_in_eq = any(id_to_type.get(name) == 'Spline1D'
+                                   for name in self.equation_components)
+            if has_spline_in_eq:
+                self.model_equation_invalid_msg = (
+                    "Spline1D is only supported for 1D Data. "
+                    "Disable 'Cube fit' to use Spline1D."
+                )
+                return
 
         # check for valid operators
         eq = self.model_equation.replace(' ', '')
@@ -1343,6 +1410,43 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
               if param['type'] == 'call'}
         init_kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
                    if param['type'] == 'init'}
+
+        # Spline1D has no scalar parameters, so skip specutils.fit_lines
+        if len(models_to_fit) == 1 and models_to_fit[0].__class__.__name__ == "Spline1D":
+            s_val = kw.get("s", 1.0)
+            smoother = fitting.SplineSmoothingFitter()
+
+            x_arr = self.dataset.get_selected_spectrum(use_display_units=True).spectral_axis.value
+            y_arr = self.dataset.get_selected_spectrum(use_display_units=True).flux.value
+
+            fitted_model = smoother(models_to_fit[0], x_arr, y_arr, s=s_val)
+            try:
+                fitted_model.name = models_to_fit[0].name
+            except Exception:
+                pass
+            
+            # build output Spectrum1D-like result with units preserved
+            spec = self.dataset.get_selected_spectrum(use_display_units=True)
+            y_fit = fitted_model(x_arr) * spec.flux.unit
+            fitted_spectrum = spec.__class__(flux=y_fit, spectral_axis=spec.spectral_axis, wcs=getattr(spec, "wcs", None))
+
+            self._fitted_model = fitted_model
+            self._fitted_spectrum = fitted_spectrum
+            if add_data:
+                self._fitted_models[self.results_label] = fitted_model
+                self.add_results.add_results_from_plugin(fitted_spectrum, format='1D Spectrum')
+                if self.residuals_calculate:
+                    self.add_results.add_results_from_plugin(
+                        spec - fitted_spectrum,
+                        label=self.residuals.value,
+                        format='1D Spectrum',
+                        replace=False,
+                    )
+            self._set_default_results_label()
+            if self.residuals_calculate:
+                return fitted_model, fitted_spectrum, spec - fitted_spectrum
+            return fitted_model, fitted_spectrum
+        # all other models (besides Spline1D)
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 masked_spectrum,
