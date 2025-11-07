@@ -147,13 +147,12 @@ filterwarnings = [
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
     "ignore::DeprecationWarning:glue",
-    "ignore:.*The TestRunner class will be deprecated in a future version.*",
-    "ignore:.*The TestRunnerBase class will be deprecated in a future version.*",
+    "ignore:.*The TestRunner class.*:astropy.utils.exceptions.AstropyDeprecationWarning",
+    "ignore:.*The TestRunnerBase class.*:astropy.utils.exceptions.AstropyDeprecationWarning",
     "ignore:The load_data function is deprecated.*",
     # This warning will not fail in CI, but causes issues running tests locally on Windows so test locally if considering
     # removing this in the future
     "ignore:Importing display from IPython.core.display is deprecated since IPython 7.14, please import from IPython.display",
-    "ignore::astropy.utils.exceptions.AstropyDeprecationWarning"
 ]
 
 
