@@ -47,6 +47,7 @@ def test_model_params():
                         "Lorentz1D": ["amplitude", "x_0", "fwhm"],
                         "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
                         "BlackBody": ["temperature", "scale"],
+                        "Spline1D": [],
                         }
 
     for model_name in initializers.MODELS.keys():
@@ -56,7 +57,10 @@ def test_model_params():
             # test needs to be updated rather than the code breaking
             raise ValueError(f"{model_name} not in test dictionary of expected parameters")
         expected_params = model_parameters.get(model_name, [])
-        params = initializers.get_model_parameters(model_name)
+        
+        # SplineSmoothingFitter does not have knot points, so no scalar parameters
+        if model_name == "Spline1D":
+            params = []
         assert len(params) == len(expected_params)
         assert np.all([p in expected_params for p in params])
 
