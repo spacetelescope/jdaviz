@@ -265,6 +265,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return str(u.K)
         elif param == "scale" and model_type == "BlackBody":
             return str("")
+        elif param == "degree" and model_type == "Spline1D":
+            return str("")
+        elif param == "s" and model_type == "Spline1D":
+            return str("")
 
         return self._units["y"] if param in y_params else self._units["x"]
 
