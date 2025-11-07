@@ -336,10 +336,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if not hasattr(self, '_viewer'):
             return
 
-        # Avoid triggering this logic during app startup
-        if not hasattr(self, '_viewer'):
-            return
-
         # Have to count subsets + data, but not the invisible WCS layers in Imviz
         n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers if not
                             (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
@@ -368,10 +364,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     layer.zorder = new_zorder
 
             self.prevent_layer_items_recursion = False
-
-            # Only trigger if the order expected in the message and the actual order differ
-            if label_order != [li['label'] for li in self.layer_items if li['is_subset'] is not None]:  # noqa
-                self.layer._update_items()
 
             # Only trigger if the order expected in the message and the actual order differ
             if label_order != [li['label'] for li in self.layer_items if li['is_subset'] is not None]:  # noqa
