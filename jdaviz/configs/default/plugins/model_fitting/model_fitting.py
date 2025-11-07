@@ -631,7 +631,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             new_model["model_kwargs"] = {"degree": 3}
 
         initial_values = {}
-        for param_name in self._safe_param_names(model_cls, new_model["model_kwargs"]):
+        for param_name in self._safe_parameter_names(model_cls, new_model["model_kwargs"]):
             # access the default value from the model class itself
             default_param = getattr(model_cls, param_name, _EmptyParam(0))
             default_units = self._param_units(param_name,
@@ -724,7 +724,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # need to loop over parameters again as the initializer may have overridden
         # the original default value. However, if we toggled cube_fit, we may need to override
-        for param_name in self._safe_param_names(model_cls, new_model["model_kwargs"]):
+        for param_name in self._safe_parameter_names(model_cls, new_model["model_kwargs"]):
             param_quant = getattr(initialized_model, param_name)
             new_model["parameters"].append({"name": param_name,
                                             "value": param_quant.value,
@@ -1208,7 +1208,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         return parameters_cube
 
-    def _safe_param_names(self, model_cls, model_kwargs):
+    def _safe_parameter_names(self, model_cls, model_kwargs):
         """Return a list of parameter names or [] if non-iterable (e.g., Spline1D)."""
         try:
             names = get_model_parameters(model_cls, model_kwargs)
