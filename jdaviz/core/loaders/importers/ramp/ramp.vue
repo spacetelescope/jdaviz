@@ -12,6 +12,11 @@
     ></plugin-select>
 
     <j-plugin-section-header>Ramp Cube</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Display the cumulative samples up-the-ramp at a given group number g<sub>i</sub>, as one image per group.</j-docs-link>
+    </v-row>
+
+
     <plugin-auto-label
       :value.sync="data_label_value"
       :default="data_label_default"
@@ -43,6 +48,10 @@
     ></plugin-viewer-create-new>
 
     <j-plugin-section-header>Difference Cube</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Display the difference image between group numbers g<sub>i</sub>-g<sub>i-1</sub>, e.g., only the counts accumulated between the previous group and the current group.</j-docs-link>
+    </v-row>
+
     <plugin-auto-label
       :value.sync="diff_data_label_value"
       :default="diff_data_label_default"
@@ -73,6 +82,10 @@
     ></plugin-viewer-create-new>
 
     <j-plugin-section-header>Ramp Integration</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Display the cumulative counts per group as a function of group number; for a single pixel, or for a statistic (mean, median, min, max, sum) of the counts for groups of pixels.</j-docs-link>
+    </v-row>
+
     <plugin-switch
       :value.sync="auto_extract"
       label="Extract Ramp Integration"
