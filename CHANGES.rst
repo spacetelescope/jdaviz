@@ -134,10 +134,16 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
+  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
 Imviz
 ^^^^^
 - In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
   The button is now hidden when no selection is made. [#3888]
+
+- The Model Fitting plugin now allows the user to select a fitter from a dropdown menu, with the default being the
+  ``astropy.modeling.fitting.TRFLSQFitter``. [#3720]
 
 Mosviz
 ^^^^^^

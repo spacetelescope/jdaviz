@@ -157,7 +157,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                 ' non-finite values (e.g., NaNs)',
                                 'calc_uncertainties': 'Whether the covariance matrix should be'
                                 ' computed and set in fit_info',
-                                's': 'Smoothing factor for SplineSmoothingFitter',}
+                                's': 'Smoothing factor for SplineSmoothingFitter', }
         self.all_fitters = {
             'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
                                             {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
@@ -176,11 +176,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
             'SplineSmoothingFitter' : {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},  # noqa
                                                       {'name': 's', 'value': 1.0, 'type': 'call'},
-                                                      {'name': 'degree', 'value': 3.0, 'type': 'call'},]},
-        }
+                                                      {'name': 'degree', 'value': 3.0, 'type': 'call'},]},  # noqa
+            }
         self.fitter_items = [{"label": k, "value": k} for k in self.all_fitters.keys()]
         self.fitter_selected = "LevMarLSQFitter"
-        # allows for Spline1D case, updating the fitters in the 
+        # allows for Spline1D case, updating the fitters in the
         # dropdown depending on the model selected
         self.fitter_component = SelectPluginComponent(self,
                                                       items='fitter_items',
@@ -517,16 +517,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             # Have to initialize with fixed dictionary
             if m["model_type"] == 'Spline1D':
-                temp_model = MODELS[m["model_type"]](name=m["id"],
-                                                **initial_values, **m.get("model_kwargs", {}))
+                temp_model = MODELS[m["model_type"]](name=m["id"], **initial_values, **m.get("model_kwargs", {}))  # noqa
             else:
-                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed,
-                                                 **initial_values, **m.get("model_kwargs", {}))
+                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed, **initial_values, **m.get("model_kwargs", {}))  # noqa
 
             temp_models.append(temp_model)
 
         return temp_models
-    
+
     def _enforce_spline_mode(self):
         has_spline = any(cm.get('model_type') == 'Spline1D' for cm in self.component_models)
         if has_spline:
@@ -1205,7 +1203,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     param_units[key].get(param_name, None))
 
         return parameters_cube
-    
+
     def _safe_param_names(self, model_cls, model_kwargs):
         """Return a list of parameter names or [] if non-iterable (e.g., Spline1D)."""
         try:
@@ -1261,7 +1259,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.model_equation_invalid_msg = 'model equation is required.'
             return
 
-        # Disable computing model if cube_fit is active and 
+        # Disable computing model if cube_fit is active and
         # Spline1D component is present in the equation
         if self.cube_fit:
             id_to_type = {cm['id']: cm.get('model_type') for cm in self.component_models}
@@ -1424,11 +1422,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 fitted_model.name = models_to_fit[0].name
             except Exception:
                 pass
-            
+
             # build output Spectrum1D-like result with units preserved
             spec = self.dataset.get_selected_spectrum(use_display_units=True)
             y_fit = fitted_model(x_arr) * spec.flux.unit
-            fitted_spectrum = spec.__class__(flux=y_fit, spectral_axis=spec.spectral_axis, wcs=getattr(spec, "wcs", None))
+            fitted_spectrum = spec.__class__(flux=y_fit, spectral_axis=spec.spectral_axis, wcs=getattr(spec, "wcs", None))  # noqa
 
             self._fitted_model = fitted_model
             self._fitted_spectrum = fitted_spectrum
