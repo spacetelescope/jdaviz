@@ -132,6 +132,9 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fixes backwards compatibility of `specviz.load_data(..., load_as_list=True)` to default to
+  loading all sources, if `source` is not passed. [#3884]
+
 Specviz2d
 ^^^^^^^^^
 - Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
