@@ -57,8 +57,9 @@ def test_model_params():
             # test needs to be updated rather than the code breaking
             raise ValueError(f"{model_name} not in test dictionary of expected parameters")
         expected_params = model_parameters.get(model_name, [])
-        
+
         # SplineSmoothingFitter does not have knot points, so no scalar parameters
+        # Will need to account for if SplineExactKnotsFitter is implemented
         if model_name == "Spline1D":
             params = []
         assert len(params) == len(expected_params)
