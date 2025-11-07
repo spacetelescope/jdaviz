@@ -119,10 +119,16 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
+  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
 Imviz
 ^^^^^
 - Adds ability to use Ra/Dec if there is no `sky_centroid` column in a catalog loaded from file
   for the Catalog Search plugin, so exported catalog tables can be loaded into the app. [#3841]
+
+- The Model Fitting plugin now allows the user to select a fitter from a dropdown menu, with the default being the
+  ``astropy.modeling.fitting.TRFLSQFitter``. [#3720]
 
 Mosviz
 ^^^^^^
