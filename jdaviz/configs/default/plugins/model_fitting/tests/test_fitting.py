@@ -877,3 +877,45 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     model = specviz_helper.app.data_collection['model'].get_object(Spectrum)
     assert model.flux.unit == 'W / (Hz m2)'
     assert_allclose(model.flux, spec.flux.to('W / (Hz m2)'), rtol=1e-2)
+
+
+def test_spline(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    mf = specviz_helper.plugins['Model Fitting']._obj
+    mf.create_model_component('Spline1D')
+
+    mf.fitter_component.selected = 'SplineSmoothingFitter'
+    mf.calculate_fit(add_data=True)
+
+    # ensure that Spline1D is not combined with any other model components
+    mf.create_model_component('Const1D')
+    assert mf.model_equation_invalid_msg == (
+                    "Spline1D cannot be combined with other model components."
+                )
+    mf.remove_model_component('C')
+
+    # ensure Spline1D is computed on 1D data
+    mf.cube_fit = True
+    assert mf.model_equation_invalid_msg == (
+                    "Spline1D is only supported for 1D Data. "
+                    "Disable 'Cube fit' to use Spline1D."
+                )
+    mf.cube_fit = False
+
+    # ensure that only SplineSmoothingFitter fitter component can be used
+    # with the Spline1D model parameter
+    assert mf.fitter_component.choices == ['SplineSmoothingFitter']
+
+    mf.remove_model_component('S')
+    mf.create_model_component('Const1D')
+
+    # make sure fitter components update when Spline1D model component is removed
+    assert mf.fitter_component.choices == ['TRFLSQFitter',
+                                           'DogBoxLSQFitter',
+                                           'LMLSQFitter',
+                                           'LevMarLSQFitter',
+                                           'LinearLSQFitter',
+                                           'SLSQPLSQFitter',
+                                           'SimplexLSQFitter',
+                                           'SplineSmoothingFitter']
