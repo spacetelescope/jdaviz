@@ -519,7 +519,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             for p in m["parameters"]:
                 fixed[p["name"]] = p["fixed"]
 
-            # Have to initialize with fixed dictionary
             if m["model_type"] == 'Spline1D':
                 temp_model = MODELS[m["model_type"]](name=m["id"], **initial_values, **m.get("model_kwargs", {}))  # noqa
             else:
@@ -532,17 +531,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _enforce_spline_mode(self):
         has_spline = any(cm.get('model_type') == 'Spline1D' for cm in self.component_models)
         if has_spline:
-            # lock to smoothing fitter only
             self.fitter_items = [
                 {"label": "SplineSmoothingFitter", "value": "SplineSmoothingFitter"}
             ]
             self.fitter_selected = "SplineSmoothingFitter"
             self.fitter_parameters = self.all_fitters["SplineSmoothingFitter"]
-            # optional: splines are 1-D only in this ticket
             if self.cube_fit:
                 self.cube_fit = False
         else:
-            # restore the normal fitter menu
             self.fitter_items = [
                 {"label": k, "value": k} for k in self.all_fitters.keys()
             ]
@@ -980,6 +976,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # model units may have changed, need to re-check their compatibility with display units
         self._check_model_component_compat()
+        self._enforce_spline_mode()
 
         # return user-friendly info on revised model
         return self.get_model_component(model_component_label)
@@ -1303,6 +1300,22 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 msg = "are not existing model components."
             self.model_equation_invalid_msg = f'{", ".join(components_not_existing)} {msg}'
             return
+
+        has_spline = any(cm.get('model_type') == 'Spline1D' for cm in self.component_models)
+        if has_spline:
+            if any(cm.get('model_type') != 'Spline1D' for cm in self.component_models):
+                self.model_equation_invalid_msg = (
+                    "Spline1D cannot be combined with other model components."
+                )
+                return
+
+            comps_in_eq = [c for c in self.equation_components if c]
+            if len(comps_in_eq) != 1:
+                self.model_equation_invalid_msg = (
+                    "When using Spline1D, the equation must contain only the Spline1D component."
+                )
+                return
+
         components_not_valid = [comp for comp in self.equation_components
                                 if comp not in self.valid_model_components]
         if len(components_not_valid):
