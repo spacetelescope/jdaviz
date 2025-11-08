@@ -18,8 +18,9 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage,
-                                CatalogSelectClickEventMessage, FootprintSelectClickEventMessage)
-from jdaviz.core.marks import SpectralLine, FootprintOverlay
+                                CatalogSelectClickEventMessage, FootprintSelectClickEventMessage,
+                                RegionSelectClickEventMessage)
+from jdaviz.core.marks import SpectralLine, FootprintOverlay, RegionOverlay
 
 __all__ = []
 
@@ -445,6 +446,31 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
     def is_visible(self):
         return any(
             isinstance(m, FootprintOverlay) and m.visible
+            for m in self.viewer.figure.marks
+            )
+
+
+@viewer_tool
+class SelectRegionOverlay(CheckableTool, HubListener):
+    icon = os.path.join(ICON_DIR, 'footprint_select.svg')
+    tool_id = 'jdaviz:selectregion'
+    action_text = 'Select/identify region overlay'
+    tool_tip = 'Select/identify region overlay'
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event,
+                                       events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        msg = RegionSelectClickEventMessage(data, sender=self)
+        self.viewer.session.hub.broadcast(msg)
+
+    def is_visible(self):
+        return any(
+            isinstance(m, RegionOverlay) and m.visible
             for m in self.viewer.figure.marks
             )
 
