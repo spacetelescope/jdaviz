@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from traitlets import Unicode
+from traitlets import Unicode, Bool
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -18,12 +18,16 @@ class ObjectResolver(BaseResolver, CustomToolbarToggleMixin):
     requires_api_support = True
 
     object_repr = Unicode("").tag(sync=True)
+    is_wcs_linked = Bool(False).tag(sync=True)
     footprint_select_icon = Unicode(read_icon(os.path.join(
         ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self._object = None
         super().__init__(*args, **kwargs)
+
+        if self.app is not None:
+            self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
 
         def custom_toolbar(viewer):
             if hasattr(self, 'observation_table') and self.observation_table is not None:
@@ -37,6 +41,11 @@ class ObjectResolver(BaseResolver, CustomToolbarToggleMixin):
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
         super().toggle_custom_toolbar()
+
+    def vue_link_by_wcs(self, *args):
+        """Link images by WCS using the Imviz helper."""
+        self.app._jdaviz_helper.link_data(align_by='wcs')
+        self.is_wcs_linked = True
 
     @property
     def user_api(self):

@@ -19,6 +19,19 @@
     :api_hints_enabled="api_hints_enabled"
     :server_is_remote="server_is_remote"
   >
+    <v-alert v-if="!is_wcs_linked" type="warning" dense style="margin-bottom: 12px">
+      <v-row no-gutters align="center">
+        <v-col>
+          <strong>Images are not linked by WCS.</strong> Link images to view footprints properly.
+        </v-col>
+        <v-col cols="auto" style="margin-left: 8px;">
+          <v-btn small color="primary" @click="link_by_wcs">
+            Link by WCS
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-alert>
+
     <v-alert type="info">
       Access the user API in a notebook cell to import a python object.
     </v-alert>
