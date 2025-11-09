@@ -32,6 +32,15 @@
       </v-row>
     </v-alert>
 
+    <j-custom-toolbar-toggle
+      v-if="is_wcs_linked && observation_table_populated"
+      :enabled="custom_toolbar_enabled"
+      text="footprint selection tools"
+      @toggle-custom-toolbar="toggle_custom_toolbar"
+    >
+      <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>
+    </j-custom-toolbar-toggle>
+    
     <v-alert type="info">
       Access the user API in a notebook cell to import a python object.
     </v-alert>

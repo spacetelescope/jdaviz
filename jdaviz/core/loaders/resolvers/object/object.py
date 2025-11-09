@@ -1,14 +1,20 @@
 import os
 from pathlib import Path
+
+import numpy as np
+from glue.core import HubListener
+from glue_jupyter.common.toolbar_vuetify import read_icon
+from regions import PolygonSkyRegion
 from traitlets import Unicode, Bool
 
-from glue_jupyter.common.toolbar_vuetify import read_icon
-
+from jdaviz.core.events import RegionSelectClickEventMessage, SnackbarMessage
+from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.template_mixin import CustomToolbarToggleMixin
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
 
 
 def closest_point_on_segment(px, py, x1, y1, x2, y2):
@@ -92,8 +98,9 @@ def find_closest_polygon_mark(px, py, marks):
 
     return closest_idx
 
+
 @loader_resolver_registry('object')
-class ObjectResolver(BaseResolver, CustomToolbarToggleMixin):
+class ObjectResolver(BaseResolver, CustomToolbarToggleMixin, HubListener):
     template_file = __file__, "object.vue"
     default_input = 'object'
     requires_api_support = True
@@ -105,14 +112,19 @@ class ObjectResolver(BaseResolver, CustomToolbarToggleMixin):
 
     def __init__(self, *args, **kwargs):
         self._object = None
+        self._footprint_marks = []
+        # Mapping observation idx to list of marks
+        self._footprint_groups = {}
         super().__init__(*args, **kwargs)
 
         if self.app is not None:
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
+            self.app.hub.subscribe(self, RegionSelectClickEventMessage,
+                                   handler=self._on_region_select)
+
         def custom_toolbar(viewer):
-            if hasattr(self, 'observation_table') and self.observation_table is not None:
-                if 's_region' in self.observation_table.headers_avail:
-                    return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'
+            if self.observation_table_populated and 's_region' in self.observation_table.headers_avail:
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
@@ -120,12 +132,123 @@ class ObjectResolver(BaseResolver, CustomToolbarToggleMixin):
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
-        super().toggle_custom_toolbar()
+        if not self.custom_toolbar_enabled:
+            self._display_observation_footprints()
+            super().toggle_custom_toolbar()
+        else:
+            super().toggle_custom_toolbar()
+            self._remove_observation_footprints()
 
     def vue_link_by_wcs(self, *args):
-        """Link images by WCS using the Imviz helper."""
+        """Link images by WCS."""
         self.app._jdaviz_helper.link_data(align_by='wcs')
         self.is_wcs_linked = True
+
+    def _on_region_select(self, msg):
+        if not self._footprint_marks:
+            return
+
+        click_x, click_y = msg.x, msg.y
+        selected_idx = find_closest_polygon_mark(click_x, click_y, self._footprint_marks)
+
+        if selected_idx is not None:
+            # Get selected rows from the table
+            currently_selected = set()
+            if hasattr(self, 'observation_table') and self.observation_table is not None:
+                for row in self.observation_table.selected_rows:
+                    idx = self.observation_table.items.index(row)
+                    currently_selected.add(idx)
+
+            # Toggle behavior
+            if selected_idx in currently_selected:
+                currently_selected.discard(selected_idx)
+                for mark in self._footprint_groups.get(selected_idx, []):
+                    mark.selected = False
+            else:
+                currently_selected.add(selected_idx)
+                if selected_idx in self._footprint_groups:
+                    for mark in self._footprint_groups[selected_idx]:
+                        mark.selected = True
+
+            # Update the table selection
+            if hasattr(self, 'observation_table') and self.observation_table is not None:
+                if currently_selected:
+                    self.observation_table.select_rows(sorted(list(currently_selected)))
+                else:
+                    # Clear selection
+                    self.observation_table.selected_rows = []
+
+    def _display_observation_footprints(self):
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+
+        viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+        wcs = getattr(viewer.state.reference_data, 'coords', None)
+
+        successfully_displayed = 0
+        new_marks = []
+
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+
+            region = stcs_string2region(s_region_str)
+            pixel_region = region.to_pixel(wcs)
+            x, y = pixel_region.vertices.x, pixel_region.vertices.y
+
+            mark = RegionOverlay(
+                viewer,
+                f"ObsTable_{idx}",
+                x=x, y=y,
+                fill_opacities=[0],
+                label=f"ObsTable_{idx}",
+                selected=False
+            )
+            new_marks.append(mark)
+            self._footprint_marks.append(mark)
+            self._footprint_groups[idx] = [mark]
+            successfully_displayed += 1
+
+        # Add all marks at once
+        if new_marks:
+            viewer.figure.marks = list(viewer.figure.marks) + new_marks
+
+    def _remove_observation_footprints(self):
+        if not self._footprint_marks:
+            return
+
+        viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+        current_marks = list(viewer.figure.marks)
+
+        for mark in self._footprint_marks:
+            if mark in current_marks:
+                current_marks.remove(mark)
+
+        viewer.figure.marks = current_marks
+        self._footprint_marks = []
+        self._footprint_groups = {}
+
+    def on_observation_select_changed(self, msg=None):
+        """Override to sync footprint selection when table rows are selected."""
+        super().on_observation_select_changed(msg)
+
+        if not self._footprint_groups:
+            return
+
+        selected_indices = set()
+        for row in self.observation_table.selected_rows:
+            idx = self.observation_table.items.index(row)
+            selected_indices.add(idx)
+
+        # Update footprint marks based on selection
+        for idx, marks in self._footprint_groups.items():
+            selected = idx in selected_indices
+            for mark in marks:
+                mark.selected = selected
 
     @property
     def user_api(self):
