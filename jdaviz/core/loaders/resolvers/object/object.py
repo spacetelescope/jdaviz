@@ -11,6 +11,87 @@ from jdaviz.core.template_mixin import CustomToolbarToggleMixin
 from jdaviz.core.tools import ICON_DIR
 
 
+def closest_point_on_segment(px, py, x1, y1, x2, y2):
+    """
+    Find the closest points on a line segment to a given point.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    x1, y1 : numpy.ndarray
+        Coordinates of the starting points of the segments.
+    x2, y2 : numpy.ndarray
+        Coordinates of the ending points of the segments.
+
+    Returns
+    -------
+    closest_xs : numpy.ndarray
+        The x coordinates of the closest points on the segments.
+    closest_ys : numpy.ndarray
+        The y coordinates of the closest points on the segments.
+
+    """
+
+    dx, dy = x2 - x1, y2 - y1
+    denominator = dx ** 2 + dy ** 2
+    # Calculate t: how far along the segment the projection of the point falls
+    t = ((px - x1) * dx + (py - y1) * dy) / np.where(denominator == 0, 1, denominator)
+    t = np.where(denominator == 0, 0, t)  # Handle zero-length segments
+    t = np.clip(t, 0, 1)
+    closest_xs = x1 + t * dx
+    closest_ys = y1 + t * dy
+    return closest_xs, closest_ys
+
+
+def find_closest_polygon_mark(px, py, marks):
+    """
+    Find the closest mark to a click point and return its observation index.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    marks : list of RegionOverlay
+        List of mark objects to compare against the given point.
+
+    Returns
+    -------
+    closest_idx : int or None
+        The observation index of the closest mark, or None if no marks.
+    """
+    min_dist = float('inf')
+    closest_idx = None
+
+    for mark in marks:
+        x_coords = np.array(mark.x)
+        y_coords = np.array(mark.y)
+
+        if len(x_coords) == 0 or len(y_coords) == 0:
+            continue
+
+        x1 = x_coords
+        x2 = np.roll(x_coords, -1)
+        y1 = y_coords
+        y2 = np.roll(y_coords, -1)
+
+        closest_xs, closest_ys = closest_point_on_segment(px, py, x1, y1, x2, y2)
+        dist = (closest_xs - px)**2 + (closest_ys - py)**2
+
+        min_idx = np.argmin(dist)
+        min_dist_for_this_mark = dist[min_idx]
+
+        if min_dist_for_this_mark < min_dist:
+            min_dist = min_dist_for_this_mark
+            # Extract observation index from overlay name format
+            closest_idx = int(mark._overlay.split('_')[-1])
+
+    return closest_idx
+
 @loader_resolver_registry('object')
 class ObjectResolver(BaseResolver, CustomToolbarToggleMixin):
     template_file = __file__, "object.vue"
@@ -28,7 +109,6 @@ class ObjectResolver(BaseResolver, CustomToolbarToggleMixin):
 
         if self.app is not None:
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
-
         def custom_toolbar(viewer):
             if hasattr(self, 'observation_table') and self.observation_table is not None:
                 if 's_region' in self.observation_table.headers_avail:
