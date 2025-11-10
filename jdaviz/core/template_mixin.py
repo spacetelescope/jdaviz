@@ -2095,8 +2095,10 @@ class LayerSelect(SelectPluginComponent):
                             and hasattr(layer.state, 'bitmap_visible')
                             and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
-                    else:
+                    elif hasattr(layer.state, 'color'):
                         colors.append(layer.state.color)
+                    else:
+                        colors.append("#000000")  # default to black
 
                     visibilities.append(getattr(layer.state, 'bitmap_visible', True)
                                         and getattr(layer, 'visible' if not is_sonified else 'audible'))  # noqa
@@ -2156,8 +2158,10 @@ class LayerSelect(SelectPluginComponent):
                 for layer in new_viewer.state.layers:
                     if is_wcs_only(layer.layer):
                         continue
-                    layer.add_callback('color', self._update_items)
-                    layer.add_callback('zorder', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.add_callback('color', self._update_items)
+                    if hasattr(layer, 'zorder'):
+                        layer.add_callback('zorder', self._update_items)
                     if hasattr(layer, 'cmap'):
                         layer.add_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -2173,8 +2177,10 @@ class LayerSelect(SelectPluginComponent):
                 continue
             for layer in viewer.state.layers:
                 if layer.layer.label == new_subset_label and is_not_wcs_only(layer.layer):
-                    layer.add_callback('color', self._update_items)
-                    layer.add_callback('visible', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.add_callback('color', self._update_items)
+                    if hasattr(layer, 'visible'):
+                        layer.add_callback('visible', self._update_items)
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_items({'source': 'subset_added'})
 
@@ -2205,7 +2211,8 @@ class LayerSelect(SelectPluginComponent):
                     # _on_layers_changed whenever the color changes
                     # TODO: find out if this conflicts with another color change event
                     #  and is causing the lag in the color picker
-                    layer.add_callback('color', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.add_callback('color', self._update_items)
                     if hasattr(layer, 'cmap'):
                         layer.add_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -4322,9 +4329,11 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_catalog(data):
+            return data.meta.get('_importer', '') == 'CatalogImporter'
+
         def is_catalog_or_image_not_spectrum(data):
-            return (is_image_not_spectrum(data)
-                    or data.meta.get('_importer', '') == 'CatalogImporter')
+            return is_catalog(data) or is_image_not_spectrum(data)
 
         def is_image_not_spectrum(data):
             if not is_image(data):
