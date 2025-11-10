@@ -12,7 +12,7 @@ dependencies = [
     "traitlets>=5.0.5",
     "bqplot>=0.12.45,<0.13",
     "glue-core>=1.23.0",
-    "glue-jupyter>=0.23.0",
+    "glue-jupyter>=0.25.0",
     "echo>=0.11.0",
     "ipykernel>=6.19.4",
     "ipyvue>=1.6",
@@ -42,7 +42,8 @@ dependencies = [
     # pyvo pin can be removed once astroquery's pyvo dep pulls in 1.5.3
     "pyvo>=1.5.3",
     "s3fs>=2024.10.0",
-    "joblib>=1.3.0"
+    "joblib>=1.3.0",
+    "ipyvuedraggable>=1.1.0",
 ]
 license-files = ["LICENSE.rst", "licenses/IPYFILECHOOSER_LICENSE.rst", "licenses/IMEXAM_LICENSE.txt", "licenses/GINGA_LICENSE.txt", "licenses/TEMPLATE_LICENCE.rst"]
 dynamic = [
@@ -147,8 +148,8 @@ filterwarnings = [
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
     "ignore::DeprecationWarning:glue",
-    "ignore:.*The TestRunner class will be deprecated in a future version.*",
-    "ignore:.*The TestRunnerBase class will be deprecated in a future version.*",
+    "ignore:.*The TestRunner class.*:astropy.utils.exceptions.AstropyDeprecationWarning",
+    "ignore:.*The TestRunnerBase class.*:astropy.utils.exceptions.AstropyDeprecationWarning",
     "ignore:The load_data function is deprecated.*",
     # This warning will not fail in CI, but causes issues running tests locally on Windows so test locally if considering
     # removing this in the future
