@@ -838,13 +838,11 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     # TODO: Investigate why the results for the parameter values are so off
     #  depending on which version of python/numpy/astropy/something is used in CI
 
-    # assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7509.7789948601,
-    #                 atol=2)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7509.7789948601)
     assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 8.574080196915292e-06)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'Jy'
-    # assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -47.02434655704804,
-    #                 atol=48)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -47.02434655704804)
     assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 0.060226470283192564)
 
     # Create third model component with flux unit W / (Hz m2)
@@ -853,9 +851,9 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     mf.create_model_component()
 
     # Make sure unit conversion is correct for model component params
-    # assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7.509778994860101e-23)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7.509778994860101e-23)
     assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 8.574080196915293e-32)
-    # assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -4.702434655704804e-25)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -4.702434655704804e-25)
     assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 6.022647028319256e-28)
 
     with warnings.catch_warnings():
@@ -864,11 +862,11 @@ def test_model_equation_with_different_flux_units(specviz_helper):
 
     # Make sure the slope units are updating correctly
     assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'W / (Angstrom Hz m2)'
-    # assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7.509778994860101e-23)
+    assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], -7.509778994860101e-23)
     assert_allclose(mf._obj.component_models[0]['parameters'][0]['std'], 5.716053467911415e-32)
     # Make sure the intercept values and units are updating correctly
     assert mf._obj.component_models[0]['parameters'][1]['unit'] == 'W / (Hz m2)'
-    # assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -4.702434655704804e-25)
+    assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], -4.702434655704804e-25)
     assert_allclose(mf._obj.component_models[0]['parameters'][1]['std'], 4.0150980188795e-28)
 
     model = specviz_helper.app.data_collection['model']
