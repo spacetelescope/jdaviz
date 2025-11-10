@@ -25,6 +25,7 @@ class Rampviz(CubeConfigHelper):
         super().__init__(*args, **kwargs)
 
         self.cube_cache = {}
+        self.load = self._load
 
     @deprecated(since="4.5", alternative="load")
     def load_data(self, data, data_label=None, **kwargs):
