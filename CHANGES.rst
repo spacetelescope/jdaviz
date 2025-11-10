@@ -12,6 +12,9 @@ Bug Fixes
 
 - Fixes an issue where loader widgets were showing outside the app when the entire app was wrapped in a solara component. [#3877]
 
+- Fixes a bug in parser preference where sometimes an input would go through the specutils parser
+  instead of the fits parser. [#3869]
+
 Cubeviz
 ^^^^^^^
 
