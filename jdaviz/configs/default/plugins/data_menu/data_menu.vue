@@ -163,55 +163,58 @@
               dense
             >
               <div>
-              <v-list-item
-                v-for="item in layer_items"
-                class="layer-select"
-              >
-                <v-list-item-icon>
-                  <j-layer-viewer-icon-stylized
-                      :label="item.label"
-                      :icon="item.icon"
-                      :visible="item.visible"
-                      :is_subset="item.is_subset"
-                      :colors="item.colors"
-                      :linewidth="item.linewidth"
-                      :cmap_samples="cmap_samples"
-                      btn_style="margin-bottom: 0px"
-                      disabled="true"
-                    />
-                </v-list-item-icon>
-                <v-list-item-content>
-                  <span style="display: inline-block">
-                    <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                    <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                    <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                    {{ item.label }}
-                  </span>
-                </v-list-item-content>
-                <v-list-item-action>
-                  <j-tooltip
-                    v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
-                    tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
+                <draggable v-model="layer_items">
+                  <v-list-item
+                    v-for="item in layer_items"
+                    :key="item.label"
+                    class="layer-select"
                   >
-                    <v-btn icon disabled>
-                      <v-icon>mdi-eye-off</v-icon>
-                    </v-btn>
-                  </j-tooltip>
-                  <j-tooltip
-                    v-else-if="viewer_supports_visible_toggle"
-                    :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                    >
-                    <plugin-switch
-                      :value="item.visible"
-                      @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                      @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                      @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                      :api_hints_enabled="false"
-                      :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                    />
-                  </j-tooltip>
-                </v-list-item-action>
-              </v-list-item>
+                    <v-list-item-icon>
+                      <j-layer-viewer-icon-stylized
+                          :label="item.label"
+                          :icon="item.icon"
+                          :visible="item.visible"
+                          :is_subset="item.is_subset"
+                          :colors="item.colors"
+                          :linewidth="item.linewidth"
+                          :cmap_samples="cmap_samples"
+                          btn_style="margin-bottom: 0px"
+                          disabled="true"
+                        />
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <span style="display: inline-block">
+                        <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                        <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
+                        <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                        {{ item.label }}
+                      </span>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <j-tooltip
+                        v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
+                        tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
+                      >
+                        <v-btn icon disabled>
+                          <v-icon>mdi-eye-off</v-icon>
+                        </v-btn>
+                      </j-tooltip>
+                      <j-tooltip
+                        v-else-if="viewer_supports_visible_toggle"
+                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                      >
+                        <plugin-switch
+                          :value="item.visible"
+                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                          :api_hints_enabled="false"
+                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                        />
+                      </j-tooltip>
+                    </v-list-item-action>
+                  </v-list-item>
+                </draggable>
               </div>
             </v-list-item-group>
             <hover-api-hint

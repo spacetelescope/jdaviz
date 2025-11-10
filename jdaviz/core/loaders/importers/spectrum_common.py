@@ -96,7 +96,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 except Exception:  # nosec
                     pass
 
-        del self.spectrum
+        if hasattr(self, 'spectrum'):
+            del self.spectrum
 
     @property
     def supported_flux_ndim(self):

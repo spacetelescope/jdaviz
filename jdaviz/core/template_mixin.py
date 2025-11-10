@@ -352,6 +352,8 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
         for name, Resolver in loader_resolver_registry.members.items():
+            if self.app.state.settings.get("server_is_remote") and name in ('file', 'file drop'):
+                continue
             loader = Resolver(app=self.app,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
