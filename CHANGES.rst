@@ -36,7 +36,7 @@ Cubeviz
 - ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
-  deprecated and will open the new sidebar.  [#3748]
+  deprecated and will open the new sidebar.  [#3748, #3872]
 
 Imviz
 ^^^^^
