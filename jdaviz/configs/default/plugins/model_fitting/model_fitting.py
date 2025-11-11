@@ -175,7 +175,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
             'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
             'SplineSmoothingFitter' : {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},  # noqa
-                                                      {'name': 'smoothing_factor', 'value': 1.0, 'type': 'call'},
+                                                      {'name': 'smoothing_factor', 'value': 1.0, 'type': 'call'},  # noqa
                                                       {'name': 'degree', 'value': 3.0, 'type': 'call'},]},  # noqa
             }
         self.fitter_items = [{"label": k, "value": k} for k in self.all_fitters.keys()]
