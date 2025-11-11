@@ -36,17 +36,32 @@ def file_drop_resolver(deconfigged_helper):
             return resolver
 
 
-class TestFileDropResolverInitialization:
+class TestFileDropResolverBasic:
     """
-    Test FileDropResolver initialization.
+    Test FileDropResolver basics.
     """
     def test_init_basic(self, file_drop_resolver):
         """
-        Test basic initialization of traitlets in FileDropResolver.
+        Test basic initialization of traitlets and some properties
+        in FileDropResolver.
         """
         assert file_drop_resolver._file_info is None
         assert file_drop_resolver.progress == 100
         assert file_drop_resolver.nfiles == 0
+
+        # Test that user_api returns LoaderUserApi instance.
+        api = file_drop_resolver.user_api
+
+        # Check that LoaderUserApi was created
+        assert isinstance(api, LoaderUserApi)
+
+        assert file_drop_resolver.is_valid is True
+        assert file_drop_resolver.default_label is None
+
+        # Test that _on_total_progress updates progress trait.
+        for value in [0, 25, 50, 75, 100]:
+            file_drop_resolver._on_total_progress(value)
+            assert file_drop_resolver.progress == value
 
     def test_init_creates_widget(self, deconfigged_helper):
         """
@@ -68,42 +83,18 @@ class TestFileDropResolverInitialization:
                 assert 'on_total_progress' in call_kwargs
                 assert 'on_file' in call_kwargs
 
+    @pytest.mark.parametrize(('filename', 'result'),
+                             [('test_data.csv', 'test_data'),
+                              ('my.data.file.fits', 'my.data.file'),
+                              ('datafile', 'datafile')])
+    def test_default_label_with_file(self, file_drop_resolver, filename, result):
+        """
+        Test default_label returns file name with different conventions.
+        """
+        file_drop_resolver._file_info = {'name': filename,
+                                         'data': b'some data'}
 
-def test_file_drop_resolver_init(file_drop_resolver):
-    """
-    Test that FileDropResolver initializes correctly.
-    """
-    # Test that user_api returns LoaderUserApi instance.
-    api = file_drop_resolver.user_api
-
-    # Check that LoaderUserApi was created
-    assert isinstance(api, LoaderUserApi)
-
-    assert file_drop_resolver.is_valid is True
-    assert file_drop_resolver.default_label is None
-
-
-@pytest.mark.parametrize(('filename', 'result'),
-                         [('test_data.csv', 'test_data'),
-                          ('my.data.file.fits', 'my.data.file'),
-                          ('datafile', 'datafile')])
-def test_default_label_with_file(file_drop_resolver, filename, result):
-    """
-    Test default_label returns file name with different conventions.
-    """
-    file_drop_resolver._file_info = {'name': filename,
-                                     'data': b'some data'}
-
-    assert file_drop_resolver.default_label == result
-
-
-def test_on_total_progress_updates(file_drop_resolver):
-    """
-    Test that _on_total_progress updates progress trait.
-    """
-    for value in [0, 25, 50, 75, 100]:
-        file_drop_resolver._on_total_progress(value)
-        assert file_drop_resolver.progress == value
+        assert file_drop_resolver.default_label == result
 
 
 _FILE_INFO = [{'name': 'file1.csv', 'data': b'data1'},
