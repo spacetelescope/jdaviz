@@ -963,8 +963,11 @@ def wildcard_match(obj, value, choices=None):
             obj.multiselect = True
             value = wildcard_match_list_of_str(choices, value)
 
-    # If only '*' wildcards are left meaning that nothing matched, return empty selection
-    if all(vi == '*' for v in value for vi in v):
+    # If only '*' wildcards are left meaning that nothing matched, return empty selection.
+    # Basically, '*' of empty should return empty---we don't want to error out. For other
+    # patterns like 'foo*' not matching anything, we use the error to notify the user of no match.
+    # e.g. value == ['*'] or ['*', '*'], choices == [] -> match == [] (rather than ['*'])
+    if all(vi == '*' for v in value for vi in v):  # List of strings
         value = [] if getattr(obj, 'multiselect', False) else ''
 
     return value
