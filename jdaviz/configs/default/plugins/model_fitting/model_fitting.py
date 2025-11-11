@@ -1315,6 +1315,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     "When using Spline1D, the equation must contain only the Spline1D component."
                 )
                 return
+            self.model_equation_invalid_msg = ""
 
         components_not_valid = [comp for comp in self.equation_components
                                 if comp not in self.valid_model_components]
