@@ -937,7 +937,7 @@ def wildcard_match(obj, value, choices=None):
     def wildcard_match_list_of_str(internal_choices, internal_value):
         matched = []
         for v in internal_value:
-            if isinstance(v, str) and any(has_wildcard(v) for v in value):
+            if isinstance(v, str) and any(has_wildcard(vi) for vi in v):
                 # Check for wildcard matches
                 matched.extend(wildcard_match_str(internal_choices, v))
             else:
