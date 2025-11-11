@@ -179,8 +179,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config != 'imviz':
             self.dataset.add_filter(valid_cube_datasets)
 
-        # self._cube_wave = u.Quantity(0, u.m)  # TODO: Make sure 0 'fails' gracefully.
-
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
@@ -516,6 +514,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # TODO: performance improvements, change to listen to slice change event
         slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
         if slice_plugin is not None:
+            # Alternatively, could use: slice_plugin._obj.flux_viewer.slice
+            #  assuming the flux_viewer is the correct reference.
             return np.argmin(abs(slice_plugin._obj.valid_values - slice_plugin.value))
 
     def _calc_background_median(self, reg, data=None):
