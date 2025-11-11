@@ -2,7 +2,7 @@
   <div>
   <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
-      v-if="mode=='select'"
+      v-if="mode=='select' || mode===undefined"
       :menu-props="{ left: true }"
       attach
       :items="items"

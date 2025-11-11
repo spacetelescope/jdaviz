@@ -26,7 +26,9 @@ New Features
 
 - AIDA methods setting and retrieving rotation of imviz viewer [#3834]
 
-- Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853]
+- Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853, #3870]
+
+- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
 
 Cubeviz
 ^^^^^^^
@@ -34,7 +36,7 @@ Cubeviz
 - ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748, #3861]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
-  deprecated and will open the new sidebar.  [#3748]
+  deprecated and will open the new sidebar.  [#3748, #3872]
 
 Imviz
 ^^^^^
@@ -115,6 +117,11 @@ Bug Fixes
 - Add support for all valid astropy table write formats. [#3822]
 
 - Fix a bug with initializing component models in Model Fitting when Cube Fit was toggle on. [#3857]
+
+- Fixes an issue where loader widgets were showing outside the app when the entire app was wrapped in a solara component. [#3877]
+
+- Fixes a bug in parser preference where sometimes an input would go through the specutils parser
+  instead of the fits parser. [#3869]
 
 Cubeviz
 ^^^^^^^

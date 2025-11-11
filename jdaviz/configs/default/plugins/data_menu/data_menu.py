@@ -18,6 +18,8 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
+import ipyvuedraggable
+
 __all__ = ['DataMenu']
 
 
@@ -109,6 +111,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Trigger the loading of ipyvuedraggable in the frontend in notebook and Solara.
+        ipyvuedraggable.Draggable()
         self._viewer = viewer
         self._during_select_sync = False
 
@@ -160,6 +165,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                              if k in SUBSET_TOOL_IDS.values()]
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
+        self.prevent_layer_items_recursion = False
 
     @property
     def user_api(self):
@@ -326,6 +332,43 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     @observe('layer_selected', 'layer_items')
     def _layers_changed(self, event={}):
+        # Avoid triggering this logic during app startup
+        if not hasattr(self, '_viewer'):
+            return
+
+        # Have to count subsets + data, but not the invisible WCS layers in Imviz
+        n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers if not
+                            (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
+                             lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
+
+        if (event.get('name') == 'layer_items' and len(event['new']) == n_layers
+                and isinstance(event.get('owner'), DataMenu)):
+            # Setting layer.zorder causes a change to layer_items, which causes this function to be
+            # immediately called again. Use this flag to prevent that.
+            if self.prevent_layer_items_recursion:
+                return
+
+            self.prevent_layer_items_recursion = True
+
+            label_order = [li['label'] for li in event["new"] if li['is_subset'] is not None]
+            not_in_order = [layer.layer.label for layer in self._viewer.layers if layer.layer.label
+                            not in label_order]
+
+            for layer in self._viewer.layers:
+                if layer.layer.label in label_order:
+                    new_zorder = len(label_order) - label_order.index(layer.layer.label)
+                else:
+                    new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
+
+                if new_zorder != layer.zorder:
+                    layer.zorder = new_zorder
+
+            self.prevent_layer_items_recursion = False
+
+            # Only trigger if the order expected in the message and the actual order differ
+            if label_order != [li['label'] for li in self.layer_items if li['is_subset'] is not None]:  # noqa
+                self.layer._update_items()
+
         if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
             return
         if not self._during_select_sync:
