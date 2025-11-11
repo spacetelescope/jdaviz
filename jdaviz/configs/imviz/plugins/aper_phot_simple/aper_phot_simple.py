@@ -1109,11 +1109,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
-        # for item in self.dataset.selected_dc_item:
-        #     print(item.meta)
-            #print('native data cls', item.meta['_native_data_cls'])
-            #print('importer', item.meta['_importer'])
-        # print('meta', self.dataset.selected_dc_item.meta)
 
         try:
             if self.multiselect:
