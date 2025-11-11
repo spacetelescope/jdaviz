@@ -128,6 +128,9 @@ Imviz
 - Adds ability to use Ra/Dec if there is no `sky_centroid` column in a catalog loaded from file
   for the Catalog Search plugin, so exported catalog tables can be loaded into the app. [#3841]
 
+- In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
+  The button is now hidden when no selection is made. [#3888]
+
 Mosviz
 ^^^^^^
 
