@@ -147,15 +147,6 @@ filterwarnings = [
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
     "ignore:Parsing dates involving a day of month without a year:DeprecationWarning", # ipykernel<7
     "ignore::DeprecationWarning:glue",
-    "ignore::DeprecationWarning:asteval",
-    "ignore:::specutils.spectra.spectrum1d",
-    "ignore:use_side_effect is deprecated:DeprecationWarning",
-    "ignore:.*is deprecated and will be removed in Pillow 13.*",
-    "ignore:.*The TestRunner class will be deprecated in a future version.*",
-    "ignore:.*The TestRunnerBase class will be deprecated in a future version.*",
-    # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
-    # and https://github.com/scipy/scipy/pull/19275
-    "ignore:.*numpy\\.core.*:DeprecationWarning",
     "ignore:The load_data function is deprecated.*",
     "ignore:.*Set OBSGEO-L to.*",
     "ignore:.*path should be string, bytes, os.PathLike or integer, not ndarray",
