@@ -38,7 +38,7 @@ Cubeviz
 - ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
-  deprecated and will open the new sidebar.  [#3748]
+  deprecated and will open the new sidebar.  [#3748, #3872]
 
 Imviz
 ^^^^^
@@ -121,6 +121,9 @@ Bug Fixes
 - Fix a bug with initializing component models in Model Fitting when Cube Fit was toggle on. [#3857]
 
 - Fixes an issue where loader widgets were showing outside the app when the entire app was wrapped in a solara component. [#3877]
+
+- Fixes a bug in parser preference where sometimes an input would go through the specutils parser
+  instead of the fits parser. [#3869]
 
 Cubeviz
 ^^^^^^^

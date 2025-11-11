@@ -79,7 +79,7 @@ class JdavizViewerMixin(WithCache):
     @property
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
-        if not isinstance(self, TableViewer):
+        if not (isinstance(self, TableViewer) and self.__class__.__name__ == 'MosvizTableViewer'):
             # TODO: eventually remove data_labels_loaded
             # and data_labels_visible once deprecation period passes
             expose = ['data_labels_loaded', 'data_labels_visible', 'data_menu']
@@ -527,7 +527,7 @@ class JdavizViewerMixin(WithCache):
 
     @property
     def _ref_or_id(self):
-        reference = self.reference
+        reference = getattr(self, 'reference', None)
         if reference is not None:
             return reference
         return self.reference_id
@@ -1105,3 +1105,19 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
     _state_cls = HistogramViewerState
 
     _native_mark_classnames = ('Bars', 'BarsGL')
+
+
+@viewer_registry("table-viewer", label="table")
+class JdavizTableViewer(JdavizViewerMixin, TableViewer):
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['jdaviz:viewer_clone']
+                   ]
+
+    def __init__(self, session, *args, **kwargs):
+        super().__init__(session, *args, **kwargs)
+
+        # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
+        self.widget_table.scrollable = True
+
+        self.data_menu._obj.dataset.add_filter('is_catalog')

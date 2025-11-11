@@ -192,7 +192,16 @@
                     </v-list-item-content>
                     <v-list-item-action>
                       <j-tooltip
-                        :tooltipcontent="api_hints_enabled ? '' : 'Toggle visibility'"
+                        v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
+                        tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
+                      >
+                        <v-btn icon disabled>
+                          <v-icon>mdi-eye-off</v-icon>
+                        </v-btn>
+                      </j-tooltip>
+                      <j-tooltip
+                        v-else-if="viewer_supports_visible_toggle"
+                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
                       >
                         <plugin-switch
                           :value="item.visible"
@@ -209,9 +218,9 @@
               </div>
             </v-list-item-group>
             <hover-api-hint
-              v-if="api_hints_enabled" 
-              :hover_api_hint.sync="hover_api_hint" 
-              :lock_hover_api_hint.sync="lock_hover_api_hint" 
+              v-if="api_hints_enabled"
+              :hover_api_hint.sync="hover_api_hint"
+              :lock_hover_api_hint.sync="lock_hover_api_hint"
               :icons="icons"
             />
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
@@ -354,7 +363,7 @@
   .viewer-label-container {
     position: absolute;
     right: 0;
-    z-index: 1;
+    z-index: 999;
     width: 24px;
   }
   .viewer-label {

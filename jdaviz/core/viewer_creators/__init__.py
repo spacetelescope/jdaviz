@@ -4,3 +4,4 @@ from .spectrum2d.spectrum2d import *  # noqa
 from .image.image import *  # noqa
 from .histogram.histogram import *  # noqa
 from .scatter.scatter import *  # noqa
+from .table.table import *  # noqa
