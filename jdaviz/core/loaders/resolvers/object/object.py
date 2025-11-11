@@ -4,10 +4,9 @@ from pathlib import Path
 import numpy as np
 from glue.core import HubListener
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from regions import PolygonSkyRegion
 from traitlets import Unicode, Bool
 
-from jdaviz.core.events import RegionSelectClickEventMessage, SnackbarMessage
+from jdaviz.core.events import RegionSelectClickEventMessage
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.loaders.resolvers import BaseResolver
@@ -123,8 +122,8 @@ class ObjectResolver(BaseResolver, CustomToolbarToggleMixin, HubListener):
                                    handler=self._on_region_select)
 
         def custom_toolbar(viewer):
-            if self.observation_table_populated and 's_region' in self.observation_table.headers_avail:
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'
+            if self.observation_table_populated and 's_region' in self.observation_table.headers_avail:  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
