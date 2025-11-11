@@ -30,8 +30,6 @@ New Features
 
 - Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
 
-- Disable cloning viewers in Specviz and Specviz2d. [#3876]
-
 Cubeviz
 ^^^^^^^
 
@@ -124,6 +122,8 @@ Bug Fixes
 
 - Fixes a bug in parser preference where sometimes an input would go through the specutils parser
   instead of the fits parser. [#3869]
+
+- Disable cloning viewers in Specviz and Specviz2d. [#3876]
 
 Cubeviz
 ^^^^^^^
