@@ -11,7 +11,7 @@ except ImportError:
     Level1bModel = None
 
 try:
-    from roman_datamodels.datamodels import RampModel
+    from roman_datamodels.datamodels import RampModel, ScienceRawModel
 except ImportError:
     RampModel = None
 
@@ -237,7 +237,7 @@ class RampImporter(BaseImporterToDataCollection):
             })
 
             ramp_data = self.input.data[integration]
-        elif isinstance(self.input, RampModel):
+        elif isinstance(self.input, (RampModel, ScienceRawModel)):
             meta = standardize_roman_metadata(self.input)
             ramp_data = self.input.data
         elif isinstance(self.input, fits.HDUList):
@@ -266,7 +266,7 @@ class RampImporter(BaseImporterToDataCollection):
             meta = {}
             ramp_data = self.input
         else:
-            raise NotImplementedError("Unsupported input for RampImporter")
+            raise NotImplementedError(f"Unsupported input for RampImporter: {type(self.input)}")
 
         # last axis is the group axis, first two are spatial axes:
         diff_data = np.vstack([
