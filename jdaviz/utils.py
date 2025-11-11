@@ -937,7 +937,7 @@ def wildcard_match(obj, value, choices=None):
     def wildcard_match_list_of_str(internal_choices, internal_value):
         matched = []
         for v in internal_value:
-            if isinstance(v, str) and any(has_wildcard(v) for v in value):
+            if isinstance(v, str) and has_wildcard(v):
                 # Check for wildcard matches
                 matched.extend(wildcard_match_str(internal_choices, v))
             else:
@@ -947,9 +947,9 @@ def wildcard_match(obj, value, choices=None):
         # Remove duplicates while preserving order
         return list(dict.fromkeys(matched))
 
-    if not choices:
+    if choices is None:
         choices = getattr(obj, 'choices', None)
-        if not choices:
+        if choices is None:
             return value
 
     # any works for both str and iterable
@@ -962,6 +962,10 @@ def wildcard_match(obj, value, choices=None):
         elif isinstance(value, (list, tuple)):
             obj.multiselect = True
             value = wildcard_match_list_of_str(choices, value)
+
+    # If only wildcards are left meaning that nothing matched, return empty selection
+    if all(has_wildcard(vi) for v in value for vi in v):
+        value = [] if getattr(obj, 'multiselect', False) else ''
 
     return value
 
