@@ -352,7 +352,7 @@ class ViewerClone(Tool):
         self.viewer.clone_viewer()
 
     def is_visible(self):
-        return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d', 'mosviz']
+        return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d', 'cubeviz', 'mosviz']
 
 
 @viewer_tool
