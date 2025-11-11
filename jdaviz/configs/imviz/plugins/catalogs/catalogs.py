@@ -53,6 +53,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
     max_sources = IntHandleEmpty(1000).tag(sync=True)
+    row_selected_count = Int(0).tag(sync=True)
 
     # setting the default table headers and values
     _default_table_values = {
@@ -115,6 +116,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
             # resetting values
             self.results_available = False
             self.number_of_results = 0
+            self.row_selected_count = 0
 
             if self._marker_name in self.app.data_collection.labels:
                 # all markers are removed from the viewer
@@ -128,6 +130,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
 
         def clear_selected_table_callback():
             self.table.select_none()
+            self.row_selected_count = 0
 
         self.table_selected._clear_callback = clear_selected_table_callback
         self.table_selected_widget = 'IPY_MODEL_'+self.table_selected.model_id
@@ -466,6 +469,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
 
     def _table_selection_changed(self, msg={}):
         selected_rows = self.table.selected_rows
+        self.row_selected_count = len(selected_rows)
 
         self.table_selected._clear_table()
         for selected_row in selected_rows:
