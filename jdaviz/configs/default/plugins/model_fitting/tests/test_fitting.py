@@ -805,6 +805,11 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     # Make sure unit conversion is correct for model component params
     assert_allclose(mf._obj.component_models[0]['parameters'][0]['value'], 0.015)
     assert_allclose(mf._obj.component_models[0]['parameters'][1]['value'], 0.002)
+
+    # Set initial values to be exact answer to test if reestimate works
+    mf._obj.component_models[0]['parameters'][0]['value'] = 0.002
+    mf._obj.component_models[0]['parameters'][1]['value'] = 0.001
+
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters*')
         mf.calculate_fit(add_data=True)
