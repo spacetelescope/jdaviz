@@ -45,6 +45,10 @@ Imviz
 
 - Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769]
 
+- Added interactive footprint selection feature for MAST observations in Imviz.
+  Users can now display observation footprints from ``s_region`` data as overlays
+  on the image viewer and click on footprints to select/deselect observations. [#3889]
+
 Mosviz
 ^^^^^^
 
