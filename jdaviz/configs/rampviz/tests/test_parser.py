@@ -1,4 +1,6 @@
 
+import pytest
+
 
 def test_load_rectangular_ramp(rampviz_helper, jwst_level_1b_rectangular_ramp):
     rampviz_helper.load_data(jwst_level_1b_rectangular_ramp)
@@ -32,3 +34,13 @@ def test_load_level_1_and_2(
 
     layers = rampviz_helper.app.get_viewer('level-2').layers
     assert len(layers) == 1
+
+
+@pytest.mark.remote_data
+@pytest.parameterize("url", [
+    "https://stsci.box.com/shared/static/vklnig8f7fflyfwrfa9t6vpl5vnoi5mb.asdf",
+    "mast:JWST/product/jw01181003001_08201_00003_mirimage_uncal.fits",
+    "mast:JWST/product/jw03383196001_04201_00004_nis_uncal.fits"
+])
+def test_load_example_notebook_data(rampviz_helper, url):
+    rampviz_helper.load(url)
