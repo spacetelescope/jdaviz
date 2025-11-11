@@ -963,8 +963,8 @@ def wildcard_match(obj, value, choices=None):
             obj.multiselect = True
             value = wildcard_match_list_of_str(choices, value)
 
-    # If only wildcards are left meaning that nothing matched, return empty selection
-    if all(has_wildcard(vi) for v in value for vi in v):
+    # If only '*' wildcards are left meaning that nothing matched, return empty selection
+    if all(vi == '*' for v in value for vi in v):
         value = [] if getattr(obj, 'multiselect', False) else ''
 
     return value

@@ -135,10 +135,10 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     assert match_result == ''
 
     # No choices in obj or provided, but multiselect is an attribute and false,
-    # all values are wildcards
+    # not all wildcards are *
     test_obj.multiselect = False
     match_result = wildcard_match(test_obj, '?*', choices=[])
-    assert match_result == ''
+    assert match_result == '?*'
 
     # Multiselect is not an attribute yet so we retain the value of the input string
     match_result = wildcard_match(test_obj, '*', choices=default_choices[0])
@@ -151,9 +151,14 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     assert match_result == []
 
     # No choices in obj or provided, but multiselect is an attribute
-    # and set to True inside the function, value is a list of wildcards
-    match_result = wildcard_match(test_obj, ['*', '?', '*?'], choices=[])
+    # and set to True inside the function, value is a list of * wildcards
+    match_result = wildcard_match(test_obj, ['*', '*'], choices=[])
     assert match_result == []
+
+    # No choices in obj or provided, but multiselect is an attribute
+    # and set to True inside the function, value list contains non-* wildcards
+    match_result = wildcard_match(test_obj, ['*', '?', '*?'], choices=[])
+    assert match_result == ['*', '?', '*?']
 
     # Add choices attribute, no matches
     test_obj.choices = default_choices
