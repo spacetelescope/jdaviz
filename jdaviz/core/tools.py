@@ -351,6 +351,9 @@ class ViewerClone(Tool):
     def activate(self):
         self.viewer.clone_viewer()
 
+    def is_visible(self):
+        return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d', 'cubeviz', 'mosviz']
+
 
 @viewer_tool
 class SelectLine(CheckableTool, HubListener):
