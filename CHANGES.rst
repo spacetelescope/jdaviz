@@ -47,7 +47,7 @@ Imviz
 
 - Added interactive footprint selection feature for MAST observations in Imviz.
   Users can now display observation footprints from ``s_region`` data as overlays
-  on the image viewer and click on footprints to select/deselect observations. [#3889]
+  on the image viewer and click on footprints to select/deselect observations. [#3894]
 
 Mosviz
 ^^^^^^
