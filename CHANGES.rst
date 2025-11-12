@@ -123,7 +123,7 @@ Bug Fixes
 - Fixes a bug in parser preference where sometimes an input would go through the specutils parser
   instead of the fits parser. [#3869]
 
-- Disable cloning viewers in Specviz and Specviz2d. [#3876]
+- Disable cloning viewers in Specviz, Specviz2d, Cubeviz, and Mosviz. [#3876]
 
 Cubeviz
 ^^^^^^^
