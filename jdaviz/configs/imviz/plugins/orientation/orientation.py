@@ -760,7 +760,14 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
     # Re-use current reference data.
     else:
-        refdata, iref = get_reference_image_data(app)
+        # If 'Default Orientation' is loaded, reference that image
+        if base_wcs_layer_label in app.data_collection:
+            refdata = app.data_collection[base_wcs_layer_label]
+            iref = app.data_collection.index(refdata)
+        # otherwise, re-use the current image. Note: this will degrade performance
+        else:
+            refdata, iref = get_reference_image_data(app)
+
         # App just loaded, nothing yet, so take first image.
         if refdata is None:
             refdata = image_viewers[0].first_loaded_data
