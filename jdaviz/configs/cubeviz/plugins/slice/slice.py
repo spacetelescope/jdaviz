@@ -220,7 +220,8 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
             viewer._set_slice_indicator_value(self.value)
         # in the case where x_att is changed after the viewer is added or data is loaded, we
         # may still need to initialize the location to a valid value (with a valid x_att)
-        viewer.state.add_callback('x_att', self._initialize_location)
+        if hasattr(viewer.state, 'x_att'):
+            viewer.state.add_callback('x_att', self._initialize_location)
 
     def _on_viewer_added(self, msg):
         viewer = self.app.get_viewer(msg.viewer_id)

@@ -436,3 +436,25 @@ def test_histogram_viewer(deconfigged_helper):
     po.xatt = 'Right Ascension'
 
     assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'Right Ascension'  # noqa
+
+
+def test_table_viewer(deconfigged_helper):
+    deconfigged_helper.app.state.catalogs_in_dc = True
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = _make_catalog(with_units=True)
+    ldr.format = 'Catalog'
+    ldr.importer.viewer.create_new = 'Table'
+    ldr.load()
+
+    assert len(deconfigged_helper.viewers) == 1  # Table viewer created upon load
+    tv = deconfigged_helper.viewers['Table']
+    assert len(tv._obj.glue_viewer.layers) == 1
+
+    # create another viewer through viewer creator
+    vc = deconfigged_helper.new_viewers['Table']
+    vc.dataset.select_all()
+    nv = vc()
+
+    assert len(deconfigged_helper.viewers) == 2
+    assert len(nv._obj.glue_viewer.layers) == 1

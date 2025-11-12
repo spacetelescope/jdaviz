@@ -39,6 +39,7 @@
       <v-divider></v-divider>
 
       <v-list-item
+        v-if="subset_tools.length > 0"
         v-for="mode_item in subset_edit_modes"
         @mouseover="() => {hover_mode=mode_item.glue_name}"
         @mouseleave="() => {if (hover_mode == mode_item.glue_name) {hover_mode=''}}"
