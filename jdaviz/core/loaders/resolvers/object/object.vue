@@ -18,29 +18,12 @@
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :server_is_remote="server_is_remote"
+    :is_wcs_linked="is_wcs_linked"
+    :footprint_select_icon="footprint_select_icon"
+    :custom_toolbar_enabled="custom_toolbar_enabled"
+    @link-by-wcs="link_by_wcs"
+    @toggle-custom-toolbar="toggle_custom_toolbar"
   >
-    <v-alert v-if="!is_wcs_linked" type="warning" dense style="margin-bottom: 12px">
-      <v-row no-gutters align="center">
-        <v-col>
-          <strong>Images are not linked by WCS.</strong> Link images to view footprints properly.
-        </v-col>
-        <v-col cols="auto" style="margin-left: 8px;">
-          <v-btn small color="primary" @click="link_by_wcs">
-            Link by WCS
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-alert>
-
-    <j-custom-toolbar-toggle
-      v-if="is_wcs_linked && observation_table_populated"
-      :enabled="custom_toolbar_enabled"
-      text="footprint selection tools"
-      @toggle-custom-toolbar="toggle_custom_toolbar"
-    >
-      <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>
-    </j-custom-toolbar-toggle>
-    
     <v-alert type="info">
       Access the user API in a notebook cell to import a python object.
     </v-alert>

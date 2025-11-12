@@ -24,7 +24,31 @@
           <slot/>
         </v-container>
 
-        <v-container>
+        <v-container style="padding-top: 0px">
+          <v-alert v-if="is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked" 
+                   type="warning" dense style="margin-bottom: 16px; margin-top: 8px">
+            <v-row no-gutters align="center">
+              <v-col>
+                <strong>Images are not linked by WCS.</strong> Link images to view footprints properly.
+              </v-col>
+              <v-col cols="auto" style="margin-left: 8px;">
+                <v-btn small color="primary" @click="$emit('link-by-wcs')">
+                  Link by WCS
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-alert>
+
+          <j-custom-toolbar-toggle
+            v-if="footprint_select_icon && treat_table_as_query && is_wcs_linked && observation_table_populated"
+            :enabled="custom_toolbar_enabled"
+            text="footprint selection tools"
+            @toggle-custom-toolbar="$emit('toggle-custom-toolbar')"
+            style="margin-bottom: 16px"
+          >
+            <img class="invert-if-dark" :src="footprint_select_icon" width="20"/>
+          </j-custom-toolbar-toggle>
+
           <!-- observation/file table -->
           <div v-if="parsed_input_is_query">
             <j-plugin-section-header>Query Results</j-plugin-section-header>
@@ -136,7 +160,9 @@ module.exports = {
           'target_items', 'target_selected',
           'format_items', 'format_selected',
           'importer_widget', 'server_is_remote',
-          'api_hints_enabled', 'valid_import_formats'],
+          'api_hints_enabled', 'valid_import_formats',
+          'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled']
+
 }
 </script>
 
