@@ -45,3 +45,12 @@ class ASDFParser(BaseParser):
                 UserWarning
             )
         return asdf.open(self.input)
+
+    def _cleanup(self):
+        if 'output' not in self.__dict__:
+            return
+        try:
+            self.output.close()
+        except Exception:  # nosec
+            pass
+        self._clear_cache('output')
