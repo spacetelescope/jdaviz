@@ -43,8 +43,17 @@ def test_load_level_1_and_2(
     "mast:JWST/product/jw03383196001_04201_00004_nis_uncal.fits"
 ])
 def test_load_example_notebook_data(rampviz_helper, url):
+    try:
+        import roman_datamodels  # noqa
+    except ImportError:
+        has_rdd = False
+    else:
+        has_rdd = True
     ldr = rampviz_helper.loaders['url']
     ldr.url = url
-    assert 'Ramp' in ldr.format.choices
-    ldr.format = 'Ramp'
-    ldr.load()
+    if has_rdd:
+        assert 'Ramp' in ldr.format.choices
+        ldr.format = 'Ramp'
+        ldr.load()
+    else:
+        assert 'Ramp' not in ldr.format.choices
