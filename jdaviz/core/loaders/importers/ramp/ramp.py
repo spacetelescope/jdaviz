@@ -14,6 +14,7 @@ try:
     from roman_datamodels.datamodels import RampModel, ScienceRawModel
 except ImportError:
     RampModel = None
+    ScienceRawModel = None
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_importer_registry, viewer_registry
