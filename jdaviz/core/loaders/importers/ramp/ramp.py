@@ -96,7 +96,7 @@ class RampImporter(BaseImporterToDataCollection):
                 return isinstance(viewer, tuple(classes))
             return viewer_filter
 
-        if isinstance(self.input, Level1bModel):
+        if Level1bModel is not None and isinstance(self.input, Level1bModel):
             integration_options = [str(i) for i in range(len(self.input.data))]
         elif isinstance(self.input, fits.HDUList):
             # TODO: this will need to be adjusted if adding extension selection
@@ -204,7 +204,15 @@ class RampImporter(BaseImporterToDataCollection):
             # NOTE: temporary during deconfig process
             return False
 
-        if not isinstance(self.input, (Level1bModel, RampModel, fits.HDUList, np.ndarray)):
+        # Filter out None types from isinstance check (optional dependencies)
+        valid_types = tuple(
+            t for t in (Level1bModel,
+                        RampModel, ScienceRawModel,
+                        fits.HDUList,
+                        np.ndarray)
+            if t is not None
+        )
+        if not isinstance(self.input, valid_types):
             return False
 
         if isinstance(self.input, fits.HDUList) and self.input[1].header['NAXIS'] != 4:
@@ -229,7 +237,7 @@ class RampImporter(BaseImporterToDataCollection):
         # NOTE: each if-statement should provide meta and ramp_data
         # if there is specific handling for flux_unit, ramp_data should
         # be a quantity with the unit attached
-        if isinstance(self.input, Level1bModel):
+        if Level1bModel is not None and isinstance(self.input, Level1bModel):
             meta = standardize_metadata({
                 key: value for key, value in self.input.to_flat_dict(
                     include_arrays=False)
@@ -238,7 +246,8 @@ class RampImporter(BaseImporterToDataCollection):
             })
 
             ramp_data = self.input.data[integration]
-        elif isinstance(self.input, (RampModel, ScienceRawModel)):
+        elif (RampModel is not None and ScienceRawModel is not None
+              and isinstance(self.input, (RampModel, ScienceRawModel))):
             meta = standardize_roman_metadata(self.input)
             ramp_data = self.input.data
         elif isinstance(self.input, fits.HDUList):
