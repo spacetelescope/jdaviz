@@ -74,7 +74,7 @@ all = [
     "strauss",
     "qtpy",
     "PySide6",
-    "roman_datamodels>=0.22.0"
+    "roman_datamodels>=0.26.0"
 ]
 test = [
     "pytest",
