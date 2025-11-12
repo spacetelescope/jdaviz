@@ -43,4 +43,8 @@ def test_load_level_1_and_2(
     "mast:JWST/product/jw03383196001_04201_00004_nis_uncal.fits"
 ])
 def test_load_example_notebook_data(rampviz_helper, url):
-    rampviz_helper.load(url)
+    ldr = rampviz_helper.loaders['url']
+    ldr.url = url
+    assert 'Ramp' in ldr.format.choices
+    ldr.format = 'Ramp'
+    ldr.load()
