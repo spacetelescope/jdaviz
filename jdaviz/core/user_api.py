@@ -71,9 +71,7 @@ class UserApiWrapper:
                                                 ViewerSelectCreateNew)
         if isinstance(exp_obj, ViewerSelectCreateNew):
             from jdaviz.utils import has_wildcard
-            if (value in exp_obj.choices + ['', []]
-                    or isinstance(value, list)
-                    or (isinstance(value, str) and has_wildcard(value))):
+            if value in exp_obj.choices + ['', []] or has_wildcard(value):
                 exp_obj.create_new.selected = ''
                 exp_obj.selected = value
                 return
