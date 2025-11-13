@@ -77,6 +77,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     assidx = FloatHandleEmpty(2.5).tag(sync=True)
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
     eln = Bool(True).tag(sync=True)
+    browser_sound = Bool(True).tag(sync=True)
     audfrqmin = FloatHandleEmpty(50).tag(sync=True)
     audfrqmax = FloatHandleEmpty(1000).tag(sync=True)
     use_pccut = Bool(True).tag(sync=True)
@@ -156,6 +157,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             "nsecs",
             "sample_rate",
             "is_playing",
+            "browser_sound",
             "volume",
         ]
         return PluginUserApi(self, expose)
