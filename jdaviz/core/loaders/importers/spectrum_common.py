@@ -437,12 +437,13 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             elif self.supported_flux_ndim == 2:
                 # TODO: handle detecting/selecting spectral axis?
                 flux = np.asarray(extension["spectrum"]).transpose()
+                flux_unit = _to_unit(meta["unit_flux"])
                 if extension['wavelength'] is not None:
                     wavelength = np.asarray(extension["wavelength"])
+                    wl_unit = _to_unit(meta["unit_wl"])
                 else:
                     wavelength = np.arange(flux.shape[1])
-                wl_unit = u.pix
-                flux_unit = _to_unit(meta["unit_flux"])
+                    wl_unit = u.pix
 
                 flux_error = None
                 variance = extension.get("variance", None)
