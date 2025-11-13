@@ -84,8 +84,8 @@ class TestLoadRegions(BaseRegionHandler):
         with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
             spectral_subsets = self.cubeviz.specviz.get_spectra()
         assert list(spectral_subsets.keys()) == ['Spectrum (sum)',
-                                                 'Spectrum (Subset 1, sum)',
                                                  'Spectrum (sum) (Subset 2)',
+                                                 'Spectrum (Subset 1, sum)',
                                                  'Spectrum (Subset 1, sum) (Subset 2)']
         for sp in spectral_subsets.values():
             assert isinstance(sp, Spectrum)
