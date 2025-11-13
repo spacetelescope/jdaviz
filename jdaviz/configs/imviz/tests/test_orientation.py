@@ -206,7 +206,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
 
         # Check that E-right still linked to default
         assert len(self.imviz.app.data_collection.external_links) == 3
-        assert self.imviz.app.data_collection.external_links[2].data1.label == "Default Orientation"
+        assert self.imviz.app.data_collection.external_links[2].data1.label == "Default orientation"
         assert self.imviz.app.data_collection.external_links[2].data2.label == "North-up, East-right"  # noqa: E501
 
         # Check that the subset got reparented and the angle is correct in the display
