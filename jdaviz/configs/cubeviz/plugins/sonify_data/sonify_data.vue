@@ -141,6 +141,15 @@
         Overall Volume
         <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
     </v-row>
+    <v-row>
+      <v-switch
+        v-model="browser_sound"
+        label="Allow Browser Sound"
+        hint="Whether to allow sound through the browser"
+        persistent-hint
+        ></v-switch>
+    </v-row>
+      
     <j-plugin-section-header>Add Results Options</j-plugin-section-header>
       <plugin-add-results
           :label.sync="results_label"
@@ -372,15 +381,18 @@ export default {
                 return;
             }
             console.log("is_playing changed to: ", newVal);
+	    console.log("is browser sound allowed?: ", this.browser_sound);
             const fadeTime = Tone.context.updateInterval;
             if (newVal) {
                 // Start transport if not already running, then start players and fade in
                 if (Tone.Transport.state !== 'started') {
                     Tone.Transport.start();
                 }
-                this.player1.start();
-                this.player2.start();
-                this.loopGain.gain.rampTo(1, fadeTime);
+		if (this.browser_sound) {
+                    this.player1.start();
+                    this.player2.start();
+                    this.loopGain.gain.rampTo(1, fadeTime);
+		}
             } else {
                 // Fade out, then schedule players and transport to stop
                 this.loopGain.gain.rampTo(0, fadeTime);
