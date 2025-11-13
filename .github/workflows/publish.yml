@@ -71,7 +71,7 @@ jobs:
       run: |
         cd ..
         python -m venv testenv
-        testenv/bin/pip install pytest pytest-astropy pytest-tornasync pytest-xdist jdaviz/dist/*.whl roman_datamodels
+        testenv/bin/pip install pytest pytest-astropy pytest-tornasync pytest-xdist jdaviz/dist/*.whl
         testenv/bin/pytest -p no:warnings -n auto --dist loadscope --astropy-header --remote-data --pyargs jdaviz
 
     # NOTE: Do not run this part for PR testing.
