@@ -452,7 +452,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
-               raise_error_for_overwrite=True, block=False):
+               raise_error_for_overwrite=True, block=True):
         """
         Export selected item(s)
 
@@ -641,18 +641,24 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if self._busy_doing_export:
             raise ValueError("Saving figure is still in progress. Use ` export(..., block=True)` to make sure the previous export is complete") # noqa
         self._busy_doing_export = True
+        self._last_error = None
 
         async def save_figure_task():
             try:
                 await self._save_figure_async(viewer, filename, filetype, show_dialog, width,
                                               height)
+            except BaseException as e:
+                logger.error(f"Error saving figure: {e}")
+                self._last_error = e
             finally:
                 self._busy_doing_export = False
         if block:
             event_loop = serial_task_run_task.get()
             logger.warning(f"event loop: {event_loop}, now creating task")
             event_loop.create_task(save_figure_task())
-            run_kernel_events_blocking_until(lambda: not self._busy_doing_export)
+            run_kernel_events_blocking_until(lambda: self._busy_doing_export)
+            if self._last_error is not None:
+                raise self._last_error
         else:
             task = asyncio.create_task(save_figure_task())
             create_serial_task(task)
