@@ -4,6 +4,8 @@ import time
 import logging
 import threading
 
+from jupyter_ui_poll import ui_events
+
 from typing import Callable
 import ipywidgets
 from asyncio import Queue
@@ -131,13 +133,6 @@ def run_kernel_events_blocking_until(
 
     Used to block in the notebook while we wait for a widget result.
     """
-    try:
-        from jupyter_ui_poll import ui_events
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError(
-            "jupyter_ui_poll is not installed. Please install it with `pip install jupyter_ui_poll`"
-        )
-
     start_time = time.time()
     with ui_events() as poll:
         while condition():

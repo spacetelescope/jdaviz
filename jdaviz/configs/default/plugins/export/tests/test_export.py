@@ -442,7 +442,7 @@ def test_ap_phot_plot_export(imviz_helper, ipython_kernel):
         export_plugin.export(overwrite=True)
 
 
-def test_figure_export(imviz_helper, ipython_kernel):
+async def test_figure_export(imviz_helper, ipython_kernel):
 
     async def mock_queue_screenshot_async(*args, **kwargs):
         return b"test"
