@@ -34,8 +34,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
-                ]
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot',
+                     'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']]
 
     default_class = None
     _state_cls = FreezableBqplotImageViewerState

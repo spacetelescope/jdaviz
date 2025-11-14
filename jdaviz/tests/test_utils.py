@@ -126,16 +126,39 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     default_choices = ['some choice', 'some good choice', 'good choice', 'maybe a bad choice']
     test_obj = FakeObject()
 
-    # No choices in obj or provided
+    # No choices in obj or provided (choices is None)
     match_result = wildcard_match(test_obj, '*')
     assert match_result == '*'
 
+    # No choices in obj or provided (choices is not None)
+    match_result = wildcard_match(test_obj, '*', choices=[])
+    assert match_result == ''
+
+    # No choices in obj or provided, but multiselect is an attribute and false,
+    # not all wildcards are *
+    test_obj.multiselect = False
+    match_result = wildcard_match(test_obj, '?*', choices=[])
+    assert match_result == '?*'
+
     # Multiselect is not an attribute yet so we retain the value of the input string
     match_result = wildcard_match(test_obj, '*', choices=default_choices[0])
-    assert match_result == '*'
+    assert match_result == ''
 
-    # Turn on allow_multiselect to check the actual matching functionality
     test_obj.allow_multiselect = True
+    # No choices in obj or provided, but multiselect is an attribute
+    # and set to True inside the function
+    match_result = wildcard_match(test_obj, '*', choices=[])
+    assert match_result == []
+
+    # No choices in obj or provided, but multiselect is an attribute
+    # and set to True inside the function, value is a list of * wildcards
+    match_result = wildcard_match(test_obj, ['*', '*'], choices=[])
+    assert match_result == []
+
+    # No choices in obj or provided, but multiselect is an attribute
+    # and set to True inside the function, value list contains non-* wildcards
+    match_result = wildcard_match(test_obj, ['*', '?', '*?'], choices=[])
+    assert match_result == ['*', '?', '*?']
 
     # Add choices attribute, no matches
     test_obj.choices = default_choices
@@ -149,6 +172,8 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
     test_selections = {
         # Test all
         '*': default_choices,
+        # Test no wildcard + wildcard
+        ('some', 'some*'): ['some'] + default_choices[:2],
         # Test repeats
         ('*', '* good *'): default_choices,
         # Test single selection

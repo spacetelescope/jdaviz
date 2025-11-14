@@ -2026,10 +2026,10 @@ class LayerSelect(SelectPluginComponent):
             return self.app._get_assoc_data_parent(lyr.label) is None
 
         def not_spatial_subset_in_profile_viewer(lyr):
-            if self.plugin.config != 'cubeviz':
+            if self.plugin.config not in ('cubeviz', 'deconfigged'):
                 return True
             # note: have to check the classname instead of isinstance to avoid circular import
-            if np.any([viewer.__class__.__name__ != 'CubevizProfileView'
+            if np.any([viewer.__class__.__name__ not in ('CubevizProfileView', 'Spectrum1DViewer')
                        for viewer in self.viewer_objs]):
                 return True
             # at this point, we are in cubeviz and ALL selected viewers are profile viewers,
@@ -3672,8 +3672,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             return None, None, None
 
         if per_pixel:
-            if self.app.config != 'cubeviz':
-                raise ValueError("per-pixel only supported for cubeviz")
+            if self.app.config not in ('cubeviz', 'deconfigged'):
+                raise ValueError("per-pixel only supported for cubeviz/deconfigged")
             full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
                                                              use_display_units=True)
         else:
