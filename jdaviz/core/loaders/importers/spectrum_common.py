@@ -21,19 +21,19 @@ __all__ = ['SpectrumInputExtensionsMixin', '_spectrum_assign_component_type']
 
 
 def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
-    if not len(units) and str(comp_id) == 'flux':
+    if not len(units) and comp_id == 'flux':
         units = 'ct'
     if units in ('ct', 'pixel'):
         physical_type = units
 
     if physical_type is None:
         return None
-    if str(comp_id) in SPECTRAL_AXIS_COMP_LABELS:
+    if comp_id in SPECTRAL_AXIS_COMP_LABELS:
         if physical_type in ('frequency', 'length', 'pixel'):
             # link frequency to wavelength
             return 'spectral_axis'
         return f'spectral_axis:{physical_type}'
-    if str(comp_id) == 'uncertainty':
+    if comp_id == 'uncertainty':
         # don't link with flux columns
         return f'uncertainty:{physical_type}'
     return physical_type

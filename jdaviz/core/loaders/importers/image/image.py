@@ -35,13 +35,13 @@ __all__ = ['ImageImporter', '_spatial_assign_component_type']
 
 
 def _spatial_assign_component_type(comp_id, comp, units, physical_type):
-    if str(comp_id).startswith('Pixel Axis'):
+    if comp_id.startswith('Pixel Axis'):
         physical_type = 'pixel'
-        return f'{str(comp_id)[-2]}:pixel'
+        return f'{comp_id[-2]}:pixel'
 
-    if str(comp_id).lower() in RA_COMPS and physical_type == 'angle':
+    if comp_id.lower() in RA_COMPS and physical_type == 'angle':
         return f'RA:{physical_type}'
-    elif str(comp_id).lower() in DEC_COMPS and physical_type == 'angle':
+    elif comp_id.lower() in DEC_COMPS and physical_type == 'angle':
         return f'DEC:{physical_type}'
 
     return physical_type
@@ -124,8 +124,9 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             self._set_default_data_label()
 
-    @staticmethod
-    def _get_supported_viewers():
+    def _get_supported_viewers(self):
+        if self.config == 'rampviz':
+            return [{'label': 'level-2', 'reference': 'imviz-image-viewer'}]
         return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
 
     @property
@@ -137,7 +138,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube

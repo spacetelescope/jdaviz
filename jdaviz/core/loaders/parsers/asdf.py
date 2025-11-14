@@ -20,7 +20,7 @@ class ASDFParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
 
@@ -45,3 +45,12 @@ class ASDFParser(BaseParser):
                 UserWarning
             )
         return asdf.open(self.input)
+
+    def _cleanup(self):
+        if 'output' not in self.__dict__:
+            return
+        try:
+            self.output.close()
+        except Exception:  # nosec
+            pass
+        self._clear_cache('output')

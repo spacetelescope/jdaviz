@@ -22,7 +22,9 @@ env:
                  jwst:jw02732-c1001_t004_miri_ch1-short_x1d.fits,
                  jwst:jw02732-o003_t002_nirspec_prism-clear_s3d.fits,
                  jwst:jw02732004001_02103_00004_mirifushort_s3d.fits,
-                 jwst:jw02732004001_02103_00004_mirifushort_x1d.fits'
+                 jwst:jw02732004001_02103_00004_mirifushort_x1d.fits,
+                 jwst:jw01181003001_08201_00003_mirimage_uncal.fits,
+                 jwst:jw03383196001_04201_00004_nis_uncal.fits'
 
 on:
   workflow_dispatch:
