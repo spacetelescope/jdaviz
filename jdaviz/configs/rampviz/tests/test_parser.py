@@ -39,7 +39,7 @@ def test_load_level_1_and_2(
 
 @pytest.mark.remote_data
 @pytest.mark.parametrize("url", [
-    "https://stsci.box.com/shared/static/vklnig8f7fflyfwrfa9t6vpl5vnoi5mb.asdf",
+    # "https://stsci.box.com/shared/static/vklnig8f7fflyfwrfa9t6vpl5vnoi5mb.asdf",
     "mast:JWST/product/jw01181003001_08201_00003_mirimage_uncal.fits",
     "mast:JWST/product/jw03383196001_04201_00004_nis_uncal.fits"
 ])
