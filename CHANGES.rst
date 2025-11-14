@@ -1,4 +1,4 @@
-4.4.2 (unreleased)
+4.4.2 (2025-11-14)
 ==================
 
 - Fixes traceback raised by the stretch histogram in plot options when entering multiselect mode. [#3825]
@@ -17,19 +17,10 @@ Bug Fixes
 
 - Disable cloning viewers in Specviz, Specviz2d, Cubeviz, and Mosviz. [#3876]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 - Adds ability to use Ra/Dec if there is no `sky_centroid` column in a catalog loaded from file
   for the Catalog Search plugin, so exported catalog tables can be loaded into the app. [#3841]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
