@@ -12,24 +12,39 @@ from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
                                                handle_squared_flux_unit_conversions)
 
 
-def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_microns):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+@pytest.mark.parametrize('helper_str', ('cubeviz_helper', 'deconfigged_helper'))
+def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj_microns):
+    helper = request.getfixturevalue(helper_str)
+    if helper_str == 'cubeviz_helper':
+        helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+        flux_label = 'test[FLUX]'
+        unc_label = 'test[ERR]'
+        unc_viewer = 'uncert-viewer'
+        match_str = r'No data item found with label.*'
+
+    elif helper_str == 'deconfigged_helper':
+        helper.load(image_cube_hdu_obj_microns, data_label="test")
+        flux_label = 'test'
+        unc_label = 'test [UNC]'
+        unc_viewer = '3D Spectrum (1)'
+        match_str = r'Could not identify viewer with reference.*'
+
     flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-2")
     solid_angle_unit = PIX2
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
 
-    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
+    helper.plugins['Subset Tools'].import_region(aper)
 
     # Make sure MASK is not an option even when shown in viewer.
-    with pytest.raises(ValueError, match=r"No data item found.*"):
-        cubeviz_helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
+    with pytest.raises(ValueError, match=match_str):
+        helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]
-    assert plg.dataset.labels == ["test[FLUX]", "test[ERR]"]
-    assert plg._obj.cube_slice == "4.894e+00 um"
+    plg = helper.plugins["Aperture Photometry"]
+    assert plg.dataset.labels == [flux_label, unc_label]
+    assert_quantity_allclose(plg._obj.cube_slice, 4.89 * u.um, atol=1e-2 * u.um)
 
-    plg.dataset.selected = "test[FLUX]"
+    plg.dataset.selected = flux_label
     plg.aperture.selected = "Subset 1"
     plg._obj.vue_do_aper_phot()
     row = plg.export_table()[0]
@@ -43,13 +58,12 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 
     # sum should be in flux ( have factor of pix^2 multiplied out of input unit)
     assert_allclose(row["sum"], 75 * flux_unit * solid_angle_unit)  # 3 (w) x 5 (h) x 5 (v)
-
     assert_allclose(row["sum_aper_area"], 15 * solid_angle_unit)  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 5 * flux_unit)
     assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
     # Move slider and make sure it recomputes for a new slice automatically.
-    cube_slice_plg = cubeviz_helper.plugins["Slice"]._obj
+    cube_slice_plg = helper.plugins["Slice"]._obj
     cube_slice_plg.vue_goto_first()
     plg._obj.vue_do_aper_phot()
     row = plg.export_table()[1]
@@ -70,14 +84,14 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 
     # We continue on with test_cubeviz_aperphot_generated_2d_collapse here
     # because we want to make sure the result would append properly between 3D and 2D.
-    collapse_plg = cubeviz_helper.plugins["Collapse"]._obj
+    collapse_plg = helper.plugins["Collapse"]._obj
     collapse_plg.vue_collapse()
 
     # Need this to make it available for photometry data drop-down.
-    cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] collapsed")
+    helper.app.add_data_to_viewer(unc_viewer, f"{flux_label} collapsed")
 
-    plg = cubeviz_helper.plugins["Aperture Photometry"]
-    plg.dataset.selected = "test[FLUX] collapsed"
+    plg = helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = f"{flux_label} collapsed"
     plg.aperture.selected = "Subset 1"
     plg._obj.vue_do_aper_phot()
     row = plg.export_table()[2]
