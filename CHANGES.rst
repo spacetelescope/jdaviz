@@ -146,6 +146,9 @@ Bug Fixes
 
 - Disable cloning viewers in Specviz, Specviz2d, Cubeviz, and Mosviz. [#3876]
 
+- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
+  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
 Imviz
 ^^^^^
 - Adds ability to use Ra/Dec if there is no `sky_centroid` column in a catalog loaded from file

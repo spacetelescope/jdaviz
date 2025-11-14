@@ -47,6 +47,7 @@ def test_model_params():
                         "Lorentz1D": ["amplitude", "x_0", "fwhm"],
                         "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
                         "BlackBody": ["temperature", "scale"],
+                        "Spline1D": [],
                         }
 
     for model_name in initializers.MODELS.keys():
@@ -56,7 +57,12 @@ def test_model_params():
             # test needs to be updated rather than the code breaking
             raise ValueError(f"{model_name} not in test dictionary of expected parameters")
         expected_params = model_parameters.get(model_name, [])
-        params = initializers.get_model_parameters(model_name)
+
+        params = []
+        # SplineSmoothingFitter does not have knot points, so no scalar parameters
+        # Will need to account for if SplineExactKnotsFitter is implemented
+        if model_name != "Spline1D":
+            params = initializers.get_model_parameters(model_name)
         assert len(params) == len(expected_params)
         assert np.all([p in expected_params for p in params])
 
@@ -873,3 +879,45 @@ def test_model_equation_with_different_flux_units(specviz_helper):
 
     model = specviz_helper.app.data_collection['model']
     assert model.get_component('flux').units == 'W / (Hz m2)'
+
+
+def test_spline(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    mf = specviz_helper.plugins['Model Fitting']._obj
+    mf.create_model_component('Spline1D')
+
+    mf.fitter_component.selected = 'SplineSmoothingFitter'
+    mf.calculate_fit(add_data=True)
+
+    # ensure that Spline1D is not combined with any other model components
+    mf.create_model_component('Const1D')
+    assert mf.model_equation_invalid_msg == (
+                    "Spline1D cannot be combined with other model components."
+                )
+    mf.remove_model_component('C')
+
+    # ensure Spline1D is computed on 1D data
+    mf.cube_fit = True
+    assert mf.model_equation_invalid_msg == (
+                    "Spline1D is only supported for 1D Data. "
+                    "Disable 'Cube fit' to use Spline1D."
+                )
+    mf.cube_fit = False
+
+    # ensure that only SplineSmoothingFitter fitter component can be used
+    # with the Spline1D model parameter
+    assert mf.fitter_component.choices == ['SplineSmoothingFitter']
+
+    mf.remove_model_component('S')
+    mf.create_model_component('Const1D')
+
+    # make sure fitter components update when Spline1D model component is removed
+    assert mf.fitter_component.choices == ['TRFLSQFitter',
+                                           'DogBoxLSQFitter',
+                                           'LMLSQFitter',
+                                           'LevMarLSQFitter',
+                                           'LinearLSQFitter',
+                                           'SLSQPLSQFitter',
+                                           'SimplexLSQFitter',
+                                           'SplineSmoothingFitter']
