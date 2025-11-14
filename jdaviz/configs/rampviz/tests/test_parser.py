@@ -1,5 +1,6 @@
 
 import pytest
+from jdaviz.utils import cached_uri
 
 
 def test_load_rectangular_ramp(rampviz_helper, jwst_level_1b_rectangular_ramp):
@@ -49,11 +50,18 @@ def test_load_example_notebook_data(rampviz_helper, url):
         has_rdd = False
     else:
         has_rdd = True
-    ldr = rampviz_helper.loaders['url']
-    ldr.url = url
-    if has_rdd:
+    uri = cached_uri(url)
+    if 'mast' in uri:
+        ldr = rampviz_helper.loaders['url']
+        ldr.cache = True
+        ldr.url = uri
+    else:
+        ldr = rampviz_helper.loaders['file']
+        ldr.filepath = uri
+
+    if url.endswith(".asdf") and not has_rdd:
+        assert 'Ramp' not in ldr.format.choices
+    else:
         assert 'Ramp' in ldr.format.choices
         ldr.format = 'Ramp'
         ldr.load()
-    else:
-        assert 'Ramp' not in ldr.format.choices
