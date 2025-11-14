@@ -19,7 +19,7 @@ class TestLineLists:
     def test_line_lists(self, specviz_helper):
         spec = Spectrum(flux=np.random.rand(100)*u.Jy,
                         spectral_axis=np.arange(6000, 7000, 10)*u.AA)
-        specviz_helper.load_data(spec)
+        specviz_helper.load(spec)
 
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
@@ -57,7 +57,7 @@ class TestLineLists:
         assert ll_plugin.disabled_msg
 
         label = "Test 1D Spectrum"
-        specviz_helper.load_data(spectrum1d, data_label=label)
+        specviz_helper.load(spectrum1d, data_label=label)
 
         assert not ll_plugin.disabled_msg
 
@@ -106,7 +106,7 @@ class TestLineLists:
     def test_load_available_preset_lists(self, specviz_helper, spectrum1d):
         """ Loads all available line lists and checks the medium requirement """
         label = "Test 1D Spectrum"
-        specviz_helper.load_data(spectrum1d, data_label=label)
+        specviz_helper.load(spectrum1d, data_label=label)
 
         # Check to make sure we got our line lists
         available_linelists = get_available_linelists()
@@ -127,7 +127,7 @@ class TestLineLists:
             assert 'medium' in list
 
     def test_line_identify(self, specviz_helper, spectrum1d):
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
 
         lt = QTable()
         lt['linename'] = ['O III', 'Halpha']
@@ -146,7 +146,7 @@ class TestLineLists:
         assert line.get('identify', False) is False
 
     def test_global_redshift_applied(self, specviz_helper, spectrum1d):
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
 
         # Create a table with redshift included
         lt = QTable({'linename': ['O III', 'Halpha'],
@@ -169,7 +169,7 @@ class TestLineLists:
         assert np.allclose([line.redshift for line in viewer_lines], 0.01)
 
     def test_global_redshift_applied_to_all(self, specviz_helper, spectrum1d):
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
 
         # Create a table with redshift included
         lt = QTable({'linename': ['O III', 'Halpha', 'O I'],

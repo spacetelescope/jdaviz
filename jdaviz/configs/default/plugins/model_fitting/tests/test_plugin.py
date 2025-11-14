@@ -23,7 +23,7 @@ PYTEST_LT_8_0 = not minversion(pytest, "8.0.dev")
 
 
 def test_default_model_labels(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
     # By default, the spectral region should be the entire spectrum
     assert modelfit_plugin._obj.spectral_subset_selected == "Entire Spectrum"
@@ -49,7 +49,7 @@ def test_default_model_labels(specviz_helper, spectrum1d):
 
 
 def test_custom_model_labels(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     for i, model in enumerate(MODELS):
@@ -71,7 +71,7 @@ def test_register_model_with_uncertainty_weighting(specviz_helper, spectrum1d):
     spectrum1d.uncertainty = StdDevUncertainty(spectrum1d.flux * 0.1)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     # Test registering a simple linear fit
@@ -105,7 +105,7 @@ def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
     spectrum1d.uncertainty = None
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     # Test registering a simple linear fit
@@ -137,7 +137,7 @@ def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
 def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        cubeviz_helper.load_data(spectrum1d_cube)
+        cubeviz_helper.load(spectrum1d_cube)
     modelfit_plugin = cubeviz_helper.plugins['Model Fitting']
 
     # Test custom model label
@@ -161,7 +161,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
 def test_initialize_gaussian_with_cube(cubeviz_helper, spectrum1d_cube_larger):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        cubeviz_helper.load_data(spectrum1d_cube_larger)
+        cubeviz_helper.load(spectrum1d_cube_larger)
     modelfit_plugin = cubeviz_helper.plugins['Model Fitting']
 
     modelfit_plugin.cube_fit = True
@@ -175,7 +175,7 @@ def test_fit_cube_no_wcs(cubeviz_helper):
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[0, 0, 0] = np.nan
     sp = Spectrum(flux=flux, spectral_axis_index=2)  # ny, nx, nz
-    cubeviz_helper.load_data(sp, data_label="test_cube")
+    cubeviz_helper.load(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
     mf.cube_fit = True
@@ -196,7 +196,7 @@ def test_fit_cube_no_wcs(cubeviz_helper):
 
 def test_toggle_cube_fit_subset(cubeviz_helper):
     sp = Spectrum(flux=np.ones((7, 8, 9)) * u.nJy, spectral_axis_index=2)  # ny, nx, nz
-    cubeviz_helper.load_data(sp, data_label="test_cube")
+    cubeviz_helper.load(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
 
     unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
@@ -208,7 +208,7 @@ def test_toggle_cube_fit_subset(cubeviz_helper):
 
 
 def test_refit_plot_options(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     modelfit_plugin._obj.model_comp_selected = 'Const1D'
@@ -239,7 +239,7 @@ def test_refit_plot_options(specviz_helper, spectrum1d):
 def test_user_api(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
     p = specviz_helper.plugins['Model Fitting']
 
     with pytest.raises(ValueError, match="blah is not a valid attribute and cannot be set"):
@@ -280,7 +280,7 @@ def test_user_api(specviz_helper, spectrum1d):
 def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     modelfit_plugin.create_model_component('Gaussian1D', 'G')
@@ -302,7 +302,7 @@ def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
 def test_reestimate_parameters(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
     mf = specviz_helper.plugins['Model Fitting']
 
     mf.create_model_component('Gaussian1D', 'G')
@@ -329,7 +329,7 @@ def test_reestimate_parameters(specviz_helper, spectrum1d):
 
 
 def test_spectral_first_cube(cubeviz_helper, image_cube_hdu_obj_microns):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+    cubeviz_helper.load(image_cube_hdu_obj_microns, data_label="test")
 
     subset = cubeviz_helper.plugins['Subset Tools']
     subset.import_region(SpectralRegion(4 * u.Unit('um'), 6 * u.Unit('um')))
@@ -345,7 +345,7 @@ def test_spectral_first_cube(cubeviz_helper, image_cube_hdu_obj_microns):
 
 
 def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
-    cubeviz_helper.load_data(spectrum1d_cube_larger)
+    cubeviz_helper.load(spectrum1d_cube_larger)
     assert spectrum1d_cube_larger.mask is None
 
     # create a "Subset 1" entry in spatial dimension, selected "interactively"
@@ -387,12 +387,12 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
 def test_invalid_subset(specviz_helper, spectrum1d):
     # 6000-8000
-    specviz_helper.load_data(spectrum1d, data_label="right_spectrum")
+    specviz_helper.load(spectrum1d, data_label="right_spectrum")
 
     # 5000-7000
     sp2 = Spectrum(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
                    flux=spectrum1d.flux * 1.25)
-    specviz_helper.load_data(sp2, data_label="left_spectrum")
+    specviz_helper.load(sp2, data_label="left_spectrum")
 
     # apply subset that overlaps on left_spectrum, but not right_spectrum
     # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when
@@ -427,7 +427,7 @@ def test_fitting_with_nans(specviz_helper, fill_val):
 
     spec = Spectrum(flux=np.array([0, 1, 2, fill_val, fill_val, fill_val, 6, 7, 8, 9]) * u.Jy,
                     spectral_axis=np.arange(10) * u.nm)
-    specviz_helper.load_data(spec)
+    specviz_helper.load(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']
     plugin.model_component = 'Linear1D'
@@ -463,7 +463,7 @@ def test_fitting_partial_overlap_subset(specviz_helper, fill_val):
 
     spec = Spectrum(flux=np.array([0, 1, 2, fill_val, fill_val, fill_val, 6, 7, 8, 9]) * u.Jy,
                     spectral_axis=np.arange(10) * u.nm)
-    specviz_helper.load_data(spec)
+    specviz_helper.load(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']
     plugin.model_component = 'Linear1D'
@@ -499,7 +499,7 @@ def test_all_nan_uncert(specviz_helper):
 
     uncertainty = StdDevUncertainty([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan] * u.Jy)
     spec = Spectrum(flux=[1, 2, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
-    specviz_helper.load_data(spec)
+    specviz_helper.load(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']
     plugin.create_model_component('Linear1D')
@@ -526,7 +526,7 @@ def test_all_nan_uncert_subset(specviz_helper):
 
     uncertainty = StdDevUncertainty([1, 1, np.nan, np.nan, np.nan, np.nan] * u.Jy)
     spec = Spectrum(flux=[2, 4, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
-    specviz_helper.load_data(spec)
+    specviz_helper.load(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']
     plugin.create_model_component('Linear1D')

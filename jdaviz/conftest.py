@@ -116,12 +116,12 @@ class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
 
 @pytest.fixture
 def cubeviz_helper():
-    return Cubeviz()
+    return App()
 
 
 @pytest.fixture
 def imviz_helper():
-    return Imviz()
+    return App()
 
 
 @pytest.fixture
@@ -131,12 +131,12 @@ def mosviz_helper():
 
 @pytest.fixture
 def specviz_helper():
-    return Specviz()
+    return App()
 
 
 @pytest.fixture
 def specviz2d_helper():
-    return Specviz2d()
+    return App()
 
 
 @pytest.fixture

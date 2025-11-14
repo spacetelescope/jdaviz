@@ -28,7 +28,7 @@ def _assert_dict_allclose(dict1, dict2):
 
 
 def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, data_label="test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
     sb_unit = 'Jy / pix2'  # cubes loaded in Jy have sb unit of Jy / pix2
@@ -208,7 +208,7 @@ def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=flux_unit / angle_unit,
                                            shape=(5, 5, 4),
                                            with_uncerts=True)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     # get plugins
     mp = cubeviz_helper.plugins['Markers']
@@ -248,7 +248,7 @@ def test_markers_specviz2d_unit_conversion(specviz2d_helper):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
     spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.AA)
-    specviz2d_helper.load_data(spectrum2d)
+    specviz2d_helper.load(spectrum2d)
 
     uc = specviz2d_helper.plugins['Unit Conversion']
     uc.open_in_tray()
@@ -430,7 +430,7 @@ def _get_distance_marks_from_viewer(viewer):
 
 def test_distance_tool_live_preview_image(cubeviz_helper, spectrum1d_cube):
     """Tests the rubber band line and live UI update in an image viewer."""
-    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, "test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
@@ -453,7 +453,7 @@ def test_distance_tool_live_preview_image(cubeviz_helper, spectrum1d_cube):
 
 def test_distance_tool_profile(cubeviz_helper, spectrum1d_cube):
     """Tests the rubber band line and live UI update in a profile viewer."""
-    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, "test")
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
@@ -501,7 +501,7 @@ def test_distance_tool_profile(cubeviz_helper, spectrum1d_cube):
 
 def test_distance_tool_snapping(cubeviz_helper, spectrum1d_cube):
     """Tests that the distance tool can snap to existing markers."""
-    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, "test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
@@ -522,7 +522,7 @@ def test_distance_tool_snapping(cubeviz_helper, spectrum1d_cube):
 
 def test_distance_tool_clearing(cubeviz_helper, spectrum1d_cube):
     """Tests that clearing the measurements table removes marks from the viewer."""
-    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, "test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
@@ -545,7 +545,7 @@ def test_distance_tool_clearing(cubeviz_helper, spectrum1d_cube):
 
 def test_distance_tool_reset_on_orientation_change(cubeviz_helper, spectrum1d_cube):
     """Tests that an in-progress measurement is cancelled on orientation change."""
-    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, "test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     mp = cubeviz_helper.plugins['Markers']
     mp.open_in_tray()
@@ -563,7 +563,7 @@ def test_distance_tool_reset_on_orientation_change(cubeviz_helper, spectrum1d_cu
 def test_distance_tool_imviz_pixel_only(imviz_helper):
     """Tests the distance tool in a pixel-only context in Imviz."""
     # Use the imviz_helper fixture and load a simple array with no WCS
-    imviz_helper.load_data(np.zeros((20, 20)))
+    imviz_helper.load(np.zeros((20, 20)))
     iv = imviz_helper.app.get_viewer('imviz-0')
     mp = imviz_helper.plugins['Markers']
     mp.open_in_tray()
@@ -592,7 +592,7 @@ def test_distance_tool_imviz_pixel_only(imviz_helper):
 
 def test_markers_specviz_config(specviz_helper, spectrum1d):
     """Tests the marker plugin's basic functionality in a Specviz context."""
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     mp = specviz_helper.plugins['Markers']
     mp.open_in_tray()
@@ -616,7 +616,7 @@ def test_distance_tool_snapping_by_pixel_scale(cubeviz_helper, spectrum1d_cube):
     Tests the snapping functionality that relies on viewer pixel scales,
     covering both image and profile viewer cases to improve test coverage.
     """
-    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper.load(spectrum1d_cube, "test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
     mp = cubeviz_helper.plugins['Markers']

@@ -42,7 +42,7 @@ def test_remote_server_disable_save_serverside():
 
 
 def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
-    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    cubeviz_helper.load(spectrum1d_cube_larger, data_label="test")
     unit = spectrum1d_cube_larger.spectral_axis.unit
     subset_plugin = cubeviz_helper.plugins['Subset Tools']
     subset_plugin.import_region([

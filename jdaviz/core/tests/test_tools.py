@@ -9,7 +9,7 @@ from specutils import Spectrum
 
 
 def test_boxzoom(cubeviz_helper, image_cube_hdu_obj_microns):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="Test Flux")
+    cubeviz_helper.load(image_cube_hdu_obj_microns, data_label="Test Flux")
 
     flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
 
@@ -32,7 +32,7 @@ def _get_lims(viewer):
 
 
 def test_rangezoom(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label='test')
+    specviz_helper.load(spectrum1d, data_label='test')
 
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     assert_allclose(_get_lims(sv), [6000, 8000, 12.30618014327326, 16.542560043585965])
@@ -51,7 +51,7 @@ def test_rangezoom(specviz_helper, spectrum1d):
 
 
 def test_stretch_bounds(imviz_helper):
-    imviz_helper.load_data(np.ones((2, 2)))
+    imviz_helper.load(np.ones((2, 2)))
 
     plot_options = imviz_helper.plugins['Plot Options']._obj
     stretch_tool = plot_options.stretch_histogram.toolbar.tools["jdaviz:stretch_bounds"]
@@ -82,7 +82,7 @@ def test_stretch_bounds_and_spline(imviz_helper):
     np.random.seed(42)
 
     image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
-    imviz_helper.load_data(image_1)
+    imviz_helper.load(image_1)
     po = imviz_helper.plugins["Plot Options"]
 
     with po.as_active():
@@ -111,7 +111,7 @@ def test_stretch_bounds_and_spline(imviz_helper):
 
 def test_stretch_bounds_click_outside_threshold(imviz_helper):
     image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
-    imviz_helper.load_data(image_1)
+    imviz_helper.load(image_1)
 
     po = imviz_helper.plugins["Plot Options"]
     po = imviz_helper.plugins["Plot Options"]
@@ -137,7 +137,7 @@ def test_stretch_bounds_click_outside_threshold(imviz_helper):
 
 
 def test_unit_conversion_limits_update(specviz2d_helper, mos_spectrum2d):
-    specviz2d_helper.load_data(mos_spectrum2d)
+    specviz2d_helper.load(mos_spectrum2d)
     uc = specviz2d_helper.plugins['Unit Conversion']
 
     spec_viewer = specviz2d_helper.app.get_viewer(
@@ -168,7 +168,7 @@ def test_unit_conversion_limits_update(specviz2d_helper, mos_spectrum2d):
 def test_match_limits_without_wave_component(specviz2d_helper):
     data = np.zeros((5, 10))
     spec2d = Spectrum(flux=data*u.MJy, spectral_axis_index=1)
-    specviz2d_helper.load_data(spec2d)
+    specviz2d_helper.load(spec2d)
 
     spec_viewer = specviz2d_helper.app.get_viewer(
                   specviz2d_helper.app._jdaviz_helper._default_spectrum_viewer_reference_name)

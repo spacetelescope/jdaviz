@@ -34,7 +34,7 @@ def test_specviz_zoom_level(specviz_helper):
 
 def test_specviz_data_labels(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     assert specviz_helper.data_labels == [label]
     assert specviz_helper.viewers['spectrum-viewer'].data_menu.data_labels_loaded == [label]

@@ -48,7 +48,7 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
 
 def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, data_label='my_data')
+    imviz_helper.load(data, data_label='my_data')
 
     imviz_helper.create_image_viewer(viewer_name='new-viewer')
     dm = imviz_helper.viewers['new-viewer'].data_menu
@@ -64,7 +64,7 @@ def test_create_viewer_align_by_wcs(imviz_helper, image_2d_wcs):
 
 def test_align_by_wcs_create_viewer(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, data_label='my_data')
+    imviz_helper.load(data, data_label='my_data')
 
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
@@ -97,7 +97,7 @@ def test_destroy_viewer_invalid(imviz_helper):
 def test_destroy_viewer_with_subset(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/1614"""
     arr = np.ones((10, 10))
-    imviz_helper.load_data(arr, data_label='my_array')
+    imviz_helper.load(arr, data_label='my_array')
 
     # Create a second viewer.
     imviz_helper.create_image_viewer(viewer_name='second')
@@ -140,7 +140,7 @@ def test_mastviz_config():
 def test_zoom_center_radius_init(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/3217"""
     arr = np.ones((10, 10))
-    imviz_helper.load_data(arr, data_label='my_array')
+    imviz_helper.load(arr, data_label='my_array')
     assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_x > 0
     assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_center_y > 0
     assert imviz_helper.default_viewer._obj.glue_viewer.state.zoom_radius > 0
@@ -148,7 +148,7 @@ def test_zoom_center_radius_init(imviz_helper):
 
 def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, data_label='my_data')
+    imviz_helper.load(data, data_label='my_data')
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     # TODO: remove once dev-flag no longer required
@@ -201,7 +201,7 @@ def test_catalog_in_image_viewer(imviz_helper, image_2d_wcs, source_catalog):
     assert 'my_catalog' not in po.layer.choices
 
     # test loading/removing another image dataset, which involves linking
-    imviz_helper.load_data(data, data_label='my_data_2')
+    imviz_helper.load(data, data_label='my_data_2')
     dm.layer.selected = ['my_data_2[DATA]']
     dm.remove_from_app()
 

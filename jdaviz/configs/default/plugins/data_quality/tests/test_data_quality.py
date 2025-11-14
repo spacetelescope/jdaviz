@@ -81,8 +81,8 @@ def test_data_quality_plugin(imviz_helper):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(
-            cached_uri(uri), cache=True, ext=('SCI', 'DQ')
+        imviz_helper.load(
+            cached_uri(uri), cache=True, extension=('SCI', 'DQ')
         )
 
     assert len(imviz_helper.app.data_collection) == 2
@@ -179,7 +179,7 @@ def test_data_quality_plugin_hst_wfc3(imviz_helper):
     uri = "mast:HST/product/hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(cached_uri(uri), cache=True, ext=('SCI', 'DQ'))
+        imviz_helper.load(cached_uri(uri), cache=True, extension=('SCI', 'DQ'))
 
     assert len(imviz_helper.app.data_collection) == 2
 
@@ -198,7 +198,7 @@ def test_data_quality_plugin_hst_acs(imviz_helper):
     uri = "mast:HST/product/hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(cached_uri(uri), cache=True, ext=('SCI', 'DQ'))
+        imviz_helper.load(cached_uri(uri), cache=True, extension=('SCI', 'DQ'))
 
     assert len(imviz_helper.app.data_collection) == 2
 
@@ -220,7 +220,7 @@ def test_cubeviz_layer_visibility_bug(cubeviz_helper):
     uri = "mast:JWST/product/jw02732-c1001_t004_miri_ch1-short_s3d.fits"
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(cached_uri(uri), cache=True)
+        cubeviz_helper.load(cached_uri(uri), cache=True)
 
     # create a moment map:
     mm = cubeviz_helper.plugins['Moment Maps']

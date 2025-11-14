@@ -16,7 +16,7 @@ from jdaviz.core.unit_conversion_utils import coerce_unit
 
 def test_plugin(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -58,7 +58,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     Not checking the value attempts to circumvent the issue we ran into here:
     https://github.com/spacetelescope/jdaviz/pull/1564#discussion_r949427663
     """
-    cubeviz_helper.load_data(image_cube_hdu_obj, data_label="Test Cube")
+    cubeviz_helper.load(image_cube_hdu_obj, data_label="Test Cube")
 
     # add a spatial region
     cubeviz_helper.plugins['Subset Tools'].import_region(
@@ -96,7 +96,7 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     """
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.Jy / sq_angle_unit,
                                            shape=(25, 25, 4), with_uncerts=True)
-    cubeviz_helper.load_data(cube, data_label="Test Cube")
+    cubeviz_helper.load(cube, data_label="Test Cube")
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     assert uc.spectral_y_type == 'Flux'  # initial selection should be Flux
@@ -167,7 +167,7 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
 
 def test_user_api(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
@@ -198,7 +198,7 @@ def test_user_api(specviz_helper, spectrum1d):
 
 def test_line_identify(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
@@ -274,7 +274,7 @@ def test_coerce_unit():
 
 def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -303,7 +303,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
 
 def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -332,7 +332,7 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
 
 def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -359,7 +359,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
 
 def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -388,7 +388,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
 
 def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -423,7 +423,7 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
 
 def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -453,7 +453,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
 
 def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -483,7 +483,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
 
 def test_subset_changed(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
@@ -518,12 +518,12 @@ def test_subset_changed(specviz_helper, spectrum1d):
 
 def test_invalid_subset(specviz_helper, spectrum1d):
     # 6000-8000
-    specviz_helper.load_data(spectrum1d, data_label="right_spectrum")
+    specviz_helper.load(spectrum1d, data_label="right_spectrum")
 
     # 5000-7000
     sp2 = Spectrum(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
                    flux=spectrum1d.flux * 1.25)
-    specviz_helper.load_data(sp2, data_label="left_spectrum")
+    specviz_helper.load(sp2, data_label="left_spectrum")
 
     # apply subset that overlaps on left_spectrum, but not right_spectrum
     # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when

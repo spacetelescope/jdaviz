@@ -18,7 +18,7 @@ def test_create_new_viewer(imviz_helper, image_2d_wcs):
 
     data_label = 'image-data'
     viewer_name = 'user-created-viewer'
-    imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=False)
+    imviz_helper.load(arr, data_label=data_label, show_in_viewer=False)
     imviz_helper.create_image_viewer(viewer_name=viewer_name)
 
     returned_data = imviz_helper.get_data(data_label)
