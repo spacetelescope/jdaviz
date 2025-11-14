@@ -154,7 +154,19 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             return "File contains no columns", {}
 
         if 'sky_centroid' not in table.colnames:
-            return 'Table does not contain required sky_centroid column', {}
+            ra_candidates = ["Right Ascension (degrees)", "ra", "RA"]
+            dec_candidates = ["Declination (degrees)", "dec", "DEC"]
+
+            ra_col = next((c for c in ra_candidates if c in table.colnames), None)
+            dec_col = next((c for c in dec_candidates if c in table.colnames), None)
+
+            if ra_col is None or dec_col is None:
+                return (
+                    "Table does not contain a 'sky_centroid' column or recognizable RA/Dec columns"
+                    " (expected e.g. 'Right Ascension (degrees)' and 'Declination (degrees)', "
+                    "or 'ra'/'dec').",
+                    {}
+                )
 
         table.meta["_orig_colnames_for_jdaviz_export"] = table.colnames
         return '', {path: table, "_orig_colnames_for_jdaviz_export": table.colnames}
@@ -284,7 +296,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.table.headers_avail = self.headers + [
                 col for col in column_names if col not in self.headers]
             self.table.headers_visible = self.headers
-            if len(table['sky_centroid']) > self.max_sources:
+            if len(table) > self.max_sources:
                 self.app._catalog_source_table = table[:self.max_sources]
                 max_sources_used = True
             else:
@@ -314,7 +326,25 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                  self.app._catalog_source_table['dec'],
                                  unit='deg')
         elif self.catalog_selected in ["From File..."]:
-            skycoords = self.app._catalog_source_table['sky_centroid']
+            tbl = self.app._catalog_source_table
+            if "sky_centroid" in tbl.colnames:
+                skycoords = tbl["sky_centroid"]
+            else:
+                ra_col_candidates = ["Right Ascension (degrees)", "Right Ascension", "ra", "RA"]
+                dec_col_candidates = ["Declination (degrees)", "Declination", "dec", "DEC"]
+
+                ra_col = next((c for c in ra_col_candidates if c in tbl.colnames), None)
+                dec_col = next((c for c in dec_col_candidates if c in tbl.colnames), None)
+
+                if ra_col is None or dec_col is None:
+                    raise ValueError(
+                        "Catalog must contain either a 'sky_centroid' column or RA/Dec columns."
+                    )
+
+                skycoords = SkyCoord(
+                    ra=tbl[ra_col] * u.deg,
+                    dec=tbl[dec_col] * u.deg,
+                )
 
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoords)
         self.app._catalog_source_table['x_coord'] = pixel_table[0]
@@ -340,16 +370,31 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'Object ID': row_id.astype(str),
                             'id': len(self.table),
                             'x_coord': row['x_coord'],
-                            'y_coord': row['y_coord']}
+                            'y_coord': row['y_coord'],
+                            }
                 self.table.add_item(row_info)
 
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
         elif self.catalog_selected in ["From File..."]:
             for row in self.app._catalog_source_table:  # noqa:E501
+                tbl = self.app._catalog_source_table
+                if 'sky_centroid' in tbl.colnames:
+                    ra = row['sky_centroid'].ra.deg
+                    dec = row['sky_centroid'].dec.deg
+                else:
+                    if "Right Ascension (degrees)" in tbl.colnames:
+                        ra = row["Right Ascension (degrees)"]
+                    elif "ra" in tbl.colnames or "RA" in tbl.colnames:
+                        ra = row.get("ra", row.get("RA"))
+
+                    if "Declination (degrees)" in tbl.colnames:
+                        dec = row["Declination (degrees)"]
+                    elif "dec" in tbl.colnames or "DEC" in tbl.colnames:
+                        dec = row.get("dec", row.get("DEC"))
                 row_info = {
-                    'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
-                    'Declination (degrees)': row['sky_centroid'].dec.deg,
+                    'Right Ascension (degrees)': ra,
+                    'Declination (degrees)': dec,
                     'Object ID': str(row.get('label', f"{len(self.table) + 1}")),
                     'id': len(self.table),
                     'x_coord': row['x_coord'],
@@ -357,8 +402,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 }
                 x_coordinates.append(row['x_coord'])
                 y_coordinates.append(row['y_coord'])
-                # Add sky_centroid and label explicitly to row_info
-                row_info['sky_centroid'] = row['sky_centroid']
+                if 'sky_centroid' in tbl.colnames:
+                    # Add sky_centroid and label explicitly to row_info
+                    row_info['sky_centroid'] = row['sky_centroid']
                 row_info['label'] = row_info['Object ID']
                 for col in table.colnames:
                     if col not in self.headers:  # Skip already processed columns
