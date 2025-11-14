@@ -381,7 +381,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
                 ndd.meta['_default_color'] = default_color
-            self.add_results.add_results_from_plugin(ndd)
+            self.add_results.add_results_from_plugin(ndd, format='Ramp Integration')
 
             snackbar_message = SnackbarMessage(
                 f"{self.resulting_product_name.title()} extracted successfully.",

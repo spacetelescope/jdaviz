@@ -345,6 +345,7 @@ class RampImporter(BaseImporterToDataCollection):
         self.app.hub.broadcast(msg)
 
         if ext is not None:
-            self.add_to_data_collection(ext, ext_data_label, viewer_select=self.ext_viewer)
-            for ext_viewer in self.ext_viewer.selected_obj:
-                ext_viewer._initialize_x_axis()
+            ext_viewer_selected = self.ext_viewer.create_new.selected if self.ext_viewer.create_new.selected != '' else self.ext_viewer.selected  # noqa
+            self.app._jdaviz_helper.load(ext, format='Ramp Integration',
+                                         data_label=ext_data_label,
+                                         viewer=ext_viewer_selected)

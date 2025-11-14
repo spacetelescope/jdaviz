@@ -297,9 +297,9 @@ class BaseImporterToDataCollection(BaseImporter):
 
         new_dc_entry = self.app.data_collection[data_label]
         for comp_id in new_dc_entry.components:
-            comp_units, physical_type = _physical_type_from_component(comp_id,
+            comp_units, physical_type = _physical_type_from_component(str(comp_id),
                                                                       new_dc_entry.get_component(comp_id))  # noqa
-            comp_id._component_type = self.assign_component_type(comp_id,
+            comp_id._component_type = self.assign_component_type(str(comp_id),
                                                                  new_dc_entry.get_component(comp_id),  # noqa
                                                                  comp_units, physical_type)
 
