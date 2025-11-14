@@ -112,6 +112,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix aperture photometry issue for cubes in deconfigged. [#3897]
+
 Cubeviz
 ^^^^^^^
 
