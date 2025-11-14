@@ -34,7 +34,14 @@ class ASDFParser(BaseParser):
     @cached_property
     def output(self):
         if HAS_ROMAN_DATAMODELS:
-            return rdd.open(self.input)
+            try:
+                return rdd.open(self.input)
+            except ImportError as e:  # noqa: F841
+                warnings.warn(
+                    f"{self.input} could not be opened with the `roman_datamodels` package, "
+                    "as it gave the following error: {e}. This file will be loaded with the `asdf` directly",  # noqa: E501
+                    UserWarning
+                )
         else:
             warnings.warn(
                 f"{self.input} should be opened with the `roman_datamodels` package, "

@@ -30,6 +30,8 @@ New Features
 
 - Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
 
+- Generalize spectrum loading logic to prepare to support Roman ASDF files. [#3864]
+
 Cubeviz
 ^^^^^^^
 
