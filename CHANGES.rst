@@ -33,7 +33,7 @@ New Features
 Cubeviz
 ^^^^^^^
 
-- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748]
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748, #3861]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3748, #3872]
@@ -113,7 +113,28 @@ Other Changes and Additions
 
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
 
-4.4.2 (unreleased)
+4.4.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.4.2 (2025-11-14)
 ==================
 
 - Fixes traceback raised by the stretch histogram in plot options when entering multiselect mode. [#3825]
@@ -130,23 +151,12 @@ Bug Fixes
 - Fixes a bug in parser preference where sometimes an input would go through the specutils parser
   instead of the fits parser. [#3869]
 
-Cubeviz
-^^^^^^^
+- Disable cloning viewers in Specviz, Specviz2d, Cubeviz, and Mosviz. [#3876]
 
 Imviz
 ^^^^^
 - Adds ability to use Ra/Dec if there is no `sky_centroid` column in a catalog loaded from file
   for the Catalog Search plugin, so exported catalog tables can be loaded into the app. [#3841]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-- Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
 
 4.4.1 (2025-09-26)
 ==================

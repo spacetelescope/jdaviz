@@ -61,6 +61,13 @@ class SelectSlice(CheckableTool):
         self._time_last = 0
         super().__init__(viewer, **kwargs)
 
+    def is_visible(self):
+        # visible if any cube-like data is present
+        for dc in self.viewer.jdaviz_app.data_collection:
+            if dc.ndim == 3:
+                return True
+        return False
+
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['dragmove', 'click'])

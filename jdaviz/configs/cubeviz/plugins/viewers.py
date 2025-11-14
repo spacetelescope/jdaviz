@@ -30,7 +30,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
                     ['jdaviz:spectrumperspaxel'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
     default_class = None

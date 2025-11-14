@@ -210,7 +210,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin,
 
         self.viewer.multiselect = True  # multiselect always enabled
         # require a viewer's reference data to have WCS so that footprints can be mapped to sky
-        self.viewer.add_filter('is_image_viewer', 'reference_has_wcs')
+        self.viewer.add_filter('is_imviz_image_viewer', 'reference_has_wcs')
 
         def custom_toolbar(viewer):
             if viewer.reference in self.viewer.choices:
