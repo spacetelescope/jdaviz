@@ -82,19 +82,6 @@
             }}
           </plugin-action-button>
        </v-col>
-       <v-col>
-         <plugin-action-button
-            :results_isolated_to_plugin="true"
-            @click="zoom_in"
-            :api_hints_enabled="api_hints_enabled"
-          >
-            {{ api_hints_enabled ?
-              'plg.zoom_to_selected()'
-              :
-              'Zoom to Selected'
-            }}
-          </plugin-action-button>
-       </v-col>
     </v-row>
 
     <v-row>
@@ -112,6 +99,21 @@
     </j-custom-toolbar-toggle>
 
     <jupyter-widget :widget="table_selected_widget"></jupyter-widget>
+    <v-row v-if="row_selected_count > 0">
+        <v-col>
+         <plugin-action-button
+            :results_isolated_to_plugin="true"
+            @click="zoom_in"
+            :api_hints_enabled="api_hints_enabled"
+          >
+            {{ api_hints_enabled ?
+              'plg.zoom_to_selected()'
+              :
+              'Zoom to Selected'
+            }}
+          </plugin-action-button>
+        </v-col>
+    </v-row>
 
     <jupyter-widget :widget="table_widget"></jupyter-widget>
 
