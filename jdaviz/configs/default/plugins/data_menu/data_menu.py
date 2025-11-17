@@ -184,7 +184,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             has_pixel = 'X' in comp_labels and 'Y' in comp_labels
             align_by_wcs = self.orientation_align_by_wcs
 
-            if not ((align_by_wcs and has_world) or (align_by_wcs and has_pixel)):
+            if not ((align_by_wcs and has_world) or (not align_by_wcs and has_pixel)):
                 coord_type = "pixel" if has_pixel else "world"
                 align_type = "WCS" if align_by_wcs else "Pixel"
                 txt = f"Hiding layer {new_data.label} in '{self.viewer_reference}'. Catalog contains {coord_type} coordinates only, which do not match current viewer alignment ({align_type})."  # noqa
