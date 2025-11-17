@@ -175,7 +175,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return ((data.ndim in (2, 3)) and
                     (img_unit.physical_type in acceptable_types))
 
-        # TODO: make sure filter doesn't mess with imviz, might need to exclude it
         if self.config != 'imviz':
             self.dataset.add_filter(valid_cube_datasets)
 
@@ -509,14 +508,22 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self._background_selected_changed()
 
-    @property
-    def _cube_slice_ind(self):
-        # TODO: performance improvements, change to listen to slice change event
+    def _cube_slice_ind(self, data):
+        # TODO: performance improvements, change to listen to
+        # slice change event
         slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
-        if slice_plugin is not None:
-            # Alternatively, could use: slice_plugin._obj.flux_viewer.slice
-            #  assuming the flux_viewer is the correct reference.
-            return np.argmin(abs(slice_plugin._obj.valid_values - slice_plugin.value))
+        if slice_plugin is None:
+            return None
+
+        # Try to find a viewer that contains this data and has slice info
+        for viewer in self.app._viewer_store.values():
+            if not hasattr(viewer, 'slice'):
+                continue
+            if any(hasattr(layer, 'layer') and layer.layer.data == data for layer in viewer.layers):
+                return viewer.slice
+
+        # Fallback to using valid_values if viewer approach doesn't work
+        return np.argmin(abs(slice_plugin._obj.valid_values - slice_plugin.value))
 
     def _calc_background_median(self, reg, data=None):
         # Basically same way image stats are calculated in vue_do_aper_phot()
@@ -533,10 +540,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         comp = data.get_component(data.main_components[0])
         if data.ndim > 2:
             spectral_axis_index = getattr(data, "meta", {}).get("spectral_axis_index", 0)
-            if spectral_axis_index == 0:
-                comp_data = comp.data[self._cube_slice_ind, :, :]
+            cube_slice_ind = self._cube_slice_ind(data)
+            if cube_slice_ind is not None:
+                if spectral_axis_index == 0:
+                    comp_data = comp.data[cube_slice_ind, :, :]
+                else:
+                    comp_data = comp.data[:, :, cube_slice_ind].T
             else:
-                comp_data = comp.data[:, :, self._cube_slice_ind].T  # nx, ny --> ny, nx
+                # fallback if slice index cannot be determined
+                if spectral_axis_index == 0:
+                    comp_data = comp.data[0, :, :]
+                else:
+                    comp_data = comp.data[:, :, 0].T
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
                 w = data.meta['_orig_spec'].wcs.celestial
@@ -644,6 +659,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 spectral_axis_index = data.meta["spectral_axis_index"]
             else:
                 spectral_axis_index = 0
+            cube_slice_ind = self._cube_slice_ind(data)
 
         if aperture is not None:
             if aperture not in self.aperture.choices:
@@ -729,9 +745,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if data.ndim > 2:
             if spectral_axis_index == 0:
-                comp_data = comp.data[self._cube_slice_ind, :, :]
+                comp_data = comp.data[cube_slice_ind, :, :]
             else:
-                comp_data = comp.data[:, :, self._cube_slice_ind].T  # nx, ny --> ny, nx
+                comp_data = comp.data[:, :, cube_slice_ind].T
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
                 w = data.meta['_orig_spec'].wcs
@@ -753,9 +769,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             if data.coords is not None:
                 if data.ndim > 2:
                     if spectral_axis_index == 0:
-                        sky = w.pixel_to_world(xcenter, ycenter, self._cube_slice_ind)
+                        sky = w.pixel_to_world(xcenter, ycenter, cube_slice_ind)
                     else:
-                        sky = w.pixel_to_world(self._cube_slice_ind, ycenter, xcenter)
+                        sky = w.pixel_to_world(cube_slice_ind, ycenter, xcenter)
                     sky_center = [coord for coord in sky if hasattr(coord, "icrs")][0]
                 else:  # "imviz"
                     sky_center = w.pixel_to_world(xcenter, ycenter)
@@ -832,7 +848,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if include_pixarea_fac:
             # convert pixarea, which is in arcsec2/pix2 to the display solid angle unit / pix2
-            if self.config == 'imviz':
+            if data.ndim == 2:  # 2D images
                 # can remove once unit conversion implemented in imviz and
                 # display_solid_angle_unit traitlet is set, for now it will always be the data units
                 display_solid_angle_unit = check_if_unit_is_per_solid_angle(comp.units,
