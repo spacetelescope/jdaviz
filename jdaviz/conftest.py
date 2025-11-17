@@ -201,7 +201,7 @@ def image_2d_wcs():
 
 
 @pytest.fixture
-def source_catalog():
+def sky_coord_only_source_catalog():
     """
     Create a sample source catalog with sources positioned within the
     coordinate range of the image_2d_wcs fixture.
