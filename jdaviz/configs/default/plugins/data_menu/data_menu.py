@@ -149,7 +149,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
-        self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
+        self.hub.subscribe(self, AddDataMessage, handler=self._on_data_added)
         self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
@@ -170,6 +170,26 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
         self.prevent_layer_items_recursion = False
+
+    def _on_data_added(self, msg=None):
+
+        self._set_viewer_id()
+
+        # when a catalog is added, set visibility based on alignment type
+        # and presence of pixel and/or world coordinates.
+        new_data = msg.data
+        if new_data.meta.get('_importer') == 'CatalogImporter':
+            comp_labels = [str(x) for x in new_data.component_ids()]
+            has_world = 'RA' in comp_labels and 'DEC' in comp_labels
+            has_pixel = 'X' in comp_labels and 'Y' in comp_labels
+            align_by_wcs = self.orientation_align_by_wcs
+
+            if not ((align_by_wcs and has_world) or (align_by_wcs and has_pixel)):
+                coord_type = "pixel" if has_pixel else "world"
+                align_type = "WCS" if align_by_wcs else "Pixel"
+                txt = f"Hiding layer {new_data.label} in '{self.viewer_reference}'. Catalog contains {coord_type} coordinates only, which do not match current viewer alignment ({align_type})."  # noqa
+                self.hub.broadcast(SnackbarMessage(txt, color='warning', sender=self))
+                self.set_layer_visibility(new_data.label, False)
 
     @property
     def user_api(self):
