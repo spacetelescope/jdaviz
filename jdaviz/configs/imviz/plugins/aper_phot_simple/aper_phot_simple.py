@@ -515,7 +515,16 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if slice_plugin is None:
             return None
 
-        spectral_axis = self.dataset.selected_obj.spectral_axis
+        selected_obj = self.dataset.selected_obj
+        if isinstance(selected_obj, list):
+            # This should always be length 1 here thanks to checks elsewhere
+            # but just in case...
+            if len(selected_obj) != 1:
+                raise(IndexError("Cannot determine cube slice index with multiple datasets."))
+            spectral_axis = selected_obj[0].spectral_axis
+        else:
+            spectral_axis = selected_obj.spectral_axis
+
         sp_disp_unit = self.app._get_display_unit('spectral')
 
         # Use the spectral axis directly, convert to spectral axis display unit, and compare
