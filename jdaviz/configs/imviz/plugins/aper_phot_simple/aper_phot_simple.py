@@ -520,7 +520,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # This should always be length 1 here thanks to checks elsewhere
             # but just in case...
             if len(selected_obj) != 1:
-                raise(IndexError("Cannot determine cube slice index with multiple datasets."))
+                raise IndexError("Cannot determine cube slice index with multiple datasets.")
             spectral_axis = selected_obj[0].spectral_axis
         else:
             spectral_axis = selected_obj.spectral_axis
