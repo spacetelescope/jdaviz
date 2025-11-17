@@ -1,3 +1,4 @@
+from astropy.utils.decorators import deprecated
 from numbers import Number
 
 from jdaviz.core.events import SliceSelectSliceMessage, NewViewerMessage
@@ -24,7 +25,9 @@ class Rampviz(CubeConfigHelper):
         super().__init__(*args, **kwargs)
 
         self.cube_cache = {}
+        self.load = self._load
 
+    @deprecated(since="4.5", alternative="load")
     def load_data(self, data, data_label=None, **kwargs):
         """
         Load and parse a data cube with Cubeviz.
@@ -43,9 +46,14 @@ class Rampviz(CubeConfigHelper):
             Extra keywords accepted by Jdaviz application-level parser.
         """  # noqa
         if data_label:
+            if not data_label.endswith('[DATA]'):
+                data_label += '[DATA]'
             kwargs['data_label'] = data_label
 
-        super().load_data(data, parser_reference="ramp-data-parser", **kwargs)
+        try:
+            self._load(data, format='Ramp', **kwargs)
+        except Exception:
+            self._load(data, format='Image', **kwargs)
         self._set_x_axis()
 
     def _set_x_axis(self, msg={}):

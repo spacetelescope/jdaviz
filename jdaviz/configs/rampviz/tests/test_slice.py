@@ -30,7 +30,7 @@ def _slice(helper, ramp_cube):
     helper.load_data(ramp_cube, data_label='test')
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("diff-viewer", "test[DATA]")
-    app.add_data_to_viewer("integration-viewer", "Ramp (mean)")
+    app.add_data_to_viewer("integration-viewer", "test (median)")
     sv = helper.viewers['integration-viewer']._obj.glue_viewer
 
     # sample ramp only has 10 groups
@@ -89,7 +89,7 @@ def _indicator_settings(helper, ramp):
     helper.load_data(ramp, data_label='test')
     app = helper.app
     app.add_data_to_viewer("group-viewer", "test[DATA]")
-    app.add_data_to_viewer("integration-viewer", "Ramp (mean)")
+    app.add_data_to_viewer("integration-viewer", "test (median)")
     sl = helper.plugins['Slice']._obj
     sv = app.get_viewer('integration-viewer')
     indicator = sv.slice_indicator

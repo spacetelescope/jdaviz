@@ -290,7 +290,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
 
     def __call__(self):
-        # get a copy of both of these before additional data entries changes defaults
+        # get a copy of all requested data-labels before additional data entries changes defaults
         data_label = self.data_label_value
         unc_data_label = self.unc_data_label_value
         mask_data_label = self.mask_data_label_value

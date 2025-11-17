@@ -56,6 +56,13 @@ Specviz2d
 
 - Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
 
+Rampviz
+^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.
+  This changes the default auto-extraction function to always be "median" as well as
+  changes to the default label of the auto-extracted ramp integration. [#3878]
+
 API Changes
 -----------
 
