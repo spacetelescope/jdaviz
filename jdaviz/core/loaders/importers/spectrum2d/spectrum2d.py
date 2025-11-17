@@ -16,7 +16,7 @@ __all__ = ['Spectrum2DImporter']
 @loader_importer_registry('2D Spectrum')
 class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum2d.vue"
-    parser_preference = ['fits', 'specutils.Spectrum']
+    parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
 
     auto_extract = Bool(True).tag(sync=True)
 
@@ -82,9 +82,8 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def user_api(self):
-        expose = ['auto_extract', 'ext_data_label', 'ext_viewer']
-        if self.input_has_extensions:
-            expose += ['extension', 'unc_extension']
+        expose = ['auto_extract', 'ext_data_label', 'ext_viewer',
+                  'extension', 'unc_extension', 'mask_extension']
         return ImporterUserApi(self, expose)
 
     @property
@@ -109,8 +108,6 @@ class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def output(self):
-        if not self.input_has_extensions:
-            return self.input
         return self.spectrum
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
