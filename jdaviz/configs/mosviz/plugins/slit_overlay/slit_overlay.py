@@ -7,6 +7,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import stcs_string2region
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['SlitOverlay', 'jwst_header_to_skyregion']
 
@@ -43,6 +44,10 @@ class SlitOverlay(PluginTemplateMixin):
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
         self._slit_overlay_mark = None
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('visible'))
 
     @property
     def _default_table_viewer_reference_name(self):
