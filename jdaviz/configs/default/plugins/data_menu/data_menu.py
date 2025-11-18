@@ -627,6 +627,33 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.modify_subset(info.get('combination_mode'),
                            info.get('subset_type'))  # pragma: no cover
 
+    def resize_subset(self):
+        """
+        Enable resizing of an existing subset in the viewer.
+        """
+        # future improvement: allow overriding layer.selected,
+        # with pre-validation
+        if len(self.layer.selected) != 1:
+            raise ValueError('Only one layer can be selected to resize subset.')
+        if self.layer.selected[0] not in self.existing_subset_labels:
+            raise ValueError('Selected layer is not a subset.')
+        subset = self.layer.selected[0]
+
+        # set subset as the active/highlighted layer in data menu
+        self.layer.selected = subset
+
+        # set subset selection to the subset to modify
+        subset_grp = ([sg for sg in self.app.data_collection.subset_groups
+                       if sg.label == subset])
+        self.session.edit_subset_mode.edit_subset = subset_grp
+        # set combination mode to replace
+        self.session.edit_subset_mode.mode = ReplaceMode
+
+        # TODO: ...proceed with resizing
+
+    def vue_resize_subset(self, *args):
+        self.resize_subset()  # pragma: no cover
+
     def view_info(self):
         """
         View info for the selected layer by opening either the metadata or subset plugin to the
