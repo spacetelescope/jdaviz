@@ -546,3 +546,35 @@ def test_invalid_subset(specviz_helper, spectrum1d):
 
     plugin.dataset = 'left_spectrum'
     assert plugin._obj.spectral_subset_valid
+
+
+def test_line_analysis_deconfig(deconfigged_helper):
+    s = Spectrum(spectral_axis=np.arange(0, 100, 1) * u.um, flux=np.arange(0, 100, 1) * u.Jy)
+    deconfigged_helper.load(s)
+    # Create 1D viewer
+    vc = deconfigged_helper.new_viewers['1D Spectrum']
+    vc()
+
+    # Add smoothed spectrum to new viewer
+    gs = deconfigged_helper.plugins['Gaussian Smooth']
+    gs.add_results.viewer = '1D Spectrum (1)'
+    gs.smooth()
+
+    subset_plugin = deconfigged_helper.plugins['Subset Tools']
+    subset_plugin.import_region(SpectralRegion(40 * u.um, 50 * u.um))
+
+    # Line analysis using subset on input spectrum
+    la = deconfigged_helper.plugins['Line Analysis']
+    la.dataset = '1D Spectrum'
+    la.spectral_subset = 'Subset 1'
+    input_results = la.get_results()
+
+    # Line analysis using subset on smoothed spectrum
+    la.dataset = '1D Spectrum smooth stddev-1.0'
+    la.spectral_subset = 'Subset 1'
+    smoothed_results = la.get_results()
+
+    # Compare results and make sure numbers are close
+    for i in range(5):
+        assert_allclose(float(input_results[i]['result']),
+                        float(smoothed_results[i]['result']), rtol=1)
