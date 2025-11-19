@@ -1032,7 +1032,10 @@ def _clean_data_for_hash(data):
 
     data_mask = getattr(data, 'mask', None)
     data_mask = data_mask if data_mask is not None else getattr(new_data, 'mask', None)
-    mask_arr = np.ascontiguousarray(data_mask).astype('uint8') if data_mask is not None else None
+    try:
+        mask_arr = np.ascontiguousarray(data_mask).astype('uint8') if data_mask is not None else None  # noqa
+    except TypeError:
+        mask_arr = None
 
     try:
         arr = np.ascontiguousarray(new_data)
