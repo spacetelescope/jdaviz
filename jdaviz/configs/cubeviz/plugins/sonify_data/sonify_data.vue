@@ -318,6 +318,9 @@ export default {
             if (!this.player1 || !this.player2 || newVal === oldVal || !window.Tone || !this.is_playing) {
                 return;
             }
+
+	    console.log("dim:", this.dims, 'ldx:', this.lindx, " x:",this.x_pos, "y:", this.y_pos, "x2:",this.x_pos2, "y2:", this.y_pos2);
+	    
 	    // Is this a sanctioned lindx value?
 	    if(newVal > (this.npix-1) || newVal < 0) {
 		return;
