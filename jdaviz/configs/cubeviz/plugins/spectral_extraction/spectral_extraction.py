@@ -240,7 +240,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _active_step_changed(self, *args):
         self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'extract'))
         self.background._set_mark_visiblities(self.active_step == 'bg')
-        self.marks['bg_extract'].visible = self.active_step == 'bg'
+        if 'bg_extract' in self.marks:
+            self.marks['bg_extract'].visible = self.active_step == 'bg'
 
     @property
     def slice_plugin(self):
