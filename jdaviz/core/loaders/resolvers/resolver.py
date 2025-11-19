@@ -6,7 +6,6 @@ from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
 import numpy as np
-from glue.core import HubListener
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
@@ -101,8 +100,7 @@ def find_closest_polygon_mark(px, py, marks):
 
         if min_dist_for_this_mark < min_dist:
             min_dist = min_dist_for_this_mark
-            # Extract observation index from overlay name format
-            closest_idx = int(mark._overlay.split('_')[-1])
+            closest_idx = mark.label
 
     return closest_idx
 
@@ -300,7 +298,7 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, HubListener):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -650,6 +648,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, HubListener):
         selected_idx = find_closest_polygon_mark(click_x, click_y, self._footprint_marks)
 
         if selected_idx is not None:
+            viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
             # Get selected rows from the table
             currently_selected = set()
             if hasattr(self, 'observation_table') and self.observation_table is not None:
@@ -657,16 +656,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, HubListener):
                     idx = self.observation_table.items.index(row)
                     currently_selected.add(idx)
 
-            # Toggle behavior
             if selected_idx in currently_selected:
                 currently_selected.discard(selected_idx)
-                for mark in self._footprint_groups.get(selected_idx, []):
-                    mark.selected = False
+                viewer._deselect_region_overlay(region_label=selected_idx)
             else:
                 currently_selected.add(selected_idx)
-                if selected_idx in self._footprint_groups:
-                    for mark in self._footprint_groups[selected_idx]:
-                        mark.selected = True
+                viewer._select_region_overlay(region_label=selected_idx)
 
             # Update the table selection
             if hasattr(self, 'observation_table') and self.observation_table is not None:
@@ -681,10 +676,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, HubListener):
             return
 
         viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
-        wcs = getattr(viewer.state.reference_data, 'coords', None)
-
-        successfully_displayed = 0
-        new_marks = []
+        regions = []
+        region_labels = []
 
         for idx, row in enumerate(self.observation_table.items):
             s_region_str = row.get('s_region', '')
@@ -695,25 +688,20 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, HubListener):
                 continue
 
             region = stcs_string2region(s_region_str)
-            pixel_region = region.to_pixel(wcs)
-            x, y = pixel_region.vertices.x, pixel_region.vertices.y
+            regions.append(region)
+            region_labels.append(idx)
 
-            mark = RegionOverlay(
-                viewer,
-                f"ObsTable_{idx}",
-                x=x, y=y,
-                fill_opacities=[0],
-                label=f"ObsTable_{idx}",
-                selected=False
+        if regions:
+            viewer._add_region_overlay(
+                region=regions,
+                region_label=region_labels,
+                selected=False,
+                fill_opacities=[0]
             )
-            new_marks.append(mark)
-            self._footprint_marks.append(mark)
-            self._footprint_groups[idx] = [mark]
-            successfully_displayed += 1
-
-        # Add all marks at once
-        if new_marks:
-            viewer.figure.marks = list(viewer.figure.marks) + new_marks
+            for mark in viewer.figure.marks:
+                if isinstance(mark, RegionOverlay) and mark.label in region_labels:
+                    self._footprint_marks.append(mark)
+                    self._footprint_groups[mark.label] = [mark]
 
     def _remove_observation_footprints(self):
         """Remove all observation footprints from the viewer."""
@@ -721,13 +709,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin, HubListener):
             return
 
         viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
-        current_marks = list(viewer.figure.marks)
 
-        for mark in self._footprint_marks:
-            if mark in current_marks:
-                current_marks.remove(mark)
+        region_labels = [mark.label for mark in self._footprint_marks]
 
-        viewer.figure.marks = current_marks
+        if region_labels:
+            viewer._remove_region_overlay(region_label=region_labels)
+
         self._footprint_marks = []
         self._footprint_groups = {}
 
