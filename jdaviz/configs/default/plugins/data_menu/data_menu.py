@@ -15,8 +15,8 @@ from jdaviz.utils import cmap_samples, is_not_wcs_only
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import (RectangularROI, CircularROI,
-                           EllipticalROI, CircularAnnulusROI)
-from glue.core.subset import RoiSubsetState
+                           EllipticalROI, CircularAnnulusROI, XRangeROI)
+from glue.core.subset import RangeSubsetState, RoiSubsetState, SubsetState
 
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -651,17 +651,23 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # get the subset group and extract the ROI
         subset_grp = ([sg for sg in self.app.data_collection.subset_groups
                        if sg.label == subset])
+        subset = subset_grp[0]
 
         # Determine which tool to use based on the ROI type
-        if (subset_grp and len(subset_grp) > 0
-                and isinstance(subset_grp[0].subset_state, RoiSubsetState)):
-            roi = subset_grp[0].subset_state.roi
+        if subset_grp and len(subset_grp) > 0:
+            if isinstance(subset.subset_state, RoiSubsetState):
+                roi = subset.subset_state.roi
+            elif isinstance(subset.subset_state, RangeSubsetState):
+                roi = XRangeROI(subset.subset_state.lo, subset.subset_state.hi)
+            else:
+                raise ValueError('Selected subset does not have a supported ROI.')
 
             # Map ROI types to tool IDs
             roi_tool_map = {RectangularROI: 'bqplot:rectangle',
                             CircularROI: 'bqplot:truecircle',
                             EllipticalROI: 'bqplot:ellipse',
-                            CircularAnnulusROI: 'bqplot:circannulus'}
+                            CircularAnnulusROI: 'bqplot:circannulus',
+                            XRangeROI: 'bqplot:xrange'}
 
             # Find the matching tool for this ROI type
             tool_id = None
@@ -691,8 +697,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     f'Failed to activate {tool.__class__.__name__} '
                     f'for resizing {roi.__class__.__name__} subsets.')
         else:
-            msg = 'Selected subset does not have a supported ROI.'
-            raise ValueError(msg)
+            raise ValueError('Selected subset group not found.')
 
     def vue_resize_subset(self, *args):
         self.resize_subset()  # pragma: no cover
