@@ -16,7 +16,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import (RectangularROI, CircularROI,
                            EllipticalROI, CircularAnnulusROI, XRangeROI)
-from glue.core.subset import RangeSubsetState, RoiSubsetState, SubsetState
+from glue.core.subset import RangeSubsetState, RoiSubsetState
 
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
