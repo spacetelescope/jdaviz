@@ -10,9 +10,10 @@ from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from gwcs import WCS as GWCS
 from stdatamodels import asdf_in_fits
-from traitlets import Bool, List, Any, observe
+from traitlets import Bool, List, Any, Unicode, observe
 
-from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect
+from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect, SelectPluginComponent
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.registries import loader_importer_registry
@@ -64,6 +65,10 @@ class ImageImporter(BaseImporterToDataCollection):
     # Use FITS approximation instead of original image GWCS
     gwcs_to_fits_sip = Bool(False).tag(sync=True)
 
+    # Alignment options
+    align_by_items = List().tag(sync=True)
+    align_by_selected = Unicode().tag(sync=True)
+
     # user-settable option to treat the data_label as prefix and append the extension later
     data_label_as_prefix = Bool(False).tag(sync=True)
     # whether the current data_label should be treated as a prefix
@@ -77,6 +82,16 @@ class ImageImporter(BaseImporterToDataCollection):
                                     multiselect=None, manual_options=['Auto'])
         self.parent.add_filter('is_image', 'not_from_plugin')
         self.parent.selected = 'Auto'
+
+        self.align_by = SelectPluginComponent(self,
+                                              items='align_by_items',
+                                              selected='align_by_selected',
+                                              manual_options=['Pixels', 'WCS'])
+        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if align_plg is not None:
+            self.align_by.selected = align_plg.align_by.selected
+        else:
+            self.align_by.selected = 'Pixels'
 
         input = self.input
         if isinstance(input, fits.hdu.image.ImageHDU):
@@ -131,7 +146,7 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def user_api(self):
-        expose = ['parent', 'data_label_as_prefix', 'gwcs_to_fits_sip']
+        expose = ['parent', 'data_label_as_prefix', 'gwcs_to_fits_sip', 'align_by']
         if self.input_has_extensions:
             expose += ['extension']
         return ImporterUserApi(self, expose)
@@ -324,6 +339,13 @@ class ImageImporter(BaseImporterToDataCollection):
             self.add_to_data_collection(output, data_label, data_hash=ext_item.get('data_hash'),
                                         parent=parent_data_label if parent_data_label != data_label else None,  # noqa
                                         cls=CCDData)
+
+        align_plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if align_plg is not None:
+            align_plg.align_by.selected = self.align_by.selected
+        else:
+            msg = f"could not change align_by to {self.align_by.selected}"
+            self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
 
     def assign_component_type(self, comp_id, comp, units, physical_type):
         return _spatial_assign_component_type(comp_id, comp, units, physical_type)
