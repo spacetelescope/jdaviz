@@ -7,15 +7,13 @@
     :scroll_to.sync="scroll_to">
 
     <v-row>
-      <v-switch
+      <plugin-switch
+        :value.sync="visible"
         label="Visible"
-        hint="Show slit in the image viewer."
         api_hint="plg.visible = "
         :api_hints_enabled="api_hints_enabled"
-        v-model="visible"
-        @click.native="change_visible"
-        persistent-hint>
-      </v-switch>
+        hint="Show slit in the image viewer."
+      />
     </v-row>
   </j-tray-plugin>
 </template>
