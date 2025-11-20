@@ -650,9 +650,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # get the subset group and extract the ROI
         subset_grp = ([sg for sg in self.app.data_collection.subset_groups
                        if sg.label == subset])
-        self.session.edit_subset_mode.edit_subset = subset_grp
-        # set combination mode to replace
-        self.session.edit_subset_mode.mode = ReplaceMode
 
         # Determine which tool to use based on the ROI type
         if (subset_grp and len(subset_grp) > 0
@@ -679,6 +676,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             # Activate the appropriate tool
             self._viewer.toolbar.active_tool_id = None
             self._viewer.toolbar.select_tool(tool_id)
+
+            # Set subset to edit and mode to replace
+            self.session.edit_subset_mode.edit_subset = subset_grp
+            self.session.edit_subset_mode.mode = ReplaceMode
 
             # Pre-populate the tool with the existing subset's ROI
             tool = self._viewer.toolbar.active_tool
