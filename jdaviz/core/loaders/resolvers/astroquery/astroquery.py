@@ -224,7 +224,7 @@ class AstroqueryResolver(BaseResolver):
         elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
-            Gaia.ROW_LIMIT = 200 # self.max_sources
+            Gaia.ROW_LIMIT = 2000 # self.max_sources
             self._output = Gaia.query_object(skycoord_center, radius=radius
                                              )
 
