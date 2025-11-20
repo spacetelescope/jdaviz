@@ -5,7 +5,7 @@ from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage', 'SubsetRenameMessage',
-           'ViewerVisibleLayersChangedMessage',
+           'ViewerVisibleLayersChangedMessage', 'LayersFinalizedMessage',
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
@@ -93,6 +93,35 @@ class LoadDataMessage(Message):
     @property
     def path(self):
         return self._path
+
+
+class LayersFinalizedMessage(Message):
+    """
+    This event type is a temporary solution to AddDataMessage ordering issues.
+    In app.py after the AddDataMessage is broadcast, modifications are made to
+    the viewer layers (e.g. setting visibility). This message is broadcast after
+    those modifications are made so that plugins can also set layer visiblity
+    after data is added to a viewer without the visibility being modified by the
+    code in app.py that runs after the AddDataMessage is broadcast."""
+
+    def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._data = data
+        self._viewer = viewer
+        self._viewer_id = viewer_id
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def viewer(self):
+        return self._viewer
+
+    @property
+    def viewer_id(self):
+        return self._viewer_id
 
 
 class AddDataMessage(Message):

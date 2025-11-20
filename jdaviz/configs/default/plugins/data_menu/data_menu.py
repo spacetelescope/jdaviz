@@ -6,7 +6,7 @@ from traitlets import Bool, Dict, Unicode, Integer, List, observe
 from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSelect,
                                         LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
+from jdaviz.core.events import (IconsUpdatedMessage, LayersFinalizedMessage,
                                 ChangeRefDataMessage, ViewerRenamedMessage)
 from glue.core.message import SubsetDeleteMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
@@ -149,7 +149,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
-        self.hub.subscribe(self, AddDataMessage, handler=self._on_data_added)
+        self.hub.subscribe(self, LayersFinalizedMessage, handler=self._on_data_added)
         self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
@@ -180,7 +180,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         new_data = msg.data
         if new_data.meta.get('_importer') == 'CatalogImporter':
             comp_labels = [str(x) for x in new_data.component_ids()]
-            has_world = 'RA' in comp_labels and 'DEC' in comp_labels
+            print('Component labels:', comp_labels)
+            has_world = 'Right Ascension' in comp_labels and 'Declination' in comp_labels
             has_pixel = 'X' in comp_labels and 'Y' in comp_labels
             align_by_wcs = self.orientation_align_by_wcs
 
