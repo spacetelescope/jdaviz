@@ -630,26 +630,70 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def resize_subset(self):
         """
         Enable resizing of an existing subset in the viewer.
+        Detects the subset's ROI type and activates the corresponding
+        selection tool pre-populated with the existing bounds for
+        interactive resizing.
         """
+        from glue.core.subset import RoiSubsetState
+        from glue.core.roi import (RectangularROI, CircularROI,
+                                   EllipticalROI, CircularAnnulusROI)
+
         # future improvement: allow overriding layer.selected,
         # with pre-validation
         if len(self.layer.selected) != 1:
-            raise ValueError('Only one layer can be selected to resize subset.')
+            msg = 'Only one layer can be selected to resize subset.'
+            raise ValueError(msg)
         if self.layer.selected[0] not in self.existing_subset_labels:
-            raise ValueError('Selected layer is not a subset.')
+            msg = 'Selected layer is not a subset.'
+            raise ValueError(msg)
         subset = self.layer.selected[0]
 
         # set subset as the active/highlighted layer in data menu
         self.layer.selected = subset
 
-        # set subset selection to the subset to modify
+        # get the subset group and extract the ROI
         subset_grp = ([sg for sg in self.app.data_collection.subset_groups
                        if sg.label == subset])
         self.session.edit_subset_mode.edit_subset = subset_grp
         # set combination mode to replace
         self.session.edit_subset_mode.mode = ReplaceMode
 
-        # TODO: ...proceed with resizing
+        # Determine which tool to use based on the ROI type
+        if (subset_grp and len(subset_grp) > 0
+                and isinstance(subset_grp[0].subset_state, RoiSubsetState)):
+            roi = subset_grp[0].subset_state.roi
+
+            # Map ROI types to tool IDs
+            roi_tool_map = {
+                RectangularROI: 'bqplot:rectangle',
+                CircularROI: 'bqplot:truecircle',
+                EllipticalROI: 'bqplot:ellipse',
+                CircularAnnulusROI: 'bqplot:circannulus',
+            }
+
+            # Find the matching tool for this ROI type
+            tool_id = None
+            for roi_type, tid in roi_tool_map.items():
+                if isinstance(roi, roi_type):
+                    tool_id = tid
+                    break
+
+            if tool_id is None:
+                msg = (f'Resize not supported for '
+                       f'{roi.__class__.__name__} subsets.')
+                raise NotImplementedError(msg)
+
+            # Activate the appropriate tool
+            self._viewer.toolbar.active_tool_id = None
+            self._viewer.toolbar.select_tool(tool_id)
+
+            # Pre-populate the tool with the existing subset's ROI
+            tool = self._viewer.toolbar.active_tool
+            if tool and hasattr(tool, 'update_from_roi'):
+                tool.update_from_roi(roi)
+        else:
+            msg = 'Selected subset does not have a supported ROI.'
+            raise ValueError(msg)
 
     def vue_resize_subset(self, *args):
         self.resize_subset()  # pragma: no cover
