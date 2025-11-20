@@ -32,6 +32,8 @@ New Features
 
 - Generalize spectrum loading logic to prepare to support Roman ASDF files. [#3864]
 
+- Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
+
 Cubeviz
 ^^^^^^^
 
