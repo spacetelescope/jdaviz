@@ -86,3 +86,112 @@ def test_footprint_workflow(imviz_helper):
     assert resolver.custom_toolbar_enabled is False
     assert resolver._footprint_marks == []
     assert resolver._footprint_groups == {}
+
+
+def test_remove_footprints(imviz_helper):
+    wcs = WCS({
+        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+        'CRPIX1': 1, 'CRVAL1': 337.5202808,
+        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+        'CRPIX2': 1, 'CRVAL2': -20.83333306,
+    })
+    arr = np.ones((200, 200))
+    ndd = NDData(arr, wcs=wcs)
+    imviz_helper.load_data(ndd, data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = imviz_helper.loaders['object']
+    ldr.object = table
+    resolver = ldr._obj
+    resolver.treat_table_as_query = True
+    resolver.vue_link_by_wcs()
+
+    # Display footprints
+    resolver.toggle_custom_toolbar()
+    n_marks_before = len(resolver._footprint_marks)
+    assert n_marks_before == 1
+
+    # Remove footprints
+    resolver.toggle_custom_toolbar()
+
+    # ASsert marks are removed
+    assert len(resolver._footprint_marks) == 0
+    assert len(resolver._footprint_groups) == 0
+
+
+def test_multiselect(imviz_helper):
+    # Load data first
+    wcs = WCS({
+        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+        'CRPIX1': 1, 'CRVAL1': 337.5202808,
+        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+        'CRPIX2': 1, 'CRVAL2': -20.83333306,
+    })
+    arr = np.ones((200, 200))
+    ndd = NDData(arr, wcs=wcs)
+    imviz_helper.load_data(ndd, data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829',
+        'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
+    ]
+
+    ldr = imviz_helper.loaders['object']
+    ldr.object = table
+    resolver = ldr._obj
+    resolver.treat_table_as_query = True
+    resolver.vue_link_by_wcs()
+    resolver.toggle_custom_toolbar()
+
+    assert len(resolver._footprint_marks) == 3
+
+    # Select observations 0 and 2 via the table
+    resolver.observation_table.select_rows([0, 2])
+
+    # Check that marks are in the groups
+    assert 0 in resolver._footprint_groups
+    assert 1 in resolver._footprint_groups
+    assert 2 in resolver._footprint_groups
+
+
+def test_display_valid_footprints(imviz_helper):
+    wcs = WCS({
+        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+        'CRPIX1': 1, 'CRVAL1': 337.5202808,
+        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+        'CRPIX2': 1, 'CRVAL2': -20.83333306,
+    })
+    arr = np.ones((200, 200))
+    ndd = NDData(arr, wcs=wcs)
+    imviz_helper.load_data(ndd, data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829'
+    ]
+
+    ldr = imviz_helper.loaders['object']
+    ldr.object = table
+    resolver = ldr._obj
+    resolver.treat_table_as_query = True
+    resolver.vue_link_by_wcs()
+    resolver.toggle_custom_toolbar()
+
+    # Assert marks were added
+    assert len(resolver._footprint_marks) == 2
+
+    # Verify marks have labels/indices
+    from jdaviz.core.marks import RegionOverlay
+    for mark in resolver._footprint_marks:
+        assert isinstance(mark, RegionOverlay)
+        assert mark.label in [0, 1]
