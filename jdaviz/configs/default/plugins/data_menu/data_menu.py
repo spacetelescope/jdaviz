@@ -12,9 +12,12 @@ from glue.core.message import SubsetDeleteMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
-
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
+from glue.core.roi import (RectangularROI, CircularROI,
+                           EllipticalROI, CircularAnnulusROI)
+from glue.core.subset import RoiSubsetState
+
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -634,18 +637,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         selection tool pre-populated with the existing bounds for
         interactive resizing.
         """
-        from glue.core.subset import RoiSubsetState
-        from glue.core.roi import (RectangularROI, CircularROI,
-                                   EllipticalROI, CircularAnnulusROI)
-
-        # future improvement: allow overriding layer.selected,
-        # with pre-validation
+        # future improvement: allow overriding layer.selected, with pre-validation
         if len(self.layer.selected) != 1:
-            msg = 'Only one layer can be selected to resize subset.'
-            raise ValueError(msg)
+            raise ValueError('Only one layer can be selected to resize subset.')
         if self.layer.selected[0] not in self.existing_subset_labels:
-            msg = 'Selected layer is not a subset.'
-            raise ValueError(msg)
+            raise ValueError('Selected layer is not a subset.')
         subset = self.layer.selected[0]
 
         # set subset as the active/highlighted layer in data menu
@@ -664,12 +660,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             roi = subset_grp[0].subset_state.roi
 
             # Map ROI types to tool IDs
-            roi_tool_map = {
-                RectangularROI: 'bqplot:rectangle',
-                CircularROI: 'bqplot:truecircle',
-                EllipticalROI: 'bqplot:ellipse',
-                CircularAnnulusROI: 'bqplot:circannulus',
-            }
+            roi_tool_map = {RectangularROI: 'bqplot:rectangle',
+                            CircularROI: 'bqplot:truecircle',
+                            EllipticalROI: 'bqplot:ellipse',
+                            CircularAnnulusROI: 'bqplot:circannulus'}
 
             # Find the matching tool for this ROI type
             tool_id = None
@@ -679,9 +673,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     break
 
             if tool_id is None:
-                msg = (f'Resize not supported for '
-                       f'{roi.__class__.__name__} subsets.')
-                raise NotImplementedError(msg)
+                raise NotImplementedError(
+                    f'Resize not supported for {roi.__class__.__name__} subsets.')
 
             # Activate the appropriate tool
             self._viewer.toolbar.active_tool_id = None
@@ -691,6 +684,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             tool = self._viewer.toolbar.active_tool
             if tool and hasattr(tool, 'update_from_roi'):
                 tool.update_from_roi(roi)
+            else:
+                raise RuntimeError(
+                    f'Failed to activate {tool.__class__.__name__} '
+                    f'for resizing {roi.__class__.__name__} subsets.')
         else:
             msg = 'Selected subset does not have a supported ROI.'
             raise ValueError(msg)
