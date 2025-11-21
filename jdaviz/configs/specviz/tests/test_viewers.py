@@ -22,7 +22,7 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*contains multiple slashes, which is discouraged by the FITS standard.*")  # noqa
-        specviz_helper.load_data(spec)
+        specviz_helper.load(spec)
 
     label = specviz_helper._spectrum_viewer.figure.axes[1].label
 
@@ -30,7 +30,7 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
 
 
 def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="Test")
+    specviz_helper.load(spectrum1d, data_label="Test")
     uc = specviz_helper.plugins["Unit Conversion"]
     assert uc.flux_unit == "Jy"
     uc.flux_unit = "MJy"
@@ -47,7 +47,7 @@ def test_limits_on_unit_change(specviz_helper, spectrum1d):
     """
     Test that the x-limits are reset when changing units
     """
-    specviz_helper.load_data(spectrum1d, data_label="Test")
+    specviz_helper.load(spectrum1d, data_label="Test")
     uc = specviz_helper.plugins["Unit Conversion"]
     sv = specviz_helper.viewers['spectrum-viewer']
 
@@ -72,7 +72,7 @@ class TestResetLimitsTwoTests:
 
     def test_reset_limits_01(self, specviz_helper, spectrum1d):
         """This should run first."""
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
         sv = specviz_helper.app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)
@@ -92,7 +92,7 @@ class TestResetLimitsTwoTests:
 
     def test_reset_limits_02(self, specviz_helper, spectrum1d_nm):
         """This should run second and see if first polutes it."""
-        specviz_helper.load_data(spectrum1d_nm)
+        specviz_helper.load(spectrum1d_nm)
         sv = specviz_helper.app.get_viewer('spectrum-viewer')
 
         orig_xlims = (sv.state.x_min, sv.state.x_max)

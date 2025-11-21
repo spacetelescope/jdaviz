@@ -20,7 +20,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     sl.vue_play_start_stop()
     assert not sl.is_playing
 
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    cubeviz_helper.load(spectrum1d_cube, data_label='test')
     app.add_data_to_viewer("flux-viewer", "test[FLUX]")
     app.add_data_to_viewer("uncert-viewer", "test[FLUX]")
     app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
@@ -94,7 +94,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
 
 
 def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    cubeviz_helper.load(spectrum1d_cube, data_label='test')
     app = cubeviz_helper.app
     app.add_data_to_viewer("flux-viewer", "test[FLUX]")
     app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
@@ -116,7 +116,7 @@ def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_init_slice(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    cubeviz_helper.load(spectrum1d_cube, data_label='test')
 
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     sl = cubeviz_helper.plugins['Slice']

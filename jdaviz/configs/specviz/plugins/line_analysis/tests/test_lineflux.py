@@ -84,7 +84,7 @@ def test_cubeviz_collapse_fluxunits(
 
     # Initialize Cubeviz with specific data and collapse function
     data_label = "Test Cube"
-    cubeviz_helper.load_data(data, data_label=data_label)
+    cubeviz_helper.load(data, data_label=data_label)
     cubeviz_helper.app.get_viewer('spectrum-viewer').state.function = function
 
     lineflux_result = _calculate_line_flux(cubeviz_helper)
@@ -104,7 +104,7 @@ def test_unit_gaussian(specviz_helper, test_case):
     Test an Area 1 Gaussian and ensure the result returns in W/m2
     Test provided by Patrick Ogle
     '''
-    specviz_helper.load_data(test_case)
+    specviz_helper.load(test_case)
 
     lineflux_result = _calculate_line_flux(specviz_helper)
     assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
@@ -124,7 +124,7 @@ def test_unit_gaussian_mixed_units_per_steradian(specviz_helper):
     flx_wave = _gauss_with_unity_area(lam_a.value, mn, sig)*1E3*u.erg/u.s/u.cm**2/u.Angstrom
     fl_wave = Spectrum(spectral_axis=lam_a, flux=flx_wave)
 
-    specviz_helper.load_data(fl_wave)
+    specviz_helper.load(fl_wave)
     lineflux_result = _calculate_line_flux(specviz_helper)
     assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
                              1*u.Unit('W/(m2)'))

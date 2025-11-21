@@ -24,7 +24,7 @@ def test_data_retrieval(cubeviz_helper):
     fn = download_file(URL, cache=True)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        cubeviz_helper.load_data(fn)
+        cubeviz_helper.load(fn)
 
     # two ways of retrieving data from the viewer.
     # They should return the same spectral values

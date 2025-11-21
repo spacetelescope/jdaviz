@@ -8,7 +8,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     dc = app.data_collection
     data_label = 'test'
-    cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
+    cubeviz_helper.load(spectrum1d_cube, data_label=data_label)
     spec_viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
 
     assert len(dc) == 2
@@ -106,7 +106,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
 def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
     data_label = 'test'
     dc = cubeviz_helper.app.data_collection
-    cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
+    cubeviz_helper.load(spectrum1d_cube, data_label=data_label)
 
     gs = cubeviz_helper.plugins['Gaussian Smooth']._obj
     gs.mode_selected = 'Spatial'
@@ -130,7 +130,7 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
 def test_specviz_smooth(specviz_helper, spectrum1d):
     data_label = 'test'
     dc = specviz_helper.app.data_collection
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
     spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     gs = specviz_helper.plugins['Gaussian Smooth']._obj
@@ -170,7 +170,7 @@ def test_specviz_smooth(specviz_helper, spectrum1d):
 def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     data_label = 'test'
     dc = specviz2d_helper.app.data_collection
-    specviz2d_helper.load_data(spectrum_2d=spectrum2d, spectrum_2d_label=data_label)
+    specviz2d_helper.load(spectrum2d, data_label=data_label)
 
     gs_plugin = specviz2d_helper.plugins['Gaussian Smooth']
 

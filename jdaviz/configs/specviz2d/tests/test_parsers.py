@@ -14,7 +14,7 @@ from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 def test_2d_parser_jwst(specviz2d_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    specviz2d_helper.load_data(spectrum_2d=fn)
+    specviz2d_helper.load(fn)
     assert len(specviz2d_helper.app.data_collection) == 2
 
     dc_0 = specviz2d_helper.app.data_collection[0]
@@ -83,7 +83,7 @@ def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
 
 
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
-    specviz2d_helper.load_data(mos_spectrum2d, spectrum_2d_label='my_2d_spec')
+    specviz2d_helper.load(mos_spectrum2d, spectrum_2d_label='my_2d_spec')
     assert len(specviz2d_helper.app.data_collection) == 2
 
     dc_0 = specviz2d_helper.app.data_collection[0]
@@ -133,7 +133,7 @@ def test_2d_parser_hdulist_ext(tmp_path, specviz2d_helper, mos_spectrum2d_as_hdu
     }
     stdatamodels.asdf_in_fits.write(in_filename, tree, mos_spectrum2d_as_hdulist, overwrite=True)
 
-    specviz2d_helper.load_data(in_filename, ext=1)
+    specviz2d_helper.load(in_filename, ext=1)
     assert len(specviz2d_helper.app.data_collection) == 2
 
     dc_0 = specviz2d_helper.app.data_collection[0]
@@ -148,7 +148,7 @@ def test_2d_parser_hdulist_ext(tmp_path, specviz2d_helper, mos_spectrum2d_as_hdu
 
 
 def test_1d_parser(specviz2d_helper, spectrum1d):
-    specviz2d_helper.load_data(spectrum_1d=spectrum1d)
+    specviz2d_helper.load(spectrum1d)
     assert len(specviz2d_helper.app.data_collection) == 1
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.label == 'Spectrum 1D'
@@ -156,7 +156,8 @@ def test_1d_parser(specviz2d_helper, spectrum1d):
 
 
 def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
-    specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d, spectrum_1d=spectrum1d)
+    specviz2d_helper.load(mos_spectrum2d)
+    specviz2d_helper.load(spectrum1d)
     assert specviz2d_helper.app.data_collection.labels == ['Spectrum 2D', 'Spectrum 1D']
 
     spec2d_viewer = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
@@ -181,4 +182,4 @@ def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
 
 def test_parser_no_data(specviz2d_helper):
     with pytest.raises(ValueError, match='Must provide spectrum_2d or spectrum_1d'):
-        specviz2d_helper.load_data()
+        specviz2d_helper.load()

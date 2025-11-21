@@ -22,11 +22,11 @@ def test_view_dict(imviz_helper):
     ndd_4[0].header['APERTURE'] = ('#TODO', 'Aperture')
     ndd_4[1].name = 'DATA'
 
-    imviz_helper.load_data(ndd_1, data_label='has_simple_meta')
-    imviz_helper.load_data(ndd_2, data_label='has_nested_meta')
-    imviz_helper.load_data(ndd_3, data_label='has_primary')
-    imviz_helper.load_data(ndd_4, data_label='has_primary_2')
-    imviz_helper.load_data(arr, data_label='no_meta')
+    imviz_helper.load(ndd_1, data_label='has_simple_meta')
+    imviz_helper.load(ndd_2, data_label='has_nested_meta')
+    imviz_helper.load(ndd_3, data_label='has_primary')
+    imviz_helper.load(ndd_4, data_label='has_primary_2')
+    imviz_helper.load(arr, data_label='no_meta')
     assert mv.dataset.labels == ['has_simple_meta[DATA]', 'has_nested_meta[DATA]',
                                  'has_primary[DATA,1]', 'has_primary_2[DATA,1]', 'no_meta']
 

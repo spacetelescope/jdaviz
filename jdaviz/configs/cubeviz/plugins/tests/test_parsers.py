@@ -14,20 +14,20 @@ from jdaviz.utils import PRIHDR_KEY
 
 @pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
-    cubeviz_helper.load_data(image_cube_hdu_obj)
+    cubeviz_helper.load(image_cube_hdu_obj)
 
     assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and extracted spectrum
     assert cubeviz_helper.app.data_collection[0].label == "3D Spectrum [FLUX]"
 
     # first load should be successful; subsequent attempts should fail
     with pytest.raises(RuntimeError, match="Only one cube"):
-        cubeviz_helper.load_data(image_cube_hdu_obj)
+        cubeviz_helper.load(image_cube_hdu_obj)
 
 
 @pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper):
     # Passing in data_label keyword as posarg.
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, 'has_microns')
+    cubeviz_helper.load(image_cube_hdu_obj_microns, 'has_microns')
 
     assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and extracted spectrum
     assert cubeviz_helper.app.data_collection[0].label == 'has_microns[FLUX]'
@@ -91,7 +91,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     f = tmpdir.join("test_fits_image.fits")
     path = f.strpath
     image_cube_hdu_obj.writeto(path, overwrite=True)
-    cubeviz_helper.load_data(path)
+    cubeviz_helper.load(path)
 
     assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and auto-extracted spectrum
     assert cubeviz_helper.app.data_collection[0].label == "test_fits_image"
@@ -125,7 +125,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     flux = image_cube_hdu_obj[1].data << u.Unit(image_cube_hdu_obj[1].header['BUNIT'])
     wcs = WCS(image_cube_hdu_obj[1].header, image_cube_hdu_obj)
     sc = Spectrum(flux=flux, wcs=wcs)
-    cubeviz_helper.load_data(sc)
+    cubeviz_helper.load(sc)
 
     data = cubeviz_helper.app.data_collection[0]
     assert len(cubeviz_helper.app.data_collection) == 2
@@ -152,7 +152,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
 @pytest.mark.parametrize("flux_unit", [u.nJy, u.DN, u.DN / u.s])
 def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
     sc = Spectrum(flux=np.ones(24).reshape((2, 3, 4)) * flux_unit, spectral_axis_index=2)  # x, y, z
-    cubeviz_helper.load_data(sc)
+    cubeviz_helper.load(sc)
     assert sc.spectral_axis.unit == u.pix
 
     data = cubeviz_helper.app.data_collection[0]
@@ -165,7 +165,7 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
 
 
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
-    cubeviz_helper.load_data(spectrum1d)
+    cubeviz_helper.load(spectrum1d)
 
     assert len(cubeviz_helper.app.data_collection) == 1
     assert cubeviz_helper.app.data_collection[0].label.endswith('Spectrum')
@@ -181,14 +181,14 @@ def test_numpy_cube(cubeviz_helper):
     arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 
     with pytest.raises(TypeError, match='Data type must be one of'):
-        cubeviz_helper.load_data(arr, data_type='foo')
+        cubeviz_helper.load(arr, data_type='foo')
 
-    cubeviz_helper.load_data(arr)
-    cubeviz_helper.load_data(arr, data_label='uncert_array', data_type='uncert',
+    cubeviz_helper.load(arr)
+    cubeviz_helper.load(arr, data_label='uncert_array', data_type='uncert',
                              override_cube_limit=True)
 
     with pytest.raises(RuntimeError, match='Only one cube'):
-        cubeviz_helper.load_data(arr, data_type='mask')
+        cubeviz_helper.load(arr, data_type='mask')
 
     assert len(cubeviz_helper.app.data_collection) == 3  # flux cube, uncert cube, Spectrum (sum)
 
@@ -215,7 +215,7 @@ def test_loading_with_mask(cubeviz_helper):
                            spectral_axis=[1, 2]*u.AA,
                            mask=[[[1, 0], [0, 0]], [[0, 0], [0, 0]]],
                            spectral_axis_index=2)
-    cubeviz_helper.load_data(custom_spec)
+    cubeviz_helper.load(custom_spec)
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
@@ -242,7 +242,7 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
     # This also tests that spaxel is converted to pix**2
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        cubeviz_helper.load_data("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", cache=True)  # noqa
+        cubeviz_helper.load("https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz", cache=True)  # noqa
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     uc.spectral_y_type = "Surface Brightness"
@@ -260,14 +260,14 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
 
 def test_invalid_data_types(cubeviz_helper):
     with pytest.raises(ValueError, match=r"no valid loaders found for input.*"):
-        cubeviz_helper.load_data('does_not_exist.fits')
+        cubeviz_helper.load('does_not_exist.fits')
 
     with pytest.raises(ValueError, match='no valid loaders found for input.*'):
-        cubeviz_helper.load_data(WCS(naxis=3))
+        cubeviz_helper.load(WCS(naxis=3))
 
     with pytest.raises(ValueError, match='no valid loaders found for input.*'):
-        cubeviz_helper.load_data(Spectrum(flux=np.ones((2, 2)) * u.nJy, spectral_axis_index=1))
+        cubeviz_helper.load(Spectrum(flux=np.ones((2, 2)) * u.nJy, spectral_axis_index=1))
 
     with pytest.raises(ValueError, match='no valid loaders found for input.*'):
         # 1D / 3D would be parsed as fluxes in a Spectrum (1d/3d), 2D not supported in cubeviz
-        cubeviz_helper.load_data(np.ones((2, 2)))
+        cubeviz_helper.load(np.ones((2, 2)))

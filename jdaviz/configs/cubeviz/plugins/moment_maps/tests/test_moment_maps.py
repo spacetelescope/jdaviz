@@ -27,7 +27,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(cube, data_label='test')
+        cubeviz_helper.load(cube, data_label='test')
 
     mm = cubeviz_helper.plugins['Moment Maps']
     cmc = mm._obj.continuum_marks['center']
@@ -84,7 +84,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(cube, data_label='test')
+        cubeviz_helper.load(cube, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
@@ -175,7 +175,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
 def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+        cubeviz_helper.load_(spectrum1d_cube, data_label='test')
 
     uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
 
@@ -228,7 +228,7 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
 def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger):
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube_larger, data_label='test')
+        cubeviz_helper.load(spectrum1d_cube_larger, data_label='test')
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     mm = cubeviz_helper.plugins['Moment Maps']
@@ -261,7 +261,7 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+        cubeviz_helper.load(spectrum1d_cube, data_label='test')
     plugin = cubeviz_helper.plugins['Moment Maps']
     plugin.calculate_moment()
 
@@ -280,7 +280,7 @@ def test_momentmap_nirspec_prism(cubeviz_helper):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(cached_uri(uri), cache=True)
+        cubeviz_helper.load(cached_uri(uri), cache=True)
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
@@ -311,7 +311,7 @@ def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_
     # load surface brigtness cube
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(sb_cube, data_label='test')
+        cubeviz_helper.load(sb_cube, data_label='test')
 
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
@@ -382,7 +382,7 @@ def test_moment_zero_unit_flux_conversions(cubeviz_helper,
     # load surface brigtness cube
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(sb_cube, data_label='test')
+        cubeviz_helper.load(sb_cube, data_label='test')
 
     # get plugins
     uc = cubeviz_helper.plugins["Unit Conversion"]

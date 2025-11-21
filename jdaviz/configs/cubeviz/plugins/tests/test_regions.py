@@ -17,7 +17,7 @@ class TestLoadRegions(BaseRegionHandler):
     @pytest.fixture(autouse=True)
     def setup_class(self, cubeviz_helper, image_cube_hdu_obj_microns):
         self.cubeviz = cubeviz_helper
-        cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label='has_microns')
+        cubeviz_helper.load(image_cube_hdu_obj_microns, data_label='has_microns')
         # This is used in BaseRegionHandler
         self.viewer = cubeviz_helper.default_viewer._obj.glue_viewer
         self.spectrum_viewer = cubeviz_helper.app.get_viewer(
