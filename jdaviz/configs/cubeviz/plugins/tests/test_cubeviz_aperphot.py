@@ -42,7 +42,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
 
     plg = helper.plugins["Aperture Photometry"]
     assert plg.dataset.labels == [flux_label, unc_label]
-    assert_quantity_allclose(plg._obj.cube_slice, 4.89 * u.um, atol=1e-2 * u.um)
+    assert plg._obj.cube_slice == "4.894e+00 um"
 
     plg.dataset.selected = flux_label
     plg.aperture.selected = "Subset 1"
