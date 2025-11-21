@@ -47,7 +47,7 @@ class SlitOverlay(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('visible'))
+        return PluginUserApi(self, expose=('visible',))
 
     @property
     def _default_table_viewer_reference_name(self):
