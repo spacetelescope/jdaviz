@@ -2548,6 +2548,7 @@ class Application(VuetifyTemplate, HubListener):
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
                                               sender=self)
+            self.hub.broadcast(add_data_message)
 
         assoc_children = self._get_assoc_data_children(data_label)
 
