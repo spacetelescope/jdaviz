@@ -24,7 +24,7 @@
           <slot/>
         </v-container>
 
-        <v-container style="padding-top: 0px">
+        <v-container>
           <v-alert v-if="is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked" 
                    type="warning" dense style="margin-bottom: 16px; margin-top: 8px">
             <v-row no-gutters align="center">
