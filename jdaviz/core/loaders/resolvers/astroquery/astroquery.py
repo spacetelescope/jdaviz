@@ -2,11 +2,8 @@ from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from pyvo.utils import vocabularies
-from pyvo import registry
-from pyvo.dal.exceptions import DALFormatError, DALQueryError
-from requests.exceptions import ConnectionError as RequestConnectionError
-from traitlets import Bool, Unicode, Any, List, Float, observe
+
+from traitlets import Bool, Unicode, List, Float, observe
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.events import (
