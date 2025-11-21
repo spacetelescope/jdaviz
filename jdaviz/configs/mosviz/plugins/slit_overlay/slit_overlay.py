@@ -1,7 +1,7 @@
 import bqplot
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
-from traitlets import Bool
+from traitlets import Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import stcs_string2region
@@ -75,8 +75,10 @@ class SlitOverlay(PluginTemplateMixin):
             'spectrum-2d-viewer'
         )
 
-    def vue_change_visible(self, *args, **kwargs):
-        if self.visible:
+    @observe('visible')
+    def _on_visible_changed(self, change):
+        """React to visibility changes from the UI."""
+        if change['new']:
             self.place_slit_overlay()
         else:
             self.remove_slit_overlay()
