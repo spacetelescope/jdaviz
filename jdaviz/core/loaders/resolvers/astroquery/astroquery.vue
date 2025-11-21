@@ -112,9 +112,23 @@
         :api_hints_enabled="api_hints_enabled"
         hint="Select a telescope to search for data"
       ></plugin-select>
+
+      <v-row justify="space-between" style="margin-top: 12px">
+        <v-text-field
+          v-model.number='max_results'
+          type="number"
+          style="padding: 0px"
+          :label="api_hints_enabled ? 'ldr.max_results =' : 'Max Results'""
+          :class="api_hints_enabled ? 'api-hint' : null"
+          persistent-hint
+          hint="Maximum number of results to return from the query"
+        ></v-text-field>
+      </v-row>
     </v-form>
 
-    <v-row class="row-no-outside-padding" justify="end">
+
+
+    <v-row class="row-no-outside-padding" justify="end" style="margin-top: 32px">
       <plugin-action-button
         :spinner="results_loading"
         :disabled="!all_fields_filled"
@@ -127,6 +141,12 @@
               'Query Archive'
           }}
       </plugin-action-button>
+    </v-row>
+
+    <v-row v-if="reached_max_results">
+      <v-alert type="warning">
+        The number of results returned has reached the maximum limit set ({{ max_results }}). Consider increasing the maximum results to ensure all data is retrieved.
+      </v-alert>
     </v-row>
   </j-loader>
 </template>

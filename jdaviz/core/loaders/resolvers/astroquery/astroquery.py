@@ -8,6 +8,7 @@ from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Unicode, Any, List, Float, observe
 
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.events import (
     SnackbarMessage,
     AddDataMessage,
@@ -45,6 +46,9 @@ class AstroqueryResolver(BaseResolver):
 
     telescope_items = List([]).tag(sync=True)
     telescope_selected = Unicode().tag(sync=True)
+
+    max_results = IntHandleEmpty(1000).tag(sync=True)
+    reached_max_results = Bool(False).tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
 
@@ -86,6 +90,7 @@ class AstroqueryResolver(BaseResolver):
                 "viewer", "coordframe", "radius", "radius_unit",
                 "source",
                 "telescope",
+                "max_results",
                 "query_archive"
             ],
         )
@@ -208,25 +213,31 @@ class AstroqueryResolver(BaseResolver):
 
             # queries the region (based on the provided center point and radius)
             # finds all the sources in that region
-            print(f"*** SDSS.query_region({skycoord_center}, radius={radius}, data_release=17) ***")
             try:
-                self._output = SDSS.query_region(skycoord_center, radius=radius,
-                                                 data_release=17)
-                print("*** self._output:", self._output)
+                output = SDSS.query_region(skycoord_center, radius=radius,
+                                           data_release=17)
             except Exception as e:  # nosec
                 errmsg = (f"Failed to query {self.telescope.selected} with c={skycoord_center} and "
                           f"r={radius}: {repr(e)}")
-                print("***", errmsg)
                 self.hub.broadcast(SnackbarMessage(errmsg, color='error',
                                                    sender=self,
                                                    traceback=e))
+                self.reached_max_results = False
                 self._output = None
+            else:
+                if len(output) > self.max_results:
+                    output = output[:self.max_results]
+                    self.reached_max_results = True
+                else:
+                    self.reached_max_results = False
+                self._output = output
         elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
-            Gaia.ROW_LIMIT = 2000 # self.max_sources
+            Gaia.ROW_LIMIT = self.max_results
             self._output = Gaia.query_object(skycoord_center, radius=radius
                                              )
+            self.reached_max_results = len(self._output) >= self.max_results
 
         else:
             raise NotImplementedError(f"Querying for {self.telescope.selected} is not supported.")
