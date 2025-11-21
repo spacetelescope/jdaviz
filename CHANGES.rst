@@ -47,6 +47,8 @@ Imviz
 
 - Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769]
 
+- Align_by can be set directly from the Image loader. [#3904]
+
 Mosviz
 ^^^^^^
 

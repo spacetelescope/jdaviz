@@ -40,6 +40,24 @@
         hint="If GWCS exists, try to convert into FITS SIP for better performance aligning images (typical precision <0.1 pixels)."
       />
     </v-row>
+    <v-row>
+      <v-radio-group
+        :label="api_hints_enabled ? 'ldr.importer.align_by = ' : 'Align by'"
+        :class="api_hints_enabled ? 'api-hint' : null"
+        hint="Align individual image layers by pixels or on the sky by WCS (affects all image and image viewers)."
+        v-model="align_by_selected"
+        @change="delete_subsets($event)"
+        persistent-hint
+        row>
+        <v-radio
+          v-for="item in align_by_items"
+          :key="item.label"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : (api_hints_enabled ? '\''+item.label+'\'' : item.label)"
+          :value="item.label"
+        ></v-radio>
+      </v-radio-group>
+    </v-row>
 
     <plugin-viewer-create-new
       :items="viewer_items"
