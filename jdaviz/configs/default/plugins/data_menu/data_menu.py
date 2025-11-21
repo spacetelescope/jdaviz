@@ -12,9 +12,12 @@ from glue.core.message import SubsetDeleteMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
-
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
+from glue.core.roi import (RectangularROI, CircularROI,
+                           EllipticalROI, CircularAnnulusROI, XRangeROI)
+from glue.core.subset import RangeSubsetState, RoiSubsetState
+
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -60,6 +63,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`toggle_layer_visibility`
     * :meth:`create_subset`
     * :meth:`modify_subset`
+    * :meth:`resize_subset`
     * :meth:`add_data`
     * :meth:`view_info`
     * :meth:`remove_from_viewer`
@@ -174,7 +178,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
-                  'create_subset', 'modify_subset', 'add_data', 'view_info',
+                  'create_subset', 'modify_subset', 'resize_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
@@ -626,6 +630,77 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_modify_subset(self, info, *args):
         self.modify_subset(info.get('combination_mode'),
                            info.get('subset_type'))  # pragma: no cover
+
+    def resize_subset(self):
+        """
+        Enable resizing of an existing subset in the viewer.
+        Detects the subset's ROI type and activates the corresponding
+        selection tool pre-populated with the existing bounds for
+        interactive resizing.
+        """
+        # future improvement: allow overriding layer.selected, with pre-validation
+        if len(self.layer.selected) != 1:
+            raise ValueError('Only one layer can be selected to resize subset.')
+        if self.layer.selected[0] not in self.existing_subset_labels:
+            raise ValueError('Selected layer is not a subset.')
+        subset = self.layer.selected[0]
+
+        # set subset as the active/highlighted layer in data menu
+        self.layer.selected = subset
+
+        # get the subset group and extract the ROI
+        subset_grp = ([sg for sg in self.app.data_collection.subset_groups
+                       if sg.label == subset])
+        subset = subset_grp[0]
+
+        # Determine which tool to use based on the ROI type
+        if subset_grp and len(subset_grp) > 0:
+            if isinstance(subset.subset_state, RoiSubsetState):
+                roi = subset.subset_state.roi
+            elif isinstance(subset.subset_state, RangeSubsetState):
+                roi = XRangeROI(subset.subset_state.lo, subset.subset_state.hi)
+            else:
+                raise ValueError('Selected subset does not have a supported ROI.')
+
+            # Map ROI types to tool IDs
+            roi_tool_map = {RectangularROI: 'bqplot:rectangle',
+                            CircularROI: 'bqplot:truecircle',
+                            EllipticalROI: 'bqplot:ellipse',
+                            CircularAnnulusROI: 'bqplot:circannulus',
+                            XRangeROI: 'bqplot:xrange'}
+
+            # Find the matching tool for this ROI type
+            tool_id = None
+            for roi_type, tid in roi_tool_map.items():
+                if isinstance(roi, roi_type):
+                    tool_id = tid
+                    break
+
+            if tool_id is None:
+                raise NotImplementedError(
+                    f'Resize not supported for {roi.__class__.__name__} subsets.')
+
+            # Activate the appropriate tool
+            self._viewer.toolbar.active_tool_id = None
+            self._viewer.toolbar.select_tool(tool_id)
+
+            # Set subset to edit and mode to replace
+            self.session.edit_subset_mode.edit_subset = subset_grp
+            self.session.edit_subset_mode.mode = ReplaceMode
+
+            # Pre-populate the tool with the existing subset's ROI
+            tool = self._viewer.toolbar.active_tool
+            if tool and hasattr(tool, 'update_from_roi'):
+                tool.update_from_roi(roi)
+            else:
+                raise RuntimeError(
+                    f'Failed to activate {tool.__class__.__name__} '
+                    f'for resizing {roi.__class__.__name__} subsets.')
+        else:
+            raise ValueError('Selected subset group not found.')
+
+    def vue_resize_subset(self, *args):
+        self.resize_subset()  # pragma: no cover
 
     def view_info(self):
         """

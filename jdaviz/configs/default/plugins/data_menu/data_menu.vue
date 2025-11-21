@@ -261,6 +261,7 @@
                   @modify-subset="(combination_mode, tool) => {modify_subset({combination_mode: combination_mode,
                                                                               subset_type: tool});
                                                               data_menu_open = false}"
+                  @resize-subset="() => {resize_subset(); data_menu_open = false}"
                 />
               </v-list-item-content>
             </v-list-item>
@@ -346,7 +347,7 @@
         if (!this.isSafari()) {
           return;
         }
-        
+
         // Helper to create dom structure
         function div({ style, ...attrs }, child) {
           const el = Object.assign(document.createElement("div"), attrs);
@@ -357,17 +358,17 @@
 
         const draggedEl = event.currentTarget;
         const draggedBounds = draggedEl.getBoundingClientRect();
-        
+
         const dragGhostEl = draggedEl.cloneNode(true);
         dragGhostEl.style.width = draggedBounds.width + "px";
         dragGhostEl.style.height = draggedBounds.height + "px";
-        
+
         // Make an offscreen element and give it the right classes so vuetify styles get applied to the drag ghost
         this._dragGhostParent = document.body.appendChild(
           div({ className: "vuetify-styles", style: { position: "absolute", left: "-10000px" } },
             div({ className: "v-application--is-ltr" },
               dragGhostEl)));
-        
+
         const offsetX = event.clientX - draggedBounds.left;
         const offsetY = event.clientY - draggedBounds.top;
         event.dataTransfer.setDragImage(dragGhostEl, offsetX, offsetY);
