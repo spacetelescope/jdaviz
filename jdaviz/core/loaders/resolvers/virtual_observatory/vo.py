@@ -34,13 +34,6 @@ class VOResolver(BaseResolver):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
-    waveband_items = List().tag(sync=True)
-    waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
-    resource_filter_coverage = Bool(False).tag(sync=True)
-    resource_items = List([]).tag(sync=True)
-    resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
-    resources_loading = Bool(False).tag(sync=True)
-
     source = Unicode("").tag(sync=True)
     coord_follow_viewer_pan = Bool(False).tag(sync=True)
     viewer_centered = Bool(False).tag(sync=True)
@@ -49,6 +42,13 @@ class VOResolver(BaseResolver):
     radius = Float(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
     radius_unit_selected = Unicode("deg").tag(sync=True)
+
+    waveband_items = List().tag(sync=True)
+    waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
+    resource_filter_coverage = Bool(False).tag(sync=True)
+    resource_items = List([]).tag(sync=True)
+    resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
+    resources_loading = Bool(False).tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
 
