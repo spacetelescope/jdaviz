@@ -10,7 +10,7 @@ from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, FootprintOverlayClickMessage
+from jdaviz.core.events import SnackbarMessage, FootprintOverlayClickMessage, LinkUpdatedMessage
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
@@ -300,7 +300,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                                    handler=self._on_data_added)
             self.app.hub.subscribe(self, DataCollectionDeleteMessage,
                                    handler=self._on_data_removed)
-        
+            self.app.hub.subscribe(self, LinkUpdatedMessage,
+                                   handler=self._on_link_type_updated)
+
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     self.observation_table_populated and 's_region' in self.observation_table.headers_avail):  # noqa: E501
@@ -365,6 +367,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
 
     def _on_data_removed(self, msg):
         self.image_data_loaded = len(self.app.data_collection) > 0
+
+    def _on_link_type_updated(self, msg=None):
+        self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
 
     @contextmanager
     def defer_resolver_input_updated(self):
