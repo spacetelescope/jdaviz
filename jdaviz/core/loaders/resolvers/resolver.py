@@ -324,7 +324,9 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
     def vue_link_by_wcs(self, *args):
-        self.app._jdaviz_helper.link_data(align_by='wcs')
+        plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if plg is not None:
+            plg.align_by = 'WCS'
         self.is_wcs_linked = True
 
     @default('observation_table')
