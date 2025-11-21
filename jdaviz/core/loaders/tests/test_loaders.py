@@ -410,25 +410,17 @@ def test_loaders_extension_select(imviz_helper):
     assert ldr.importer.extension.selected == ['1: [SCI,1]', '3: [SCI,2]']
 
 
-def test_load_image_align_by(deconfigged_helper):
-    arr = np.zeros((2, 2), dtype=np.float32)
-    hdul = fits.HDUList([fits.PrimaryHDU(),
-                        fits.ImageHDU(arr, name='SCI', ver=1),
-                        fits.ImageHDU(arr, name='ERR', ver=1),
-                        fits.ImageHDU(arr, name='SCI', ver=2),
-                        fits.ImageHDU(arr, name='ERR', ver=2)
-                         ])
-
+def test_load_image_align_by(deconfigged_helper, image_nddata_wcs):
     ldr = deconfigged_helper.loaders['object']
-    ldr.object = hdul
+    ldr.object = image_nddata_wcs
     assert 'Image' in ldr.format.choices
     ldr.format = 'Image'
 
-    assert ldr.importer.align_by == 'Pixel'
+    assert ldr.importer.align_by == 'Pixels'
 
     ldr.load()
 
-    assert deconfigged_helper.plugins['Orientation'].align_by.selected == 'Pixel'
+    assert deconfigged_helper.plugins['Orientation'].align_by.selected == 'Pixels'
 
     ldr.importer.align_by = 'WCS'
     ldr.load()
