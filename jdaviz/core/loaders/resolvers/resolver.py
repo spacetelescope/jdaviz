@@ -5,7 +5,6 @@ from functools import cached_property
 from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
-import numpy as np
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
@@ -24,85 +23,9 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
-from jdaviz.utils import download_uri_to_path
+from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark
 
 __all__ = ['BaseResolver', 'find_matching_resolver']
-
-
-def closest_point_on_segment(px, py, x1, y1, x2, y2):
-    """
-    Find the closest point on a line segment to a reference point.
-
-    Parameters
-    ----------
-    px : float
-        X coordinate of the reference point.
-    py : float
-        Y coordinate of the reference point.
-    x1, y1, x2, y2 : array-like
-        Coordinates of the line segment endpoints.
-
-    Returns
-    -------
-    closest_x, closest_y : ndarray
-        Coordinates of the closest points on the segments.
-    """
-    dx = x2 - x1
-    dy = y2 - y1
-    len_sq = dx**2 + dy**2
-
-    t = np.clip(((px - x1) * dx + (py - y1) * dy) / len_sq, 0, 1)
-
-    closest_x = x1 + t * dx
-    closest_y = y1 + t * dy
-
-    return closest_x, closest_y
-
-
-def find_closest_polygon_mark(px, py, marks):
-    """
-    Find the closest mark to a click point and return its observation index.
-
-    Parameters
-    ----------
-    px : float
-        X coordinate of the reference point.
-    py : float
-        Y coordinate of the reference point.
-    marks : list of RegionOverlay
-        List of mark objects to compare against the given point.
-
-    Returns
-    -------
-    closest_idx : int or None
-        The observation index of the closest mark, or None if no marks.
-    """
-    min_dist = float('inf')
-    closest_idx = None
-
-    for mark in marks:
-        x_coords = np.array(mark.x)
-        y_coords = np.array(mark.y)
-
-        if len(x_coords) == 0 or len(y_coords) == 0:
-            continue
-
-        x1 = x_coords
-        x2 = np.roll(x_coords, -1)
-        y1 = y_coords
-        y2 = np.roll(y_coords, -1)
-
-        closest_xs, closest_ys = closest_point_on_segment(px, py, x1, y1, x2, y2)
-        dist = (closest_xs - px)**2 + (closest_ys - py)**2
-
-        min_idx = np.argmin(dist)
-        min_dist_for_this_mark = dist[min_idx]
-
-        if min_dist_for_this_mark < min_dist:
-            min_dist = min_dist_for_this_mark
-            closest_idx = mark.label
-
-    return closest_idx
 
 
 class FormatSelect(SelectPluginComponent):
