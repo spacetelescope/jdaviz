@@ -24,6 +24,8 @@ from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
 from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark
+from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+
 
 __all__ = ['BaseResolver', 'find_matching_resolver']
 
@@ -259,6 +261,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
     target_selected = Unicode().tag(sync=True)
 
     is_wcs_linked = Bool(False).tag(sync=True)
+    image_data_loaded = Bool(False).tag(sync=True)
     footprint_select_icon = Unicode(read_icon(os.path.join(
         ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)
 
@@ -292,7 +295,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
             self.app.hub.subscribe(self, FootprintOverlayClickMessage,
                                    handler=self._on_region_select)
-
+            self.image_data_loaded = len(self.app.data_collection) > 0
+            self.app.hub.subscribe(self, DataCollectionAddMessage,
+                                   handler=self._on_data_added)
+            self.app.hub.subscribe(self, DataCollectionDeleteMessage,
+                                   handler=self._on_data_removed)
+        
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     self.observation_table_populated and 's_region' in self.observation_table.headers_avail):  # noqa: E501
@@ -351,6 +359,12 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             The new settings dictionary from the app state.
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
+
+    def _on_data_added(self, msg):
+        self.image_data_loaded = len(self.app.data_collection) > 0
+
+    def _on_data_removed(self, msg):
+        self.image_data_loaded = len(self.app.data_collection) > 0
 
     @contextmanager
     def defer_resolver_input_updated(self):

@@ -25,7 +25,7 @@
         </v-container>
 
         <v-container>
-          <v-alert v-if="is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked" 
+          <v-alert v-if="image_data_loaded && is_wcs_linked !== undefined && treat_table_as_query && observation_table_populated && !is_wcs_linked" 
                    type="warning" dense style="margin-bottom: 16px; margin-top: 8px">
             <v-row no-gutters align="center">
               <v-col>
@@ -161,7 +161,7 @@ module.exports = {
           'format_items', 'format_selected',
           'importer_widget', 'server_is_remote',
           'api_hints_enabled', 'valid_import_formats',
-          'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled']
+          'is_wcs_linked', 'footprint_select_icon', 'custom_toolbar_enabled','image_data_loaded'],
 
 }
 </script>

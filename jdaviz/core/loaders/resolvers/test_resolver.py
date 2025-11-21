@@ -58,7 +58,7 @@ def test_footprint_workflow(imviz_helper):
     ]
 
     ldr = imviz_helper.loaders['object']
-    ldr.object = table 
+    ldr.object = table
     ldr.treat_table_as_query = True
 
     assert ldr._obj.parsed_input_is_query is True
