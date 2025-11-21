@@ -13,7 +13,9 @@ from stdatamodels import asdf_in_fits
 from traitlets import Bool, List, Any, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.core.template_mixin import SelectFileExtensionComponent, DatasetSelect, SelectPluginComponent
+from jdaviz.core.template_mixin import (SelectFileExtensionComponent,
+                                        DatasetSelect,
+                                        SelectPluginComponent)
 
 from jdaviz.core.loaders.importers import BaseImporterToDataCollection
 from jdaviz.core.registries import loader_importer_registry
