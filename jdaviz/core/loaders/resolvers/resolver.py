@@ -11,7 +11,7 @@ from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, RegionSelectClickEventMessage
+from jdaviz.core.events import SnackbarMessage, FootprintOverlayClickMessage
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
@@ -367,7 +367,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         # Setup footprint selection
         if self.app is not None:
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
-            self.app.hub.subscribe(self, RegionSelectClickEventMessage,
+            self.app.hub.subscribe(self, FootprintOverlayClickMessage,
                                    handler=self._on_region_select)
 
         def custom_toolbar(viewer):
