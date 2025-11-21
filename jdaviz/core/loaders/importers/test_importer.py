@@ -136,14 +136,15 @@ class TestResetAndCheckExistingDataInDC:
 
     def test_reset_and_check_all_importers(self, deconfigged_helper,
                                            image_hdu_wcs, spectrum1d, spectrum2d,
-                                           premade_spectrum_list, source_catalog):
+                                           premade_spectrum_list,
+                                           sky_coord_only_source_catalog):
 
         input_data = {'Image': image_hdu_wcs,
                       '1D Spectrum': spectrum1d,
                       '2D Spectrum': spectrum2d,
                       '1D Spectrum List': premade_spectrum_list,
                       '1D Spectrum Concatenated': premade_spectrum_list,
-                      'Catalog': source_catalog}
+                      'Catalog': sky_coord_only_source_catalog}
 
         # TODO: Remove when this dev flag is no longer needed
         deconfigged_helper.app.state.catalogs_in_dc = True
