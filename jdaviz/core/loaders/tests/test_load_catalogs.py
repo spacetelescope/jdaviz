@@ -365,6 +365,7 @@ def test_astroquery_load_catalog(deconfigged_helper):
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = 'M4'
     ldr.telescope = 'Gaia'
+    ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
 
