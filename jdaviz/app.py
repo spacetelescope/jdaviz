@@ -306,6 +306,7 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3856
     # https://github.com/spacetelescope/jdaviz/pull/3863
     # https://github.com/spacetelescope/jdaviz/pull/3867 - table viewer
+    # https://github.com/spacetelescope/jdaviz/pull/3906 - SDSS/Gaia in astroquery resolver
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
@@ -2547,6 +2548,10 @@ class Application(VuetifyTemplate, HubListener):
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
                                               sender=self)
+        else:
+            add_data_message = None
+
+        if add_data_message is not None:
             self.hub.broadcast(add_data_message)
 
         assoc_children = self._get_assoc_data_children(data_label)
