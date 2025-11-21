@@ -358,6 +358,24 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     assert_quantity_allclose(qtab['Declination'], catalog_obj['SkyCoord'].dec)
 
 
+@pytest.mark.remote_data
+def test_astroquery_load_catalog(deconfigged_helper):
+    deconfigged_helper.app.state.catalogs_in_dc = True
+
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.source = 'M4'
+    ldr.telescope = 'Gaia'
+    assert 'Catalog' in ldr.format.choices
+    ldr.format = 'Catalog'
+
+    ldr.importer.col_id = 'source_id'
+    ldr.importer.col_other = ['parallax', 'pm', 'bp_rp', 'phot_rp_mean_mag']
+    ldr.importer.viewer.create_new = 'Scatter'
+    ldr.load()
+    assert 'Scatter' in deconfigged_helper.viewers
+    assert 'Catalog' in deconfigged_helper.viewers['Scatter'].data_menu.layer.choices
+
+
 def test_invalid(imviz_helper, tmp_path):
 
     imviz_helper.app.state.catalogs_in_dc = True
