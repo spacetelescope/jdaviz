@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from traitlets import Unicode
 
 from jdaviz.core.registries import loader_resolver_registry
