@@ -2548,11 +2548,6 @@ class Application(VuetifyTemplate, HubListener):
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
                                               sender=self)
-        else:
-            add_data_message = None
-
-        if add_data_message is not None:
-            self.hub.broadcast(add_data_message)
 
         assoc_children = self._get_assoc_data_children(data_label)
 
