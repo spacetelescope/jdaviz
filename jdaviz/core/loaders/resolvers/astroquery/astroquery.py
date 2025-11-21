@@ -220,24 +220,21 @@ class AstroqueryResolver(BaseResolver):
                                                    sender=self,
                                                    traceback=e))
                 self.reached_max_results = False
-                self._output = None
-            else:
-                if len(output) > self.max_results:
-                    output = output[:self.max_results]
-                    self.reached_max_results = True
-                else:
-                    self.reached_max_results = False
-                self._output = output
+                output = None
         elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
             Gaia.ROW_LIMIT = self.max_results
-            self._output = Gaia.query_object(skycoord_center, radius=radius
-                                             )
-            self.reached_max_results = len(self._output) >= self.max_results
-
+            output = Gaia.query_object(skycoord_center, radius=radius)
         else:
             raise NotImplementedError(f"Querying for {self.telescope.selected} is not supported.")
+
+        if output is not None and len(output) > self.max_results:
+            output = output[:self.max_results]
+            self.reached_max_results = True
+        else:
+            self.reached_max_results = False
+        self._output = output
 
         self._resolver_input_updated()
 
