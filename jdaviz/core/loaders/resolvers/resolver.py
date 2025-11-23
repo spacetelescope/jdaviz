@@ -592,7 +592,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         selected_idx = find_closest_polygon_mark(click_x, click_y, self._footprint_marks)
 
         if selected_idx is not None:
-            viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+            # Get viewer - deconfigged (TODO: factor this out for multiviewer support)
+            viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
+            if viewer_ref is None:
+                return
+            viewer = self.app.get_viewer(viewer_ref)
             # Get selected rows from the table
             currently_selected = set()
             if hasattr(self, 'observation_table') and self.observation_table is not None:
@@ -619,7 +623,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         if 's_region' not in self.observation_table.headers_avail:
             return
 
-        viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+        # Get viewer - works for both Imviz and deconfigged
+        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
+        if viewer_ref is None:
+            return
+        viewer = self.app.get_viewer(viewer_ref)
         regions = []
         region_labels = []
 
@@ -652,7 +660,11 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         if not self._footprint_marks:
             return
 
-        viewer = self.app._jdaviz_helper.default_viewer._obj.glue_viewer
+        # Get viewer - for deconfigged (TODO: factor this out for multiviewer support)
+        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
+        if viewer_ref is None:
+            return
+        viewer = self.app.get_viewer(viewer_ref)
 
         region_labels = [mark.label for mark in self._footprint_marks]
 

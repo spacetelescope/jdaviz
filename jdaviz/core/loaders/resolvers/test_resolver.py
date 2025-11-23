@@ -2,9 +2,7 @@ from jdaviz.app import Application
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
 
 import numpy as np
-from astropy.nddata import NDData
 from astropy.table import Table
-from astropy.wcs import WCS
 
 
 # Create a minimal test class that mimics the resolver behavior
@@ -37,17 +35,8 @@ def test_server_is_remote_callback():
     assert settings.get('server_is_remote') != test_obj.server_is_remote
 
 
-def test_footprint_workflow(imviz_helper):
-
-    wcs = WCS({
-        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
-        'CRPIX1': 1, 'CRVAL1': 337.5202808,
-        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
-        'CRPIX2': 1, 'CRVAL2': -20.83333306,
-    })
-    arr = np.ones((200, 200))
-    ndd = NDData(arr, wcs=wcs)
-    imviz_helper.load_data(ndd, data_label='test_image')
+def test_footprint_workflow(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
 
     table = Table()
     table['Dataset'] = ['obs1', 'obs2', 'obs3']
@@ -57,7 +46,7 @@ def test_footprint_workflow(imviz_helper):
         'POLYGON 337.53 -20.84 337.54 -20.84 337.54 -20.83 337.53 -20.83',
     ]
 
-    ldr = imviz_helper.loaders['object']
+    ldr = deconfigged_helper.loaders['object']
     ldr.object = table
     ldr.treat_table_as_query = True
 
@@ -86,16 +75,8 @@ def test_footprint_workflow(imviz_helper):
     assert ldr._obj._footprint_groups == {}
 
 
-def test_remove_footprints(imviz_helper):
-    wcs = WCS({
-        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
-        'CRPIX1': 1, 'CRVAL1': 337.5202808,
-        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
-        'CRPIX2': 1, 'CRVAL2': -20.83333306,
-    })
-    arr = np.ones((200, 200))
-    ndd = NDData(arr, wcs=wcs)
-    imviz_helper.load_data(ndd, data_label='test_image')
+def test_remove_footprints(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
 
     table = Table()
     table['Dataset'] = ['obs1']
@@ -103,7 +84,7 @@ def test_remove_footprints(imviz_helper):
         'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
     ]
 
-    ldr = imviz_helper.loaders['object']
+    ldr = deconfigged_helper.loaders['object']
     ldr.object = table
     ldr.treat_table_as_query = True
     ldr._obj.vue_link_by_wcs()
@@ -121,17 +102,8 @@ def test_remove_footprints(imviz_helper):
     assert len(ldr._obj._footprint_groups) == 0
 
 
-def test_multiselect(imviz_helper):
-    # Load data first
-    wcs = WCS({
-        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
-        'CRPIX1': 1, 'CRVAL1': 337.5202808,
-        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
-        'CRPIX2': 1, 'CRVAL2': -20.83333306,
-    })
-    arr = np.ones((200, 200))
-    ndd = NDData(arr, wcs=wcs)
-    imviz_helper.load_data(ndd, data_label='test_image')
+def test_multiselect(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
 
     table = Table()
     table['Dataset'] = ['obs1', 'obs2', 'obs3']
@@ -141,7 +113,7 @@ def test_multiselect(imviz_helper):
         'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
     ]
 
-    ldr = imviz_helper.loaders['object']
+    ldr = deconfigged_helper.loaders['object']
     ldr.object = table
     ldr.treat_table_as_query = True
     ldr._obj.vue_link_by_wcs()
@@ -158,16 +130,8 @@ def test_multiselect(imviz_helper):
     assert 2 in ldr._obj._footprint_groups
 
 
-def test_display_valid_footprints(imviz_helper):
-    wcs = WCS({
-        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
-        'CRPIX1': 1, 'CRVAL1': 337.5202808,
-        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
-        'CRPIX2': 1, 'CRVAL2': -20.83333306,
-    })
-    arr = np.ones((200, 200))
-    ndd = NDData(arr, wcs=wcs)
-    imviz_helper.load_data(ndd, data_label='test_image')
+def test_display_valid_footprints(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
 
     table = Table()
     table['Dataset'] = ['obs1', 'obs2']
@@ -175,8 +139,7 @@ def test_display_valid_footprints(imviz_helper):
         'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
         'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829'
     ]
-
-    ldr = imviz_helper.loaders['object']
+    ldr = deconfigged_helper.loaders['object']
     ldr.object = table
     ldr.treat_table_as_query = True
     ldr._obj.vue_link_by_wcs()
@@ -190,3 +153,48 @@ def test_display_valid_footprints(imviz_helper):
     for mark in ldr._obj._footprint_marks:
         assert isinstance(mark, RegionOverlay)
         assert mark.label in [0, 1]
+
+
+def test_no_image_data_disables_toolbar(deconfigged_helper):
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+
+    # Although we have footprint data, toolbar should not be enabled
+    # because there's no image data to link
+    assert len(deconfigged_helper.app.data_collection) == 0
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.image_data_loaded is False
+
+
+def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Test Image')
+    assert len(deconfigged_helper.app.data_collection) == 1
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.image_data_loaded is True
+
+    ldr._obj.vue_link_by_wcs()
+    assert ldr._obj.is_wcs_linked is True
+
+    ldr._obj.toggle_custom_toolbar()
+    assert ldr._obj.custom_toolbar_enabled is True
+    assert len(ldr._obj._footprint_marks) == 1
+    assert len(ldr._obj._footprint_groups) == 1
