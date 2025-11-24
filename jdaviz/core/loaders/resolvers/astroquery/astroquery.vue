@@ -19,6 +19,13 @@
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :valid_import_formats="valid_import_formats"
+    :server_is_remote="server_is_remote"
+    :is_wcs_linked="is_wcs_linked"
+    :footprint_select_icon="footprint_select_icon"
+    :custom_toolbar_enabled="custom_toolbar_enabled"
+    :image_data_loaded="image_data_loaded"
+    @link-by-wcs="link_by_wcs"
+    @toggle-custom-toolbar="toggle_custom_toolbar"
   >
     <v-form v-model="all_fields_filled">
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
