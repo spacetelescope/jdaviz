@@ -89,7 +89,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a ramp from a ramp cube.'
 
-        self.dataset.filters = ['is_flux_cube']
+        self.dataset.filters = ['is_ramp_cube']
 
         # TODO: in the future this could be generalized with support in SelectPluginComponent
         self.aperture._default_text = 'Entire Cube'
@@ -421,8 +421,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def marks(self):
         if not self._tray_instance:
             return {}
-        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
+        if not len(self.slice_indicator_viewers):
+            return {}
 
+        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]
         marks = {'extract': PluginLine(sv, visible=self.is_active)}
         sv.figure.marks = sv.figure.marks + [marks['extract'],]

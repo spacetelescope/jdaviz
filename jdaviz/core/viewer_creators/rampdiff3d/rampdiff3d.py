@@ -12,7 +12,7 @@ class RampDiff3DViewerCreator(BaseViewerCreator):
 
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
-        self.dataset.filters = ['is_flux_cube']  # TODO: better filter
+        self.dataset.filters = ['is_ramp_diff_cube']
         self.viewer_label_default = '3D Ramp Diff'
 
     @property

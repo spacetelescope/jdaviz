@@ -122,7 +122,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
 
-        self.dataset.add_filter('is_cube_or_image')
+        self.dataset.add_filter('is_image_or_flux_cube')
 
         self.background = SubsetSelect(self,
                                        'background_items',

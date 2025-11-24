@@ -306,6 +306,7 @@ class RampImporter(BaseImporterToDataCollection):
 
         ramp_cube, diff_cube = self.output
 
+        ramp_cube.meta['_ramp_type'] = 'group'
         self.add_to_data_collection(ramp_cube,
                                     data_label,
                                     viewer_select=self.viewer)
@@ -315,6 +316,7 @@ class RampImporter(BaseImporterToDataCollection):
             self.app._jdaviz_helper.cube_cache = {}
         self.app._jdaviz_helper.cube_cache[data_label] = ramp_cube
 
+        diff_cube.meta['_ramp_type'] = 'diff'
         self.add_to_data_collection(diff_cube,
                                     diff_data_label,
                                     viewer_select=self.diff_viewer)
