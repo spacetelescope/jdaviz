@@ -214,8 +214,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def live_update_subscriptions(self):
         return {'data': ('dataset',), 'subset': ('aperture', 'background')}
 
-    def __call__(self, add_data=True):
-        return self.extract(add_data=add_data)
+    def __call__(self, add_data=True, load_kwargs={}):
+        return self.extract(add_data=add_data, load_kwargs=load_kwargs)
 
     @property
     def slice_display_unit_name(self):
@@ -286,7 +286,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         plg.function.selected = function
         plg.add_results.auto_update_result = auto_update
         # all other settings remain at their plugin defaults
-        return plg(add_data=add_data)
+        return plg(add_data=add_data, load_kwargs={'viewer': '*'})
 
     @observe('wavelength_dependent', 'bg_wavelength_dependent')
     def _wavelength_dependent_changed(self, *args):
@@ -639,7 +639,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return extracted.flux
 
     @with_spinner()
-    def extract(self, return_bg=False, add_data=True, **kwargs):
+    def extract(self, return_bg=False, add_data=True, load_kwargs={}, **kwargs):
         """
         Extract the spectrum from the data cube according to the plugin inputs.
 
@@ -680,8 +680,10 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
                 spec.meta['_default_color'] = default_color
+            if self.add_results.viewer.selected != 'None' and 'viewer' not in load_kwargs:
+                load_kwargs['viewer'] = [self.add_results.viewer.selected]
             self.add_results.add_results_from_plugin(spec, format=self.extracted_format,
-                                                     load_kwargs={'viewer': '*'})
+                                                     load_kwargs=load_kwargs)
 
             snackbar_message = SnackbarMessage(
                 f"{self.resulting_product_name.title()} extracted successfully.",
