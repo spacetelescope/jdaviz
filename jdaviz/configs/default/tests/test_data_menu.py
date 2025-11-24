@@ -338,7 +338,6 @@ class TestResizeSubset:
                       if sg.label == 'Subset 1']
         assert self.imviz_helper.app.session.edit_subset_mode.edit_subset == subset_grp
 
-
     @pytest.mark.parametrize('roi', [XRangeROI(min=6000, max=6500),
                                      SpectralRegion(6000 * u.Angstrom, 6500 * u.Angstrom)])
     def test_resize_subset_xrange_roi(self, roi):
