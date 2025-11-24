@@ -23,7 +23,7 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
-from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark
+from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark, layer_is_image_data
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
@@ -295,7 +295,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
             self.app.hub.subscribe(self, FootprintOverlayClickMessage,
                                    handler=self._on_region_select)
-            self.image_data_loaded = len(self.app.data_collection) > 0
+            self.image_data_loaded = any(layer_is_image_data(data)
+                                         for data in self.app.data_collection)
             self.app.hub.subscribe(self, DataCollectionAddMessage,
                                    handler=self._on_data_added)
             self.app.hub.subscribe(self, DataCollectionDeleteMessage,
@@ -363,10 +364,10 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
     def _on_data_added(self, msg):
-        self.image_data_loaded = len(self.app.data_collection) > 0
+        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
 
     def _on_data_removed(self, msg):
-        self.image_data_loaded = len(self.app.data_collection) > 0
+        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
 
     def _on_link_type_updated(self, msg=None):
         self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
