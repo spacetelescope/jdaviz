@@ -6,3 +6,6 @@ from .image.image import *  # noqa
 from .histogram.histogram import *  # noqa
 from .scatter.scatter import *  # noqa
 from .table.table import *  # noqa
+from .ramp3d.ramp3d import *  # noqa
+from .rampdiff3d.rampdiff3d import *  # noqa
+from .ramp_integration.ramp_integration import *  # noqa
