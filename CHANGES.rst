@@ -5,7 +5,9 @@ New Features
 ------------
 
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
-  and import from an astroquery or MAST search. [#3769]
+  and import from an astroquery or MAST search. Interactive footprint selection enables displaying
+  observation footprints from ``s_region`` data as overlays on the image viewer and clicking on
+  footprints to select/deselect observations. [#3769, #3894]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
 
