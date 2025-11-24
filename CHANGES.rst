@@ -36,6 +36,11 @@ New Features
 
 - Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
 
+- Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
+
+- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
+  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
 Cubeviz
 ^^^^^^^
 
@@ -133,9 +138,6 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
-
-- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
-  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
 
 Imviz
 ^^^^^
