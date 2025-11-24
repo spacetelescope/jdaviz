@@ -251,7 +251,7 @@
                 </j-tooltip>
                 <data-menu-subset-edit
                   :subset_edit_enabled="subset_edit_enabled"
-                  :subset_resize_enabled="subset_resize_enabled"
+                  :subset_resize_in_viewer_enabled="subset_resize_in_viewer_enabled"
                   :subset_edit_tooltip="subset_edit_tooltip"
                   :selected_n_subsets="selected_n_subsets"
                   :subset_edit_modes="subset_edit_modes"
@@ -262,7 +262,7 @@
                   @modify-subset="(combination_mode, tool) => {modify_subset({combination_mode: combination_mode,
                                                                               subset_type: tool});
                                                               data_menu_open = false}"
-                  @resize-subset="() => {resize_subset(); data_menu_open = false}"
+                  @resize-subset-in-viewer="() => {resize_subset_in_viewer(); data_menu_open = false}"
                 />
               </v-list-item-content>
             </v-list-item>

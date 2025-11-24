@@ -63,7 +63,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`toggle_layer_visibility`
     * :meth:`create_subset`
     * :meth:`modify_subset`
-    * :meth:`resize_subset`
+    * :meth:`resize_subset_in_viewer`
     * :meth:`add_data`
     * :meth:`view_info`
     * :meth:`remove_from_viewer`
@@ -111,7 +111,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_enabled = Bool(False).tag(sync=True)
     subset_edit_tooltip = Unicode().tag(sync=True)
-    subset_resize_enabled = Bool(True).tag(sync=True)
+    subset_resize_in_viewer_enabled = Bool(True).tag(sync=True)
 
     subset_edit_modes = List().tag(sync=True)
 
@@ -155,8 +155,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
-        self.hub.subscribe(self, SubsetUpdateMessage, handler=lambda _: self._allow_resize_subset())
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda msg: self._remove_subset_from_layers(msg.subset))
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda _: self._allow_resize_subset_in_viewer())
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
@@ -180,7 +182,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
-                  'create_subset', 'modify_subset', 'resize_subset', 'add_data', 'view_info',
+                  'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
@@ -634,7 +636,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                            info.get('subset_type'))  # pragma: no cover
 
     @observe('layer_selected')
-    def _allow_resize_subset(self, event={}):
+    def _allow_resize_subset_in_viewer(self, event={}):
         # Needed during app initialization
         if not hasattr(self, 'layer'):
             return
@@ -646,11 +648,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if len(subset_grp):
             subset = subset_grp[0]
             if isinstance(subset.subset_state, CompositeSubsetState):
-                self.subset_resize_enabled = False
+                self.subset_resize_in_viewer_enabled = False
             else:
-                self.subset_resize_enabled = True
+                self.subset_resize_in_viewer_enabled = True
 
-    def resize_subset(self):
+    def resize_subset_in_viewer(self):
         """
         Enable resizing of an existing subset in the viewer.
         Detects the subset's ROI type and activates the corresponding
@@ -662,7 +664,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             raise ValueError('Only one layer can be selected to resize subset.')
         if self.layer.selected[0] not in self.existing_subset_labels:
             raise ValueError('Selected layer is not a subset.')
-        if not self.subset_resize_enabled:
+        if not self.subset_resize_in_viewer_enabled:
             raise ValueError('Resizing is not supported for composite subsets.')
 
         subset_str = self.layer.selected[0]
@@ -719,8 +721,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     f'Failed to activate {tool.__class__.__name__} '
                     f'for resizing {roi.__class__.__name__} subsets.')
 
-    def vue_resize_subset(self, *args):
-        self.resize_subset()  # pragma: no cover
+    def vue_resize_subset_in_viewer(self, *args):
+        self.resize_subset_in_viewer()  # pragma: no cover
 
     def view_info(self):
         """
