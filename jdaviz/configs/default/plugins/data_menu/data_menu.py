@@ -8,7 +8,7 @@ from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSel
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
                                 ChangeRefDataMessage, ViewerRenamedMessage)
-from glue.core.message import SubsetDeleteMessage
+from glue.core.message import SubsetDeleteMessage, SubsetUpdateMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
@@ -16,7 +16,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import (RectangularROI, CircularROI,
                            EllipticalROI, CircularAnnulusROI, XRangeROI)
-from glue.core.subset import RangeSubsetState, RoiSubsetState
+from glue.core.subset import CompositeSubsetState, RangeSubsetState, RoiSubsetState
 
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -111,6 +111,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_enabled = Bool(False).tag(sync=True)
     subset_edit_tooltip = Unicode().tag(sync=True)
+    subset_resize_enabled = Bool(True).tag(sync=True)
 
     subset_edit_modes = List().tag(sync=True)
 
@@ -155,6 +156,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
         self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
+        self.hub.subscribe(self, SubsetUpdateMessage, handler=lambda _: self._allow_resize_subset())
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
@@ -275,7 +277,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                         # if layer is a catalog that has pixel coordinates, we
                         # don't need to hide the layer
                         if data.meta.get('_importer') == 'CatalogImporter' and \
-                           'X' in comp_labels and 'Y' in comp_labels:
+                                'X' in comp_labels and 'Y' in comp_labels:
                             continue
                         else:
                             hiding_due_to_pixel_link.append(layer.layer.label)
@@ -350,8 +352,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         # Have to count subsets + data, but not the invisible WCS layers in Imviz
         n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers if not
-                            (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
-                             lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
+        (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
+         lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
 
         if (event.get('name') == 'layer_items' and len(event['new']) == n_layers
                 and isinstance(event.get('owner'), DataMenu)):
@@ -471,7 +473,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     self.delete_app_tooltip = "Cannot delete sonified data from app"
                     break
                 elif (layer not in self.existing_subset_labels
-                        and selected_items['from_plugin'][i] is None):
+                      and selected_items['from_plugin'][i] is None):
                     self.delete_app_enabled = False
                     self.delete_app_tooltip = f"Cannot delete imported data from {self.app.config}"
                     break
@@ -631,6 +633,23 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.modify_subset(info.get('combination_mode'),
                            info.get('subset_type'))  # pragma: no cover
 
+    @observe('layer_selected')
+    def _allow_resize_subset(self, event={}):
+        # Needed during app initialization
+        if not hasattr(self, 'layer'):
+            return
+        if not len(self.layer.selected):
+            return
+
+        subset_grp = [sg for sg in self.app.data_collection.subset_groups
+                      if sg.label == self.layer.selected[0]]
+        if len(subset_grp):
+            subset = subset_grp[0]
+            if isinstance(subset.subset_state, CompositeSubsetState):
+                self.subset_resize_enabled = False
+            else:
+                self.subset_resize_enabled = True
+
     def resize_subset(self):
         """
         Enable resizing of an existing subset in the viewer.
@@ -643,18 +662,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             raise ValueError('Only one layer can be selected to resize subset.')
         if self.layer.selected[0] not in self.existing_subset_labels:
             raise ValueError('Selected layer is not a subset.')
-        subset = self.layer.selected[0]
+        subset_str = self.layer.selected[0]
 
         # set subset as the active/highlighted layer in data menu
-        self.layer.selected = subset
+        self.layer.selected = subset_str
 
         # get the subset group and extract the ROI
-        subset_grp = ([sg for sg in self.app.data_collection.subset_groups
-                       if sg.label == subset])
-        subset = subset_grp[0]
+        subset_grp = [sg for sg in self.app.data_collection.subset_groups
+                      if sg.label == subset_str]
 
         # Determine which tool to use based on the ROI type
-        if subset_grp and len(subset_grp) > 0:
+        if len(subset_grp):
+            subset = subset_grp[0]
             if isinstance(subset.subset_state, RoiSubsetState):
                 roi = subset.subset_state.roi
             elif isinstance(subset.subset_state, RangeSubsetState):
@@ -696,8 +715,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 raise RuntimeError(
                     f'Failed to activate {tool.__class__.__name__} '
                     f'for resizing {roi.__class__.__name__} subsets.')
-        else:
-            raise ValueError('Selected subset group not found.')
 
     def vue_resize_subset(self, *args):
         self.resize_subset()  # pragma: no cover

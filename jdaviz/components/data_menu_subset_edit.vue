@@ -23,7 +23,7 @@
       </j-tooltip>
     </template>
     <v-list dense style="width: 300px">
-      <v-list-item>
+      <v-list-item v-if="subset_resize_enabled">
         <v-list-item-content>
           <j-tooltip :tooltipcontent="'Interactively resize '+subset_selected+' in the viewer'">
             <span
@@ -105,7 +105,7 @@ module.exports = {
         lock_hover_api_hint: false,
       }
     },
-  props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes', 'subset_tools', 'api_hints_enabled'],
+  props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes', 'subset_tools', 'api_hints_enabled', 'subset_resize_enabled'],
 };
 </script>
 

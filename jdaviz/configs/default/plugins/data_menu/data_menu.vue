@@ -251,6 +251,7 @@
                 </j-tooltip>
                 <data-menu-subset-edit
                   :subset_edit_enabled="subset_edit_enabled"
+                  :subset_resize_enabled="subset_resize_enabled"
                   :subset_edit_tooltip="subset_edit_tooltip"
                   :selected_n_subsets="selected_n_subsets"
                   :subset_edit_modes="subset_edit_modes"
