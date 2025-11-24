@@ -1,12 +1,13 @@
 import bqplot
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
-from traitlets import Bool
+from traitlets import Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import stcs_string2region
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['SlitOverlay', 'jwst_header_to_skyregion']
 
@@ -45,6 +46,10 @@ class SlitOverlay(PluginTemplateMixin):
         self._slit_overlay_mark = None
 
     @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('visible',))
+
+    @property
     def _default_table_viewer_reference_name(self):
         return getattr(
             self.app._jdaviz_helper, '_default_table_viewer_reference_name', 'table-viewer'
@@ -70,8 +75,10 @@ class SlitOverlay(PluginTemplateMixin):
             'spectrum-2d-viewer'
         )
 
-    def vue_change_visible(self, *args, **kwargs):
-        if self.visible:
+    @observe('visible')
+    def _on_visible_changed(self, change):
+        """React to visibility changes from the UI."""
+        if change['new']:
             self.place_slit_overlay()
         else:
             self.remove_slit_overlay()
