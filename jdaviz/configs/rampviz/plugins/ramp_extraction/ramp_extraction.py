@@ -30,7 +30,8 @@ rng = np.random.default_rng(seed=42)
 
 
 @tray_registry(
-    'ramp-extraction', label="Ramp Extraction"
+    'ramp-extraction', label="Ramp Extraction",
+    category='data:reduction'
 )
 class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                      DatasetSelectMixin, AddResultsMixin):
@@ -129,6 +130,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def integration_viewer(self):
