@@ -680,7 +680,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
                 spec.meta['_default_color'] = default_color
-            self.add_results.add_results_from_plugin(spec, format=self.extracted_format)
+            self.add_results.add_results_from_plugin(spec, format=self.extracted_format,
+                                                     load_kwargs={'viewer': '*'})
 
             snackbar_message = SnackbarMessage(
                 f"{self.resulting_product_name.title()} extracted successfully.",
