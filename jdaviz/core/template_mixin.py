@@ -4371,10 +4371,12 @@ class DatasetSelect(SelectPluginComponent):
                     and data.label != uncert_label)
 
         def is_ramp_cube(data):
-            return data.meta.get('_importer') == 'RampImporter' and data.meta.get('_ramp_type') == 'group'
+            return (data.meta.get('_importer') == 'RampImporter'
+                    and data.meta.get('_ramp_type') == 'group')
 
         def is_ramp_diff_cube(data):
-            return data.meta.get('_importer') == 'RampImporter' and data.meta.get('_ramp_type') == 'diff'
+            return (data.meta.get('_importer') == 'RampImporter'
+                    and data.meta.get('_ramp_type') == 'diff')
 
         def not_ramp(data):
             return data.meta.get('_importer') not in ('RampImporter', 'RampIntegrationImporter')
