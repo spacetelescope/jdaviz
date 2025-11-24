@@ -672,7 +672,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # subset-masked spectrum, if applicable
         mask = masked_spectrum.mask
-        print(mask)
 
         if mask is not None:
             if mask.ndim == 3:
@@ -1473,10 +1472,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 )
 
             fitted_model = smoother(models_to_fit[0], x_fit, y_fit, s=s_val)
-            try:
-                fitted_model.name = models_to_fit[0].name
-            except Exception:
-                pass
+            fitted_model.name = getattr(models_to_fit[0], "name", getattr(fitted_model, "name", None))  # noqa
 
             # Evaluate the spline on the full spectral axis and restore units
             x_eval = x_full
