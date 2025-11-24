@@ -662,6 +662,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             raise ValueError('Only one layer can be selected to resize subset.')
         if self.layer.selected[0] not in self.existing_subset_labels:
             raise ValueError('Selected layer is not a subset.')
+        if not self.subset_resize_enabled:
+            raise ValueError('Resizing is not supported for composite subsets.')
+
         subset_str = self.layer.selected[0]
 
         # set subset as the active/highlighted layer in data menu
