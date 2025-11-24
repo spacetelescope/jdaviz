@@ -25,6 +25,7 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
 
     default_class = NDDataArray
     _default_profile_subset_type = 'temporal'
+    _x_axis_initialized = False
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
@@ -33,10 +34,17 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
         self.data_menu._obj.dataset.add_filter('is_ramp_integration')
 
     def _initialize_x_axis(self):
+        if self._x_axis_initialized:
+            return
         if len(self.state.x_att_helper.choices):
             self.state.x_att = self.state.x_att_helper.choices[-1]
             self.set_plot_axes()
             self.reset_limits()
+            self._x_axis_initialized = True
+
+    def add_data(self, *args, **kwargs):
+        super().add_data(*args, **kwargs)
+        self._initialize_x_axis()
 
     def reset_limits(self):
         # override to reset to the global y limits including marks:
