@@ -672,6 +672,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # subset-masked spectrum, if applicable
         mask = masked_spectrum.mask
+        print(mask)
 
         if mask is not None:
             if mask.ndim == 3:
@@ -1262,7 +1263,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Disable computing model if cube_fit is active and
         # Spline1D component is present in the equation
-        if self.cube_fit:
+        if self.app.config == 'cubeviz' and self.cube_fit:
             id_to_type = {cm['id']: cm.get('model_type') for cm in self.component_models}
             has_spline_in_eq = any(id_to_type.get(name) == 'Spline1D'
                                    for name in self.equation_components)
@@ -1427,38 +1428,86 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         init_kw = {param['name']: param['value'] for param in self.fitter_parameters['parameters']
                    if param['type'] == 'init'}
 
-        # Spline1D has no scalar parameters, so skip specutils.fit_lines
+        # Spline1D special-case: fit directly with SplineSmoothingFitter and
+        # skip specutils.fit_lines, which assumes scalar model parameters.
         if len(models_to_fit) == 1 and models_to_fit[0].__class__.__name__ == "Spline1D":
             s_val = kw.get("s", 1.0)
             smoother = fitting.SplineSmoothingFitter()
 
-            x_arr = self.dataset.get_selected_spectrum(use_display_units=True).spectral_axis.value
-            y_arr = self.dataset.get_selected_spectrum(use_display_units=True).flux.value
+            mspec = masked_spectrum
+            spec = self.dataset.get_selected_spectrum(use_display_units=True)
 
-            fitted_model = smoother(models_to_fit[0], x_arr, y_arr, s=s_val)
+            x_full = np.asarray(spec.spectral_axis)
+            y_full = np.asarray(mspec.flux)
+
+            if mspec.mask is None:
+                good = np.isfinite(x_full) & np.isfinite(y_full)
+            else:
+                base = ~np.asarray(mspec.mask, dtype=bool)
+                good = base & np.isfinite(x_full) & np.isfinite(y_full)
+
+            if not np.any(good):
+                raise ValueError("No finite, unmasked points available for Spline1D fit")
+
+            xf = x_full[good]
+            yf = y_full[good]
+
+            if hasattr(xf, "value"):
+                xf = xf.value
+            if hasattr(yf, "value"):
+                yf = yf.value
+
+            x_fit = np.asarray(xf)
+            y_fit = np.asarray(yf)
+
+            order = np.argsort(x_fit)
+            x_fit = x_fit[order]
+            y_fit = y_fit[order]
+
+            # Require at least degree+1 points for a meaningful spline.
+            deg = getattr(models_to_fit[0], "degree", 1)
+            if x_fit.size <= deg:
+                raise ValueError(
+                    f"Spline1D fit requires more than degree ({deg}) sample points; "
+                    f"got {x_fit.size}"
+                )
+
+            fitted_model = smoother(models_to_fit[0], x_fit, y_fit, s=s_val)
             try:
                 fitted_model.name = models_to_fit[0].name
             except Exception:
                 pass
 
-            # build output Spectrum1D-like result with units preserved
-            spec = self.dataset.get_selected_spectrum(use_display_units=True)
-            y_fit = fitted_model(x_arr) * spec.flux.unit
-            fitted_spectrum = spec.__class__(flux=y_fit, spectral_axis=spec.spectral_axis, wcs=getattr(spec, "wcs", None))  # noqa
+            # Evaluate the spline on the full spectral axis and restore units
+            x_eval = x_full
+            if hasattr(x_eval, "value"):
+                x_eval = x_eval.value
+            x_eval = np.asarray(x_eval)
+            y_model = fitted_model(x_eval) * spec.flux.unit
+            fitted_spectrum = spec.__class__(
+                flux=y_model,
+                spectral_axis=spec.spectral_axis,
+                wcs=getattr(spec, "wcs", None),
+            )
 
             self._fitted_model = fitted_model
             self._fitted_spectrum = fitted_spectrum
+
             if add_data:
                 self._fitted_models[self.results_label] = fitted_model
-                self.add_results.add_results_from_plugin(fitted_spectrum, format='1D Spectrum')
+                self.add_results.add_results_from_plugin(
+                    fitted_spectrum, format="1D Spectrum"
+                )
                 if self.residuals_calculate:
                     self.add_results.add_results_from_plugin(
                         spec - fitted_spectrum,
                         label=self.residuals.value,
-                        format='1D Spectrum',
+                        format="1D Spectrum",
                         replace=False,
                     )
+
             self._set_default_results_label()
+
             if self.residuals_calculate:
                 return fitted_model, fitted_spectrum, spec - fitted_spectrum
             return fitted_model, fitted_spectrum
