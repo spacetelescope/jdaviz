@@ -311,6 +311,8 @@ class RampImporter(BaseImporterToDataCollection):
                                     viewer_select=self.viewer)
         # TODO: this will need to be removed when removing restriction of a single flux cube
         self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
+        if not hasattr(self.app._jdaviz_helper, 'cube_cache'):
+            self.app._jdaviz_helper.cube_cache = {}
         self.app._jdaviz_helper.cube_cache[data_label] = ramp_cube
 
         self.add_to_data_collection(diff_cube,
