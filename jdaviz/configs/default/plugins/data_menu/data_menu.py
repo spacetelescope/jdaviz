@@ -182,8 +182,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
-                  'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data', 'view_info',
-                  'remove_from_viewer', 'remove_from_app']
+                  'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data',
+                  'view_info', 'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
                       if e not in ('set_layer_visibility', 'toggle_layer_visibility',
