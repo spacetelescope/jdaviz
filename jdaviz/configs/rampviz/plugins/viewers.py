@@ -30,6 +30,8 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
         kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
 
+        self.data_menu._obj.dataset.add_filter('is_ramp_integration')
+
     def _initialize_x_axis(self):
         if len(self.state.x_att_helper.choices):
             self.state.x_att = self.state.x_att_helper.choices[-1]
@@ -110,6 +112,8 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
+
+        self.data_menu._obj.dataset.add_filter('is_ramp_cube')
 
         # Hide axes by default
         self.state.show_axes = False

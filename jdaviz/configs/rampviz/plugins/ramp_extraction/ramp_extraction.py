@@ -89,7 +89,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a ramp from a ramp cube.'
 
-        self.dataset.filters = ['is_ramp_cube']
+        self.dataset.filters = ['is_ramp_group_cube']
 
         # TODO: in the future this could be generalized with support in SelectPluginComponent
         self.aperture._default_text = 'Entire Cube'
