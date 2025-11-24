@@ -5,7 +5,9 @@ New Features
 ------------
 
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
-  and import from an astroquery or MAST search. [#3769]
+  and import from an astroquery or MAST search. Interactive footprint selection enables displaying
+  observation footprints from ``s_region`` data as overlays on the image viewer and clicking on
+  footprints to select/deselect observations. [#3769, #3894]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
 
@@ -46,6 +48,10 @@ Imviz
 - Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
 
 - Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769]
+
+- Added interactive footprint selection feature for MAST observations in Imviz.
+  Users can now display observation footprints from ``s_region`` data as overlays
+  on the image viewer and click on footprints to select/deselect observations. [#3894]
 
 Mosviz
 ^^^^^^
