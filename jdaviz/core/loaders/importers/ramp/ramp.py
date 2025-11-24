@@ -138,7 +138,7 @@ class RampImporter(BaseImporterToDataCollection):
                                                  'diff_viewer_label_invalid_msg',
                                                  multiselect='diff_viewer_multiselect',
                                                  default_mode='empty')
-        supported_viewers = [{'label': 'Ramp Diff',
+        supported_viewers = [{'label': '3D Ramp Diff',
                               'reference': 'rampviz-image-viewer'}]
         if self.app.config == 'deconfigged':
             self.diff_viewer_create_new_items = supported_viewers
@@ -188,7 +188,7 @@ class RampImporter(BaseImporterToDataCollection):
 
     @staticmethod
     def _get_supported_viewers():
-        return [{'label': 'Ramp Group', 'reference': 'rampviz-image-viewer'}]
+        return [{'label': '3D Ramp', 'reference': 'rampviz-image-viewer'}]
 
     @property
     def user_api(self):
