@@ -43,11 +43,11 @@ def _slice(helper, ramp_cube):
     assert helper.app.get_viewer("group-viewer").slice == len(slice_values) // 2
     assert helper.app.get_viewer("group-viewer").state.slices[-1] == 5
     assert helper.app.get_viewer("diff-viewer").state.slices[-1] == 5
-    helper.select_group(slice_values[0])
+    helper.plugins['Slice'].value = float(slice_values[0])
     assert helper.app.get_viewer("group-viewer").slice == 0
     assert sl.value == slice_values[0]
 
-    helper.select_group(slice_values[1])
+    helper.plugins['Slice'].value = float(slice_values[1])
     assert sl.value == slice_values[1]
 
     # Retrieve updated slice_values
