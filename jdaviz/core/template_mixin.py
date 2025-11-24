@@ -4822,11 +4822,10 @@ class AddResults(BasePluginComponent):
             data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
         if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
-            if 'viewer' not in load_kwargs:
-                load_kwargs['viewer'] = []
             self.app._jdaviz_helper.load(data_item,
                                          loader='object', format=format,
-                                         data_label=label, **load_kwargs)
+                                         data_label=label, viewer=load_kwargs.pop('viewer', []),
+                                         **load_kwargs)
         else:
             # NOTE: eventually remove this entirely once all plugins are set to go through
             # the new loaders infrastructure above
