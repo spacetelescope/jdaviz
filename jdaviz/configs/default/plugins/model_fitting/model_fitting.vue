@@ -200,6 +200,11 @@
                   </v-btn>
                 </j-tooltip>
               </v-row>
+              <v-row v-if="item.model_type === 'Spline1D'">
+                <v-alert type="info">
+                  To view Spline1D parameters, please open the fitter parameters section below.               </v-alert>
+              </v-row>
+              <template v-else>
               <v-div
                 v-for="param in item.parameters"
                 :style="componentInEquation(item.id) ? '': 'opacity: 0.3'"
@@ -240,6 +245,7 @@
                 </v-row>
                 <v-divider></v-divider>
               </v-div>
+              </template>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
