@@ -450,7 +450,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
         'data/gauss100_fits_wcs_block_reduced.fits', package='jdaviz.configs.imviz.tests'))
 
     # Link them by WCS
-    imviz_helper.link_data(align_by='wcs')
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
     w = imviz_helper.app.data_collection[0].coords
 
     # This rectangle is over a real object in reference image but

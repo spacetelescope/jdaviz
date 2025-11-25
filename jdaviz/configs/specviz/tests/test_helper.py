@@ -22,7 +22,7 @@ class TestSpecvizHelper:
         self.multi_order_spectrum_list = multi_order_spectrum_list
 
         self.label = "Test 1D Spectrum"
-        self.spec_app.load_data(spectrum1d, data_label=self.label)
+        self.spec_app.load(spectrum1d, data_label=self.label)
 
     def test_load_spectrum1d(self):
         # starts with a single loaded spectrum1d object:
@@ -50,7 +50,7 @@ class TestSpecvizHelper:
         spectrum_table.header['INSTRUME'] = 'Fake Instrument'
         fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
         self.label = "Test 1D Spectrum"
-        self.spec_app.load_data(fake_hdulist)
+        self.spec_app.load(fake_hdulist)
         data = self.spec_app.get_data(data_label=self.label)
         # HDUList should load as Spectrum
         assert isinstance(data, Spectrum)
@@ -63,7 +63,7 @@ class TestSpecvizHelper:
     def test_load_spectrum_list_with_kwargs(self, kwargs):
         # When loading via the ``data_label`` argument, the length of the
         # list must match the number of sources in the SpectrumList.
-        self.spec_app.load_data(self.spec_list, **kwargs)
+        self.spec_app.load(self.spec_list, **kwargs)
         assert len(self.spec_app.app.data_collection) == 4
         if 'load' in list(kwargs.keys())[0]:
             for i in (1, 2, 3):
@@ -72,19 +72,19 @@ class TestSpecvizHelper:
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_data(self.multi_order_spectrum_list, sources='*')
+        self.spec_app.load(self.multi_order_spectrum_list, sources='*')
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
         # NOTE: will be removed after load_data deprecation is removed
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
-            self.spec_app.load_data(self.spec_list, data_label=labels)
+            self.spec_app.load(self.spec_list, data_label=labels)
 
     def test_load_spectrum_collection(self):
         with pytest.raises(ValueError):
             collection = SpectrumCollection([1]*u.AA)
-            self.spec_app.load_data(collection)
+            self.spec_app.load(collection)
 
     def test_get_spectra_no_viewer_reference(self):
         """

@@ -113,7 +113,7 @@ class TestExportSubsets:
         imviz_helper.load(data)  # load data twice so we can link them
         imviz_helper.load(data)
 
-        imviz_helper.link_data(align_by='wcs')
+        imviz_helper.plugins['Orientation'].align_by = 'WCS'
         subset_plugin = imviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=8, yc=6, radius=.2))
 
@@ -284,7 +284,7 @@ class TestExportSubsets:
         arr = np.arange(40000).reshape(200, 200)
         ndd = NDData(arr, wcs=wcs)
         imviz_helper.load(ndd)
-        imviz_helper.link_data(align_by='wcs')
+        imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
         subset_plugin = imviz_helper.plugins['Subset Tools']
         export_plugin = imviz_helper.plugins['Export']._obj

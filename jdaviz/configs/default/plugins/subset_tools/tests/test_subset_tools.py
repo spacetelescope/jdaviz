@@ -147,7 +147,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     # remove subsets and change link type to wcs
     dc = imviz_helper.app.data_collection
     dc.remove_subset_group(dc.subset_groups[0])
-    imviz_helper.link_data(align_by='wcs')
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
     assert plugin.display_sky_coordinates  # linking change should trigger change to True
 
     # apply original subset. transform sky coord of original subset to new pixels

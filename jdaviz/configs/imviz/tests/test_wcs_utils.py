@@ -132,7 +132,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
             data_label="fits_wcs[DATA]",
             rotation_angle=5 * u.deg
         )
-        self.imviz.load_data(ndd, data_label='ndd')
+        self.imviz.load(ndd, data_label='ndd')
         assert self.imviz.app.data_collection[3].label == 'ndd'
 
         # Confirm that all data in collection are labeled.
@@ -149,7 +149,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
             data_label="fits_wcs[DATA]",
             rotation_angle=45 * u.deg
         )
-        self.imviz.load_data(ndd2, data_label="rot: 45.00 deg")
+        self.imviz.load(ndd2, data_label="rot: 45.00 deg")
         assert self.imviz.app.data_collection[4].label == "rot: 45.00 deg"
 
         # Confirm that all data in collection are labeled.

@@ -23,9 +23,9 @@ class TestDeleteData(BaseImviz_WCS_WCS):
 
         # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
         hdu3 = NDData(arr, wcs=self.wcs_1)
-        self.imviz.load_data(hdu3, data_label='has_wcs_3')
+        self.imviz.load(hdu3, data_label='has_wcs_3')
 
-        self.imviz.link_data(align_by='wcs', wcs_fallback_scheme=None)
+        self.imviz.plugins['Orientation'].align_by = 'WCS'
 
         # Add a subset
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)

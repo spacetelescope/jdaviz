@@ -55,11 +55,11 @@ class BaseImviz_WCS_NoWCS:
     def setup_class(self, imviz_helper):
         # Data with WCS
         hdu_wcs = _image_hdu_wcs(arr=np.arange(100).reshape((10, 10)))
-        imviz_helper.load_data(hdu_wcs, data_label='has_wcs')
+        imviz_helper.load(hdu_wcs, data_label='has_wcs')
 
         # Data without WCS
         hdu_nowcs = _image_hdu_nowcs(arr=np.arange(100).reshape((10, 10)))
-        imviz_helper.load_data(hdu_nowcs, data_label='no_wcs')
+        imviz_helper.load(hdu_nowcs, data_label='no_wcs')
         imviz_helper.app.data_collection[1].coords = None
 
         self.wcs = WCS(hdu_wcs.header)

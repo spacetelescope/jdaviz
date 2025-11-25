@@ -279,7 +279,7 @@ class TestAdvancedAperPhot:
         imviz_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
         # Link them by WCS
-        imviz_helper.link_data(align_by='wcs')
+        imviz_helper.plugins['Orientation'].align_by = 'WCS'
         w = imviz_helper.app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
