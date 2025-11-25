@@ -6,6 +6,7 @@ from astropy.wcs import WCS
 from gwcs.wcs import WCS as GWCS
 
 from jdaviz.utils import get_top_layer_index
+from jdaviz.configs.imviz.wcs_utils import get_compass_info
 
 
 class AID:
@@ -85,8 +86,6 @@ class AID:
             self.viewer.state.zoom_radius = self.viewer.state.zoom_radius * scale_factor
 
     def _set_rotation(self, rotation):
-        from jdaviz.configs.imviz.wcs_utils import get_compass_info
-
         if rotation is None:
             return
 
@@ -210,15 +209,22 @@ class AID:
         return center
 
     def _get_current_rotation(self):
-        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
-        # rotation angle from pixel y
-        rotation_angle = orientation.rotation_angle
+        reference_data = self.viewer.state.reference_data
+        degrees_east_of_north = get_compass_info(
+            reference_data.coords, reference_data.shape
+        )[-3]
 
-        # rotation angle of pixel y from north
-        degn = orientation._obj._get_wcs_angles()[-3]
+        default_data = self.app.data_collection['Default orientation']
+        default_degrees_east_of_north = get_compass_info(
+            default_data.coords, default_data.shape
+        )[-3]
 
-        rotation = (rotation_angle - degn) % 360
-        return rotation * u.deg
+        rotation = Angle(
+            default_degrees_east_of_north - degrees_east_of_north,
+            unit = u.deg
+        ).wrap_at(360*u.deg)
+
+        return rotation
 
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """
