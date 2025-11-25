@@ -12,7 +12,11 @@ from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage, FootprintOverlayClickMessage, LinkUpdatedMessage
+from jdaviz.core.events import (AddDataMessage,
+                                RemoveDataMessage,
+                                SnackbarMessage,
+                                FootprintOverlayClickMessage,
+                                LinkUpdatedMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
