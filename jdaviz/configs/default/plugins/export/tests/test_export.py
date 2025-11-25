@@ -403,7 +403,7 @@ class TestExportPluginPlots:
         assert export_plugin.default_filepath == expected_path
 
 
-def test_ap_phot_plot_export(imviz_helper, ipython_kernel):
+async def test_ap_phot_plot_export(imviz_helper, ipython_kernel):
     """
     Test export functionality for plot from the aperture photometry
     plugin.
@@ -464,7 +464,7 @@ async def test_figure_export(imviz_helper, ipython_kernel):
             assert str(e) == "Saving figure is still in progress. Use ` export(..., block=True)` to make sure the previous export is complete"  # noqa: E501
 
 
-def test_basic_export_plugin_plots(imviz_helper, ipython_kernel):
+async def test_basic_export_plugin_plots(imviz_helper, ipython_kernel):
     """
     Test basic funcionality of exporting plugin plots
     from the export plugin. Tests on the 'Plot Options: stretch_hist'
