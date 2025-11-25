@@ -85,6 +85,8 @@ class AID:
             self.viewer.state.zoom_radius = self.viewer.state.zoom_radius * scale_factor
 
     def _set_rotation(self, rotation):
+        from jdaviz.configs.imviz.wcs_utils import get_compass_info
+
         if rotation is None:
             return
 
@@ -97,8 +99,11 @@ class AID:
                 f"`rotation` must be a Quantity or float, got {rotation=}"
             )
 
-        degn = orientation._obj._get_wcs_angles()[-3]
-        rotation_angle = (degn + rotation) % 360
+        reference_data = self.viewer.state.reference_data
+        lonpole = Angle(reference_data.coords.wcs.lonpole, unit = u.deg).wrap_at(360*u.deg).deg
+        north_offset = (lonpole - 180) % 360
+        degrees_east_of_north = get_compass_info(reference_data.coords, reference_data.shape)[-3]
+        rotation_angle = (rotation - degrees_east_of_north + north_offset) % 360
 
         label = f'{rotation:.2f} deg east of north'
 
