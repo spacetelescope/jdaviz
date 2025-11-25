@@ -954,6 +954,12 @@ class BaseConeSearchResolver(BaseResolver):
 
         self.viewer_centered = True
 
+    @property
+    def is_valid(self):
+        # these resolvers do not accept any direct, (default_input = None), so can
+        # always be considered valid
+        return True
+
 
 def find_matching_resolver(app, inp=None, resolver=None, format=None, target=None, **kwargs):
     formats = format if isinstance(format, (list, tuple)) else [format]
@@ -1011,9 +1017,3 @@ def find_matching_resolver(app, inp=None, resolver=None, format=None, target=Non
         raise ValueError(f"multiple valid loaders found for input: {vrs}")
     else:
         return valid_resolvers[0][0].user_api
-
-    @property
-    def is_valid(self):
-        # these resolvers do not accept any direct, (default_input = None), so can
-        # always be considered valid
-        return True
