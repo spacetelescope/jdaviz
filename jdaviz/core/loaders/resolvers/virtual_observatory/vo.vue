@@ -18,6 +18,10 @@
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :valid_import_formats="valid_import_formats"
+    :is_wcs_linked="is_wcs_linked"
+    :image_data_loaded="image_data_loaded"
+    :footprint_select_icon="footprint_select_icon"
+    :custom_toolbar_enabled="custom_toolbar_enabled"
   >
     <v-form v-model="all_fields_filled">
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
