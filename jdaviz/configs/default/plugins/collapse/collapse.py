@@ -76,7 +76,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     @observe("dataset_selected", "dataset_items")
     def _set_default_results_label(self, event={}):
         label_comps = []
-        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+        if hasattr(self, 'dataset'):
             label_comps += [self.dataset_selected]
         label_comps += ["collapsed"]
         self.results_label_default = " ".join(label_comps)
