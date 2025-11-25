@@ -21,7 +21,9 @@ from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         Table,
-                                        CustomToolbarToggleMixin, UnitSelectPluginComponent, ViewerSelect,
+                                        CustomToolbarToggleMixin,
+                                        UnitSelectPluginComponent,
+                                        ViewerSelect,
                                         with_spinner)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
