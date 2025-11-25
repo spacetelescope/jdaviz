@@ -850,11 +850,6 @@ class BaseConeSearchResolver(BaseResolver):
         self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
         self.radius_unit.selected = "deg"
 
-        self.telescope = SelectPluginComponent(
-            self, items="telescope_items", selected="telescope_selected",
-            manual_options=['JWST', 'HST', 'SDSS', 'Gaia']
-        )
-
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
