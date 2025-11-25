@@ -163,55 +163,60 @@
               dense
             >
               <div>
-              <v-list-item
-                v-for="item in layer_items"
-                class="layer-select"
-              >
-                <v-list-item-icon>
-                  <j-layer-viewer-icon-stylized
-                      :label="item.label"
-                      :icon="item.icon"
-                      :visible="item.visible"
-                      :is_subset="item.is_subset"
-                      :colors="item.colors"
-                      :linewidth="item.linewidth"
-                      :cmap_samples="cmap_samples"
-                      btn_style="margin-bottom: 0px"
-                      disabled="true"
-                    />
-                </v-list-item-icon>
-                <v-list-item-content>
-                  <span style="display: inline-block">
-                    <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                    <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                    <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                    {{ item.label }}
-                  </span>
-                </v-list-item-content>
-                <v-list-item-action>
-                  <j-tooltip
-                    v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
-                    tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
+                <draggable v-model="layer_items">
+                  <v-list-item
+                    v-for="item in layer_items"
+                    :key="item.label"
+                    class="layer-select"
+                    @dragstart="onDragStart($event)"
+                    @dragend="onDragEnd"
                   >
-                    <v-btn icon disabled>
-                      <v-icon>mdi-eye-off</v-icon>
-                    </v-btn>
-                  </j-tooltip>
-                  <j-tooltip
-                    v-else
-                    :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
-                    >
-                    <plugin-switch
-                      :value="item.visible"
-                      @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                      @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
-                      @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
-                      :api_hints_enabled="false"
-                      :use_icon="item.is_sonified ? 'speaker' : 'eye'"
-                    />
-                  </j-tooltip>
-                </v-list-item-action>
-              </v-list-item>
+                    <v-list-item-icon>
+                      <j-layer-viewer-icon-stylized
+                          :label="item.label"
+                          :icon="item.icon"
+                          :visible="item.visible"
+                          :is_subset="item.is_subset"
+                          :colors="item.colors"
+                          :linewidth="item.linewidth"
+                          :cmap_samples="cmap_samples"
+                          btn_style="margin-bottom: 0px"
+                          disabled="true"
+                        />
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <span style="display: inline-block">
+                        <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                        <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
+                        <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                        {{ item.label }}
+                      </span>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <j-tooltip
+                        v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
+                        tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
+                      >
+                        <v-btn icon disabled>
+                          <v-icon>mdi-eye-off</v-icon>
+                        </v-btn>
+                      </j-tooltip>
+                      <j-tooltip
+                        v-else-if="viewer_supports_visible_toggle"
+                        :tooltipcontent="api_hints_enabled ? '' : item.is_sonified ? 'Toggle sonification' :'Toggle visibility'"
+                      >
+                        <plugin-switch
+                          :value="item.visible"
+                          @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                          @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}"
+                          @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
+                          :api_hints_enabled="false"
+                          :use_icon="item.is_sonified ? 'speaker' : 'eye'"
+                        />
+                      </j-tooltip>
+                    </v-list-item-action>
+                  </v-list-item>
+                </draggable>
               </div>
             </v-list-item-group>
             <hover-api-hint
@@ -329,6 +334,50 @@
       }
     },
     methods: {
+      isSafari() {
+        const ua = navigator.userAgent;
+        return ua.includes('Safari') && !ua.match(/Chrome|Chromium|Edg/);
+      },
+      onDragStart(event) {
+        /* Safari mis-renders drag previews inside overlay menus/dialogs, capturing extra UI chrome.
+         * Work around that by cloning the dragged element, rendering the clone offscreen (outside overlays),
+         * and passing it to setDragImage so only the intended element appears in the ghost preview.
+         */
+        if (!this.isSafari()) {
+          return;
+        }
+        
+        // Helper to create dom structure
+        function div({ style, ...attrs }, child) {
+          const el = Object.assign(document.createElement("div"), attrs);
+          Object.assign(el.style, style);
+          el.appendChild(child);
+          return el;
+        }
+
+        const draggedEl = event.currentTarget;
+        const draggedBounds = draggedEl.getBoundingClientRect();
+        
+        const dragGhostEl = draggedEl.cloneNode(true);
+        dragGhostEl.style.width = draggedBounds.width + "px";
+        dragGhostEl.style.height = draggedBounds.height + "px";
+        
+        // Make an offscreen element and give it the right classes so vuetify styles get applied to the drag ghost
+        this._dragGhostParent = document.body.appendChild(
+          div({ className: "vuetify-styles", style: { position: "absolute", left: "-10000px" } },
+            div({ className: "v-application--is-ltr" },
+              dragGhostEl)));
+        
+        const offsetX = event.clientX - draggedBounds.left;
+        const offsetY = event.clientY - draggedBounds.top;
+        event.dataTransfer.setDragImage(dragGhostEl, offsetX, offsetY);
+      },
+      onDragEnd() {
+        if (this._dragGhostParent && this._dragGhostParent.parentNode) {
+          this._dragGhostParent.parentNode.removeChild(this._dragGhostParent);
+        }
+        this._dragGhostParent = null;
+      },
       onScroll(e) {
         if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
           const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
@@ -360,7 +409,7 @@
   .viewer-label-container {
     position: absolute;
     right: 0;
-    z-index: 1;
+    z-index: 999;
     width: 24px;
   }
   .viewer-label {

@@ -5,7 +5,9 @@ New Features
 ------------
 
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
-  and import from an astroquery or MAST search. [#3769]
+  and import from an astroquery or MAST search. Interactive footprint selection enables displaying
+  observation footprints from ``s_region`` data as overlays on the image viewer and clicking on
+  footprints to select/deselect observations. [#3769, #3894]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
 
@@ -28,13 +30,17 @@ New Features
 
 - Added ability to delete subsets from the Subset Tools plugin UI and API. [#3853, #3870]
 
+- Support layer re-ordering by drag-and-drop in viewer data menus. [#3532]
+
+- Generalize spectrum loading logic to prepare to support Roman ASDF files. [#3864]
+
 Cubeviz
 ^^^^^^^
 
-- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748]
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748, #3861]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
-  deprecated and will open the new sidebar.  [#3748]
+  deprecated and will open the new sidebar.  [#3748, #3872]
 
 Imviz
 ^^^^^
@@ -42,6 +48,10 @@ Imviz
 - Loading footprints from files/API is now done through the loaders infrastructure. [#3790]
 
 - Virtual Observatory (VO) plugin functionality is now available through the loaders infrastructure. [#3769]
+
+- Added interactive footprint selection feature for MAST observations in Imviz.
+  Users can now display observation footprints from ``s_region`` data as overlays
+  on the image viewer and click on footprints to select/deselect observations. [#3894]
 
 Mosviz
 ^^^^^^
@@ -53,6 +63,13 @@ Specviz2d
 ^^^^^^^^^
 
 - Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
+
+Rampviz
+^^^^^^^
+
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.
+  This changes the default auto-extraction function to always be "median" as well as
+  changes to the default label of the auto-extracted ramp integration. [#3878]
 
 API Changes
 -----------
@@ -104,7 +121,30 @@ Other Changes and Additions
 
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
 
-4.4.2 (unreleased)
+4.4.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+- In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
+  The button is now hidden when no selection is made. [#3888]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.4.2 (2025-11-14)
 ==================
 
 - Fixes traceback raised by the stretch histogram in plot options when entering multiselect mode. [#3825]
@@ -116,23 +156,17 @@ Bug Fixes
 
 - Fix a bug with initializing component models in Model Fitting when Cube Fit was toggle on. [#3857]
 
-Cubeviz
-^^^^^^^
+- Fixes an issue where loader widgets were showing outside the app when the entire app was wrapped in a solara component. [#3877]
+
+- Fixes a bug in parser preference where sometimes an input would go through the specutils parser
+  instead of the fits parser. [#3869]
+
+- Disable cloning viewers in Specviz, Specviz2d, Cubeviz, and Mosviz. [#3876]
 
 Imviz
 ^^^^^
 - Adds ability to use Ra/Dec if there is no `sky_centroid` column in a catalog loaded from file
   for the Catalog Search plugin, so exported catalog tables can be loaded into the app. [#3841]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-- Fix subset linking between pixel/wavelength in Specviz2d viewers. [#3817]
 
 4.4.1 (2025-09-26)
 ==================

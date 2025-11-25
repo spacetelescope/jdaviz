@@ -56,17 +56,18 @@ COMMENTCARD_KEY = '_fits_comment_card'
 
 CONFIGS_WITH_LOADERS = ('deconfigged', 'lcviz',
                         'specviz', 'specviz2d',
-                        'imviz', 'cubeviz')
+                        'imviz', 'cubeviz',
+                        'rampviz')
 SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
-RA_COMPS = ['right ascension', 'ra', 'ra_deg', 'radeg',
-            'radegrees', 'right ascension (degrees)',
-            'ra_obj', 'raj2000', 'ra2000']
-DEC_COMPS = ['declination', 'dec', 'dec_deg', 'decdeg',
-             'decdegrees', 'declination (degrees)',
-             'dec_obj', 'obj_dec', 'decj2000', 'dec2000']
+RA_COMPS = ['rightascension', 'ra', 'radeg', 'radeg',
+            'radegrees', 'rightascensiondegrees', 'rightascensiondeg',
+            'raobj', 'objra', 'sourcera', 'rasource', 'raj2000', 'ra2000']
+DEC_COMPS = ['declination', 'dec', 'decdeg', 'decdeg',
+             'decdegrees', 'declinationdegrees', 'declinationdeg',
+             'decobj', 'objdec', 'decsource', 'sourcedec', 'decj2000', 'dec2000']
 
 
 class SnackbarQueue:
@@ -850,7 +851,7 @@ def get_top_layer_index(viewer):
     associations = viewer.jdaviz_app._data_associations
 
     visible_image_layers = [
-        i for i, lyr in enumerate(viewer.layers)
+        i for i, lyr in enumerate(viewer.state.layers)
         if (
             lyr.visible and
             layer_is_image_data(lyr.layer) and
@@ -937,7 +938,7 @@ def wildcard_match(obj, value, choices=None):
     def wildcard_match_list_of_str(internal_choices, internal_value):
         matched = []
         for v in internal_value:
-            if isinstance(v, str) and any(has_wildcard(v) for v in value):
+            if isinstance(v, str) and has_wildcard(v):
                 # Check for wildcard matches
                 matched.extend(wildcard_match_str(internal_choices, v))
             else:
@@ -947,9 +948,9 @@ def wildcard_match(obj, value, choices=None):
         # Remove duplicates while preserving order
         return list(dict.fromkeys(matched))
 
-    if not choices:
+    if choices is None:
         choices = getattr(obj, 'choices', None)
-        if not choices:
+        if choices is None:
             return value
 
     # any works for both str and iterable
@@ -962,6 +963,13 @@ def wildcard_match(obj, value, choices=None):
         elif isinstance(value, (list, tuple)):
             obj.multiselect = True
             value = wildcard_match_list_of_str(choices, value)
+
+    # If only '*' wildcards are left meaning that nothing matched, return empty selection.
+    # Basically, '*' of empty should return empty---we don't want to error out. For other
+    # patterns like 'foo*' not matching anything, we use the error to notify the user of no match.
+    # e.g. value == ['*'] or ['*', '*'], choices == [] -> match == [] (rather than ['*'])
+    if all(vi == '*' for v in value for vi in v):  # List of strings
+        value = [] if getattr(obj, 'multiselect', False) else ''
 
     return value
 
@@ -1024,7 +1032,10 @@ def _clean_data_for_hash(data):
 
     data_mask = getattr(data, 'mask', None)
     data_mask = data_mask if data_mask is not None else getattr(new_data, 'mask', None)
-    mask_arr = np.ascontiguousarray(data_mask).astype('uint8') if data_mask is not None else None
+    try:
+        mask_arr = np.ascontiguousarray(data_mask).astype('uint8') if data_mask is not None else None  # noqa
+    except TypeError:
+        mask_arr = None
 
     try:
         arr = np.ascontiguousarray(new_data)
@@ -1170,3 +1181,79 @@ def _get_celestial_wcs(wcs):
     else:
         return None
     return data_wcs
+
+
+def closest_point_on_segment(px, py, x1, y1, x2, y2):
+    """
+    Find the closest point on a line segment to a reference point.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    x1, y1, x2, y2 : array-like
+        Coordinates of the line segment endpoints.
+
+    Returns
+    -------
+    closest_x, closest_y : ndarray
+        Coordinates of the closest points on the segments.
+    """
+    dx = x2 - x1
+    dy = y2 - y1
+    len_sq = dx**2 + dy**2
+
+    t = np.clip(((px - x1) * dx + (py - y1) * dy) / len_sq, 0, 1)
+
+    closest_x = x1 + t * dx
+    closest_y = y1 + t * dy
+
+    return closest_x, closest_y
+
+
+def find_closest_polygon_mark(px, py, marks):
+    """
+    Find the closest mark to a click point and return its observation index.
+
+    Parameters
+    ----------
+    px : float
+        X coordinate of the reference point.
+    py : float
+        Y coordinate of the reference point.
+    marks : list of RegionOverlay
+        List of mark objects to compare against the given point.
+
+    Returns
+    -------
+    closest_idx : int or None
+        The observation index of the closest mark, or None if no marks.
+    """
+    min_dist = float('inf')
+    closest_idx = None
+
+    for mark in marks:
+        x_coords = np.array(mark.x)
+        y_coords = np.array(mark.y)
+
+        if len(x_coords) == 0 or len(y_coords) == 0:
+            continue
+
+        x1 = x_coords
+        x2 = np.roll(x_coords, -1)
+        y1 = y_coords
+        y2 = np.roll(y_coords, -1)
+
+        closest_xs, closest_ys = closest_point_on_segment(px, py, x1, y1, x2, y2)
+        dist = (closest_xs - px)**2 + (closest_ys - py)**2
+
+        min_idx = np.argmin(dist)
+        min_dist_for_this_mark = dist[min_idx]
+
+        if min_dist_for_this_mark < min_dist:
+            min_dist = min_dist_for_this_mark
+            closest_idx = mark.label
+
+    return closest_idx

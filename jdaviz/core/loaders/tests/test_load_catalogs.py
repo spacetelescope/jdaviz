@@ -58,6 +58,50 @@ def _make_catalog_string_coord_columns():
                   names=['RA', 'Dec', 'X', 'Y', 'Obj_ID', 'flux'])
 
 
+def _make_catalog_no_coordinates():
+    # Table to test loading catalogs that aren't 'Source Catalogs',
+    col1 = ['A', 'B', 'C']
+    col2 = [1, 2, 3]
+    col3 = [True, False, True]
+
+    return Table(data=[col1, col2, col3],
+                 names=['col1', 'col2', 'col3'])
+
+
+def test_load_catalog_no_source_positions(imviz_helper, image_2d_wcs):
+    """
+    A table should be able to be loaded without selecting
+    an RA/Dec or X/Y pair. This table will not have the functionality
+    of a 'Souce Catalog' that does have source positions
+    (linking, mouseover) but it may be loaded to plot for example
+    in the scatter or histrogram viewer.
+    """
+    imviz_helper.app.state.catalogs_in_dc = True
+
+    catalog_obj = _make_catalog_no_coordinates()
+
+    # load data so we can test orientation later
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    # load catalog, all columns
+    imviz_helper.load(catalog_obj, col_other=['col1', 'col2', 'col3'])
+
+    # check for the table in the data collection
+    dc = imviz_helper.app.data_collection
+    assert len(dc) == 2
+    assert 'Catalog' in imviz_helper.app.data_collection.labels
+    tab = imviz_helper.app.data_collection[1].get_object(Table)
+    assert 'col1' in tab.colnames
+
+    # make sure linking doesn't produce any errors when alingment changes.
+    # this isn't relevant for this catalog with no source positons,
+    # but orientation will check for the presence of certain
+    # components in a table to decide not to link and we
+    # want to make sure that works correctly
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+
 def test_load_catalog_with_string_coord_cols(imviz_helper):
     """
     Test loading a catalog with string RA/Dec columns (that can be converted
@@ -161,8 +205,8 @@ def test_import_enabled_disabled(imviz_helper):
     ldr.importer.col_dec.selected = '---'
     ldr.importer.col_x.selected = '---'
     ldr.importer.col_y.selected = '---'
-    # now with no coordinate column pair selected, import should be disabled
-    assert ldr.importer._obj.import_disabled is True
+    # no coordinate column pair selected, import should still be enabled
+    assert ldr.importer._obj.import_disabled is False
 
     # when RA is selected but Dec is not, import should be disabled
     ldr.importer.col_ra.selected = 'RA'
@@ -392,3 +436,25 @@ def test_histogram_viewer(deconfigged_helper):
     po.xatt = 'Right Ascension'
 
     assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'Right Ascension'  # noqa
+
+
+def test_table_viewer(deconfigged_helper):
+    deconfigged_helper.app.state.catalogs_in_dc = True
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = _make_catalog(with_units=True)
+    ldr.format = 'Catalog'
+    ldr.importer.viewer.create_new = 'Table'
+    ldr.load()
+
+    assert len(deconfigged_helper.viewers) == 1  # Table viewer created upon load
+    tv = deconfigged_helper.viewers['Table']
+    assert len(tv._obj.glue_viewer.layers) == 1
+
+    # create another viewer through viewer creator
+    vc = deconfigged_helper.new_viewers['Table']
+    vc.dataset.select_all()
+    nv = vc()
+
+    assert len(deconfigged_helper.viewers) == 2
+    assert len(nv._obj.glue_viewer.layers) == 1

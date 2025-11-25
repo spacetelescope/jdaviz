@@ -10,7 +10,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
            'CatalogResultsChangedMessage', 'CatalogSelectClickEventMessage',
-           'FootprintSelectClickEventMessage',
+           'FootprintSelectClickEventMessage', 'FootprintOverlayClickMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
            'AstrowidgetMarkersChangedMessage', 'MarkersPluginUpdate',
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
@@ -344,6 +344,17 @@ class CatalogSelectClickEventMessage(Message):
 class FootprintSelectClickEventMessage(Message):
     """
     Message emitted when a user clicks on a viewer to select an overlay.
+    """
+
+    def __init__(self, data, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.x = data["domain"]["x"]
+        self.y = data["domain"]["y"]
+
+
+class FootprintOverlayClickMessage(Message):
+    """
+    Message emitted when a user clicks on a viewer to select a footprint/region overlay.
     """
 
     def __init__(self, data, *args, **kwargs):

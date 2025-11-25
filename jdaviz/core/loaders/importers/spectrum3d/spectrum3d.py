@@ -25,7 +25,7 @@ __all__ = ['Spectrum3DImporter']
 @loader_importer_registry('3D Spectrum')
 class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum3d.vue"
-    parser_preference = ['fits', 'specutils.Spectrum']
+    parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
 
     # Uncertainty Cube
     unc_data_label_value = Unicode().tag(sync=True)
@@ -220,12 +220,11 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             expose += ['unc_data_label', 'unc_viewer']
         if self.has_mask:
             expose += ['mask_data_label', 'mask_viewer']
-        if self.input_has_extensions:
-            expose += ['extension']
-            if self.has_unc:
-                expose += ['unc_extension']
-            if self.has_mask:
-                expose += ['mask_extension']
+        expose += ['extension']
+        if self.has_unc:
+            expose += ['unc_extension']
+        if self.has_mask:
+            expose += ['mask_extension']
         return ImporterUserApi(self, expose)
 
     @property
@@ -290,7 +289,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
         return sp.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
 
     def __call__(self):
-        # get a copy of both of these before additional data entries changes defaults
+        # get a copy of all requested data-labels before additional data entries changes defaults
         data_label = self.data_label_value
         unc_data_label = self.unc_data_label_value
         mask_data_label = self.mask_data_label_value

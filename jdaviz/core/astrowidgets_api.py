@@ -78,7 +78,7 @@ class AstrowidgetsImageViewerMixin:
         if i_top is None:
             return
 
-        image = self.layers[i_top].layer
+        image = self.state.layers[i_top].layer
 
         if isinstance(point, SkyCoord):
             if data_has_valid_wcs(image):
@@ -133,7 +133,7 @@ class AstrowidgetsImageViewerMixin:
 
         """
         i_top = get_top_layer_index(self)
-        image = self.layers[i_top].layer
+        image = self.state.layers[i_top].layer
         width = self.state.x_max - self.state.x_min
         height = self.state.y_max - self.state.y_min
         x_cen = self.state.x_min + (width * 0.5)
@@ -485,7 +485,7 @@ class AstrowidgetsImageViewerMixin:
         # Link markers to top visible image data or reference data.
         if not use_skycoord and hasattr(self, '_get_real_xy'):
             i_top = get_top_layer_index(self)
-            image = self.layers[i_top].layer
+            image = self.state.layers[i_top].layer
         else:
             image = self.state.reference_data
 

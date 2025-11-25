@@ -5,20 +5,27 @@ from functools import cached_property
 from traitlets import Bool, Instance, List, Unicode, observe, default
 from ipywidgets import widget_serialization
 
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from astropy.table import Table as astropyTable
 from astroquery.mast import MastMissions
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, FootprintOverlayClickMessage, LinkUpdatedMessage
+from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         Table,
+                                        CustomToolbarToggleMixin,
                                         with_spinner)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
 from jdaviz.core.user_api import LoaderUserApi
-from jdaviz.utils import download_uri_to_path
+from jdaviz.core.tools import ICON_DIR
+from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
+from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark, layer_is_image_data
+from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+
 
 __all__ = ['BaseResolver', 'find_matching_resolver']
 
@@ -61,7 +68,7 @@ class FormatSelect(SelectPluginComponent):
             self._apply_default_selection()
             return
 
-        all_resolvers = []
+        all_formats = []
         self._parsers = {}
         self._dbg_importers = {}
         self._invalid_importers = {}
@@ -128,32 +135,36 @@ class FormatSelect(SelectPluginComponent):
                                     'target': this_importer.target}
                             parser_pref = this_importer.parser_preference
                             if importer_name not in self._importers:
-                                all_resolvers.append(item)
+                                all_formats.append(item)
+                                self._importers[importer_name] = this_importer
                             elif not len(parser_pref) or parser_name not in parser_pref:
                                 # default to the previous (or first) found match
                                 continue
                             else:
                                 # then there was already a match from an earlier parser.  Compare
                                 # to see which has preference and replace if necessary.
-                                item_importers = [i['importer'] for i in all_resolvers]
+                                item_importers = [i['importer'] for i in all_formats]
                                 item_index = item_importers.index(importer_name)
-                                prev_parser = all_resolvers[item_index]['parser']
+                                prev_parser = all_formats[item_index]['parser']
                                 parser_pref = this_importer.parser_preference
                                 if (prev_parser not in parser_pref or
                                         parser_pref.index(prev_parser) > parser_pref.index(parser_name)):  # noqa
                                     # this parser has preference over the previous one
-                                    all_resolvers[item_index] = item
+                                    all_formats[item_index] = item
+                                    self._importers[importer_name] = this_importer
                                 else:
                                     # this previous parser has preference over this one
                                     continue
 
-                        # we'll store the importer even if it isn't valid according to the filters
-                        # so that they can be used when compiling the list of target filters
-                        self._importers[importer_name] = this_importer
+                        else:
+                            # we'll store the importer even if it isn't valid according to the
+                            # filters so that they can be used when compiling the list of
+                            # target filters
+                            self._importers[importer_name] = this_importer
                     else:
                         self._invalid_importers[label] = 'not valid'
 
-        self.items = all_resolvers
+        self.items = all_formats
         self._apply_default_selection()
 
 
@@ -173,6 +184,7 @@ class TargetSelect(SelectPluginComponent):
         What mode to use when making the default selection.  Valid options: first, default_text,
         empty.
     """
+
     def __init__(self, plugin, items, selected, default_mode='first'):
         self._importers = {}
         super().__init__(plugin,
@@ -211,7 +223,7 @@ class TargetSelect(SelectPluginComponent):
         self._apply_default_selection()
 
 
-class BaseResolver(PluginTemplateMixin):
+class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
     _defer_resolver_input_updated = False  # noqa: only use via defer_resolver_input_updated context manager
     default_input = None
     default_input_cast = None
@@ -248,11 +260,20 @@ class BaseResolver(PluginTemplateMixin):
     target_items = List().tag(sync=True)
     target_selected = Unicode().tag(sync=True)
 
+    is_wcs_linked = Bool(False).tag(sync=True)
+    image_data_loaded = Bool(False).tag(sync=True)
+    footprint_select_icon = Unicode(read_icon(os.path.join(
+        ICON_DIR, 'footprint_select.svg'), 'svg+xml')).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         self.set_active_loader_callback = kwargs.pop('set_active_loader_callback', None)
         self.open_callback = kwargs.pop('open_callback', None)
         self.close_callback = kwargs.pop('close_callback', None)
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
+
+        self._footprint_marks = []
+        self._footprint_groups = {}
+
         super().__init__(*args, **kwargs)
 
         self.observation_table.enable_clear = False
@@ -268,6 +289,29 @@ class BaseResolver(PluginTemplateMixin):
         self.file_table.item_key = "url"
         self.file_table.multiselect = False
         self.file_table._selected_rows_changed_callback = self.on_file_select_changed
+
+        # Setup footprint selection
+        if self.app is not None:
+            self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
+            self.app.hub.subscribe(self, FootprintOverlayClickMessage,
+                                   handler=self._on_region_select)
+            self.image_data_loaded = any(layer_is_image_data(data)
+                                         for data in self.app.data_collection)
+            self.app.hub.subscribe(self, DataCollectionAddMessage,
+                                   handler=self._on_data_added)
+            self.app.hub.subscribe(self, DataCollectionDeleteMessage,
+                                   handler=self._on_data_removed)
+            self.app.hub.subscribe(self, LinkUpdatedMessage,
+                                   handler=self._on_link_type_updated)
+
+        def custom_toolbar(viewer):
+            if (self.parsed_input_is_query and self.treat_table_as_query and
+                    self.observation_table_populated and 's_region' in self.observation_table.headers_avail):  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'  # noqa: E501
+            return None, None
+
+        self.custom_toolbar.callable = custom_toolbar
+        self.custom_toolbar.name = "Footprint Selection"
 
         # subclasses should call self._resolver_input_updated on any change
         # to user-inputs that might affect the available formats
@@ -289,6 +333,12 @@ class BaseResolver(PluginTemplateMixin):
         # Set up bidirectional synchronization
         # Listen for changes to app.state.settings and update traitlet
         self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    def vue_link_by_wcs(self, *args):
+        plg = self.app._jdaviz_helper.plugins.get('Orientation', None)
+        if plg is not None:
+            plg.align_by = 'WCS'
+        self.is_wcs_linked = True
 
     @default('observation_table')
     def _default_observation_table(self):
@@ -312,6 +362,15 @@ class BaseResolver(PluginTemplateMixin):
             The new settings dictionary from the app state.
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
+
+    def _on_data_added(self, msg):
+        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+
+    def _on_data_removed(self, msg):
+        self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+
+    def _on_link_type_updated(self, msg=None):
+        self.is_wcs_linked = getattr(self.app, '_align_by', None) == 'wcs'
 
     @contextmanager
     def defer_resolver_input_updated(self):
@@ -476,11 +535,16 @@ class BaseResolver(PluginTemplateMixin):
             return 'hst'
 
     def on_observation_select_changed(self, _=None):
-
         if len(self.observation_table.selected_rows) == 0:
             self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
                                                    sender=self, color="warning"))
+            # Update footprint selection if applicable
+            if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
+                for idx, marks in self._footprint_groups.items():
+                    for mark in marks:
+                        mark.selected = False
             return
+
         datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
         results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
         file_table = self._parsed_input_to_file_table(results)
@@ -493,6 +557,123 @@ class BaseResolver(PluginTemplateMixin):
             self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
                                                    sender=self, color="error"))
             self.file_table_populated = False
+
+        # Update footprint selection to match table selection
+        if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
+            selected_indices = set()
+            for row in self.observation_table.selected_rows:
+                idx = self.observation_table.items.index(row)
+                selected_indices.add(idx)
+
+            # Update footprint marks based on selection
+            for idx, marks in self._footprint_groups.items():
+                selected = idx in selected_indices
+                for mark in marks:
+                    mark.selected = selected
+
+    def toggle_custom_toolbar(self):
+        """Override to control footprint display when toolbar is toggled."""
+        if not self.custom_toolbar_enabled:
+            if self.parsed_input_is_query and self.treat_table_as_query:
+                self._display_observation_footprints()
+            super().toggle_custom_toolbar()
+        else:
+            super().toggle_custom_toolbar()
+            if self.parsed_input_is_query and self.treat_table_as_query:
+                self._remove_observation_footprints()
+
+    def _on_region_select(self, msg):
+        """Handle footprint click events."""
+        if not self._footprint_marks:
+            return
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            return
+
+        click_x, click_y = msg.x, msg.y
+        selected_idx = find_closest_polygon_mark(click_x, click_y, self._footprint_marks)
+
+        if selected_idx is not None:
+            # Get viewer - deconfigged (TODO: factor this out for multiviewer support)
+            viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
+            if viewer_ref is None:
+                return
+            viewer = self.app.get_viewer(viewer_ref)
+            # Get selected rows from the table
+            currently_selected = set()
+            if hasattr(self, 'observation_table') and self.observation_table is not None:
+                for row in self.observation_table.selected_rows:
+                    idx = self.observation_table.items.index(row)
+                    currently_selected.add(idx)
+
+            if selected_idx in currently_selected:
+                currently_selected.discard(selected_idx)
+                viewer._deselect_region_overlay(region_label=selected_idx)
+            else:
+                currently_selected.add(selected_idx)
+                viewer._select_region_overlay(region_label=selected_idx)
+
+            # Update the table selection
+            if hasattr(self, 'observation_table') and self.observation_table is not None:
+                if currently_selected:
+                    self.observation_table.select_rows(sorted(list(currently_selected)))
+                else:
+                    # Clear selection
+                    self.observation_table.selected_rows = []
+
+    def _display_observation_footprints(self):
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+
+        # Get viewer - works for both Imviz and deconfigged
+        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
+        if viewer_ref is None:
+            return
+        viewer = self.app.get_viewer(viewer_ref)
+        regions = []
+        region_labels = []
+
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+
+            region = stcs_string2region(s_region_str)
+            regions.append(region)
+            region_labels.append(idx)
+
+        if regions:
+            viewer._add_region_overlay(
+                region=regions,
+                region_label=region_labels,
+                selected=False,
+                fill_opacities=[0]
+            )
+            for mark in viewer.figure.marks:
+                if isinstance(mark, RegionOverlay) and mark.label in region_labels:
+                    self._footprint_marks.append(mark)
+                    self._footprint_groups[mark.label] = [mark]
+
+    def _remove_observation_footprints(self):
+        """Remove all observation footprints from the viewer."""
+        if not self._footprint_marks:
+            return
+
+        # Get viewer - for deconfigged (TODO: factor this out for multiviewer support)
+        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
+        if viewer_ref is None:
+            return
+        viewer = self.app.get_viewer(viewer_ref)
+
+        region_labels = [mark.label for mark in self._footprint_marks]
+
+        if region_labels:
+            viewer._remove_region_overlay(region_label=region_labels)
+
+        self._footprint_marks = []
+        self._footprint_groups = {}
 
     def on_file_select_changed(self, _=None):
         self._clear_cache('output')

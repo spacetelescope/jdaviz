@@ -304,6 +304,8 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3835
     # https://github.com/spacetelescope/jdaviz/pull/3854
     # https://github.com/spacetelescope/jdaviz/pull/3856
+    # https://github.com/spacetelescope/jdaviz/pull/3863
+    # https://github.com/spacetelescope/jdaviz/pull/3867 - table viewer
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
@@ -3152,22 +3154,23 @@ class Application(VuetifyTemplate, HubListener):
             self.state.loader_selected = resolver
 
         # registry will be populated at import
-        import jdaviz.core.loaders  # noqa
-        for name, Resolver in loader_resolver_registry.members.items():
-            loader = Resolver(app=self,
-                              open_callback=open,
-                              close_callback=close,
-                              set_active_loader_callback=set_active_loader)
-            self.state.loader_items.append({
-                'name': name,
-                'label': name,
-                'requires_api_support': loader.requires_api_support,
-                'widget': "IPY_MODEL_" + loader.model_id,
-                'api_methods': loader.api_methods,
-            })
-        # initialize selection (tab) to first entry
-        if len(self.state.loader_items):
-            self.state.loader_selected = self.state.loader_items[0]['name']
+        if self.config in CONFIGS_WITH_LOADERS:
+            import jdaviz.core.loaders  # noqa
+            for name, Resolver in loader_resolver_registry.members.items():
+                loader = Resolver(app=self,
+                                  open_callback=open,
+                                  close_callback=close,
+                                  set_active_loader_callback=set_active_loader)
+                self.state.loader_items.append({
+                    'name': name,
+                    'label': name,
+                    'requires_api_support': loader.requires_api_support,
+                    'widget': "IPY_MODEL_" + loader.model_id,
+                    'api_methods': loader.api_methods,
+                })
+            # initialize selection (tab) to first entry
+            if len(self.state.loader_items):
+                self.state.loader_selected = self.state.loader_items[0]['name']
 
         # Tray plugins
         if self.config == 'deconfigged':

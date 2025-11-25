@@ -352,6 +352,8 @@ class LoadersMixin(VuetifyTemplate, HubListener):
         from jdaviz.core.registries import loader_resolver_registry
         loader_items = []
         for name, Resolver in loader_resolver_registry.members.items():
+            if self.app.state.settings.get("server_is_remote") and name in ('file', 'file drop'):
+                continue
             loader = Resolver(app=self.app,
                               open_callback=open_accordion,
                               close_callback=close_accordion,
@@ -2024,10 +2026,10 @@ class LayerSelect(SelectPluginComponent):
             return self.app._get_assoc_data_parent(lyr.label) is None
 
         def not_spatial_subset_in_profile_viewer(lyr):
-            if self.plugin.config != 'cubeviz':
+            if self.plugin.config not in ('cubeviz', 'deconfigged'):
                 return True
             # note: have to check the classname instead of isinstance to avoid circular import
-            if np.any([viewer.__class__.__name__ != 'CubevizProfileView'
+            if np.any([viewer.__class__.__name__ not in ('CubevizProfileView', 'Spectrum1DViewer')
                        for viewer in self.viewer_objs]):
                 return True
             # at this point, we are in cubeviz and ALL selected viewers are profile viewers,
@@ -2093,8 +2095,10 @@ class LayerSelect(SelectPluginComponent):
                             and hasattr(layer.state, 'bitmap_visible')
                             and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
-                    else:
+                    elif hasattr(layer.state, 'color'):
                         colors.append(layer.state.color)
+                    else:
+                        colors.append("#000000")  # default to black
 
                     visibilities.append(getattr(layer.state, 'bitmap_visible', True)
                                         and getattr(layer, 'visible' if not is_sonified else 'audible'))  # noqa
@@ -2154,8 +2158,10 @@ class LayerSelect(SelectPluginComponent):
                 for layer in new_viewer.state.layers:
                     if is_wcs_only(layer.layer):
                         continue
-                    layer.add_callback('color', self._update_items)
-                    layer.add_callback('zorder', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.add_callback('color', self._update_items)
+                    if hasattr(layer, 'zorder'):
+                        layer.add_callback('zorder', self._update_items)
                     if hasattr(layer, 'cmap'):
                         layer.add_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -2171,8 +2177,10 @@ class LayerSelect(SelectPluginComponent):
                 continue
             for layer in viewer.state.layers:
                 if layer.layer.label == new_subset_label and is_not_wcs_only(layer.layer):
-                    layer.add_callback('color', self._update_items)
-                    layer.add_callback('visible', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.add_callback('color', self._update_items)
+                    if hasattr(layer, 'visible'):
+                        layer.add_callback('visible', self._update_items)
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_items({'source': 'subset_added'})
 
@@ -2203,7 +2211,8 @@ class LayerSelect(SelectPluginComponent):
                     # _on_layers_changed whenever the color changes
                     # TODO: find out if this conflicts with another color change event
                     #  and is causing the lag in the color picker
-                    layer.add_callback('color', self._update_items)
+                    if hasattr(layer, 'color'):
+                        layer.add_callback('color', self._update_items)
                     if hasattr(layer, 'cmap'):
                         layer.add_callback('cmap', self._update_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -3663,8 +3672,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             return None, None, None
 
         if per_pixel:
-            if self.app.config != 'cubeviz':
-                raise ValueError("per-pixel only supported for cubeviz")
+            if self.app.config not in ('cubeviz', 'deconfigged'):
+                raise ValueError("per-pixel only supported for cubeviz/deconfigged")
             full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
                                                              use_display_units=True)
         else:
@@ -4320,9 +4329,11 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_catalog(data):
+            return data.meta.get('_importer', '') == 'CatalogImporter'
+
         def is_catalog_or_image_not_spectrum(data):
-            return (is_image_not_spectrum(data)
-                    or data.meta.get('_importer', '') == 'CatalogImporter')
+            return is_catalog(data) or is_image_not_spectrum(data)
 
         def is_image_not_spectrum(data):
             if not is_image(data):

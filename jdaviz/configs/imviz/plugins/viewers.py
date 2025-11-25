@@ -13,6 +13,7 @@ from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.default import aida
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
@@ -33,8 +34,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
-                ]
+                    ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot',
+                     'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']]
 
     default_class = None
     _state_cls = FreezableBqplotImageViewerState
@@ -454,3 +455,199 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         # convert to world, make a polygon sky region:
         viewer_corners = wcs.pixel_to_world(*corners)
         return PolygonSkyRegion(viewer_corners)
+
+    def _get_region_overlay_labels(self):
+        """
+        Get ``label`` from each ``RegionOverlay`` mark in the figure
+        """
+        return [
+            getattr(mark, 'label', None) for mark in self.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+
+    def _add_region_overlay(self, region=None, region_label=None, selected=False, **style_kwargs):
+        """
+        Add a `~jdaviz.core.marks.RegionOverlay` mark for ``region`` in the viewer.
+
+        If a region overlay already exists with ``region_label``, update
+        the ``selected`` and ``style_kwargs`` as needed.
+
+        Parameters
+        ----------
+        region : `~regions.PolygonSkyRegion`, list of `~regions.PolygonSkyRegion`, or None
+            ``Region`` object(s) that represents a closed sky polygon.
+        region_label : str, list of str, or None
+            String label(s) for each region.
+        selected : bool
+            Visual style will match ``selected`` state. Default is False.
+            This updates a traitlet on RegionOverlay, which may trigger a
+            callback to change the style.
+        **style_kwargs
+            Keywords passed to ``RegionOverlay`` constructor, which get passed to
+            the `~bqplot.marks.Lines` constructor.
+        """
+        # note: if you're adding a lot of regions, adding them as a list
+        # will be more performant (fewer reindexing calls) than calling
+        # _add_region_overlay in a loop.
+
+        region_label = region_label if isinstance(region_label, (tuple, list)) else [region_label]
+
+        if region is None:
+            region = len(region_label) * [None]
+
+        region = region if isinstance(region, (tuple, list)) else [region]
+
+        if not isinstance(selected, (tuple, list)):
+            selected = [selected]
+
+        if len(selected) < len(region_label):
+            selected = len(region_label) * selected
+
+        wcs = getattr(self.state.reference_data, 'coords', None)
+
+        existing_marks = list(self.figure.marks)
+        existing_mark_labels = self._get_region_overlay_labels()
+
+        new_marks = []
+        for reg, label, selection in zip(region, region_label, selected):
+            if label not in existing_mark_labels:
+                # add new marks:
+                if not isinstance(reg, PolygonSkyRegion):
+                    raise NotImplementedError()
+
+                pixel_region = reg.to_pixel(wcs)
+                x, y = pixel_region.vertices.x, pixel_region.vertices.y
+                mark = RegionOverlay(
+                    self, region, x=x, y=y,
+                    label=label,
+                    name=str(label),
+                    selected=selection,
+                    **style_kwargs
+                )
+                new_marks.append(mark)
+
+            else:
+                # update an existing mark:
+                idx = existing_mark_labels.index(label)
+                existing_marks[idx].selected = selection
+                existing_marks[idx].update_style(style_kwargs)
+
+        self.figure.marks = existing_marks + new_marks
+
+    def _remove_region_overlay(self, region_label):
+        """
+        Remove a `~jdaviz.core.marks.RegionOverlay` from the viewer marks.
+
+        Parameters
+        ----------
+        region_label : str, list of str, or None
+            String label(s) for each region.
+        """
+        region_label = region_label if isinstance(region_label, (tuple, list)) else [region_label]
+
+        existing_mark_labels = self._get_region_overlay_labels()
+        for label in region_label:
+            if label not in existing_mark_labels:
+                raise ValueError(f"No RegionOverlay labeled '{label}'.")
+
+        self.figure.marks = [
+            mark for mark in self.figure.marks if not isinstance(mark, RegionOverlay) or
+            (isinstance(mark, RegionOverlay) and mark.label not in region_label)
+        ]
+
+    def _remove_all_region_overlays(self):
+        """
+        Remove all `~jdaviz.core.marks.RegionOverlay` marks from the viewer.
+        """
+        self.figure.marks = [
+            mark for mark in self.figure.marks if not isinstance(mark, RegionOverlay)
+        ]
+
+    def _change_region_overlay_selection(self, region_label, selection, **style_kwargs):
+        """
+        Remove a `~jdaviz.core.marks.RegionOverlay` from the viewer marks.
+
+        Parameters
+        ----------
+        region_label : str, list of str, or None
+            String label(s) for each region.
+        """
+        existing_marks = [
+            mark for mark in self.figure.marks
+            if not isinstance(mark, RegionOverlay)
+        ]
+        existing_region_overlays = [
+            mark for mark in self.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+        existing_region_overlay_labels = self._get_region_overlay_labels()
+
+        labels = region_label if isinstance(region_label, (tuple, list)) else [region_label]
+
+        if not isinstance(selection, (tuple, list)):
+            selection = [selection]
+
+        if len(selection) < len(labels):
+            selection = len(labels) * selection
+
+        for label, selected in zip(labels, selection):
+            idx = existing_region_overlay_labels.index(label)
+            if isinstance(existing_region_overlays[idx], RegionOverlay):
+                existing_region_overlays[idx].selected = selected
+                existing_region_overlays[idx].update_style(style_kwargs)
+
+        # bqplot marks are over plotted in order, with the last
+        # marks in the list appearing at the highest zorder.
+        # sort the marks by selection state, which puts selected marks
+        # at the end of the list, which plots those regions on top.
+        self.figure.marks = sorted(
+            existing_marks + existing_region_overlays,
+            # this lambda function allows `m.selected = None` to act as `False`
+            key=lambda m: m.selected if isinstance(m.selected, bool) else False
+        )
+
+    def _select_region_overlay(self, region_label, **style_kwargs):
+        """
+        Select all `~jdaviz.core.marks.RegionOverlay` marks in the viewer.
+        """
+        self._change_region_overlay_selection(
+            region_label=region_label,
+            selection=True,
+            **style_kwargs
+        )
+
+    def _deselect_region_overlay(self, region_label):
+        """
+        Deselect one or more regions by label.
+        Parameters
+        ----------
+        region_label : str, list of str, or None
+            String label(s) for each region.
+        **style_kwargs
+            Keywords passed to ``RegionOverlay`` constructor, which get passed to
+            the `~bqplot.marks.Lines` constructor.
+        """
+        self._change_region_overlay_selection(
+            region_label=region_label,
+            selection=False,
+        )
+
+    def _select_all_region_overlays(self):
+        """
+        Select all `~jdaviz.core.marks.RegionOverlay` marks in the viewer.
+        """
+        existing_mark_labels = self._get_region_overlay_labels()
+
+        self._select_region_overlay(
+            region_label=existing_mark_labels,
+        )
+
+    def _deselect_all_region_overlays(self):
+        """
+        Deselect all `~jdaviz.core.marks.RegionOverlay` marks in the viewer.
+        """
+        existing_mark_labels = self._get_region_overlay_labels()
+
+        self._deselect_region_overlay(
+            region_label=existing_mark_labels,
+        )

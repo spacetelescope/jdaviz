@@ -172,9 +172,10 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def valid_slice_att_names(self):
         if self.app.config in ('cubeviz', 'deconfigged'):
-            if len(self.app.data_collection):
-                spectral_axis = self.app.data_collection[0].meta['spectral_axis_index']
-                return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
+            for dc in self.app.data_collection:
+                if dc.ndim == 3 and 'spectral_axis_index' in dc.meta:
+                    spectral_axis = dc.meta['spectral_axis_index']
+                    return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
             return _spectral_axis_names
         elif self.app.config == 'rampviz':
             return _temporal_axis_names + ['Pixel Axis 2 [x]']
@@ -219,7 +220,8 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
             viewer._set_slice_indicator_value(self.value)
         # in the case where x_att is changed after the viewer is added or data is loaded, we
         # may still need to initialize the location to a valid value (with a valid x_att)
-        viewer.state.add_callback('x_att', self._initialize_location)
+        if hasattr(viewer.state, 'x_att'):
+            viewer.state.add_callback('x_att', self._initialize_location)
 
     def _on_viewer_added(self, msg):
         viewer = self.app.get_viewer(msg.viewer_id)

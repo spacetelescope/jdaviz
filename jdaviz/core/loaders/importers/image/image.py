@@ -35,13 +35,13 @@ __all__ = ['ImageImporter', '_spatial_assign_component_type']
 
 
 def _spatial_assign_component_type(comp_id, comp, units, physical_type):
-    if str(comp_id).startswith('Pixel Axis'):
+    if comp_id.startswith('Pixel Axis'):
         physical_type = 'pixel'
-        return f'{str(comp_id)[-2]}:pixel'
+        return f'{comp_id[-2]}:pixel'
 
-    if str(comp_id).lower() in RA_COMPS and physical_type == 'angle':
+    if comp_id.lower() in RA_COMPS and physical_type == 'angle':
         return f'RA:{physical_type}'
-    elif str(comp_id).lower() in DEC_COMPS and physical_type == 'angle':
+    elif comp_id.lower() in DEC_COMPS and physical_type == 'angle':
         return f'DEC:{physical_type}'
 
     return physical_type
@@ -124,8 +124,9 @@ class ImageImporter(BaseImporterToDataCollection):
         else:
             self._set_default_data_label()
 
-    @staticmethod
-    def _get_supported_viewers():
+    def _get_supported_viewers(self):
+        if self.config == 'rampviz':
+            return [{'label': 'level-2', 'reference': 'imviz-image-viewer'}]
         return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
 
     @property
@@ -137,14 +138,32 @@ class ImageImporter(BaseImporterToDataCollection):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz'):
+        if self.app.config not in ('deconfigged', 'imviz', 'mastviz', 'cubeviz', 'rampviz'):
             # NOTE: temporary during deconfig process
             return False
         # flat image, not a cube
         # isinstance NDData
-        return (isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
-                                        NDData, np.ndarray, asdf.AsdfFile, Data)) or
-                (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))))
+        if self.input_has_extensions and not len(self.extension.choices):
+            return False
+
+        if isinstance(self.input, (fits.HDUList, fits.hdu.image.ImageHDU,
+                                   NDData, np.ndarray, Data)):
+            supported_input_type = True
+        elif isinstance(self.input, (asdf.AsdfFile)) or \
+                (HAS_ROMAN_DATAMODELS and isinstance(self.input, (rdd.DataModel, rdd.ImageModel))):
+            supported_input_type = True
+        else:
+            supported_input_type = False
+
+        if not supported_input_type:
+            return False
+
+        try:
+            _ = self.output
+        except Exception:  # noqa
+            return False
+        else:
+            return True
 
     def _glue_data_wcs_to_fits(self, glue_data):
         """

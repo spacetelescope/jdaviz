@@ -55,13 +55,13 @@ def test_plugin(specviz2d_helper):
     assert pext.trace_pixel == 27
 
     # offset existing trace
-    pext.trace_trace_selected = 'trace'
+    pext.trace_trace.selected = 'trace'
     pext.trace_offset = 2
     trace = pext.export_trace(add_data=True)  # overwrite
     assert isinstance(trace, tracing.FlatTrace)
 
     # create FitTrace
-    pext.trace_trace_selected = 'New Trace'
+    pext.trace_trace.selected = 'New Trace'
     pext.trace_type_selected = 'Polynomial'
     trace = pext.export_trace(add_data=True)
     assert isinstance(trace, tracing.FitTrace)
@@ -73,7 +73,7 @@ def test_plugin(specviz2d_helper):
     assert pext.trace_pixel == 28
 
     # offset existing trace
-    pext.trace_trace_selected = 'trace'
+    pext.trace_trace.selected = 'trace'
     pext.trace_offset = 2
     trace = pext.export_trace(add_data=True)  # overwrite
     assert isinstance(trace, tracing.ArrayTrace)
@@ -85,7 +85,7 @@ def test_plugin(specviz2d_helper):
     assert len(sp2dv.figure.marks) in [18, 20]
 
     # interact with background section, check marks
-    pext.trace_trace_selected = 'New Trace'
+    pext.trace_trace.selected = 'New Trace'
     pext.trace_type_selected = 'Flat'
     pext.bg_separation = 5
     pext.bg_width = 3
@@ -175,7 +175,6 @@ def test_plugin(specviz2d_helper):
         exported_trace = pext.export_trace(add_data=False)
         assert isinstance(exported_trace, type(imported_trace))
 
-    # array trace needs to go through loader, uncomment after JDAT-5518
     array_trace = tracing.ArrayTrace(img, np.arange(len(img.spectral_axis)))
     specviz2d_helper.load(array_trace, data_label='array_trace')
     pext.trace_trace.selected = 'array_trace'

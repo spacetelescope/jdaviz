@@ -3,15 +3,17 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
-from regions import CirclePixelRegion, PixCoord
+from regions import CirclePixelRegion, PixCoord, PolygonSkyRegion
 
 from jdaviz.app import Application
 from jdaviz.core.config import get_configuration
+from jdaviz.core.marks import RegionOverlay
 from jdaviz.configs.imviz.helper import Imviz
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.imviz.tests.utils import (
     BaseImviz_WCS_NoWCS, create_example_gwcs
 )
+from jdaviz.conftest import _image_hdu_wcs
 
 from numpy.testing import assert_allclose
 
@@ -312,3 +314,161 @@ class TestDeleteData(BaseImviz_WCS_NoWCS):
         po.stretch_function = "Square Root"
         self.imviz.destroy_viewer("imviz-1")
         assert len(po.layer.choices) == 2
+
+
+class TestRegionOverlay:
+    @pytest.fixture(autouse=True)
+    def setup_class(self, imviz_helper):
+        np.random.seed(42)
+        # Data with WCS
+        hdu_wcs = _image_hdu_wcs(arr=np.arange(100).reshape((10, 10)))
+        imviz_helper.load_data(hdu_wcs)
+
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer._obj.glue_viewer
+
+        # Since we are not really displaying, need this to test zoom.
+        self.viewer.shape = (100, 100)
+        self.viewer.state._set_axes_aspect_ratio(1)
+
+        # create polygon sky regions near the image viewer's sky position:
+        ra = np.array([337.51928678, 337.51928679, 337.51697352, 337.5169735])
+        dec = np.array([-20.83245874, -20.83160296, -20.83160294, -20.83245871])
+
+        self.regions = []
+        self.region_labels = []
+        for i in range(5):
+            scatter_deg = 2e-4
+            ra_offset = np.random.uniform(-scatter_deg, scatter_deg, size=ra.size)
+            dec_offset = np.random.uniform(-scatter_deg, scatter_deg, size=ra.size)
+            vertices = SkyCoord(ra + ra_offset, dec + dec_offset, unit='deg')
+            self.regions.append(PolygonSkyRegion(vertices))
+            self.region_labels.append(i)
+
+    def test_add_remove_region_overlay(self):
+
+        self.viewer._add_region_overlay(
+            region=self.regions,
+            region_label=self.region_labels,
+            selected=False
+        )
+
+        region_overlay_marks = [
+            mark for mark in self.viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+
+        # check that marks were added:
+        n_marks_added = len(region_overlay_marks)
+        n_marks_expected = len(self.region_labels)
+        assert n_marks_added == n_marks_expected
+        assert not any(mark.selected for mark in region_overlay_marks)
+
+        labels_found = [mark.label for mark in region_overlay_marks]
+        assert self.region_labels == labels_found
+
+        # remove a region:
+        self.viewer._remove_region_overlay(3)
+        assert len([
+            mark for mark in self.viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]) == n_marks_added - 1
+
+        # remove all regions:
+        self.viewer._remove_all_region_overlays()
+        assert not len([
+            mark for mark in self.viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ])
+
+    def test_select_region_overlay(self):
+        self.viewer._add_region_overlay(
+            region=self.regions,
+            region_label=self.region_labels,
+            selected=False
+        )
+
+        select_labels_expected = [0, 1]
+        self.viewer._select_region_overlay(
+            region_label=select_labels_expected
+        )
+
+        region_overlay_marks = [
+            mark for mark in self.viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+
+        # check selected status is correct
+        for mark in region_overlay_marks:
+            if mark.label in select_labels_expected:
+                assert mark.selected
+            else:
+                assert not mark.selected
+
+        # check that selected regions appear at the end of the
+        # marks list, so they're plotted on top of the not-selected marks
+        assert select_labels_expected == [mark.label for mark in region_overlay_marks[-2:]]
+        assert [2, 3, 4] == [mark.label for mark in region_overlay_marks[:-2]]
+
+        selected_marks = [
+            mark for mark in region_overlay_marks if mark.selected
+        ]
+        not_selected_marks = [
+            mark for mark in region_overlay_marks if not mark.selected
+        ]
+
+        # check that correct marks are selected
+        selected_labels_found = [mark.label for mark in selected_marks]
+        assert select_labels_expected == selected_labels_found
+
+        # check that selected and not-selected marks have
+        # the expected styles:
+        check_selected_attrs = ['stroke_width', 'colors']
+
+        for attr in check_selected_attrs:
+            for mark in selected_marks:
+                assert getattr(mark, attr) == mark.selected_style[attr]
+
+            for mark in not_selected_marks:
+                assert getattr(mark, attr) == mark.default_style[attr]
+
+        # test select all
+        self.viewer._select_all_region_overlays()
+        n_selected = len([
+            mark for mark in self.viewer.figure.marks if mark.selected
+        ])
+        assert n_selected == len(self.regions)
+
+    def test_deselect_region_overlay(self):
+        # all selected
+        self.viewer._add_region_overlay(
+            region=self.regions,
+            region_label=self.region_labels,
+            selected=True
+        )
+
+        deselect_labels = [0, 3, 4]
+        select_labels_expected = [1, 2]
+        self.viewer._deselect_region_overlay(
+            region_label=deselect_labels
+        )
+
+        region_overlay_marks = [
+            mark for mark in self.viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+
+        selected_marks = [
+            mark for mark in region_overlay_marks if mark.selected
+        ]
+
+        # check that correct marks are selected
+        selected_labels_found = [mark.label for mark in selected_marks]
+        assert select_labels_expected == selected_labels_found
+
+        # deselect all, check none are selected
+        self.viewer._deselect_all_region_overlays()
+        assert not len([
+            mark for mark in self.viewer.figure.marks
+            if isinstance(mark, RegionOverlay) and mark.selected
+        ])
