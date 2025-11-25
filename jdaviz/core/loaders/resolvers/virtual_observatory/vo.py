@@ -1,4 +1,3 @@
-from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
@@ -6,42 +5,23 @@ from pyvo.utils import vocabularies
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
 from requests.exceptions import ConnectionError as RequestConnectionError
-from traitlets import Bool, Unicode, Any, List, Float, observe
+from traitlets import Bool, Any, List, observe
 
-from jdaviz.core.events import (
-    SnackbarMessage,
-    AddDataMessage,
-    RemoveDataMessage,
-    LinkUpdatedMessage,
-)
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.core.template_mixin import (
-    ViewerSelect,
     SelectPluginComponent,
-    UnitSelectPluginComponent,
     with_spinner,
 )
-from jdaviz.core.loaders.resolvers import BaseResolver
+from jdaviz.core.loaders.resolvers import BaseConeSearchResolver
 from jdaviz.core.user_api import LoaderUserApi
 
 __all__ = ["VOResolver"]
 
 
 @loader_resolver_registry("virtual observatory")
-class VOResolver(BaseResolver):
+class VOResolver(BaseConeSearchResolver):
     template_file = __file__, "vo.vue"
-
-    viewer_items = List([]).tag(sync=True)
-    viewer_selected = Unicode().tag(sync=True)
-
-    source = Unicode("").tag(sync=True)
-    coord_follow_viewer_pan = Bool(False).tag(sync=True)
-    viewer_centered = Bool(False).tag(sync=True)
-    coordframe_choices = List([]).tag(sync=True)
-    coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius = Float(1).tag(sync=True)
-    radius_unit_items = List().tag(sync=True)
-    radius_unit_selected = Unicode("deg").tag(sync=True)
 
     waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
@@ -50,28 +30,8 @@ class VOResolver(BaseResolver):
     resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resources_loading = Bool(False).tag(sync=True)
 
-    results_loading = Bool(False).tag(sync=True)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._output = None
-
-        self.viewer = ViewerSelect(
-            self, "viewer_items", "viewer_selected", manual_options=["Manual"],
-            filters=['is_image_viewer']
-        )
-
-        self.coordframe = SelectPluginComponent(
-            self, items="coordframe_choices", selected="coordframe_selected"
-        )
-        self.coordframe.choices = [frame.lower() for frame in all_astropy_frames]
-        self.coordframe.selected = self.coordframe.choices[0]
-
-        self.radius_unit = UnitSelectPluginComponent(
-            self, items="radius_unit_items", selected="radius_unit_selected"
-        )
-        self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
-        self.radius_unit.selected = "deg"
 
         # Waveband properties to filter available registry resources
         self.waveband = SelectPluginComponent(
@@ -89,10 +49,6 @@ class VOResolver(BaseResolver):
         )
         self.resource.choices = []
 
-        self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
-        self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
-
     @property
     def user_api(self):
         return LoaderUserApi(
@@ -104,106 +60,6 @@ class VOResolver(BaseResolver):
                 "query_archive"
             ],
         )
-
-    @observe("viewer_selected", type="change")
-    def vue_viewer_changed(self, _=None):
-        # Check mixin object initialized
-        if not hasattr(self, "viewer"):
-            return
-
-        # Clear all existing subscriptions and resubscribe to selected viewer
-        # NOTE: Viewer subscription needed regardless of coord_follow_viewer_pan in order
-        #   to detect when coords are centered on viewer, regardless of viewer tracking
-        for viewer in self.viewer.viewers:
-            if viewer == self.viewer.selected_obj:
-                viewer.state.add_callback(
-                    "zoom_center_x",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-                viewer.state.add_callback(
-                    "zoom_center_y",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-            else:
-                # If not subscribed anyways, remove_callback should produce a no-op
-                viewer.state.remove_callback(
-                    "zoom_center_x",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-                viewer.state.remove_callback(
-                    "zoom_center_y",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-        self.vue_center_on_data()
-
-    @observe("coord_follow_viewer_pan", type="change")
-    def _toggle_viewer_pan_tracking(self, _=None):
-        """Detects when live viewer tracking toggle is clicked and centers on data if necessary"""
-        # Center on data if we're enabling the toggle
-        if self.coord_follow_viewer_pan:
-            self.vue_center_on_data()
-
-    def vue_center_on_data(self, _=None, user_zoom_trigger=False):
-        """
-        This vue method serves two purposes:
-        * UI entrypoint for the manual viewer center button
-        * Callback method for user panning (sub'ed to zoom_center_x/zoom_center_y)
-        """
-        # If plugin is in "Manual" mode, we should never
-        # autocenter and potentially wipe the user's data
-        if not self.viewer_selected or self.viewer_selected == "Manual":
-            return
-
-        # If the user panned but tracking not enabled, don't recenter
-        if (user_zoom_trigger) and not self.coord_follow_viewer_pan:
-            # Thus, we're no longer centered
-            self.viewer_centered = False
-            return
-
-        self.center_on_data()
-
-    def center_on_data(self):
-        """
-        If data is present in the default viewer, center the plugin's coordinates on
-        the viewer's center WCS coordinates.
-        """
-        if not hasattr(self, "viewer"):
-            # mixin object not yet initialized
-            return
-
-        # gets the current viewer
-        viewer = self.viewer.selected_obj
-
-        # nothing happens in the case there is no image in the viewer
-        # additionally if the data does not have WCS
-        if (
-            len(self.app._jdaviz_helper.data_labels) < 1
-            or viewer.state.reference_data is None
-            or viewer.state.reference_data.coords is None
-        ):
-            self.source = ""
-            return
-
-        # Obtain center point of the current image and convert into sky coordinates
-        if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
-            skycoord_center = SkyCoord(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
-            )
-        else:
-            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
-                viewer.state.zoom_center_x, viewer.state.zoom_center_y
-            )
-
-        # Extract SkyCoord values as strings for plugin display
-        ra_deg = skycoord_center.ra.deg
-        dec_deg = skycoord_center.dec.deg
-        frame = skycoord_center.frame.name.lower()
-
-        # Show center value in plugin
-        self.source = f"{ra_deg} {dec_deg}"
-        self.coordframe_selected = frame
-
-        self.viewer_centered = True
 
     @observe("waveband_selected",
              "source", "coordframe_selected",
@@ -415,12 +271,6 @@ class VOResolver(BaseResolver):
 
     def vue_query_archive(self, _=None):
         self.query_archive()
-
-    @property
-    def is_valid(self):
-        # this resolver does not accept any direct, (default_input = None), so can
-        # always be considered valid
-        return True
 
     def parse_input(self):
         return self._output
