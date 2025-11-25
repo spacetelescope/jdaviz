@@ -78,6 +78,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     active_step = Unicode().tag(sync=True)
 
     resulting_product_name = Unicode("spectrum").tag(sync=True)
+    extracted_format = '1D Spectrum'
     do_auto_extraction = True
     # whether wavelength dependent options should be exposed to the user (in the UI)
     wavelength_dependent_available = Bool(True).tag(sync=True)
@@ -239,7 +240,8 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _active_step_changed(self, *args):
         self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'extract'))
         self.background._set_mark_visiblities(self.active_step == 'bg')
-        self.marks['bg_extract'].visible = self.active_step == 'bg'
+        if 'bg_extract' in self.marks:
+            self.marks['bg_extract'].visible = self.active_step == 'bg'
 
     @property
     def slice_plugin(self):
@@ -678,7 +680,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
                 spec.meta['_default_color'] = default_color
-            self.add_results.add_results_from_plugin(spec, format='1D Spectrum')
+            self.add_results.add_results_from_plugin(spec, format=self.extracted_format)
 
             snackbar_message = SnackbarMessage(
                 f"{self.resulting_product_name.title()} extracted successfully.",

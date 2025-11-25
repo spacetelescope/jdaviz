@@ -168,6 +168,8 @@
                     v-for="item in layer_items"
                     :key="item.label"
                     class="layer-select"
+                    @dragstart="onDragStart($event)"
+                    @dragend="onDragEnd"
                   >
                     <v-list-item-icon>
                       <j-layer-viewer-icon-stylized
@@ -332,6 +334,50 @@
       }
     },
     methods: {
+      isSafari() {
+        const ua = navigator.userAgent;
+        return ua.includes('Safari') && !ua.match(/Chrome|Chromium|Edg/);
+      },
+      onDragStart(event) {
+        /* Safari mis-renders drag previews inside overlay menus/dialogs, capturing extra UI chrome.
+         * Work around that by cloning the dragged element, rendering the clone offscreen (outside overlays),
+         * and passing it to setDragImage so only the intended element appears in the ghost preview.
+         */
+        if (!this.isSafari()) {
+          return;
+        }
+        
+        // Helper to create dom structure
+        function div({ style, ...attrs }, child) {
+          const el = Object.assign(document.createElement("div"), attrs);
+          Object.assign(el.style, style);
+          el.appendChild(child);
+          return el;
+        }
+
+        const draggedEl = event.currentTarget;
+        const draggedBounds = draggedEl.getBoundingClientRect();
+        
+        const dragGhostEl = draggedEl.cloneNode(true);
+        dragGhostEl.style.width = draggedBounds.width + "px";
+        dragGhostEl.style.height = draggedBounds.height + "px";
+        
+        // Make an offscreen element and give it the right classes so vuetify styles get applied to the drag ghost
+        this._dragGhostParent = document.body.appendChild(
+          div({ className: "vuetify-styles", style: { position: "absolute", left: "-10000px" } },
+            div({ className: "v-application--is-ltr" },
+              dragGhostEl)));
+        
+        const offsetX = event.clientX - draggedBounds.left;
+        const offsetY = event.clientY - draggedBounds.top;
+        event.dataTransfer.setDragImage(dragGhostEl, offsetX, offsetY);
+      },
+      onDragEnd() {
+        if (this._dragGhostParent && this._dragGhostParent.parentNode) {
+          this._dragGhostParent.parentNode.removeChild(this._dragGhostParent);
+        }
+        this._dragGhostParent = null;
+      },
       onScroll(e) {
         if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
           const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height

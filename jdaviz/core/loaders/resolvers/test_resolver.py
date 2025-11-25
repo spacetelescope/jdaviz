@@ -1,5 +1,8 @@
 from jdaviz.app import Application
-from jdaviz.core.loaders.resolvers.resolver import BaseResolver
+from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
+
+import numpy as np
+from astropy.table import Table
 
 
 # Create a minimal test class that mimics the resolver behavior
@@ -30,3 +33,168 @@ def test_server_is_remote_callback():
     # (this behavior could change)
     test_obj.server_is_remote = False
     assert settings.get('server_is_remote') != test_obj.server_is_remote
+
+
+def test_footprint_workflow(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.51 -20.84 337.52 -20.84 337.52 -20.83 337.51 -20.83',
+        'POLYGON 337.52 -20.84 337.53 -20.84 337.53 -20.83 337.52 -20.83',
+        'POLYGON 337.53 -20.84 337.54 -20.84 337.54 -20.83 337.53 -20.83',
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is True
+    assert 's_region' in ldr._obj.observation_table.headers_avail
+
+    ldr._obj.vue_link_by_wcs()
+    assert ldr._obj.is_wcs_linked is True
+
+    ldr._obj.toggle_custom_toolbar()
+    assert ldr._obj.custom_toolbar_enabled is True
+    assert len(ldr._obj._footprint_marks) == 3
+    assert len(ldr._obj._footprint_groups) == 3
+    assert all(idx in ldr._obj._footprint_groups for idx in range(3))
+
+    mark = ldr._obj._footprint_marks[1]
+    px, py = np.mean(mark.x), np.mean(mark.y)
+    idx = find_closest_polygon_mark(px, py, ldr._obj._footprint_marks)
+    assert idx is not None
+    assert 0 <= idx < 3
+
+    ldr._obj.toggle_custom_toolbar()
+    assert ldr._obj.custom_toolbar_enabled is False
+    assert ldr._obj._footprint_marks == []
+    assert ldr._obj._footprint_groups == {}
+
+
+def test_remove_footprints(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+
+    # Display footprints
+    ldr._obj.toggle_custom_toolbar()
+    n_marks_before = len(ldr._obj._footprint_marks)
+    assert n_marks_before == 1
+
+    # Remove footprints
+    ldr._obj.toggle_custom_toolbar()
+
+    # Assert marks are removed
+    assert len(ldr._obj._footprint_marks) == 0
+    assert len(ldr._obj._footprint_groups) == 0
+
+
+def test_multiselect(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829',
+        'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    assert len(ldr._obj._footprint_marks) == 3
+
+    # Select observations 0 and 2 via the table
+    ldr._obj.observation_table.select_rows([0, 2])
+
+    # Check that marks are in the groups
+    assert 0 in ldr._obj._footprint_groups
+    assert 1 in ldr._obj._footprint_groups
+    assert 2 in ldr._obj._footprint_groups
+
+
+def test_display_valid_footprints(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='test_image')
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829'
+    ]
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    # Assert marks were added
+    assert len(ldr._obj._footprint_marks) == 2
+
+    # Verify marks have labels/indices
+    from jdaviz.core.marks import RegionOverlay
+    for mark in ldr._obj._footprint_marks:
+        assert isinstance(mark, RegionOverlay)
+        assert mark.label in [0, 1]
+
+
+def test_no_image_data_disables_toolbar(deconfigged_helper):
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+
+    # Although we have footprint data, toolbar should not be enabled
+    # because there's no image data to link
+    assert len(deconfigged_helper.app.data_collection) == 0
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.image_data_loaded is False
+
+
+def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Test Image')
+    assert len(deconfigged_helper.app.data_collection) == 1
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr._obj.observation_table_populated is True
+    assert ldr._obj.image_data_loaded is True
+
+    ldr._obj.vue_link_by_wcs()
+    assert ldr._obj.is_wcs_linked is True
+
+    ldr._obj.toggle_custom_toolbar()
+    assert ldr._obj.custom_toolbar_enabled is True
+    assert len(ldr._obj._footprint_marks) == 1
+    assert len(ldr._obj._footprint_groups) == 1
