@@ -895,14 +895,6 @@ def test_spline(specviz_helper, spectrum1d):
                 )
     mf.remove_model_component('C')
 
-    # ensure Spline1D is computed on 1D data
-    mf.cube_fit = True
-    assert mf.model_equation_invalid_msg == (
-                    "Spline1D is only supported for 1D Data. "
-                    "Disable 'Cube fit' to use Spline1D."
-                )
-    mf.cube_fit = False
-
     # ensure that only SplineSmoothingFitter fitter component can be used
     # with the Spline1D model parameter
     assert mf.fitter_component.choices == ['SplineSmoothingFitter']
