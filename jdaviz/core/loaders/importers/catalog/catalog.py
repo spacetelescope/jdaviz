@@ -239,7 +239,7 @@ class CatalogImporter(BaseImporterToDataCollection):
 
     @staticmethod
     def _get_supported_viewers():
-        return [{'label': 'Image', 'reference': 'imviz-image-viewer'},
+        return [{'label': 'Image', 'reference': 'imviz-image-viewer', 'allow_create': False},
                 {'label': 'Scatter', 'reference': 'scatter-viewer'},
                 {'label': 'Histogram', 'reference': 'histogram-viewer'},
                 {'label': 'Table', 'reference': 'table-viewer'}]

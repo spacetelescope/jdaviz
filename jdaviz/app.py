@@ -307,6 +307,7 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3863
     # https://github.com/spacetelescope/jdaviz/pull/3867 - table viewer
     # https://github.com/spacetelescope/jdaviz/pull/3906 - SDSS/Gaia in astroquery resolver
+    # https://github.com/spacetelescope/jdaviz/pull/3912
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
