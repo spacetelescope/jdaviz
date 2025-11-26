@@ -70,8 +70,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
                 self.hub.broadcast(SnackbarMessage(errmsg, color='error',
                                                    sender=self,
                                                    traceback=e))
-                self.reached_max_results = False
-                output = None
+                output = None  # will force returned_max_results = False, returned_no_results = True
         elif self.telescope.selected == 'Gaia':
             from astroquery.gaia import Gaia
 
@@ -82,9 +81,13 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
         if output is not None and len(output) > self.max_results:
             output = output[:self.max_results]
-            self.reached_max_results = True
+            self.returned_max_results = True
         else:
-            self.reached_max_results = False
+            self.returned_max_results = False
+        if output is None or len(output) == 0:
+            self.returned_no_results = True
+        else:
+            self.returned_no_results = False
         self._output = output
 
         self._resolver_input_updated()

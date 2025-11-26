@@ -825,7 +825,8 @@ class BaseConeSearchResolver(BaseResolver):
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
     max_results = IntHandleEmpty(1000).tag(sync=True)
-    reached_max_results = Bool(False).tag(sync=True)
+    returned_no_results = Bool(False).tag(sync=True)
+    returned_max_results = Bool(False).tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
 

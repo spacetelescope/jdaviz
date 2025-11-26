@@ -143,7 +143,13 @@
       </plugin-action-button>
     </v-row>
 
-    <v-row v-if="reached_max_results">
+    <v-row v-if="returned_no_results">
+      <v-alert type="warning">
+        The search returned no results. Please modify your query parameters and try again.
+      </v-alert>
+    </v-row>
+
+    <v-row v-if="returned_max_results">
       <v-alert type="warning">
         The number of results returned has reached the maximum limit set ({{ max_results }}). Consider increasing the maximum results to ensure all data is retrieved.
       </v-alert>
