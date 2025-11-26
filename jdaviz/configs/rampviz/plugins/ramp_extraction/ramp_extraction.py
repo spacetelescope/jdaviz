@@ -30,7 +30,8 @@ rng = np.random.default_rng(seed=42)
 
 
 @tray_registry(
-    'ramp-extraction', label="Ramp Extraction"
+    'ramp-extraction', label="Ramp Extraction",
+    category='data:reduction'
 )
 class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                      DatasetSelectMixin, AddResultsMixin):
@@ -88,7 +89,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a ramp from a ramp cube.'
 
-        self.dataset.filters = ['is_flux_cube']
+        self.dataset.filters = ['is_ramp_group_cube']
 
         # TODO: in the future this could be generalized with support in SelectPluginComponent
         self.aperture._default_text = 'Entire Cube'
@@ -129,6 +130,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def integration_viewer(self):
@@ -417,8 +421,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def marks(self):
         if not self._tray_instance:
             return {}
-        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
+        if not len(self.slice_indicator_viewers):
+            return {}
 
+        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]
         marks = {'extract': PluginLine(sv, visible=self.is_active)}
         sv.figure.marks = sv.figure.marks + [marks['extract'],]

@@ -54,7 +54,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self.volume_level = None
 
-        self.data_menu._obj.dataset.add_filter('is_cube_or_image')
+        self.data_menu._obj.dataset.add_filter('is_image_or_flux_cube')
 
         self.layer_volume = {}
         self.same_pix = None

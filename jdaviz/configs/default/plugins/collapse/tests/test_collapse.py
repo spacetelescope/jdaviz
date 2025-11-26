@@ -15,12 +15,12 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     coll.selected_data_item = '3D Spectrum [FLUX]'
     coll.dataset_selected = '3D Spectrum [FLUX]'
 
-    assert coll.results_label == 'collapsed'
+    assert coll.results_label == '3D Spectrum [FLUX] collapsed'
     coll.vue_collapse()
     assert coll.results_label_overwrite is True
 
     assert len(dc) == 3
-    assert dc[2].label == 'collapsed'
+    assert dc[2].label == '3D Spectrum [FLUX] collapsed'
     assert len(dc.external_links) == 5
 
     # Link 3D z to 2D x and 3D y to 2D y

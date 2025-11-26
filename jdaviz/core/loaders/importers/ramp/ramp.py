@@ -138,7 +138,7 @@ class RampImporter(BaseImporterToDataCollection):
                                                  'diff_viewer_label_invalid_msg',
                                                  multiselect='diff_viewer_multiselect',
                                                  default_mode='empty')
-        supported_viewers = [{'label': 'Ramp Diff',
+        supported_viewers = [{'label': '3D Ramp Diff',
                               'reference': 'rampviz-image-viewer'}]
         if self.app.config == 'deconfigged':
             self.diff_viewer_create_new_items = supported_viewers
@@ -188,7 +188,7 @@ class RampImporter(BaseImporterToDataCollection):
 
     @staticmethod
     def _get_supported_viewers():
-        return [{'label': 'Ramp Group', 'reference': 'rampviz-image-viewer'}]
+        return [{'label': '3D Ramp', 'reference': 'rampviz-image-viewer'}]
 
     @property
     def user_api(self):
@@ -306,13 +306,17 @@ class RampImporter(BaseImporterToDataCollection):
 
         ramp_cube, diff_cube = self.output
 
+        ramp_cube.meta['_ramp_type'] = 'group'
         self.add_to_data_collection(ramp_cube,
                                     data_label,
                                     viewer_select=self.viewer)
         # TODO: this will need to be removed when removing restriction of a single flux cube
         self.app._jdaviz_helper._loaded_flux_cube = self.app.data_collection[data_label]
+        if not hasattr(self.app._jdaviz_helper, 'cube_cache'):
+            self.app._jdaviz_helper.cube_cache = {}
         self.app._jdaviz_helper.cube_cache[data_label] = ramp_cube
 
+        diff_cube.meta['_ramp_type'] = 'diff'
         self.add_to_data_collection(diff_cube,
                                     diff_data_label,
                                     viewer_select=self.diff_viewer)

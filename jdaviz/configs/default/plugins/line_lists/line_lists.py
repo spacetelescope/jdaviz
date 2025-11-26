@@ -151,7 +151,8 @@ class LineListTool(PluginTemplateMixin, ViewerSelectMixin, CustomToolbarToggleMi
             irrelevant_msg = ''
             self.disabled_msg = ''
 
-            if not len(self.available_lists):
+            if (not len(self.available_lists)
+                    and hasattr(self.viewer.selected_obj, 'available_linelists')):
                 # TODO: move this logic within the plugin itself and out of the viewer
                 self.available_lists = self.viewer.selected_obj.available_linelists()
 

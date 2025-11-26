@@ -122,7 +122,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
 
-        self.dataset.add_filter('is_cube_or_image')
+        self.dataset.add_filter('is_image_or_flux_cube')
 
         self.background = SubsetSelect(self,
                                        'background_items',
@@ -213,19 +213,55 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe("dataset_selected")
     def _on_dataset_selected_changed(self, event={}):
         # self.dataset might not exist when app is setting itself up.
-        if hasattr(self, "dataset") and self.dataset.choices != []:
-            if isinstance(self.dataset.selected_dc_item, list):
-                datasets = self.dataset.selected_dc_item
-            else:
-                datasets = [self.dataset.selected_dc_item]
+        if not hasattr(self, "dataset"):
+            return
 
-            self.is_cube = False
-            for dataset in datasets:
-                # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
-                # or images this will need to change.
-                if dataset.ndim > 2:
-                    self.is_cube = True
-                    break
+        if self.dataset.selected_dc_item is None:
+            return
+
+        if isinstance(self.dataset.selected_dc_item, list):
+            datasets = self.dataset.selected_dc_item
+        else:
+            datasets = [self.dataset.selected_dc_item]
+
+        self.is_cube = False
+        for dataset in datasets:
+            # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
+            # or images this will need to change.
+            if dataset.ndim > 2:
+                self.is_cube = True
+                break
+
+        if self.multiselect:
+            # defaults are applied within the loop if the auto-switches are enabled,
+            # but we still need to update the flux-scaling warning
+            self._multiselect_flux_scaling_warning()
+            return
+
+        try:
+            defaults = self._get_defaults_from_metadata()
+            self.counts_factor = 0
+            self.pixel_area = defaults.get('pixel_area', 0)
+            self.flux_scaling = defaults.get('flux_scaling', 0)
+            if 'flux_scaling' in defaults:
+                self.flux_scaling_warning = ''
+            else:
+                self.flux_scaling_warning = ('Could not determine flux scaling for '
+                                             f'{self.dataset.selected}, defaulting to zero.')
+
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to extract {self.dataset_selected}: {repr(e)}",
+                color='error', sender=self,
+                traceback=e))
+
+        # get correct display unit for newly selected dataset
+        if self._has_display_unit_support:
+            # sets display_unit and flux_scaling_display_unit traitlets
+            self._set_display_unit_of_selected_dataset()
+
+        # auto-populate background, if applicable.
+        self._aperture_selected_changed()
 
     def _on_display_units_changed(self, event={}):
         """
@@ -414,44 +450,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not self.multiselect:
             # disable warning once user changes value
             self.flux_scaling_warning = ''
-
-    @observe('dataset_selected')
-    def _dataset_selected_changed(self, event={}):
-        if not hasattr(self, 'dataset'):
-            # plugin not fully initialized
-            return
-        if self.dataset.selected_dc_item is None:
-            return
-        if self.multiselect:
-            # defaults are applied within the loop if the auto-switches are enabled,
-            # but we still need to update the flux-scaling warning
-            self._multiselect_flux_scaling_warning()
-            return
-
-        try:
-            defaults = self._get_defaults_from_metadata()
-            self.counts_factor = 0
-            self.pixel_area = defaults.get('pixel_area', 0)
-            self.flux_scaling = defaults.get('flux_scaling', 0)
-            if 'flux_scaling' in defaults:
-                self.flux_scaling_warning = ''
-            else:
-                self.flux_scaling_warning = ('Could not determine flux scaling for '
-                                             f'{self.dataset.selected}, defaulting to zero.')
-
-        except Exception as e:
-            self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {self.dataset_selected}: {repr(e)}",
-                color='error', sender=self,
-                traceback=e))
-
-        # get correct display unit for newly selected dataset
-        if self._has_display_unit_support:
-            # sets display_unit and flux_scaling_display_unit traitlets
-            self._set_display_unit_of_selected_dataset()
-
-        # auto-populate background, if applicable.
-        self._aperture_selected_changed()
 
     def _on_subset_update(self, msg):
         if not self.dataset_selected or not self.aperture_selected:

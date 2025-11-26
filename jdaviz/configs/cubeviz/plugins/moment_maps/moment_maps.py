@@ -116,7 +116,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                                  'Velocity',
                                                                  'Velocity^N'])
 
-        self.dataset.add_filter('is_cube')
+        self.dataset.add_filter('is_flux_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._set_data_units)

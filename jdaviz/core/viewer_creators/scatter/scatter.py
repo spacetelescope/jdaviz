@@ -24,6 +24,7 @@ class ScatterViewerCreator(BaseViewerCreator):
     def __init__(self, app, **kwargs):
         super().__init__(app, **kwargs)
         self.viewer_label_default = 'Scatter'
+        self.dataset.filters = ['not_ramp']
 
         self.xatt = SelectPluginComponent(self,
                                           items='xatt_items',

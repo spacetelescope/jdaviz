@@ -184,6 +184,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # by default, require entries to be in spectrum-viewer (not other cubeviz images, etc)
         # in cubeviz, the cube_fit toggle will then replace this filter to filter for cubes
         self.dataset.add_filter('layer_in_spectrum_viewer')
+        self.dataset.add_filter('not_ramp')
 
         self.equation = AutoTextField(self, 'model_equation', 'model_equation_default',
                                       'model_equation_auto', 'model_equation_invalid_msg')

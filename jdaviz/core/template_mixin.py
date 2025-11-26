@@ -169,8 +169,9 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
 
 
 def _is_spectrum_viewer(viewer):
-    return ('ProfileView' in viewer.__class__.__name__
-            or viewer.__class__.__name__ == 'Spectrum1DViewer')
+    return viewer.__class__.__name__ in ('CubevizProfileView',
+                                         'MosvizProfileView',
+                                         'Spectrum1DViewer')
 
 
 def _is_spectrum_2d_viewer(viewer):
@@ -4343,8 +4344,8 @@ class DatasetSelect(SelectPluginComponent):
         def is_cube(data):
             return len(data.shape) == 3
 
-        def is_cube_or_image(data):
-            return len(data.shape) >= 2
+        def is_image_or_flux_cube(data):
+            return is_image(data) or is_flux_cube(data)
 
         def is_spectrum(data):
             return (len(data.shape) == 1
@@ -4356,15 +4357,35 @@ class DatasetSelect(SelectPluginComponent):
                     and data.coords is not None
                     and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
 
-        def is_spectrum_or_cube(data):
-            return is_spectrum(data) or is_cube(data)
+        def is_spectrum_or_flux_cube(data):
+            return is_spectrum(data) or is_flux_cube(data)
 
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
                 uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
             else:
                 uncert_label = None
-            return is_cube(data) and not_child_layer(data) and data.label != uncert_label
+            return (data.meta.get('_importer') == 'Spectrum3DImporter'
+                    and is_cube(data)
+                    and not_child_layer(data)
+                    and data.label != uncert_label)
+
+        def is_ramp_cube(data):
+            return is_ramp_group_cube(data) or is_ramp_diff_cube(data)
+
+        def is_ramp_group_cube(data):
+            return (data.meta.get('_importer') == 'RampImporter'
+                    and data.meta.get('_ramp_type') == 'group')
+
+        def is_ramp_diff_cube(data):
+            return (data.meta.get('_importer') == 'RampImporter'
+                    and data.meta.get('_ramp_type') == 'diff')
+
+        def is_ramp_integration(data):
+            return data.meta.get('_importer') == 'RampIntegrationImporter'
+
+        def not_ramp(data):
+            return data.meta.get('_importer') not in ('RampImporter', 'RampIntegrationImporter')
 
         def is_not_wcs_only(data):
             return not data.meta.get(_wcs_only_label, False)
