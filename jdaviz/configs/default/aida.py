@@ -6,6 +6,7 @@ from astropy.wcs import WCS
 from gwcs.wcs import WCS as GWCS
 
 from jdaviz.utils import get_top_layer_index
+from jdaviz.configs.imviz.wcs_utils import get_compass_info
 
 
 class AID:
@@ -97,8 +98,22 @@ class AID:
                 f"`rotation` must be a Quantity or float, got {rotation=}"
             )
 
-        degn = orientation._obj._get_wcs_angles()[-3]
-        rotation_angle = (degn + rotation) % 360
+        reference_data = self.viewer.state.reference_data
+        if not hasattr(reference_data.coords, 'wcs'):
+            raise ValueError("Viewer must be aligned by WCS to set rotation")
+
+        lonpole = Angle(reference_data.coords.wcs.lonpole, unit=u.deg).wrap_at(360*u.deg).deg
+        # north offset
+        refdata_wcs_rotation_angle = (lonpole - 180) % 360
+        # degrees east of north
+        degn = get_compass_info(reference_data.coords, reference_data.shape)[-3]
+        rotation_angle = (rotation - degn + refdata_wcs_rotation_angle) % 360
+        # account for default degn
+        default_data = self.app.data_collection['Default orientation']
+        default_degn = get_compass_info(
+            default_data.coords, default_data.shape
+        )[-3]
+        rotation_angle = rotation_angle + default_degn
 
         label = f'{rotation:.2f} deg east of north'
 
@@ -156,9 +171,13 @@ class AID:
         state = self.viewer.state
         wcs = state.reference_data.coords
 
+        pixel_fov = min(
+            state.x_max - state.x_min,
+            state.y_max - state.y_min
+        )
+
         if self.viewer.jdaviz_app._align_by != "wcs" or wcs is None:
-            zoom_radius = state.zoom_radius
-            return 2 * zoom_radius
+            return pixel_fov
 
         # compute the mean of the height and width of the
         # viewer's FOV on ``data`` in world units:
@@ -179,7 +198,7 @@ class AID:
 
         current_fov = min([width_sky, height_sky])
 
-        return current_fov if (sky_or_pixel in ("sky", None)) else current_fov.value
+        return current_fov if (sky_or_pixel in ("sky", None)) else pixel_fov
 
     def _get_current_center(self, sky_or_pixel, image_label=None):
         # center pixel coordinates on the reference data:
@@ -205,15 +224,13 @@ class AID:
         return center
 
     def _get_current_rotation(self):
-        orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
-        # rotation angle from pixel y
-        rotation_angle = orientation.rotation_angle
+        reference_data = self.viewer.state.reference_data
+        degn = get_compass_info(
+            reference_data.coords, reference_data.shape
+        )[-3]
+        rotation = Angle(-degn, unit=u.deg).wrap_at(360*u.deg)
 
-        # rotation angle of pixel y from north
-        degn = orientation._obj._get_wcs_angles()[-3]
-
-        rotation = (rotation_angle - degn) % 360
-        return rotation * u.deg
+        return rotation
 
     def get_viewport(self, sky_or_pixel=None, image_label=None, **kwargs):
         """

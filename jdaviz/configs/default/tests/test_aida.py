@@ -114,6 +114,7 @@ def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
 
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     viewer = imviz_helper.app.get_viewer('imviz-0')
 
