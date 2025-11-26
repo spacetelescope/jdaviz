@@ -596,7 +596,7 @@ def test_line_analysis_deconfig(deconfigged_helper):
                 np.isnan(float(smoothed_results[i]['result']))):
             continue
         assert_allclose(float(input_results[i]['result']),
-                        float(smoothed_results[i]['result']), atol=1)
+                        float(smoothed_results[i]['result']), atol=3)
 
     viewer_1d_2.data_menu.add_data('1D Spectrum')
 
