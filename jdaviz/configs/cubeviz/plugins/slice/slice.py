@@ -165,9 +165,9 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def slice_display_unit_name(self):
         # global display unit "axis" corresponding to the slice axis
-        if self.app.config in ('cubeviz',):
+        if self.app.config in ('cubeviz', 'deconfigged'):
             return 'spectral'
-        elif self.app.config in ('rampviz', 'deconfigged'):
+        elif self.app.config == 'rampviz':
             return 'temporal'
 
     @property
