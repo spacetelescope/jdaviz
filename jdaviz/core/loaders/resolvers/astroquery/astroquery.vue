@@ -118,7 +118,7 @@
           v-model.number='max_results'
           type="number"
           style="padding: 0px"
-          :label="api_hints_enabled ? 'ldr.max_results =' : 'Max Results'""
+          :label="api_hints_enabled ? 'ldr.max_results =' : 'Max Results'"
           :class="api_hints_enabled ? 'api-hint' : null"
           persistent-hint
           hint="Maximum number of results to return from the query"
