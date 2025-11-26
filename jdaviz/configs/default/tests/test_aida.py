@@ -41,7 +41,7 @@ def test_get_viewport_sky(imviz_helper, image_hdu_wcs):
     assert_coordinate_close(viewport['center'], expected_center)
     assert_angle_close(viewport['fov'], expected_fov)
 
-    expected_rotation = 360 * u.deg
+    expected_rotation = 0 * u.deg
     assert_angle_close(viewport['rotation'], expected_rotation, atol=0.001*u.deg)
 
     assert viewport['image_label'] == expected_image_label
@@ -114,6 +114,7 @@ def test_get_viewport_external_update(imviz_helper, image_hdu_wcs):
 
 def test_set_viewport_pixel(imviz_helper, image_hdu_wcs):
     imviz_helper.load_data(image_hdu_wcs)
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     viewer = imviz_helper.app.get_viewer('imviz-0')
 

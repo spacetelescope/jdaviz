@@ -99,7 +99,7 @@ class AID:
             )
 
         reference_data = self.viewer.state.reference_data
-        lonpole = Angle(reference_data.coords.wcs.lonpole, unit = u.deg).wrap_at(360*u.deg).deg
+        lonpole = Angle(reference_data.coords.wcs.lonpole, unit=u.deg).wrap_at(360*u.deg).deg
         # north offset
         refdata_wcs_rotation_angle = (lonpole - 180) % 360
         # degrees east of north
@@ -223,7 +223,7 @@ class AID:
 
         rotation = Angle(
             default_degn - degn,
-            unit = u.deg
+            unit=u.deg
         ).wrap_at(360*u.deg)
 
         return rotation
