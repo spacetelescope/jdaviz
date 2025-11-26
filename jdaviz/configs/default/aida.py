@@ -99,12 +99,21 @@ class AID:
             )
 
         reference_data = self.viewer.state.reference_data
+        if not hasattr(reference_data.coords, 'wcs'):
+            raise ValueError("Viewer must be aligned by WCS to set rotation")
+
         lonpole = Angle(reference_data.coords.wcs.lonpole, unit=u.deg).wrap_at(360*u.deg).deg
         # north offset
         refdata_wcs_rotation_angle = (lonpole - 180) % 360
         # degrees east of north
         degn = get_compass_info(reference_data.coords, reference_data.shape)[-3]
         rotation_angle = (rotation - degn + refdata_wcs_rotation_angle) % 360
+        # account for default degn
+        default_data = self.app.data_collection['Default orientation']
+        default_degn = get_compass_info(
+            default_data.coords, default_data.shape
+        )[-3]
+        rotation_angle = rotation_angle + default_degn
 
         label = f'{rotation:.2f} deg east of north'
 
@@ -219,16 +228,7 @@ class AID:
         degn = get_compass_info(
             reference_data.coords, reference_data.shape
         )[-3]
-
-        default_data = self.app.data_collection['Default orientation']
-        default_degn = get_compass_info(
-            default_data.coords, default_data.shape
-        )[-3]
-
-        rotation = Angle(
-            default_degn - degn,
-            unit=u.deg
-        ).wrap_at(360*u.deg)
+        rotation = Angle(-degn, unit=u.deg).wrap_at(360*u.deg)
 
         return rotation
 
