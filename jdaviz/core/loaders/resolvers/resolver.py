@@ -239,6 +239,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
 
     spinner = Unicode("").tag(sync=True)
 
+    parsed_input_is_empty = Bool(True).tag(sync=True)
+
     # whether the current output could be interpretted as a list of data products
     parsed_input_is_query = Bool(False).tag(sync=True)
     # if parsed_input_is_query is True, whether to treat it as such
@@ -481,6 +483,17 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         try:
             parsed_input = self.parsed_input  # calls self.parse_input() on the subclass and caches
         except Exception:  # nosec
+            self.parsed_input_is_empty = True
+            self.parsed_input_is_query = False
+            self.observation_table_populated = False
+            self.file_table_populated = False
+            self.observation_table._clear_table()
+            self.file_table._clear_table()
+            self._update_format_items()
+            return
+
+        if parsed_input in (None, []):
+            self.parsed_input_is_empty = True
             self.parsed_input_is_query = False
             self.observation_table_populated = False
             self.file_table_populated = False
@@ -519,6 +532,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                 self.file_table_populated = False
                 return
 
+        self.parsed_input_is_empty = False
         self.parsed_input_is_query = False
         self.observation_table_populated = False
         self.file_table_populated = False
