@@ -1,6 +1,6 @@
 <template>
   <j-loader
-    title="Virtual Observatory"
+    title="Astroquery"
     :popout_button="popout_button"
     :spinner="spinner"
     :parsed_input_is_empty="parsed_input_is_empty"
@@ -19,10 +19,6 @@
     :importer_widget="importer_widget"
     :api_hints_enabled="api_hints_enabled"
     :valid_import_formats="valid_import_formats"
-    :is_wcs_linked="is_wcs_linked"
-    :image_data_loaded="image_data_loaded"
-    :footprint_select_icon="footprint_select_icon"
-    :custom_toolbar_enabled="custom_toolbar_enabled"
   >
     <v-form v-model="all_fields_filled">
       <j-plugin-section-header>Source Selection</j-plugin-section-header>
@@ -105,45 +101,35 @@
         </div>
       </v-row>
 
-      <j-plugin-section-header>Survey Collections</j-plugin-section-header>
-      <v-row>
-        <j-tooltip tipid='plugin-vo-filter-coverage'>
-          <plugin-switch
-            :value.sync="resource_filter_coverage"
-            label="Filter by Coverage"
-            api_hint="ldr.resource_filter_coverage ="
-            :api_hints_enabled="api_hints_enabled"
-          ></plugin-switch>
-        </j-tooltip>
+      <j-plugin-section-header>Telescope/Mission</j-plugin-section-header>
+
+      <plugin-select
+        :show_if_single_entry="true"
+        :items="telescope_items.map(i => i.label)"
+        :selected.sync="telescope_selected"
+        label="Telescope"
+        :search="true"
+        api_hint="ldr.telescope ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Select a telescope to search for data"
+      ></plugin-select>
+
+      <v-row justify="space-between" style="margin-top: 12px">
+        <v-text-field
+          v-model.number='max_results'
+          type="number"
+          style="padding: 0px"
+          :label="api_hints_enabled ? 'ldr.max_results =' : 'Max Results'"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          persistent-hint
+          hint="Maximum number of results to return from the query"
+        ></v-text-field>
       </v-row>
-
-      <plugin-select
-        :show_if_single_entry="true"
-        :items="waveband_items.map(i => i.label)"
-        :selected.sync="waveband_selected"
-        label="Resource Waveband"
-        :search="true"
-        api_hint="ldr.waveband ="
-        :api_hints_enabled="api_hints_enabled"
-        hint="Select a spectral waveband to filter your surveys"
-      ></plugin-select>
-
-
-      <plugin-select
-        :show_if_single_entry="true"
-        :items="resource_items.map(i => i.label)"
-        :selected.sync="resource_selected"
-        :loading="resources_loading"
-        :rules="[() => !!resource_selected || 'This field is required']"
-        label="Available Resources"
-        :search="true"
-        api_hint="ldr.resource ="
-        :api_hints_enabled="api_hints_enabled"
-        hint="Select a SIA resource to query"
-      ></plugin-select>
     </v-form>
 
-    <v-row class="row-no-outside-padding" justify="end">
+
+
+    <v-row class="row-no-outside-padding" justify="end" style="margin-top: 32px">
       <plugin-action-button
         :spinner="results_loading"
         :disabled="!all_fields_filled"
@@ -156,6 +142,18 @@
               'Query Archive'
           }}
       </plugin-action-button>
+    </v-row>
+
+    <v-row v-if="returned_no_results">
+      <v-alert type="warning">
+        The search returned no results. Please modify your query parameters and try again.
+      </v-alert>
+    </v-row>
+
+    <v-row v-if="returned_max_results">
+      <v-alert type="warning">
+        The number of results returned has reached the maximum limit set ({{ max_results }}). Consider increasing the maximum results to ensure all data is retrieved.
+      </v-alert>
     </v-row>
   </j-loader>
 </template>
