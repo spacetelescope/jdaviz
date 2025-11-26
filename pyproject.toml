@@ -149,6 +149,7 @@ filterwarnings = [
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13",
     "ignore::DeprecationWarning:glue",
+    "ignore:There is no current event loop.*:DeprecationWarning",
     "ignore:The load_data function is deprecated.*",
     # This warning will not fail in CI, but causes issues running tests locally on Windows so test locally if considering
     # removing this in the future

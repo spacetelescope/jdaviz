@@ -685,6 +685,8 @@ def ipython_kernel():
     # Create the kernel first, which will create its own InProcessInteractiveShell
     kernel = InProcessKernel()
     shell = kernel.shell
+    InteractiveShell._instance = shell
+
     try:
         yield shell
     finally:
