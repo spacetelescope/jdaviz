@@ -162,9 +162,13 @@ class AID:
         state = self.viewer.state
         wcs = state.reference_data.coords
 
+        pixel_fov = min(
+            state.x_max - state.x_min,
+            state.y_max - state.y_min
+        )
+
         if self.viewer.jdaviz_app._align_by != "wcs" or wcs is None:
-            zoom_radius = state.zoom_radius
-            return 2 * zoom_radius
+            return pixel_fov
 
         # compute the mean of the height and width of the
         # viewer's FOV on ``data`` in world units:
@@ -185,7 +189,7 @@ class AID:
 
         current_fov = min([width_sky, height_sky])
 
-        return current_fov if (sky_or_pixel in ("sky", None)) else current_fov.value
+        return current_fov if (sky_or_pixel in ("sky", None)) else pixel_fov
 
     def _get_current_center(self, sky_or_pixel, image_label=None):
         # center pixel coordinates on the reference data:
