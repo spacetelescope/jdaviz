@@ -47,7 +47,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, ChangeRefDataMessage,
-                                IconsUpdatedMessage)
+                                IconsUpdatedMessage, LayersFinalizedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
                                     data_parser_registry, loader_resolver_registry)
@@ -307,6 +307,7 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3863
     # https://github.com/spacetelescope/jdaviz/pull/3867 - table viewer
     # https://github.com/spacetelescope/jdaviz/pull/3912
+    # https://github.com/spacetelescope/jdaviz/pull/3899
     catalogs_in_dc = CallbackProperty(
         False, docstring="Whether to enable developer mode for adding catalogs to data collection.")
     loader_items = ListCallbackProperty(
@@ -2516,6 +2517,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # if the data_label is in the app, but not loaded in the viewer, automatically load it first
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+        layers_finalized_message = None
         if data_label not in viewer_data_labels:
             dc_labels = [data.label for data in self.data_collection]
             if data_label not in dc_labels:
@@ -2549,6 +2551,10 @@ class Application(VuetifyTemplate, HubListener):
                                               viewer_id=viewer_id,
                                               sender=self)
             self.hub.broadcast(add_data_message)
+
+            layers_finalized_message = LayersFinalizedMessage(data, viewer,
+                                                              viewer_id=viewer_id,
+                                                              sender=self)
 
         assoc_children = self._get_assoc_data_children(data_label)
 
@@ -2605,6 +2611,9 @@ class Application(VuetifyTemplate, HubListener):
             # for other configs in the future, as needed.
             if self.config == 'imviz':
                 viewer.on_limits_change()  # Trigger compass redraw
+
+        if layers_finalized_message:
+            self.hub.broadcast(layers_finalized_message)
 
     def data_item_remove(self, data_label):
         data = self.data_collection[data_label]

@@ -458,3 +458,53 @@ def test_table_viewer(deconfigged_helper):
 
     assert len(deconfigged_helper.viewers) == 2
     assert len(nv._obj.glue_viewer.layers) == 1
+
+
+def test_catalog_visibility(imviz_helper, image_2d_wcs):
+    """
+
+    # Verify that catalog visibility is toggled on/off correctly
+    # based on link type and presence of pixel and/or world coordinates
+    # in loaded catalog.
+    """
+
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    # catalog with ra, dec, x, y
+    orig_catalog = _make_catalog_xy_radec(with_units=True)
+    # catalog with ra, dec only
+    table_ra_dec_only = orig_catalog['RA', 'Dec', 'Obj_ID']
+    # catalog with x, y only
+    table_x_y_only = orig_catalog['X', 'Y', 'Obj_ID']
+
+    imviz_helper.app.state.catalogs_in_dc = True
+    imviz_helper.load(table_ra_dec_only,
+                      data_label='catalog0')
+
+    # since we're pixel linked and catalog has only world coordinates,
+    # visiblity should be off by default
+    dm = imviz_helper.viewers['imviz-0'].data_menu
+    assert dm.data_labels_visible == ['Image[DATA]']
+
+    # but if we load the catalog with X, Y, it should be visible
+    imviz_helper.load(table_x_y_only,
+                      data_label='catalog1')
+    assert dm.data_labels_visible == ['catalog1', 'Image[DATA]']
+
+    # now change to WCS linking
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # load catalog with RA, Dec only again. It's default visiblity should
+    # now be on since we're WCS linked
+    imviz_helper.load(table_ra_dec_only,
+                      data_label='catalog2')
+
+    # the pixel-only 'catalog1' should now be hidden
+    assert dm.data_labels_visible == ['catalog2', 'Image[DATA]']
+
+    # loading a pixel-coordinate-only catalog should now be hidden by default
+    # since were WCS linked
+    imviz_helper.load(table_x_y_only,
+                      data_label='catalog3')
+    assert 'catalog3' not in dm.data_labels_visible

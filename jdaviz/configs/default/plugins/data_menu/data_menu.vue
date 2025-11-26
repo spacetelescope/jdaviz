@@ -194,8 +194,8 @@
                     </v-list-item-content>
                     <v-list-item-action>
                       <j-tooltip
-                        v-if="disabled_layers_due_to_pixel_link.includes(item.label)"
-                        tooltipcontent="Layer cannot be made visible when viewer is aligned by pixel coordinates."
+                        v-if="disabled_layers_due_to_pixel_sky_mismatch.includes(item.label)"
+                        tooltipcontent="Layer cannot be made visible when catalog does not contain coordinates (pixel or sky) that correspond to current alignment type."
                       >
                         <v-btn icon disabled>
                           <v-icon>mdi-eye-off</v-icon>

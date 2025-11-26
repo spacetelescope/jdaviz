@@ -6,9 +6,10 @@ from traitlets import Bool, Dict, Unicode, Integer, List, observe
 from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSelect,
                                         LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
-                                ChangeRefDataMessage, ViewerRenamedMessage)
-from glue.core.message import SubsetDeleteMessage, SubsetUpdateMessage
+from jdaviz.core.events import (AddDataMessage, ChangeRefDataMessage,
+                                IconsUpdatedMessage, LayersFinalizedMessage,
+                                LinkUpdatedMessage, ViewerRenamedMessage)
+from glue.core.message import SubsetDeleteMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
@@ -88,7 +89,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     orientation_layer_selected = Unicode().tag(sync=True)
 
     viewer_supports_visible_toggle = Bool(True).tag(sync=True)
-    disabled_layers_due_to_pixel_link = List().tag(sync=True)
+    disabled_layers_due_to_pixel_sky_mismatch = List().tag(sync=True)
 
     cmap_samples = Dict(cmap_samples).tag(sync=True)
     subset_tools = List().tag(sync=True)
@@ -155,10 +156,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda msg: self._remove_subset_from_layers(msg.subset))
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._allow_resize_subset_in_viewer())
+        self.hub.subscribe(self, LayersFinalizedMessage, handler=self._on_layers_finalized)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
@@ -253,6 +253,63 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.layer_icons = msg.icons
         self._set_viewer_id()
 
+    def _on_layers_finalized(self, msg=None):
+        # when a catalog is added, set visibility based on alignment type
+        # and presence of pixel and/or world coordinates.
+        new_data = msg.data
+        if new_data.meta.get('_importer') == 'CatalogImporter':
+            self._handle_catalog_layer_visibility(layers=[new_data])
+
+    def _on_link_changed(self, msg=None):
+
+        if len(self._viewer.layers):
+            layers = [layer.layer for layer in self._viewer.layers]
+            self._handle_catalog_layer_visibility(layers=layers)
+
+    def _handle_catalog_layer_visibility(self, layers=None):
+        """
+        When a catalog layer is added, check if it should be visible based on
+        presence of pixel/world coordinates and viewer alignment.
+
+        If a catalog contains sky coordinates only and the viewer is aligned by
+        pixels, hide the layer and show a snackbar message (and vice versa for
+        world coordinates only and viewer aligned by WCS). If visibility is
+        toggled off for this reason, the visibility toggle is greyed out in the
+        data menu so it can not be toggled on again until the viewer alignment
+        is changed.
+        """
+
+        if layers is None:
+            return
+
+        hiding_due_to_pixel_sky_mismatch = []
+        coord_type = None
+        align_type = None
+
+        for layer in layers:
+            if hasattr(layer, 'meta'):
+                if layer.meta.get('_importer') == 'CatalogImporter':
+                    comp_labels = [str(x) for x in layer.component_ids()]
+                    has_world = 'Right Ascension' in comp_labels and 'Declination' in comp_labels
+                    has_pixel = 'X' in comp_labels and 'Y' in comp_labels
+                    align_by_wcs = self.orientation_align_by_wcs
+
+                    if not ((align_by_wcs and has_world) or (not align_by_wcs and has_pixel)):  # noqa
+                        coord_type = "pixel" if has_pixel else "world"
+                        align_type = "WCS" if align_by_wcs else "Pixel"
+                        self.set_layer_visibility(layer.label, False)
+                        hiding_due_to_pixel_sky_mismatch.append(layer.label)
+
+            if len(hiding_due_to_pixel_sky_mismatch):
+                plural = 's' if len(hiding_due_to_pixel_sky_mismatch) > 1 else ''
+                m = (f"Hiding Catalog layer{plural} {hiding_due_to_pixel_sky_mismatch} in "
+                     f"'{self.viewer_reference}. Catalog{plural} contains {coord_type} "
+                     f"coordinates only, which do not match current viewer alignment "
+                     f"({align_type}).")
+                self.hub.broadcast(SnackbarMessage(m, color='warning', sender=self))
+
+        self.disabled_layers_due_to_pixel_sky_mismatch = hiding_due_to_pixel_sky_mismatch
+
     def _on_refdata_change(self, msg=None):
         if msg is not None and msg.viewer_id != self.viewer_id:
             return
@@ -265,29 +322,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 if ref_label not in self.orientation.choices:
                     self.orientation._update_items()
                 self.orientation.selected = str(ref_label)
-            self.disabled_layers_due_to_pixel_link = []
         else:
-            # disable any scatter layers.  In the future, this may be dependent
-            # on whether sky coordinates exist in the data (and vice versa when
-            # aligned by WCS)
-            hiding_due_to_pixel_link = []
-            for layer in self._viewer.layers:
-                if getattr(layer.layer, 'coords', None) is None:
-                    if layer.visible:
-                        data = layer.layer.data
-                        comp_labels = [str(x) for x in data.component_ids()]
-                        # if layer is a catalog that has pixel coordinates, we
-                        # don't need to hide the layer
-                        if data.meta.get('_importer') == 'CatalogImporter' and \
-                                'X' in comp_labels and 'Y' in comp_labels:
-                            continue
-                        else:
-                            hiding_due_to_pixel_link.append(layer.layer.label)
-                            layer.visible = False
-            if len(hiding_due_to_pixel_link):
-                self.hub.broadcast(SnackbarMessage(f"Hiding layers {hiding_due_to_pixel_link} in '{self.viewer_reference}' viewer due to change in align_by to 'Pixel'.",  # noqa
-                                                   color='warning', sender=self))
-                self.disabled_layers_due_to_pixel_link = hiding_due_to_pixel_link
+            # update catalog layer visibility based on alignment / presence
+            # of pixel/world coordinates
+            if len(self._viewer.layers):
+                layers = [layer.layer for layer in self._viewer.layers if layer.visible is True]
+                self._handle_catalog_layer_visibility(layers)
 
     def _on_viewer_renamed_message(self, msg):
         if self.viewer_reference == msg.old_viewer_ref:
@@ -514,7 +554,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         dict
             A dictionary of the current visible layers.
         """
-        if visible and layer_label in self.disabled_layers_due_to_pixel_link:
+        if visible and layer_label in self.disabled_layers_due_to_pixel_sky_mismatch:
             raise ValueError(f"Layer '{layer_label}' cannot be made visible when "
                              "viewer is aligned by pixel coordinates.")
         for layer in self._viewer.layers:
