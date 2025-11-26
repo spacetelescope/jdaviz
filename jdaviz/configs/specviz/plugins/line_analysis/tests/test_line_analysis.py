@@ -549,11 +549,21 @@ def test_invalid_subset(specviz_helper, spectrum1d):
 
 
 def test_line_analysis_deconfig(deconfigged_helper):
+    def _check_line_visible(viewer):
+        line_visible = False
+        for mark in viewer.figure.marks:
+            if isinstance(mark, LineAnalysisContinuum) and mark.visible:
+                line_visible = True
+                break
+        return line_visible
     s = Spectrum(spectral_axis=np.arange(0, 100, 1) * u.um, flux=np.arange(0, 100, 1) * u.Jy)
     deconfigged_helper.load(s)
     # Create 1D viewer
     vc = deconfigged_helper.new_viewers['1D Spectrum']
     vc()
+
+    viewer_1d_1 = deconfigged_helper.viewers['1D Spectrum']._obj.glue_viewer
+    viewer_1d_2 = deconfigged_helper.viewers['1D Spectrum (1)']._obj.glue_viewer
 
     # Add smoothed spectrum to new viewer
     gs = deconfigged_helper.plugins['Gaussian Smooth']
@@ -569,10 +579,16 @@ def test_line_analysis_deconfig(deconfigged_helper):
     la.spectral_subset = 'Subset 1'
     input_results = la.get_results()
 
+    assert _check_line_visible(viewer_1d_1)
+    assert not _check_line_visible(viewer_1d_2)
+
     # Line analysis using subset on smoothed spectrum
     la.dataset = '1D Spectrum smooth stddev-1.0'
     la.spectral_subset = 'Subset 1'
     smoothed_results = la.get_results()
+
+    assert _check_line_visible(viewer_1d_2)
+    assert not _check_line_visible(viewer_1d_1)
 
     # Compare results and make sure numbers are close
     for i in range(5):
@@ -580,4 +596,15 @@ def test_line_analysis_deconfig(deconfigged_helper):
                 np.isnan(float(smoothed_results[i]['result']))):
             continue
         assert_allclose(float(input_results[i]['result']),
-                        float(smoothed_results[i]['result']), rtol=1)
+                        float(smoothed_results[i]['result']), atol=1)
+
+    viewer_1d_2.data_menu.add_data('1D Spectrum')
+
+    la.keep_active = True  # Ensure plugin is active so marks are visible
+    la.dataset = '1D Spectrum'
+    la.spectral_subset = 'Subset 1'
+    la.continuum = 'Surrounding'
+
+    # Make sure lines are visible on both viewers
+    assert _check_line_visible(viewer_1d_2)
+    assert _check_line_visible(viewer_1d_1)
