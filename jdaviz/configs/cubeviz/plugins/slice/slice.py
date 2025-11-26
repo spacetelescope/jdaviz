@@ -13,7 +13,7 @@ from jdaviz.configs.cubeviz.plugins.viewers import (
 )
 from jdaviz.configs.cubeviz.helper import _spectral_axis_names
 from jdaviz.configs.rampviz.helper import _temporal_axis_names
-from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
+from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
@@ -152,7 +152,8 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
                     str(viewer.state.x_att_pixel) not in self.valid_slice_att_names):
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 continue
-            if self.app._get_display_unit(viewer.slice_display_unit_name) == '':
+            if (self.app._get_display_unit(viewer.slice_display_unit_name) == ''
+                    and not isinstance(viewer, RampvizProfileView)):
                 # viewer is not ready to retrieve slice_values in display units
                 continue
             slice_values = viewer.slice_values
@@ -164,21 +165,24 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def slice_display_unit_name(self):
         # global display unit "axis" corresponding to the slice axis
-        if self.app.config in ('cubeviz', 'deconfigged'):
+        if self.app.config in ('cubeviz',):
             return 'spectral'
-        elif self.app.config == 'rampviz':
+        elif self.app.config in ('rampviz', 'deconfigged'):
             return 'temporal'
 
     @property
     def valid_slice_att_names(self):
+        att_names = []
         if self.app.config in ('cubeviz', 'deconfigged'):
             for dc in self.app.data_collection:
                 if dc.ndim == 3 and 'spectral_axis_index' in dc.meta:
                     spectral_axis = dc.meta['spectral_axis_index']
-                    return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
-            return _spectral_axis_names
-        elif self.app.config == 'rampviz':
-            return _temporal_axis_names + ['Pixel Axis 2 [x]']
+                    att_names += [f'Pixel Axis {spectral_axis} [x]']
+            att_names += _spectral_axis_names
+        if self.app.config in ('rampviz', 'deconfigged'):
+            att_names += _temporal_axis_names + ['Pixel Axis 2 [x]']
+
+        return att_names
 
     @property
     def slice_selection_viewers(self):
