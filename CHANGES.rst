@@ -45,25 +45,7 @@ Cubeviz
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3748, #3872]
   
-- New Sonification implementation through the browser!
-  
-- Sonification To Do:
-  - Limit sonification layers to one for now (use case limited currently and greatly simplifies implmentation)
-  - Use the mute/unmute status of the audio layer
-  - make impervious to cubes spectral axis order
-  - remove the direct sound implementation for now
-    
-- Questions:
-  - Can I trick add results plugin to always write and overwrite a single layer?
-  - Test for spectral axis order?
-  - Can we package Tone.js?
-  - Why is CI hanging?
-  - Can I test a client-like set up?
-    
-- Answers:
-  - Tone.js for it's sequencing capability, to enusre every action is scheduled smoothly
-  - JIT sound is maybe not tolerable (eats up all of what's tolerable latency wise)
-  - Can we clean up the widget memory issue?
+- New Sonification implementation through the browser! [#3330]
     
 Imviz
 -----
