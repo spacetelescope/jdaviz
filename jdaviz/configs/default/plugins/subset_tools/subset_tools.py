@@ -249,7 +249,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         >>> import numpy as np
         >>> import astropy.units as u
         >>> imviz = Imviz()
-        >>> imviz.link_data(align_by='pixels')
+        >>> imviz.plugins['Orientation'].align_by = 'Pixels'
         >>> data = NDData(np.ones((128, 128)) * u.nJy, wcs=getfixture('image_2d_wcs'))
         >>> imviz.load_data(data)
         >>> plg = imviz.plugins['Subset Tools']

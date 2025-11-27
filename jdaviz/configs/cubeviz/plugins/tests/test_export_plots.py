@@ -12,7 +12,7 @@ def test_export_movie(cubeviz_helper, spectrum1d_cube, tmp_path):
     orig_path = os.getcwd()
     os.chdir(tmp_path)
     try:
-        cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
+        cubeviz_helper.load(spectrum1d_cube, data_label="test")
         plugin = cubeviz_helper.plugins["Export"]
         assert plugin._obj.i_start == 0
         assert plugin._obj.i_end == 1
@@ -26,7 +26,7 @@ def test_export_movie(cubeviz_helper, spectrum1d_cube, tmp_path):
 
 @pytest.mark.skipif(HAS_OPENCV, reason="opencv-python is installed")
 def test_no_opencv(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
+    cubeviz_helper.load(spectrum1d_cube, data_label="test")
     plugin = cubeviz_helper.plugins["Export"]
     assert 'mp4' in plugin.viewer_format.choices
     assert not plugin._obj.movie_enabled
@@ -43,7 +43,7 @@ def test_export_movie_not_cubeviz(imviz_helper):
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
 def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
+    cubeviz_helper.load(spectrum1d_cube, data_label="test")
     cubeviz_helper.default_viewer._obj.glue_viewer.shape = (100, 100)
     cubeviz_helper.app.get_viewer("uncert-viewer").shape = (100, 100)
     plugin = cubeviz_helper.plugins["Export"]
@@ -86,7 +86,7 @@ def test_export_movie_cubeviz_empty(cubeviz_helper):
 
 
 def test_export_plot_exceptions(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
+    cubeviz_helper.load(spectrum1d_cube, data_label="test")
     plugin = cubeviz_helper.plugins["Export"]
 
     plugin.filename = "/fake/path/image.png"

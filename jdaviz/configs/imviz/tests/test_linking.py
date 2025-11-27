@@ -26,7 +26,7 @@ class BaseLinkHandler:
         assert all([isinstance(link, (AffineLink, OffsetLink)) for link in links])
 
     def test_pixel_linking(self):
-        self.imviz.link_data(align_by='pixels')
+        self.imviz.plugins['Orientation'].align_by = 'Pixels'
         self.check_all_pixel_links()
 
     @property
@@ -282,7 +282,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
 class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
 
     def test_pixel_linking(self):
-        self.imviz.link_data(align_by='pixels')
+        self.imviz.plugins['Orientation'].align_by = 'Pixels'
 
         # Check the coordinates display: Last loaded is on top.
         label_mouseover = self.imviz._coords_info

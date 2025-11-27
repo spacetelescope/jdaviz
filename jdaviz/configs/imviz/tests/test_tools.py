@@ -87,8 +87,8 @@ def test_panzoom_click_center_linking(imviz_helper, align_by):
     arr_small = np.ones((20, 15), dtype=int)
     w_small = create_example_gwcs(arr_small.shape)
 
-    imviz_helper.load_data(NDData(arr_big, wcs=w_big), data_label="big")
-    imviz_helper.load_data(NDData(arr_small, wcs=w_small), data_label="small")
+    imviz_helper.load(NDData(arr_big, wcs=w_big), data_label="big")
+    imviz_helper.load(NDData(arr_small, wcs=w_small), data_label="small")
 
     lc_plugin = imviz_helper.plugins['Orientation']
     lc_plugin.align_by = align_by
@@ -117,7 +117,7 @@ def test_blink(imviz_helper):
     viewer = imviz_helper.default_viewer._obj.glue_viewer
 
     for i in range(3):
-        imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}')
+        imviz_helper.load(np.zeros((2, 2)) + i, data_label=f'image_{i}')
 
     label_mouseover = imviz_helper._coords_info
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b', 'domain': {'x': 0, 'y': 0}})
@@ -147,12 +147,12 @@ def test_compass_open_while_load(imviz_helper):
     plg._obj.plugin_opened = True
 
     # Should not crash even if Compass is open in tray.
-    imviz_helper.load_data(np.ones((2, 2)))
+    imviz_helper.load(np.ones((2, 2)))
     assert len(imviz_helper.app.data_collection) == 1
 
 
 def test_tool_visibility(imviz_helper):
-    imviz_helper.load_data(np.ones((2, 2)))
+    imviz_helper.load(np.ones((2, 2)))
     tb = imviz_helper.default_viewer._obj.glue_viewer.toolbar
 
     assert not tb.tools_data['jdaviz:boxzoommatch']['visible']

@@ -11,7 +11,7 @@ IN_GITHUB_ACTIONS = os.environ.get("CI", "false") == "true"
 
 @pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test requires computer with audio output.")
 def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
-    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    cubeviz_helper.load(spectrum1d_cube_larger, data_label="test")
     sonify_plg = cubeviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
     assert sonify_plg.stream_active
 
@@ -58,7 +58,7 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
 
 @pytest.mark.skipif(not IN_GITHUB_ACTIONS, reason="Plugin disabled only in CI")
 def test_sonify_data_disabled(cubeviz_helper, spectrum1d_cube_larger):
-    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label="test")
+    cubeviz_helper.load(spectrum1d_cube_larger, data_label="test")
     sonify_plg = cubeviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
     assert sonify_plg.disabled_msg
     with pytest.raises(ValueError, match='Unable to sonify cube'):

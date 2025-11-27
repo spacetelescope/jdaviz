@@ -342,7 +342,7 @@ def test_markers_gwcs_lonlat(imviz_helper):
     with asdf.open(gw_file) as af:
         gw = af.tree['wcs']
     ndd = NDData(np.ones((10, 10), dtype=np.float32), wcs=gw, unit='MJy/sr')
-    imviz_helper.load_data(ndd, data_label='MIRI_i2d')
+    imviz_helper.load(ndd, data_label='MIRI_i2d')
     assert imviz_helper.app.data_collection[0].label == 'MIRI_i2d[DATA]'
     assert imviz_helper.app.data_collection[0].components == [
         'Pixel Axis 0 [y]', 'Pixel Axis 1 [x]', 'Lat', 'Lon', 'DATA']

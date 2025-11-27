@@ -22,8 +22,8 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
     # load the image twice to test linking
-    imviz_helper.load_data(ndd)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd)
+    imviz_helper.load(ndd)
 
     plugin = imviz_helper.plugins['Footprints']
     default_color = plugin.color
@@ -209,8 +209,8 @@ def test_api_after_linking(imviz_helper):
     viewer = imviz_helper.app.get_viewer_by_id('imviz-0')
 
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd)
+    imviz_helper.load(ndd)
 
     plugin = imviz_helper.plugins['Footprints']
     with plugin.as_active():
@@ -228,7 +228,7 @@ def test_api_after_linking(imviz_helper):
         assert no_marks_displayed is True
 
         # link by wcs and retest
-        imviz_helper.link_data(align_by='wcs')
+        imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
         viewer_marks = _get_markers_from_viewer(viewer)
         # distinguish default from custom overlay with color
@@ -250,8 +250,8 @@ def test_footprint_updates_on_rotation(imviz_helper):
     arr = np.random.normal(size=(10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
 
-    imviz_helper.load_data(ndd)
-    imviz_helper.link_data(align_by='wcs')
+    imviz_helper.load(ndd)
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     footprints = imviz_helper.plugins['Footprints']
     footprints.keep_active = True
@@ -311,7 +311,7 @@ def test_footprint_select(imviz_helper):
                'CRPIX2': 1, 'CRVAL2': -33.71313112382379})
     arr = np.arange(40000).reshape(200, 200)
     ndd = NDData(arr, wcs=wcs)
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd)
     fp = imviz_helper.plugins["Footprints"]
     fp._obj.toggle_custom_toolbar()
     toolbar = imviz_helper.viewers['imviz-0']._obj.glue_viewer.toolbar
@@ -338,7 +338,7 @@ def test_footprint_loaders(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
     # load the image twice to test linking
-    imviz_helper.load_data(ndd)
+    imviz_helper.load(ndd)
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
     plg = imviz_helper.plugins['Footprints']

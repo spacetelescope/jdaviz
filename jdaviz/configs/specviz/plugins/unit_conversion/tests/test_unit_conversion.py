@@ -15,7 +15,7 @@ from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
      ("micron", "fail", "micron", "Jy")])
 def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, new_flux,
                                expected_spectral_axis, expected_flux):
-    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum")
     viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
 
@@ -37,7 +37,7 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
 
 def test_initialize_specviz_sb(specviz_helper, spectrum1d):
     spec_sb = Spectrum(spectrum1d.flux/u.sr, spectrum1d.spectral_axis)
-    specviz_helper.load_data(spec_sb, data_label="Test 1D Spectrum")
+    specviz_helper.load(spec_sb, data_label="Test 1D Spectrum")
     plg = specviz_helper.plugins["Unit Conversion"]
     assert plg._obj.flux_unit == "Jy"
     assert plg._obj.spectral_y_type == "Surface Brightness"
@@ -48,7 +48,7 @@ def test_initialize_specviz_sb(specviz_helper, spectrum1d):
 def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
@@ -64,7 +64,7 @@ def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
 def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
@@ -80,7 +80,7 @@ def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
 def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     plg = specviz_helper.plugins["Unit Conversion"]
@@ -104,7 +104,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
         plg.spectral_unit = "micron"
     assert len(specviz_helper.app.data_collection) == 0
 
-    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load(spectrum1d, data_label="Test 1D Spectrum")
 
     # make sure we don't expose translations in Specviz
     assert hasattr(plg, 'flux_unit')
@@ -124,7 +124,7 @@ def test_non_stddev_uncertainty(specviz_helper):
         spectral_axis=wavelength
     )
 
-    specviz_helper.load_data(spec)
+    specviz_helper.load(spec)
 
     po = specviz_helper.plugins['Plot Options']
     po.uncertainty_visible = True
@@ -148,7 +148,7 @@ def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
     """
 
     spec = Spectrum([1, 2, 3] * flux_unit, [4, 5, 6] * u.um)
-    specviz_helper.load_data(spec)
+    specviz_helper.load(spec)
 
     uc_plg = specviz_helper.plugins['Unit Conversion']
 
@@ -161,7 +161,7 @@ def test_mosviz_viewer_mouseover_flux(specviz2d_helper):
     data[3] = np.arange(10)
     spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
-    specviz2d_helper.load_data(spectrum2d)
+    specviz2d_helper.load(spectrum2d)
     viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
     plg = specviz2d_helper.plugins["Unit Conversion"]
 
@@ -209,7 +209,7 @@ def test_mosviz_viewer_mouseover_sb(specviz2d_helper):
     data[3] = np.arange(10)
     spectrum2d = Spectrum(flux=data*u.MJy/u.sr, spectral_axis=data[3]*u.um)
 
-    specviz2d_helper.load_data(spectrum2d)
+    specviz2d_helper.load(spectrum2d)
     spectrum_viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
     spectrum2d_viewer = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     plg = specviz2d_helper.plugins["Unit Conversion"]
@@ -326,7 +326,7 @@ def test_data_unload_reload(specviz2d_helper):
     data[3] = np.arange(10)
     spectrum2d = Spectrum(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
-    specviz2d_helper.load_data(spectrum2d)
+    specviz2d_helper.load(spectrum2d)
 
     # remove data from viewer
     viewer = specviz2d_helper.app.get_viewer('spectrum-viewer')
@@ -341,7 +341,7 @@ def test_data_unload_reload(specviz2d_helper):
 
     # re-load data with new units into the spectrum viewer
     spectrum2d_new = Spectrum(flux=data*u.Jy/u.sr, spectral_axis=data[3]*u.nm)
-    specviz2d_helper.load_data(spectrum2d_new)
+    specviz2d_helper.load(spectrum2d_new)
 
     # make sure newly loaded data did not change unit conversion selection,
     # and that the plugin traitlets and viewer attributes still match the

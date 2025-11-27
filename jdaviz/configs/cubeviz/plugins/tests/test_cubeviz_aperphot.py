@@ -117,7 +117,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
 
 
 def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cube_hdu_obj_microns):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+    cubeviz_helper.load(image_cube_hdu_obj_microns, data_label="test")
     flux_unit = u.Unit("erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
     solid_angle_unit = PIX2
 
@@ -164,7 +164,7 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     # set so the output values between units will be the same
 
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test[FLUX]")
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
@@ -227,7 +227,7 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
     # but for a single surface brightness unit and without changing the pixel
     # area to make outputs the same. it was requested in review to keep both tests
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test[FLUX]")
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
@@ -323,7 +323,7 @@ def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
     # load cube with specified unit
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit, shape=(5, 5, 4),
                                            with_uncerts=True)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     # get plugins
     st = cubeviz_helper.plugins['Subset Tools']

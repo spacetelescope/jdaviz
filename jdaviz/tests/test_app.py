@@ -17,7 +17,7 @@ from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
 
 # This applies to all viz but testing with Imviz should be enough.
 def test_viewer_calling_app(imviz_helper):
-    viewer = imviz_helper.default_viewer._obj.glue_viewer
+    viewer = imviz_helper.viewers['Image']._obj.glue_viewer
     assert viewer.session.jdaviz_app is imviz_helper.app
 
 
@@ -71,20 +71,20 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
 
 
 def test_duplicate_data_labels(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="test")
-    specviz_helper.load_data(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test")
     dc = specviz_helper.app.data_collection
     assert dc[0].label == "test"
     assert dc[1].label == "test (1)"
-    specviz_helper.load_data(spectrum1d, data_label="test_1")
-    specviz_helper.load_data(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test_1")
+    specviz_helper.load(spectrum1d, data_label="test")
     assert dc[2].label == "test_1"
     assert dc[3].label == "test (2)"
 
 
 def test_duplicate_data_labels_with_brackets(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="test[test]")
-    specviz_helper.load_data(spectrum1d, data_label="test[test]")
+    specviz_helper.load(spectrum1d, data_label="test[test]")
+    specviz_helper.load(spectrum1d, data_label="test[test]")
     dc = specviz_helper.app.data_collection
     assert len(dc) == 2
     assert dc[0].label == "test[test]"
@@ -118,7 +118,7 @@ def test_unique_name_variations(specviz_helper, spectrum1d):
     data_label = specviz_helper.app.return_unique_name(None)
     assert data_label == "Unknown"
 
-    specviz_helper.load_data(spectrum1d, data_label="test[flux]")
+    specviz_helper.load(spectrum1d, data_label="test[flux]")
     data_label = specviz_helper.app.return_data_label("test[flux]", ext="flux")
     assert data_label == "test[flux][flux]"
 
@@ -127,8 +127,8 @@ def test_unique_name_variations(specviz_helper, spectrum1d):
 
 
 def test_substring_in_label(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="M31")
-    specviz_helper.load_data(spectrum1d, data_label="M32")
+    specviz_helper.load(spectrum1d, data_label="M31")
+    specviz_helper.load(spectrum1d, data_label="M32")
     data_label = specviz_helper.app.return_data_label("M")
     assert data_label == "M"
 
@@ -139,17 +139,17 @@ def test_substring_in_label(specviz_helper, spectrum1d):
 def test_edge_cases(specviz_helper, spectrum1d, data_label):
     dc = specviz_helper.app.data_collection
 
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
     assert dc[1].label == f"{data_label} (1)"
 
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    specviz_helper.load(spectrum1d, data_label=data_label)
     assert dc[2].label == f"{data_label} (2)"
 
 
 def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="this used to break (1)")
-    specviz_helper.load_data(spectrum1d, data_label="this used to break")
+    specviz_helper.load(spectrum1d, data_label="this used to break (1)")
+    specviz_helper.load(spectrum1d, data_label="this used to break")
     dc = specviz_helper.app.data_collection
     assert dc[0].label == "this used to break (1)"
     assert dc[1].label == "this used to break (2)"
@@ -190,19 +190,19 @@ def test_data_associations(imviz_helper):
     data_parent = np.ones(shape, dtype=float)
     data_child = np.zeros(shape, dtype=int)
 
-    imviz_helper.load_data(data_parent, data_label='parent_data')
-    imviz_helper.load_data(data_child, data_label='child_data', parent='parent_data')
+    imviz_helper.load(data_parent, format='Image', data_label='parent_data')
+    imviz_helper.load(data_child, format='Image', data_label='child_data', parent='parent_data')
 
     assert imviz_helper.app._get_assoc_data_children('parent_data') == ['child_data']
     assert imviz_helper.app._get_assoc_data_parent('child_data') == 'parent_data'
 
     with pytest.raises(ValueError):
         # we don't (yet) allow children of children:
-        imviz_helper.load_data(data_child, data_label='grandchild_data', parent='child_data')
+        imviz_helper.load(data_child, format='Image', data_label='grandchild_data', parent='child_data')
 
     with pytest.raises(ValueError):
         # ensure the parent actually exists:
-        imviz_helper.load_data(data_child, data_label='child_data', parent='absent parent')
+        imviz_helper.load(data_child, format='Image', data_label='child_data', parent='absent parent')
 
 
 def test_to_unit(cubeviz_helper):
@@ -215,7 +215,7 @@ def test_to_unit(cubeviz_helper):
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+    cubeviz_helper.load(cube, data_label="test")
 
     # this can be removed once spectra pass through cube spectral extraction
     extract_plg = cubeviz_helper.plugins['3D Spectral Extraction']

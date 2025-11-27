@@ -132,7 +132,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
             data_label="fits_wcs[DATA]",
             rotation_angle=5 * u.deg
         )
-        self.imviz.load_data(ndd, data_label='ndd')
+        self.imviz.load(ndd, data_label='ndd')
         assert self.imviz.app.data_collection[3].label == 'ndd'
 
         # Confirm that all data in collection are labeled.
@@ -149,7 +149,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
             data_label="fits_wcs[DATA]",
             rotation_angle=45 * u.deg
         )
-        self.imviz.load_data(ndd2, data_label="rot: 45.00 deg")
+        self.imviz.load(ndd2, data_label="rot: 45.00 deg")
         assert self.imviz.app.data_collection[4].label == "rot: 45.00 deg"
 
         # Confirm that all data in collection are labeled.
@@ -167,7 +167,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
 
 def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
     a = np.zeros((2, 2), dtype=np.int8)
-    imviz_helper.load_data(a, data_label="no_wcs")
+    imviz_helper.load(a, data_label="no_wcs")
     with pytest.raises(ValueError, match=r".*has no WCS for rotation"):
         wcs_utils._get_rotated_nddata_from_label(imviz_helper.app, "no_wcs", 0 * u.deg)
 

@@ -15,9 +15,9 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     # which should be removed once the old data menu is removed from jdaviz
 
     # load 2 data entries
-    specviz_helper.load_data(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test")
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
-    specviz_helper.load_data(new_spec, data_label="test2")
+    specviz_helper.load(new_spec, data_label="test2")
 
     # check that both are enabled in the data menu
     sv = specviz_helper.viewers['spectrum-viewer']
@@ -47,9 +47,9 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
 
 def test_data_menu_selection(specviz_helper, spectrum1d):
     # load 2 data entries
-    specviz_helper.load_data(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test")
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
-    specviz_helper.load_data(new_spec, data_label="test2")
+    specviz_helper.load(new_spec, data_label="test2")
 
     sv = specviz_helper.viewers['spectrum-viewer']
     dm = sv._obj.glue_viewer.data_menu
@@ -78,7 +78,7 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
 
 def test_data_menu_add_remove_data(imviz_helper):
     for i in range(3):
-        imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}', show_in_viewer=False)
+        imviz_helper.load(np.zeros((2, 2)) + i, data_label=f'image_{i}', show_in_viewer=False)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
     assert len(dm._obj.layer_items) == 0
@@ -109,7 +109,7 @@ def test_data_menu_add_remove_data(imviz_helper):
 
 
 def test_remove_all_data_cubeviz(cubeviz_helper, image_cube_hdu_obj_microns):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+    cubeviz_helper.load(image_cube_hdu_obj_microns, data_label="test")
     dm1 = cubeviz_helper.viewers['flux-viewer']._obj.glue_viewer.data_menu
     dm2 = cubeviz_helper.viewers['uncert-viewer']._obj.glue_viewer.data_menu
     dm3 = cubeviz_helper.viewers['spectrum-viewer']._obj.glue_viewer.data_menu
@@ -133,7 +133,7 @@ def test_remove_all_data_cubeviz(cubeviz_helper, image_cube_hdu_obj_microns):
 
 
 def test_data_menu_create_subset(imviz_helper):
-    imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
+    imviz_helper.load(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
     assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
@@ -145,9 +145,9 @@ def test_data_menu_create_subset(imviz_helper):
 
 def test_data_menu_remove_subset(specviz_helper, spectrum1d):
     # load 2 data entries
-    specviz_helper.load_data(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test")
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
-    specviz_helper.load_data(new_spec, data_label="test2")
+    specviz_helper.load(new_spec, data_label="test2")
 
     dm = specviz_helper.viewers['spectrum-viewer']._obj.glue_viewer.data_menu
     sp = specviz_helper.plugins['Subset Tools']
@@ -184,7 +184,7 @@ def test_data_menu_dq_layers(imviz_helper):
     hdu_dq.name = 'DQ'
     data = fits.HDUList([fits.PrimaryHDU(), hdu_data, hdu_dq])
 
-    imviz_helper.load_data(data, data_label="image", ext=('SCI', 'DQ'), show_in_viewer=True)
+    imviz_helper.load(data, data_label="image", ext=('SCI', 'DQ'), show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
     assert dm.layer.choices == ['image[DQ,1]', 'image[SCI,1]']
@@ -208,7 +208,7 @@ def test_data_menu_dq_layers(imviz_helper):
 def test_data_menu_subset_appearance(specviz_helper, spectrum1d):
     # NOTE: this test is similar to above - the subset is appearing in time IF there
     # are two data entries, but not in this case with just one
-    specviz_helper.load_data(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test")
 
     dm = specviz_helper.viewers['spectrum-viewer']._obj.glue_viewer.data_menu
     sp = specviz_helper.plugins['Subset Tools']
@@ -222,9 +222,9 @@ def test_data_menu_subset_appearance(specviz_helper, spectrum1d):
 
 def test_data_menu_view_info(specviz_helper, spectrum1d):
     # load 2 data entries
-    specviz_helper.load_data(spectrum1d, data_label="test")
+    specviz_helper.load(spectrum1d, data_label="test")
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
-    specviz_helper.load_data(new_spec, data_label="test2")
+    specviz_helper.load(new_spec, data_label="test2")
 
     dm = specviz_helper.viewers['spectrum-viewer']._obj.glue_viewer.data_menu
     mp = specviz_helper.plugins['Metadata']

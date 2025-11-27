@@ -22,7 +22,7 @@ from jdaviz.core.region_translators import regions2roi
 def test_plugin(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load(spectrum1d)
     p = specviz_helper.plugins['Subset Tools']
 
     # regression test for https://github.com/spacetelescope/jdaviz/issues/1693
@@ -39,7 +39,7 @@ def test_plugin(specviz_helper, spectrum1d):
 def test_subset_definition_with_composite_subset(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        cubeviz_helper.load_data(spectrum1d_cube)
+        cubeviz_helper.load(spectrum1d_cube)
     cubeviz_helper.app.get_tray_item_from_name('g-subset-tools')
 
 
@@ -101,8 +101,8 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
-    imviz_helper.load_data(ndd, data_label='dataset1')
-    imviz_helper.load_data(ndd, data_label='dataset2')
+    imviz_helper.load(ndd, data_label='dataset1')
+    imviz_helper.load(ndd, data_label='dataset2')
 
     # apply subset
     roi_params = {key: subset_info[key]['initial_value'] for key in subset_info}
@@ -147,7 +147,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     # remove subsets and change link type to wcs
     dc = imviz_helper.app.data_collection
     dc.remove_subset_group(dc.subset_groups[0])
-    imviz_helper.link_data(align_by='wcs')
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
     assert plugin.display_sky_coordinates  # linking change should trigger change to True
 
     # apply original subset. transform sky coord of original subset to new pixels
@@ -205,7 +205,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 )
 def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
                                 len_subregions, subset_label):
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
     plg.import_region(spec_regions, combination_mode=mode, subset_label=subset_label)
     subsets = cubeviz_helper.app.get_subsets()
@@ -227,7 +227,7 @@ def test_bad_labels(cubeviz_helper, spectrum1d_cube):
                     SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
                     SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)]
 
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
     with pytest.raises(ValueError, match="Each subset label must be unique"):
         subset_label = ["Test", "Test", "Test"]
@@ -239,7 +239,7 @@ def test_bad_labels(cubeviz_helper, spectrum1d_cube):
 
 
 def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path):
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
     s = SpectralRegion(5*u.um, 6*u.um)
     local_path = str(tmp_path / 'spectral_region.ecsv')
@@ -265,7 +265,7 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
 
 
 def test_import_sky_region_in_cubeviz(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
 
     ra = 339.0149557 * u.deg
@@ -284,7 +284,7 @@ def test_get_regions(cubeviz_helper, spectrum1d_cube, imviz_helper):
 
     """Test Subset Tools.get regions."""
 
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
 
     # load one spectral region, which will become 'Subset 1'
@@ -349,7 +349,7 @@ def test_get_regions_composite(imviz_helper):
     using subset_tools.get_regions
     """
     a = np.ones((200, 200))
-    imviz_helper.load_data(a, data_label="test")
+    imviz_helper.load(a, data_label="test")
     plg = imviz_helper.plugins['Subset Tools']
 
     # apply two (not concentric) circular subsets
@@ -407,7 +407,7 @@ def test_get_regions_composite(imviz_helper):
 
 def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data)
+    imviz_helper.load(data)
 
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
@@ -438,8 +438,8 @@ def test_get_regions_composite_wcs_linked(imviz_helper, image_2d_wcs):
 
 def test_get_regions_composite_pixel_linked(imviz_helper, image_2d_wcs):
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data, 'test 1')
-    imviz_helper.load_data(data, 'test 2')
+    imviz_helper.load(data, 'test 1')
+    imviz_helper.load(data, 'test 2')
 
     imviz_helper.plugins['Orientation'].align_by = 'Pixels'
 
@@ -493,7 +493,7 @@ def test_get_composite_sky_region_remove(imviz_helper, image_2d_wcs):
     correctly retrieving the second subset.
     """
     data = NDData(np.ones((128, 128)) * u.nJy, wcs=image_2d_wcs)
-    imviz_helper.load_data(data)
+    imviz_helper.load(data)
 
     imviz_helper.plugins['Orientation'].align_by = 'WCS'
 
@@ -527,7 +527,7 @@ def test_check_valid_subset_label(imviz_helper):
 
     # imviz instance with some data
     data = NDData(np.ones((50, 50)) * u.nJy)
-    imviz_helper.load_data(data)
+    imviz_helper.load(data)
 
     st = imviz_helper.plugins["Subset Tools"]
 
@@ -549,7 +549,7 @@ def test_check_valid_subset_label(imviz_helper):
 
 def test_rename_subset(cubeviz_helper, spectrum1d_cube):
 
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
 
     spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
@@ -572,7 +572,7 @@ def test_rename_subset(cubeviz_helper, spectrum1d_cube):
 
 def test_delete_subset(cubeviz_helper, spectrum1d_cube):
 
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
 
     spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
@@ -587,7 +587,7 @@ def test_delete_subset(cubeviz_helper, spectrum1d_cube):
 
 
 def test_update_subset(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']
 
     spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
@@ -616,7 +616,7 @@ def test_update_subset(cubeviz_helper, spectrum1d_cube):
 
 
 def test_data_menu_subset_delete(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load(spectrum1d_cube)
     dm = cubeviz_helper.viewers['spectrum-viewer'].data_menu
     plg = cubeviz_helper.plugins['Subset Tools']
 

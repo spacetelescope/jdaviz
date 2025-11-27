@@ -272,14 +272,14 @@ class TestAdvancedAperPhot:
     def setup_class(self, imviz_helper):
         # Reference image
         fn_1 = get_pkg_data_filename('data/gauss100_fits_wcs.fits')
-        imviz_helper.load_data(fn_1)
+        imviz_helper.load(fn_1)
         # Different pixel scale
-        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
+        imviz_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
         # Different pixel scale + rotated
-        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
+        imviz_helper.load(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
         # Link them by WCS
-        imviz_helper.link_data(align_by='wcs')
+        imviz_helper.plugins['Orientation'].align_by = 'WCS'
         w = imviz_helper.app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
@@ -344,8 +344,8 @@ def test_annulus_background(imviz_helper):
     bg_4gauss_3 = 45.416834
     bg_4gauss_4 = 4.939397
 
-    imviz_helper.load_data(gauss4, data_label='four_gaussians')
-    imviz_helper.load_data(ones, data_label='ones')
+    imviz_helper.load(gauss4, data_label='four_gaussians')
+    imviz_helper.load(ones, data_label='ones')
 
     phot_plugin = imviz_helper.plugins['Aperture Photometry']
     phot_plugin.dataset.selected = 'ones'
@@ -421,7 +421,7 @@ def test_fit_radial_profile_with_nan(imviz_helper):
     # Insert NaN
     gauss4[25, 150] = np.nan
 
-    imviz_helper.load_data(gauss4, data_label='four_gaussians')
+    imviz_helper.load(gauss4, data_label='four_gaussians')
 
     # Mark an object of interest
     circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
@@ -508,7 +508,7 @@ def test_curve_of_growth(with_unit):
 
 
 def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
-    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
+    cubeviz_helper.load(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
     phot_plugin = cubeviz_helper.plugins['Aperture Photometry']
     uc_plugin = cubeviz_helper.plugins['Unit Conversion']
     subset_plugin = cubeviz_helper.plugins['Subset Tools']

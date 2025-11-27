@@ -193,7 +193,7 @@ class TestConfigHelperSubsets:
         # self.config_helper = deconfigged_helper
         self.config_helper = cubeviz_helper
         # self.config_helper.load(image_cube_hdu_obj, format='Spectral Cube')
-        self.config_helper.load_data(image_cube_hdu_obj)
+        self.config_helper.load(image_cube_hdu_obj)
         self.data = self.config_helper.app.data_collection[0]
         self.label = self.data.label
 
@@ -311,7 +311,7 @@ def test_get_data_cls_spectrum_for_specviz2d(specviz2d_helper, spectrum2d):
     """
     Test _get_data: cls inferred as Spectrum for specviz2d config.
     """
-    specviz2d_helper.load_data(spectrum2d)
+    specviz2d_helper.load(spectrum2d)
     # Get the actual label from data collection
     label = specviz2d_helper.app.data_collection[0].label
 
@@ -359,7 +359,7 @@ def test_delete_region_with_invalid_subset(cubeviz_helper, image_cube_hdu_obj):
     """
     Test _delete_region with an invalid subset label (early return).
     """
-    cubeviz_helper.load_data(image_cube_hdu_obj)
+    cubeviz_helper.load(image_cube_hdu_obj)
 
     # Try to delete a non-existent subset (should not raise error, just return)
     cubeviz_helper._delete_region('NonExistentSubset')
