@@ -1,5 +1,6 @@
 import os
 import re
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -319,16 +320,21 @@ class TestExportSubsets:
 
 
 @pytest.mark.usefixtures('_jail')
-def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube, ipython_kernel):
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
 
-    ep = cubeviz_helper.plugins["Export"]
-    ep.viewer = 'spectrum-viewer'
-    ep.viewer_format = 'png'
-    ep.export()
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
+        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
 
-    ep.viewer_format = 'svg'
-    ep.export()
+        ep = cubeviz_helper.plugins["Export"]
+        ep.viewer = 'spectrum-viewer'
+        ep.viewer_format = 'png'
+        ep.export()
+
+        ep.viewer_format = 'svg'
+        ep.export()
 
 
 @pytest.mark.usefixtures('_jail')
@@ -375,45 +381,39 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
 
 class TestExportPluginPlots:
 
-    def test_basic_export_plugin_plots(self, imviz_helper):
-        """
-        Test basic funcionality of exporting plugin plots
-        from the export plugin. Tests on the 'Plot Options: stretch_hist'
-        plot, which exists upon loading data, and also that plots that
-        may have been initialized but are empty are not displayed in
-        the Export plugin.
-        """
+    def test_filepath_convention(self, imviz_helper):
         data = NDData(np.ones((500, 500)) * u.nJy)
-
         imviz_helper.load_data(data)
-
         export_plugin = imviz_helper.plugins['Export']._obj
-        export_plugin.plugin_plot.selected = 'Plot Options: stretch_hist'
 
-        assert export_plugin.plugin_plot_format.selected == 'png'  # should be default format
-        # and change file type
-        export_plugin.plugin_plot_format.selected = 'svg'
+        # Set filename value using OS-independent Path methods
+        export_plugin.filename_value = str(Path('/') / 'img.png')
+        assert os.path.abspath(export_plugin.default_filepath) == os.path.abspath(export_plugin.filename_value)  # noqa: E501
 
-        assert export_plugin.filename.value.endswith('.svg')
-        # change filename
-        export_plugin.filename_value = 'test_export_plugin_plot'
+        export_plugin.filename_value = str(Path('~') / 'img.png')
+        expected_path = str(Path('~').expanduser() / 'img.png')
+        assert export_plugin.default_filepath == expected_path
 
-        # just check that it doesn't crash, since we can't download
-        export_plugin.export()
+        export_plugin.filename_value = str(Path('..') / 'img.png')
+        expected_path = str((Path('..') / 'img.png').resolve())
+        assert export_plugin.default_filepath == expected_path
 
-        # make sure that the only valid option for export is this plugin,
-        # not the other plots that exist but are empty (ap phot and line profile)
-        # this might change down the line if new plots are added.
-        available_plots = [x['label'] for x in export_plugin.plugin_plot.items]
-        assert len(available_plots) == 1
-        assert available_plots[0] == 'Plot Options: stretch_hist'
+        export_plugin.filename_value = str(Path('.') / 'img.png')
+        expected_path = str((Path('.') / 'img.png').resolve())
+        assert export_plugin.default_filepath == expected_path
 
-    def test_ap_phot_plot_export(self, imviz_helper):
-        """
-        Test export functionality for plot from the aperture photometry
-        plugin.
-        """
 
+async def test_ap_phot_plot_export(imviz_helper, ipython_kernel):
+    """
+    Test export functionality for plot from the aperture photometry
+    plugin.
+    """
+
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
+
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
         data = NDData(np.ones((500, 500)) * u.nJy)
 
         imviz_helper.load_data(data)
@@ -439,41 +439,70 @@ class TestExportPluginPlots:
         export_plugin.plugin_plot_format.selected = 'svg'
 
         # just check that it doesn't crash, since we can't download
-        export_plugin.export()
+        export_plugin.export(overwrite=True)
 
-    def test_figure_export(self, imviz_helper):
 
+async def test_figure_export(imviz_helper, ipython_kernel):
+
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
+
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
         data = NDData(np.ones((500, 500)) * u.nJy)
 
         imviz_helper.load_data(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
 
-        export_plugin.export(filename=None)
+        export_plugin.export(filename=None, overwrite=True, block=False)
 
-        # attempt to save a figure back to back
+        # attempt to save a figure back to back without waiting
         try:
-            export_plugin.export(filename='img.png')
+            export_plugin.export(filename='img.png', overwrite=True)
         except ValueError as e:
-            assert str(e) == "previous png export is still in progress. Wait to complete before making another call to save_figure"  # noqa: E501
+            assert str(e) == "Saving figure is still in progress. Use ` export(..., block=True)` to make sure the previous export is complete"  # noqa: E501
 
-    def test_filepath_convention(self, imviz_helper):
+
+async def test_basic_export_plugin_plots(imviz_helper, ipython_kernel):
+    """
+    Test basic funcionality of exporting plugin plots
+    from the export plugin. Tests on the 'Plot Options: stretch_hist'
+    plot, which exists upon loading data, and also that plots that
+    may have been initialized but are empty are not displayed in
+    the Export plugin.
+    """
+
+    async def mock_queue_screenshot_async(*args, **kwargs):
+        return b"test"
+
+    with mock.patch("jdaviz.configs.default.plugins.export.export.queue_screenshot_async",
+                    mock_queue_screenshot_async):
         data = NDData(np.ones((500, 500)) * u.nJy)
+
         imviz_helper.load_data(data)
+
         export_plugin = imviz_helper.plugins['Export']._obj
+        export_plugin.plugin_plot.selected = 'Plot Options: stretch_hist'
 
-        # Set filename value using OS-independent Path methods
-        export_plugin.filename_value = str(Path('/') / 'img.png')
-        assert os.path.abspath(export_plugin.default_filepath) == os.path.abspath(export_plugin.filename_value)  # noqa: E501
+        assert export_plugin.plugin_plot_format.selected == 'png'  # should be default format
+        # and change file type
+        export_plugin.plugin_plot_format.selected = 'svg'
 
-        export_plugin.filename_value = str(Path('~') / 'img.png')
-        expected_path = str(Path('~').expanduser() / 'img.png')
-        assert export_plugin.default_filepath == expected_path
+        assert export_plugin.filename.value.endswith('.svg')
+        # change filename
+        export_plugin.filename_value = 'test_export_plugin_plot'
 
-        export_plugin.filename_value = str(Path('..') / 'img.png')
-        expected_path = str((Path('..') / 'img.png').resolve())
-        assert export_plugin.default_filepath == expected_path
+        # just check that it doesn't crash, since we can't download
+        export_plugin.export(overwrite=True)
 
-        export_plugin.filename_value = str(Path('.') / 'img.png')
-        expected_path = str((Path('.') / 'img.png').resolve())
-        assert export_plugin.default_filepath == expected_path
+        # make sure that the only valid option for export is this plugin,
+        # not the other plots that exist but are empty (ap phot and line profile)
+        # this might change down the line if new plots are added.
+        available_plots = [x['label'] for x in export_plugin.plugin_plot.items]
+        assert len(available_plots) == 1
+        assert available_plots[0] == 'Plot Options: stretch_hist'
+
+        filename = export_plugin.filename_value + ".svg"
+        with open(filename, 'rb') as f:
+            assert f.read() == b"test"

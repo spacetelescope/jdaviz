@@ -15,6 +15,9 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from specutils import Spectrum, SpectrumCollection, SpectrumList
 from astropy.utils.masked import Masked
+from IPython.core.interactiveshell import InteractiveShell
+from ipykernel.inprocess.ipkernel import InProcessKernel
+
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
@@ -672,3 +675,20 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['roman_datamodels'] = 'roman_datamodels'
 
     TESTED_VERSIONS['jdaviz'] = __version__
+
+
+@pytest.fixture
+def ipython_kernel():
+    # Clear any existing InteractiveShell singleton to avoid conflicts
+    InteractiveShell.clear_instance()
+
+    # Create the kernel first, which will create its own InProcessInteractiveShell
+    kernel = InProcessKernel()
+    shell = kernel.shell
+    InteractiveShell._instance = shell
+
+    try:
+        yield shell
+    finally:
+        kernel.clear_instance()
+        InteractiveShell.clear_instance()
