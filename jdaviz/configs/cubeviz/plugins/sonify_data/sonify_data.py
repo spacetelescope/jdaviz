@@ -189,7 +189,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # Modify default label to avoid vue error from re-using label
         self.results_label_default = self.app.return_unique_name(
             "Sonified data", typ="data")
-        
 
     def _on_viewer_added(self, msg):
         # TODO
