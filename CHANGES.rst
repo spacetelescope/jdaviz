@@ -55,6 +55,8 @@ Imviz
   Users can now display observation footprints from ``s_region`` data as overlays
   on the image viewer and click on footprints to select/deselect observations. [#3894]
 
+- ``align_by`` can be set directly from the Image loader. [#3904]
+
 Mosviz
 ^^^^^^
 
