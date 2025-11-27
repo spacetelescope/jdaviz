@@ -86,6 +86,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
     eln = Bool(True).tag(sync=True)
     browser_sound = Bool(True).tag(sync=True)
+    direct_sound = Bool(False).tag(sync=True)
     audfrqmin = FloatHandleEmpty(50).tag(sync=True)
     audfrqmax = FloatHandleEmpty(1000).tag(sync=True)
     use_pccut = Bool(True).tag(sync=True)
@@ -93,6 +94,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     volume = IntHandleEmpty(100).tag(sync=True)
     stream_active = Bool(True).tag(sync=True)
     has_strauss = Bool(_has_strauss).tag(sync=True)
+    has_sound = Bool(_has_sound).tag(sync=True)
     has_outs = Bool((sd.default.device[1] != -1)).tag(sync=True)
     scrubdx = IntHandleEmpty(0).tag(sync=True)
 
@@ -173,6 +175,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             "sample_rate",
             "is_playing",
             "browser_sound",
+            "direct_sound",
+            "has_strauss",
             "volume",
         ]
         return PluginUserApi(self, expose)
@@ -184,8 +188,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         """
         # Modify default label to avoid vue error from re-using label
         self.results_label_default = self.app.return_unique_name(
-            "Sonified data", typ="data"
-        )
+            "Sonified data", typ="data")
+        
 
     def _on_viewer_added(self, msg):
         # TODO

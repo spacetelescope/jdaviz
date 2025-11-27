@@ -145,11 +145,19 @@
       <v-switch
         v-model="browser_sound"
         label="Allow Browser Sound"
-        hint="Whether to allow sound through the browser"
+        hint="Allow playback through the browser"
         persistent-hint
         ></v-switch>
     </v-row>
-      
+    <v-row v-if="!has_sound">
+      <v-switch
+        v-model="direct_sound"
+	label="Allow Direct Sound"
+        hint="Allow playback direct to the soundcard when hosted locally"
+        persistent-hint
+        ></v-switch>
+    </v-row>
+    
     <j-plugin-section-header>Add Results Options</j-plugin-section-header>
       <plugin-add-results
           :label.sync="results_label"
@@ -178,9 +186,12 @@ export default {
             // Tone.js objects
             player1: null,
             player2: null,
+	    oneShotPlayer: null,
             panner1: null,
             panner2: null,
             crossFade: null,
+	    loopGain: null,
+	    cubeBuffer: null,
             activePlayer: 1, // 1 or 2
             isFading: false,
             lindxLatest: null,
@@ -226,9 +237,43 @@ export default {
         if (this.crossFade) this.crossFade.dispose();
     },
     methods: {
+	async playOneShot() {
+	    // 1. If we already have a loaded player, just play it (Reuse)
+	    if (this.oneShotPlayer) {
+		// Stop if currently playing to allow rapid re-triggering
+		if(this.oneShotPlayer.state === 'started') this.oneShotPlayer.stop();
+		this.oneShotPlayer.start();
+		return;
+	    }
+	    
+	    // 2. If no player, check if data is ready to create one
+	    if (this.on_audio_data && this.on_audio_data.length > 100) {
+		try {
+		    const onAudioBuffer = await new Tone.Buffer().load(this.on_audio_data_url);
+		    this.oneShotPlayer = new Tone.Player(onAudioBuffer).toDestination();
+		    this.oneShotPlayer.volume.value = -0.2;
+		    this.oneShotPlayer.start();
+		} catch(e) { console.warn("One-shot load failed", e); }
+	    }
+	},
 	handleSonifyClick() {
             console.log('Run Sonify Cube...')
             this.sonify_cube(); 
+	},
+	clearOldAudio() {
+	    // clean up...
+	    if (window.Tone && Tone.Transport.state === 'started') {
+		Tone.Transport.stop();
+		Tone.Transport.cancel();
+	    }
+	    this.is_playing = false;
+	    if (this.cubeBuffer) { this.cubeBuffer.dispose(); this.cubeBuffer = null; }
+	    if (this.player1) { this.player1.dispose(); this.player1 = null; }
+	    if (this.player2) { this.player2.dispose(); this.player2 = null; }
+	    if (this.panner1) { this.panner1.dispose(); this.panner1 = null; }
+	    if (this.panner2) { this.panner2.dispose(); this.panner2 = null; }
+	    if (this.crossFade) { this.crossFade.dispose(); this.crossFade = null; }
+	    if (this.loopGain) { this.loopGain.dispose(); this.loopGain = null; }
 	},
 	async loadAudio() {
             try {
@@ -244,20 +289,22 @@ export default {
 		console.log('New audio data incoming...');
 		
 		// --- Handle one-shot audio with Tone.Player ---
-		const onAudioBuffer = await new Tone.Buffer().load(this.on_audio_data_url);
-		const oneShotPlayer = new Tone.Player(onAudioBuffer).toDestination();
-		oneShotPlayer.volume.value = -0.2; // -0.2dB to not redline anything
+		// const onAudioBuffer = await new Tone.Buffer().load(this.on_audio_data_url);
+		// const oneShotPlayer = new Tone.Player(onAudioBuffer).toDestination();
+		// oneShotPlayer.volume.value = -0.2; // -0.2dB to not redline anything
 		
 		// --- Pre-load and pre-route looping cube audio with Tone.js ---
-		if (this.cube_audio_data && !this.player1) {
+		if (this.cube_audio_data) {
+		    if (this.cube_audio_data.length < 100) return;
+		    this.clearOldAudio();
 		    console.log('Setting up looping sources with Tone.js...');
-		    const cubeAudioBuffer = await new Tone.Buffer().load(this.cube_audio_data_url);
+		    this.cubeBuffer = await new Tone.Buffer().load(this.cube_audio_data_url);
 		    // Gotta go fast! (minimise audio latency)
 		    Tone.context.lookAhead = 0;
 		    
 		    // Create two players for the same audio buffer to allow smooth seeking and switching
-		    this.player1 = new Tone.Player(cubeAudioBuffer);
-		    this.player2 = new Tone.Player(cubeAudioBuffer);
+		    this.player1 = new Tone.Player(this.cubeBuffer);
+		    this.player2 = new Tone.Player(this.cubeBuffer);
 		    
                     // Create panners for stereo separation (debugging)
 		    // TODO remove panning layer once happy with implementation
@@ -292,8 +339,9 @@ export default {
 		    if (Tone.Transport.state !== 'started') {
 			Tone.Transport.start();
 		    }
-		    // confirm we are ready with audio cue 
-		    oneShotPlayer.start();
+		    // confirm we are ready with audio cue
+		    // this.playOneShot();
+		    // oneShotPlayer.start();
 		    
 		    // initialise as not playing
 		    this.is_playing = false;
@@ -319,7 +367,7 @@ export default {
                 return;
             }
 
-	    console.log("dim:", this.dims, 'ldx:', this.lindx, " x:",this.x_pos, "y:", this.y_pos, "x2:",this.x_pos2, "y2:", this.y_pos2);
+	    // console.log("dim:", this.dims, 'ldx:', this.lindx, " x:",this.x_pos, "y:", this.y_pos, "x2:",this.x_pos2, "y2:", this.y_pos2);
 	    
 	    // Is this a sanctioned lindx value?
 	    if(newVal > (this.npix-1) || newVal < 0) {
@@ -371,9 +419,64 @@ export default {
     },
     
     watch: {
+	cube_audio_data(newVal) {
+	    if (newVal) {
+		const len = newVal.length;
+		// Base64 is ~33% larger than binary. (Length * 0.75) / 1024 / 1024 = MB
+		const approxMB = (len * 0.75) / (1024 * 1024);
+		const headerOffset = 100;
+		
+		console.group("=-=-= Audio Data Debug Info =-=-=");
+		console.log(`Raw String Length: ${len} chars`);
+		console.log(`Approximate File Size: ${approxMB.toFixed(2)} MB`);
+		// 1. Extract the "Body" (pure audio data, hopefully)
+		const body = newVal.substring(headerOffset);
+		
+		// 2. Find the first character that is NOT 'A' (Silence = 'A' in Base64)
+		// This regex looks for anything that isn't 'A'
+		const firstSignalMatch = body.match(/[^A]/);
+		
+		
+		if (firstSignalMatch) {
+                    // match.index is relative to 'body', so add headerOffset to get global index
+                    const localIndex = firstSignalMatch.index;
+                    const globalIndex = headerOffset + localIndex;
+                    
+                    console.log(`FIRST SIGNAL DETECTED at index: ${globalIndex}`);
+                    
+                    // 3. Extract a sample of the signal found
+                    // We take 100 characters starting from that point
+                    const signalSnippet = newVal.substring(globalIndex, globalIndex + 100);
+                    
+                    console.log("--- SIGNAL SNIPPET ---");
+                    console.log(signalSnippet);
+                    console.log("----------------------");
+		} else {
+                    console.error("SCAN COMPLETE: No signal found. The entire data body is 'A's (Silence).");
+		}
+		
+		if (len < 100) {
+		    console.error("Data is too short to be a valid audio file.");
+		} else if (!newVal.startsWith("UklGR")) {
+		    console.warn("Header does not match WAV 'RIFF' signature (UklGR).");
+		} else {
+		    console.log("Header looks like valid WAV.");
+		}
+		console.groupEnd();
+
+		if (newVal.length > 100) {
+		    this.loadAudio();
+		}
+            }
+         },
 	on_audio_data(newVal) {
             if (newVal) {
-		this.loadAudio();
+		if (!this.cube_audio_data) {
+		    this.loadAudio();
+		}
+		if (newVal.length > 100 && !this.oneShotPlayer) {
+		    this.playOneShot();
+		}
             }
 	},
 	lindx(newVal, oldVal) {
