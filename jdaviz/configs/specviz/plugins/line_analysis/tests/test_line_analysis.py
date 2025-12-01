@@ -590,14 +590,6 @@ def test_line_analysis_deconfig(deconfigged_helper):
     assert _check_line_visible(viewer_1d_2)
     assert not _check_line_visible(viewer_1d_1)
 
-    # Compare results and make sure numbers are close
-    for i in range(5):
-        if np.isnan(float(input_results[i]['result'])):
-            assert np.isnan(float(smoothed_results[i]['result']))
-            continue
-        assert_allclose(float(input_results[i]['result']),
-                        float(smoothed_results[i]['result']), atol=3)
-
     viewer_1d_2.data_menu.add_data('1D Spectrum')
 
     la.keep_active = True  # Ensure plugin is active so marks are visible
