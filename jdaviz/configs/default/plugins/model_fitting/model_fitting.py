@@ -1431,7 +1431,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # skip specutils.fit_lines, which assumes scalar model parameters.
         # Spline1D has no scalar parameters, so skip specutils.fit_lines
         if len(models_to_fit) == 1 and models_to_fit[0].__class__.__name__ == "Spline1D":
-            s_val = kw.get("s", 1.0)
+            s_val = kw.get("smoothing_factor", 1.0)
             s_val = max(1.0, min(5.0, s_val))
             smoother = fitting.SplineSmoothingFitter()
 
@@ -1469,7 +1469,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             x_fit = x_fit[order]
             y_fit = y_fit[order]
 
-            deg = getattr(models_to_fit[0], "degree", 1)
+            deg = kw.get("degree", getattr(models_to_fit[0], "degree", 3))
             if x_fit.size <= deg:
                 raise ValueError(
                     f"Spline1D fit requires more than degree ({deg}) sample points; "
