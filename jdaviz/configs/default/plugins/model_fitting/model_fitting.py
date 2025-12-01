@@ -1214,7 +1214,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if isinstance(names, (list, tuple)):
             return list(names)
         try:
-            return list(names)  # will TypeError for 'property'
+            return list(names)
         except Exception:
             return []
 
@@ -1431,6 +1431,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # skip specutils.fit_lines, which assumes scalar model parameters.
         if len(models_to_fit) == 1 and models_to_fit[0].__class__.__name__ == "Spline1D":
             s_val = kw.get("s", 1.0)
+            # enforce smoothing_factor limits
+            s_val = max(1.0, min(5.0, float(s_val)))
             smoother = fitting.SplineSmoothingFitter()
 
             mspec = masked_spectrum

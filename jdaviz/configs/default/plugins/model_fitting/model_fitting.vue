@@ -307,6 +307,8 @@
                     :label="item.name"
                     v-model.number="item.value"
                     type="number"
+                    :min="item.name === 'smoothing_factor' ? 1 : undefined"
+                    :max="item.name === 'smoothing_factor' ? 5 : undefined"
                     style="padding-top: 0px; margin-top: 14px; margin-bottom: 10px;"
                   ></v-text-field>
               </div>

@@ -30,7 +30,7 @@ MODELS = {
      'Lorentz1D': models.Lorentz1D,
      'PowerLaw1D': models.PowerLaw1D,
      'BlackBody': BlackBody,
-     "Spline1D": models.Spline1D,
+     'Spline1D': models.Spline1D,
      }
 
 
