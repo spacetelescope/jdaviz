@@ -236,8 +236,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
         )
 
 
-@pytest.mark.skip(reason="now raising: File does not appear to be a VOTABLE")
-def test_catalog_reingestion(imviz_helper, tmp_path):
+def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_exception):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
     viewer = imviz_helper.default_viewer._obj
@@ -265,8 +264,17 @@ def test_catalog_reingestion(imviz_helper, tmp_path):
     # search Gaia to get exportable data
     catalog_plg.catalog = 'Gaia'
     catalog_plg.max_sources = 10
-    with pytest.warns(ResourceWarning):
-        catalog_plg.search(error_on_fail=True)
+
+    # TODO: remove catch_validate_known_exception
+    #  when GAIA completes system maintenance (2-12-2025 12:00 CET)
+    # Use exception context manager to handle occasional VOTable E19 parsing
+    # errors (e.g. due to scheduled maintenance) -- 'File does not appear to be a VOTABLE'.
+    from astropy.io.votable.exceptions import E19
+    with catch_validate_known_exception(E19,
+                               stdout_text_to_check='scheduled maintenance',
+                               skip_text='Gaia query failed with VOTable parsing error.'):
+        with pytest.warns(ResourceWarning):
+            catalog_plg.search(error_on_fail=True)
 
     export_plg.plugin_table = 'Catalog Search: table'
     export_plg.filename = 'test.ecsv'
