@@ -592,8 +592,8 @@ def test_line_analysis_deconfig(deconfigged_helper):
 
     # Compare results and make sure numbers are close
     for i in range(5):
-        if (np.isnan(float(input_results[i]['result'])) or
-                np.isnan(float(smoothed_results[i]['result']))):
+        if np.isnan(float(input_results[i]['result'])):
+            assert np.isnan(float(smoothed_results[i]['result']))
             continue
         assert_allclose(float(input_results[i]['result']),
                         float(smoothed_results[i]['result']), atol=3)
