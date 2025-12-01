@@ -358,6 +358,58 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     assert_quantity_allclose(qtab['Declination'], catalog_obj['SkyCoord'].dec)
 
 
+@pytest.mark.remote_data
+def test_astroquery_load_catalog_source(deconfigged_helper):
+    deconfigged_helper.app.state.catalogs_in_dc = True
+
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.source = 'M4'
+    ldr.telescope = 'Gaia'
+    ldr.max_results = 10
+    ldr.query_archive()
+    assert 'Catalog' in ldr.format.choices
+    ldr.format = 'Catalog'
+
+    ldr.importer.col_id = 'source_id'
+    ldr.importer.col_other = ['parallax', 'pm', 'bp_rp', 'phot_rp_mean_mag']
+    ldr.importer.viewer.create_new = 'Scatter'
+    ldr.load()
+    assert 'Scatter' in deconfigged_helper.viewers
+    assert 'Catalog' in deconfigged_helper.viewers['Scatter'].data_menu.layer.choices
+
+
+@pytest.mark.remote_data
+def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
+    deconfigged_helper.app.state.catalogs_in_dc = True
+    arr = np.ones((1489, 2048))
+
+    # header is based on the data provided above
+    hdu1 = fits.ImageHDU(arr, name='SCI')
+    hdu1.header.update({'CTYPE1': 'RA---TAN',
+                        'CUNIT1': 'deg',
+                        'CD1_1': -7.80378407867e-05,
+                        'CD1_2': 7.74904339463e-05,
+                        'CRPIX1': 1025.0,
+                        'CRVAL1': 6.62750450757,
+                        'NAXIS1': 2048,
+                        'CTYPE2': 'DEC--TAN',
+                        'CUNIT2': 'deg',
+                        'CD2_1': 7.74973322238e-05,
+                        'CD2_2': 7.80788034973e-05,
+                        'CRPIX2': 745.0,
+                        'CRVAL2': 1.54470013629,
+                        'NAXIS2': 1489})
+    deconfigged_helper.load(hdu1, format='Image', data_label='has_wcs')
+
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.viewer = list(deconfigged_helper.viewers.keys())[0]
+    ldr.telescope = 'SDSS'
+    ldr.max_results = 10
+    ldr.query_archive()
+    assert 'Catalog' in ldr.format.choices
+    ldr.format = 'Catalog'
+
+
 def test_invalid(imviz_helper, tmp_path):
 
     imviz_helper.app.state.catalogs_in_dc = True

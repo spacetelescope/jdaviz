@@ -335,15 +335,18 @@ class BaseImporterToDataCollection(BaseImporter):
                 self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='warning'))
         else:
             failed_viewers = []
+            exceptions = []
             for viewer_label in viewer_select.selected:
                 viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
                 try:
                     viewer.data_menu.add_data(data_label)
-                except Exception:
+                except Exception as e:
                     failed_viewers.append(viewer_label)
+                    exceptions.append(str(e))
             if len(failed_viewers) > 0:
                 msg = f"Failed to add {data_label} to viewers: {', '.join(failed_viewers)}"
-                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error'))
+                self.app.hub.broadcast(SnackbarMessage(msg, sender=self, color='error',
+                                                       traceback=exceptions))
 
     @with_spinner('import_spinner')
     def __call__(self):
