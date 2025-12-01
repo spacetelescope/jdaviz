@@ -298,7 +298,7 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
 
     def _update_reference_data(self, reference_data):
         # don't update x units before initialization or in rampviz
-        if reference_data is None or self.viewer.jdaviz_app.config == 'rampviz':
+        if reference_data is None or 'Rampviz' in self.viewer.__class__.__name__:
             return
 
         self._update_unit(reference_data.get_object(cls=Spectrum).spectral_axis.unit)

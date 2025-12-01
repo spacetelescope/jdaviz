@@ -55,7 +55,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
                                               selected='function_selected',
                                               manual_options=['Mean', 'Median', 'Min', 'Max', 'Sum'])  # noqa
 
-        self.dataset.add_filter('is_cube')
+        self.dataset.add_filter('is_flux_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
 
         # description displayed under plugin title in tray
@@ -76,7 +76,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     @observe("dataset_selected", "dataset_items")
     def _set_default_results_label(self, event={}):
         label_comps = []
-        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+        if hasattr(self, 'dataset'):
             label_comps += [self.dataset_selected]
         label_comps += ["collapsed"]
         self.results_label_default = " ".join(label_comps)

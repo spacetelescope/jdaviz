@@ -1,5 +1,4 @@
 import pytest
-from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 
@@ -14,7 +13,7 @@ def test_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
 
 def _slice(helper, ramp_cube):
     app = helper.app
-    sl = Slice(app=app)
+    sl = helper.plugins['Slice']._obj
 
     # No data yet
     assert len(sl.slice_selection_viewers) == 2  # group-viewer, diff-viewer
@@ -43,11 +42,11 @@ def _slice(helper, ramp_cube):
     assert helper.app.get_viewer("group-viewer").slice == len(slice_values) // 2
     assert helper.app.get_viewer("group-viewer").state.slices[-1] == 5
     assert helper.app.get_viewer("diff-viewer").state.slices[-1] == 5
-    helper.select_group(slice_values[0])
+    sl.value = float(slice_values[0])
     assert helper.app.get_viewer("group-viewer").slice == 0
     assert sl.value == slice_values[0]
 
-    helper.select_group(slice_values[1])
+    sl.value = float(slice_values[1])
     assert sl.value == slice_values[1]
 
     # Retrieve updated slice_values
