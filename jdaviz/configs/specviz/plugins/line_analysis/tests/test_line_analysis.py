@@ -577,7 +577,6 @@ def test_line_analysis_deconfig(deconfigged_helper):
     la = deconfigged_helper.plugins['Line Analysis']
     la.dataset = '1D Spectrum'
     la.spectral_subset = 'Subset 1'
-    input_results = la.get_results()
 
     assert _check_line_visible(viewer_1d_1)
     assert not _check_line_visible(viewer_1d_2)
@@ -585,7 +584,6 @@ def test_line_analysis_deconfig(deconfigged_helper):
     # Line analysis using subset on smoothed spectrum
     la.dataset = '1D Spectrum smooth stddev-1.0'
     la.spectral_subset = 'Subset 1'
-    smoothed_results = la.get_results()
 
     assert _check_line_visible(viewer_1d_2)
     assert not _check_line_visible(viewer_1d_1)
