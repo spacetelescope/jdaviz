@@ -236,7 +236,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
         )
 
 
-def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_exception):
+def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_exceptions):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
     viewer = imviz_helper.default_viewer._obj
@@ -268,11 +268,12 @@ def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_except
     # TODO: remove catch_validate_known_exception
     #  when GAIA completes system maintenance (2-12-2025 12:00 CET)
     # Use exception context manager to handle occasional VOTable E19 parsing
-    # errors (e.g. due to scheduled maintenance) -- 'File does not appear to be a VOTABLE'.
+    # errors and HTTP 500 errors (e.g. due to scheduled maintenance) --
+    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
     from astropy.io.votable.exceptions import E19
-    with catch_validate_known_exception(E19,
-                               stdout_text_to_check='scheduled maintenance',
-                               skip_text='Gaia query failed with VOTable parsing error.'):
+    from requests.exceptions import HTTPError
+    with catch_validate_known_exceptions((E19, HTTPError),
+                                         stdout_text_to_check='scheduled maintenance'):
         with pytest.warns(ResourceWarning):
             catalog_plg.search(error_on_fail=True)
 

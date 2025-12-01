@@ -336,7 +336,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
 
 
-def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exception):
+def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
     with asdf.open(gw_file) as af:
@@ -367,10 +367,11 @@ def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exception):
     # TODO: remove catch_validate_known_exception
     #  when GAIA completes system maintenance (2-12-2025 12:00 CET)
     # Use exception context manager to handle occasional VOTable E19 parsing
-    # errors (e.g. due to scheduled maintenance) -- 'File does not appear to be a VOTABLE'.
+    # errors and HTTP 500 errors (e.g. due to scheduled maintenance) --
+    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
     from astropy.io.votable.exceptions import E19
-    with catch_validate_known_exception(E19,
-                               stdout_text_to_check='scheduled maintenance',
-                               skip_text='Gaia query failed with VOTable parsing error.'):
+    from requests.exceptions import HTTPError
+    with catch_validate_known_exceptions((E19, HTTPError),
+                                         stdout_text_to_check='scheduled maintenance'):
         with pytest.warns(ResourceWarning):
             catalogs_plugin.search(error_on_fail=True)
