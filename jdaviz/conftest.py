@@ -116,7 +116,7 @@ class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
 
 def _catch_validate_known_exception(exception_to_catch,
                                     stdout_text_to_check='',
-                                    skip_text='Skipping test due to known issue.'):
+                                    skip_text=''):
     """
     Context manager to catch known exceptions in CI tests. Validates the exception
     by checking for specific text in stdout. If matched, the test is skipped. If
@@ -132,7 +132,7 @@ def _catch_validate_known_exception(exception_to_catch,
     exception_to_catch : Exception or tuple of Exception class(es) to catch.
     stdout_text_to_check : str, optional
         Text to match in stdout via substring matching.
-        Default is '' (matches any stdout).
+        Default is '' (matches any string).
     skip_text : str, optional
         Message to provide to pytest when skipping the test.
     """
@@ -145,10 +145,10 @@ def _catch_validate_known_exception(exception_to_catch,
         try:
             with contextlib.redirect_stdout(buf):
                 yield buf
-        except exception_to_catch:
+        except exception_to_catch as etc:
             stdout_text = buf.getvalue()
             if stdout_text_to_check in stdout_text:
-                pytest.skip(skip_text)
+                pytest.skip(skip_text if skip_text else str(etc))
             else:
                 raise
 
