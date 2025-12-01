@@ -575,6 +575,7 @@ def test_line_analysis_deconfig(deconfigged_helper):
 
     # Line analysis using subset on input spectrum
     la = deconfigged_helper.plugins['Line Analysis']
+    la.keep_active = True  # Ensure plugin is active so marks are visible
     la.dataset = '1D Spectrum'
     la.spectral_subset = 'Subset 1'
 
@@ -590,7 +591,6 @@ def test_line_analysis_deconfig(deconfigged_helper):
 
     viewer_1d_2.data_menu.add_data('1D Spectrum')
 
-    la.keep_active = True  # Ensure plugin is active so marks are visible
     la.dataset = '1D Spectrum'
     la.spectral_subset = 'Subset 1'
     la.continuum = 'Surrounding'
