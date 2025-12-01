@@ -366,8 +366,9 @@ def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
 
     # TODO: remove catch_validate_known_exception
     #  when GAIA completes system maintenance (2-12-2025 12:00 CET)
-    # Use exception context manager to handle occasional VOTable E19 parsing
-    # errors and HTTP 500 errors (e.g. due to scheduled maintenance) --
+    # Use exception context manager to handle occasional VOTable parsing
+    # errors via retrieval failures and HTTP 500 errors. Both currently due
+    # to scheduled maintenance. These errors are reported as (and caught):
     # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
     from astropy.io.votable.exceptions import E19
     from requests.exceptions import HTTPError
