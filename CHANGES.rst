@@ -34,6 +34,8 @@ New Features
 
 - Generalize spectrum loading logic to prepare to support Roman ASDF files. [#3864]
 
+- Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
+
 Cubeviz
 ^^^^^^^
 
@@ -56,6 +58,8 @@ Imviz
 - Added interactive footprint selection feature for MAST observations in Imviz.
   Users can now display observation footprints from ``s_region`` data as overlays
   on the image viewer and click on footprints to select/deselect observations. [#3894]
+
+- ``align_by`` can be set directly from the Image loader. [#3904]
 
 Mosviz
 ^^^^^^
