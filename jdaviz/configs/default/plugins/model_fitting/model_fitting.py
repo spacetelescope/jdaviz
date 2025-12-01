@@ -1429,43 +1429,46 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Spline1D special-case: fit directly with SplineSmoothingFitter and
         # skip specutils.fit_lines, which assumes scalar model parameters.
+        # Spline1D has no scalar parameters, so skip specutils.fit_lines
         if len(models_to_fit) == 1 and models_to_fit[0].__class__.__name__ == "Spline1D":
             s_val = kw.get("s", 1.0)
-            # enforce smoothing_factor limits
-            s_val = max(1.0, min(5.0, float(s_val)))
+            s_val = max(1.0, min(5.0, s_val))
             smoother = fitting.SplineSmoothingFitter()
 
             mspec = masked_spectrum
             spec = self.dataset.get_selected_spectrum(use_display_units=True)
 
-            x_full = np.asarray(spec.spectral_axis)
-            y_full = np.asarray(mspec.flux)
+            x_full = spec.spectral_axis
+            y_full = mspec.flux
+
+            if hasattr(x_full, "value"):
+                x_vals = np.asarray(x_full.value)
+            else:
+                x_vals = np.asarray(x_full)
+
+            if hasattr(y_full, "value"):
+                y_vals = np.asarray(y_full.value)
+            else:
+                y_vals = np.asarray(y_full)
 
             if mspec.mask is None:
-                good = np.isfinite(x_full) & np.isfinite(y_full)
+                good = np.isfinite(y_vals)
             else:
                 base = ~np.asarray(mspec.mask, dtype=bool)
-                good = base & np.isfinite(x_full) & np.isfinite(y_full)
+                good = base & np.isfinite(y_vals)
 
             if not np.any(good):
                 raise ValueError("No finite, unmasked points available for Spline1D fit")
 
-            xf = x_full[good]
-            yf = y_full[good]
-
-            if hasattr(xf, "value"):
-                xf = xf.value
-            if hasattr(yf, "value"):
-                yf = yf.value
-
-            x_fit = np.asarray(xf)
-            y_fit = np.asarray(yf)
+            y_masked = np.where(good, y_vals, np.nan)
+            mask = np.isfinite(y_masked)
+            x_fit = x_vals[mask]
+            y_fit = y_masked[mask]
 
             order = np.argsort(x_fit)
             x_fit = x_fit[order]
             y_fit = y_fit[order]
 
-            # Require at least degree+1 points for a meaningful spline.
             deg = getattr(models_to_fit[0], "degree", 1)
             if x_fit.size <= deg:
                 raise ValueError(
@@ -1474,14 +1477,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 )
 
             fitted_model = smoother(models_to_fit[0], x_fit, y_fit, s=s_val)
-            fitted_model.name = getattr(models_to_fit[0], "name", getattr(fitted_model, "name", None))  # noqa
+            fitted_model.name = getattr(models_to_fit[0], "name", fitted_model.name)
 
-            # Evaluate the spline on the full spectral axis and restore units
-            x_eval = x_full
-            if hasattr(x_eval, "value"):
-                x_eval = x_eval.value
-            x_eval = np.asarray(x_eval)
-            y_model = fitted_model(x_eval) * spec.flux.unit
+            y_model_vals = fitted_model(x_vals)
+            y_model = y_model_vals * spec.flux.unit
             fitted_spectrum = spec.__class__(
                 flux=y_model,
                 spectral_axis=spec.spectral_axis,
@@ -1498,7 +1497,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 )
                 if self.residuals_calculate:
                     self.add_results.add_results_from_plugin(
-                        spec - fitted_spectrum,
+                        mspec - fitted_spectrum,
                         label=self.residuals.value,
                         format="1D Spectrum",
                         replace=False,
@@ -1507,7 +1506,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self._set_default_results_label()
 
             if self.residuals_calculate:
-                return fitted_model, fitted_spectrum, spec - fitted_spectrum
+                return fitted_model, fitted_spectrum, mspec - fitted_spectrum
             return fitted_model, fitted_spectrum
         # all other models (besides Spline1D)
         try:
