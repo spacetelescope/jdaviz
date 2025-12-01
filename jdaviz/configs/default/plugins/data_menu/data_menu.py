@@ -8,13 +8,16 @@ from jdaviz.core.template_mixin import (SnackbarMessage, TemplateMixin, LayerSel
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import (IconsUpdatedMessage, AddDataMessage,
                                 ChangeRefDataMessage, ViewerRenamedMessage)
-from glue.core.message import SubsetDeleteMessage
+from glue.core.message import SubsetDeleteMessage, SubsetUpdateMessage
 from jdaviz.core.sonified_layers import SonifiedLayerState, SonifiedDataLayerArtist
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
-
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
+from glue.core.roi import (RectangularROI, CircularROI,
+                           EllipticalROI, CircularAnnulusROI, XRangeROI)
+from glue.core.subset import CompositeSubsetState, RangeSubsetState, RoiSubsetState
+
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -60,6 +63,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`toggle_layer_visibility`
     * :meth:`create_subset`
     * :meth:`modify_subset`
+    * :meth:`resize_subset_in_viewer`
     * :meth:`add_data`
     * :meth:`view_info`
     * :meth:`remove_from_viewer`
@@ -107,6 +111,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_enabled = Bool(False).tag(sync=True)
     subset_edit_tooltip = Unicode().tag(sync=True)
+    subset_resize_in_viewer_enabled = Bool(True).tag(sync=True)
 
     subset_edit_modes = List().tag(sync=True)
 
@@ -150,7 +155,10 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._remove_subset_from_layers(msg.subset))  # noqa
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda msg: self._remove_subset_from_layers(msg.subset))
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda _: self._allow_resize_subset_in_viewer())
         self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewer_renamed_message)
         self.viewer_icons = dict(self.app.state.viewer_icons)
@@ -174,8 +182,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
-                  'create_subset', 'modify_subset', 'add_data', 'view_info',
-                  'remove_from_viewer', 'remove_from_app']
+                  'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data',
+                  'view_info', 'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
                       if e not in ('set_layer_visibility', 'toggle_layer_visibility',
@@ -271,7 +279,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                         # if layer is a catalog that has pixel coordinates, we
                         # don't need to hide the layer
                         if data.meta.get('_importer') == 'CatalogImporter' and \
-                           'X' in comp_labels and 'Y' in comp_labels:
+                                'X' in comp_labels and 'Y' in comp_labels:
                             continue
                         else:
                             hiding_due_to_pixel_link.append(layer.layer.label)
@@ -345,9 +353,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             return
 
         # Have to count subsets + data, but not the invisible WCS layers in Imviz
-        n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers if not
-                            (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
-                             lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
+        n_layers = len(set([lyr.layer.label for lyr in self._viewer.layers
+                            if not (hasattr(lyr.layer, 'meta') and '_WCS_ONLY' in
+                                    lyr.layer.meta and lyr.layer.meta['_WCS_ONLY'])]))
 
         if (event.get('name') == 'layer_items' and len(event['new']) == n_layers
                 and isinstance(event.get('owner'), DataMenu)):
@@ -467,7 +475,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     self.delete_app_tooltip = "Cannot delete sonified data from app"
                     break
                 elif (layer not in self.existing_subset_labels
-                        and selected_items['from_plugin'][i] is None):
+                      and selected_items['from_plugin'][i] is None):
                     self.delete_app_enabled = False
                     self.delete_app_tooltip = f"Cannot delete imported data from {self.app.config}"
                     break
@@ -626,6 +634,95 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_modify_subset(self, info, *args):
         self.modify_subset(info.get('combination_mode'),
                            info.get('subset_type'))  # pragma: no cover
+
+    @observe('layer_selected')
+    def _allow_resize_subset_in_viewer(self, event={}):
+        # Needed during app initialization
+        if not hasattr(self, 'layer'):
+            return
+        if not len(self.layer.selected):
+            return
+
+        subset_grp = [sg for sg in self.app.data_collection.subset_groups
+                      if sg.label == self.layer.selected[0]]
+        if len(subset_grp):
+            subset = subset_grp[0]
+            if isinstance(subset.subset_state, CompositeSubsetState):
+                self.subset_resize_in_viewer_enabled = False
+            else:
+                self.subset_resize_in_viewer_enabled = True
+
+    def resize_subset_in_viewer(self):
+        """
+        Enable resizing of an existing subset in the viewer.
+        Detects the subset's ROI type and activates the corresponding
+        selection tool pre-populated with the existing bounds for
+        interactive resizing.
+        """
+        # future improvement: allow overriding layer.selected, with pre-validation
+        if len(self.layer.selected) != 1:
+            raise ValueError('Only one layer can be selected to resize subset.')
+        if self.layer.selected[0] not in self.existing_subset_labels:
+            raise ValueError('Selected layer is not a subset.')
+        if not self.subset_resize_in_viewer_enabled:
+            raise ValueError('Resizing is not supported for composite subsets.')
+
+        subset_str = self.layer.selected[0]
+
+        # set subset as the active/highlighted layer in data menu
+        self.layer.selected = subset_str
+
+        # get the subset group and extract the ROI
+        subset_grp = [sg for sg in self.app.data_collection.subset_groups
+                      if sg.label == subset_str]
+
+        # Determine which tool to use based on the ROI type
+        if len(subset_grp):
+            subset = subset_grp[0]
+            if isinstance(subset.subset_state, RoiSubsetState):
+                roi = subset.subset_state.roi
+            elif isinstance(subset.subset_state, RangeSubsetState):
+                roi = XRangeROI(subset.subset_state.lo, subset.subset_state.hi)
+            else:
+                raise ValueError('Selected subset does not have a supported ROI.')
+
+            # Map ROI types to tool IDs
+            roi_tool_map = {RectangularROI: 'bqplot:rectangle',
+                            CircularROI: 'bqplot:truecircle',
+                            EllipticalROI: 'bqplot:ellipse',
+                            CircularAnnulusROI: 'bqplot:circannulus',
+                            XRangeROI: 'bqplot:xrange'}
+
+            # Find the matching tool for this ROI type
+            tool_id = None
+            for roi_type, tid in roi_tool_map.items():
+                if isinstance(roi, roi_type):
+                    tool_id = tid
+                    break
+
+            if tool_id is None:
+                raise NotImplementedError(
+                    f'Resize not supported for {roi.__class__.__name__} subsets.')
+
+            # Activate the appropriate tool
+            self._viewer.toolbar.active_tool_id = None
+            self._viewer.toolbar.select_tool(tool_id)
+
+            # Set subset to edit and mode to replace
+            self.session.edit_subset_mode.edit_subset = subset_grp
+            self.session.edit_subset_mode.mode = ReplaceMode
+
+            # Pre-populate the tool with the existing subset's ROI
+            tool = self._viewer.toolbar.active_tool
+            if tool and hasattr(tool, 'update_from_roi'):
+                tool.update_from_roi(roi)
+            else:
+                raise RuntimeError(
+                    f'Failed to activate {tool.__class__.__name__} '
+                    f'for resizing {roi.__class__.__name__} subsets.')
+
+    def vue_resize_subset_in_viewer(self, *args):
+        self.resize_subset_in_viewer()  # pragma: no cover
 
     def view_info(self):
         """

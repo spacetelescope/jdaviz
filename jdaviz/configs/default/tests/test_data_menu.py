@@ -3,6 +3,11 @@ import astropy.units as u
 import pytest
 import numpy as np
 from specutils import SpectralRegion
+from glue.core.roi import (
+    RectangularROI, CircularROI, EllipticalROI,
+    CircularAnnulusROI, XRangeROI
+)
+from glue.core.edit_subset_mode import ReplaceMode
 
 
 def test_data_menu_toggles(specviz_helper, spectrum1d):
@@ -245,3 +250,153 @@ def test_data_menu_view_info(specviz_helper, spectrum1d):
     dm.layer.selected = ["test", "test2"]
     with pytest.raises(ValueError, match="Only one layer can be selected to view info"):
         dm.view_info()
+
+
+class TestResizeSubset:
+    """
+    Test suite for DataMenu resize subset functionality.
+    """
+    @pytest.fixture(autouse=True)
+    def _init(self, imviz_helper, specviz_helper, spectrum1d):
+        """
+        Autouse fixture to attach the shared helper to the test instance.
+        """
+        self.imviz_helper = imviz_helper
+        self.imviz_helper.load_data(np.zeros((10, 10)), data_label='image', show_in_viewer=True)
+        self.imviz_viewer = self.imviz_helper.default_viewer._obj.glue_viewer
+        self.imviz_dm = self.imviz_viewer.data_menu
+        self.imviz_subset_tools = self.imviz_helper.plugins['Subset Tools']
+
+        self.specviz_helper = specviz_helper
+        self.specviz_helper.load(spectrum1d, data_label="Spectrum 1D")
+        self.specviz_viewer = self.specviz_helper.app.get_viewer('spectrum-viewer')
+        self.specviz_dm = self.specviz_viewer.data_menu
+        self.specviz_subset_tools = self.specviz_helper.plugins['Subset Tools']
+
+    def test_allow_resize_subset_in_viewer(self):
+        """
+        Test _allow_resize_subset_in_viewer with single and composite subsets.
+        """
+        # Create a circular subset
+        self.imviz_viewer.apply_roi(CircularROI(xc=5, yc=5, radius=2))
+
+        # Test without any subsets selected (returns None_
+        assert self.imviz_dm._obj._allow_resize_subset_in_viewer() is None
+        self.imviz_dm.layer.selected = []
+        assert self.imviz_dm._obj._allow_resize_subset_in_viewer() is None
+
+        # Select the subset
+        self.imviz_dm.layer.selected = ['Subset 1']
+
+        # Trigger the allow resize check
+        self.imviz_dm._obj._allow_resize_subset_in_viewer()
+
+        # Should be enabled for simple ROI
+        assert self.imviz_dm._obj.subset_resize_in_viewer_enabled is True
+
+        # Combine to create composite subset
+        self.imviz_subset_tools.combination_mode = 'or'
+        self.imviz_subset_tools.subset.selected = 'Subset 1'
+        self.imviz_viewer.apply_roi(CircularROI(xc=5, yc=5, radius=1))
+
+        # Select the composite subset
+        self.imviz_dm.layer.selected = ['Subset 1']
+
+        # Trigger the allow resize check
+        self.imviz_dm._obj._allow_resize_subset_in_viewer()
+
+        # Should be disabled for composite ROI
+        assert self.imviz_dm._obj.subset_resize_in_viewer_enabled is False
+
+    @pytest.mark.parametrize(
+        ("roi", "tool_id"), [
+            (CircularROI(xc=5, yc=5, radius=2), 'bqplot:truecircle'),
+            (RectangularROI(xmin=2, xmax=7, ymin=3, ymax=8), 'bqplot:rectangle'),
+            (EllipticalROI(xc=5, yc=5, radius_x=2, radius_y=3), 'bqplot:ellipse'),
+            (CircularAnnulusROI(xc=5, yc=5, inner_radius=1, outer_radius=3), 'bqplot:circannulus')])
+    def test_resize_subset_in_viewer_image_rois(self, roi, tool_id):
+        """
+        Test resize_subset_in_viewer functionality with various image ROIs.
+        """
+        # Create a circular subset
+        self.imviz_viewer.apply_roi(roi)
+
+        # Select the subset for resizing
+        self.imviz_dm.layer.selected = ['Subset 1']
+
+        # Resize the subset
+        self.imviz_dm.resize_subset_in_viewer()
+
+        # Verify that the correct tool is activated
+        assert self.imviz_viewer.toolbar.active_tool_id == tool_id
+
+        # Verify that we're in replace mode
+        assert self.imviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+
+        # Verify that the correct subset is being edited
+        subset_grp = [sg for sg in self.imviz_helper.app.data_collection.subset_groups
+                      if sg.label == 'Subset 1']
+        assert self.imviz_helper.app.session.edit_subset_mode.edit_subset == subset_grp
+
+    @pytest.mark.parametrize('roi', [XRangeROI(min=6000, max=6500),
+                                     SpectralRegion(6000 * u.Angstrom, 6500 * u.Angstrom)])
+    def test_resize_subset_in_viewer_xrange_roi(self, roi):
+        """
+        Test resize_subset_in_viewer functionality with an XRange ROI and
+        Spectral Region (implicitly) converted to XRange ROI.
+        """
+        if isinstance(roi, XRangeROI):
+            # Create an XRange subset
+            self.specviz_viewer.apply_roi(roi)
+        elif isinstance(roi, SpectralRegion):
+            self.specviz_subset_tools.import_region(roi)
+
+        # Select and resize
+        self.specviz_dm.layer.selected = ['Subset 1']
+        self.specviz_dm.resize_subset_in_viewer()
+
+        # Verify that the correct tool is activated
+        assert self.specviz_viewer.toolbar.active_tool_id == 'bqplot:xrange'
+        assert self.specviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
+
+    def test_resize_subset_in_viewer_errors(self):
+        """
+        Test that resize_subset_in_viewer raises errors where expected.
+        """
+        # Create two subsets
+        self.imviz_viewer.apply_roi(CircularROI(xc=3, yc=3, radius=2))
+        self.imviz_subset_tools.combination_mode = 'new'
+        self.imviz_viewer.apply_roi(CircularROI(xc=7, yc=7, radius=2))
+
+        # Select both subsets
+        self.imviz_dm.layer.selected = ['Subset 1', 'Subset 2']
+
+        # Should raise error
+        msg = 'Only one layer can be selected to resize subset.'
+        with pytest.raises(ValueError, match=msg):
+            self.imviz_dm.resize_subset_in_viewer()
+
+        # Select data layer instead of subset
+        self.imviz_dm.layer.selected = ['image']
+
+        # Should raise error
+        msg = 'Selected layer is not a subset.'
+        with pytest.raises(ValueError, match=msg):
+            self.imviz_dm.resize_subset_in_viewer()
+
+        # Select the subset again
+        self.imviz_dm.layer.selected = ['Subset 1']
+
+        # Retrieve the subset group and replace its subset_state with a
+        # mock object that is not a RoiSubsetState/RangeSubsetState to
+        # simulate an unsupported ROI.
+        subset_grp = [sg for sg in self.imviz_helper.app.data_collection.subset_groups
+                      if sg.label == 'Subset 1']
+
+        # Replace the subset_state with a plain object (unsupported)
+        subset_grp[0].subset_state = object()
+
+        # Try to resize and assert the specific error message
+        msg = 'Selected subset does not have a supported ROI.'
+        with pytest.raises(ValueError, match=msg):
+            self.imviz_dm.resize_subset_in_viewer()
