@@ -492,7 +492,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             self._update_format_items()
             return
 
-        if parsed_input in (None, []):
+        if parsed_input is None or getattr(parsed_input, 'len', lambda: 1)() == 0:
             self.parsed_input_is_empty = True
             self.parsed_input_is_query = False
             self.observation_table_populated = False
