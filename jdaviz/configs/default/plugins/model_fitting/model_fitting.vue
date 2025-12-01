@@ -290,15 +290,18 @@
                 <v-switch v-if="isBoolean(item.value)"
                   v-model="item.value"
                   :hint="parameter_hints[item.name]"
+                  :label="api_hints_enabled ? 'plg.fitter_component.' + item.name + ' = ' + boolToString(item.value) : null"
+                  :class="api_hints_enabled ? 'api-hint' : null"
                   persistent-hint>
-                    <template v-slot:label>
+                    <template v-if="!api_hints_enabled" v-slot:label>
                         <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
                           {{ item.name }}
                         </span>
                      </template>
                 </v-switch>
                 <v-text-field v-else
-                    :label="item.name"
+                    :label="api_hints_enabled ? 'plg.fitter_component.' + item.name + ' =' : item.name"
+                    :class="api_hints_enabled ? 'api-hint' : null"
                     v-model.number="item.value"
                     type="number"
                     style="padding-top: 0px; margin-top: 14px; margin-bottom: 10px;"
@@ -394,6 +397,13 @@
       },
       isBoolean(val) {
         return val === false || val === true
+      },
+      boolToString(b) {
+        if (b) {
+          return 'True'
+        } else {
+          return 'False'
+        }
       }
     }
   }

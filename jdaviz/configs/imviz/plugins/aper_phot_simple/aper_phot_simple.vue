@@ -33,7 +33,8 @@
           <v-text-field
             :value="cube_slice"
             class="mt-0 pt-0"
-            label="Slice wavelength"
+            :label="api_hints_enabled ? 'plg.cube_slice' : 'Slice wavelength'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Extracts photometry from currently selected cube slice"
             disabled
           ></v-text-field>

@@ -1,6 +1,7 @@
 <template>
   <j-tray-plugin
     plugin_key="Cross Dispersion Profile"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description"
     :uses_active_status="uses_active_status"
     :keep_active.sync="keep_active"
@@ -18,6 +19,8 @@
       :selected.sync="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the data to compute the profile."
     />
 
@@ -38,7 +41,8 @@
           v-model.number="pixel"
           type="number"
           style="width: 60px"
-          label="Pixel"
+          :label="api_hints_enabled ? 'plg.pixel =' : 'Pixel'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           hide-details
           dense
           single-line
@@ -49,6 +53,8 @@
     <plugin-switch
       :value.sync="use_full_width"
       label="Use full cross-dispersion width."
+      api_hint="plg.use_full_width = "
+      :api_hints_enabled="api_hints_enabled"
       style="font-size: 10px;"
     />
 

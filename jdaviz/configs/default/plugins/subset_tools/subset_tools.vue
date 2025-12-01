@@ -188,9 +188,14 @@
         <plugin-action-button
           :disabled="subset_selected === 'Create New'"
           :results_isolated_to_plugin="false"
+          :api_hints_enabled="api_hints_enabled"
           @click="update_subset"
         >
-          Update
+          {{ api_hints_enabled ?
+            'plg.update_subset()'
+            :
+            'Update'
+          }}
         </plugin-action-button>
       </v-row>
   </j-tray-plugin>
