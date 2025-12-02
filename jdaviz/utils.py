@@ -65,11 +65,11 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
 RA_COMPS = ['rightascension', 'ra', 'radeg', 'radeg',
             'radegrees', 'rightascensiondegrees', 'rightascensiondeg',
             'raobj', 'objra', 'sourcera', 'rasource', 'raj2000', 'ra2000',
-            'worldra']
+            'worldra', 'targ_ra']
 DEC_COMPS = ['declination', 'dec', 'decdeg', 'decdeg',
              'decdegrees', 'declinationdegrees', 'declinationdeg',
              'decobj', 'objdec', 'decsource', 'sourcedec', 'decj2000', 'dec2000',
-             'worlddec']
+             'worlddec', 'targ_dec']
 
 
 class SnackbarQueue:
