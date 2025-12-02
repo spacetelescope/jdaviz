@@ -37,6 +37,7 @@
 
     <v-row v-if="add_to_viewer_items.length === 2">
       <v-switch v-if="label_overwrite"
+        :input-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         :label="addToViewerText"
         :class="api_hints_enabled && add_results_api_hint ? 'api-hint hide-input' : 'hide-input'"
         :disabled="true"
@@ -44,6 +45,7 @@
         persistent-hint
       ></v-switch>
       <v-switch v-else
+        :input-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
         :label="addToViewerText"
         :class="api_hints_enabled && add_results_api_hint ? 'api-hint' : null"
@@ -107,7 +109,7 @@
       },
       addToViewerText() {
         if (this.api_hints_enabled && this.add_results_api_hint) {
-          return this.add_results_api_hint + '.viewer = \'' + this.add_to_viewer_selected+'\'';
+          return this.add_results_api_hint + '.viewer = \'' + this.add_to_viewer_selected + '\'';
         } else {
           return 'Show in ' + this.add_to_viewer_items[1].label;
         }
