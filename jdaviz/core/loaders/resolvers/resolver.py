@@ -492,7 +492,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             self._update_format_items()
             return
 
-        if parsed_input is None or getattr(parsed_input, 'len', lambda: 1)() == 0:
+        if parsed_input is None or getattr(parsed_input, '__len__', lambda: 1)() == 0:
             self.parsed_input_is_empty = True
             self.parsed_input_is_query = False
             self.observation_table_populated = False
@@ -507,7 +507,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         # if the input could be parsed as a table, try to interpret it as
         # either an observation table or file table.  parsed_input_table
         # will be None if it could not be parsed as a table.
-        if parsed_input_table is not None:
+        if self.treat_table_as_query and parsed_input_table is not None:
             file_table = self._parsed_input_to_file_table(parsed_input_table)
             if file_table is not None:
                 self.observation_table._clear_table()
