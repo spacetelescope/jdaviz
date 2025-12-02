@@ -27,7 +27,7 @@
       :api_hints_enabled="api_hints_enabled"
     />
 
-    <div v-if='config == "cubeviz" && is_cube'>
+    <div v-if='is_cube'>
       <v-row class="row-no-outside-padding row-min-bottom-padding">
         <v-col>
           <v-text-field
