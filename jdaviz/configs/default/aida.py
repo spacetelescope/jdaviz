@@ -91,6 +91,9 @@ class AID:
 
         orientation = self.app._jdaviz_helper.plugins.get('Orientation', None)
 
+        if orientation.align_by != 'WCS':
+            raise ValueError("The viewer must be aligned by WCS to use `set_rotation`.")
+
         if isinstance(rotation, (u.Quantity, Angle)):
             rotation = rotation.to_value(u.deg)
         elif not isinstance(rotation, (float, int)):
@@ -98,22 +101,8 @@ class AID:
                 f"`rotation` must be a Quantity or float, got {rotation=}"
             )
 
-        reference_data = self.viewer.state.reference_data
-        if not hasattr(reference_data.coords, 'wcs'):
-            raise ValueError("Viewer must be aligned by WCS to set rotation")
-
-        lonpole = Angle(reference_data.coords.wcs.lonpole, unit=u.deg).wrap_at(360*u.deg).deg
-        # north offset
-        refdata_wcs_rotation_angle = (lonpole - 180) % 360
-        # degrees east of north
-        degn = get_compass_info(reference_data.coords, reference_data.shape)[-3]
-        rotation_angle = (rotation - degn + refdata_wcs_rotation_angle) % 360
-        # account for default degn
-        default_data = self.app.data_collection['Default orientation']
-        default_degn = get_compass_info(
-            default_data.coords, default_data.shape
-        )[-3]
-        rotation_angle = rotation_angle + default_degn
+        degn = orientation._obj._get_wcs_angles()[-3]
+        rotation_angle = (degn + rotation) % 360
 
         label = f'{rotation:.2f} deg east of north'
 
@@ -176,8 +165,13 @@ class AID:
             state.y_max - state.y_min
         )
 
-        if self.viewer.jdaviz_app._align_by != "wcs" or wcs is None:
+        if sky_or_pixel == 'pixel':
             return pixel_fov
+        if not any(c.strip() for c in wcs.wcs.ctype):
+            raise ValueError("The image must have valid WCS to return `fov` in `sky`.")
+
+        if isinstance(wcs, GWCS):
+            wcs = WCS(wcs.to_fits_sip())
 
         # compute the mean of the height and width of the
         # viewer's FOV on ``data`` in world units:
@@ -193,12 +187,12 @@ class AID:
         ]
 
         sky_corners = wcs.pixel_to_world(x_corners, y_corners)
-        height_sky = abs(sky_corners[0].separation(sky_corners[2]))
-        width_sky = abs(sky_corners[0].separation(sky_corners[1]))
+        height_sky = sky_corners[0].separation(sky_corners[2])
+        width_sky = sky_corners[0].separation(sky_corners[1])
 
         current_fov = min([width_sky, height_sky])
 
-        return current_fov if (sky_or_pixel in ("sky", None)) else pixel_fov
+        return current_fov
 
     def _get_current_center(self, sky_or_pixel, image_label=None):
         # center pixel coordinates on the reference data:
