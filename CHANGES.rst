@@ -36,6 +36,8 @@ New Features
 
 - Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
 
+- Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
+
 Cubeviz
 ^^^^^^^
 
