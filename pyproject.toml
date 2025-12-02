@@ -12,7 +12,7 @@ dependencies = [
     "traitlets>=5.0.5",
     "bqplot>=0.12.45,<0.13",
     "glue-core>=1.23.0",
-    "glue-jupyter>=0.25.0",
+    "glue-jupyter @ git+https://github.com/glue-viz/glue-jupyter.git@refs/pull/498/head",
     "echo>=0.11.0",
     "ipykernel>=6.19.4",
     "ipyvue>=1.6",
