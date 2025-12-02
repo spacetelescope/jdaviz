@@ -15,7 +15,7 @@
             v-if="index === 0"
             class="grey--text text-caption"
           >
-            ({{ headers_visible.length}} selected)
+            ({{ headers_visible.length}}/{{  headers_avail.length }} selected)
           </span>
         </template>
         <template v-slot:prepend-item>

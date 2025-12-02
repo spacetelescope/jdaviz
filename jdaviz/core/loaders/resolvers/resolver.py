@@ -527,6 +527,8 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
 
                 for row in observation_table:
                     self.observation_table.add_item(row)
+                self.observation_table.headers_visible = [h for h in self.observation_table.headers_visible # noqa
+                                                          if h not in ['s_region']]
                 self.parsed_input_is_query = True
                 self.observation_table_populated = True
                 self.file_table_populated = False
