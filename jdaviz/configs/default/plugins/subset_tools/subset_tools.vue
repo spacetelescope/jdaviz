@@ -191,11 +191,7 @@
           :api_hints_enabled="api_hints_enabled"
           @click="update_subset"
         >
-          {{ api_hints_enabled ?
-            'plg.update_subset()'
-            :
-            'Update'
-          }}
+          Update
         </plugin-action-button>
       </v-row>
   </j-tray-plugin>
