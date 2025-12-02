@@ -8,6 +8,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from glue.core.roi import CircularROI, EllipticalROI
+from jdaviz.conftest import ipython_kernel_context
 from regions import Regions, CircleSkyRegion
 from specutils import Spectrum, SpectralRegion
 from pathlib import Path
@@ -320,7 +321,7 @@ class TestExportSubsets:
 
 
 @pytest.mark.usefixtures('_jail')
-def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube, ipython_kernel):
+def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube):
     async def mock_queue_screenshot_async(*args, **kwargs):
         return b"test"
 
@@ -329,12 +330,15 @@ def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube, ipython
         cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
 
         ep = cubeviz_helper.plugins["Export"]
+        # this test fails on the next line when we use the ipython_kernel fixture, so
+        # use the ipython_kernel_context context manager
         ep.viewer = 'spectrum-viewer'
         ep.viewer_format = 'png'
-        ep.export()
+        with ipython_kernel_context():
+            ep.export()
 
-        ep.viewer_format = 'svg'
-        ep.export()
+            ep.viewer_format = 'svg'
+            ep.export()
 
 
 @pytest.mark.usefixtures('_jail')

@@ -52,7 +52,6 @@ def serial_task_run_task():
             async def tick():
                 while True:
                     await asyncio.sleep(0.1)
-                    print(".", end="", flush=True)
 
             # not sure why we need this
             event_loop.run_until_complete(tick())

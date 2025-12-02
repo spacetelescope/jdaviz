@@ -3,6 +3,7 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
+import contextlib
 import os
 import warnings
 
@@ -679,6 +680,12 @@ def pytest_configure(config):
 
 @pytest.fixture
 def ipython_kernel():
+    with ipython_kernel_context() as shell:
+        yield shell
+
+
+@contextlib.contextmanager
+def ipython_kernel_context():
     # Clear any existing InteractiveShell singleton to avoid conflicts
     InteractiveShell.clear_instance()
 
