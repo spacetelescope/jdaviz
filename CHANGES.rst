@@ -112,6 +112,7 @@ Cubeviz
 
 Imviz
 ^^^^^
+- Fixes in AIDA methods for retrieving rotation and fov of imviz viewer [#3914]
 
 Mosviz
 ^^^^^^
