@@ -112,7 +112,6 @@ Cubeviz
 
 Imviz
 ^^^^^
-- Fixes in AIDA methods for retrieving rotation and fov of imviz viewer [#3914]
 
 Mosviz
 ^^^^^^
@@ -143,6 +142,8 @@ Imviz
 ^^^^^
 - In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
   The button is now hidden when no selection is made. [#3888]
+
+- Fixes in AIDA methods for retrieving rotation and fov of imviz viewer [#3914]
 
 Mosviz
 ^^^^^^
