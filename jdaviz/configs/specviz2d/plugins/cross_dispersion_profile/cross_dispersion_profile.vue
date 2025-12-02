@@ -10,7 +10,7 @@
     :disabled_msg="disabled_msg"
     :scroll_to.sync="scroll_to">
 
-    <v-row v-if="plot_available" style="padding: 0px"
+    <v-row v-if="plot_available" style="padding: 0px">
       <jupyter-widget :widget="plot_widget"/>
     </v-row>
 
@@ -25,6 +25,9 @@
     />
 
     <v-row>
+      <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
+        plg.pixel =
+      </span>
       <v-col cols="9" style="padding: 0px">
         <v-slider
           :min="0"
@@ -34,6 +37,7 @@
           hint="Pixel on spectral axis."
           persistent-hint
         >
+        </v-slider>
       </v-col>
 
       <v-col cols="3" style="padding: 7px">
@@ -41,8 +45,7 @@
           v-model.number="pixel"
           type="number"
           style="width: 60px"
-          :label="api_hints_enabled ? 'plg.pixel =' : 'Pixel'"
-          :class="api_hints_enabled ? 'api-hint' : null"
+          label="Pixel"
           hide-details
           dense
           single-line
@@ -60,6 +63,9 @@
 
     <div v-if="!use_full_width">
       <v-row>
+        <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
+          plg.y_pixel =
+        </span>
         <v-col cols="9" style="padding: 0px">
           <v-slider
             :min="0"
@@ -69,6 +75,7 @@
             hint="Center of profile on cross-dispersion axis."
             persistent-hint
           >
+          </v-slider>
         </v-col>
 
         <v-col cols="3" style="padding: 7px">
@@ -85,6 +92,9 @@
     </v-row>
 
       <v-row>
+        <span v-if="api_hints_enabled" class="api-hint" style="font-size: 10px">
+          plg.width =
+        </span>
         <v-col cols="9" style="padding: 0px">
           <v-slider
             :min="0"
@@ -94,6 +104,7 @@
             hint="Width in cross-dispersion axis, in pixels."
             persistent-hint
           >
+          </v-slider>
         </v-col>
 
         <v-col cols="3" style="padding: 7px">
@@ -108,8 +119,6 @@
           />
         </v-col>
       </v-row>
-    </div>
-
     </div>
 
   </j-tray-plugin>
