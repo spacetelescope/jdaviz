@@ -198,7 +198,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                   'export_table', 'fitted_models', 'current_plot_type',
                   'fit_radial_profile', 'plot')
 
-        return PluginUserApi(self, expose=expose, readonly=('cube_slice',))
+        if self.config == 'Imviz':
+            return PluginUserApi(self, expose=expose)
+        else:
+            return PluginUserApi(self, expose=expose, readonly=('cube_slice',))
 
     @property
     def fitted_models(self):
