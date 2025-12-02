@@ -20,7 +20,9 @@ class ASDFParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'rampviz'):
+        if self.app.config not in ('deconfigged', 'imviz',
+                                   'specviz', 'specviz2d',
+                                   'rampviz'):
             # NOTE: temporary during deconfig process
             return False
 
