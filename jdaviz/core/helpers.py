@@ -247,9 +247,14 @@ class ConfigHelper(HubListener):
 
         msg_temp = "in the future, the formerly named \"{}\" plugin will only be available by its new name: \"{}\""  # noqa
 
-        old_new = (('Imviz Line Profiles (XY)', 'Image Profiles (XY)'),  # renamed in 4.0
+        old_new = [('Imviz Line Profiles (XY)', 'Image Profiles (XY)'),  # renamed in 4.0
                    ('Spectral Extraction', '2D Spectral Extraction'),  # renamed in 4.3
-                   ('Spectral Extraction', '3D Spectral Extraction'))  # renamed in 4.3
+                   ('Spectral Extraction', '3D Spectral Extraction')]  # renamed in 4.3
+
+        if self.app.config == 'cubeviz':
+            old_new.append(('Slice', 'Spectral Slice'))  # renamed in 4.5
+        elif self.app.config == 'rampviz':
+            old_new.append(('Slice', 'Ramp Slice'))  # renamed in 4.5
 
         # handle renamed plugins during deprecation
         for old, new in old_new:
@@ -1047,7 +1052,7 @@ class CubeConfigHelper(ImageConfigHelper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @deprecated(since="4.1", alternative="plugins['Slice'].slice")
+    @deprecated(since="4.1", alternative="plugins['Spectral Slice'].slice")
     def select_slice(self, value):
         """
         Select the slice closest to the provided value.
