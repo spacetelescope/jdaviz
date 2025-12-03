@@ -243,7 +243,6 @@ def test_manga_with_mask(cubeviz_helper):
     for function, expected_value in [('Mean', 5.566169e-18),
                                      ('Sum', 1.553518e-14),
                                      ('Max', 1e20)]:
-
         se.function = function
         se.extract()
         extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()
