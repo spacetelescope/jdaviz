@@ -229,7 +229,7 @@ def test_loading_with_mask(cubeviz_helper):
 
 
 @pytest.mark.remote_data
-def test_manga_with_mask(cubeviz_helper, function, expected_value):
+def test_manga_with_mask(cubeviz_helper):
     # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
     # This also tests that spaxel is converted to pix**2
     with warnings.catch_warnings():
