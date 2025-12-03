@@ -140,8 +140,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     assert_quantity_allclose(qtab['Declination'], sc.dec.deg * u.deg)
 
     # cast data collection X/Y back to strings for comparison
-    assert np.all(qtab['X'].astype(str) == catalog_obj['X'])
-    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'])
+    assert np.all(qtab['X'].astype(str) == catalog_obj['X'].astype(str))
+    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'].astype(str))
 
 
 @pytest.mark.parametrize("from_file", [True, False])
