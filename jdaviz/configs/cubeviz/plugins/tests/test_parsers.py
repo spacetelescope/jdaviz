@@ -229,14 +229,6 @@ def test_loading_with_mask(cubeviz_helper):
 
 
 @pytest.mark.remote_data
-@pytest.mark.parametrize(
-    'function, expected_value,',
-    (
-        ('Mean', 5.566169e-18),
-        ('Sum', 1.553518e-14),
-        ('Max', 1e20),
-    )
-)
 def test_manga_with_mask(cubeviz_helper, function, expected_value):
     # Remote data test of loading and extracting an up-to-date (as of 11/19/2024) MaNGA cube
     # This also tests that spaxel is converted to pix**2
@@ -248,14 +240,18 @@ def test_manga_with_mask(cubeviz_helper, function, expected_value):
     uc.spectral_y_type = "Surface Brightness"
 
     se = cubeviz_helper.plugins['3D Spectral Extraction']
-    se.function = function
-    se.extract()
-    extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()
-    assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
-    if function == "Sum":
-        assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")
-    else:
-        assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
+    for function, expected_value in [('Mean', 5.566169e-18),
+                                     ('Sum', 1.553518e-14),
+                                     ('Max', 1e20)]:
+
+        se.function = function
+        se.extract()
+        extracted_max = cubeviz_helper.get_data(f"Spectrum ({function.lower()})").max()
+        assert_allclose(extracted_max.value, expected_value, rtol=5e-7)
+        if function == "Sum":
+            assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2")
+        else:
+            assert extracted_max.unit == u.Unit("erg / Angstrom s cm**2 pix**2")
 
 
 def test_invalid_data_types(cubeviz_helper):
