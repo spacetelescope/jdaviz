@@ -446,20 +446,24 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
 
 
 @pytest.mark.remote_data
-def test_roman_1d_spectrum(deconfigged_helper):
-    ldr = deconfigged_helper.loaders['url']
+@pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz_helper'])
+def test_roman_1d_spectrum(helper, request):
+    helper = request.getfixturevalue(helper)
+    ldr = helper.loaders['url']
     # wfi_spec_combined_1d_r0000201001001001001_0002_WFI01.asdf
     ldr.url = 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf'
     assert len(ldr.importer.extension.choices) > 1
     ldr.format = '1D Spectrum'
 
     ldr.load()
-    assert len(deconfigged_helper.app.data_collection) == 1
+    assert len(helper.app.data_collection) == 1
 
 
 @pytest.mark.remote_data
-def test_roman_2d_spectrum(deconfigged_helper):
-    ldr = deconfigged_helper.loaders['url']
+@pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz2d_helper'])
+def test_roman_2d_spectrum(helper, request):
+    helper = request.getfixturevalue(helper)
+    ldr = helper.loaders['url']
     # wfi_spec_decontaminated_2d_r0000201001001001001_0002_WFI01.asdf
     ldr.url = 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'
     assert len(ldr.importer.extension.choices) > 1
@@ -467,4 +471,4 @@ def test_roman_2d_spectrum(deconfigged_helper):
 
     ldr.load()
     # 2D spectrum and auto-extracted 1D spectrum
-    assert len(deconfigged_helper.app.data_collection) == 2
+    assert len(helper.app.data_collection) == 2
