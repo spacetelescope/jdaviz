@@ -718,7 +718,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 raise ImportError("Please install opencv-python")
             raise ValueError("movie support disabled")
 
-        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        slice_plg = self.app._jdaviz_helper.plugins["Spectral Slice"]._obj
         orig_slice = viewer.slice
         temp_png_files = []
         i = i_start
@@ -842,7 +842,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             i_end = int(self.i_end)
 
         # No wrapping. Forward only.
-        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        slice_plg = self.app._jdaviz_helper.plugins["Spectral Slice"]._obj
         if i_start < 0:  # pragma: no cover
             i_start = 0
         max_slice = len(slice_plg.valid_values_sorted) - 1
