@@ -125,7 +125,7 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759]
+- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759, #3914]
 
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
 
@@ -142,8 +142,6 @@ Imviz
 ^^^^^
 - In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
   The button is now hidden when no selection is made. [#3888]
-
-- Fixes in AIDA methods for retrieving rotation and fov of imviz viewer [#3914]
 
 Mosviz
 ^^^^^^
