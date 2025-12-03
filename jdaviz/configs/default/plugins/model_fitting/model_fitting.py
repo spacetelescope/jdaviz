@@ -157,7 +157,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                 ' non-finite values (e.g., NaNs)',
                                 'calc_uncertainties': 'Whether the covariance matrix should be'
                                 ' computed and set in fit_info',
-                                's': 'Smoothing factor for SplineSmoothingFitter', }
+                                'smoothing_factor': 'Smoothing factor for SplineSmoothingFitter', }
         self.all_fitters = {
             'TRFLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},
                                             {'name': 'filter_non_finite', 'value': True, 'type': 'call'},  # noqa
@@ -175,7 +175,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             'SLSQPLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
             'SimplexLSQFitter': {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'}]},
             'SplineSmoothingFitter' : {'parameters': [{'name': 'maxiter', 'value': 100, 'type': 'call'},  # noqa
-                                                      {'name': 'smoothing_factor', 'value': 1.0, 'type': 'call'},  # noqa
+                                                      {'name': 'smoothing_factor', 'value': None, 'type': 'call'},  # noqa
                                                       {'name': 'degree', 'value': 3.0, 'type': 'call'},]},  # noqa
             }
         self.fitter_items = [{"label": k, "value": k} for k in self.all_fitters.keys()]
@@ -536,6 +536,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             ]
             self.fitter_selected = "SplineSmoothingFitter"
             self.fitter_parameters = self.all_fitters["SplineSmoothingFitter"]
+
             if self.cube_fit:
                 self.cube_fit = False
         else:
@@ -1431,8 +1432,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # skip specutils.fit_lines, which assumes scalar model parameters.
         # Spline1D has no scalar parameters, so skip specutils.fit_lines
         if len(models_to_fit) == 1 and models_to_fit[0].__class__.__name__ == "Spline1D":
-            s_val = kw.get("smoothing_factor", 1.0)
-            s_val = max(1.0, min(5.0, s_val))
             smoother = fitting.SplineSmoothingFitter()
 
             mspec = masked_spectrum
@@ -1468,6 +1467,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             order = np.argsort(x_fit)
             x_fit = x_fit[order]
             y_fit = y_fit[order]
+
+            s_param = None
+            for p in self.fitter_parameters['parameters']:
+                if p['name'] == 'smoothing_factor':
+                    s_param = p
+                    break
+
+            if s_param is None or s_param['value'] in (None, ''):
+                s_val = x_fit.size
+            else:
+                s_val = s_param['value']
 
             deg = kw.get("degree", getattr(models_to_fit[0], "degree", 3))
             if x_fit.size <= deg:

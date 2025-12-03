@@ -111,6 +111,22 @@ will additionally show the standard deviation uncertainty of the fitted
 parameter value if the parameter was not set to be fixed to the initial value
 and if the spectrum uncertainty was loaded.
 
+.. note::
+
+   When a ``Spline1D`` model is selected, the plugin uses
+   ``SplineSmoothingFitter`` to compute the fit.  
+   The initial value of the smoothing factor is automatically set to the
+   length of the selected dataset (``len(data)``).  
+
+   For more accurate spline fitting, Astropy documentation recommends
+   setting the smoothing factor to::
+
+       len(data) * (standard_deviation(data))**2
+
+   See the Astropy spline modeling guide for details:
+   https://docs.astropy.org/en/stable/modeling/spline_models.html
+
+
 From the API
 ------------
 
