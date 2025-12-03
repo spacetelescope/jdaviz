@@ -83,7 +83,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
 
-    # rotation angle, counterclockwise [degrees]
+    # this `rotation_angle` traitlet contains the contents of
+    # the orientation plugin's `Rotation angle` user input textbox,
+    # it is *not* necessarily the current rotation state of the viewer
     rotation_angle = FloatHandleEmpty(0).tag(sync=True)
     east_left = Bool(True).tag(sync=True)  # set convention for east left of north
 
