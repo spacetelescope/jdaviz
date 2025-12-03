@@ -464,16 +464,16 @@ class TestExportPluginPlots:
 
         # Set filename value using OS-independent Path methods
         export_plugin.filename_value = str(Path('/') / 'img.png')
-        assert os.path.abspath(export_plugin.default_filepath) == os.path.abspath(export_plugin.filename_value)  # noqa: E501
+        assert os.path.abspath(export_plugin.filepath) == os.path.abspath(export_plugin.filename_value)  # noqa: E501
 
         export_plugin.filename_value = str(Path('~') / 'img.png')
         expected_path = str(Path('~').expanduser() / 'img.png')
-        assert export_plugin.default_filepath == expected_path
+        assert export_plugin.filepath == expected_path
 
         export_plugin.filename_value = str(Path('..') / 'img.png')
         expected_path = str((Path('..') / 'img.png').resolve())
-        assert export_plugin.default_filepath == expected_path
+        assert export_plugin.filepath == expected_path
 
         export_plugin.filename_value = str(Path('.') / 'img.png')
         expected_path = str((Path('.') / 'img.png').resolve())
-        assert export_plugin.default_filepath == expected_path
+        assert export_plugin.filepath == expected_path
