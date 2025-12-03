@@ -2,12 +2,12 @@ import warnings
 
 import pytest
 
-from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
+from jdaviz.configs.cubeviz.plugins.slice.slice import SpectralSlice
 
 
 def test_slice(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
-    sl = Slice(app=app)
+    sl = SpectralSlice(app=app)
 
     # No data yet
     assert len(sl.slice_selection_viewers) == 2  # flux-viewer, uncert-viewer
