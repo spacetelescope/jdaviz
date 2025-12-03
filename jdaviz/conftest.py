@@ -8,8 +8,6 @@ import warnings
 
 import numpy as np
 import pytest
-from pytest import ExceptionInfo
-
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
@@ -37,20 +35,6 @@ if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
 
 SPECTRUM_SIZE = 10  # length of spectrum
-
-
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    # Source - https://stackoverflow.com/
-    # Posted by Andrew Volodko
-    # Retrieved 2025-12-02, License - CC BY-SA 4.0
-    outcome = yield
-    rep = outcome.get_result()
-    setattr(item, "rep_" + rep.when, rep)
-
-    # Remove exception info, since it causes excessive memory usage and workers crash
-    if call.excinfo and isinstance(call.excinfo, ExceptionInfo):
-        call.excinfo = None
 
 
 @pytest.fixture
