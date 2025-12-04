@@ -340,8 +340,10 @@ span.api-hint-header {
   color: #C6F0FD !important;
 }
 
-/* More specific: only hide if the v-icon text is 'filter_list' */
-.v-data-table .v-btn .v-icon:contains('filter_list') {
-  display: none;
+/* Hide filter button in v-data-table header */
+.v-data-table-header .v-btn:has(.v-icon),
+.v-data-table th .v-btn:has(.v-icon) {
+  display: none !important;
 }
+
 </style>
