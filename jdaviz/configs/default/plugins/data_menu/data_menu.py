@@ -409,15 +409,48 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             label_order = [li['label'] for li in event["new"] if li['is_subset'] is not None]
             not_in_order = [layer.layer.label for layer in self._viewer.layers if layer.layer.label
                             not in label_order]
-
+            
+            print('\n\t\tlabel_order:', label_order)
+            print('\n\t\tnot_in_order:', not_in_order)
+            children_blocks = []
+            data_and_children = []
+            def _return_zorder_of_layers(layers):
+                return [x['zorder'] for x in self.layer_items if x['label'] in layers]
+            for data in self.app.data_collection:
+                if self.app._get_assoc_data_children(data.label):
+                    data_and_children.append(data.label)
+                    data_and_children += self.app._get_assoc_data_children(data.label)
+                    children_blocks.append(_return_zorder_of_layers([data.label] +
+                                                self.app._get_assoc_data_children(data.label)))
+            print(f'\n\t\tData and children for {data_and_children}:', children_blocks)
+            # print('\n\t\told event layers zorders:', event['old'])
+            old_layers = {item['label']: item['zorder'] for item in event['old']}
             for layer in self._viewer.layers:
+                # print('Changing zorder of', layer.layer.label, 'from', layer.zorder, 'to', new_zorder)  # noqa
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
+                    if layer.layer.label not in data_and_children:
+                        print(layer.layer.label, 'is not in data and children')
+                        for x in children_blocks:
+                            if min(x) <= new_zorder <= max(x):
+                                print('x is ', x, 'new_zorder is ', new_zorder, 'layer order is ', layer.zorder)  # noqa    
+                                if new_zorder < old_layers[layer.layer.label]:
+                                    print('new zorder should be ', min(x))
+                                    new_zorder = min(x) - 0.5
+                                else:
+                                    # new_zorder = max(x) + 0.5
+                                    print('new zorder should be ', max(x))
+                                    new_zorder = max(x) + 0.5
+                        # new_zorder = [min(x) if new_zorder < layer.zorder else max(x) for x in children_blocks if new_zorder in x][0]
+                        print('!!!!!!!!! new zorder adjusted to ', new_zorder, 'for', layer.layer.label)
                 else:
                     new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
 
                 if new_zorder != layer.zorder:
+                    print('Changing zorder of', layer.layer.label, 'from', layer.zorder, 'to', new_zorder)  # noqa
                     layer.zorder = new_zorder
+                    print('\n\nAfter change zorders in glue layers:', [(l.layer.label, l.zorder) for l in self._viewer.layers])
+                    self.layer._update_items()
 
             self.prevent_layer_items_recursion = False
 

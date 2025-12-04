@@ -168,6 +168,7 @@
                     v-for="item in layer_items"
                     :key="item.label"
                     class="layer-select"
+                    :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
                     @dragstart="onDragStart($event)"
                     @dragend="onDragEnd"
                   >
