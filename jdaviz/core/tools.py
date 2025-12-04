@@ -379,6 +379,7 @@ class TableSubset(Tool):
             return False
         return len(self.viewer.widget_table.checked) > 0
 
+
 @viewer_tool
 class SelectLine(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
