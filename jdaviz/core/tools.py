@@ -359,6 +359,25 @@ class ViewerClone(Tool):
 
 
 @viewer_tool
+class TableSubset(Tool):
+    icon = os.path.join(ICON_DIR, 'table_subset.svg')
+    tool_id = 'jdaviz:table_subset'
+    action_text = 'Create subset from table selection'
+    tool_tip = 'Create a new subset based on the current table selection'
+
+    def activate(self):
+        if not len(self.viewer.widget_table.checked):
+            return
+        self.viewer.apply_filter()
+
+    def is_visible(self):
+        if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
+                                                     'cubeviz', 'mosviz',
+                                                     'rampviz']:
+            return False
+        return True
+
+@viewer_tool
 class SelectLine(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'
