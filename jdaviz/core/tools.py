@@ -394,6 +394,9 @@ class TableZoomToSelected(Tool):
 
         padding = 0.02
 
+        ras = self.viewer.layers[0].layer.get_component('Right Ascension').data[selected_rows]
+        decs = self.viewer.layers[0].layer.get_component('Declination').data[selected_rows]
+
         for viewer in self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
             i_top = get_top_layer_index(viewer)
             image = viewer.layers[i_top].layer
@@ -401,31 +404,17 @@ class TableZoomToSelected(Tool):
             x_max = -99999
             y_min = 99999
             y_max = -99999
-            for coord in selected_rows:  # list of dict
-                cur_x, cur_y = viewer._get_real_xy(
-                    image, float(coord['x_coord']), float(coord['y_coord']))[:2]
-                if cur_x < x_min:
-                    x_min = cur_x
-                if cur_x > x_max:
-                    x_max = cur_x
-                if cur_y < y_min:
-                    y_min = cur_y
-                if cur_y > y_max:
-                    y_max = cur_y
 
-            if x_min == x_max and y_min == y_max:  # Only one selected
-                pass
-            elif x_min >= x_max or y_min >= y_max:
-                raise ValueError(
-                    f"Zoom failed: x_min={x_min}, x_max={x_max}, y_min={y_min}, y_max={y_max}")
+            # map RA, Dec onto axes coordinates
+            xs, ys = viewer.state.reference_data.coords.world_to_pixel_values(ras, decs)
+            x_min, x_max = np.nanmin(xs), np.nanmax(xs)
+            y_min, y_max = np.nanmin(ys), np.nanmax(ys)
 
             pix_pad = padding * max(x_max, y_max)
             x_min -= pix_pad
             x_max += pix_pad
             y_min -= pix_pad
             y_max += pix_pad
-            new_y_min = viewer._get_real_xy(image, x_min, y_min, reverse=True)[1]
-            new_y_max = viewer._get_real_xy(image, x_max, y_max, reverse=True)[1]
 
             # First, we center using image's coordinates.
             viewer.center_on((0.5 * (x_min + x_max), 0.5 * (y_min + y_max)))
@@ -435,19 +424,21 @@ class TableZoomToSelected(Tool):
             # Given most displays are wider in X, we make sure Y coordinates all fit first
             # and X will naturally all fit within after aspect ratio is taken into account.
             with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                viewer.state.y_min = new_y_min
-                viewer.state.y_max = new_y_max
+                viewer.state.y_min = y_min
+                viewer.state.y_max = y_max
             viewer.state._adjust_limits_aspect()
-
 
     def is_visible(self):
         if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
                                                      'cubeviz', 'mosviz',
                                                      'rampviz']:
             return False
+        if not len(self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView')):
+            return False
         if not hasattr(self.viewer, 'widget_table'):
             return False
         return len(self.viewer.widget_table.checked) > 0
+
 
 @viewer_tool
 class SelectLine(CheckableTool, HubListener):
