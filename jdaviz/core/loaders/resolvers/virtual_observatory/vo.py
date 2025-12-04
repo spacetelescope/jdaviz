@@ -1,10 +1,9 @@
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from pyvo.utils import vocabularies
+from pyvo.utils import vocabularies  # noqa: F401
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError, DALQueryError
-from pyvo.utils.vocabularies import VocabularyError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Any, List, observe
 
@@ -38,12 +37,13 @@ class VOResolver(BaseConeSearchResolver):
         self.waveband = SelectPluginComponent(
             self, items="waveband_items", selected="waveband_selected"
         )
-        try:
-            self.waveband.choices = (
-                w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
-            )
-        except VocabularyError:
-            self.waveband.choices = []
+        '''
+        # Temporarily disabled while IVOA servers are apparently misconfigured
+        self.waveband.choices = (
+            w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
+        )
+        '''
+        self.waveband.choices = ["",]
 
         self.waveband_selected = ""
 
