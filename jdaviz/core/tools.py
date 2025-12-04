@@ -375,7 +375,9 @@ class TableSubset(Tool):
                                                      'cubeviz', 'mosviz',
                                                      'rampviz']:
             return False
-        return True
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return len(self.viewer.widget_table.checked) > 0
 
 @viewer_tool
 class SelectLine(CheckableTool, HubListener):
