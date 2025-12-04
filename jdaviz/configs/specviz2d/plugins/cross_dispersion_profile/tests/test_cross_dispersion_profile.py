@@ -25,7 +25,7 @@ def test_cross_dispersion_profile(helper, request):
     helper.load(data, format='2D Spectrum')
 
     cdp = helper.plugins['Cross Dispersion Profile']
-    cdp.open_in_tray()
+    cdp.keep_active = True
 
     fitter = LevMarLSQFitter()
     model = Gaussian1D()
@@ -38,8 +38,8 @@ def test_cross_dispersion_profile(helper, request):
 
     # check that 2d spectrum viewer marks marks (vertical line with scatter)
     # are in the correct starting location
-    assert np.all(cdp._obj.marks['2d']['pix'].x == 12)
-    assert np.all(cdp._obj.marks['2d']['y_pix'].y == 5)
+    assert np.all(cdp._obj.marks['2d']['pix'].marks_list[0].x == 12)
+    assert np.all(cdp._obj.marks['2d']['y_pix'].marks_list[0].y == 5)
 
     # make sure the profile at row 12 is a gaussian with amp. 12, as the test
     # data was designed
@@ -55,19 +55,19 @@ def test_cross_dispersion_profile(helper, request):
     fit = fitter(model, y, profile_13)
     assert fit.amplitude == 13 * u.Jy
     assert fit.mean == 5
-    assert np.all(cdp._obj.marks['2d']['pix'].x == 13)
-    assert np.all(cdp._obj.marks['2d']['y_pix'].y == 5)
+    assert np.all(cdp._obj.marks['2d']['pix'].marks_list[0].x == 13)
+    assert np.all(cdp._obj.marks['2d']['y_pix'].marks_list[0].y == 5)
 
     # and now adjust the width, and make sure the profile and
     # marks changed accordingly
     cdp.use_full_width = False
     cdp.width = 5
     assert len(cdp.profile) == 5
-    assert len(cdp._obj.marks['2d']['pix'].y) == 5
+    assert len(cdp._obj.marks['2d']['pix'].marks_list[0].y) == 5
     cdp.width = 7
     prev_profile = cdp.profile  # save profile to compare after unit conversions
     assert len(cdp.profile) == 7
-    assert len(cdp._obj.marks['2d']['pix'].y) == 7
+    assert len(cdp._obj.marks['2d']['pix'].marks_list[0].y) == 7
 
     # test flux unit conversion
     uc = helper.plugins['Unit Conversion']
