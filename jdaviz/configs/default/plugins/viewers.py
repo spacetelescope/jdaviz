@@ -173,7 +173,8 @@ class JdavizViewerMixin(WithCache):
         for layer in self.data_menu.data_labels_loaded[::-1]:
             visible = layer in visible_layers
             new_viewer.data_menu.add_data(layer)
-            new_viewer.data_menu.set_layer_visibility(layer, visible)
+            if hasattr(new_viewer.data_menu, 'set_layer_visibility'):
+                new_viewer.data_menu.set_layer_visibility(layer, visible)
             # TODO: don't revert color when adding same data to a new viewer
 
         # allow viewers to set attributes (not in state) on cloned viewers
