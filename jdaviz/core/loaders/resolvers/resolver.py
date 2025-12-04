@@ -1014,14 +1014,20 @@ class BaseConeSearchResolver(BaseResolver):
                 )
             else:
                 # If not subscribed anyways, remove_callback should produce a no-op
-                viewer.state.remove_callback(
-                    "zoom_center_x",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
-                viewer.state.remove_callback(
-                    "zoom_center_y",
-                    lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
-                )
+                try:
+                    viewer.state.remove_callback(
+                        "zoom_center_x",
+                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                    )
+                except TypeError:
+                    pass
+                try:
+                    viewer.state.remove_callback(
+                        "zoom_center_y",
+                        lambda callback: self.vue_center_on_data(user_zoom_trigger=True),
+                    )
+                except TypeError:
+                    pass
         self.vue_center_on_data()
 
     @observe("coord_follow_viewer_pan", type="change")
