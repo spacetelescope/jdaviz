@@ -20,7 +20,8 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['CrossDispersionProfile']
 
 
-@tray_registry('cross-dispersion-profile', label="Cross Dispersion Profile")
+@tray_registry('cross-dispersion-profile', label="Cross Dispersion Profile",
+               category="data:analysis")
 class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
     """
     The Cross Dispersion Profile plugin allows for visualizaion of the
@@ -112,6 +113,10 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                                        'right': 15}
         self.plot.viewer.axis_y.tick_format = '0.1e'
         self.plot.viewer.axis_y.label_offset = '50px'
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
 
     @property
     def user_api(self):
