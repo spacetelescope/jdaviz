@@ -72,6 +72,8 @@ Specviz2d
 
 - Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
 
+- Generalized cross-dispersion profile plugin to be compatible with the deconfigged jdaviz instance. [#3928]
+
 Rampviz
 ^^^^^^^
 
