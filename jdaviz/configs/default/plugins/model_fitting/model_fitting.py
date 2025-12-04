@@ -469,7 +469,23 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe('fitter_selected')
     def _update_fitter_component_msg(self, event={}):
         self.fitter_parameters = self.all_fitters[event['new']]
+        if event['new'] == 'SplineSmoothingFitter':
+            self._initialize_smoothing_factor()
         self._update_fitter_error()
+
+    def _initialize_smoothing_factor(self):
+        spec = self.dataset.get_selected_spectrum(use_display_units=True)
+        y = np.asarray(getattr(spec.flux, "value", spec.flux))
+        finite = np.isfinite(y)
+        n = int(finite.sum())
+        sigma = float(np.nanstd(y[finite])) if n > 0 else 0.0
+        auto_s = float(n * sigma**2)
+
+        for p in self.fitter_parameters['parameters']:
+            if p['name'] == 'smoothing_factor':
+                p['value'] = auto_s
+                break
+        self.send_state('fitter_parameters')
 
     @observe('fitter_parameters')
     def _update_fitter_parameters(self, event={}):
@@ -1468,23 +1484,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             x_fit = x_fit[order]
             y_fit = y_fit[order]
 
-            s_param = None
-            for p in self.fitter_parameters['parameters']:
-                if p['name'] == 'smoothing_factor':
-                    s_param = p
-                    break
-
-            if s_param is None or s_param['value'] in (None, ''):
-                s_val = x_fit.size
-            else:
-                s_val = s_param['value']
-
             deg = kw.get("degree", getattr(models_to_fit[0], "degree", 3))
             if x_fit.size <= deg:
                 raise ValueError(
                     f"Spline1D fit requires more than degree ({deg}) sample points; "
                     f"got {x_fit.size}"
                 )
+            s_val = kw.get("smoothing_factor", None)
 
             fitted_model = smoother(models_to_fit[0], x_fit, y_fit, s=s_val)
             fitted_model.name = getattr(models_to_fit[0], "name", fitted_model.name)

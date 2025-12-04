@@ -115,15 +115,11 @@ and if the spectrum uncertainty was loaded.
 
    When a ``Spline1D`` model is selected, the plugin uses
    ``SplineSmoothingFitter`` to compute the fit.  
-   The initial value of the smoothing factor is automatically set to the
-   length of the selected dataset (``len(data)``).  
+   The initial value of the smoothing factor is automatically set to:
+   (``len(data) * (standard_deviation(data))**2``).  
 
-   For more accurate spline fitting, Astropy documentation recommends
-   setting the smoothing factor to::
-
-       len(data) * (standard_deviation(data))**2
-
-   See the Astropy spline modeling guide for details:
+   For more accurate spline fitting, refer to the Astropy spline modeling documentation
+   to set the smoothing factor manually:
    https://docs.astropy.org/en/stable/modeling/spline_models.html
 
 
