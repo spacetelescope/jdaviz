@@ -118,7 +118,6 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
-
     @property
     def user_api(self):
         expose = ('dataset', 'pixel', 'y_pixel', 'use_full_width', 'width',

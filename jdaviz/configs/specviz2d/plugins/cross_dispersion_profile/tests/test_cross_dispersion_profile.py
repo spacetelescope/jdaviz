@@ -7,7 +7,7 @@ import pytest
 from specutils import Spectrum
 
 
-@pytest.mark.parametrize("helper", ('specviz2d_helper', 'deconfigged_helper')))
+@pytest.mark.parametrize("helper", ('specviz2d_helper', 'deconfigged_helper'))
 def test_cross_dispersion_profile(helper, request):
     """Tests the basic functionality of the cross dispersion profile plugin."""
     helper = request.getfixturevalue(helper)
