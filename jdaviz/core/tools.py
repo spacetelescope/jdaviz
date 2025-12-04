@@ -21,6 +21,7 @@ from jdaviz.core.events import (LineIdentifyMessage, SpectralMarksChangedMessage
                                 CatalogSelectClickEventMessage, FootprintSelectClickEventMessage,
                                 FootprintOverlayClickMessage)
 from jdaviz.core.marks import SpectralLine, FootprintOverlay, RegionOverlay
+from jdaviz.utils import get_top_layer_index
 
 __all__ = []
 
@@ -377,6 +378,76 @@ class TableSubset(Tool):
             return False
         return len(self.viewer.widget_table.checked) > 0
 
+
+@viewer_tool
+class TableZoomToSelected(Tool):
+    icon = os.path.join(ICON_DIR, 'table_zoom_to_selected.svg')
+    tool_id = 'jdaviz:table_zoom_to_selected'
+    action_text = 'Zoom to selected'
+    tool_tip = 'Zoom all applicable viewers to the selected entries in the table'
+
+    def activate(self):
+        selected_rows = self.viewer.widget_table.checked
+
+        if not len(selected_rows):
+            return
+
+        padding = 0.02
+
+        for viewer in self.viewer.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            i_top = get_top_layer_index(viewer)
+            image = viewer.layers[i_top].layer
+            x_min = 99999
+            x_max = -99999
+            y_min = 99999
+            y_max = -99999
+            for coord in selected_rows:  # list of dict
+                cur_x, cur_y = viewer._get_real_xy(
+                    image, float(coord['x_coord']), float(coord['y_coord']))[:2]
+                if cur_x < x_min:
+                    x_min = cur_x
+                if cur_x > x_max:
+                    x_max = cur_x
+                if cur_y < y_min:
+                    y_min = cur_y
+                if cur_y > y_max:
+                    y_max = cur_y
+
+            if x_min == x_max and y_min == y_max:  # Only one selected
+                pass
+            elif x_min >= x_max or y_min >= y_max:
+                raise ValueError(
+                    f"Zoom failed: x_min={x_min}, x_max={x_max}, y_min={y_min}, y_max={y_max}")
+
+            pix_pad = padding * max(x_max, y_max)
+            x_min -= pix_pad
+            x_max += pix_pad
+            y_min -= pix_pad
+            y_max += pix_pad
+            new_y_min = viewer._get_real_xy(image, x_min, y_min, reverse=True)[1]
+            new_y_max = viewer._get_real_xy(image, x_max, y_max, reverse=True)[1]
+
+            # First, we center using image's coordinates.
+            viewer.center_on((0.5 * (x_min + x_max), 0.5 * (y_min + y_max)))
+
+            # Then, we zoom using reference data's coordinates. This is important when WCS linked.
+            # We cannot use viewer.zoom_level because it is wonky when WCS linked.
+            # Given most displays are wider in X, we make sure Y coordinates all fit first
+            # and X will naturally all fit within after aspect ratio is taken into account.
+            with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+                viewer.state.y_min = new_y_min
+                viewer.state.y_max = new_y_max
+            viewer.state._adjust_limits_aspect()
+
+
+    def is_visible(self):
+        if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
+                                                     'cubeviz', 'mosviz',
+                                                     'rampviz']:
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return len(self.viewer.widget_table.checked) > 0
 
 @viewer_tool
 class SelectLine(CheckableTool, HubListener):

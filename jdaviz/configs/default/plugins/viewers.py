@@ -1113,6 +1113,7 @@ class HistogramViewer(JdavizViewerMixin, BqplotHistogramView):
 class JdavizTableViewer(JdavizViewerMixin, TableViewer):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
+                    ['jdaviz:table_zoom_to_selected'],
                     ['jdaviz:table_subset'],
                     ['jdaviz:viewer_clone']
                    ]
