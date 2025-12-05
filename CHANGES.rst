@@ -129,6 +129,8 @@ Other Changes and Additions
 
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
 
+- Fix missing user API and API hint entries in plugins. [#3900, #3918]
+
 4.4.3 (unreleased)
 ==================
 
