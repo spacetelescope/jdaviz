@@ -1578,7 +1578,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         Examples
         --------
-        >>> plugin = specviz_helper.plugins['Model Fitting']
+        >>> from jdaviz import Specviz
+        >>> specviz = Specviz()
+        >>> plugin = specviz.plugins['Model Fitting']
         >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
         >>> max_iterations = plugin.get_fitter_parameter('maxiter')
         >>> print(max_iterations)
@@ -1607,12 +1609,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             (available for most fitters)
             * ``calc_uncertainties`` : Whether to calculate uncertainties
             (available for most fitters)
+
         value : int, float, or bool
             The new value for the parameter. The type should match the parameter's expected type.
 
         Examples
         --------
-        >>> plugin = specviz_helper.plugins['Model Fitting']
+        >>> from jdaviz import Specviz
+        >>> specviz = Specviz()
+        >>> plugin = specviz.plugins['Model Fitting']
         >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
         >>> plugin.set_fitter_parameter('maxiter', 200)
         >>> plugin.set_fitter_parameter('filter_non_finite', False)
