@@ -28,7 +28,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
         if self.app.state.catalogs_in_dc:
             manual_options = ['JWST', 'HST', 'SDSS', 'Gaia']
         else:
-            manual_options = ['SDSS', 'Gaia']
+            manual_options = ['JWST', 'HST']
         self.telescope = SelectPluginComponent(
             self, items="telescope_items", selected="telescope_selected",
             manual_options=manual_options
