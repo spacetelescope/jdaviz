@@ -84,6 +84,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`fitted_models`
     * :meth:`get_models`
     * :meth:`get_model_parameters`
+    * :meth:`get_fitter_parameter`
+    * :meth:`set_fitter_parameter`
     """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
@@ -1553,6 +1555,35 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         return spectrum
 
     def get_fitter_parameter(self, key):
+        """
+        Get the value of a fitter parameter.
+
+        Parameters
+        ----------
+        key : str
+            The name of the fitter parameter to retrieve. Available parameters depend on the
+            selected fitter. Common parameters include:
+
+            * ``maxiter`` : Maximum number of iterations (available for most fitters)
+            * ``filter_non_finite`` : Whether to filter non-finite values
+            (available for most fitters)
+            * ``calc_uncertainties`` : Whether to calculate uncertainties
+            (available for most fitters)
+
+        Returns
+        -------
+        value : int, float, bool, or None
+            The current value of the parameter, or None if the parameter does not exist
+            for the selected fitter.
+
+        Examples
+        --------
+        >>> plugin = specviz_helper.plugins['Model Fitting']
+        >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
+        >>> max_iterations = plugin.get_fitter_parameter('maxiter')
+        >>> print(max_iterations)
+        100
+        """
         component = self.fitter_parameters['parameters']
         value = None
         for param in component:
@@ -1562,6 +1593,30 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         return value
 
     def set_fitter_parameter(self, key, value):
+        """
+        Set the value of a fitter parameter.
+
+        Parameters
+        ----------
+        key : str
+            The name of the fitter parameter to set. Available parameters depend on the
+            selected fitter. Common parameters include:
+
+            * ``maxiter`` : Maximum number of iterations (available for most fitters)
+            * ``filter_non_finite`` : Whether to filter non-finite values
+            (available for most fitters)
+            * ``calc_uncertainties`` : Whether to calculate uncertainties
+            (available for most fitters)
+        value : int, float, or bool
+            The new value for the parameter. The type should match the parameter's expected type.
+
+        Examples
+        --------
+        >>> plugin = specviz_helper.plugins['Model Fitting']
+        >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
+        >>> plugin.set_fitter_parameter('maxiter', 200)
+        >>> plugin.set_fitter_parameter('filter_non_finite', False)
+        """
         component = self.fitter_parameters['parameters']
         for i in range(len(component)):
             if component[i]['name'] == key:
