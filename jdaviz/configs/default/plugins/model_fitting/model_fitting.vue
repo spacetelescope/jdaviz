@@ -200,6 +200,10 @@
                   </v-btn>
                 </j-tooltip>
               </v-row>
+              <v-row v-if="item.model_type === 'Spline1D'">
+                <v-alert type="info">
+                  To view Spline1D parameters, please open the fitter parameters section below.               </v-alert>
+              </v-row>
               <v-div
                 v-for="param in item.parameters"
                 :style="componentInEquation(item.id) ? '': 'opacity: 0.3'"
@@ -301,6 +305,9 @@
                     :label="item.name"
                     v-model.number="item.value"
                     type="number"
+                    :min="item.name === 'degree' ? 1 : undefined"
+                    :max="item.name === 'degree' ? 5 : undefined"
+                    :rules="item.name === 'degree' ? [v => (v >= 1 && v <= 5) || 'Degree must be between 1 and 5.'] : []"
                     style="padding-top: 0px; margin-top: 14px; margin-bottom: 10px;"
                   ></v-text-field>
               </div>
