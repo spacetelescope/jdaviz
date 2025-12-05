@@ -886,6 +886,25 @@ def test_spline(specviz_helper, spectrum1d):
     mf.create_model_component('Spline1D')
 
     mf.fitter_component.selected = 'SplineSmoothingFitter'
+
+    # check that smoothing_factor parameter exists and has a value (initialized as 0
+    # by unitl the fitter component is selected)
+    assert mf.fitter_parameters['parameters'][1]['name'] == 'smoothing_factor'
+    assert mf.fitter_parameters['parameters'][1]['value'] is not None
+
+    deg_param = next(p for p in mf.fitter_parameters['parameters']
+                     if p['name'] == 'degree')
+
+    # degree must be between 1 and 5
+    deg_param['value'] = 0
+    with pytest.raises(ValueError, match=r"k should be 1 <= k <= 5"):
+        mf.calculate_fit(add_data=False)
+    deg_param['value'] = 6
+    with pytest.raises(ValueError, match=r"k should be 1 <= k <= 5"):
+        mf.calculate_fit(add_data=False)
+
+    deg_param['value'] = 3
+
     mf.calculate_fit(add_data=True)
 
     # ensure that Spline1D is not combined with any other model components
