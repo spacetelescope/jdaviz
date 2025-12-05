@@ -469,23 +469,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe('fitter_selected')
     def _update_fitter_component_msg(self, event={}):
         self.fitter_parameters = self.all_fitters[event['new']]
-        if event['new'] == 'SplineSmoothingFitter':
-            self._initialize_smoothing_factor()
         self._update_fitter_error()
-
-    def _initialize_smoothing_factor(self):
-        spec = self.dataset.get_selected_spectrum(use_display_units=True)
-        y = np.asarray(getattr(spec.flux, "value", spec.flux))
-        finite = np.isfinite(y)
-        n = int(finite.sum())
-        sigma = float(np.nanstd(y[finite])) if n > 0 else 0.0
-        auto_s = float(f"{n * sigma**2:.2g}")
-
-        for p in self.fitter_parameters['parameters']:
-            if p['name'] == 'smoothing_factor':
-                p['value'] = auto_s
-                break
-        self.send_state('fitter_parameters')
 
     @observe('fitter_parameters')
     def _update_fitter_parameters(self, event={}):
@@ -1361,9 +1345,22 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         label_comps += ["model"]
         self.results_label_default = " ".join(label_comps)
 
+    @observe('spectral_subset_selected', 'fitter_selected', 'dataset_selected', 'dataset_items')
+    def _update_smoothing_factor_on_data_change(self, event={}):
         # Recompute spline smoothing factor when the input data changes
-        if self.fitter_selected == "SplineSmoothingFitter" and hasattr(self, "dataset"):
-            self._initialize_smoothing_factor()
+        if self.fitter_selected == 'SplineSmoothingFitter':
+            spec = self.dataset.get_selected_spectrum(use_display_units=True)
+            y = np.asarray(getattr(spec.flux, "value", spec.flux))
+            finite = np.isfinite(y)
+            n = int(finite.sum())
+            sigma = float(np.nanstd(y[finite])) if n > 0 else 0.0
+            auto_s = float(f"{n * sigma**2:.2g}")
+
+            for p in self.fitter_parameters['parameters']:
+                if p['name'] == 'smoothing_factor':
+                    p['value'] = auto_s
+                    break
+            self.send_state('fitter_parameters')
 
     @observe("results_label")
     def _set_residuals_label_default(self, event={}):
