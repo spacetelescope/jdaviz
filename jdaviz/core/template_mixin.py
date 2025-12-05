@@ -4824,7 +4824,8 @@ class AddResults(BasePluginComponent):
         if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
             self.app._jdaviz_helper.load(data_item,
                                          loader='object', format=format,
-                                         data_label=label, viewer=[], **load_kwargs)
+                                         data_label=label, viewer=load_kwargs.pop('viewer', []),
+                                         **load_kwargs)
         else:
             # NOTE: eventually remove this entirely once all plugins are set to go through
             # the new loaders infrastructure above
