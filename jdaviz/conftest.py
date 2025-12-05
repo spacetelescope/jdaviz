@@ -114,6 +114,50 @@ class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
         return None
 
 
+def _catch_validate_known_exceptions(exceptions_to_catch,
+                                     stdout_text_to_check=''):
+    """
+    Context manager to catch known exceptions in CI tests. Validates the exception
+    by checking for specific text in stdout. If matched, the test is skipped. If
+    no text is provided, any occurrence of the exception will trigger the skip. If
+    the match fails, the exception is re-raised.
+
+    Use as:
+    with _catch_known_exception(Exceptions):  # or via fixture catch_known_exceptions
+        catalog_plg.search(error_on_fail=True)
+
+    Parameters
+    ----------
+    exceptions_to_catch : Exception or tuple of Exceptions to catch.
+    stdout_text_to_check : str, optional
+        Text to match in stdout via substring matching.
+        Default is '' (matches any string).
+    """
+    import contextlib
+    import io
+
+    @contextlib.contextmanager
+    def _cm():
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                yield buf
+        except exceptions_to_catch as etc:
+            stdout_text = buf.getvalue()
+            if stdout_text_to_check in stdout_text or isinstance(etc, TimeoutError):
+                pytest.skip(str(etc))
+            else:
+                raise
+
+    return _cm()
+
+
+@pytest.fixture(scope='function')
+def catch_validate_known_exceptions():
+    """Context manager fixture to catch and validate known exceptions in testing."""
+    return _catch_validate_known_exceptions
+
+
 @pytest.fixture
 def cubeviz_helper():
     return Cubeviz()
