@@ -185,10 +185,12 @@
             }}
           </plugin-action-button>
         </j-tooltip>
+        <v-alert v-if="api_hints_enabled" type="info" dense>
+          see individual commands above to update subset properties
+        </v-alert>
         <plugin-action-button
           :disabled="subset_selected === 'Create New'"
           :results_isolated_to_plugin="false"
-          :api_hints_enabled="api_hints_enabled"
           @click="update_subset"
         >
           Update
