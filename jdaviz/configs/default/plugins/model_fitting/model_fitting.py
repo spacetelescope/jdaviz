@@ -1491,6 +1491,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     f"Spline1D fit requires more than degree ({deg}) sample points; "
                     f"got {x_fit.size}"
                 )
+            models_to_fit[0]._degree = deg
             s_val = kw.get("smoothing_factor", None)
 
             fitted_model = smoother(models_to_fit[0], x_fit, y_fit, s=s_val)
