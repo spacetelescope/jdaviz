@@ -365,7 +365,8 @@ def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     catalogs_plugin.max_sources = 10
 
     # TODO: remove catch_validate_known_exception
-    #  when GAIA completes system maintenance (2-12-2025 12:00 CET)
+    #  when GAIA completes system maintenance (10-12-2025 12:00 CET,
+    #  this has so far proven to be a moving target...)
     # Use exception context manager to handle occasional VOTable parsing
     # errors via retrieval failures and HTTP 500 errors. Both currently due
     # to scheduled maintenance. These errors are reported as (and caught):
@@ -374,5 +375,4 @@ def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     from requests.exceptions import HTTPError
     with catch_validate_known_exceptions((E19, HTTPError),
                                          stdout_text_to_check='scheduled maintenance'):
-        with pytest.warns(ResourceWarning):
-            catalogs_plugin.search(error_on_fail=True)
+        catalogs_plugin.search(error_on_fail=True)
