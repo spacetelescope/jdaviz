@@ -359,14 +359,25 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
 
 
 @pytest.mark.remote_data
-def test_astroquery_load_catalog_source(deconfigged_helper):
+def test_astroquery_load_catalog_source(deconfigged_helper, catch_validate_known_exceptions):
     deconfigged_helper.app.state.catalogs_in_dc = True
 
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = 'M4'
     ldr.telescope = 'Gaia'
     ldr.max_results = 10
-    ldr.query_archive()
+    # TODO: remove catch_validate_known_exception
+    #  when GAIA completes system maintenance (December 10, 2025 9:00 CET,
+    #  this has so far proven to be a moving target...)
+    # Use exception context manager to handle occasional VOTable parsing
+    # errors via retrieval failures and HTTP 500 errors. Both currently due
+    # to scheduled maintenance. These errors are reported as (and caught):
+    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
+    from astropy.io.votable.exceptions import E19
+    from requests.exceptions import HTTPError
+    with catch_validate_known_exceptions((E19, HTTPError),
+                                         stdout_text_to_check='scheduled maintenance'):
+        ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
 

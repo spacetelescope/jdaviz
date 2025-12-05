@@ -336,6 +336,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
 
 
+@pytest.mark.remote_data
 def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
@@ -365,7 +366,7 @@ def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     catalogs_plugin.max_sources = 10
 
     # TODO: remove catch_validate_known_exception
-    #  when GAIA completes system maintenance (10-12-2025 12:00 CET,
+    #  when GAIA completes system maintenance (December 10, 2025 9:00 CET,
     #  this has so far proven to be a moving target...)
     # Use exception context manager to handle occasional VOTable parsing
     # errors via retrieval failures and HTTP 500 errors. Both currently due

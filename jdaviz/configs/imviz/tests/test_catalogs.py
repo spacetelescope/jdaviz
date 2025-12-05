@@ -236,6 +236,7 @@ def test_from_file_parsing(imviz_helper, tmp_path):
         )
 
 
+@pytest.mark.remote_data
 def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_exceptions):
     # load data that we know has Gaia sources
     arr = np.ones((1489, 2048))
@@ -266,7 +267,8 @@ def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_except
     catalog_plg.max_sources = 10
 
     # TODO: remove catch_validate_known_exception
-    #  when GAIA completes system maintenance (2-12-2025 12:00 CET)
+    #  when GAIA completes system maintenance (December 10, 2025 9:00 CET,
+    #  this has so far proven to be a moving target...)
     # Use exception context manager to handle occasional VOTable parsing
     # errors via retrieval failures and HTTP 500 errors. Both currently due
     # to scheduled maintenance. These errors are reported as (and caught):
