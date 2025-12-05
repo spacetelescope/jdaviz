@@ -144,7 +144,7 @@ def _catch_validate_known_exceptions(exceptions_to_catch,
                 yield buf
         except exceptions_to_catch as etc:
             stdout_text = buf.getvalue()
-            if stdout_text_to_check in stdout_text:
+            if stdout_text_to_check in stdout_text or isinstance(etc, TimeoutError):
                 pytest.skip(str(etc))
             else:
                 raise

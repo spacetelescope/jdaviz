@@ -375,8 +375,8 @@ def test_astroquery_load_catalog_source(deconfigged_helper, catch_validate_known
     # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
     from astropy.io.votable.exceptions import E19
     from requests.exceptions import HTTPError
-    with catch_validate_known_exceptions((E19, HTTPError),
-                                         stdout_text_to_check='scheduled maintenance'):
+    with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
+                                         stdout_text_to_check='maintenance'):
         ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'

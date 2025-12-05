@@ -272,11 +272,11 @@ def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_except
     # Use exception context manager to handle occasional VOTable parsing
     # errors via retrieval failures and HTTP 500 errors. Both currently due
     # to scheduled maintenance. These errors are reported as (and caught):
-    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
+    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500/503
     from astropy.io.votable.exceptions import E19
     from requests.exceptions import HTTPError
-    with catch_validate_known_exceptions((E19, HTTPError),
-                                         stdout_text_to_check='scheduled maintenance'):
+    with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
+                                         stdout_text_to_check='maintenance'):
         catalog_plg.search(error_on_fail=True)
 
     export_plg.plugin_table = 'Catalog Search: table'
