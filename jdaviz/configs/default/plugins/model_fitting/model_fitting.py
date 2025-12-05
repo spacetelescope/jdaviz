@@ -1361,6 +1361,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         label_comps += ["model"]
         self.results_label_default = " ".join(label_comps)
 
+        # Recompute spline smoothing factor when the input data changes
+        if self.fitter_selected == "SplineSmoothingFitter" and hasattr(self, "dataset"):
+            self._initialize_smoothing_factor()
+
     @observe("results_label")
     def _set_residuals_label_default(self, event={}):
         self.residuals_label_default = self.results_label+" residuals"
