@@ -479,7 +479,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         finite = np.isfinite(y)
         n = int(finite.sum())
         sigma = float(np.nanstd(y[finite])) if n > 0 else 0.0
-        auto_s = float(n * sigma**2)
+        auto_s = float(f"{n * sigma**2:.2g}")
 
         for p in self.fitter_parameters['parameters']:
             if p['name'] == 'smoothing_factor':
