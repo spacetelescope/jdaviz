@@ -871,3 +871,104 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     model = specviz_helper.app.data_collection['model'].get_object(Spectrum)
     assert model.flux.unit == 'W / (Hz m2)'
     assert_allclose(model.flux, spec.flux.to('W / (Hz m2)'), rtol=1e-2)
+
+
+def test_get_fitter_parameter(specviz_helper, spectrum1d):
+    """Test the get_fitter_parameter method."""
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]
+
+    # Test default fitter (TRFLSQFitter) parameters
+    assert plugin.fitter_component == 'TRFLSQFitter'
+
+    # Test getting maxiter parameter
+    maxiter_value = plugin.get_fitter_parameter('maxiter')
+    assert maxiter_value == 100  # default value
+
+    # Test getting filter_non_finite parameter
+    filter_value = plugin.get_fitter_parameter('filter_non_finite')
+    assert filter_value is True  # default value
+
+    # Test getting calc_uncertainties parameter
+    calc_uncert_value = plugin.get_fitter_parameter('calc_uncertainties')
+    assert calc_uncert_value is True  # default value
+
+    # Test getting non-existent parameter
+    non_existent = plugin.get_fitter_parameter('non_existent_param')
+    assert non_existent is None
+
+    # Test with different fitter
+    plugin.fitter_component = 'LinearLSQFitter'
+    calc_uncert_value = plugin.get_fitter_parameter('calc_uncertainties')
+    assert calc_uncert_value is True
+
+    # maxiter should not exist for LinearLSQFitter
+    maxiter_value = plugin.get_fitter_parameter('maxiter')
+    assert maxiter_value is None
+
+
+def test_set_fitter_parameter(specviz_helper, spectrum1d):
+    """Test the set_fitter_parameter method."""
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]._obj
+
+    # Test default fitter (TRFLSQFitter)
+    assert plugin.fitter_component == 'TRFLSQFitter'
+
+    # Test setting maxiter parameter
+    original_maxiter = plugin.get_fitter_parameter('maxiter')
+    assert original_maxiter == 100
+
+    plugin.set_fitter_parameter('maxiter', 50)
+    new_maxiter = plugin.get_fitter_parameter('maxiter')
+    assert new_maxiter == 50
+
+    # Test setting filter_non_finite parameter
+    plugin.set_fitter_parameter('filter_non_finite', False)
+    filter_value = plugin.get_fitter_parameter('filter_non_finite')
+    assert filter_value is False
+
+    # Test setting calc_uncertainties parameter
+    plugin.set_fitter_parameter('calc_uncertainties', False)
+    calc_uncert_value = plugin.get_fitter_parameter('calc_uncertainties')
+    assert calc_uncert_value is False
+
+    # Set back to True
+    plugin.set_fitter_parameter('calc_uncertainties', True)
+    calc_uncert_value = plugin.get_fitter_parameter('calc_uncertainties')
+    assert calc_uncert_value is True
+
+    # Test that setting non-existent parameter doesn't raise error
+    # (it should just do nothing)
+    plugin.set_fitter_parameter('non_existent_param', 123)
+    # No error expected, parameter just won't be set
+
+    # Test with different fitter
+    plugin.fitter_component = 'SimplexLSQFitter'
+    plugin.set_fitter_parameter('maxiter', 200)
+    maxiter_value = plugin.get_fitter_parameter('maxiter')
+    assert maxiter_value == 200
+
+
+def test_fitter_parameter_persistence(specviz_helper, spectrum1d):
+    """Test that fitter parameters persist when switching between fitters."""
+    specviz_helper.load_data(spectrum1d)
+    plugin = specviz_helper.plugins["Model Fitting"]
+
+    # Set custom value for TRFLSQFitter
+    plugin.fitter_component = 'TRFLSQFitter'
+    plugin.set_fitter_parameter('maxiter', 75)
+
+    # Switch to different fitter
+    plugin.fitter_component = 'LevMarLSQFitter'
+    plugin.set_fitter_parameter('maxiter', 150)
+
+    # Switch back to TRFLSQFitter and check if value persisted
+    plugin.fitter_component = 'TRFLSQFitter'
+    maxiter_value = plugin.get_fitter_parameter('maxiter')
+    assert maxiter_value == 75  # Should have persisted
+
+    # Check that LevMarLSQFitter value also persisted
+    plugin.fitter_component = 'LevMarLSQFitter'
+    maxiter_value = plugin.get_fitter_parameter('maxiter')
+    assert maxiter_value == 150

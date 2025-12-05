@@ -240,7 +240,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'add_results', 'residuals_calculate',
                    'residuals']
         expose += ['calculate_fit', 'clear_table', 'export_table',
-                   'fitted_models', 'get_models', 'get_model_parameters', 'fitter_component']
+                   'fitted_models', 'get_models', 'get_model_parameters', 'fitter_component',
+                   'get_fitter_parameter', 'set_fitter_parameter']
         return PluginUserApi(self, expose=expose)
 
     def _param_units(self, param, model_type=None):
@@ -1550,3 +1551,20 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             spectrum.mask = subset_mask
         return spectrum
+
+    def get_fitter_parameter(self, key):
+        component = self.fitter_parameters['parameters']
+        value = None
+        for param in component:
+            if param['name'] == key:
+                value = param['value']
+                break
+        return value
+
+    def set_fitter_parameter(self, key, value):
+        component = self.fitter_parameters['parameters']
+        for i in range(len(component)):
+            if component[i]['name'] == key:
+                component[i]['value'] = value
+                self.send_state("fitter_parameters")
+                break
