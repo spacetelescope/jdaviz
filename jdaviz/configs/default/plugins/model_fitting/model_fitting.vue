@@ -307,6 +307,7 @@
                     type="number"
                     :min="item.name === 'degree' ? 1 : undefined"
                     :max="item.name === 'degree' ? 5 : undefined"
+                    :rules="item.name === 'degree' ? [v => (v >= 1 && v <= 5) || 'Degree must be between 1 and 5.'] : []"
                     style="padding-top: 0px; margin-top: 14px; margin-bottom: 10px;"
                   ></v-text-field>
               </div>
