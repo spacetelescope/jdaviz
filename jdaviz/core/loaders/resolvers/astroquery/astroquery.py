@@ -25,9 +25,13 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.app.state.catalogs_in_dc:
+            manual_options = ['JWST', 'HST', 'SDSS', 'Gaia']
+        else:
+            manual_options = ['JWST', 'HST']
         self.telescope = SelectPluginComponent(
             self, items="telescope_items", selected="telescope_selected",
-            manual_options=['SDSS', 'Gaia']
+            manual_options=manual_options
         )
 
     @property
@@ -48,7 +52,13 @@ class AstroqueryResolver(BaseConeSearchResolver):
         skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
-        if self.telescope.selected == 'SDSS':
+        if self.telescope.selected in ('JWST', 'HST'):
+            from astroquery.mast import MastMissions
+
+            mission = MastMissions(mission=self.telescope.selected)
+            output = mission.query_region(skycoord_center, radius=radius.value)
+
+        elif self.telescope.selected == 'SDSS':
             from astroquery.sdss import SDSS
 
             r_max = 3 * u.arcmin

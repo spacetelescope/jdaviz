@@ -319,35 +319,39 @@ class CatalogImporter(BaseImporterToDataCollection):
             if ra is not None:
                 output_table['Right Ascension'] = ra
             else:
-                output_table['Right Ascension'] = table[self.col_ra_selected]
+                ra_col = table[self.col_ra_selected].astype(float)
                 # add units to ra if they weren't loaded in with units assigned
                 if not self.col_ra_has_unit:
-                    output_table['Right Ascension'] *= u.Unit(self.col_ra_unit_selected)
+                    ra_col = ra_col * u.Unit(self.col_ra_unit_selected)
+                output_table['Right Ascension'] = ra_col
             if dec is not None:
                 output_table['Declination'] = dec
             else:
-                output_table['Declination'] = table[self.col_dec_selected]
+                dec_col = table[self.col_dec_selected].astype(float)
                 if not self.col_dec_has_unit:
-                    output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
+                    dec_col = dec_col * u.Unit(self.col_dec_unit_selected)
+                output_table['Declination'] = dec_col
 
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
             # handle output construction for X and Y coordinate columns, if selected
             # if input is a string, try to convert to floats
             if isinstance(self.input[self.col_x_selected][0], str):
                 try:
-                    output_table['X'] = [float(x) for x in table[self.col_x_selected]]
+                    x_col = [float(x) for x in table[self.col_x_selected]]
+                    output_table['X'] = x_col
                 except ValueError:
                     raise ValueError("Could not parse X column as numeric values.")
+            else:
+                output_table['X'] = table[self.col_x_selected].astype(float)
+
             if isinstance(self.input[self.col_y_selected][0], str):
                 try:
-                    output_table['Y'] = [float(y) for y in table[self.col_y_selected]]
+                    y_col = [float(y) for y in table[self.col_y_selected]]
+                    output_table['Y'] = y_col
                 except ValueError:
                     raise ValueError("Could not parse Y column as numeric values.")
-
-            # rename X and Y columns so that table in data collection always has
-            # the same X, Y column names for consistency when accessing elsewhere
-            output_table['X'] = table[self.col_x_selected]
-            output_table['Y'] = table[self.col_y_selected]
+            else:
+                output_table['Y'] = table[self.col_y_selected].astype(float)
 
         # add source ID column. If no column selected, just use table index
         # for now this will be added as a column named 'ID' in the output table,
