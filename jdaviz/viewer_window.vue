@@ -64,7 +64,7 @@ module.exports = {
   methods: {
     ensureFullHeightChain() {
       const popoutSelector = ".jupyter-widgets-popout-container";
-      const sidecarSelector = ".lm-Panel";
+      const sidecarSelector = ".jp-LinkedOutputView .lm-Panel";
 
       const topElement = this.$refs.top;
       const fullHeightTarget = topElement.closest(sidecarSelector) || topElement.closest(popoutSelector);
