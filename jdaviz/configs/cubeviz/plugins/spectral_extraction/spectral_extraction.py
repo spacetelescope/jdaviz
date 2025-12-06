@@ -245,7 +245,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_plugin(self):
-        return self.app._jdaviz_helper.plugins['Slice']
+        return self.app._jdaviz_helper.plugins['Spectral Slice']
 
     @observe('aperture_items')
     @skip_if_not_tray_instance()

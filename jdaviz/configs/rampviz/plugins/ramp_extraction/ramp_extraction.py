@@ -264,7 +264,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_plugin(self):
-        return self.app._jdaviz_helper.plugins['Slice']
+        return self.app._jdaviz_helper.plugins['Ramp Slice']
 
     def _extract_in_new_instance(self, dataset=None, function='Mean', subset_lbl=None,
                                  auto_update=False, add_data=False):

@@ -61,7 +61,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
     assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
     # Move slider and make sure it recomputes for a new slice automatically.
-    cube_slice_plg = helper.plugins["Slice"]._obj
+    cube_slice_plg = helper.plugins["Spectral Slice"]._obj
     cube_slice_plg.vue_goto_first()
     plg._obj.vue_do_aper_phot()
     row = plg.export_table()[1]

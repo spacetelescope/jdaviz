@@ -169,7 +169,7 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         [CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)])
 
     extract_plg = cubeviz_helper.plugins['3D Spectral Extraction']
-    slice_plg = cubeviz_helper.plugins['Slice']
+    slice_plg = cubeviz_helper.plugins['Spectral Slice']
 
     mark = extract_plg.aperture.marks[0]
     assert not mark.visible
@@ -619,7 +619,7 @@ def test_spectral_extraction_scientific_validation(
     subset_plugin.import_region(CircularROI(*aperture))
 
     # set the slice to the blue end of MIRI CH1
-    slice_plugin = cubeviz_helper.plugins['Slice']
+    slice_plugin = cubeviz_helper.plugins['Spectral Slice']
     slice_plugin.value = start_slice
 
     # run a conical spectral extraction

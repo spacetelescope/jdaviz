@@ -105,7 +105,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
     assert len(spectrum_viewer.data()) == 1
 
     # Check coordinate info panel
-    sl = cubeviz_helper.plugins['Slice']
+    sl = cubeviz_helper.plugins['Spectral Slice']
     sl.value = sl._obj.valid_indicator_values_sorted[1]
     assert flux_viewer.slice == 1
     label_mouseover = cubeviz_helper._coords_info

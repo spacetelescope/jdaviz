@@ -63,7 +63,7 @@ class Rampviz(CubeConfigHelper):
             group_viewer.state.x_att = ref_data.id["Pixel Axis 0 [z]"]
             group_viewer.state.y_att = ref_data.id["Pixel Axis 1 [y]"]
 
-    @deprecated(since="4.5", alternative="viz.plugins['Slice'].value = group_index")
+    @deprecated(since="4.5", alternative="viz.plugins['Ramp Slice'].value = group_index")
     def select_group(self, group_index):
         """
         Select the slice closest to the provided wavelength.
