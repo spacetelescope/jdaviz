@@ -511,6 +511,19 @@ def test_table_viewer(deconfigged_helper):
     assert len(deconfigged_helper.viewers) == 2
     assert len(nv._obj.glue_viewer.layers) == 1
 
+    # subset creation tool should not be visible because no entries checked
+    toolbar = tv._obj.glue_viewer.toolbar
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+
+    tv._obj.glue_viewer.widget_table.checked = [1, 2]
+
+    toolbar.select_tool('jdaviz:table_subset')
+    assert 'Subset 1' in deconfigged_helper.plugins['Subset Tools'].subset.choices
+
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
+    tv._obj.glue_viewer.widget_table.checked = []
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+
 
 def test_catalog_visibility(imviz_helper, image_2d_wcs):
     """
