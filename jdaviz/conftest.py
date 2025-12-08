@@ -688,49 +688,6 @@ except ImportError:
     PYTEST_HEADER_MODULES = {}
     TESTED_VERSIONS = {}
 
-
-def pytest_configure(config):
-    """
-    Configure pytest, including memlog initialization.
-    """
-    global _memlog_enabled_flag
-
-    # Initialize memlog
-    if len(config.getoption('memlog')) > 0:
-        config._memlog_top = int(config.getoption('memlog'))
-        config._memlog_sort = config.getoption('memlog_sort')
-        _memlog_enabled_flag = True
-        config._memlog_enabled = True
-
-    PYTEST_HEADER_MODULES['astropy'] = 'astropy'
-    PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
-    PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
-    PYTEST_HEADER_MODULES['specutils'] = 'specutils'
-    PYTEST_HEADER_MODULES['specreduce'] = 'specreduce'
-    PYTEST_HEADER_MODULES['asteval'] = 'asteval'
-    PYTEST_HEADER_MODULES['echo'] = 'echo'
-    PYTEST_HEADER_MODULES['idna'] = 'idna'
-    PYTEST_HEADER_MODULES['traitlets'] = 'traitlets'
-    PYTEST_HEADER_MODULES['bqplot'] = 'bqplot'
-    PYTEST_HEADER_MODULES['bqplot-image-gl'] = 'bqplot_image_gl'
-    PYTEST_HEADER_MODULES['glue-core'] = 'glue'
-    PYTEST_HEADER_MODULES['glue-jupyter'] = 'glue_jupyter'
-    PYTEST_HEADER_MODULES['glue-astronomy'] = 'glue_astronomy'
-    PYTEST_HEADER_MODULES['ipyvue'] = 'ipyvue'
-    PYTEST_HEADER_MODULES['ipyvuetify'] = 'ipyvuetify'
-    PYTEST_HEADER_MODULES['ipysplitpanes'] = 'ipysplitpanes'
-    PYTEST_HEADER_MODULES['ipygoldenlayout'] = 'ipygoldenlayout'
-    PYTEST_HEADER_MODULES['ipypopout'] = 'ipypopout'
-    PYTEST_HEADER_MODULES['solara'] = 'solara'
-    PYTEST_HEADER_MODULES['vispy'] = 'vispy'
-    PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
-    PYTEST_HEADER_MODULES['asdf'] = 'asdf'
-    PYTEST_HEADER_MODULES['stdatamodels'] = 'stdatamodels'
-    PYTEST_HEADER_MODULES['roman_datamodels'] = 'roman_datamodels'
-
-    TESTED_VERSIONS['jdaviz'] = __version__
-
-
 # ============================================================================
 # Memory logging plugin (memlog) - log per-test memory usage
 # ============================================================================
@@ -757,13 +714,70 @@ def _format_bytes(b):
     return f'{mib:7.2f} MiB'
 
 
-try:
-    from pytest_astropy_header.display import (
-        PYTEST_HEADER_MODULES, TESTED_VERSIONS
-    )
-except ImportError:
-    PYTEST_HEADER_MODULES = {}
-    TESTED_VERSIONS = {}
+def _format_memlog_line(record, include_worker=False):
+    """
+    Format a memlog record as a display line.
+
+    Parameters
+    ----------
+    record : dict
+        A memlog record with 'mem_diff', 'mem_before', 'mem_after',
+        'worker_id', and 'nodeid' keys.
+    include_worker : bool
+        If True, include the worker ID in the output.
+
+    Returns
+    -------
+    str
+        Formatted line for display.
+    """
+    diff = record['mem_diff'] or 0
+    before = record['mem_before'] or 0
+    after = record['mem_after'] or 0
+
+    if include_worker:
+        worker = record.get('worker_id') or 'master'
+        return (
+            f'{_format_bytes(diff):>10}  '
+            f'{_format_bytes(before):>10}  '
+            f'{_format_bytes(after):>10}  '
+            f'{worker:>8}  {record["nodeid"]}'
+        )
+    else:
+        return (
+            f'{_format_bytes(diff):>10}  '
+            f'{_format_bytes(before):>10}  '
+            f'{_format_bytes(after):>10}  {record["nodeid"]}'
+        )
+
+
+def _parse_worker_id(worker_id):
+    """
+    Parse worker_id into a sortable tuple.
+
+    For xdist worker IDs like 'gw0', 'gw1', etc., returns
+    (prefix, number). For 'master', returns ('~', 0) to sort
+    last. Ensures numerical ordering within each prefix.
+
+    Parameters
+    ----------
+    worker_id : str
+        The worker ID string to parse.
+
+    Returns
+    -------
+    tuple
+        A (prefix, number) tuple suitable for sorting.
+    """
+    import re
+
+    if worker_id == 'master':
+        return ('~', 0)
+    match = re.match(r'([a-z]+)(\d+)', worker_id)
+    if match:
+        prefix, number = match.groups()
+        return (prefix, int(number))
+    return (worker_id, 0)
 
 
 def pytest_addoption(parser):
@@ -786,9 +800,23 @@ def pytest_addoption(parser):
         dest='memlog_sort',
         default='diff',
         help='Enable sorting of memory results. Default: diff\n'
-             '\t\tdiff - Sort by memory difference.\n'
-             '\t\tseq  - Sort by test output order '
-             '(can help determine sustained memory allocation).'
+             'diff   - Sort by memory allocation difference.\n'
+             'before - Sort by highest memory before test.\n'
+             'after  - Sort by highest memory after test.\n'
+             'peak   - Sort by highest peak memory allocation.\n'
+             'seq    - Sort by test output order '
+             '(can help determine sustained memory allocation).\n'
+             'worker - Group by worker ID, then sort by peak memory '
+             'which can serve as a proxy for in-node sequential memory allocation '
+             '(xdist only).\n'
+    )
+
+    group.addoption(
+        '--memlog-worker',
+        action='store',
+        dest='memlog_worker',
+        default='',
+        help='Show memory report for a specific worker (xdist only).'
     )
 
 
@@ -832,16 +860,61 @@ def pytest_runtest_makereport(item, call):
     mem_before = getattr(item, '_mem_before', None)
     mem_after = getattr(item, '_mem_after', None)
 
-
     if mem_before is None or mem_after is None:
         return
 
     diff = int(mem_after) - int(mem_before)
 
+    # Get worker_id from config (xdist sets this)
+    worker_id = getattr(item.config, 'workerinput', {}).get('workerid', 'master')
+
     # Attach to user_properties - these get serialized to master in xdist
     report.user_properties.append(('mem_before', int(mem_before)))
     report.user_properties.append(('mem_after', int(mem_after)))
     report.user_properties.append(('mem_diff', int(diff)))
+    report.user_properties.append(('worker_id', worker_id))
+
+
+def _extract_memlog_properties(props):
+    """
+    Extract memory properties from user_properties list.
+
+    Parameters
+    ----------
+    props : list
+        List of (name, value) tuples from report.user_properties.
+
+    Returns
+    -------
+    dict or None
+        Dictionary with 'mem_before', 'mem_after', 'mem_diff', and
+        'worker_id' keys, or None if no memory data found.
+    """
+    mem_before = None
+    mem_after = None
+    mem_diff = None
+    worker_id = None
+
+    for name, value in props:
+        if name == 'mem_before':
+            mem_before = int(value)
+        elif name == 'mem_after':
+            mem_after = int(value)
+        elif name == 'mem_diff':
+            mem_diff = int(value)
+        elif name == 'worker_id':
+            worker_id = value
+
+    # Return None if no memory data found
+    if mem_before is None and mem_after is None and mem_diff is None:
+        return None
+
+    return {
+        'mem_before': mem_before,
+        'mem_after': mem_after,
+        'mem_diff': mem_diff,
+        'worker_id': worker_id
+    }
 
 
 def pytest_runtest_logreport(report):
@@ -859,73 +932,188 @@ def pytest_runtest_logreport(report):
     if not props:
         return
 
-    mem_before = None
-    mem_after = None
-    mem_diff = None
-
-    for name, value in props:
-        if name == 'mem_before':
-            mem_before = int(value)
-        elif name == 'mem_after':
-            mem_after = int(value)
-        elif name == 'mem_diff':
-            mem_diff = int(value)
-
-    if mem_before is None and mem_after is None and mem_diff is None:
+    mem_props = _extract_memlog_properties(props)
+    if mem_props is None:
         return
 
     _memlog_records.append({
         'nodeid': getattr(report, 'nodeid', '<unknown>'),
+        'worker_id': mem_props['worker_id'],
         'when': report.when,
-        'mem_before': mem_before,
-        'mem_after': mem_after,
-        'mem_diff': mem_diff
+        'mem_before': mem_props['mem_before'],
+        'mem_after': mem_props['mem_after'],
+        'mem_diff': mem_props['mem_diff']
     })
 
 
-def pytest_terminal_summary(terminalreporter, exitstatus, config=None):
+def _apply_memlog_sort(records, sort_method, top_n):
+    """
+    Apply sorting to memlog records based on sort_method.
+
+    Parameters
+    ----------
+    records : list
+        List of memlog record dictionaries.
+    sort_method : str
+        Sorting method: 'diff', 'before', 'after', 'peak', or 'seq'.
+    top_n : int
+        Number of top records to return.
+
+    Returns
+    -------
+    list
+        Sorted records, limited to top_n items.
+    """
+    if sort_method == 'diff':
+        records.sort(key=lambda r: r['mem_diff'], reverse=True)
+
+    elif sort_method == 'before':
+        records.sort(key=lambda r: max(r['mem_before']), reverse=True)
+
+    elif sort_method == 'after':
+        records.sort(key=lambda r: max(r['mem_after']), reverse=True)
+
+    elif sort_method == 'peak':
+        records.sort(key=lambda r: max(r['mem_before'], r['mem_after']), reverse=True)
+
+    elif sort_method == 'seq':
+        records = records[::-1]  # Keep original order but reverse for display purposes
+
+    return records[:top_n]
+
+
+def pytest_terminal_summary(terminalreporter, config=None):
     """
     Terminal summary hook that prints memlog summary.
     """
 
     if config is None:
         config = terminalreporter.config
+
     if not getattr(config, '_memlog_enabled', False):
         return
 
     if not _memlog_records:
-        terminalreporter.write_line(
-            'memlog: no records collected.'
-        )
+        terminalreporter.write_line('memlog: no records collected.')
         return
 
     top_n = getattr(config, '_memlog_top', 10)
-    records = [
-        r for r in _memlog_records if r.get('mem_diff') is not None
-    ]
+    records = [r for r in _memlog_records if r.get('mem_diff') is not None]
 
-    # If 'seq' is given, leave _memlog_records as-is.
     sort_method = getattr(config, '_memlog_sort', 'diff')
-    if sort_method == 'diff':
-        records.sort(key=lambda r: abs(r['mem_diff']), reverse=True)
+    memlog_worker = getattr(config, '_memlog_worker', '')
 
-    records = records[:top_n]
+    # If a specific worker is requested, filter and report on that worker
+    if len(memlog_worker) > 0:
+        worker_records = [r for r in records
+                          if (r.get('worker_id') or 'master') == memlog_worker]
 
-    title = f'Top {top_n} tests by memory difference'
-    terminalreporter.write_sep('-', title)
-    header = (
-        f'{"mem diff":>10}  {"before":>10}  {"after":>10}  test'
-    )
-    terminalreporter.write_line(header)
-    for r in records:
-        diff = r['mem_diff'] or 0
-        before = r['mem_before'] or 0
-        after = r['mem_after'] or 0
-        line = (
-            f'{_format_bytes(diff):>10}  '
-            f'{_format_bytes(before):>10}  '
-            f'{_format_bytes(after):>10}  {r["nodeid"]}'
-        )
-        terminalreporter.write_line(line)
+        if not worker_records:
+            terminalreporter.write_line(f'memlog: no records found for worker "{memlog_worker}".')
+            return
+
+        # 'seq' is the most relevant in this context given we are filtering by worker
+        # and are likely interested in sustained memory usage on that worker
+        worker_records = _apply_memlog_sort(worker_records, 'seq', top_n)
+
+        title = f'Top {top_n} tests for worker {memlog_worker}'
+        terminalreporter.write_sep('-', title)
+
+        header = f'{"mem diff":>10}  {"before":>10}  {"after":>10}  test'
+        terminalreporter.write_line(header)
+
+        for r in worker_records:
+            terminalreporter.write_line(_format_memlog_line(r))
+        terminalreporter.write_sep('-', 'end of memlog summary')
+
+        return
+
+    # Group by worker_id if sorting by worker
+    if sort_method == 'worker':
+        from itertools import groupby
+
+        # Sort records by worker_id first (with numerical sorting)
+        records.sort(key=lambda r: _parse_worker_id(r.get('worker_id') or 'master'))
+
+        # Group by worker_id
+        grouped = {}
+        for worker_id, group_records in groupby(
+                records, key=lambda r: r.get('worker_id') or 'master'
+        ):
+            # Within each worker, sort by sequential order
+            grouped[worker_id] = _apply_memlog_sort(list(group_records), 'seq', top_n)
+
+        # Display results grouped by worker
+        title = f'Top {top_n} tests by worker, sorted by peak memory'
+        terminalreporter.write_sep('-', title)
+
+        header = (f'{"mem diff":>10}  {"before":>10}  {"after":>10}  '
+                  f'{"worker":>8}  test')
+
+        # Sort worker_ids numerically for display
+        sorted_worker_ids = sorted(grouped.keys(), key=_parse_worker_id)
+
+        for worker_id in sorted_worker_ids:
+            terminalreporter.write_line(f'\nWorker: {worker_id}')
+            terminalreporter.write_line(header)
+
+            for r in grouped[worker_id][:top_n]:
+                terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
+    else:
+        # Apply the selected sort method to all records
+        records = _apply_memlog_sort(records, sort_method, top_n)
+
+        title = f'Top {top_n} tests by memory difference'
+        terminalreporter.write_sep('-', title)
+
+        header = (f'{"mem diff":>10}  {"before":>10}  {"after":>10}  '
+                  f'{"worker":>8}  test')
+        terminalreporter.write_line(header)
+
+        for r in records:
+            terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
+
     terminalreporter.write_sep('-', 'end of memlog summary')
 
+
+def pytest_configure(config):
+    """
+    Configure pytest, including memlog initialization.
+    """
+    global _memlog_enabled_flag
+
+    # Initialize memlog
+    if len(config.getoption('memlog')) > 0:
+        config._memlog_top = int(config.getoption('memlog'))
+        config._memlog_sort = config.getoption('memlog_sort')
+        config._memlog_worker = config.getoption('memlog_worker')
+        _memlog_enabled_flag = True
+        config._memlog_enabled = True
+
+    PYTEST_HEADER_MODULES['astropy'] = 'astropy'
+    PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
+    PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
+    PYTEST_HEADER_MODULES['specutils'] = 'specutils'
+    PYTEST_HEADER_MODULES['specreduce'] = 'specreduce'
+    PYTEST_HEADER_MODULES['asteval'] = 'asteval'
+    PYTEST_HEADER_MODULES['echo'] = 'echo'
+    PYTEST_HEADER_MODULES['idna'] = 'idna'
+    PYTEST_HEADER_MODULES['traitlets'] = 'traitlets'
+    PYTEST_HEADER_MODULES['bqplot'] = 'bqplot'
+    PYTEST_HEADER_MODULES['bqplot-image-gl'] = 'bqplot_image_gl'
+    PYTEST_HEADER_MODULES['glue-core'] = 'glue'
+    PYTEST_HEADER_MODULES['glue-jupyter'] = 'glue_jupyter'
+    PYTEST_HEADER_MODULES['glue-astronomy'] = 'glue_astronomy'
+    PYTEST_HEADER_MODULES['ipyvue'] = 'ipyvue'
+    PYTEST_HEADER_MODULES['ipyvuetify'] = 'ipyvuetify'
+    PYTEST_HEADER_MODULES['ipysplitpanes'] = 'ipysplitpanes'
+    PYTEST_HEADER_MODULES['ipygoldenlayout'] = 'ipygoldenlayout'
+    PYTEST_HEADER_MODULES['ipypopout'] = 'ipypopout'
+    PYTEST_HEADER_MODULES['solara'] = 'solara'
+    PYTEST_HEADER_MODULES['vispy'] = 'vispy'
+    PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
+    PYTEST_HEADER_MODULES['asdf'] = 'asdf'
+    PYTEST_HEADER_MODULES['stdatamodels'] = 'stdatamodels'
+    PYTEST_HEADER_MODULES['roman_datamodels'] = 'roman_datamodels'
+
+    TESTED_VERSIONS['jdaviz'] = __version__
