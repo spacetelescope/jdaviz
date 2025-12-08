@@ -4,6 +4,7 @@
 # packagename.test
 
 import os
+import psutil
 import warnings
 
 import numpy as np
@@ -689,6 +690,18 @@ except ImportError:
 
 
 def pytest_configure(config):
+    """
+    Configure pytest, including memlog initialization.
+    """
+    global _memlog_enabled_flag
+
+    # Initialize memlog
+    if len(config.getoption('memlog')) > 0:
+        config._memlog_top = int(config.getoption('memlog'))
+        config._memlog_sort = config.getoption('memlog_sort')
+        _memlog_enabled_flag = True
+        config._memlog_enabled = True
+
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
@@ -716,3 +729,203 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['roman_datamodels'] = 'roman_datamodels'
 
     TESTED_VERSIONS['jdaviz'] = __version__
+
+
+# ============================================================================
+# Memory logging plugin (memlog) - log per-test memory usage
+# ============================================================================
+
+# Module-level storage for memlog
+_memlog_records = []
+_memlog_enabled_flag = False
+
+
+def _get_memory_bytes():
+    """
+    Return the current process resident set size (RSS) in bytes.
+
+    Uses psutil if available, otherwise falls back to resource.
+    """
+    return psutil.Process().memory_info().rss
+
+
+def _format_bytes(b):
+    """
+    Format byte count as human-readable string with MiB unit.
+    """
+    mib = b / (1024.0 * 1024.0)
+    return f'{mib:7.2f} MiB'
+
+
+try:
+    from pytest_astropy_header.display import (
+        PYTEST_HEADER_MODULES, TESTED_VERSIONS
+    )
+except ImportError:
+    PYTEST_HEADER_MODULES = {}
+    TESTED_VERSIONS = {}
+
+
+def pytest_addoption(parser):
+    """
+    Register pytest options including memlog options.
+    """
+    # Memlog options
+    group = parser.getgroup('memlog')
+    group.addoption(
+        '--memlog',
+        action='store',
+        dest='memlog',
+        default='10',
+        help='Enable per-test memory logging and summary. Default: 10'
+    )
+
+    group.addoption(
+        '--memlog-sort',
+        action='store',
+        dest='memlog_sort',
+        default='diff',
+        help='Enable sorting of memory results. Default: diff\n'
+             '\t\tdiff - Sort by memory difference.\n'
+             '\t\tseq  - Sort by test output order '
+             '(can help determine sustained memory allocation).'
+    )
+
+
+def pytest_runtest_setup(item):
+    """
+    Setup hook that records memory before test.
+    """
+    if not _memlog_enabled_flag:
+        return
+    mem = _get_memory_bytes()
+    item._mem_before = mem
+
+
+def pytest_runtest_teardown(item, nextitem):
+    """
+    Teardown hook that records memory after test.
+    """
+    if not _memlog_enabled_flag:
+        return
+    mem = _get_memory_bytes()
+    item._mem_after = mem
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Hook wrapper to attach memory measurements to report user_properties.
+
+    This runs during report creation when we still have access to the item.
+    The user_properties are serialized and sent to master in xdist.
+    """
+    outcome = yield
+    report = outcome.get_result()
+
+    if call.when != 'teardown':
+        return
+
+    if not _memlog_enabled_flag:
+        return
+
+    mem_before = getattr(item, '_mem_before', None)
+    mem_after = getattr(item, '_mem_after', None)
+
+
+    if mem_before is None or mem_after is None:
+        return
+
+    diff = int(mem_after) - int(mem_before)
+
+    # Attach to user_properties - these get serialized to master in xdist
+    report.user_properties.append(('mem_before', int(mem_before)))
+    report.user_properties.append(('mem_after', int(mem_after)))
+    report.user_properties.append(('mem_diff', int(diff)))
+
+
+def pytest_runtest_logreport(report):
+    """
+    Log report hook that collects memory measurements from user_properties.
+
+    This runs on both workers and master. On master (xdist), it receives
+    the serialized user_properties from workers.
+    """
+    if report.when != 'teardown':
+        return
+
+    props = getattr(report, 'user_properties', [])
+
+    if not props:
+        return
+
+    mem_before = None
+    mem_after = None
+    mem_diff = None
+
+    for name, value in props:
+        if name == 'mem_before':
+            mem_before = int(value)
+        elif name == 'mem_after':
+            mem_after = int(value)
+        elif name == 'mem_diff':
+            mem_diff = int(value)
+
+    if mem_before is None and mem_after is None and mem_diff is None:
+        return
+
+    _memlog_records.append({
+        'nodeid': getattr(report, 'nodeid', '<unknown>'),
+        'when': report.when,
+        'mem_before': mem_before,
+        'mem_after': mem_after,
+        'mem_diff': mem_diff
+    })
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config=None):
+    """
+    Terminal summary hook that prints memlog summary.
+    """
+
+    if config is None:
+        config = terminalreporter.config
+    if not getattr(config, '_memlog_enabled', False):
+        return
+
+    if not _memlog_records:
+        terminalreporter.write_line(
+            'memlog: no records collected.'
+        )
+        return
+
+    top_n = getattr(config, '_memlog_top', 10)
+    records = [
+        r for r in _memlog_records if r.get('mem_diff') is not None
+    ]
+
+    # If 'seq' is given, leave _memlog_records as-is.
+    sort_method = getattr(config, '_memlog_sort', 'diff')
+    if sort_method == 'diff':
+        records.sort(key=lambda r: abs(r['mem_diff']), reverse=True)
+
+    records = records[:top_n]
+
+    title = f'Top {top_n} tests by memory difference'
+    terminalreporter.write_sep('-', title)
+    header = (
+        f'{"mem diff":>10}  {"before":>10}  {"after":>10}  test'
+    )
+    terminalreporter.write_line(header)
+    for r in records:
+        diff = r['mem_diff'] or 0
+        before = r['mem_before'] or 0
+        after = r['mem_after'] or 0
+        line = (
+            f'{_format_bytes(diff):>10}  '
+            f'{_format_bytes(before):>10}  '
+            f'{_format_bytes(after):>10}  {r["nodeid"]}'
+        )
+        terminalreporter.write_line(line)
+    terminalreporter.write_sep('-', 'end of memlog summary')
+
