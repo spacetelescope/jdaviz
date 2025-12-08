@@ -812,11 +812,11 @@ def pytest_addoption(parser):
     )
 
     group.addoption(
-        '--memlog-worker',
-        action='store',
-        dest='memlog_worker',
-        default='',
-        help='Show memory report for a specific worker (xdist only).'
+        '--memlog-max-worker',
+        action='store_true',
+        dest='memlog_max_worker',
+        default=False,
+        help='Show memory report for the worker with highest peak memory allocation (xdist only).'
     )
 
 
@@ -986,7 +986,6 @@ def pytest_terminal_summary(terminalreporter, config=None):
     """
     Terminal summary hook that prints memlog summary.
     """
-
     if config is None:
         config = terminalreporter.config
 
@@ -1001,22 +1000,33 @@ def pytest_terminal_summary(terminalreporter, config=None):
     records = [r for r in _memlog_records if r.get('mem_diff') is not None]
 
     sort_method = getattr(config, '_memlog_sort', 'diff')
-    memlog_worker = getattr(config, '_memlog_worker', '')
 
-    # If a specific worker is requested, filter and report on that worker
-    if len(memlog_worker) > 0:
-        worker_records = [r for r in records
-                          if (r.get('worker_id') or 'master') == memlog_worker]
+    # If max worker is requested, find and report on the worker with
+    # highest peak memory allocation
+    if getattr(config, '_memlog_max_worker', False):
+        # Find the worker with the highest peak memory across all tests
+        max_worker = None
+        max_peak = -1
 
-        if not worker_records:
-            terminalreporter.write_line(f'memlog: no records found for worker "{memlog_worker}".')
+        for r in records:
+            worker_id = r.get('worker_id') or 'master'
+            peak = max(r['mem_before'], r['mem_after'])
+            if peak > max_peak:
+                max_peak = peak
+                max_worker = worker_id
+
+        if max_worker is None:
+            terminalreporter.write_line('memlog: no worker found with memory data.')
             return
 
-        # 'seq' is the most relevant in this context given we are filtering by worker
-        # and are likely interested in sustained memory usage on that worker
+        # Filter to only this worker's records
+        worker_records = [r for r in records if (r.get('worker_id') or 'master') == max_worker]
+
+        # Apply the selected sort method to worker records
         worker_records = _apply_memlog_sort(worker_records, 'seq', top_n)
 
-        title = f'Top {top_n} tests for worker {memlog_worker}'
+        title = (f'Top {top_n} tests for worker {max_worker} '
+                 f'(highest peak memory: {_format_bytes(max_peak)})')
         terminalreporter.write_sep('-', title)
 
         header = f'{"mem diff":>10}  {"before":>10}  {"after":>10}  test'
@@ -1024,6 +1034,7 @@ def pytest_terminal_summary(terminalreporter, config=None):
 
         for r in worker_records:
             terminalreporter.write_line(_format_memlog_line(r))
+
         terminalreporter.write_sep('-', 'end of memlog summary')
 
         return
@@ -1086,7 +1097,7 @@ def pytest_configure(config):
     if len(config.getoption('memlog')) > 0:
         config._memlog_top = int(config.getoption('memlog'))
         config._memlog_sort = config.getoption('memlog_sort')
-        config._memlog_worker = config.getoption('memlog_worker')
+        config._memlog_max_worker = config.getoption('memlog_max_worker')
         _memlog_enabled_flag = True
         config._memlog_enabled = True
 
