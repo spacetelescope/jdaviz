@@ -118,9 +118,9 @@ and if the spectrum uncertainty was loaded.
    The initial value of the smoothing factor is automatically set to:
    (``len(data) * (standard_deviation(data))**2``).  
 
-   For more accurate spline fitting, refer to the Astropy spline modeling documentation
-   to set the smoothing factor/condition manually:
-   https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splrep.html#scipy.interpolate.make_splrep
+   Refer to the section of the Scipy spline modeling documentation explaining
+   the ``s`` parameter for advice on setting the smoothing factor/condition manually:
+   https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.UnivariateSpline.html#scipy.interpolate.UnivariateSpline
 
 
 From the API

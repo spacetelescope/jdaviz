@@ -1351,7 +1351,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.fitter_selected == 'SplineSmoothingFitter':
             spec = self.dataset.get_selected_spectrum(use_display_units=True)
             y = np.asarray(getattr(spec.flux, "value", spec.flux))
-            finite = np.isfinite(y)
+            mask = self.spectral_subset.selected_subset_mask
+            finite = np.isfinite(y) & ~mask
             n = int(finite.sum())
             sigma = float(np.nanstd(y[finite])) if n > 0 else 0.0
             auto_s = float(f"{n * sigma**2:.2g}")
