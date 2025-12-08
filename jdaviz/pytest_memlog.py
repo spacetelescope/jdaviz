@@ -31,10 +31,10 @@ from itertools import groupby
 import psutil
 import pytest
 
+
 # ============================================================================
 # Module-level storage
 # ============================================================================
-
 _memlog_records = []
 _memlog_enabled_flag = False
 
@@ -42,7 +42,6 @@ _memlog_enabled_flag = False
 # ============================================================================
 # Helper functions
 # ============================================================================
-
 def _get_memory_bytes():
     """
     Return the current process resident set size (RSS) in bytes.
@@ -81,18 +80,14 @@ def _format_memlog_line(record, include_worker=False):
 
     if include_worker:
         worker = record.get('worker_id') or 'master'
-        return (
-            f'{_format_bytes(diff):>10}  '
-            f'{_format_bytes(before):>10}  '
-            f'{_format_bytes(after):>10}  '
-            f'{worker:>8}  {record["nodeid"]}'
-        )
+        return (f'{_format_bytes(diff):>10}  '
+                f'{_format_bytes(before):>10}  '
+                f'{_format_bytes(after):>10}  '
+                f'{worker:>8}  {record["nodeid"]}')
     else:
-        return (
-            f'{_format_bytes(diff):>10}  '
-            f'{_format_bytes(before):>10}  '
-            f'{_format_bytes(after):>10}  {record["nodeid"]}'
-        )
+        return (f'{_format_bytes(diff):>10}  '
+                f'{_format_bytes(before):>10}  '
+                f'{_format_bytes(after):>10}  {record["nodeid"]}')
 
 
 def _parse_worker_id(worker_id):
@@ -114,12 +109,12 @@ def _parse_worker_id(worker_id):
         A (prefix, number) tuple suitable for sorting.
     """
     if worker_id == 'master':
-        return ('~', 0)
+        return '~', 0
     match = re.match(r'([a-z]+)(\d+)', worker_id)
     if match:
         prefix, number = match.groups()
-        return (prefix, int(number))
-    return (worker_id, 0)
+        return prefix, int(number)
+    return worker_id, 0
 
 
 def _extract_memlog_properties(props):
@@ -156,12 +151,10 @@ def _extract_memlog_properties(props):
     if mem_before is None and mem_after is None and mem_diff is None:
         return None
 
-    return {
-        'mem_before': mem_before,
-        'mem_after': mem_after,
-        'mem_diff': mem_diff,
-        'worker_id': worker_id
-    }
+    return {'mem_before': mem_before,
+            'mem_after': mem_after,
+            'mem_diff': mem_diff,
+            'worker_id': worker_id}
 
 
 def _apply_memlog_sort(records, sort_method, top_n):
@@ -192,10 +185,8 @@ def _apply_memlog_sort(records, sort_method, top_n):
         records.sort(key=lambda r: r['mem_after'], reverse=True)
 
     elif sort_method == 'peak':
-        records.sort(
-            key=lambda r: max(r['mem_before'], r['mem_after']),
-            reverse=True
-        )
+        records.sort(key=lambda r: max(r['mem_before'], r['mem_after']),
+                     reverse=True)
 
     elif sort_method == 'seq':
         # Keep original order but reverse for display purposes
@@ -218,8 +209,7 @@ def pytest_addoption(parser):
         action='store',
         dest='memlog',
         default='10',
-        help='Enable per-test memory logging and summary. Default: 10'
-    )
+        help='Enable per-test memory logging and summary. Default: 10')
 
     group.addoption(
         '--memlog-sort',
@@ -235,20 +225,15 @@ def pytest_addoption(parser):
             'seq    - Sort by test output order '
             '(can help determine sustained memory allocation).\n'
             'worker - Group by worker ID, then sort by peak memory '
-            '(xdist only).\n'
-        )
-    )
+            '(xdist only).\n'))
 
     group.addoption(
         '--memlog-max-worker',
         action='store_true',
         dest='memlog_max_worker',
         default=False,
-        help=(
-            'Show memory report for the worker with highest peak '
-            'memory allocation (xdist only).'
-        )
-    )
+        help=('Show memory report for the worker with highest peak '
+              'memory allocation (xdist only).'))
 
 
 def pytest_configure(config):
@@ -319,9 +304,7 @@ def pytest_runtest_makereport(item, call):
     diff = int(mem_after) - int(mem_before)
 
     # Get worker_id from config (xdist sets this)
-    worker_id = getattr(
-        item.config, 'workerinput', {}
-    ).get('workerid', 'master')
+    worker_id = getattr(item.config, 'workerinput', {}).get('workerid', 'master')
 
     # Attach to user_properties - these get serialized to master in xdist
     report.user_properties.append(('mem_before', int(mem_before)))
@@ -349,14 +332,12 @@ def pytest_runtest_logreport(report):
     if mem_props is None:
         return
 
-    _memlog_records.append({
-        'nodeid': getattr(report, 'nodeid', '<unknown>'),
-        'worker_id': mem_props['worker_id'],
-        'when': report.when,
-        'mem_before': mem_props['mem_before'],
-        'mem_after': mem_props['mem_after'],
-        'mem_diff': mem_props['mem_diff']
-    })
+    _memlog_records.append({'nodeid': getattr(report, 'nodeid', '<unknown>'),
+                            'worker_id': mem_props['worker_id'],
+                            'when': report.when,
+                            'mem_before': mem_props['mem_before'],
+                            'mem_after': mem_props['mem_after'],
+                            'mem_diff': mem_props['mem_diff']})
 
 
 def pytest_terminal_summary(terminalreporter, config=None):
@@ -381,23 +362,19 @@ def pytest_terminal_summary(terminalreporter, config=None):
     # If max worker is requested, find and report on the worker with
     # highest peak memory allocation
     if getattr(config, '_memlog_max_worker', False):
-        _display_max_worker_report(
-            terminalreporter, records, sort_method, top_n
-        )
+        _display_max_worker_report(terminalreporter, records, sort_method, top_n)
         return
 
     # Group by worker_id if sorting by worker
     if sort_method == 'worker':
         _display_worker_grouped_report(terminalreporter, records, top_n)
     else:
-        _display_standard_report(
-            terminalreporter, records, sort_method, top_n
-        )
+        _display_standard_report(terminalreporter, records, sort_method, top_n)
 
     terminalreporter.write_sep('-', 'end of memlog summary')
 
 
-def _display_max_worker_report(terminalreporter, records, sort_method, top_n):
+def _display_max_worker_report(terminalreporter, records, top_n):
     """
     Display memory report for the worker with highest peak memory.
 
@@ -424,24 +401,17 @@ def _display_max_worker_report(terminalreporter, records, sort_method, top_n):
             max_worker = worker_id
 
     if max_worker is None:
-        terminalreporter.write_line(
-            'memlog: no worker found with memory data.'
-        )
+        terminalreporter.write_line('memlog: no worker found with memory data.')
         return
 
     # Filter to only this worker's records
-    worker_records = [
-        r for r in records
-        if (r.get('worker_id') or 'master') == max_worker
-    ]
+    worker_records = [r for r in records if (r.get('worker_id') or 'master') == max_worker]
 
     # Apply the selected sort method to worker records
     worker_records = _apply_memlog_sort(worker_records, 'seq', top_n)
 
-    title = (
-        f'Top {top_n} tests for worker {max_worker} '
-        f'(highest peak memory: {_format_bytes(max_peak)})'
-    )
+    title = (f'Top {top_n} tests for worker {max_worker} '
+             f'(highest peak memory: {_format_bytes(max_peak)})')
     terminalreporter.write_sep('-', title)
 
     header = f'{"mem diff":>10}  {"before":>10}  {"after":>10}  test'
@@ -467,28 +437,21 @@ def _display_worker_grouped_report(terminalreporter, records, top_n):
         Number of top records to display per worker.
     """
     # Sort records by worker_id first (with numerical sorting)
-    records.sort(
-        key=lambda r: _parse_worker_id(r.get('worker_id') or 'master')
-    )
+    records.sort(key=lambda r: _parse_worker_id(r.get('worker_id') or 'master'))
 
     # Group by worker_id
     grouped = {}
-    for worker_id, group_records in groupby(
-        records, key=lambda r: r.get('worker_id') or 'master'
-    ):
+    for worker_id, group_records in (
+            groupby(records, key=lambda r: r.get('worker_id') or 'master')):
         # Within each worker, sort by sequential order
-        grouped[worker_id] = _apply_memlog_sort(
-            list(group_records), 'seq', top_n
-        )
+        grouped[worker_id] = _apply_memlog_sort(list(group_records), 'seq', top_n)
 
     # Display results grouped by worker
     title = f'Top {top_n} tests by worker, sorted by peak memory'
     terminalreporter.write_sep('-', title)
 
-    header = (
-        f'{"mem diff":>10}  {"before":>10}  {"after":>10}  '
-        f'{"worker":>8}  test'
-    )
+    header = (f'{"mem diff":>10}  {"before":>10}  {"after":>10}  '
+              f'{"worker":>8}  test')
 
     # Sort worker_ids numerically for display
     sorted_worker_ids = sorted(grouped.keys(), key=_parse_worker_id)
@@ -498,9 +461,7 @@ def _display_worker_grouped_report(terminalreporter, records, top_n):
         terminalreporter.write_line(header)
 
         for r in grouped[worker_id][:top_n]:
-            terminalreporter.write_line(
-                _format_memlog_line(r, include_worker=True)
-            )
+            terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
 
 
 def _display_standard_report(terminalreporter, records, sort_method, top_n):
@@ -530,4 +491,3 @@ def _display_standard_report(terminalreporter, records, sort_method, top_n):
 
     for r in records:
         terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
-
