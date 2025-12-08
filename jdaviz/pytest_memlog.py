@@ -250,7 +250,7 @@ def pytest_configure(config):
     """
     global _memlog_enabled_flag
 
-    if len(config.getoption('memlog')) > 0:
+    if config.getoption('memlog') or config.getoption('memlog_max_worker'):
         config._memlog_top = int(config.getoption('memlog'))
         config._memlog_sort = config.getoption('memlog_sort')
         config._memlog_max_worker = config.getoption('memlog_max_worker')
