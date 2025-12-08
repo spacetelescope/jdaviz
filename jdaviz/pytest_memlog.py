@@ -268,7 +268,7 @@ def pytest_runtest_setup(item):
     item._mem_before = mem
 
 
-def pytest_runtest_teardown(item, nextitem):
+def pytest_runtest_teardown(item, _):
     """
     Teardown hook that records memory after test.
     """
@@ -362,7 +362,7 @@ def pytest_terminal_summary(terminalreporter, config=None):
     # If max worker is requested, find and report on the worker with
     # highest peak memory allocation
     if getattr(config, '_memlog_max_worker', False):
-        _display_max_worker_report(terminalreporter, records, sort_method, top_n)
+        _display_max_worker_report(terminalreporter, records, top_n)
         return
 
     # Group by worker_id if sorting by worker
