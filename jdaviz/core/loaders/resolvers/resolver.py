@@ -619,7 +619,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                                                        sender=self, color="error"))
                 self.file_table_populated = False
 
-
     def _get_image_viewers(self):
         return [viewer for viewer in self.app._viewer_store.values()
                 if _is_image_viewer(viewer)]
