@@ -281,6 +281,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         if layers is None:
             return
+        if not hasattr(self._viewer, '_get_alignment_method'):
+            # then not an image viewer that supports WCS linking anyways
+            return
 
         hiding_due_to_pixel_sky_mismatch = []
         coord_type = None
