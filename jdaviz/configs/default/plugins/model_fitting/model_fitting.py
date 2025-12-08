@@ -1566,9 +1566,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             * ``maxiter`` : Maximum number of iterations (available for most fitters)
             * ``filter_non_finite`` : Whether to filter non-finite values
-            (available for most fitters)
+                (available for most fitters)
             * ``calc_uncertainties`` : Whether to calculate uncertainties
-            (available for most fitters)
+                (available for most fitters)
 
         Returns
         -------
@@ -1606,9 +1606,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             * ``maxiter`` : Maximum number of iterations (available for most fitters)
             * ``filter_non_finite`` : Whether to filter non-finite values
-            (available for most fitters)
+                (available for most fitters)
             * ``calc_uncertainties`` : Whether to calculate uncertainties
-            (available for most fitters)
+                (available for most fitters)
 
         value : int, float, or bool
             The new value for the parameter. The type should match the parameter's expected type.
