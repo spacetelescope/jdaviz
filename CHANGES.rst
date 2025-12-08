@@ -34,7 +34,9 @@ New Features
 
 - Generalize spectrum loading logic to prepare to support Roman ASDF files. [#3864]
 
-- Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
+- Add 'Resize in Viewer' to the 'Edit Subset' menu. [#3905]
+
+- Update the standalone application launcher to use deconfigged file/data resolvers. [#3936]
 
 Cubeviz
 ^^^^^^^

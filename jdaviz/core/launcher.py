@@ -16,7 +16,7 @@ from jdaviz.core.registries import loader_resolver_registry
 from jdaviz.utils import download_uri_to_path
 
 STATUS_HINTS = {
-    'idle': "Provide data using one of the resolvers below, or pick which viz tool to open",
+    'idle': "Provide data using one of the resolvers above, or pick which viz tool to open.",
     'identifying': "Identifying which tool is best to visualize your data...",
     'id ok': "The below tools can best visualize your data. Pick which one you want to use.",
     'id failed': "We couldn't identify which tool is best for your data. Pick a tool below to use."
