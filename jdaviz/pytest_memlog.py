@@ -208,8 +208,8 @@ def pytest_addoption(parser):
         '--memlog',
         action='store',
         dest='memlog',
-        default='10',
-        help='Enable per-test memory logging and summary. Default: 10')
+        default='20',
+        help='Enable per-test memory logging and summary. Default: 20')
 
     group.addoption(
         '--memlog-sort',
@@ -354,7 +354,7 @@ def pytest_terminal_summary(terminalreporter, config=None):
         terminalreporter.write_line('memlog: no records collected.')
         return
 
-    top_n = getattr(config, '_memlog_top', 10)
+    top_n = getattr(config, '_memlog_top', 20)
     records = [r for r in _memlog_records if r.get('mem_diff') is not None]
 
     sort_method = getattr(config, '_memlog_sort', 'diff')
