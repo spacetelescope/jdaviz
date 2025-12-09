@@ -2721,7 +2721,7 @@ class SubsetSelect(SelectPluginComponent):
         # If no subset group was found return True (no masking)
         if glue_mask is None:
             data = self.app.data_collection[dataset]
-            glue_mask = np.ones(data.shape, dtype=bool)
+            glue_mask = np.zeros(data.shape, dtype=bool)
 
         if self.app.data_collection[dataset].ndim == 3 and glue_mask.ndim == 1:
             data = self.app.data_collection[dataset]
