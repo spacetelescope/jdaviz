@@ -9,21 +9,10 @@ Usage
 -----
 Run pytest with the --memlog option to enable memory logging:
 
+    pytest --memlog                       # Show default 20 tests by memory diff
     pytest --memlog 10                    # Show top 10 tests by memory diff
     pytest --memlog 10 --memlog-sort peak # Sort by peak memory
-    pytest --memlog 10 --memlog-max-worker # Show worker with highest memory
-
-To use this plugin, import and register the hooks in your conftest.py:
-
-    from jdaviz.pytest_memlog import (
-        pytest_addoption as memlog_addoption,
-        pytest_configure as memlog_configure,
-        pytest_runtest_setup as memlog_runtest_setup,
-        pytest_runtest_teardown as memlog_runtest_teardown,
-        pytest_runtest_makereport as memlog_runtest_makereport,
-        pytest_runtest_logreport as memlog_runtest_logreport,
-        pytest_terminal_summary as memlog_terminal_summary,
-    )
+    pytest --memlog 10 --memlog-max-worker # Show worker with the highest memory
 """
 import re
 from itertools import groupby
@@ -148,9 +137,9 @@ def _extract_memlog_properties(props):
         elif name == 'worker_id':
             worker_id = value
 
-    # Return None if no memory data found
+    # Return empty dict if no memory data found
     if mem_before is None and mem_after is None and mem_diff is None:
-        return None
+        return {}
 
     return {'mem_before': mem_before,
             'mem_after': mem_after,
@@ -191,7 +180,7 @@ def _apply_memlog_sort(records, sort_method, top_n):
 
     elif sort_method == 'seq':
         # Keep original order but reverse for display purposes
-        records = records[::-1]
+        records.reverse()
 
     return records[:top_n]
 
@@ -212,8 +201,9 @@ def memlog_addoption(parser):
         const=str(_default_top_n),
         dest='memlog',
         default='',
-        help='Enable per-test memory logging and summary. Default when used without a value: 20'
-    )
+        help='Enable per-test memory logging and summary.\n'
+             'Usage: --memlog [N], where N is the number of top entries to display.\n'
+             f'Default: {_default_top_n}')
 
     group.addoption(
         '--memlog-sort',
@@ -228,7 +218,7 @@ def memlog_addoption(parser):
               'seq    - Sort by test output order '
               '(can help determine sustained memory allocation).\n'
               'worker - Group by worker ID, then sort by peak memory '
-              '(xdist only).\n'))
+              '(xdist only).'))
 
     group.addoption(
         '--memlog-max-worker',
@@ -332,7 +322,7 @@ def memlog_runtest_logreport(report):
         return
 
     mem_props = _extract_memlog_properties(props)
-    if mem_props is None:
+    if len(mem_props) == 0:
         return
 
     _memlog_records.append({'nodeid': getattr(report, 'nodeid', '<unknown>'),
