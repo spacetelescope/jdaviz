@@ -37,7 +37,7 @@ import pytest
 # ============================================================================
 _memlog_records = []
 _memlog_enabled_flag = False
-
+_default_top_n = 20
 
 # ============================================================================
 # Helper functions
@@ -208,7 +208,7 @@ def memlog_addoption(parser):
         '--memlog',
         action='store',
         nargs='?',
-        const='20',
+        const=str(_default_top_n),
         dest='memlog',
         default='',
         help='Enable per-test memory logging and summary. Default when used without a value: 20'
@@ -219,27 +219,23 @@ def memlog_addoption(parser):
         action='store',
         dest='memlog_sort',
         default='diff',
-        help=(
-            'Sorting method for memory results. Default: diff\n'
-            'diff   - Sort by memory allocation difference.\n'
-            'before - Sort by highest memory before test.\n'
-            'after  - Sort by highest memory after test.\n'
-            'peak   - Sort by highest peak memory allocation.\n'
-            'seq    - Sort by test output order '
-            '(can help determine sustained memory allocation).\n'
-            'worker - Group by worker ID, then sort by peak memory '
-            '(xdist only).\n'))
+        help=('Sorting method for memory results. Default: diff\n'
+              'diff   - Sort by memory allocation difference.\n'
+              'before - Sort by highest memory before test.\n'
+              'after  - Sort by highest memory after test.\n'
+              'peak   - Sort by highest peak memory allocation.\n'
+              'seq    - Sort by test output order '
+              '(can help determine sustained memory allocation).\n'
+              'worker - Group by worker ID, then sort by peak memory '
+              '(xdist only).\n'))
 
     group.addoption(
         '--memlog-max-worker',
         action='store_true',
         dest='memlog_max_worker',
         default=False,
-        help=(
-            'Show memory report for the worker with highest peak '
-            'memory allocation (xdist only).'
-        )
-    )
+        help=('Show memory report for the worker with highest peak '
+              'memory allocation (xdist only).'))
 
 
 def memlog_configure(config):
@@ -257,7 +253,7 @@ def memlog_configure(config):
     global _memlog_enabled_flag
 
     if config.getoption('memlog') or config.getoption('memlog_max_worker'):
-        config._memlog_top = int(config.getoption('memlog'))
+        config._memlog_top = config.getoption('memlog')
         config._memlog_sort = config.getoption('memlog_sort')
         config._memlog_max_worker = config.getoption('memlog_max_worker')
         _memlog_enabled_flag = True
@@ -360,7 +356,12 @@ def memlog_terminal_summary(terminalreporter, config=None):
         terminalreporter.write_line('memlog: no records collected.')
         return
 
-    top_n = getattr(config, '_memlog_top', 20)
+    top_n = getattr(config, '_memlog_top', '20')
+    if top_n.isdigit():
+        top_n = int(top_n)
+    else:
+        top_n = _default_top_n
+
     records = [r for r in _memlog_records if r.get('mem_diff') is not None]
 
     sort_method = getattr(config, '_memlog_sort', 'diff')
