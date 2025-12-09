@@ -48,6 +48,8 @@ Cubeviz
 
 - The default label for collapsed cubes now always includes the input data-label. [#3910]
 
+- The `Slice` plugin is renamed to `Spectral Slice`. [#3925]
+
 Imviz
 ^^^^^
 
@@ -78,6 +80,8 @@ Rampviz
 - ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.
   This changes the default auto-extraction function to always be "median" as well as
   changes to the default label of the auto-extracted ramp integration. [#3878, #3910]
+
+- The `Slice` plugin is renamed to `Ramp Slice`. [#3925]
 
 API Changes
 -----------

@@ -514,7 +514,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def _cube_slice_ind(self):
         # TODO: performance improvements, change to listen to slice change event
-        slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
+        slice_plugin = self.app._jdaviz_helper.plugins.get('Spectral Slice', None)
         if slice_plugin is None:
             return None
 
