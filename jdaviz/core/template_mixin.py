@@ -2707,6 +2707,7 @@ class SubsetSelect(SelectPluginComponent):
 
         # Use Glue's to_mask method directly rather than translating the whole Data object to
         # output class (e.g., Spectrum)
+        glue_mask = None
         for sg in self.app.data_collection.subset_groups:
             if sg.label == subset:
                 if hasattr(self.plugin, "cube_fit") and self.plugin.cube_fit:
@@ -2716,6 +2717,11 @@ class SubsetSelect(SelectPluginComponent):
                     data = self.app.data_collection[dataset]
                 glue_mask = ~sg.subset_state.to_mask(data)
                 break
+
+        # If no subset group was found return True (no masking)
+        if glue_mask is None:
+            data = self.app.data_collection[dataset]
+            glue_mask = np.ones(data.shape, dtype=bool)
 
         if self.app.data_collection[dataset].ndim == 3 and glue_mask.ndim == 1:
             data = self.app.data_collection[dataset]
