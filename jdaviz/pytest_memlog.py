@@ -36,7 +36,7 @@ def _get_memory_bytes():
     """
     Return the current process resident set size (RSS) in bytes.
     """
-    return psutil.Process().memory_info().rss
+    return psutil.Process().memory_full_info().uss
 
 
 def _format_bytes(b):
