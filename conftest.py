@@ -45,6 +45,7 @@ def pytest_terminal_summary(terminalreporter, config=None):
     """
     memlog_terminal_summary(terminalreporter, config)
 
+
 try:
     from pytest_astropy_header.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
 except ImportError:
