@@ -44,14 +44,14 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 # ============================================================================
 # Memory logging plugin (memlog) - imported from pytest_memlog.py
+# In CI, the memlog utilities may have already been called
+# from the root conftest.py, so we avoid that by excepting
+# the ValueError pytest throws.
 # ============================================================================
 def pytest_addoption(parser):
     """
     Register pytest options.
     """
-    # In CI, the memlog_addoption may have already been called
-    # from the root conftest.py, so we avoid that by excepting
-    # the ValueError pytest throws.
     try:
         memlog_addoption(parser)
     except ValueError:
@@ -62,14 +62,20 @@ def pytest_runtest_setup(item):
     """
     Setup hook that records memory before test.
     """
-    memlog_runtest_setup(item)
+    try:
+        memlog_runtest_setup(item)
+    except ValueError:
+        pass
 
 
 def pytest_runtest_teardown(item, nextitem):
     """
     Teardown hook that records memory after test.
     """
-    memlog_runtest_teardown(item, nextitem)
+    try:
+        memlog_runtest_teardown(item, nextitem)
+    except ValueError:
+        pass
 
 
 # Re-export the hookwrapper directly
@@ -80,14 +86,20 @@ def pytest_runtest_logreport(report):
     """
     Log report hook that collects memory measurements from user_properties.
     """
-    memlog_runtest_logreport(report)
+    try:
+        memlog_runtest_logreport(report)
+    except ValueError:
+        pass
 
 
 def pytest_terminal_summary(terminalreporter, config=None):
     """
     Terminal summary hook that prints memlog summary.
     """
-    memlog_terminal_summary(terminalreporter, config)
+    try:
+        memlog_terminal_summary(terminalreporter, config)
+    except ValueError:
+        pass
 
 
 @pytest.fixture
