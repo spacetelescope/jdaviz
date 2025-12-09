@@ -31,15 +31,9 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.registries import tray_registry
 
-from jdaviz.pytest_memlog import (
-    pytest_addoption as memlog_addoption,
-    pytest_configure as memlog_configure,
-    pytest_runtest_setup as memlog_runtest_setup,
-    pytest_runtest_teardown as memlog_runtest_teardown,
-    pytest_runtest_makereport as memlog_runtest_makereport,
-    pytest_runtest_logreport as memlog_runtest_logreport,
-    pytest_terminal_summary as memlog_terminal_summary,
-)
+from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
+                                  memlog_runtest_teardown, memlog_runtest_makereport,
+                                  memlog_runtest_logreport, memlog_terminal_summary)
 
 
 if not NUMPY_LT_2_0:

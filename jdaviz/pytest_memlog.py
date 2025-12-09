@@ -199,7 +199,7 @@ def _apply_memlog_sort(records, sort_method, top_n):
 # Pytest hooks
 # ============================================================================
 
-def pytest_addoption(parser):
+def memlog_addoption(parser):
     """
     Register memlog command-line options.
     """
@@ -207,9 +207,12 @@ def pytest_addoption(parser):
     group.addoption(
         '--memlog',
         action='store',
+        nargs='?',
+        const='20',
         dest='memlog',
-        default='20',
-        help='Enable per-test memory logging and summary. Default: 20')
+        default='',
+        help='Enable per-test memory logging and summary. Default when used without a value: 20'
+    )
 
     group.addoption(
         '--memlog-sort',
@@ -232,11 +235,14 @@ def pytest_addoption(parser):
         action='store_true',
         dest='memlog_max_worker',
         default=False,
-        help=('Show memory report for the worker with highest peak '
-              'memory allocation (xdist only).'))
+        help=(
+            'Show memory report for the worker with highest peak '
+            'memory allocation (xdist only).'
+        )
+    )
 
 
-def pytest_configure(config):
+def memlog_configure(config):
     """
     Configure memlog based on command-line options.
 
@@ -258,7 +264,7 @@ def pytest_configure(config):
         config._memlog_enabled = True
 
 
-def pytest_runtest_setup(item):
+def memlog_runtest_setup(item):
     """
     Setup hook that records memory before test.
     """
@@ -268,7 +274,7 @@ def pytest_runtest_setup(item):
     item._mem_before = mem
 
 
-def pytest_runtest_teardown(item, _):
+def memlog_runtest_teardown(item, _):
     """
     Teardown hook that records memory after test.
     """
@@ -279,7 +285,7 @@ def pytest_runtest_teardown(item, _):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
+def memlog_runtest_makereport(item, call):
     """
     Hook wrapper to attach memory measurements to report user_properties.
 
@@ -313,7 +319,7 @@ def pytest_runtest_makereport(item, call):
     report.user_properties.append(('worker_id', worker_id))
 
 
-def pytest_runtest_logreport(report):
+def memlog_runtest_logreport(report):
     """
     Log report hook that collects memory measurements from user_properties.
 
@@ -340,7 +346,7 @@ def pytest_runtest_logreport(report):
                             'mem_diff': mem_props['mem_diff']})
 
 
-def pytest_terminal_summary(terminalreporter, config=None):
+def memlog_terminal_summary(terminalreporter, config=None):
     """
     Terminal summary hook that prints memlog summary.
     """
