@@ -49,7 +49,13 @@ def pytest_addoption(parser):
     """
     Register pytest options.
     """
-    memlog_addoption(parser)
+    # In CI, the memlog_addoption may have already been called
+    # from the root conftest.py, so we avoid that by excepting
+    # the ValueError pytest throws.
+    try:
+        memlog_addoption(parser)
+    except ValueError:
+        pass
 
 
 def pytest_runtest_setup(item):
