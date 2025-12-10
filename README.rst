@@ -1,4 +1,4 @@
-.. image:: docs/logos/jdaviz.svg
+.. image:: https://github.com/spacetelescope/jdaviz/blob/main/docs/logos/jdaviz.svg
     :width: 400
     :alt: Jdaviz logo
     :align: center
@@ -49,7 +49,7 @@ the tool should be flexible enough to read in data from many astronomical telesc
 Installing
 ----------
 
-You may want to consider installing ``jdaviz`` in a new virtual or conda environment to avoid 
+You may want to consider installing ``jdaviz`` in a new virtual or conda environment to avoid
 version conflicts with other packages you may have installed, for example:
 
 .. code-block:: bash
