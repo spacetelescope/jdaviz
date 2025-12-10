@@ -576,7 +576,7 @@ def _display_peak_usage(terminalreporter, records):
     peak = _calculate_peak_usage(records)
 
     terminalreporter.write_line('')
-    terminalreporter.write_line(f'Peak memory usage across all tests:')
+    terminalreporter.write_line('Peak memory usage across all tests:')
     terminalreporter.write_line(f'  USS:  {_format_bytes(peak["uss"])}')
     terminalreporter.write_line(f'  RSS:  {_format_bytes(peak["rss"])}')
     terminalreporter.write_line(f'  Swap: {_format_bytes(peak["swap"])}')
