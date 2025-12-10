@@ -38,6 +38,13 @@ def test_load_nddata(imviz_helper):
 
     assert ([x['zorder'] for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items
         if x['label'] == 'data_c[DATA]'][0] == 2.5)
+    
+    # Set layer with 'data_c[DATA]' to be invisible
+    imviz_helper.viewers['imviz-0'].data_menu.set_layer_visibility('data_c[DATA]', False)
+
+    assert ([x['zorder'] for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items
+        if x['label'] == 'data_c[DATA]'][0] == 2.5)
+
 
     imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.layers[5].zorder = 1
     imviz_helper.viewers['imviz-0'].data_menu._obj.layer._update_items()

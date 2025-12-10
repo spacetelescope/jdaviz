@@ -404,6 +404,16 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if self.prevent_layer_items_recursion:
                 return
 
+            # Check if only visibility changed (not order or zorder)
+            old_layers = {item['label']: item['zorder'] for item in event['old']}
+            new_layers = {item['label']: item['zorder'] for item in event['new']}
+            old_order = [item['label'] for item in event['old'] if item['is_subset'] is not None]
+            new_order = [item['label'] for item in event['new'] if item['is_subset'] is not None]
+            
+            # If order and zorders are the same, only visibility changed, so skip zorder recalculation
+            if old_order == new_order and old_layers == new_layers:
+                return
+
             self.prevent_layer_items_recursion = True
 
             label_order = [li['label'] for li in event["new"] if li['is_subset'] is not None]
@@ -436,11 +446,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                 print('x is ', x, 'new_zorder is ', new_zorder, 'layer order is ', layer.zorder)  # noqa    
                                 if new_zorder < old_layers[layer.layer.label]:
                                     print('new zorder should be ', min(x))
-                                    new_zorder = min(x) - 0.5
+                                    new_zorder = min(x)
                                 else:
                                     # new_zorder = max(x) + 0.5
                                     print('new zorder should be ', max(x))
-                                    new_zorder = max(x) + 0.5
+                                    new_zorder = max(x)
                         # new_zorder = [min(x) if new_zorder < layer.zorder else max(x) for x in children_blocks if new_zorder in x][0]
                         print('!!!!!!!!! new zorder adjusted to ', new_zorder, 'for', layer.layer.label)
                 else:
@@ -602,11 +612,16 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 # then this is a child-layer of a parent-layer that is being hidden
                 # so also hide the child-layer
                 layer.visible = False
+            elif visible and self.app._get_assoc_data_parent(layer.layer.label) == layer_label:
+                # then this is a child-layer of a parent-layer that is being shown
+                # so also show the child-layer
+                layer.visible = True
 
             if layer.state.visible != layer.visible:
                 layer.state.visible = layer.visible
 
-            self.layer._update_items()
+        # Update items once after all visibility changes are made
+        self.layer._update_items()
 
         if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
