@@ -340,4 +340,10 @@ span.api-hint-header {
   color: #C6F0FD !important;
 }
 
+/* Hide filter button in v-data-table header */
+.v-data-table-header .v-btn:has(.v-icon),
+.v-data-table th .v-btn:has(.v-icon) {
+  display: none !important;
+}
+
 </style>

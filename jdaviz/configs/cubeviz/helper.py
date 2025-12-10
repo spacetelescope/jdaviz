@@ -99,7 +99,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
                   **kwargs)
         return
 
-    @deprecated(since="4.2", alternative="plugins['Slice'].value")
+    @deprecated(since="4.2", alternative="plugins['Spectral Slice'].value")
     def select_wavelength(self, wavelength):
         """
         Select the slice closest to the provided wavelength.

@@ -95,7 +95,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     filename_auto = Bool(True).tag(sync=True)
     filename_invalid_msg = Unicode('').tag(sync=True)
 
-    default_filepath = Unicode().tag(sync=True)
+    filepath = Unicode().tag(sync=True)
 
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
@@ -288,7 +288,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if self.dev_multi_support:
             expose += ['multiselect']
 
-        return PluginUserApi(self, expose=expose)
+        return PluginUserApi(self, expose=expose, readonly=('filepath',))
 
     def _on_cubeviz_data_added(self, msg):
         # NOTE: This needs revising if we allow loading more than one cube.
@@ -363,7 +363,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # by user via self.filename_value
         expanded_path = os.path.expanduser(self.filename_value)
         abs_path = Path(expanded_path).resolve()
-        self.default_filepath = str(abs_path)
+        self.filepath = str(abs_path)
 
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
@@ -429,10 +429,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if default_path:
             if not filepath.is_absolute():
                 abs_path = filepath.resolve()
-                self.default_filepath = str(abs_path)
+                self.filepath = str(abs_path)
             # set default path for standalone
             if os.environ.get("JDAVIZ_START_DIR", ""):
-                self.default_filepath = os.environ["JDAVIZ_START_DIR"]
+                self.filepath = os.environ["JDAVIZ_START_DIR"]
 
         if filename.exists() and not overwrite and not default_path:
             self.overwrite_warn = True
@@ -718,7 +718,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 raise ImportError("Please install opencv-python")
             raise ValueError("movie support disabled")
 
-        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        slice_plg = self.app._jdaviz_helper.plugins["Spectral Slice"]._obj
         orig_slice = viewer.slice
         temp_png_files = []
         i = i_start
@@ -842,7 +842,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             i_end = int(self.i_end)
 
         # No wrapping. Forward only.
-        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        slice_plg = self.app._jdaviz_helper.plugins["Spectral Slice"]._obj
         if i_start < 0:  # pragma: no cover
             i_start = 0
         max_slice = len(slice_plg.valid_values_sorted) - 1

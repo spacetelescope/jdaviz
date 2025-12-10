@@ -36,10 +36,13 @@ New Features
 
 - Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
 
+- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
+  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
 Cubeviz
 ^^^^^^^
 
-- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748, #3861]
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748, #3861, #3911]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3748, #3872]
@@ -47,6 +50,8 @@ Cubeviz
 - Aperture photometry and collapse data selection no longer includes uncertainty cubes. [#3910]
 
 - The default label for collapsed cubes now always includes the input data-label. [#3910]
+
+- The `Slice` plugin is renamed to `Spectral Slice`. [#3925]
 
 Imviz
 ^^^^^
@@ -78,6 +83,8 @@ Rampviz
 - ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.
   This changes the default auto-extraction function to always be "median" as well as
   changes to the default label of the auto-extracted ramp integration. [#3878, #3910]
+
+- The `Slice` plugin is renamed to `Ramp Slice`. [#3925]
 
 API Changes
 -----------
@@ -128,6 +135,8 @@ Other Changes and Additions
 - Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759, #3914]
 
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
+
+- Fix missing user API and API hint entries in plugins. [#3900, #3918]
 
 4.4.3 (unreleased)
 ==================

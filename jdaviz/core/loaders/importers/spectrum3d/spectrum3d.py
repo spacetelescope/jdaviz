@@ -337,12 +337,12 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
             # we'll add the data manually instead of through add_results_from_plugin
             # but still want to preserve the plugin metadata
             ext.meta['plugin'] = spext._plugin_name
-        except Exception:
+        except Exception as e:
             ext = None
             msg = SnackbarMessage(
                 "Automatic spectrum extraction failed. See the 3D spectral extraction"
                 " plugin to perform a custom extraction",
-                color='error', sender=self, timeout=10000)
+                color='error', sender=self, timeout=10000, traceback=e)
         else:
             msg = SnackbarMessage(
                 "The extracted 1D spectrum was generated automatically."

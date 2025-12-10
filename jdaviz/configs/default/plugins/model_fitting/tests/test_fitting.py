@@ -47,6 +47,7 @@ def test_model_params():
                         "Lorentz1D": ["amplitude", "x_0", "fwhm"],
                         "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
                         "BlackBody": ["temperature", "scale"],
+                        "Spline1D": [],
                         }
 
     for model_name in initializers.MODELS.keys():
@@ -56,7 +57,12 @@ def test_model_params():
             # test needs to be updated rather than the code breaking
             raise ValueError(f"{model_name} not in test dictionary of expected parameters")
         expected_params = model_parameters.get(model_name, [])
-        params = initializers.get_model_parameters(model_name)
+
+        params = []
+        # SplineSmoothingFitter does not have knot points, so no scalar parameters
+        # Will need to account for if SplineExactKnotsFitter is implemented
+        if model_name != "Spline1D":
+            params = initializers.get_model_parameters(model_name)
         assert len(params) == len(expected_params)
         assert np.all([p in expected_params for p in params])
 
@@ -972,3 +978,56 @@ def test_fitter_parameter_persistence(specviz_helper, spectrum1d):
     plugin.fitter_component = 'LevMarLSQFitter'
     maxiter_value = plugin.get_fitter_parameter('maxiter')
     assert maxiter_value == 150
+
+
+def test_spline(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+    mf = specviz_helper.plugins['Model Fitting']._obj
+    mf.create_model_component('Spline1D')
+
+    mf.fitter_component.selected = 'SplineSmoothingFitter'
+
+    # check that smoothing_factor parameter exists and has a value (initialized as 0
+    # by unitl the fitter component is selected)
+    assert mf.fitter_parameters['parameters'][1]['name'] == 'smoothing_factor'
+    assert mf.fitter_parameters['parameters'][1]['value'] is not None
+
+    deg_param = next(p for p in mf.fitter_parameters['parameters']
+                     if p['name'] == 'degree')
+
+    # degree must be between 1 and 5
+    deg_param['value'] = 0
+    with pytest.raises(ValueError, match=r"k should be 1 <= k <= 5"):
+        mf.calculate_fit(add_data=False)
+    deg_param['value'] = 6
+    with pytest.raises(ValueError, match=r"k should be 1 <= k <= 5"):
+        mf.calculate_fit(add_data=False)
+
+    deg_param['value'] = 3
+
+    mf.calculate_fit(add_data=True)
+
+    # ensure that Spline1D is not combined with any other model components
+    mf.create_model_component('Const1D')
+    assert mf.model_equation_invalid_msg == (
+                    "Spline1D cannot be combined with other model components."
+                )
+    mf.remove_model_component('C')
+
+    # ensure that only SplineSmoothingFitter fitter component can be used
+    # with the Spline1D model parameter
+    assert mf.fitter_component.choices == ['SplineSmoothingFitter']
+
+    mf.remove_model_component('S')
+    mf.create_model_component('Const1D')
+
+    # make sure fitter components update when Spline1D model component is removed
+    assert mf.fitter_component.choices == ['TRFLSQFitter',
+                                           'DogBoxLSQFitter',
+                                           'LMLSQFitter',
+                                           'LevMarLSQFitter',
+                                           'LinearLSQFitter',
+                                           'SLSQPLSQFitter',
+                                           'SimplexLSQFitter',
+                                           'SplineSmoothingFitter']
