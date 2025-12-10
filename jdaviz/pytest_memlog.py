@@ -15,16 +15,32 @@ Run pytest with the --memlog option to enable memory logging:
     pytest --memlog 10 --memlog-max-worker # Show worker with the highest memory
 """
 import re
-from itertools import groupby
 
+import numpy as np
 import psutil
 import pytest
 
 
 # ============================================================================
-# Module-level storage
+# Module-level storage and dtype
 # ============================================================================
-_memlog_records = []
+_memlog_dtype = np.dtype([('worker_id', 'U20'),
+                          ('nodeid', 'U256'),
+                          ('uss_before', 'u8'),
+                          ('uss_after', 'u8'),
+                          ('uss_diff', 'i8'),
+                          ('rss_before', 'u8'),
+                          ('rss_after', 'u8'),
+                          ('rss_diff', 'i8'),
+                          ('swap_before', 'u8'),
+                          ('swap_after', 'u8'),
+                          ('swap_diff', 'i8')])
+
+_header = f'{"uss_diff":>10}  {"rss_diff":>10}  {"swap_diff":>10}  '
+_header_no_worker = _header + 'test'
+_header_with_worker = _header + f'{"worker":>8}  test'
+
+_memlog_records = np.array([], dtype=_memlog_dtype)
 _memlog_enabled_flag = False
 _default_top_n = 20
 
@@ -34,13 +50,21 @@ _default_top_n = 20
 # ============================================================================
 def _get_memory_bytes():
     """
-    Return the current process resident set size (RSS) in bytes.
+    Get current process memory usage.
+
+    Returns
+    -------
+    numpy.void
+        A structured array record with rss, swap, and uss fields in bytes.
     """
     p = psutil.Process()
     rss = p.memory_info().rss
     swap = psutil.swap_memory().used
     uss = p.memory_full_info().uss
-    return {'rss': rss, 'swap': swap, 'uss': uss}
+
+    mem_array = np.array([(rss, swap, uss)],
+                         dtype=[('rss', 'u8'), ('swap', 'u8'), ('uss', 'u8')])
+    return mem_array[0]
 
 
 def _format_bytes(b):
@@ -57,9 +81,8 @@ def _format_memlog_line(record, include_worker=False):
 
     Parameters
     ----------
-    record : dict
-        A memlog record with memory values (uss, rss, swap before/after/diff),
-        'worker_id', and 'nodeid' keys.
+    record : numpy.void
+        A structured array record with memory values and worker_id.
     include_worker : bool
         If True, include the worker ID in the output.
 
@@ -68,16 +91,16 @@ def _format_memlog_line(record, include_worker=False):
     str
         Formatted line for display showing uss_diff, rss_diff, swap_diff.
     """
-    uss_diff = record.get('uss_diff') or 0
-    rss_diff = record.get('rss_diff') or 0
-    swap_diff = record.get('swap_diff') or 0
+    uss_diff = int(record['uss_diff'])
+    rss_diff = int(record['rss_diff'])
+    swap_diff = int(record['swap_diff'])
 
     result_str = (f'{_format_bytes(uss_diff):>10}  '
                   f'{_format_bytes(rss_diff):>10}  '
                   f'{_format_bytes(swap_diff):>10}  ')
 
     if include_worker:
-        worker = record.get('worker_id') or 'master'
+        worker = record['worker_id']
         return result_str + f'{worker:>8}  {record["nodeid"]}'
     else:
         return result_str + f'{record["nodeid"]}'
@@ -112,7 +135,7 @@ def _parse_worker_id(worker_id):
 
 def _extract_memlog_properties(props):
     """
-    Extract memory properties from user_properties list.
+    Extract memory properties from user_properties list into a dict.
 
     Parameters
     ----------
@@ -122,9 +145,34 @@ def _extract_memlog_properties(props):
     Returns
     -------
     dict
-        Dictionary with memory values and diffs.
+        Dictionary mapping property names to integer values (or string for
+        worker_id). Returns empty dict if no memory data found.
     """
-    return {name: int(value) if name != 'worker_id' else value for name, value in props}
+    values = {'worker_id': 'master',
+              'uss_before': 0,
+              'uss_after': 0,
+              'uss_diff': 0,
+              'rss_before': 0,
+              'rss_after': 0,
+              'rss_diff': 0,
+              'swap_before': 0,
+              'swap_after': 0,
+              'swap_diff': 0}
+
+    for name, value in props:
+        if name in values:
+            if name == 'worker_id':
+                values[name] = value
+            else:
+                values[name] = int(value)
+
+    # Check if we have any memory data
+    has_memory_data = any(
+        values[k] != 0 for k in ['uss_before', 'uss_after', 'uss_diff',
+                                 'rss_before', 'rss_after', 'rss_diff',
+                                 'swap_before', 'swap_after', 'swap_diff'])
+
+    return values if has_memory_data else {}
 
 
 def _apply_memlog_sort(records, sort_method, top_n):
@@ -133,8 +181,8 @@ def _apply_memlog_sort(records, sort_method, top_n):
 
     Parameters
     ----------
-    records : list
-        List of memlog record dictionaries.
+    records : numpy.ndarray
+        Array of memlog records.
     sort_method : str
         Sorting method: 'diff', 'before', 'after', 'peak', or 'seq'.
     top_n : int
@@ -142,26 +190,33 @@ def _apply_memlog_sort(records, sort_method, top_n):
 
     Returns
     -------
-    list
+    numpy.ndarray
         Sorted records, limited to top_n items.
     """
+    if len(records) == 0:
+        return records
+
     if sort_method == 'diff':
-        records.sort(key=lambda r: r['uss_diff'], reverse=True)
+        sort_idx = np.argsort(-records['uss_diff'])
 
     elif sort_method == 'before':
-        records.sort(key=lambda r: r['uss_before'], reverse=True)
+        sort_idx = np.argsort(-records['uss_before'])
 
     elif sort_method == 'after':
-        records.sort(key=lambda r: r['uss_after'], reverse=True)
+        sort_idx = np.argsort(-records['uss_after'])
 
     elif sort_method == 'peak':
-        records.sort(key=lambda r: max(r['uss_before'], r['uss_after']), reverse=True)
+        peaks = np.maximum(records['uss_before'], records['uss_after'])
+        sort_idx = np.argsort(-peaks)
 
     elif sort_method == 'seq':
-        # Keep original order but reverse for display purposes
-        records.reverse()
+        sort_idx = np.arange(len(records) - 1, -1, -1)
 
-    return records[:top_n]
+    else:
+        sort_idx = np.arange(len(records))
+
+    sorted_records = records[sort_idx]
+    return sorted_records[:top_n]
 
 
 # ============================================================================
@@ -272,15 +327,13 @@ def memlog_runtest_makereport(item, call):
         return
 
     # Attach to user_properties - these get serialized to master in xdist
-    str_suffixes = ('before', 'after')
-    mem_before_after = (mem_before, mem_after)
     for prefix in ('uss', 'rss', 'swap'):
+        before = int(mem_before[prefix])
+        after = int(mem_after[prefix])
+        diff = after - before
 
-        for mem_ba, suffix in zip(mem_before_after, str_suffixes):
-            # e.g. result tuple ('uss_before', int(mem_before['uss'])
-            report.user_properties.append((f'{prefix}_{suffix}', int(mem_ba[prefix])))
-
-        diff = int(mem_after[prefix]) - int(mem_before[prefix])
+        report.user_properties.append((f'{prefix}_before', before))
+        report.user_properties.append((f'{prefix}_after', after))
         report.user_properties.append((f'{prefix}_diff', diff))
 
     # Get worker_id from config (xdist sets this)
@@ -295,6 +348,8 @@ def memlog_runtest_logreport(report):
     This runs on both workers and master. On master (xdist), it receives
     the serialized user_properties from workers.
     """
+    global _memlog_records
+
     if report.when != 'teardown':
         return
 
@@ -304,13 +359,24 @@ def memlog_runtest_logreport(report):
         return
 
     mem_props = _extract_memlog_properties(props)
-    if len(mem_props) == 0:
+    if not mem_props:
         return
 
-    mem_props.update({'nodeid': getattr(report, 'nodeid', '<unknown>'),
-                      'when': report.when})
+    # Build record tuple in dtype field order
+    record_values = (mem_props['worker_id'],
+                     getattr(report, 'nodeid', '<unknown>'),
+                     mem_props['uss_before'],
+                     mem_props['uss_after'],
+                     mem_props['uss_diff'],
+                     mem_props['rss_before'],
+                     mem_props['rss_after'],
+                     mem_props['rss_diff'],
+                     mem_props['swap_before'],
+                     mem_props['swap_after'],
+                     mem_props['swap_diff'])
 
-    _memlog_records.append(mem_props)
+    record = np.array([record_values], dtype=_memlog_dtype)
+    _memlog_records = np.append(_memlog_records, record)
 
 
 def memlog_terminal_summary(terminalreporter, config=None):
@@ -323,7 +389,7 @@ def memlog_terminal_summary(terminalreporter, config=None):
     if not getattr(config, '_memlog_enabled', False):
         return
 
-    if not _memlog_records:
+    if len(_memlog_records) == 0:
         terminalreporter.write_line('memlog: no records collected.')
         return
 
@@ -336,16 +402,17 @@ def memlog_terminal_summary(terminalreporter, config=None):
     elif not isinstance(top_n, int):
         top_n = 20
 
-    records = [r for r in _memlog_records if r.get('uss_diff') is not None]
+    # Filter records with valid uss_diff (no null/nan checks needed with arrays)
+    records = _memlog_records[_memlog_records['uss_diff'] != 0]
 
-    if not records:
+    if len(records) == 0:
         terminalreporter.write_line('memlog: no records collected.')
         return
 
     sort_method = getattr(config, '_memlog_sort', 'diff')
 
     # If max worker is requested, find and report on the worker with
-    # highest peak memory allocation
+    # the highest peak memory allocation
     if getattr(config, '_memlog_max_worker', False):
         _display_max_worker_report(terminalreporter, records, top_n)
         return
@@ -364,38 +431,30 @@ def memlog_terminal_summary(terminalreporter, config=None):
 
 def _display_max_worker_report(terminalreporter, records, top_n):
     """
-    Display memory report for the worker with highest peak memory.
+    Display memory report for the worker with the highest peak memory.
 
     Parameters
     ----------
     terminalreporter : TerminalReporter
         The pytest terminal reporter.
-    records : list
-        List of memlog record dictionaries.
+    records : numpy.ndarray
+        Array of memlog records.
     top_n : int
         Number of top records to display.
     """
-    # Filter records that have uss_diff data
-    records = [r for r in records if r.get('uss_diff') is not None]
-
-    # Find the worker with the highest peak uss memory across all tests
-    max_worker = None
-    max_peak = -1
-
-    for r in records:
-        worker_id = r.get('worker_id') or 'master'
-        peak = max(r['uss_before'], r['uss_after'])
-        if peak > max_peak:
-            max_peak = peak
-            max_worker = worker_id
-
-    if max_worker is None:
+    if len(records) == 0:
         terminalreporter.write_line('memlog: no worker found with memory data.')
         return
 
+    # Find the worker with the highest peak uss memory across all tests
+    # using vectorized operations
+    peaks = np.maximum(records['uss_before'], records['uss_after'])
+    max_idx = np.argmax(peaks)
+    max_peak = int(peaks[max_idx])
+    max_worker = records[max_idx]['worker_id']
+
     # Filter to only this worker's records
-    worker_records = [r for r in records
-                      if (r.get('worker_id') or 'master') == max_worker]
+    worker_records = records[records['worker_id'] == max_worker]
 
     # Apply the selected sort method to worker records
     worker_records = _apply_memlog_sort(worker_records, 'seq', top_n)
@@ -404,8 +463,7 @@ def _display_max_worker_report(terminalreporter, records, top_n):
              f'(highest peak uss: {_format_bytes(max_peak)})')
     terminalreporter.write_sep('-', title)
 
-    header = f'{"uss_diff":>10}  {"rss_diff":>10}  {"swap_diff":>10}  test'
-    terminalreporter.write_line(header)
+    terminalreporter.write_line(_header_no_worker)
 
     for r in worker_records:
         terminalreporter.write_line(_format_memlog_line(r))
@@ -421,39 +479,32 @@ def _display_worker_grouped_report(terminalreporter, records, top_n):
     ----------
     terminalreporter : TerminalReporter
         The pytest terminal reporter.
-    records : list
-        List of memlog record dictionaries.
+    records : numpy.ndarray
+        Array of memlog records.
     top_n : int
         Number of top records to display per worker.
     """
-    # Filter records that have uss_diff data
-    records = [r for r in records if r.get('uss_diff') is not None]
+    if len(records) == 0:
+        return
 
-    # Sort records by worker_id first (with numerical sorting)
-    records.sort(key=lambda r: _parse_worker_id(r.get('worker_id') or 'master'))
-
-    # Group by worker_id
-    grouped = {}
-    for worker_id, group_records in (
-            groupby(records, key=lambda r: r.get('worker_id') or 'master')):
-        # Within each worker, sort by sequential order
-        grouped[worker_id] = _apply_memlog_sort(list(group_records), 'seq', top_n)
+    # Get unique worker IDs and sort them numerically
+    unique_workers = np.unique(records['worker_id'])
+    sorted_workers = sorted(unique_workers, key=_parse_worker_id)
 
     # Display results grouped by worker
     title = f'Top {top_n} tests by worker, sorted by peak memory'
     terminalreporter.write_sep('-', title)
 
-    header = (f'{"uss_diff":>10}  {"rss_diff":>10}  {"swap_diff":>10}  '
-              f'{"worker":>8}  test')
+    for worker_id in sorted_workers:
+        # Filter records for this worker
+        worker_records = records[records['worker_id'] == worker_id]
+        # Sort within worker group
+        worker_records = _apply_memlog_sort(worker_records, 'seq', top_n)
 
-    # Sort worker_ids numerically for display
-    sorted_worker_ids = sorted(grouped.keys(), key=_parse_worker_id)
-
-    for worker_id in sorted_worker_ids:
         terminalreporter.write_line(f'\nWorker: {worker_id}')
-        terminalreporter.write_line(header)
+        terminalreporter.write_line(_header_with_worker)
 
-        for r in grouped[worker_id][:top_n]:
+        for r in worker_records[:top_n]:
             terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
 
 
@@ -465,25 +516,20 @@ def _display_standard_report(terminalreporter, records, sort_method, top_n):
     ----------
     terminalreporter : TerminalReporter
         The pytest terminal reporter.
-    records : list
-        List of memlog record dictionaries.
+    records : numpy.ndarray
+        Array of memlog records.
     sort_method : str
         Sorting method: 'diff', 'before', 'after', 'peak', or 'seq'.
     top_n : int
         Number of top records to display.
     """
-    # Filter records that have uss_diff data
-    records = [r for r in records if r.get('uss_diff') is not None]
-
     # Apply the selected sort method to all records
     records = _apply_memlog_sort(records, sort_method, top_n)
 
     title = f'Top {top_n} tests by memory difference'
     terminalreporter.write_sep('-', title)
 
-    header = (f'{"uss_diff":>10}  {"rss_diff":>10}  {"swap_diff":>10}  '
-              f'{"worker":>8}  test')
-    terminalreporter.write_line(header)
+    terminalreporter.write_line(_header_with_worker)
 
     for r in records:
         terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
@@ -491,37 +537,29 @@ def _display_standard_report(terminalreporter, records, sort_method, top_n):
 
 def _calculate_peak_usage(records):
     """
-    Calculate peak memory usage across all records.
+    Calculate peak memory usage across all records using vectorized operations.
 
     Parameters
     ----------
-    records : list
-        List of memlog record dictionaries.
+    records : numpy.ndarray
+        Array of memlog records.
 
     Returns
     -------
     dict
         Dictionary with 'uss', 'rss', 'swap' peak values.
     """
-    peak_uss = -1
-    peak_rss = -1
-    peak_swap = -1
+    if len(records) == 0:
+        return {'uss': 0, 'rss': 0, 'swap': 0}
 
-    for r in records:
-        uss_peak = max(r.get('uss_before') or 0, r.get('uss_after') or 0)
-        rss_peak = max(r.get('rss_before') or 0, r.get('rss_after') or 0)
-        swap_peak = max(r.get('swap_before') or 0, r.get('swap_after') or 0)
+    # Use vectorized operations to find max peaks for each memory type
+    peaks = {}
+    for prefix in ('uss', 'rss', 'swap'):
+        before = records[f'{prefix}_before']
+        after = records[f'{prefix}_after']
+        peaks[prefix] = int(np.maximum(before, after).max())
 
-        if uss_peak > peak_uss:
-            peak_uss = uss_peak
-        if rss_peak > peak_rss:
-            peak_rss = rss_peak
-        if swap_peak > peak_swap:
-            peak_swap = swap_peak
-
-    return {'uss': peak_uss if peak_uss >= 0 else 0,
-            'rss': peak_rss if peak_rss >= 0 else 0,
-            'swap': peak_swap if peak_swap >= 0 else 0}
+    return peaks
 
 
 def _display_peak_usage(terminalreporter, records):
@@ -532,21 +570,13 @@ def _display_peak_usage(terminalreporter, records):
     ----------
     terminalreporter : TerminalReporter
         The pytest terminal reporter.
-    records : list
-        List of memlog record dictionaries.
+    records : numpy.ndarray
+        Array of memlog records.
     """
     peak = _calculate_peak_usage(records)
 
     terminalreporter.write_line('')
-    terminalreporter.write_line(
-        f'Peak memory usage across all tests:'
-    )
-    terminalreporter.write_line(
-        f'  USS:  {_format_bytes(peak["uss"])}'
-    )
-    terminalreporter.write_line(
-        f'  RSS:  {_format_bytes(peak["rss"])}'
-    )
-    terminalreporter.write_line(
-        f'  Swap: {_format_bytes(peak["swap"])}'
-    )
+    terminalreporter.write_line(f'Peak memory usage across all tests:')
+    terminalreporter.write_line(f'  USS:  {_format_bytes(peak["uss"])}')
+    terminalreporter.write_line(f'  RSS:  {_format_bytes(peak["rss"])}')
+    terminalreporter.write_line(f'  Swap: {_format_bytes(peak["swap"])}')
