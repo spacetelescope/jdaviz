@@ -311,8 +311,12 @@ class CatalogImporter(BaseImporterToDataCollection):
             if getattr(dec, 'unit') is None:
                 dec *= u.Unit(self.col_dec_unit_selected)
 
-            output_table['Right Ascension'] = ra
-            output_table['Declination'] = dec
+            output_table[self.col_ra_selected] = ra
+            output_table[self.col_dec_selected] = dec
+
+            # add the selected ra/dec columns to meta
+            output_table.meta['_jdaviz_loader_ra_col'] = self.col_ra_selected
+            output_table.meta['_jdaviz_loader_dec_col'] = self.col_dec_selected
 
         # handle output construction for X and Y coordinate columns, if selected
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
@@ -328,10 +332,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                 except ValueError:
                     raise ValueError("Could not parse Y column as numeric values.")
 
-            # rename X and Y columns so that table in data collection always has
-            # the same X, Y column names for consistency when accessing elsewhere
-            output_table['X'] = table[self.col_x_selected]
-            output_table['Y'] = table[self.col_y_selected]
+            output_table[self.col_x_selected] = table[self.col_x_selected]
+            output_table[self.col_y_selected] = table[self.col_y_selected]
+
+            # add the selected ra/dec columns to meta
+            output_table.meta['_jdaviz_loader_x_col'] = self.col_x_selected
+            output_table.meta['_jdaviz_loader_y_col'] = self.col_y_selected
 
         # add source ID column. If no column selected, just use table index
         # for now this will be added as a column named 'ID' in the output table,
@@ -339,8 +345,10 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         if self.col_id_selected in table.colnames:
             output_table['ID'] = table[self.col_id_selected]
+            output_table.meta['_jdaviz_id_col'] = self.col_id_selected
         else:
             output_table['ID'] = np.arange(len(table))
+            output_table.meta['_jdaviz_id_col'] = 'ID'
 
         # add additional columns to output table
         for col in self.output_cols:

@@ -783,9 +783,13 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
         # and use ComponentLink instead of WCSLink because Catalogs do not
         # have coords (wcs) attribute.
         if data.meta.get('_importer') == 'CatalogImporter':
+
             comp_labels = [str(x) for x in data.component_ids()]
+
             if align_by == 'wcs':
-                if 'Right Ascension' in comp_labels and 'Declination' in comp_labels:
+                ra_col = data.meta.get('_jdaviz_loader_ra_col')
+                dec_col = data.meta.get('_jdaviz_loader_dec_col')
+                if ra_col in comp_labels and dec_col in comp_labels:
                     ref_labels = [str(x) for x in refdata.component_ids()]
                     try:  # default orientation will have components named 'Lat' and 'Lon'
                         ref_ra = refdata.components[ref_labels.index('Lon')]
@@ -794,16 +798,18 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
                         ref_ra = refdata.components[ref_labels.index('Right Ascension')]
                         ref_dec = refdata.components[ref_labels.index('Declination')]
 
-                    # source catalogs will always have RA/Dec components with
-                    # these exact labels, so this is safe to do with exact labels
-                    cat_ra = data.components[comp_labels.index('Right Ascension')]
-                    cat_dec = data.components[comp_labels.index('Declination')]
+                    cat_ra = data.components[comp_labels.index(ra_col)]
+                    cat_dec = data.components[comp_labels.index(dec_col)]
 
                     links_list += [ComponentLink([ref_ra], cat_ra),
                                    ComponentLink([ref_dec], cat_dec)]
+
                     continue
+
             elif align_by == 'pixels':
-                if 'X' in comp_labels and 'Y' in comp_labels:
+                x_col = data.meta.get('_jdaviz_loader_x_col')
+                y_col = data.meta.get('_jdaviz_loader_y_col')
+                if x_col in comp_labels and y_col in comp_labels:
                     # Image components should always be called 'Pixel Axis 1 [x]'
                     # and 'Pixel Axis 0 [y]' If an error ever arises from trying
                     # to access these directly, generalize it, but this should be safe.
@@ -813,11 +819,12 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_a
 
                     # source catalogs will always have X/Y components with
                     # these exact labels, so this is safe to do with exact labels
-                    cat_x = data.components[comp_labels.index('X')]
-                    cat_y = data.components[comp_labels.index('Y')]
+                    cat_x = data.components[comp_labels.index(x_col)]
+                    cat_y = data.components[comp_labels.index(y_col)]
 
                     links_list += [ComponentLink([ref_x], cat_x),
                                    ComponentLink([ref_y], cat_y)]
+
                     continue
 
         else:
