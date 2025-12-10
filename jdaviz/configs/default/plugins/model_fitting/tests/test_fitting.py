@@ -884,8 +884,8 @@ def test_get_fitter_parameter(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     plugin = specviz_helper.plugins["Model Fitting"]
 
-    # Test default fitter (TRFLSQFitter) parameters
-    assert plugin.fitter_component == 'TRFLSQFitter'
+    # Test default fitter (LevMarLSQFitter) parameters
+    assert plugin.fitter_component == 'LevMarLSQFitter'
 
     # Test getting maxiter parameter
     maxiter_value = plugin.get_fitter_parameter('maxiter')
@@ -918,8 +918,8 @@ def test_set_fitter_parameter(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     plugin = specviz_helper.plugins["Model Fitting"]._obj
 
-    # Test default fitter (TRFLSQFitter)
-    assert plugin.fitter_component == 'TRFLSQFitter'
+    # Test default fitter (LevMarLSQFitter)
+    assert plugin.fitter_component == 'LevMarLSQFitter'
 
     # Test setting maxiter parameter
     original_maxiter = plugin.get_fitter_parameter('maxiter')
@@ -961,21 +961,21 @@ def test_fitter_parameter_persistence(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     plugin = specviz_helper.plugins["Model Fitting"]
 
-    # Set custom value for TRFLSQFitter
-    plugin.fitter_component = 'TRFLSQFitter'
+    # Set custom value for LevMarLSQFitter
+    plugin.fitter_component = 'LevMarLSQFitter'
     plugin.set_fitter_parameter('maxiter', 75)
 
     # Switch to different fitter
-    plugin.fitter_component = 'LevMarLSQFitter'
+    plugin.fitter_component = 'SimplexLSQFitter'
     plugin.set_fitter_parameter('maxiter', 150)
 
-    # Switch back to TRFLSQFitter and check if value persisted
-    plugin.fitter_component = 'TRFLSQFitter'
+    # Switch back to LevMarLSQFitter and check if value persisted
+    plugin.fitter_component = 'LevMarLSQFitter'
     maxiter_value = plugin.get_fitter_parameter('maxiter')
     assert maxiter_value == 75  # Should have persisted
 
-    # Check that LevMarLSQFitter value also persisted
-    plugin.fitter_component = 'LevMarLSQFitter'
+    # Check that SimplexLSQFitter value also persisted
+    plugin.fitter_component = 'SimplexLSQFitter'
     maxiter_value = plugin.get_fitter_parameter('maxiter')
     assert maxiter_value == 150
 
