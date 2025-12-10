@@ -468,6 +468,9 @@ def _display_max_worker_report(terminalreporter, records, top_n):
     for r in worker_records:
         terminalreporter.write_line(_format_memlog_line(r))
 
+    # Display peak memory usage across all tests
+    _display_peak_usage(terminalreporter, records)
+
     terminalreporter.write_sep('-', 'end of memlog summary')
 
 
