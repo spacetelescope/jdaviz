@@ -371,9 +371,7 @@ class TableSubset(Tool):
         self.viewer.apply_filter()
 
     def is_visible(self):
-        if not self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
-                                                     'cubeviz', 'mosviz',
-                                                     'rampviz']:
+        if self.viewer.jdaviz_app.config != 'deconfigged':
             return False
         if not hasattr(self.viewer, 'widget_table'):
             return False
