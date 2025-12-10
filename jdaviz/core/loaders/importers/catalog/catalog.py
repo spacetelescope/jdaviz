@@ -282,56 +282,40 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         table = self.input[self.output_cols]
         output_table = QTable()
-
+ 
+        # Handle RA / Dec columns, if selected
         if (self.col_ra_selected in table.colnames) and (self.col_dec_selected in table.colnames):  # noqa
-            # handle output construction for RA/Dec and/or X/Y coordinate columns.
-            # rename columns so that table in data collection always has
-            # the same column names for consistency when accessing elsewhere
-            # also add and units if they weren't loaded in with units assigned
+            ra = self.input[self.col_ra_selected]
+            dec = self.input[self.col_dec_selected]
 
-            ra = None
-            dec = None
-            if isinstance(self.input[self.col_ra_selected], SkyCoord):
-                ra = self.input[self.col_ra_selected].ra
-            if isinstance(self.input[self.col_dec_selected], SkyCoord):
-                dec = self.input[self.col_dec_selected].dec
+            ra = ra.ra if isinstance(ra, SkyCoord) else ra
+            dec = dec.dec if isinstance(dec, SkyCoord) else dec
 
-            # if the columns are strings, try to parse them as coordinates.
-            # To do this, we try loading it through SkyCoord, which can determine
-            # if the string format is recognizable as Lon/Lat coordinates.
-            if isinstance(self.input[self.col_ra_selected][0], str):
+            # If the columns are strings, pass them through 'SkyCoord', which can
+            # determine if the string format is recognizable as Lon/Lat coordinates.
+            if isinstance(ra[0], str):
                 try:
-                    sc = SkyCoord(self.input[self.col_ra_selected],
-                                  self.input[self.col_ra_selected])
-                    ra = sc.ra.deg * u.deg
+                    ra = SkyCoord(ra, ra).ra  # dummy value 'ra' twice, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse RA column as string coordinates.")
-            if isinstance(self.input[self.col_dec_selected][0], str):
+            if isinstance(dec[0], str):
                 try:
-                    sc = SkyCoord(self.input[self.col_dec_selected],
-                                  self.input[self.col_dec_selected])
-                    dec = sc.dec.deg * u.deg
+                    dec = SkyCoord(dec, dec).dec  # dummy value 'dec' twice, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse Dec column as string coordinates.")
 
             # append units to RA/Dec, if they weren't loaded in with units or
             # assigned units above when parsing strings as units
-            if ra is not None:
-                output_table['Right Ascension'] = ra
-            else:
-                output_table['Right Ascension'] = table[self.col_ra_selected]
-                # add units to ra if they weren't loaded in with units assigned
-                if not self.col_ra_has_unit:
-                    output_table['Right Ascension'] *= u.Unit(self.col_ra_unit_selected)
-            if dec is not None:
-                output_table['Declination'] = dec
-            else:
-                output_table['Declination'] = table[self.col_dec_selected]
-                if not self.col_dec_has_unit:
-                    output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
+            if getattr(ra, 'unit') is None:
+                ra *= u.Unit(self.col_ra_unit_selected)
+            if getattr(dec, 'unit') is None:
+                dec *= u.Unit(self.col_dec_unit_selected)
 
+            output_table['Right Ascension'] = ra
+            output_table['Declination'] = dec
+
+        # handle output construction for X and Y coordinate columns, if selected
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
-            # handle output construction for X and Y coordinate columns, if selected
             # if input is a string, try to convert to floats
             if isinstance(self.input[self.col_x_selected][0], str):
                 try:
