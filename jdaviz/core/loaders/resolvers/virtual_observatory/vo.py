@@ -37,13 +37,11 @@ class VOResolver(BaseConeSearchResolver):
         self.waveband = SelectPluginComponent(
             self, items="waveband_items", selected="waveband_selected"
         )
-        '''
+
         # Temporarily disabled while IVOA servers are apparently misconfigured
         self.waveband.choices = (
             w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
         )
-        '''
-        self.waveband.choices = ["",]
 
         self.waveband_selected = ""
 
