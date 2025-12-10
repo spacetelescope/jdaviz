@@ -307,11 +307,10 @@ def memlog_runtest_logreport(report):
     if len(mem_props) == 0:
         return
 
-    to_append = {name: item[name] for name, item in mem_props}
-    to_append.update({'nodeid': getattr(report, 'nodeid', '<unknown>'),
+    mem_props.update({'nodeid': getattr(report, 'nodeid', '<unknown>'),
                       'when': report.when})
 
-    _memlog_records.append(to_append)
+    _memlog_records.append(mem_props)
 
 
 def memlog_terminal_summary(terminalreporter, config=None):
@@ -339,6 +338,10 @@ def memlog_terminal_summary(terminalreporter, config=None):
 
     records = [r for r in _memlog_records if r.get('uss_diff') is not None]
 
+    if not records:
+        terminalreporter.write_line('memlog: no records collected.')
+        return
+
     sort_method = getattr(config, '_memlog_sort', 'diff')
 
     # If max worker is requested, find and report on the worker with
@@ -352,6 +355,9 @@ def memlog_terminal_summary(terminalreporter, config=None):
         _display_worker_grouped_report(terminalreporter, records, top_n)
     else:
         _display_standard_report(terminalreporter, records, sort_method, top_n)
+
+    # Display peak memory usage across all tests
+    _display_peak_usage(terminalreporter, records)
 
     terminalreporter.write_sep('-', 'end of memlog summary')
 
@@ -481,3 +487,66 @@ def _display_standard_report(terminalreporter, records, sort_method, top_n):
 
     for r in records:
         terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
+
+
+def _calculate_peak_usage(records):
+    """
+    Calculate peak memory usage across all records.
+
+    Parameters
+    ----------
+    records : list
+        List of memlog record dictionaries.
+
+    Returns
+    -------
+    dict
+        Dictionary with 'uss', 'rss', 'swap' peak values.
+    """
+    peak_uss = -1
+    peak_rss = -1
+    peak_swap = -1
+
+    for r in records:
+        uss_peak = max(r.get('uss_before') or 0, r.get('uss_after') or 0)
+        rss_peak = max(r.get('rss_before') or 0, r.get('rss_after') or 0)
+        swap_peak = max(r.get('swap_before') or 0, r.get('swap_after') or 0)
+
+        if uss_peak > peak_uss:
+            peak_uss = uss_peak
+        if rss_peak > peak_rss:
+            peak_rss = rss_peak
+        if swap_peak > peak_swap:
+            peak_swap = swap_peak
+
+    return {'uss': peak_uss if peak_uss >= 0 else 0,
+            'rss': peak_rss if peak_rss >= 0 else 0,
+            'swap': peak_swap if peak_swap >= 0 else 0}
+
+
+def _display_peak_usage(terminalreporter, records):
+    """
+    Display peak memory usage summary.
+
+    Parameters
+    ----------
+    terminalreporter : TerminalReporter
+        The pytest terminal reporter.
+    records : list
+        List of memlog record dictionaries.
+    """
+    peak = _calculate_peak_usage(records)
+
+    terminalreporter.write_line('')
+    terminalreporter.write_line(
+        f'Peak memory usage across all tests:'
+    )
+    terminalreporter.write_line(
+        f'  USS:  {_format_bytes(peak["uss"])}'
+    )
+    terminalreporter.write_line(
+        f'  RSS:  {_format_bytes(peak["rss"])}'
+    )
+    terminalreporter.write_line(
+        f'  Swap: {_format_bytes(peak["swap"])}'
+    )
