@@ -200,13 +200,16 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.app._jdaviz_helper._in_batch_load > 0:
             return
         if isinstance(msg, DataCollectionAddMessage):
-            components = [str(comp) for comp in msg.data.main_components]
-            if "ra" in components or "Lon" in components:
-                # linking currently removes any markers, so we want to skip
-                # linking immediately after new markers are added.
-                # Eventually we'll probably want to support linking WITH markers,
-                # at which point this if-statement should be removed.
-                return
+            if msg.data.meta.get('_importer') != 'CatalogImporter':
+                components = [str(comp) for comp in msg.data.main_components]
+                if "ra" in components or "Lon" in components:
+                    # linking currently removes any markers, so we want to skip
+                    # linking immediately after new markers are added. Check if
+                    # data was added by the Catalog importer because these may have
+                    # columns called 'ra' or "Lon". Eventually we'll probably
+                    # want to support linking WITH markers, # at which point this
+                    # if-statement should be removed.
+                    return
         self._link_image_data()
         self._check_if_data_with_wcs_exists()
 

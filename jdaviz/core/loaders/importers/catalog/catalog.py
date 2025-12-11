@@ -282,14 +282,24 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         table = self.input[self.output_cols]
         output_table = QTable()
- 
+
         # Handle RA / Dec columns, if selected
         if (self.col_ra_selected in table.colnames) and (self.col_dec_selected in table.colnames):  # noqa
             ra = self.input[self.col_ra_selected]
             dec = self.input[self.col_dec_selected]
 
-            ra = ra.ra if isinstance(ra, SkyCoord) else ra
-            dec = dec.dec if isinstance(dec, SkyCoord) else dec
+            # The only modification made to the output table is the addition of individual
+            # RA, Dec columns if the input columns are SkyCoord. This avoids unpacking
+            # RA and Dec and checking if components are a SkyCoord every time they
+            # are accessed.
+            col_ra_selected = self.col_ra_selected  # final output col name
+            col_dec_selected = self.col_dec_selected  # final output col name
+            if isinstance(ra, SkyCoord):
+                ra = ra.ra
+                col_ra_selected = 'SkyCoord_RA'
+            if isinstance(dec, SkyCoord):
+                dec = dec.dec
+                col_dec_selected = 'SkyCoord_Dec'
 
             # If the columns are strings, pass them through 'SkyCoord', which can
             # determine if the string format is recognizable as Lon/Lat coordinates.
@@ -311,12 +321,12 @@ class CatalogImporter(BaseImporterToDataCollection):
             if getattr(dec, 'unit') is None:
                 dec *= u.Unit(self.col_dec_unit_selected)
 
-            output_table[self.col_ra_selected] = ra
-            output_table[self.col_dec_selected] = dec
+            output_table[col_ra_selected] = ra
+            output_table[col_dec_selected] = dec
 
             # add the selected ra/dec columns to meta
-            output_table.meta['_jdaviz_loader_ra_col'] = self.col_ra_selected
-            output_table.meta['_jdaviz_loader_dec_col'] = self.col_dec_selected
+            output_table.meta['_jdaviz_loader_ra_col'] = col_ra_selected
+            output_table.meta['_jdaviz_loader_dec_col'] = col_dec_selected
 
         # handle output construction for X and Y coordinate columns, if selected
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
