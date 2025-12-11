@@ -23,23 +23,23 @@ def test_load_nddata(imviz_helper):
     assert ([x['zorder'] for x in dm.layer_items
              if x['label'] == 'data_c[DATA]'][0] == 6)
 
-    # Go from 6 to 4, should redirect zorder to be 2
+    # Go from 6 to 4, should redirect zorder to be 3
     # AKA below the block of data_b + children
     gv.state.layers[5].zorder = 4
     dm.layer._update_items()
 
     assert ([x['zorder'] for x in dm.layer_items
-             if x['label'] == 'data_c[DATA]'][0] == 2.5)
+             if x['label'] == 'data_c[DATA]'][0] == 3)
 
     # Set layer with 'data_c[DATA]' to be invisible
     imviz_helper.viewers['imviz-0'].data_menu.set_layer_visibility(
         'data_c[DATA]', False)
 
     assert ([x['zorder'] for x in dm.layer_items
-             if x['label'] == 'data_c[DATA]'][0] == 2.5)
+             if x['label'] == 'data_c[DATA]'][0] == 3)
 
     gv.state.layers[5].zorder = 1
     dm.layer._update_items()
 
     assert ([x['zorder'] for x in dm.layer_items
-             if x['label'] == 'data_c[DATA]'][0] == 0.5)
+             if x['label'] == 'data_c[DATA]'][0] == 1)
