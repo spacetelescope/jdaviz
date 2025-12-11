@@ -8,8 +8,9 @@ from specreduce.tracing import FlatTrace
 from specreduce.utils import measure_cross_dispersion_profile
 from traitlets import Bool, Float, Integer, List, Unicode, observe
 
+from jdaviz.configs.specviz.plugins.viewers import Spectrum1DViewer
 from jdaviz.core.events import GlobalDisplayUnitChanged
-from jdaviz.core.marks import PluginLine, PluginScatter
+from jdaviz.core.marks import PluginLine, PluginMarkCollection, PluginScatter
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (DatasetSelect, PluginTemplateMixin,
                                         PlotMixin)
@@ -20,7 +21,8 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['CrossDispersionProfile']
 
 
-@tray_registry('cross-dispersion-profile', label="Cross Dispersion Profile")
+@tray_registry('cross-dispersion-profile', label="Cross Dispersion Profile",
+               category="data:analysis")
 class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
     """
     The Cross Dispersion Profile plugin allows for visualizaion of the
@@ -112,6 +114,9 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                                        'right': 15}
         self.plot.viewer.axis_y.tick_format = '0.1e'
         self.plot.viewer.axis_y.label_offset = '50px'
+
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
     @property
     def user_api(self):
@@ -209,6 +214,14 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
         return self._profile
 
     @property
+    def marks_viewers2d(self):
+        return self.dataset.viewers_with_selected_visible
+
+    @property
+    def marks_viewers1d(self):
+        return self.app.get_viewers_of_cls(Spectrum1DViewer)
+
+    @property
     def marks(self):
         """
         Access the marks created by this plugin in the spectrum-2d-viewer.
@@ -219,27 +232,19 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
         if not self._tray_instance:
             return {}
 
-        v2d = self.spectrum_2d_viewers[0]
-        v1d = self.spectrum_1d_viewers[0]
-
-        if not v2d.state.reference_data:
-            return {}
-
-        self._marks = {'2d': {'pix': PluginLine(v2d,
-                                                visible=self.is_active,
-                                                line_style='solid'),
-                              'y_pix': PluginScatter(v2d, marker='diamond',
-                                                     stroke_width=1)},
-                       '1d': {'pix': PluginLine(v1d,
-                                                x=[0, 0], y=[0, 1],
-                                                scales={'x': v1d.scales['x'],
-                                                        'y': LinearScale(min=0,
-                                                                         max=1)},
-                                                visible=self.is_active,
-                                                line_style='solid')}}
-
-        v2d.figure.marks = v2d.figure.marks + list(self._marks['2d'].values())
-        v1d.figure.marks = v1d.figure.marks + list(self._marks['1d'].values())
+        self._marks = {'2d': {'pix': PluginMarkCollection(PluginLine,
+                                                          visible=self.is_active,
+                                                          line_style='solid'),
+                              'y_pix': PluginMarkCollection(PluginScatter,
+                                                            marker='diamond',
+                                                            stroke_width=1)},
+                       '1d': {'pix': PluginMarkCollection(PluginLine,
+                                                          x=[0, 0],
+                                                          y=[0, 1],
+                                                          scales={'y': LinearScale(min=0,
+                                                                                   max=1)},
+                                                          visible=self.is_active,
+                                                          line_style='solid')}}
 
         return self._marks
 
@@ -264,17 +269,21 @@ class CrossDispersionProfile(PluginTemplateMixin, PlotMixin):
                 ymax = self.y_pixel + int(self.width/2)
                 ymin = self.y_pixel - int(self.width/2)
 
-            self.marks['2d']['pix'].update_xy(np.full(data.shape[1],
-                                              self.pixel), range(ymin, ymax+1))
+            self.marks['2d']['pix'].update_xy(np.full(data.shape[1], self.pixel),
+                                              range(ymin, ymax+1),
+                                              viewers=self.marks_viewers2d)
             self.marks['2d']['pix'].visible = self.is_active
             self.marks['2d']['y_pix'].update_xy((self.pixel, self.pixel),
-                                                (self.y_pixel, self.y_pixel))
+                                                (self.y_pixel, self.y_pixel),
+                                                viewers=self.marks_viewers2d)
             self.marks['2d']['y_pix'].visible = self.is_active
 
             # plot line in 1d viewer when possible, unit conversion is handled
             # inside of Marks so we don't need to convert the limits here
             if self.wav is not None and self.sa_display_unit != '':
-                self.marks['1d']['pix'].update_xy([self.wav, self.wav], [0, 1])
+                self.marks['1d']['pix'].update_xy((self.wav, self.wav),
+                                                  (0, 1),
+                                                  viewers=self.marks_viewers1d)
                 self.marks['1d']['pix'].visible = self.is_active
 
     @observe('is_active', 'pixel', 'y_pixel', 'width', 'use_full_width',
