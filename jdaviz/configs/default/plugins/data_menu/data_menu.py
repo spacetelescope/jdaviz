@@ -608,10 +608,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 # then this is a child-layer of a parent-layer that is being hidden
                 # so also hide the child-layer
                 layer.visible = False
-            elif visible and self.app._get_assoc_data_parent(layer.layer.label) == layer_label:
-                # then this is a child-layer of a parent-layer that is being shown
-                # so also show the child-layer
-                layer.visible = True
 
             if layer.state.visible != layer.visible:
                 layer.state.visible = layer.visible
