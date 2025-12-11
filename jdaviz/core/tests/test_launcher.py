@@ -10,6 +10,7 @@ from astropy.io.registry import IORegistryError
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 import numpy as np
+from pathlib import Path
 
 from jdaviz import Imviz
 from jdaviz.cli import (DEFAULT_VERBOSITY,
@@ -201,8 +202,8 @@ class TestLauncherClass:
         assert launcher.filepath == ''
         assert launcher.loaded_data is None
         assert launcher.hint == STATUS_HINTS['idle']
-        assert launcher.file_chooser_visible is False
-        assert launcher.valid_path is True
+        assert launcher.file_browser_visible is False
+        assert launcher.file_browser_widget is None
         for config in ALL_JDAVIZ_CONFIGS:
             assert config in launcher.config_icons
 
@@ -244,9 +245,9 @@ class TestLauncherClass:
         test_dir = '/custom/start/dir'
         # Use patch.dict to temporarily set the environment variable.
         with patch.dict(os.environ, {'JDAVIZ_START_DIR': test_dir}):
-            with patch('jdaviz.core.launcher.FileChooser') as mock_fc:
-                _ = Launcher()
-                mock_fc.assert_called_once_with(test_dir)
+            launcher = Launcher()
+            launcher.vue_open_file_dialog()
+            assert str(launcher.file_browser_dir.value) == test_dir
 
     def test_launcher_init_with_filepath(self):
         """
@@ -306,31 +307,35 @@ class TestLauncherClass:
         Test vue_choose_file with various scenarios.
         """
         launcher = Launcher()
+        launcher.vue_open_file_dialog()
+        assert launcher.file_browser_widget is not None
 
         # No file
-        launcher._file_chooser.file_path = None
+        launcher.selected_file.value = ''
         launcher.vue_choose_file()
-        assert launcher.error_message == 'No file selected'
+
         assert launcher.filepath == ''
 
         # Choose with directory (should not update filepath)
-        launcher._file_chooser.file_path = str(tmp_path)
-        launcher.file_chooser_visible = True
+        launcher.selected_file.value = 'somedir'
+        launcher.file_browser_dir.value = str(tmp_path)
+        launcher.file_browser_visible = True
 
         launcher.vue_choose_file()
 
-        # Should not change filepath or visibility since path is not a file
-        assert launcher.file_chooser_visible is True
-        assert launcher.filepath == ''
+        # Should close dialog even if it's a directory
+        assert launcher.file_browser_visible is False
 
         with patch('jdaviz.core.launcher.identify_helper') as mock_identify:
             mock_identify.return_value = (['imviz'], self.ccd)
 
-            launcher._file_chooser.file_path = self.test_file
+            test_file_path = Path(self.test_file)
+            launcher.file_browser_dir.value = test_file_path.parent
+            launcher.selected_file.value = test_file_path.name
 
             launcher.vue_choose_file()
 
-            assert launcher.file_chooser_visible is False
+            assert launcher.file_browser_visible is False
             assert launcher.filepath == self.test_file
 
     @pytest.mark.parametrize('height', ['600', '100%', '100vh'])
