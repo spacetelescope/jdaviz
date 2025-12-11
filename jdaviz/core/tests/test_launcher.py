@@ -247,7 +247,7 @@ class TestLauncherClass:
         with patch.dict(os.environ, {'JDAVIZ_START_DIR': test_dir}):
             launcher = Launcher()
             launcher.vue_open_file_dialog()
-            assert str(launcher.file_browser_dir.value) == test_dir
+            assert Path(launcher.file_browser_dir.value) == Path(test_dir)
 
     def test_launcher_init_with_filepath(self):
         """
