@@ -1,6 +1,6 @@
-from jdaviz import Imviz
 import numpy as np
 from astropy.nddata import NDData
+
 
 def test_load_nddata(imviz_helper):
     data_a = NDData(np.random.rand(16, 16))
@@ -17,37 +17,29 @@ def test_load_nddata(imviz_helper):
     imviz_helper.load(data_b2, data_label='data_b2', parent='data_b[DATA]')
     imviz_helper.load(data_c, data_label='data_c')
 
-    print('Initial zorders in layer items:',
-          [(x['label'], x['zorder']) for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items])
-    print('\n\nInitial zorders in glue layers:',
-          [(layer.layer.label, layer.zorder) for layer in imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.layers])
-    print('\n\n layer at 5', imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.layers[5].layer.label)
+    dm = imviz_helper.viewers['imviz-0'].data_menu._obj
+    gv = imviz_helper.viewers['imviz-0']._obj.glue_viewer
 
-    assert ([x['zorder'] for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items
-            if x['label'] == 'data_c[DATA]'][0] == 6)
+    assert ([x['zorder'] for x in dm.layer_items
+             if x['label'] == 'data_c[DATA]'][0] == 6)
 
-    # Go from 6 to 4, should redirect zorder to be 2 AKA below the block of data_b + children
-    imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.layers[5].zorder = 4
-    imviz_helper.viewers['imviz-0'].data_menu._obj.layer._update_items()
-    
-    print('New zorders in layer items:',
-        [(x['label'], x['zorder']) for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items])
-    print('\n\nNew zorders in glue layers:',
-        [(layer.layer.label, layer.zorder) for layer in imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.layers])
-    print('\n\n layer at 5', imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.layers[5].layer.label)
+    # Go from 6 to 4, should redirect zorder to be 2
+    # AKA below the block of data_b + children
+    gv.state.layers[5].zorder = 4
+    dm.layer._update_items()
 
-    assert ([x['zorder'] for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items
-        if x['label'] == 'data_c[DATA]'][0] == 2.5)
-    
+    assert ([x['zorder'] for x in dm.layer_items
+             if x['label'] == 'data_c[DATA]'][0] == 2.5)
+
     # Set layer with 'data_c[DATA]' to be invisible
-    imviz_helper.viewers['imviz-0'].data_menu.set_layer_visibility('data_c[DATA]', False)
+    imviz_helper.viewers['imviz-0'].data_menu.set_layer_visibility(
+        'data_c[DATA]', False)
 
-    assert ([x['zorder'] for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items
-        if x['label'] == 'data_c[DATA]'][0] == 2.5)
+    assert ([x['zorder'] for x in dm.layer_items
+             if x['label'] == 'data_c[DATA]'][0] == 2.5)
 
+    gv.state.layers[5].zorder = 1
+    dm.layer._update_items()
 
-    imviz_helper.viewers['imviz-0']._obj.glue_viewer.state.layers[5].zorder = 1
-    imviz_helper.viewers['imviz-0'].data_menu._obj.layer._update_items()
-
-    assert ([x['zorder'] for x in imviz_helper.viewers['imviz-0'].data_menu._obj.layer_items
-        if x['label'] == 'data_c[DATA]'][0] == 0.5)
+    assert ([x['zorder'] for x in dm.layer_items
+             if x['label'] == 'data_c[DATA]'][0] == 0.5)
