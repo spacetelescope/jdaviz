@@ -4,12 +4,14 @@ from pathlib import Path
 from astropy.io.registry.base import IORegistryError
 from glue_jupyter.common.toolbar_vuetify import read_icon
 import ipyvuetify as v
-from traitlets import List, Unicode, Dict, Bool, observe
+from traitlets import List, Unicode, Dict, Bool, observe, Any
+from ipywidgets import widget_serialization
+from solara import FileBrowser, reactive
+import reacton
 
 from jdaviz import configs as jdaviz_configs
 from jdaviz import __version__
 from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_CONFIGS
-from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.data_formats import identify_helper
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.template_mixin import show_widget
@@ -117,9 +119,8 @@ class Launcher(v.VuetifyTemplate):
     hint = Unicode().tag(sync=True)
     vdocs = Unicode("").tag(sync=True)  # App not available yet, so we need to recompute it here
     # File picker Traitlets
-    error_message = Unicode().tag(sync=True)
-    valid_path = Bool(True).tag(sync=True)
-    file_chooser_visible = Bool(False).tag(sync=True)
+    file_browser_widget = Any(None).tag(sync=True, **widget_serialization)
+    file_browser_visible = Bool(False).tag(sync=True)
 
     # Define Icons
     cubeviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'cubeviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -152,9 +153,10 @@ class Launcher(v.VuetifyTemplate):
             'imviz': self.imviz_icon
         }
 
-        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
-        self._file_chooser = FileChooser(start_path)
-        self.components = {'g-file-import': self._file_chooser}
+        self.file_browser_widget = None
+        self.file_browser_dir = None
+        self.selected_file = None
+        self.components = {}
         self.loaded_data = None
         self.hint = STATUS_HINTS['idle']
 
@@ -189,12 +191,40 @@ class Launcher(v.VuetifyTemplate):
         # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
         self.hint = ('' if self.hint == STATUS_HINTS['identifying'] else self.hint)
 
+    def _create_file_browser(self):
+        if self.file_browser_widget is None:
+            # Ensure JDAVIZ_START_DIR is set to absolute path of current working directory
+            if 'JDAVIZ_START_DIR' not in os.environ:
+                os.environ['JDAVIZ_START_DIR'] = os.path.abspath(os.getcwd())
+
+            start_path = Path(os.path.abspath(os.environ['JDAVIZ_START_DIR']))
+            self.file_browser_dir = reactive(start_path)
+            self.selected_file = reactive('')
+            self.file_browser_widget_el = FileBrowser(
+                directory=self.file_browser_dir,
+                selected=self.selected_file,
+                on_path_select=self._on_file_select,
+                can_select=True
+            )
+            self.file_browser_widget, rc = reacton.render(self.file_browser_widget_el)
+
+    def _on_file_select(self, path):
+        selected_value = self.selected_file.value if self.selected_file is not None else None
+        dir_value = self.file_browser_dir.value if self.file_browser_dir is not None else None
+
+        if selected_value:
+            full_path = os.path.join(dir_value, selected_value)
+            self.filepath = full_path
+
+    def vue_open_file_dialog(self, *args, **kwargs):
+        self._create_file_browser()
+        self.file_browser_visible = True
+
     def vue_choose_file(self, *args, **kwargs):
-        if self._file_chooser.file_path is None:
-            self.error_message = "No file selected"
-        elif Path(self._file_chooser.file_path).is_file():
-            self.file_chooser_visible = False
-            self.filepath = self._file_chooser.file_path
+        if self.selected_file is not None and self.selected_file.value:
+            full_path = os.path.join(self.file_browser_dir.value, self.selected_file.value)
+            self.filepath = full_path
+            self.file_browser_visible = False
 
     def vue_launch_config(self, event):
         config = event.get('config')
