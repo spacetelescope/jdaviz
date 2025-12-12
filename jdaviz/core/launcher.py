@@ -209,12 +209,8 @@ class Launcher(v.VuetifyTemplate):
             self.file_browser_widget, rc = reacton.render(self.file_browser_widget_el)
 
     def _on_file_select(self, path):
-        selected_value = self.selected_file.value if self.selected_file is not None else None
-        dir_value = self.file_browser_dir.value if self.file_browser_dir is not None else None
-
-        if selected_value:
-            full_path = os.path.join(dir_value, selected_value)
-            self.filepath = full_path
+        # don't set filepath here, only set it when user clicks Import button
+        pass
 
     def vue_open_file_dialog(self, *args, **kwargs):
         self._create_file_browser()
