@@ -733,7 +733,7 @@ def test_different_fitters(specviz_helper, spectrum1d, fitter):
     else:
         mf.create_model_component('Linear1D')
 
-    mf.fitter_component.selected = fitter
+    mf.fitter.selected = fitter
     # change maxiter to 50
     if fitter != 'LinearLSQFitter':
         mf.fitter_parameters['parameters'][0]['value'] = 50
@@ -813,7 +813,7 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     mf = specviz_helper.plugins['Model Fitting']
     uc = specviz_helper.plugins['Unit Conversion']
 
-    mf._obj.fitter_component.selected = 'LevMarLSQFitter'
+    mf._obj.fitter.selected = 'LevMarLSQFitter'
 
     # Create first model component with flux unit MJy
     uc.flux_unit = 'MJy'
@@ -885,7 +885,7 @@ def test_spline(specviz_helper, spectrum1d):
     mf = specviz_helper.plugins['Model Fitting']._obj
     mf.create_model_component('Spline1D')
 
-    mf.fitter_component.selected = 'SplineSmoothingFitter'
+    mf.fitter.selected = 'SplineSmoothingFitter'
 
     # check that smoothing_factor parameter exists and has a value (initialized as 0
     # by unitl the fitter component is selected)
@@ -916,17 +916,17 @@ def test_spline(specviz_helper, spectrum1d):
 
     # ensure that only SplineSmoothingFitter fitter component can be used
     # with the Spline1D model parameter
-    assert mf.fitter_component.choices == ['SplineSmoothingFitter']
+    assert mf.fitter.choices == ['SplineSmoothingFitter']
 
     mf.remove_model_component('S')
     mf.create_model_component('Const1D')
 
     # make sure fitter components update when Spline1D model component is removed
-    assert mf.fitter_component.choices == ['TRFLSQFitter',
-                                           'DogBoxLSQFitter',
-                                           'LMLSQFitter',
-                                           'LevMarLSQFitter',
-                                           'LinearLSQFitter',
-                                           'SLSQPLSQFitter',
-                                           'SimplexLSQFitter',
-                                           'SplineSmoothingFitter']
+    assert mf.fitter.choices == ['TRFLSQFitter',
+                                 'DogBoxLSQFitter',
+                                 'LMLSQFitter',
+                                 'LevMarLSQFitter',
+                                 'LinearLSQFitter',
+                                 'SLSQPLSQFitter',
+                                 'SimplexLSQFitter',
+                                 'SplineSmoothingFitter']

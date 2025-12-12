@@ -114,9 +114,9 @@ and if the spectrum uncertainty was loaded.
 .. note::
 
    When a `1D Spline Models <https://docs.astropy.org/en/stable/modeling/spline_models.html>`_. model is selected, the plugin uses
-   `astropy.modeling.spline.SplineSmoothingFitter <https://docs.astropy.org/en/stable/api/astropy.modeling.spline.SplineSmoothingFitter.html#astropy.modeling.spline.SplineSmoothingFitter>`_. to compute the fit.  
+   `astropy.modeling.spline.SplineSmoothingFitter <https://docs.astropy.org/en/stable/api/astropy.modeling.spline.SplineSmoothingFitter.html#astropy.modeling.spline.SplineSmoothingFitter>`_. to compute the fit.
    The initial value of the smoothing factor is automatically set to:
-   (``len(data) * (standard_deviation(data))**2``).  
+   (``len(data) * (standard_deviation(data))**2``).
 
    Refer to the section of the Scipy spline modeling documentation explaining
    the ``s`` parameter for advice on setting the smoothing factor/condition manually:
@@ -147,7 +147,7 @@ The model fitting plugin can be run from the API:
     # Model equation gets populated automatically, but can be overwritten
     plugin_mf.equation = 'L+G'
     # Set fitter
-    plugin_mf.fitter_component.selected = 'TRFLSQFitter'
+    plugin_mf.fitter.selected = 'TRFLSQFitter'
     # Calculate fit
     plugin_mf.calculate_fit()
 
