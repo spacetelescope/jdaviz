@@ -719,4 +719,3 @@ def memlog_terminal_summary(terminalreporter, config=None):
     _display_peak_usage(terminalreporter, _memlog_records)
 
     terminalreporter.write_sep('-', 'end of memlog summary')
-
