@@ -715,10 +715,10 @@ def memlog_terminal_summary(terminalreporter, config=None):
         else:
             _display_standard_report(terminalreporter, _memlog_records, sort_method, top_n)
 
-    # Display final memory usage of last test in each worker
-    _display_final_usage(terminalreporter, _memlog_records)
-
     # Display peak memory usage across all tests
     _display_peak_usage(terminalreporter, _memlog_records)
+
+    # Display final memory usage of last test in each worker
+    _display_final_usage(terminalreporter, _memlog_records)
 
     terminalreporter.write_sep('-', 'end of memlog summary')
