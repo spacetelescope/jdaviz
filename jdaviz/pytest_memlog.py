@@ -5,14 +5,22 @@ This module provides a pytest plugin for tracking memory usage during test
 execution. It supports pytest-xdist for distributed testing and provides
 various sorting and filtering options for the memory report.
 
+Memory metrics tracked:
+- USS (Unique Set Size): Private memory used by the process
+- RSS (Resident Set Size): All physical memory used by the process
+- Swap: Swap memory used by the system during test execution
+
+The primary focus is on combined USS + Swap as the key metric for memory
+allocation during tests.
+
 Usage
 -----
 Run pytest with the --memlog option to enable memory logging:
 
-    pytest --memlog                       # Show default 20 tests by memory diff
-    pytest --memlog 10                    # Show top 10 tests by memory diff
-    pytest --memlog 10 --memlog-sort peak # Sort by peak memory
-    pytest --memlog 10 --memlog-max-worker # Show worker with the highest memory
+    pytest --memlog                         # Show default 20 tests by USS+Swap diff
+    pytest --memlog 10                      # Show top 10 tests by USS+Swap diff
+    pytest --memlog 10 --memlog-sort peak   # Sort by peak USS+Swap memory
+    pytest --memlog 10 --memlog-max-worker  # Show worker with highest peak memory
 """
 import re
 
@@ -36,9 +44,17 @@ _memlog_dtype = np.dtype([('worker_id', 'U20'),
                           ('swap_after', 'u8'),
                           ('swap_diff', 'i8')])
 
-_header = f'{"uss_diff":>10}  {"rss_diff":>10}  {"swap_diff":>10}  '
-_header_no_worker = _header + 'test'
-_header_with_worker = _header + f'{"worker":>8}  test'
+_full_header = (f'{"uss_before":>12}  {"uss_after":>12}  {"uss_diff":>10}  '
+                f'{"rss_before":>12}  {"rss_after":>12}  {"rss_diff":>10}  '
+                f'{"swap_before":>12}  {"swap_after":>12}  {"swap_diff":>10}  ')
+_after_header = (f'{"uss_after":>12}  '
+                 f'{"rss_after":>12}  '
+                 f'{"swap_after":>12}  ')
+_diff_header = f'{"uss_diff":>10}  {"rss_diff":>10}  {"swap_diff":>10}  '
+_full_header_no_worker = _full_header + 'test'
+_full_header_with_worker = _full_header + f'{"worker":>8}  test'
+_after_header_no_worker = _after_header + 'test'
+_after_header_with_worker = _after_header + f'{"worker":>8}  test'
 
 _memlog_records = np.array([], dtype=_memlog_dtype)
 _memlog_enabled_flag = False
@@ -75,29 +91,57 @@ def _format_bytes(b):
     return f'{mib:7.2f} MiB'
 
 
-def _format_memlog_line(record, include_worker=False):
+def _format_memlog_line(record, header='full', include_worker=False):
     """
-    Format a memlog record as a display line.
+    Format a memlog record as a display line matching header templates.
 
     Parameters
     ----------
     record : numpy.void
         A structured array record with memory values and worker_id.
-    include_worker : bool
-        If True, include the worker ID in the output.
+    full_header : bool, optional
+        If True (default), display all before/after/diff values.
+        If False, display only diff values (uss_diff, rss_diff, swap_diff).
+    include_worker : bool, optional
+        If True, include the worker ID in the output. Default is False.
+    after_only : bool, optional
+        If True, display only after values. Default is False.
 
     Returns
     -------
     str
-        Formatted line for display showing uss_diff, rss_diff, swap_diff.
+        Formatted line for display showing memory values aligned with headers.
     """
+    # Extract values from record
+    uss_before = int(record['uss_before'])
+    uss_after = int(record['uss_after'])
     uss_diff = int(record['uss_diff'])
+    rss_before = int(record['rss_before'])
+    rss_after = int(record['rss_after'])
     rss_diff = int(record['rss_diff'])
+    swap_before = int(record['swap_before'])
+    swap_after = int(record['swap_after'])
     swap_diff = int(record['swap_diff'])
 
-    result_str = (f'{_format_bytes(uss_diff):>10}  '
-                  f'{_format_bytes(rss_diff):>10}  '
+    # Format all columns matching _full_header layout
+    result_str = (f'{_format_bytes(uss_before):>10}  ',
+                  f'{_format_bytes(uss_after):>10}  ',
+                  f'{_format_bytes(uss_diff):>10}  ',
+                  f'{_format_bytes(rss_before):>10}  ',
+                  f'{_format_bytes(rss_after):>10}  ',
+                  f'{_format_bytes(rss_diff):>10}  ',
+                  f'{_format_bytes(swap_before):>10}  ',
+                  f'{_format_bytes(swap_after):>10}  ',
                   f'{_format_bytes(swap_diff):>10}  ')
+
+    if header == 'full':
+        result_str = ''.join(result_str)
+    elif header == 'after':
+        # After only
+        result_str = result_str[1] + result_str[4] + result_str[7]
+    elif header == 'diff':
+        # Diffs only
+        result_str = result_str[2] + result_str[5] + result_str[8]
 
     if include_worker:
         worker = record['worker_id']
@@ -179,12 +223,20 @@ def _apply_memlog_sort(records, sort_method, top_n):
     """
     Apply sorting to memlog records based on sort_method.
 
+    All methods that reference USS implicitly include the combined USS + Swap
+    metric as the primary indicator of memory allocation.
+
     Parameters
     ----------
     records : numpy.ndarray
         Array of memlog records.
     sort_method : str
-        Sorting method: 'diff', 'before', 'after', 'peak', or 'seq'.
+        Sorting method:
+        - 'diff': Sort by USS + Swap difference (memory allocated during test)
+        - 'before': Sort by highest USS before test
+        - 'after': Sort by highest USS after test
+        - 'peak': Sort by highest peak combined USS + Swap
+        - 'seq': Reverse chronological order (test execution order)
     top_n : int
         Number of top records to return.
 
@@ -197,7 +249,8 @@ def _apply_memlog_sort(records, sort_method, top_n):
         return records
 
     if sort_method == 'diff':
-        sort_idx = np.argsort(-records['uss_diff'])
+        combined_diffs = records['uss_diff'] + records['swap_diff']
+        sort_idx = np.argsort(-combined_diffs)
 
     elif sort_method == 'before':
         sort_idx = np.argsort(-records['uss_before'])
@@ -206,8 +259,10 @@ def _apply_memlog_sort(records, sort_method, top_n):
         sort_idx = np.argsort(-records['uss_after'])
 
     elif sort_method == 'peak':
-        peaks = np.maximum(records['uss_before'], records['uss_after'])
-        sort_idx = np.argsort(-peaks)
+        uss_peaks = np.maximum(records['uss_before'], records['uss_after'])
+        swap_peaks = np.maximum(records['swap_before'], records['swap_after'])
+        combined_peaks = uss_peaks + swap_peaks
+        sort_idx = np.argsort(-combined_peaks)
 
     elif sort_method == 'seq':
         sort_idx = np.arange(len(records) - 1, -1, -1)
@@ -244,15 +299,13 @@ def memlog_addoption(parser):
         action='store',
         dest='memlog_sort',
         default='diff',
-        help=('Sorting method for memory results. Default: diff\n'
-              'diff   - Sort by memory allocation difference.\n'
-              'before - Sort by highest memory before test.\n'
-              'after  - Sort by highest memory after test.\n'
-              'peak   - Sort by highest peak memory allocation.\n'
-              'seq    - Sort by test output order '
-              '(can help determine sustained memory allocation).\n'
-              'worker - Group by worker ID, then sort by peak memory '
-              '(xdist only).'))
+        help=('Sorting method for memory (USS + Swap) results. Default: diff\n'
+              'diff   - Sort by USS + Swap difference (memory allocated during test).\n'
+              'before - Sort by highest USS before test.\n'
+              'after  - Sort by highest USS after test.\n'
+              'peak   - Sort by highest peak combined USS + Swap.\n'
+              'seq    - Sort by test execution order (helps identify sustained memory).\n'
+              'worker - Group by worker ID (xdist only), then sort by peak USS + Swap.'))
 
     group.addoption(
         '--memlog-max-worker',
@@ -309,7 +362,9 @@ def memlog_runtest_makereport(item, call):
     Hook wrapper to attach memory measurements to report user_properties.
 
     This runs during report creation when we still have access to the item.
-    The user_properties are serialized and sent to master in xdist.
+    The user_properties are serialized and sent to master in xdist. We track
+    USS, RSS, and Swap for each test, though the analysis focuses on
+    USS + Swap as the primary memory allocation metric.
     """
     outcome = yield
     report = outcome.get_result()
@@ -379,59 +434,13 @@ def memlog_runtest_logreport(report):
     _memlog_records = np.append(_memlog_records, record)
 
 
-def memlog_terminal_summary(terminalreporter, config=None):
-    """
-    Terminal summary hook that prints memlog summary.
-    """
-    if config is None:
-        config = terminalreporter.config
-
-    if not getattr(config, '_memlog_enabled', False):
-        return
-
-    if len(_memlog_records) == 0:
-        terminalreporter.write_line('memlog: no records collected.')
-        return
-
-    top_n = getattr(config, '_memlog_top', '20')
-    if isinstance(top_n, str):
-        if top_n.isdigit():
-            top_n = int(top_n)
-        else:
-            top_n = 20
-    elif not isinstance(top_n, int):
-        top_n = 20
-
-    # Filter records with valid uss_diff (no null/nan checks needed with arrays)
-    records = _memlog_records[_memlog_records['uss_diff'] != 0]
-
-    if len(records) == 0:
-        terminalreporter.write_line('memlog: no records collected.')
-        return
-
-    sort_method = getattr(config, '_memlog_sort', 'diff')
-
-    # If max worker is requested, find and report on the worker with
-    # the highest peak memory allocation
-    if getattr(config, '_memlog_max_worker', False):
-        _display_max_worker_report(terminalreporter, records, top_n)
-        return
-
-    # Group by worker_id if sorting by worker
-    if sort_method == 'worker':
-        _display_worker_grouped_report(terminalreporter, records, top_n)
-    else:
-        _display_standard_report(terminalreporter, records, sort_method, top_n)
-
-    # Display peak memory usage across all tests
-    _display_peak_usage(terminalreporter, records)
-
-    terminalreporter.write_sep('-', 'end of memlog summary')
-
-
 def _display_max_worker_report(terminalreporter, records, top_n):
     """
     Display memory report for the worker with the highest peak memory.
+
+    Identifies the worker that had the highest peak combined USS + Swap memory
+    allocation across all tests, then displays all that worker's tests in
+    execution order.
 
     Parameters
     ----------
@@ -446,24 +455,26 @@ def _display_max_worker_report(terminalreporter, records, top_n):
         terminalreporter.write_line('memlog: no worker found with memory data.')
         return
 
-    # Find the worker with the highest peak uss memory across all tests
+    # Find the worker with the highest peak USS + Swap memory across all tests
     # using vectorized operations
-    peaks = np.maximum(records['uss_before'], records['uss_after'])
-    max_idx = np.argmax(peaks)
-    max_peak = int(peaks[max_idx])
+    uss_peaks = np.maximum(records['uss_before'], records['uss_after'])
+    swap_peaks = np.maximum(records['swap_before'], records['swap_after'])
+    combined_peaks = uss_peaks + swap_peaks
+    max_idx = np.argmax(combined_peaks)
+    max_peak = int(combined_peaks[max_idx])
     max_worker = records[max_idx]['worker_id']
 
     # Filter to only this worker's records
     worker_records = records[records['worker_id'] == max_worker]
 
-    # Apply the selected sort method to worker records
+    # Sort by execution order (seq) to see memory allocation pattern
     worker_records = _apply_memlog_sort(worker_records, 'seq', top_n)
 
-    title = (f'Top {top_n} tests for worker {max_worker} '
-             f'(highest peak uss: {_format_bytes(max_peak)})')
+    title = (f'Top {top_n} tests for worker {max_worker}, in sequence order '
+             f'(highest peak USS + Swap: {_format_bytes(max_peak)})')
     terminalreporter.write_sep('-', title)
 
-    terminalreporter.write_line(_header_no_worker)
+    terminalreporter.write_line(_full_header_no_worker)
 
     for r in worker_records:
         terminalreporter.write_line(_format_memlog_line(r))
@@ -476,7 +487,11 @@ def _display_max_worker_report(terminalreporter, records, top_n):
 
 def _display_worker_grouped_report(terminalreporter, records, top_n):
     """
-    Display memory report grouped by worker ID.
+    Display memory report grouped by worker ID and sorted by test execution.
+
+    This report shows the top N tests for each worker in the order they were
+    executed, making it easier to identify memory leaks or accumulated memory
+    allocation over the test sequence for each worker.
 
     Parameters
     ----------
@@ -494,18 +509,17 @@ def _display_worker_grouped_report(terminalreporter, records, top_n):
     unique_workers = np.unique(records['worker_id'])
     sorted_workers = sorted(unique_workers, key=_parse_worker_id)
 
-    # Display results grouped by worker
-    title = f'Top {top_n} tests by worker, sorted by peak memory'
+    # Display results grouped by worker in execution order
+    title = f'Top {top_n} tests by worker, in test execution order'
     terminalreporter.write_sep('-', title)
 
     for worker_id in sorted_workers:
-        # Filter records for this worker
+        # Filter records for this worker and sort by execution order (seq)
         worker_records = records[records['worker_id'] == worker_id]
-        # Sort within worker group
         worker_records = _apply_memlog_sort(worker_records, 'seq', top_n)
 
         terminalreporter.write_line(f'\nWorker: {worker_id}')
-        terminalreporter.write_line(_header_with_worker)
+        terminalreporter.write_line(_full_header_with_worker)
 
         for r in worker_records[:top_n]:
             terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
@@ -514,6 +528,9 @@ def _display_worker_grouped_report(terminalreporter, records, top_n):
 def _display_standard_report(terminalreporter, records, sort_method, top_n):
     """
     Display standard memory report with selected sorting.
+
+    Displays all memory before/after/diff values aligned with the full header
+    template. Sorting is based on the USS + Swap combined metric.
 
     Parameters
     ----------
@@ -529,13 +546,22 @@ def _display_standard_report(terminalreporter, records, sort_method, top_n):
     # Apply the selected sort method to all records
     records = _apply_memlog_sort(records, sort_method, top_n)
 
-    title = f'Top {top_n} tests by memory difference'
+    # Create descriptive title based on sort method
+    sort_titles = {
+        'diff': 'by USS + Swap difference',
+        'before': 'by USS before test',
+        'after': 'by USS after test',
+        'peak': 'by peak USS + Swap',
+        'seq': 'by test execution order'
+    }
+    sort_desc = sort_titles.get(sort_method, 'by memory difference')
+    title = f'Top {top_n} tests {sort_desc}'
     terminalreporter.write_sep('-', title)
 
-    terminalreporter.write_line(_header_with_worker)
+    terminalreporter.write_line(_diff_header)
 
     for r in records:
-        terminalreporter.write_line(_format_memlog_line(r, include_worker=True))
+        terminalreporter.write_line(_format_memlog_line(r, header='diff', include_worker=True))
 
 
 def _calculate_peak_usage(records):
@@ -569,6 +595,10 @@ def _display_peak_usage(terminalreporter, records):
     """
     Display peak memory usage summary.
 
+    Identifies and displays the test that reached the highest combined USS + Swap
+    memory allocation (peak value) across all test runs. Shows both the global
+    position in the test execution queue and the position within that specific worker.
+
     Parameters
     ----------
     terminalreporter : TerminalReporter
@@ -576,10 +606,113 @@ def _display_peak_usage(terminalreporter, records):
     records : numpy.ndarray
         Array of memlog records.
     """
-    peak = _calculate_peak_usage(records)
+    if len(records) == 0:
+        return
+
+    # Calculate peak values for each test
+    uss_swap_before_peaks = records['uss_before'] + records['swap_before']
+    uss_swap_after_peaks = records['uss_after'] + records['swap_after']
+    combined_peaks = np.maximum(uss_swap_before_peaks, uss_swap_after_peaks)
+
+    # Find the test with the maximum combined peak
+    max_combined_idx = np.argmax(combined_peaks)
+    max_combined_record = records[max_combined_idx]
+
+    # Get position within the same worker
+    worker_id = max_combined_record['worker_id']
+    worker_records = records[records['worker_id'] == worker_id]
+    # Find the index of this record within the worker's records
+    worker_position = np.where(worker_records['nodeid'] == max_combined_record['nodeid'])[0][0]
 
     terminalreporter.write_line('')
-    terminalreporter.write_line('Peak memory usage across all tests:')
-    terminalreporter.write_line(f'  USS:  {_format_bytes(peak["uss"])}')
-    terminalreporter.write_line(f'  RSS:  {_format_bytes(peak["rss"])}')
-    terminalreporter.write_line(f'  Swap: {_format_bytes(peak["swap"])}')
+    terminalreporter.write_line(f'Peak memory usage, maximum USS + Swap, '
+                                f'Global position: {max_combined_idx}, Worker position: {worker_position}:')
+
+    terminalreporter.write_line(_full_header_with_worker)
+    terminalreporter.write_line(_format_memlog_line(max_combined_record, include_worker=True))
+
+
+def _display_final_usage(terminalreporter, records):
+    """
+    Display final memory usage summary of final tests in all workers.
+
+    Shows the memory state (after the test, before teardown) of the last test
+    executed in each worker, helping identify final memory footprint across
+    distributed workers.
+
+    Parameters
+    ----------
+    terminalreporter : TerminalReporter
+        The pytest terminal reporter.
+    records : numpy.ndarray
+        Array of memlog records.
+    """
+    if len(records) == 0:
+        return
+
+    terminalreporter.write_line('')
+    terminalreporter.write_line('Final memory usage (last test in each worker, after test execution):')
+
+    # Get unique worker IDs and sort them numerically
+    unique_workers = np.unique(records['worker_id'])
+    sorted_workers = sorted(unique_workers, key=_parse_worker_id)
+
+    terminalreporter.write_line(_after_header_with_worker)
+
+    # For each worker, get the last test executed (highest index in execution order)
+    for worker_id in sorted_workers:
+        worker_records = records[records['worker_id'] == worker_id]
+        # The last record for this worker is the one with the highest index
+        last_record = worker_records[-1]
+        terminalreporter.write_line(_format_memlog_line(last_record, header='after', include_worker=True))
+
+
+def memlog_terminal_summary(terminalreporter, config=None):
+    """
+    Terminal summary hook that prints memlog summary.
+    """
+    if config is None:
+        config = terminalreporter.config
+
+    if not getattr(config, '_memlog_enabled', False):
+        return
+
+    if len(_memlog_records) == 0:
+        terminalreporter.write_line('memlog: no records collected.')
+        return
+
+    top_n = getattr(config, '_memlog_top', '20')
+    if isinstance(top_n, str):
+        if top_n.isdigit():
+            top_n = int(top_n)
+        else:
+            top_n = 20
+    elif not isinstance(top_n, int):
+        top_n = 20
+
+    if len(_memlog_records) == 0:
+        terminalreporter.write_line('memlog: no records collected.')
+        return
+
+    sort_method = getattr(config, '_memlog_sort', 'diff')
+
+    # If max worker is requested, find and report on the worker with
+    # the highest peak memory allocation
+    if getattr(config, '_memlog_max_worker', False):
+        _display_max_worker_report(terminalreporter, _memlog_records, top_n)
+
+    else:
+        # Group by worker_id if sorting by worker
+        if sort_method == 'worker':
+            _display_worker_grouped_report(terminalreporter, _memlog_records, top_n)
+        else:
+            _display_standard_report(terminalreporter, _memlog_records, sort_method, top_n)
+
+    # Display final memory usage of last test in each worker
+    _display_final_usage(terminalreporter, _memlog_records)
+
+    # Display peak memory usage across all tests
+    _display_peak_usage(terminalreporter, _memlog_records)
+
+    terminalreporter.write_sep('-', 'end of memlog summary')
+
