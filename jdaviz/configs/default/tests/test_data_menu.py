@@ -187,7 +187,7 @@ def test_data_menu_dq_layers(imviz_helper):
     imviz_helper.load_data(data, data_label="image", ext=('SCI', 'DQ'), show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
-    assert dm.layer.choices == ['image[DQ,1]', 'image[SCI,1]']
+    assert dm.layer.choices == ['image[SCI,1]', 'image[DQ,1]']
     assert len(dm._obj.visible_layers) == 2
 
     # turning off image (parent) data-layer should also turn off DQ

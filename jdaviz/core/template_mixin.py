@@ -2265,6 +2265,53 @@ class LayerSelect(SelectPluginComponent):
 
         if self.sort_by == 'zorder':
             layer_items.sort(key=_sort_by_zorder)
+
+            # Group parent data with their children and place children below parents
+            # First, identify all parent-child relationships
+            parent_to_children = {}
+            child_to_parent = {}
+
+            if hasattr(self._plugin.app, '_get_assoc_data_children'):
+                for item in layer_items:
+                    label = item['label']
+                    children = self._plugin.app._get_assoc_data_children(label)
+                    if children:
+                        parent_to_children[label] = children
+                        for child in children:
+                            child_to_parent[child] = label
+
+            # Now build the grouped list, skipping children and adding them after their parent
+            grouped_items = []
+            processed = set()
+
+            for item in layer_items:
+                label = item['label']
+
+                # Skip if already processed
+                if label in processed:
+                    continue
+
+                # Skip if this is a child (it will be added when we process its parent)
+                if label in child_to_parent:
+                    continue
+
+                # Add the parent/standalone layer
+                grouped_items.append(item)
+                processed.add(label)
+
+                # Add any children immediately after
+                if label in parent_to_children:
+                    for child_label in parent_to_children[label]:
+                        for child_item in layer_items:
+                            if (child_item['label'] == child_label and
+                                    child_label not in processed):
+                                grouped_items.append(child_item)
+                                processed.add(child_label)
+                                break
+
+            # Only use grouped items if we actually reorganized something
+            if len(grouped_items) > 0:
+                layer_items = grouped_items
         else:  # icon
             layer_items.sort(key=_sort_by_icon)
 
