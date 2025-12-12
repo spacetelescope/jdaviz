@@ -94,6 +94,8 @@ API Changes
 - Adds `ldr.load()` method to the loaders API and suggests using this in API hints over `ldr.importer()`
   (which will continue to exist). [#3832]
 
+- Renames model fitting's `fitter_component` to `fitter`, with deprecation. [#3944]
+
 Cubeviz
 ^^^^^^^
 
