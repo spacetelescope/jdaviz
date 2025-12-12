@@ -441,7 +441,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                             self.app._get_assoc_data_children(data.label)))
 
             old_layers = {item['label']: item['zorder'] for item in event['old']}
-            
+
             # Build a map of child to parent for zorder adjustments
             child_to_parent = {}
             for data in self.app.data_collection:
@@ -449,7 +449,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 if children:
                     for child in children:
                         child_to_parent[child] = data.label
-            
+
             for layer in self._viewer.layers:
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
