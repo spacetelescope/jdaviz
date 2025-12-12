@@ -39,6 +39,8 @@ New Features
 - The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
   the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
 
+- Update the standalone application launcher to use the solara file browser. [#3941]
+
 Cubeviz
 ^^^^^^^
 

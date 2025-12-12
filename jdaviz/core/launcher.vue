@@ -31,29 +31,28 @@
         </v-text-field>
 
         <j-tooltip tooltipcontent="select file from disk" span_style="height: 80px">
-          <v-dialog v-model="file_chooser_visible" height="400" width="600">
+          <v-dialog v-model="file_browser_visible" max-width="1000" max-height="800">
               <template v-slot:activator="{ on }">
                   <v-btn
                       v-on="on"
+                      @click="open_file_dialog"
                       class="ma-2"
                       color="#1E617F"
                       style="top: 7px; height: 57px"
                       dark>
-                      <v-icon large>mdi-file-upload</v-icon
-                      <g-file-import id="file-chooser"></g-file-import>
+                      <v-icon large>mdi-file-upload</v-icon>
                   </v-btn>
               </template>
-              <v-card>
+              <v-card max-height="800">
                   <v-card-title class="headline" color="primary" primary-title>Select Data</v-card-title>
-                  <v-card-text>
+                  <v-card-text style="max-height: 650px; overflow-y: auto;">
                   Select a file with data you want to load into this instance of Jdaviz. Jdaviz will
                   attempt to identify a compatible configuration for your selected dataset. If one cannot
                   be found, you can manually select a configuration to load your data into.
                   <v-container>
                       <v-row>
                       <v-col>
-                          <g-file-import id="file-chooser"></g-file-import>
-                          <span style="color: red;">{{ error_message }}</span>
+                          <jupyter-widget :widget="file_browser_widget" v-if="file_browser_widget"/>
                       </v-col>
                       </v-row>
                   </v-container>
@@ -61,8 +60,8 @@
 
                   <v-card-actions>
                   <div class="flex-grow-1"></div>
-                      <v-btn color="primary" text @click="file_chooser_visible = false">Cancel</v-btn>
-                      <v-btn color="primary" text @click="choose_file" :disabled="!valid_path">Import</v-btn>
+                      <v-btn color="primary" text @click="file_browser_visible = false">Cancel</v-btn>
+                      <v-btn color="primary" text @click="choose_file">Import</v-btn>
                   </v-card-actions>
 
               </v-card>
