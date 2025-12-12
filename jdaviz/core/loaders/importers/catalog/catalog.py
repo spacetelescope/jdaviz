@@ -283,55 +283,53 @@ class CatalogImporter(BaseImporterToDataCollection):
         table = self.input[self.output_cols]
         output_table = QTable()
 
+        # Handle RA / Dec columns, if selected
         if (self.col_ra_selected in table.colnames) and (self.col_dec_selected in table.colnames):  # noqa
-            # handle output construction for RA/Dec and/or X/Y coordinate columns.
-            # rename columns so that table in data collection always has
-            # the same column names for consistency when accessing elsewhere
-            # also add and units if they weren't loaded in with units assigned
+            ra = self.input[self.col_ra_selected]
+            dec = self.input[self.col_dec_selected]
 
-            ra = None
-            dec = None
-            if isinstance(self.input[self.col_ra_selected], SkyCoord):
-                ra = self.input[self.col_ra_selected].ra
-            if isinstance(self.input[self.col_dec_selected], SkyCoord):
-                dec = self.input[self.col_dec_selected].dec
+            # The only modification made to the output table is the addition of individual
+            # RA, Dec columns if the input columns are SkyCoord. This avoids unpacking
+            # RA and Dec and checking if components are a SkyCoord every time they
+            # are accessed.
+            col_ra_selected = self.col_ra_selected  # final output col name
+            col_dec_selected = self.col_dec_selected  # final output col name
+            if isinstance(ra, SkyCoord):
+                ra = ra.ra
+                col_ra_selected = 'SkyCoord_RA'
+            if isinstance(dec, SkyCoord):
+                dec = dec.dec
+                col_dec_selected = 'SkyCoord_Dec'
 
-            # if the columns are strings, try to parse them as coordinates.
-            # To do this, we try loading it through SkyCoord, which can determine
-            # if the string format is recognizable as Lon/Lat coordinates.
-            if isinstance(self.input[self.col_ra_selected][0], str):
+            # If the columns are strings, pass them through 'SkyCoord', which can
+            # determine if the string format is recognizable as Lon/Lat coordinates.
+            if isinstance(ra[0], str):
                 try:
-                    sc = SkyCoord(self.input[self.col_ra_selected],
-                                  self.input[self.col_ra_selected])
-                    ra = sc.ra.deg * u.deg
+                    ra = SkyCoord(ra, ra).ra  # dummy value 'ra' twice, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse RA column as string coordinates.")
-            if isinstance(self.input[self.col_dec_selected][0], str):
+            if isinstance(dec[0], str):
                 try:
-                    sc = SkyCoord(self.input[self.col_dec_selected],
-                                  self.input[self.col_dec_selected])
-                    dec = sc.dec.deg * u.deg
+                    dec = SkyCoord(dec, dec).dec  # dummy value 'dec' twice, just to parse string
                 except (ValueError, u.UnitTypeError):
                     raise ValueError("Could not parse Dec column as string coordinates.")
 
             # append units to RA/Dec, if they weren't loaded in with units or
             # assigned units above when parsing strings as units
-            if ra is not None:
-                output_table['Right Ascension'] = ra
-            else:
-                output_table['Right Ascension'] = table[self.col_ra_selected]
-                # add units to ra if they weren't loaded in with units assigned
-                if not self.col_ra_has_unit:
-                    output_table['Right Ascension'] *= u.Unit(self.col_ra_unit_selected)
-            if dec is not None:
-                output_table['Declination'] = dec
-            else:
-                output_table['Declination'] = table[self.col_dec_selected]
-                if not self.col_dec_has_unit:
-                    output_table['Declination'] *= u.Unit(self.col_dec_unit_selected)
+            if getattr(ra, 'unit') is None:
+                ra *= u.Unit(self.col_ra_unit_selected)
+            if getattr(dec, 'unit') is None:
+                dec *= u.Unit(self.col_dec_unit_selected)
 
+            output_table[col_ra_selected] = ra
+            output_table[col_dec_selected] = dec
+
+            # add the selected ra/dec columns to meta
+            output_table.meta['_jdaviz_loader_ra_col'] = col_ra_selected
+            output_table.meta['_jdaviz_loader_dec_col'] = col_dec_selected
+
+        # handle output construction for X and Y coordinate columns, if selected
         if (self.col_x_selected in table.colnames) and (self.col_y_selected in table.colnames):  # noqa
-            # handle output construction for X and Y coordinate columns, if selected
             # if input is a string, try to convert to floats
             if isinstance(self.input[self.col_x_selected][0], str):
                 try:
@@ -344,10 +342,12 @@ class CatalogImporter(BaseImporterToDataCollection):
                 except ValueError:
                     raise ValueError("Could not parse Y column as numeric values.")
 
-            # rename X and Y columns so that table in data collection always has
-            # the same X, Y column names for consistency when accessing elsewhere
-            output_table['X'] = table[self.col_x_selected]
-            output_table['Y'] = table[self.col_y_selected]
+            output_table[self.col_x_selected] = table[self.col_x_selected]
+            output_table[self.col_y_selected] = table[self.col_y_selected]
+
+            # add the selected ra/dec columns to meta
+            output_table.meta['_jdaviz_loader_x_col'] = self.col_x_selected
+            output_table.meta['_jdaviz_loader_y_col'] = self.col_y_selected
 
         # add source ID column. If no column selected, just use table index
         # for now this will be added as a column named 'ID' in the output table,
@@ -355,8 +355,10 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         if self.col_id_selected in table.colnames:
             output_table['ID'] = table[self.col_id_selected]
+            output_table.meta['_jdaviz_id_col'] = self.col_id_selected
         else:
             output_table['ID'] = np.arange(len(table))
+            output_table.meta['_jdaviz_id_col'] = 'ID'
 
         # add additional columns to output table
         for col in self.output_cols:
