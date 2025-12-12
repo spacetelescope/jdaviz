@@ -296,19 +296,21 @@
                   :hint="parameter_hints[item.name]"
                   persistent-hint>
                     <template v-slot:label>
-                        <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
-                          {{ item.name }}
+                        <span :style="api_hints_enabled ? 'overflow-wrap: anywhere; font-size: 8pt' : 'overflow-wrap: anywhere; font-size: 12pt'"
+                              :class="api_hints_enabled ? 'api-hint' : 'font-weight-bold'">
+                          {{ api_hints_enabled ? `plg.set_fitter_parameter('${item.name}', ${item.value.toString()[0].toUpperCase() + item.value.toString().slice(1)})` : item.name }}
                         </span>
                      </template>
                 </v-switch>
                 <v-text-field v-else
-                    :label="item.name"
                     v-model.number="item.value"
                     type="number"
                     :min="item.name === 'degree' ? 1 : undefined"
                     :max="item.name === 'degree' ? 5 : undefined"
                     :rules="item.name === 'degree' ? [v => (v >= 1 && v <= 5) || 'Degree must be between 1 and 5.'] : []"
                     style="padding-top: 0px; margin-top: 14px; margin-bottom: 10px;"
+                    :label="api_hints_enabled ? `plg.set_fitter_parameter('${item.name}', ${item.value})` : item.name"
+                    :class="api_hints_enabled ? 'api-hint' : null"
                   ></v-text-field>
               </div>
               </v-expansion-panel-content>

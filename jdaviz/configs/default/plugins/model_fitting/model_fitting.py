@@ -85,6 +85,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`fitted_models`
     * :meth:`get_models`
     * :meth:`get_model_parameters`
+    * :meth:`get_fitter_parameter`
+    * :meth:`set_fitter_parameter`
     """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
@@ -255,7 +257,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'add_results', 'residuals_calculate',
                    'residuals']
         expose += ['calculate_fit', 'clear_table', 'export_table',
-                   'fitted_models', 'get_models', 'get_model_parameters', 'fitter']
+                   'fitted_models', 'get_models', 'get_model_parameters', 'fitter',
+                   'get_fitter_parameter', 'set_fitter_parameter']
         return PluginUserApi(self, expose=expose)
 
     def _param_units(self, param, model_type=None):
@@ -1741,3 +1744,78 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             spectrum.mask = subset_mask
         return spectrum
+
+    def get_fitter_parameter(self, key):
+        """
+        Get the value of a fitter parameter.
+
+        Parameters
+        ----------
+        key : str
+            The name of the fitter parameter to retrieve. Available parameters depend on the
+            selected fitter. Common parameters include:
+
+            * ``maxiter`` : Maximum number of iterations (available for most fitters)
+            * ``filter_non_finite`` : Whether to filter non-finite values
+                (available for most fitters)
+            * ``calc_uncertainties`` : Whether to calculate uncertainties
+                (available for most fitters)
+
+        Returns
+        -------
+        value : int, float, bool, or None
+            The current value of the parameter, or None if the parameter does not exist
+            for the selected fitter.
+
+        Examples
+        --------
+        >>> from jdaviz import Specviz
+        >>> specviz = Specviz()
+        >>> plugin = specviz.plugins['Model Fitting']
+        >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
+        >>> max_iterations = plugin.get_fitter_parameter('maxiter')
+        >>> print(max_iterations)
+        100
+        """
+        component = self.fitter_parameters['parameters']
+        value = None
+        for param in component:
+            if param['name'] == key:
+                value = param['value']
+                break
+        return value
+
+    def set_fitter_parameter(self, key, value):
+        """
+        Set the value of a fitter parameter.
+
+        Parameters
+        ----------
+        key : str
+            The name of the fitter parameter to set. Available parameters depend on the
+            selected fitter. Common parameters include:
+
+            * ``maxiter`` : Maximum number of iterations (available for most fitters)
+            * ``filter_non_finite`` : Whether to filter non-finite values
+                (available for most fitters)
+            * ``calc_uncertainties`` : Whether to calculate uncertainties
+                (available for most fitters)
+
+        value : int, float, or bool
+            The new value for the parameter. The type should match the parameter's expected type.
+
+        Examples
+        --------
+        >>> from jdaviz import Specviz
+        >>> specviz = Specviz()
+        >>> plugin = specviz.plugins['Model Fitting']
+        >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
+        >>> plugin.set_fitter_parameter('maxiter', 200)
+        >>> plugin.set_fitter_parameter('filter_non_finite', False)
+        """
+        component = self.fitter_parameters['parameters']
+        for i in range(len(component)):
+            if component[i]['name'] == key:
+                component[i]['value'] = value
+                self.send_state("fitter_parameters")
+                break

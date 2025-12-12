@@ -151,6 +151,42 @@ The model fitting plugin can be run from the API:
     # Calculate fit
     plugin_mf.calculate_fit()
 
+Customizing Fitter Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The fitter parameters (such as maximum iterations, filtering non-finite values, etc.)
+can be accessed and modified programmatically using the
+:meth:`~jdaviz.configs.default.plugins.model_fitting.model_fitting.ModelFitting.get_fitter_parameter`
+and :meth:`~jdaviz.configs.default.plugins.model_fitting.model_fitting.ModelFitting.set_fitter_parameter`
+methods. The available parameters depend on the selected fitter.
+
+Common parameters include:
+
+* ``maxiter``: Maximum number of iterations (available for most fitters)
+* ``filter_non_finite``: Whether to filter non-finite values like NaNs (available for most fitters)
+* ``calc_uncertainties``: Whether to calculate parameter uncertainties (available for most fitters)
+
+.. code-block:: python
+
+    # Get the current value of a fitter parameter
+    max_iterations = plugin_mf.get_fitter_parameter('maxiter')
+    print(f"Current max iterations: {max_iterations}")
+    
+    # Set a new value for a fitter parameter
+    plugin_mf.set_fitter_parameter('maxiter', 200)
+    plugin_mf.set_fitter_parameter('filter_non_finite', False)
+    
+    # Verify the change
+    new_max_iterations = plugin_mf.get_fitter_parameter('maxiter')
+    print(f"New max iterations: {new_max_iterations}")
+
+Note that different fitters support different parameters. For example, ``LinearLSQFitter``
+does not support the ``maxiter`` parameter. If you attempt to get a parameter that doesn't
+exist for the selected fitter, the method will return ``None``.
+
+Exporting Fit Results
+^^^^^^^^^^^^^^^^^^^^^^
+
 Parameter values for each fitting run are stored in the plugin table.
 To export the table into the notebook, call
 :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
