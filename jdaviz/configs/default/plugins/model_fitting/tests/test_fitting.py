@@ -879,71 +879,83 @@ def test_model_equation_with_different_flux_units(specviz_helper):
     assert_allclose(model.flux, spec.flux.to('W / (Hz m2)'), rtol=1e-2)
 
 
-@pytest.mark.parametrize("fitter_name,expected_params", [
-    ('TRFLSQFitter', {'maxiter': 100, 'filter_non_finite': True, 'calc_uncertainties': True}),
-    ('DogBoxLSQFitter', {'maxiter': 100, 'filter_non_finite': True, 'calc_uncertainties': True}),
-    ('LMLSQFitter', {'maxiter': 100, 'filter_non_finite': True, 'calc_uncertainties': True}),
-    ('LevMarLSQFitter', {'maxiter': 100, 'filter_non_finite': True, 'calc_uncertainties': True}),
-    ('LinearLSQFitter', {'calc_uncertainties': True}),
-    ('SLSQPLSQFitter', {'maxiter': 100}),
-    ('SimplexLSQFitter', {'maxiter': 100}),
-])
-def test_get_fitter_parameter_all_fitters(specviz_helper, spectrum1d, fitter_name, expected_params):
+def test_get_fitter_parameter_all_fitters(specviz_helper, spectrum1d):
     """Test the get_fitter_parameter method for all non-spline fitters."""
+    fitter_configs = [
+        ('TRFLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                          'calc_uncertainties': True}),
+        ('DogBoxLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                             'calc_uncertainties': True}),
+        ('LMLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                         'calc_uncertainties': True}),
+        ('LevMarLSQFitter', {'maxiter': 100, 'filter_non_finite': True,
+                             'calc_uncertainties': True}),
+        ('LinearLSQFitter', {'calc_uncertainties': True}),
+        ('SLSQPLSQFitter', {'maxiter': 100}),
+        ('SimplexLSQFitter', {'maxiter': 100}),
+    ]
+
     specviz_helper.load_data(spectrum1d)
     plugin = specviz_helper.plugins["Model Fitting"]
 
-    # Set the fitter
-    plugin.fitter_component = fitter_name
+    for fitter_name, expected_params in fitter_configs:
+        # Set the fitter
+        plugin.fitter_component = fitter_name
 
-    # Test getting each expected parameter and verify default value
-    for param_name, expected_value in expected_params.items():
-        actual_value = plugin.get_fitter_parameter(param_name)
-        assert actual_value == expected_value, (
-            f"Fitter {fitter_name}: expected {param_name}={expected_value}, "
-            f"got {actual_value}"
-        )
+        # Test getting each expected parameter and verify default value
+        for param_name, expected_value in expected_params.items():
+            actual_value = plugin.get_fitter_parameter(param_name)
+            assert actual_value == expected_value, (
+                f"Fitter {fitter_name}: expected {param_name}={expected_value}, "
+                f"got {actual_value}"
+            )
 
-    # Test getting non-existent parameter returns None
-    non_existent = plugin.get_fitter_parameter('non_existent_param')
-    assert non_existent is None
+        # Test getting non-existent parameter returns None
+        non_existent = plugin.get_fitter_parameter('non_existent_param')
+        assert non_existent is None
 
-    # Test that parameters not in this fitter return None
-    if 'maxiter' not in expected_params:
-        assert plugin.get_fitter_parameter('maxiter') is None
-    if 'filter_non_finite' not in expected_params:
-        assert plugin.get_fitter_parameter('filter_non_finite') is None
+        # Test that parameters not in this fitter return None
+        if 'maxiter' not in expected_params:
+            assert plugin.get_fitter_parameter('maxiter') is None
+        if 'filter_non_finite' not in expected_params:
+            assert plugin.get_fitter_parameter('filter_non_finite') is None
 
 
-@pytest.mark.parametrize("fitter_name,test_values", [
-    ('TRFLSQFitter', {'maxiter': 50, 'filter_non_finite': False, 'calc_uncertainties': False}),
-    ('DogBoxLSQFitter', {'maxiter': 75, 'filter_non_finite': False, 'calc_uncertainties': False}),
-    ('LMLSQFitter', {'maxiter': 125, 'filter_non_finite': False, 'calc_uncertainties': False}),
-    ('LevMarLSQFitter', {'maxiter': 150, 'filter_non_finite': False, 'calc_uncertainties': False}),
-    ('LinearLSQFitter', {'calc_uncertainties': False}),
-    ('SLSQPLSQFitter', {'maxiter': 200}),
-    ('SimplexLSQFitter', {'maxiter': 250}),
-])
-def test_set_fitter_parameter_all_fitters(specviz_helper, spectrum1d, fitter_name, test_values):
+def test_set_fitter_parameter_all_fitters(specviz_helper, spectrum1d):
     """Test the set_fitter_parameter method for all non-spline fitters."""
+    fitter_configs = [
+        ('TRFLSQFitter', {'maxiter': 50, 'filter_non_finite': False,
+                          'calc_uncertainties': False}),
+        ('DogBoxLSQFitter', {'maxiter': 75, 'filter_non_finite': False,
+                             'calc_uncertainties': False}),
+        ('LMLSQFitter', {'maxiter': 125, 'filter_non_finite': False,
+                         'calc_uncertainties': False}),
+        ('LevMarLSQFitter', {'maxiter': 150, 'filter_non_finite': False,
+                             'calc_uncertainties': False}),
+        ('LinearLSQFitter', {'calc_uncertainties': False}),
+        ('SLSQPLSQFitter', {'maxiter': 200}),
+        ('SimplexLSQFitter', {'maxiter': 250}),
+    ]
+
     specviz_helper.load_data(spectrum1d)
     plugin = specviz_helper.plugins["Model Fitting"]
 
-    # Set the fitter
-    plugin.fitter_component = fitter_name
+    for fitter_name, test_values in fitter_configs:
+        # Set the fitter
+        plugin.fitter_component = fitter_name
 
-    # Test setting each parameter and verify it was set correctly
-    for param_name, test_value in test_values.items():
-        plugin.set_fitter_parameter(param_name, test_value)
-        actual_value = plugin.get_fitter_parameter(param_name)
-        assert actual_value == test_value, (
-            f"Fitter {fitter_name}: failed to set {param_name}={test_value}, "
-            f"got {actual_value}"
-        )
+        # Test setting each parameter and verify it was set correctly
+        for param_name, test_value in test_values.items():
+            plugin.set_fitter_parameter(param_name, test_value)
+            actual_value = plugin.get_fitter_parameter(param_name)
+            assert actual_value == test_value, (
+                f"Fitter {fitter_name}: failed to set {param_name}={test_value}, "
+                f"got {actual_value}"
+            )
 
-    # Test that setting non-existent parameter doesn't raise error
-    plugin.set_fitter_parameter('non_existent_param', 999)
-    assert plugin.get_fitter_parameter('non_existent_param') is None
+        # Test that setting non-existent parameter doesn't raise error
+        plugin.set_fitter_parameter('non_existent_param', 999)
+        assert plugin.get_fitter_parameter('non_existent_param') is None
 
 
 def test_spline_fitter_get_set_parameters(specviz_helper, spectrum1d):
