@@ -75,7 +75,8 @@ def _get_memory_bytes():
     """
     p = psutil.Process()
     rss = p.memory_info().rss
-    swap = psutil.swap_memory().used
+    mf = p.memory_full_info()
+    swap = getattr(mf, 'swap', 0) or 0
     uss = p.memory_full_info().uss
 
     mem_array = np.array([(rss, swap, uss)],
@@ -593,11 +594,11 @@ def _calculate_peak_usage(records):
 
 def _display_peak_usage(terminalreporter, records):
     """
-    Display peak memory usage summary.
+    Display peak memory usage summary across all workers.
 
-    Identifies and displays the test that reached the highest combined USS + Swap
-    memory allocation (peak value) across all test runs. Shows both the global
-    position in the test execution queue and the position within that specific worker.
+    Identifies and displays the test(s) that reached the highest combined USS +
+    Swap memory allocation (peak value) in each worker. Shows the test with
+    maximum memory usage for each worker separately.
 
     Parameters
     ----------
@@ -609,28 +610,30 @@ def _display_peak_usage(terminalreporter, records):
     if len(records) == 0:
         return
 
-    # Calculate peak values for each test
-    uss_swap_before_peaks = records['uss_before'] + records['swap_before']
-    uss_swap_after_peaks = records['uss_after'] + records['swap_after']
-    combined_peaks = np.maximum(uss_swap_before_peaks, uss_swap_after_peaks)
-
-    # Find the test with the maximum combined peak
-    max_combined_idx = np.argmax(combined_peaks)
-    max_combined_record = records[max_combined_idx]
-
-    # Get position within the same worker
-    worker_id = max_combined_record['worker_id']
-    worker_records = records[records['worker_id'] == worker_id]
-    # Find the index of this record within the worker's records
-    worker_position = np.where(worker_records['nodeid'] == max_combined_record['nodeid'])[0][0]
-
     terminalreporter.write_line('')
-    terminalreporter.write_line(f'Peak memory usage, maximum USS + Swap, '
-                                f'global position: {max_combined_idx}, '
-                                f'worker position: {worker_position}:')
+    terminalreporter.write_line('Peak memory usage (maximum USS + Swap per worker):')
+
+    # Get unique worker IDs and sort them numerically
+    unique_workers = np.unique(records['worker_id'])
+    sorted_workers = sorted(unique_workers, key=_parse_worker_id)
 
     terminalreporter.write_line(_full_header_with_worker)
-    terminalreporter.write_line(_format_memlog_line(max_combined_record, include_worker=True))
+
+    # For each worker, find the test with the maximum combined peak
+    for worker_id in sorted_workers:
+        worker_records = records[records['worker_id'] == worker_id]
+
+        # Calculate peak values for this worker's tests
+        uss_swap_before = worker_records['uss_before'] + worker_records['swap_before']
+        uss_swap_after = worker_records['uss_after'] + worker_records['swap_after']
+        combined_peaks = np.maximum(uss_swap_before, uss_swap_after)
+
+        # Find the test with the maximum combined peak in this worker
+        max_idx = np.argmax(combined_peaks)
+        peak_record = worker_records[max_idx]
+
+        terminalreporter.write_line(_format_memlog_line(peak_record,
+                                                        include_worker=True))
 
 
 def _display_final_usage(terminalreporter, records):
