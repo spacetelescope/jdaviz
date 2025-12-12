@@ -7,7 +7,7 @@ New Features
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
   and import from an astroquery or MAST search. Interactive footprint selection enables displaying
   observation footprints from ``s_region`` data as overlays on the image viewer and clicking on
-  footprints to select/deselect observations. [#3769, #3894]
+  footprints to select/deselect observations. [#3769, #3894, #3935]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
 
@@ -38,6 +38,8 @@ New Features
 
 - The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
   the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
+- Update the standalone application launcher to use the solara file browser. [#3941]
 
 Cubeviz
 ^^^^^^^
@@ -77,6 +79,8 @@ Specviz2d
 
 - Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
 
+- Generalized cross-dispersion profile plugin to be compatible with the deconfigged jdaviz instance. [#3928]
+
 Rampviz
 ^^^^^^^
 
@@ -91,6 +95,8 @@ API Changes
 
 - Adds `ldr.load()` method to the loaders API and suggests using this in API hints over `ldr.importer()`
   (which will continue to exist). [#3832]
+
+- Renames model fitting's `fitter_component` to `fitter`, with deprecation. [#3944]
 
 Cubeviz
 ^^^^^^^

@@ -273,7 +273,7 @@
           attach
           :items="fitter_items.map(i => i.label)"
           v-model="fitter_selected"
-          :label="api_hints_enabled ? 'plg.fitter_component.selected =' : 'Fitter Component'"
+          :label="api_hints_enabled ? 'plg.fitter =' : 'Fitter Component'"
           :class="api_hints_enabled ? 'api-hint' : null"
           hint="Select a fitter for the model."
           persistent-hint

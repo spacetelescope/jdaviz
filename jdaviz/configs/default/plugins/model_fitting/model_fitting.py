@@ -3,6 +3,7 @@ import numpy as np
 from copy import deepcopy
 
 import astropy.units as u
+from astropy.utils.decorators import deprecated
 from astropy.modeling import fitting
 from specutils import Spectrum
 from specutils.fitting import fit_lines
@@ -184,9 +185,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.fitter_selected = "LevMarLSQFitter"
         # allows for Spline1D case, updating the fitters in the
         # dropdown depending on the model selected
-        self.fitter_component = SelectPluginComponent(self,
-                                                      items='fitter_items',
-                                                      selected='fitter_selected')
+        self.fitter = SelectPluginComponent(self,
+                                            items='fitter_items',
+                                            selected='fitter_selected')
         self._enforce_spline_fitter()
 
         if self.config == 'cubeviz':
@@ -238,6 +239,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         )
 
     @property
+    @deprecated(since="4.5", alternative="fitter")
+    def fitter_component(self):
+        return self.fitter
+
+    @property
     def user_api(self):
         expose = ['dataset']
         if self.config == "cubeviz":
@@ -251,7 +257,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'add_results', 'residuals_calculate',
                    'residuals']
         expose += ['calculate_fit', 'clear_table', 'export_table',
-                   'fitted_models', 'get_models', 'get_model_parameters', 'fitter_component',
+                   'fitted_models', 'get_models', 'get_model_parameters', 'fitter',
                    'get_fitter_parameter', 'set_fitter_parameter']
         return PluginUserApi(self, expose=expose)
 
@@ -471,7 +477,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.comp_label_invalid_msg = ''
 
     @observe('fitter_selected')
-    def _update_fitter_component_msg(self, event={}):
+    def _update_fitter_msg(self, event={}):
         self.fitter_parameters = self.all_fitters[event['new']]
         self._update_fitter_error()
 
@@ -496,7 +502,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             models_to_fit = self._reinitialize_with_fixed()
             spec = self.dataset.get_selected_spectrum(use_display_units=True)
             masked_spectrum = self._apply_subset_masks(spec, self.spectral_subset)
-            fitter = getattr(fitting, self.fitter_component.selected)(**init_kw)
+            fitter = getattr(fitting, self.fitter.selected)(**init_kw)
             fit_lines(masked_spectrum, models_to_fit, fitter=fitter, weights=None,
                       window=None, **kw)
             self.fitter_error = None
@@ -1537,7 +1543,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 masked_spectrum,
                 models_to_fit,
                 self.model_equation,
-                fitter=getattr(fitting, self.fitter_component.selected)(**init_kw),
+                fitter=getattr(fitting, self.fitter.selected)(**init_kw),
                 run_fitter=True,
                 window=None,
                 n_cpu=self.parallel_n_cpu,
@@ -1663,7 +1669,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 spec,
                 models_to_fit,
                 self.model_equation,
-                fitter=getattr(fitting, self.fitter_component.selected)(**init_kw),
+                fitter=getattr(fitting, self.fitter.selected)(**init_kw),
                 run_fitter=True,
                 window=None,
                 n_cpu=self.parallel_n_cpu,

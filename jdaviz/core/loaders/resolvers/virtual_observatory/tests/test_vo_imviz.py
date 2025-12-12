@@ -209,7 +209,6 @@ class TestVOXMLInjectionWarning:
 
 
 @pytest.mark.remote_data
-@pytest.mark.skip(reason="IVOA server misconfiguration causing infinite looping")
 class TestVOImvizRemote:
 
     def _init_vo_ldr_M51(self, imviz_helper):

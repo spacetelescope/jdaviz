@@ -35,12 +35,10 @@ def test_plugin(specviz2d_helper):
 
     # test trace marks - won't be created until after opening the plugin
     sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    # includes 2 hidden marks from cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) == 5
+    assert len(sp2dv.figure.marks) == 3
 
     pext.keep_active = True
-    # includes 2 hidden marks from cross-dispersion profile plugin
-    assert len(sp2dv.figure.marks) == 14
+    assert len(sp2dv.figure.marks) == 12
     assert pext.marks['trace'].marks_list[0].visible is True
     assert len(pext.marks['trace'].marks_list[0].x) > 0
 

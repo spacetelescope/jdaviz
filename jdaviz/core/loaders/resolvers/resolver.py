@@ -16,7 +16,8 @@ from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 SnackbarMessage,
                                 FootprintOverlayClickMessage,
-                                LinkUpdatedMessage)
+                                LinkUpdatedMessage,
+                                ViewerAddedMessage)
 from jdaviz.core.marks import RegionOverlay
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
@@ -24,7 +25,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         CustomToolbarToggleMixin,
                                         UnitSelectPluginComponent,
                                         ViewerSelect,
-                                        with_spinner)
+                                        with_spinner,
+                                        _is_image_viewer)
 from jdaviz.core.registries import (loader_resolver_registry,
                                     loader_parser_registry,
                                     loader_importer_registry)
@@ -281,9 +283,6 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         self.close_callback = kwargs.pop('close_callback', None)
         self._restrict_to_target = kwargs.pop('restrict_to_target', None)
 
-        self._footprint_marks = []
-        self._footprint_groups = {}
-
         super().__init__(*args, **kwargs)
 
         self.observation_table.enable_clear = False
@@ -308,15 +307,19 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             self.image_data_loaded = any(layer_is_image_data(data)
                                          for data in self.app.data_collection)
             self.app.hub.subscribe(self, DataCollectionAddMessage,
-                                   handler=self._on_data_added)
+                                   handler=self._on_collection_data_added)
             self.app.hub.subscribe(self, DataCollectionDeleteMessage,
                                    handler=self._on_data_removed)
             self.app.hub.subscribe(self, LinkUpdatedMessage,
                                    handler=self._on_link_type_updated)
+            self.app.hub.subscribe(self, ViewerAddedMessage,
+                                   handler=self._on_viewer_added)
+            self.app.hub.subscribe(self, AddDataMessage,
+                                   handler=self._on_viewer_data_added)
 
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
-                    self.observation_table_populated and 's_region' in self.observation_table.headers_avail):  # noqa: E501
+                    's_region' in self.observation_table.headers_avail):
                 return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'  # noqa: E501
             return None, None
 
@@ -373,8 +376,46 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         """
         self.server_is_remote = new_settings_dict.get('server_is_remote', False)
 
-    def _on_data_added(self, msg):
+    def _on_collection_data_added(self, msg):
         self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
+
+    def _on_viewer_data_added(self, msg):
+        """
+        If footprint selection is enabled and this is an image viewer
+        with valid WCS, add footprints to this viewer.
+        """
+
+        if not self.custom_toolbar_enabled:
+            return
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            return
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+        # Get the viewer from the message
+        if not hasattr(msg, 'viewer_id') or msg.viewer_id is None:
+            return
+
+        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        if viewer is None:
+            return
+        # Check if it's an image viewer
+        if not _is_image_viewer(viewer):
+            return
+        # Does this viewer already have footprints? If so, don't re-add.
+        existing_labels = [
+            mark.label for mark in viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+        if existing_labels:
+            return
+        # Check for valid WCS
+        if (not hasattr(viewer.state, "reference_data") or
+            viewer.state.reference_data is None or
+            not hasattr(viewer.state.reference_data, "coords") or
+                viewer.state.reference_data.coords is None):
+            # No WCS yet; nothing to do
+            return
+        self._add_footprints_to_viewer(viewer)
 
     def _on_data_removed(self, msg):
         self.image_data_loaded = any(layer_is_image_data(data) for data in self.app.data_collection)
@@ -557,41 +598,30 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             return 'hst'
 
     def on_observation_select_changed(self, _=None):
+        # Sync footprint selection across all viewers (only if footprints are displayed)
+        if self.custom_toolbar_enabled and self.parsed_input_is_query and self.treat_table_as_query:
+            self._sync_footprint_selection_to_viewers()
+        # Fetch products if rows are selected
         if len(self.observation_table.selected_rows) == 0:
             self.app.hub.broadcast(SnackbarMessage("No observation currently selected",
                                                    sender=self, color="warning"))
-            # Update footprint selection if applicable
-            if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
-                for idx, marks in self._footprint_groups.items():
-                    for mark in marks:
-                        mark.selected = False
-            return
-
-        datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
-        results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
-        file_table = self._parsed_input_to_file_table(results)
-        if file_table is not None:
-            self.file_table._clear_table()
-            for row in file_table:
-                self.file_table.add_item(row)
-            self.file_table_populated = True
         else:
-            self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
-                                                   sender=self, color="error"))
-            self.file_table_populated = False
+            datasets = [row['Dataset'] for row in self.observation_table.selected_rows]
+            results = self._get_product_list(self.guess_mission(datasets[0]), datasets)
+            file_table = self._parsed_input_to_file_table(results)
+            if file_table is not None:
+                self.file_table._clear_table()
+                for row in file_table:
+                    self.file_table.add_item(row)
+                self.file_table_populated = True
+            else:
+                self.app.hub.broadcast(SnackbarMessage(f"No products found for {datasets}",
+                                                       sender=self, color="error"))
+                self.file_table_populated = False
 
-        # Update footprint selection to match table selection
-        if self.parsed_input_is_query and self.treat_table_as_query and self._footprint_groups:
-            selected_indices = set()
-            for row in self.observation_table.selected_rows:
-                idx = self.observation_table.items.index(row)
-                selected_indices.add(idx)
-
-            # Update footprint marks based on selection
-            for idx, marks in self._footprint_groups.items():
-                selected = idx in selected_indices
-                for mark in marks:
-                    mark.selected = selected
+    def _get_image_viewers(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if _is_image_viewer(viewer)]
 
     def toggle_custom_toolbar(self):
         """Override to control footprint display when toolbar is toggled."""
@@ -604,56 +634,57 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
             if self.parsed_input_is_query and self.treat_table_as_query:
                 self._remove_observation_footprints()
 
+    @observe('custom_toolbar_enabled')
+    def _on_custom_toolbar_enabled_changed(self, change={}):
+        if not change.get('new', self.custom_toolbar_enabled):
+            # Toolbar was disabled - remove footprints from all viewers
+            if self.parsed_input_is_query and self.treat_table_as_query:
+                self._remove_observation_footprints()
+
     def _on_region_select(self, msg):
         """Handle footprint click events."""
-        if not self._footprint_marks:
-            return
         if not (self.parsed_input_is_query and self.treat_table_as_query):
             return
 
+        click_viewer = msg.sender.viewer if hasattr(msg.sender, 'viewer') else None
+        if click_viewer is None:
+            return
+        region_marks = [
+            mark for mark in click_viewer.figure.marks
+            if isinstance(mark, RegionOverlay)
+        ]
+
         click_x, click_y = msg.x, msg.y
-        selected_idx = find_closest_polygon_mark(click_x, click_y, self._footprint_marks)
+        selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
 
         if selected_idx is not None:
-            # Get viewer - deconfigged (TODO: factor this out for multiviewer support)
-            viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-            if viewer_ref is None:
-                return
-            viewer = self.app.get_viewer(viewer_ref)
-            # Get selected rows from the table
             currently_selected = set()
-            if hasattr(self, 'observation_table') and self.observation_table is not None:
-                for row in self.observation_table.selected_rows:
-                    idx = self.observation_table.items.index(row)
-                    currently_selected.add(idx)
+            for row in self.observation_table.selected_rows:
+                idx = self.observation_table.items.index(row)
+                currently_selected.add(idx)
 
+            # Toggle selection
             if selected_idx in currently_selected:
                 currently_selected.discard(selected_idx)
-                viewer._deselect_region_overlay(region_label=selected_idx)
             else:
                 currently_selected.add(selected_idx)
-                viewer._select_region_overlay(region_label=selected_idx)
 
             # Update the table selection
-            if hasattr(self, 'observation_table') and self.observation_table is not None:
-                if currently_selected:
-                    self.observation_table.select_rows(sorted(list(currently_selected)))
-                else:
-                    # Clear selection
-                    self.observation_table.selected_rows = []
+            if currently_selected:
+                self.observation_table.select_rows(sorted(list(currently_selected)))
+            else:
+                # Clear selection
+                self.observation_table.selected_rows = []
 
     def _display_observation_footprints(self):
         if 's_region' not in self.observation_table.headers_avail:
             return
 
-        # Get viewer - works for both Imviz and deconfigged
-        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-        if viewer_ref is None:
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
             return
-        viewer = self.app.get_viewer(viewer_ref)
         regions = []
         region_labels = []
-
         for idx, row in enumerate(self.observation_table.items):
             s_region_str = row.get('s_region', '')
 
@@ -661,41 +692,132 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
                 continue
             if not is_stcs_string(s_region_str):
                 continue
-
             region = stcs_string2region(s_region_str)
             regions.append(region)
             region_labels.append(idx)
 
-        if regions:
+        if not regions:
+            return
+
+        for viewer in image_viewers:
             viewer._add_region_overlay(
                 region=regions,
                 region_label=region_labels,
                 selected=False,
                 fill_opacities=[0]
             )
-            for mark in viewer.figure.marks:
-                if isinstance(mark, RegionOverlay) and mark.label in region_labels:
-                    self._footprint_marks.append(mark)
-                    self._footprint_groups[mark.label] = [mark]
+
+        self._sync_footprint_selection_to_viewers()
 
     def _remove_observation_footprints(self):
-        """Remove all observation footprints from the viewer."""
-        if not self._footprint_marks:
+        """Remove all observation footprints from all image viewers."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
             return
 
-        # Get viewer - for deconfigged (TODO: factor this out for multiviewer support)
-        viewer_ref = self.app._get_first_viewer_reference_name(require_image_viewer=True)
-        if viewer_ref is None:
+        # Get all labels (row indices) from observation table
+        all_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            all_labels.append(idx)
+
+        if not all_labels:
             return
-        viewer = self.app.get_viewer(viewer_ref)
 
-        region_labels = [mark.label for mark in self._footprint_marks]
+        # Remove footprints from all viewers
+        for viewer in image_viewers:
+            # Only remove labels that actually exist in this viewer
+            existing_labels = [
+                mark.label for mark in viewer.figure.marks
+                if isinstance(mark, RegionOverlay)
+            ]
+            labels_to_remove = [label for label in all_labels if label in existing_labels]
+            if labels_to_remove:
+                viewer._remove_region_overlay(region_label=labels_to_remove)
 
-        if region_labels:
-            viewer._remove_region_overlay(region_label=region_labels)
+    def _sync_footprint_selection_to_viewers(self):
+        """Sync footprint selection state across all viewers based on table selection."""
+        image_viewers = self._get_image_viewers()
+        if not image_viewers:
+            return
 
-        self._footprint_marks = []
-        self._footprint_groups = {}
+        selected_indices = set()
+        for row in self.observation_table.selected_rows:
+            idx = self.observation_table.items.index(row)
+            selected_indices.add(idx)
+
+        valid_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            valid_labels.append(idx)
+
+        # Update selection in all viewers
+        for viewer in image_viewers:
+            for label in valid_labels:
+                if label in selected_indices:
+                    viewer._select_region_overlay(region_label=label)
+                else:
+                    viewer._deselect_region_overlay(region_label=label)
+
+    def _on_viewer_added(self, msg):
+        """When a new viewer is created, add footprints if toolbar is enabled."""
+        if not self.custom_toolbar_enabled:
+            return
+        if not (self.parsed_input_is_query and self.treat_table_as_query):
+            return
+
+        viewer = self.app.get_viewer_by_id(msg.viewer_id)
+        if viewer is None:
+            return
+        # Check if it's an image viewer
+        if not _is_image_viewer(viewer):
+            return
+        if 's_region' not in self.observation_table.headers_avail:
+            return
+        # Check if viewer has valid WCS before attempting to add footprints
+        # New viewers may not have data/WCS yet, so we skip and wait for AddDataMessage
+        if (not hasattr(viewer.state, 'reference_data') or
+            viewer.state.reference_data is None or
+            not hasattr(viewer.state.reference_data, 'coords') or
+                viewer.state.reference_data.coords is None):
+            # No WCS yet - footprints will be added later when data is loaded
+            # via _on_viewer_data_added handler
+            return
+        # Viewer has WCS, safe to add footprints
+        self._add_footprints_to_viewer(viewer)
+
+    def _add_footprints_to_viewer(self, viewer):
+        # Build regions from table
+        regions = []
+        region_labels = []
+        for idx, row in enumerate(self.observation_table.items):
+            s_region_str = row.get('s_region', '')
+            if not s_region_str or (isinstance(s_region_str, str) and s_region_str.strip() == ''):
+                continue
+            if not is_stcs_string(s_region_str):
+                continue
+            region = stcs_string2region(s_region_str)
+            regions.append(region)
+            region_labels.append(idx)
+
+        if not regions:
+            return
+        viewer._add_region_overlay(
+            region=regions,
+            region_label=region_labels,
+            selected=False,
+            fill_opacities=[0]
+        )
+        # Sync selection state with table
+        self._sync_footprint_selection_to_viewers()
 
     def on_file_select_changed(self, _=None):
         self._clear_cache('output')
