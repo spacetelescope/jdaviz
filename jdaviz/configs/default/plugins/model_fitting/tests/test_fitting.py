@@ -923,10 +923,10 @@ def test_spline(specviz_helper, spectrum1d):
 
     # make sure fitter components update when Spline1D model component is removed
     assert mf.fitter.choices == ['TRFLSQFitter',
-                                           'DogBoxLSQFitter',
-                                           'LMLSQFitter',
-                                           'LevMarLSQFitter',
-                                           'LinearLSQFitter',
-                                           'SLSQPLSQFitter',
-                                           'SimplexLSQFitter',
-                                           'SplineSmoothingFitter']
+                                 'DogBoxLSQFitter',
+                                 'LMLSQFitter',
+                                 'LevMarLSQFitter',
+                                 'LinearLSQFitter',
+                                 'SLSQPLSQFitter',
+                                 'SimplexLSQFitter',
+                                 'SplineSmoothingFitter']
