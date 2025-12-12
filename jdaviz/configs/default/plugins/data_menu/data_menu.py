@@ -441,6 +441,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                             self.app._get_assoc_data_children(data.label)))
 
             old_layers = {item['label']: item['zorder'] for item in event['old']}
+            
+            # Build a map of child to parent for zorder adjustments
+            child_to_parent = {}
+            for data in self.app.data_collection:
+                children = self.app._get_assoc_data_children(data.label)
+                if children:
+                    for child in children:
+                        child_to_parent[child] = data.label
+            
             for layer in self._viewer.layers:
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
@@ -451,6 +460,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                     new_zorder = min(x)
                                 else:
                                     new_zorder = max(x)
+                    # If this is a child layer, ensure it stays above its parent
+                    elif layer.layer.label in child_to_parent:
+                        parent_label = child_to_parent[layer.layer.label]
+                        # Find the parent's zorder
+                        parent_zorder = None
+                        for parent_layer in self._viewer.layers:
+                            if parent_layer.layer.label == parent_label:
+                                parent_zorder = parent_layer.zorder
+                                break
+                        # Child must have higher zorder than parent (rendered on top)
+                        if parent_zorder is not None and new_zorder <= parent_zorder:
+                            new_zorder = parent_zorder + 0.1
                 else:
                     new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
 
