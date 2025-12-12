@@ -220,7 +220,7 @@ class Launcher(v.VuetifyTemplate):
         if self.selected_file is not None and self.selected_file.value:
             full_path = os.path.join(self.file_browser_dir.value, self.selected_file.value)
             self.filepath = full_path
-            self.file_browser_visible = False
+        self.file_browser_visible = False
 
     def vue_launch_config(self, event):
         config = event.get('config')
