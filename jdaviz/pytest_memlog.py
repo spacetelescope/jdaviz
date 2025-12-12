@@ -626,7 +626,8 @@ def _display_peak_usage(terminalreporter, records):
 
     terminalreporter.write_line('')
     terminalreporter.write_line(f'Peak memory usage, maximum USS + Swap, '
-                                f'Global position: {max_combined_idx}, Worker position: {worker_position}:')
+                                f'global position: {max_combined_idx}, '
+                                f'worker position: {worker_position}:')
 
     terminalreporter.write_line(_full_header_with_worker)
     terminalreporter.write_line(_format_memlog_line(max_combined_record, include_worker=True))
@@ -651,7 +652,8 @@ def _display_final_usage(terminalreporter, records):
         return
 
     terminalreporter.write_line('')
-    terminalreporter.write_line('Final memory usage (last test in each worker, after test execution):')
+    terminalreporter.write_line('Final memory usage '
+                                '(last test in each worker, after test execution):')
 
     # Get unique worker IDs and sort them numerically
     unique_workers = np.unique(records['worker_id'])
@@ -664,7 +666,9 @@ def _display_final_usage(terminalreporter, records):
         worker_records = records[records['worker_id'] == worker_id]
         # The last record for this worker is the one with the highest index
         last_record = worker_records[-1]
-        terminalreporter.write_line(_format_memlog_line(last_record, header='after', include_worker=True))
+        terminalreporter.write_line(_format_memlog_line(last_record,
+                                                        header='after',
+                                                        include_worker=True))
 
 
 def memlog_terminal_summary(terminalreporter, config=None):
