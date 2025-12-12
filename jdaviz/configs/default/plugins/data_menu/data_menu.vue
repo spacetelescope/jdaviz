@@ -456,6 +456,14 @@
     /* alternating row colors */
     background-color: #f1f2f85a;
   }
+  .theme--dark .layer-select:nth-child(even) {
+    /* darker alternating row colors in dark mode */
+    background-color: #1a1a1a;
+  }
+  .theme--dark .layer-select:nth-child(odd) {
+    /* slightly darker odd rows in dark mode */
+    background-color: #0d0d0d;
+  }
   .active-list-item {
     background-color: #d1f4ff75 !important;
     font-weight: 500;
