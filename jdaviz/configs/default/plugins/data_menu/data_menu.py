@@ -404,19 +404,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if self.prevent_layer_items_recursion:
                 return
 
-            # Check if only visibility changed (not order or zorder)
-            old_layers = {item['label']: item['zorder'] for item in event['old']}
-            new_layers = {item['label']: item['zorder'] for item in event['new']}
-            old_order = [item['label'] for item in event['old']
-                         if item['is_subset'] is not None]
-            new_order = [item['label'] for item in event['new']
-                         if item['is_subset'] is not None]
-
-            # If order and zorders are the same, only visibility changed,
-            # so skip zorder recalculation
-            if old_order == new_order and old_layers == new_layers:
-                return
-
             self.prevent_layer_items_recursion = True
 
             label_order = [li['label'] for li in event["new"]
