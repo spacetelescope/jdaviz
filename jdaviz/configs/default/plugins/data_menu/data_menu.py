@@ -22,6 +22,7 @@ from glue.core.subset import CompositeSubsetState, RangeSubsetState, RoiSubsetSt
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue.viewers.scatter.state import ScatterLayerState
+from glue_jupyter.bqplot.image import BqplotImageView
 
 import ipyvuedraggable
 
@@ -412,9 +413,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                             not in label_order]
 
             for layer in self._viewer.layers:
-                # Skip scatter layersm they should not be reordered because that
-                # can interfere with image rendering in bqplot
-                if isinstance(layer.state, ScatterLayerState):
+                # Skip reordering scatter layers in image viewers.
+                if isinstance(self._viewer, BqplotImageView) and isinstance(layer.state, ScatterLayerState):
                     continue
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
