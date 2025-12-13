@@ -414,7 +414,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
             for layer in self._viewer.layers:
                 # Skip reordering scatter layers in image viewers.
-                if isinstance(self._viewer, BqplotImageView) and isinstance(layer.state, ScatterLayerState):
+                if isinstance(self._viewer, BqplotImageView) and isinstance(layer.state, ScatterLayerState):  # noqa
                     continue
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
