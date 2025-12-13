@@ -412,6 +412,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                             not in label_order]
 
             for layer in self._viewer.layers:
+                # Skip scatter layersm they should not be reordered because that
+                # can interfere with image rendering in bqplot
                 if isinstance(layer.state, ScatterLayerState):
                     continue
                 if layer.layer.label in label_order:
