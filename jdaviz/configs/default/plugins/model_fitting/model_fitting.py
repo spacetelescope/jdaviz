@@ -3,7 +3,6 @@ import numpy as np
 from copy import deepcopy
 
 import astropy.units as u
-from astropy.utils.decorators import deprecated
 from astropy.modeling import fitting
 from specutils import Spectrum
 from specutils.fitting import fit_lines
@@ -239,7 +238,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         )
 
     @property
-    @deprecated(since="4.5", alternative="fitter")
     def fitter_component(self):
         return self.fitter
 
@@ -259,7 +257,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose += ['calculate_fit', 'clear_table', 'export_table',
                    'fitted_models', 'get_models', 'get_model_parameters', 'fitter',
                    'get_fitter_parameter', 'set_fitter_parameter']
-        return PluginUserApi(self, expose=expose, deprecated=['fitter_component'])
+        return PluginUserApi(self, expose=expose+['fitter_component'],
+                             deprecated=['fitter_component'])
 
     def _param_units(self, param, model_type=None):
         """Helper function to handle units that depend on x and y"""
