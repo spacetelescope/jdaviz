@@ -41,6 +41,8 @@ New Features
 
 - Update the standalone application launcher to use the solara file browser. [#3941]
 
+- Update data menu to group children with parents using visual indentation and ordering children below parents. [#3926]
+
 Cubeviz
 ^^^^^^^
 

@@ -412,18 +412,70 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
             self.prevent_layer_items_recursion = True
 
-            label_order = [li['label'] for li in event["new"] if li['is_subset'] is not None]
-            not_in_order = [layer.layer.label for layer in self._viewer.layers if layer.layer.label
-                            not in label_order]
+            label_order = [li['label'] for li in event["new"]
+                           if li['is_subset'] is not None]
+            not_in_order = [layer.layer.label for layer in self._viewer.layers
+                            if layer.layer.label not in label_order]
+
+            children_blocks = []
+            data_and_children = []
+
+            def _return_zorder_of_layers(layers):
+                return [x.zorder for x in self._viewer.state.layers
+                        if x.layer.label in layers]
+            for data in self.app.data_collection:
+                if self.app._get_assoc_data_children(data.label):
+                    # If data has children, find their zorder blocks
+                    # and return that as a list within a list of all
+                    # data+children blocks
+                    data_and_children.append(data.label)
+                    data_and_children += (
+                        self.app._get_assoc_data_children(data.label))
+                    children_blocks.append(
+                        _return_zorder_of_layers(
+                            [data.label] +
+                            self.app._get_assoc_data_children(data.label)))
+
+            # Find old zorder of all layers previous to change
+            old_layers = {item['label']: item['zorder'] for item in event['old']}
+
+            # Build a map of child to parent for zorder adjustments
+            child_to_parent = {child: data.label for data in self.app.data_collection
+                               for child in self.app._get_assoc_data_children(data.label)}
 
             for layer in self._viewer.layers:
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
+                    if layer.layer.label not in data_and_children:
+                        for x in children_blocks:
+                            # If the projected new_zorder falls within a block of
+                            # data+children, adjust to be just above or below the block
+                            # depending on if the layer came from below or above, respectively
+                            if min(x) <= new_zorder <= max(x):
+                                # The old zorder was above the block and is moving down
+                                if new_zorder < old_layers[layer.layer.label]:
+                                    new_zorder = min(x)
+                                # The old zorder was below the block and is moving up
+                                else:
+                                    new_zorder = max(x)
+                    # If this is a child layer, ensure it stays above its parent
+                    elif layer.layer.label in child_to_parent:
+                        parent_label = child_to_parent[layer.layer.label]
+                        # Find the parent's zorder
+                        parent_zorder = None
+                        for parent_layer in self._viewer.layers:
+                            if parent_layer.layer.label == parent_label:
+                                parent_zorder = parent_layer.zorder
+                                break
+                        # Child must have higher zorder than parent (rendered on top)
+                        if parent_zorder is not None and new_zorder <= parent_zorder:
+                            new_zorder = parent_zorder + 0.1
                 else:
                     new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
 
                 if new_zorder != layer.zorder:
                     layer.zorder = new_zorder
+                    self.layer._update_items()
 
             self.prevent_layer_items_recursion = False
 
@@ -579,7 +631,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if layer.state.visible != layer.visible:
                 layer.state.visible = layer.visible
 
-            self.layer._update_items()
+        # Update items once after all visibility changes are made
+        self.layer._update_items()
 
         if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
