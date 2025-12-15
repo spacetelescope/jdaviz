@@ -900,7 +900,7 @@ def test_get_fitter_parameter_all_fitters(specviz_helper, spectrum1d):
 
     for fitter_name, expected_params in fitter_configs:
         # Set the fitter
-        plugin.fitter_component = fitter_name
+        plugin.fitter = fitter_name
 
         # Test getting each expected parameter and verify default value
         for param_name, expected_value in expected_params.items():
@@ -942,7 +942,7 @@ def test_set_fitter_parameter_all_fitters(specviz_helper, spectrum1d):
 
     for fitter_name, test_values in fitter_configs:
         # Set the fitter
-        plugin.fitter_component = fitter_name
+        plugin.fitter = fitter_name
 
         # Test setting each parameter and verify it was set correctly
         for param_name, test_value in test_values.items():
@@ -965,7 +965,7 @@ def test_spline_fitter_get_set_parameters(specviz_helper, spectrum1d):
 
     # Create Spline1D model to enable SplineSmoothingFitter
     plugin.create_model_component('Spline1D')
-    plugin.fitter_component = 'SplineSmoothingFitter'
+    plugin.fitter = 'SplineSmoothingFitter'
 
     # Test getting default parameters
     assert plugin.get_fitter_parameter('maxiter') == 100
@@ -1003,13 +1003,13 @@ def test_fitter_parameter_persistence(specviz_helper, spectrum1d):
 
     # Set all configurations
     for fitter_name, params in fitter_configs.items():
-        plugin.fitter_component = fitter_name
+        plugin.fitter = fitter_name
         for param_name, param_value in params.items():
             plugin.set_fitter_parameter(param_name, param_value)
 
     # Verify all configurations persisted
     for fitter_name, params in fitter_configs.items():
-        plugin.fitter_component = fitter_name
+        plugin.fitter = fitter_name
         for param_name, expected_value in params.items():
             actual_value = plugin.get_fitter_parameter(param_name)
             assert actual_value == expected_value, (

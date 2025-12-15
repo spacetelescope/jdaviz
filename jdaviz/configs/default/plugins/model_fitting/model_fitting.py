@@ -259,7 +259,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose += ['calculate_fit', 'clear_table', 'export_table',
                    'fitted_models', 'get_models', 'get_model_parameters', 'fitter',
                    'get_fitter_parameter', 'set_fitter_parameter']
-        return PluginUserApi(self, expose=expose)
+        return PluginUserApi(self, expose=expose, deprecated=['fitter_component'])
 
     def _param_units(self, param, model_type=None):
         """Helper function to handle units that depend on x and y"""
@@ -1772,7 +1772,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         >>> from jdaviz import Specviz
         >>> specviz = Specviz()
         >>> plugin = specviz.plugins['Model Fitting']
-        >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
+        >>> plugin.fitter.selected = 'LevMarLSQFitter'
         >>> max_iterations = plugin.get_fitter_parameter('maxiter')
         >>> print(max_iterations)
         100
@@ -1809,7 +1809,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         >>> from jdaviz import Specviz
         >>> specviz = Specviz()
         >>> plugin = specviz.plugins['Model Fitting']
-        >>> plugin.fitter_component.selected = 'LevMarLSQFitter'
+        >>> plugin.fitter.selected = 'LevMarLSQFitter'
         >>> plugin.set_fitter_parameter('maxiter', 200)
         >>> plugin.set_fitter_parameter('filter_non_finite', False)
         """
