@@ -1,4 +1,85 @@
-4.5 (unreleased)
+4.6 (unreleased)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+4.5.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+4.5 (2025-12-15)
 ================
 
 New Features
@@ -70,12 +151,6 @@ Imviz
 
 - ``align_by`` can be set directly from the Image loader. [#3904]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Specviz2d
 ^^^^^^^^^
 
@@ -100,21 +175,6 @@ API Changes
 
 - Renames model fitting's `fitter_component` to `fitter`, with deprecation. [#3944]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
 Bug Fixes
 ---------
 
@@ -122,20 +182,11 @@ Bug Fixes
 
 - Fixes in model fitting plugin to correctly update parameter units and values upon unit conversion. [#3858]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
+- In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
+  The button is now hidden when no selection is made. [#3888]
 
 Other Changes and Additions
 ---------------------------
@@ -145,29 +196,6 @@ Other Changes and Additions
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
 
 - Fix missing user API and API hint entries in plugins. [#3900, #3918]
-
-4.4.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-- In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
-  The button is now hidden when no selection is made. [#3888]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 4.4.2 (2025-11-14)
 ==================
