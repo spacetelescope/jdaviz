@@ -415,10 +415,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             data_and_children = []
 
             def _return_zorder_of_layers(layers):
-                return [x['zorder'] for x in self.layer_items
-                        if x['label'] in layers]
+                return [x.zorder for x in self._viewer.state.layers
+                        if x.layer.label in layers]
             for data in self.app.data_collection:
                 if self.app._get_assoc_data_children(data.label):
+                    # If data has children, find their zorder blocks
+                    # and return that as a list within a list of all
+                    # data+children blocks
                     data_and_children.append(data.label)
                     data_and_children += (
                         self.app._get_assoc_data_children(data.label))
@@ -427,24 +430,26 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                             [data.label] +
                             self.app._get_assoc_data_children(data.label)))
 
+            # Find old zorder of all layers previous to change
             old_layers = {item['label']: item['zorder'] for item in event['old']}
 
             # Build a map of child to parent for zorder adjustments
-            child_to_parent = {}
-            for data in self.app.data_collection:
-                children = self.app._get_assoc_data_children(data.label)
-                if children:
-                    for child in children:
-                        child_to_parent[child] = data.label
+            child_to_parent = {child: data.label for data in self.app.data_collection
+                               for child in self.app._get_assoc_data_children(data.label)}
 
             for layer in self._viewer.layers:
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
                     if layer.layer.label not in data_and_children:
                         for x in children_blocks:
+                            # If the projected new_zorder falls within a block of
+                            # data+children, adjust to be just above or below the block
+                            # depending on if the layer came from below or above, respectively
                             if min(x) <= new_zorder <= max(x):
+                                # The old zorder was above the block and is moving down
                                 if new_zorder < old_layers[layer.layer.label]:
                                     new_zorder = min(x)
+                                # The old zorder was below the block and is moving up
                                 else:
                                     new_zorder = max(x)
                     # If this is a child layer, ensure it stays above its parent
