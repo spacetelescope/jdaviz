@@ -21,6 +21,8 @@ from glue.core.subset import CompositeSubsetState, RangeSubsetState, RoiSubsetSt
 
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
+from glue.viewers.scatter.state import ScatterLayerState
+from glue_jupyter.bqplot.image import BqplotImageView
 
 import ipyvuedraggable
 
@@ -444,6 +446,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                for child in self.app._get_assoc_data_children(data.label)}
 
             for layer in self._viewer.layers:
+                # Skip reordering scatter layers in image viewers.
+                if isinstance(self._viewer, BqplotImageView) and isinstance(layer.state, ScatterLayerState):  # noqa
+                    continue
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
                     if layer.layer.label not in data_and_children:
