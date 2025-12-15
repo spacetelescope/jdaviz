@@ -2,6 +2,7 @@
   <j-tray-plugin
     :config="config"
     plugin_key="Markers"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#markers'"
     :uses_active_status="uses_active_status"

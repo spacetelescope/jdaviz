@@ -123,8 +123,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     # X and Y in the data collection for consistency, and that RA / Dec always
     # has units
     qtab = dc[0].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
     # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
@@ -136,8 +136,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     # go through SkyCoord to parse weird string format into deg units for comparison
     sc = SkyCoord(ra=catalog_obj['RA'], dec=catalog_obj['Dec'])
 
-    assert_quantity_allclose(qtab['Right Ascension'], sc.ra.deg * u.deg)
-    assert_quantity_allclose(qtab['Declination'], sc.dec.deg * u.deg)
+    assert_quantity_allclose(qtab['RA'], sc.ra.deg * u.deg)
+    assert_quantity_allclose(qtab['Dec'], sc.dec.deg * u.deg)
 
     # cast data collection X/Y back to strings for comparison
     assert np.all(qtab['X'].astype(str) == catalog_obj['X'])
@@ -170,16 +170,16 @@ def test_load_catalog_xy_and_radec(imviz_helper, tmp_path, from_file, with_units
     # in the data collection for consistency, and that the table in the data
     # collection always has units
     qtab = imviz_helper.app.data_collection[0].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
     assert 'X' in qtab.colnames
     assert 'Y' in qtab.colnames
 
     # make sure only ra/dec/x/y/index loaded, since we didn't specify more columns
     assert len(qtab.colnames) == 5
     # and that it has the correct contents
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'])
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'])
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'])
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'])
     assert_quantity_allclose(qtab['X'], catalog_obj['X'])
     assert_quantity_allclose(qtab['Y'], catalog_obj['Y'])
 
@@ -265,8 +265,8 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     # in the data collection for consistency, and that the table in the data
     # collection always has units
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'RA' in qtab.colnames
+    assert 'Dec' in qtab.colnames
     # there should also be an ID column
     assert 'ID' in qtab.colnames
     # we didn't specify a specific ID column, so it should just be the index
@@ -280,9 +280,9 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     un = 1
     if not with_units:
         un = u.deg
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['RA'] * un)
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['Dec'] * un)
-    assert qtab['Right Ascension'].unit == qtab['Declination'].unit == u.deg
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'] * un)
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'] * un)
+    assert qtab['RA'].unit == qtab['Dec'].unit == u.deg
 
     # make sure 'col_ra_has_unit' is True if the input catalog has units, and is
     # False if the input doesn't have units. This controls the dropdown to
@@ -309,8 +309,8 @@ def test_load_catalog(imviz_helper, image_2d_wcs, tmp_path, from_file, with_unit
     assert len(dc) == 6  # image, orientation layer, and 4 catalogs
     assert 'flux' in dc['with_flux'].get_object(QTable).colnames
     qtab = imviz_helper.app.data_collection[-1].get_object(QTable)
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['Dec'] * un)
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['RA'] * un)
+    assert_quantity_allclose(qtab['RA'], catalog_obj['RA'] * un)
+    assert_quantity_allclose(qtab['Dec'], catalog_obj['Dec'] * un)
 
 
 @pytest.mark.parametrize("from_file", [True, False])
@@ -343,30 +343,38 @@ def test_load_catalog_skycoord(imviz_helper, tmp_path, from_file):
     assert len(dc) == 1
     assert 'Catalog' in imviz_helper.app.data_collection.labels
 
-    # make sure 'RA' column was renamed to Right Ascension and 'Dec' to 'Declination'
-    # in the data collection for consistency, and that the table in the data
-    # collection always has units
     qtab = imviz_helper.app.data_collection[0].get_object(QTable)
-    assert 'Right Ascension' in qtab.colnames
-    assert 'Declination' in qtab.colnames
+    assert 'SkyCoord_RA' in qtab.colnames
+    assert 'SkyCoord_Dec' in qtab.colnames
     # make sure only ra and dec (plus index) loaded, since we didn't specify more columns
     assert len(qtab.colnames) == 3
     # and that it has the correct contents, and always has units assigned
     # when data is loaded from a unitless table, units should always be assigned
     # to the catalog in the data collection based on selections in the loader
-    assert_quantity_allclose(qtab['Right Ascension'], catalog_obj['SkyCoord'].ra)
-    assert_quantity_allclose(qtab['Declination'], catalog_obj['SkyCoord'].dec)
+    assert_quantity_allclose(qtab['SkyCoord_RA'], catalog_obj['SkyCoord'].ra)
+    assert_quantity_allclose(qtab['SkyCoord_Dec'], catalog_obj['SkyCoord'].dec)
 
 
 @pytest.mark.remote_data
-def test_astroquery_load_catalog_source(deconfigged_helper):
+def test_astroquery_load_catalog_source(deconfigged_helper, catch_validate_known_exceptions):
     deconfigged_helper.app.state.catalogs_in_dc = True
 
     ldr = deconfigged_helper.loaders['astroquery']
     ldr.source = 'M4'
     ldr.telescope = 'Gaia'
     ldr.max_results = 10
-    ldr.query_archive()
+    # TODO: remove catch_validate_known_exception
+    #  when GAIA completes system maintenance (December 10, 2025 9:00 CET,
+    #  this has so far proven to be a moving target...)
+    # Use exception context manager to handle occasional VOTable parsing
+    # errors via retrieval failures and HTTP 500 errors. Both currently due
+    # to scheduled maintenance. These errors are reported as (and caught):
+    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
+    from astropy.io.votable.exceptions import E19
+    from requests.exceptions import HTTPError
+    with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
+                                         stdout_text_to_check='maintenance'):
+        ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
 
@@ -485,9 +493,9 @@ def test_histogram_viewer(deconfigged_helper):
 
     po = deconfigged_helper.plugins['Plot Options']
     po.viewer = 'Added Histogram Viewer'
-    po.xatt = 'Right Ascension'
+    po.xatt = 'RA'
 
-    assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'Right Ascension'  # noqa
+    assert str(deconfigged_helper.viewers['Histogram']._obj.glue_viewer.state.x_att) == 'RA'  # noqa
 
 
 def test_table_viewer(deconfigged_helper):
@@ -510,6 +518,19 @@ def test_table_viewer(deconfigged_helper):
 
     assert len(deconfigged_helper.viewers) == 2
     assert len(nv._obj.glue_viewer.layers) == 1
+
+    # subset creation tool should not be visible because no entries checked
+    toolbar = tv._obj.glue_viewer.toolbar
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
+
+    tv._obj.glue_viewer.widget_table.checked = [1, 2]
+
+    toolbar.select_tool('jdaviz:table_subset')
+    assert 'Subset 1' in deconfigged_helper.plugins['Subset Tools'].subset.choices
+
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is True
+    tv._obj.glue_viewer.widget_table.checked = []
+    assert toolbar.tools['jdaviz:table_subset'].is_visible() is False
 
 
 def test_catalog_visibility(imviz_helper, image_2d_wcs):

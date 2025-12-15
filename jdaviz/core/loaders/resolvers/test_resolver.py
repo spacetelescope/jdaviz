@@ -1,5 +1,6 @@
 from jdaviz.app import Application
 from jdaviz.core.loaders.resolvers.resolver import BaseResolver, find_closest_polygon_mark
+from jdaviz.core.marks import RegionOverlay
 
 import numpy as np
 from astropy.table import Table
@@ -59,20 +60,23 @@ def test_footprint_workflow(deconfigged_helper, image_nddata_wcs):
 
     ldr._obj.toggle_custom_toolbar()
     assert ldr._obj.custom_toolbar_enabled is True
-    assert len(ldr._obj._footprint_marks) == 3
-    assert len(ldr._obj._footprint_groups) == 3
-    assert all(idx in ldr._obj._footprint_groups for idx in range(3))
 
-    mark = ldr._obj._footprint_marks[1]
+    # Check footprints in viewer
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
+    assert sorted([m.label for m in footprints]) == [0, 1, 2]
+
+    mark = footprints[1]
     px, py = np.mean(mark.x), np.mean(mark.y)
-    idx = find_closest_polygon_mark(px, py, ldr._obj._footprint_marks)
+    idx = find_closest_polygon_mark(px, py, footprints)
     assert idx is not None
     assert 0 <= idx < 3
 
     ldr._obj.toggle_custom_toolbar()
     assert ldr._obj.custom_toolbar_enabled is False
-    assert ldr._obj._footprint_marks == []
-    assert ldr._obj._footprint_groups == {}
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 0
 
 
 def test_remove_footprints(deconfigged_helper, image_nddata_wcs):
@@ -91,15 +95,16 @@ def test_remove_footprints(deconfigged_helper, image_nddata_wcs):
 
     # Display footprints
     ldr._obj.toggle_custom_toolbar()
-    n_marks_before = len(ldr._obj._footprint_marks)
-    assert n_marks_before == 1
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 1
 
     # Remove footprints
     ldr._obj.toggle_custom_toolbar()
 
     # Assert marks are removed
-    assert len(ldr._obj._footprint_marks) == 0
-    assert len(ldr._obj._footprint_groups) == 0
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 0
 
 
 def test_multiselect(deconfigged_helper, image_nddata_wcs):
@@ -119,15 +124,16 @@ def test_multiselect(deconfigged_helper, image_nddata_wcs):
     ldr._obj.vue_link_by_wcs()
     ldr._obj.toggle_custom_toolbar()
 
-    assert len(ldr._obj._footprint_marks) == 3
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 3
 
     # Select observations 0 and 2 via the table
     ldr._obj.observation_table.select_rows([0, 2])
 
-    # Check that marks are in the groups
-    assert 0 in ldr._obj._footprint_groups
-    assert 1 in ldr._obj._footprint_groups
-    assert 2 in ldr._obj._footprint_groups
+    # Check that selected marks match table selection
+    selected_labels = sorted([m.label for m in footprints if m.selected])
+    assert selected_labels == [0, 2]
 
 
 def test_display_valid_footprints(deconfigged_helper, image_nddata_wcs):
@@ -146,11 +152,12 @@ def test_display_valid_footprints(deconfigged_helper, image_nddata_wcs):
     ldr._obj.toggle_custom_toolbar()
 
     # Assert marks were added
-    assert len(ldr._obj._footprint_marks) == 2
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 2
 
     # Verify marks have labels/indices
-    from jdaviz.core.marks import RegionOverlay
-    for mark in ldr._obj._footprint_marks:
+    for mark in footprints:
         assert isinstance(mark, RegionOverlay)
         assert mark.label in [0, 1]
 
@@ -196,5 +203,107 @@ def test_footprint_with_image_deconfigged(deconfigged_helper, image_nddata_wcs):
 
     ldr._obj.toggle_custom_toolbar()
     assert ldr._obj.custom_toolbar_enabled is True
-    assert len(ldr._obj._footprint_marks) == 1
-    assert len(ldr._obj._footprint_groups) == 1
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(footprints) == 1
+    assert footprints[0].label == 0
+
+
+def test_multiviewer_footprints(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    viewer_footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(viewer_footprints) == 2
+    # Assert labels match
+    viewer_labels = sorted([m.label for m in viewer_footprints])
+    assert viewer_labels == [0, 1]
+
+
+def test_multiviewer_selection_sync(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+
+    table = Table()
+    table['Dataset'] = ['obs1', 'obs2', 'obs3']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829',
+        'POLYGON 337.502 -20.831 337.504 -20.831 337.504 -20.829 337.502 -20.829',
+        'POLYGON 337.505 -20.831 337.507 -20.831 337.507 -20.829 337.505 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    # Select observation in table
+    ldr._obj.observation_table.select_rows([0, 2])
+
+    # Check selection is synced in viewer
+    footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    selected_labels = [m.label for m in footprints if m.selected]
+    assert sorted(selected_labels) == [0, 2]
+
+
+def test_add_footprints_to_viewer_method(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+
+    # Manually call _add_footprints_to_viewer
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+    ldr._obj.custom_toolbar_enabled = True
+    ldr._obj._add_footprints_to_viewer(viewer)
+
+    # Assert footprints were added
+    viewer_footprints = [m for m in viewer.figure.marks if isinstance(m, RegionOverlay)]
+    assert len(viewer_footprints) == 1
+    assert viewer_footprints[0].label == 0
+
+
+def test_remove_footprints_from_viewer(deconfigged_helper, image_nddata_wcs):
+    deconfigged_helper.load(image_nddata_wcs, format='Image', data_label='Image 1')
+    viewer = list(deconfigged_helper.app._viewer_store.values())[0]
+
+    table = Table()
+    table['Dataset'] = ['obs1']
+    table['s_region'] = [
+        'POLYGON 337.499 -20.831 337.501 -20.831 337.501 -20.829 337.499 -20.829'
+    ]
+
+    ldr = deconfigged_helper.loaders['object']
+    ldr.object = table
+    ldr.treat_table_as_query = True
+    ldr._obj.vue_link_by_wcs()
+    ldr._obj.toggle_custom_toolbar()
+
+    # Assert viewer has footprints
+    assert any(isinstance(m, RegionOverlay) for m in viewer.figure.marks)
+    # Disable toolbar
+    ldr._obj.toggle_custom_toolbar()
+    # Assert footprints removed
+    assert not any(isinstance(m, RegionOverlay) for m in viewer.figure.marks)

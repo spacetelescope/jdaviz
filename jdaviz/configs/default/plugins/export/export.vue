@@ -276,9 +276,10 @@
     <v-row v-if="serverside_enabled" class="row-no-outside-padding row-min-bottom-padding">
       <v-col>
         <v-text-field
-          :value="default_filepath"
-          label="Filepath"
-          hint="Filepath export location."
+          :value="filepath"
+          :label="api_hints_enabled ? 'plg.filepath' : 'Filepath'"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          hint="Filepath export location.  If filename is not a full path, the filepath will include the default export directory."
           persistent-hint
           disabled
         ></v-text-field>
@@ -294,7 +295,7 @@
       :auto.sync="filename_auto"
       :invalid_msg="filename_invalid_msg"
       label="Filename"
-      :api_hint="'plg.filename = \''+filename_value+'\''"
+      api_hint="plg.filename = "
       :api_hints_enabled="api_hints_enabled"
       hint="Export to a file on disk."
     ></plugin-auto-label>

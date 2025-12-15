@@ -498,6 +498,20 @@ export default {
     }).observe(this.$refs.mainapp.$el);
     this.outputCellHasHeight = this.$refs.mainapp.$el.offsetHeight > 0
 
+    /* Workaround for Lab 4.5: cells outside the viewport get the style "contentVisibility: auto" which causes wrong
+     * size calculations of golden layout from which it doesn't recover.    
+     */
+    const jpCell = this.$el.closest('.jp-Cell.jp-CodeCell');
+    if (jpCell) {
+      const observer = new MutationObserver((mutationsList) => {
+        if (jpCell.style.contentVisibility !== 'visible') {
+          jpCell.style.contentVisibility = 'visible';
+        }
+      });
+      observer.observe(jpCell, { attributes: true, attributeFilter: ['style'] });
+      jpCell.style.contentVisibility = 'visible';
+    }
+
     /* workaround: when initializing with an existing golden_layout state, the layout doesn't show. rendering it a
      * second time the layout does show.
      */

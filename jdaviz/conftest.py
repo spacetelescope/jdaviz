@@ -31,10 +31,75 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.registries import tray_registry
 
+from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
+                                  memlog_runtest_teardown, memlog_runtest_makereport,
+                                  memlog_runtest_logreport, memlog_terminal_summary)
+
+
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
 
 SPECTRUM_SIZE = 10  # length of spectrum
+
+
+# ============================================================================
+# Memory logging plugin (memlog) - imported from pytest_memlog.py
+# In CI, the memlog utilities may have already been called
+# from the root conftest.py, so we avoid that by excepting
+# the ValueError pytest throws.
+# ============================================================================
+def pytest_addoption(parser):
+    """
+    Register pytest options.
+    """
+    try:
+        memlog_addoption(parser)
+    except ValueError:
+        pass
+
+
+def pytest_runtest_setup(item):
+    """
+    Setup hook that records memory before test.
+    """
+    try:
+        memlog_runtest_setup(item)
+    except ValueError:
+        pass
+
+
+def pytest_runtest_teardown(item, nextitem):
+    """
+    Teardown hook that records memory after test.
+    """
+    try:
+        memlog_runtest_teardown(item, nextitem)
+    except ValueError:
+        pass
+
+
+# Re-export the hookwrapper directly
+pytest_runtest_makereport = memlog_runtest_makereport
+
+
+def pytest_runtest_logreport(report):
+    """
+    Log report hook that collects memory measurements from user_properties.
+    """
+    try:
+        memlog_runtest_logreport(report)
+    except ValueError:
+        pass
+
+
+def pytest_terminal_summary(terminalreporter, config=None):
+    """
+    Terminal summary hook that prints memlog summary.
+    """
+    try:
+        memlog_terminal_summary(terminalreporter, config)
+    except ValueError:
+        pass
 
 
 @pytest.fixture
@@ -112,6 +177,50 @@ class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
         if hasattr(self, 'new_default_data_label'):
             return self.new_default_data_label
         return None
+
+
+def _catch_validate_known_exceptions(exceptions_to_catch,
+                                     stdout_text_to_check=''):
+    """
+    Context manager to catch known exceptions in CI tests. Validates the exception
+    by checking for specific text in stdout. If matched, the test is skipped. If
+    no text is provided, any occurrence of the exception will trigger the skip. If
+    the match fails, the exception is re-raised.
+
+    Use as:
+    with _catch_known_exception(Exceptions):  # or via fixture catch_known_exceptions
+        catalog_plg.search(error_on_fail=True)
+
+    Parameters
+    ----------
+    exceptions_to_catch : Exception or tuple of Exceptions to catch.
+    stdout_text_to_check : str, optional
+        Text to match in stdout via substring matching.
+        Default is '' (matches any string).
+    """
+    import contextlib
+    import io
+
+    @contextlib.contextmanager
+    def _cm():
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                yield buf
+        except exceptions_to_catch as etc:
+            stdout_text = buf.getvalue()
+            if stdout_text_to_check in stdout_text or isinstance(etc, TimeoutError):
+                pytest.skip(str(etc))
+            else:
+                raise
+
+    return _cm()
+
+
+@pytest.fixture(scope='function')
+def catch_validate_known_exceptions():
+    """Context manager fixture to catch and validate known exceptions in testing."""
+    return _catch_validate_known_exceptions
 
 
 @pytest.fixture
@@ -645,6 +754,13 @@ except ImportError:
 
 
 def pytest_configure(config):
+    """
+    Configure pytest, including memlog initialization.
+    """
+    # Initialize memlog
+    memlog_configure(config)
+
+    # Configure pytest header modules
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'

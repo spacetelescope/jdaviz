@@ -289,9 +289,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         for layer in layers:
             if hasattr(layer, 'meta'):
                 if layer.meta.get('_importer') == 'CatalogImporter':
+                    ra_col = layer.meta.get('_jdaviz_loader_ra_col')
+                    dec_col = layer.meta.get('_jdaviz_loader_dec_col')
+                    x_col = layer.meta.get('_jdaviz_loader_x_col')
+                    y_col = layer.meta.get('_jdaviz_loader_y_col')
+
                     comp_labels = [str(x) for x in layer.component_ids()]
-                    has_world = 'Right Ascension' in comp_labels and 'Declination' in comp_labels
-                    has_pixel = 'X' in comp_labels and 'Y' in comp_labels
+
+                    has_world = ra_col in comp_labels and dec_col in comp_labels
+                    has_pixel = x_col in comp_labels and y_col in comp_labels
                     align_by_wcs = self.orientation_align_by_wcs
 
                     if not ((align_by_wcs and has_world) or (not align_by_wcs and has_pixel)):  # noqa

@@ -7,7 +7,7 @@ New Features
 - Loaders now all support "observation" and "file" tables, allowing choosing which file to download
   and import from an astroquery or MAST search. Interactive footprint selection enables displaying
   observation footprints from ``s_region`` data as overlays on the image viewer and clicking on
-  footprints to select/deselect observations. [#3769, #3894]
+  footprints to select/deselect observations. [#3769, #3894, #3935]
 
 - Change parallelization framework for better performance and flexibility. [#3806]
 
@@ -36,15 +36,26 @@ New Features
 
 - Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
 
+- The Model Fitting plugin now supports fitting with ``astropy.modeling.models.Spline1D`` using
+  the ``astropy.modeling.fitting.SplineSmoothingFitter``. [#3882]
+
+- Update the standalone application launcher to use the solara file browser. [#3941]
+
 - Update data menu to group children with parents using visual indentation and ordering children below parents. [#3926]
 
 Cubeviz
 ^^^^^^^
 
-- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748, #3861]
+- ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.  [#3748, #3861, #3911]
 
 - Loading data is now done through the loaders menu in the right sidebar.  The "import data" button is
   deprecated and will open the new sidebar.  [#3748, #3872]
+
+- Aperture photometry and collapse data selection no longer includes uncertainty cubes. [#3910]
+
+- The default label for collapsed cubes now always includes the input data-label. [#3910]
+
+- The `Slice` plugin is renamed to `Spectral Slice`. [#3925]
 
 Imviz
 ^^^^^
@@ -70,18 +81,24 @@ Specviz2d
 
 - Allow loading intermediate ``_bsub`` pipeline step files for JWST WFSS. [#3786]
 
+- Generalized cross-dispersion profile plugin to be compatible with the deconfigged jdaviz instance. [#3928]
+
 Rampviz
 ^^^^^^^
 
 - ``load_data`` is deprecated in favor of ``load`` method and loaders infrastructure.
   This changes the default auto-extraction function to always be "median" as well as
-  changes to the default label of the auto-extracted ramp integration. [#3878]
+  changes to the default label of the auto-extracted ramp integration. [#3878, #3910]
+
+- The `Slice` plugin is renamed to `Ramp Slice`. [#3925]
 
 API Changes
 -----------
 
 - Adds `ldr.load()` method to the loaders API and suggests using this in API hints over `ldr.importer()`
   (which will continue to exist). [#3832]
+
+- Renames model fitting's `fitter_component` to `fitter`, with deprecation. [#3944]
 
 Cubeviz
 ^^^^^^^
@@ -123,9 +140,11 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759]
+- Add rotation keyword argument to `set_viewport` and `get_viewport` methods to expand the Astro Image Display API (AIDA) [#3759, #3914]
 
 - Scatter and histogram viewer support in the deconfigged app instance. [#3778, #3833]
+
+- Fix missing user API and API hint entries in plugins. [#3900, #3918]
 
 4.4.3 (unreleased)
 ==================

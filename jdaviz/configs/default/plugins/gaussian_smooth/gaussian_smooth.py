@@ -59,7 +59,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
             self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
             self.dataset._clear_cache()
 
-        self.dataset.add_filter('not_from_this_plugin', 'is_spectrum_or_cube')
+        self.dataset.add_filter('not_from_this_plugin', 'is_spectrum_or_flux_cube')
 
         self.mode = SelectPluginComponent(self,
                                           items='mode_items',
