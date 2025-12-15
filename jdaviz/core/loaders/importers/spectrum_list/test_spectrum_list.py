@@ -156,26 +156,26 @@ class TestSpectrumListImporter:
         # Baseline, default first source selected
         assert importer_obj.import_disabled is False
         assert importer_obj.sources.selected == [importer_obj.sources.choices[0]]
-        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum'})
         # No change
         assert importer_obj.import_disabled is False
 
         # Set new selection to empty to ensure it doesn't change on format change
         importer_obj.sources.selected = []
-        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum'})
         # No selection
         assert importer_obj.import_disabled is True
 
         # Still no selection
-        importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum'})
         assert importer_obj.import_disabled is True
 
         importer_obj.sources.selected = importer_obj.sources.choices[:2]
-        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum'})
         assert importer_obj.import_disabled is False
 
         # No new selection
-        importer_obj._on_format_selected_change(change={'new': '1D Spectrum Concatenated'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum'})
         assert importer_obj.import_disabled is False
 
         importer_obj._on_format_selected_change(change={'new': 'Not a 1D Spectrum List'})
@@ -186,7 +186,7 @@ class TestSpectrumListImporter:
 
         # Baseline, single source selected
         assert importer_obj.import_disabled is False
-        importer_obj._on_format_selected_change(change={'new': '1D Spectrum List'})
+        importer_obj._on_format_selected_change(change={'new': '1D Spectrum'})
         # No change
         assert importer_obj.import_disabled is False
 

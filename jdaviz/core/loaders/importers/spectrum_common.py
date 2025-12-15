@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 
 from asdf import AsdfFile
@@ -8,14 +9,15 @@ from astropy.wcs import WCS
 from functools import cached_property
 from glue.core import HubListener
 from ipyvuetify import VuetifyTemplate
-from specutils import Spectrum
-from traitlets import List, Unicode, observe
+from specutils import Spectrum, SpectrumList, SpectrumCollection
+from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.template_mixin import SelectFileExtensionComponent
 from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
 from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.utils import (standardize_metadata,
+                          create_data_hash,
                           PRIHDR_KEY,
                           SPECTRAL_AXIS_COMP_LABELS,
                           _get_celestial_wcs)
@@ -45,14 +47,16 @@ def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
 class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
     input_type = Unicode().tag(sync=True)
 
+    multiselect = Bool(True).tag(sync=True)
+
     extension_items = List().tag(sync=True)
-    extension_selected = Unicode().tag(sync=True)
+    extension_selected = Any().tag(sync=True)
 
     unc_extension_items = List().tag(sync=True)
-    unc_extension_selected = Unicode().tag(sync=True)
+    unc_extension_selected = Any().tag(sync=True)
 
     mask_extension_items = List().tag(sync=True)
-    mask_extension_selected = Unicode().tag(sync=True)
+    mask_extension_selected = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,6 +67,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                             'ver': hdu.ver,
                             'name_ver': f"{hdu.name},{hdu.ver}",
                             'index': index,
+                            'data_hash': create_data_hash(hdu),
                             'obj': hdu}
                            for index, hdu in enumerate(self.input)
                            ]
@@ -73,16 +78,49 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                             'name': k,
                             'name_ver': k,
                             'index': ind,
+                            'data_hash': create_data_hash(ext),
                             'obj': ext}
                            for ind, (k, ext) in enumerate(self.input['roman']['data'].items())
                            ]
 
+        elif isinstance(self.input, (SpectrumList, SpectrumCollection)):
+            self.input_type = 'specutils:spectrumlist'
+            ext_options = []
+            for index, spec in enumerate(self.input):
+                if self.is_wfssmulti(spec):
+                    # ver, name are stand-ins for exposure and source_id
+                    # ver == exposure, name == source_id
+                    ver, name = self._extract_exposure_sourceid(spec)
+                    exposure_label = f"Exposure {ver}"
+
+                    label = f"{exposure_label}, Source ID: {name}"
+                    # Flipping the two from the variable naming convention
+                    name_ver = f"{ver}_{name}"
+                    suffix = f"EXP-{ver}_ID-{name}"
+
+                else:
+                    name_ver = index
+                    name = index
+                    ver = index
+                    label = f"1D Spectrum at index: {index}"
+                    suffix = f"index-{index}"
+
+                spec = self._apply_spectral_mask(spec)
+                ext_options.append({'label': label,
+                                    'index': index,
+                                    'name': str(name),
+                                    'ver': str(ver),
+                                    'name_ver': str(name_ver),
+                                    'suffix': suffix,
+                                    'data_hash': create_data_hash(spec),
+                                    'obj': spec})
         elif isinstance(self.input, Spectrum):
             self.input_type = 'specutils:spectrum'
             ext_options = [{'label': f'spectrum.{attr}',
                             'name': attr,
                             'name_ver': None,
                             'index': ind+1,  # to match indexing of HDUList for load_data defaults
+                            'data_hash': create_data_hash(self.input),
                             'obj': self.input}
                            for ind, attr in enumerate(('flux', 'uncertainty', 'mask'))
                            if getattr(self.input, attr, None) is not None
@@ -90,27 +128,33 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         else:
             raise TypeError("Input type not supported for SpectrumInputExtensionsMixin")
 
-        ext_options += [{'label': 'None',
-                         'name': '',
-                         'name_ver': '',
-                         'index': len(ext_options),
-                         'obj': None}]
-
         self.extension = SelectFileExtensionComponent(self,
                                                       items='extension_items',
                                                       selected='extension_selected',
+                                                      multiselect='multiselect',
                                                       manual_options=ext_options,
-                                                      filters=[self.is_valid_flux])
+                                                      filters=[self.is_valid_flux],
+                                                      default_mode='first')
+        self.data_hashes = self.extension.data_hashes
+        self.hash_map_to_label = dict(zip(self.extension.data_hashes, self.extension.labels))
+        self.extension.select_default()
+
         self.unc_extension = SelectFileExtensionComponent(self,
                                                           items='unc_extension_items',
                                                           selected='unc_extension_selected',
+                                                          multiselect='multiselect',
                                                           manual_options=ext_options,
-                                                          filters=[self.is_valid_unc])
+                                                          filters=[self.is_valid_unc],
+                                                          default_mode='first')
+        self.unc_extension.select_default()
         self.mask_extension = SelectFileExtensionComponent(self,
                                                            items='mask_extension_items',
                                                            selected='mask_extension_selected',
+                                                           multiselect='multiselect',
                                                            manual_options=ext_options,
-                                                           filters=[self.is_valid_mask])
+                                                           filters=[self.is_valid_mask],
+                                                           default_mode='empty')
+        self.mask_extension.select_default()
 
     def _cleanup(self):
         for attr in ('extension', 'unc_extension', 'mask_extension'):
@@ -130,7 +174,61 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 except Exception:  # nosec
                     pass
 
-        self._clear_cache('spectrum')
+        self._clear_cache('spectra')
+
+    @staticmethod
+    def is_wfssmulti(spec):
+        return 'WFSSMulti' in spec.meta.get('header', {}).get('DATAMODL', '')
+
+    @staticmethod
+    def _extract_exposure_sourceid(spec):
+        """
+        Generate a label for WFSSMulti sources based on the header information.
+        """
+        header = spec.meta.get('header', {})
+        exp_num = header.get('EXPGRPID', '0_0_0').split('_')[-2]
+        source_id = str(spec.meta.get('source_id', ''))
+
+        return exp_num, source_id
+
+    @staticmethod
+    def _has_mask(spec):
+        if hasattr(spec, 'mask'):
+            if spec.mask is not None and len(spec.mask):
+                return True
+        return False
+
+    def _is_fully_masked(self, spec):
+        if self._has_mask(spec):
+            # all == True implies the entire array is masked and unusable
+            if all(spec.mask):
+                return True
+        return False
+
+    @property
+    def _is_2d_spectrum(self):
+        return isinstance(self.input, Spectrum) and self.input.flux.ndim == 2
+
+    def _apply_spectral_mask(self, spec):
+        # The masks (spec.spectral_axis.mask and spec.mask) for WFSS L3 spectra
+        # may not be equivalent, so we only apply the spectral_axis mask to avoid
+        # a Specutils error. Specutils expects the spectral axis to be strictly
+        # increasing/decreasing so applying the 'full' mask may throw that error.
+        if self._has_mask(spec.spectral_axis) and not self._is_fully_masked(spec):
+            mask = spec.spectral_axis.mask
+            # NOTE: Something breaks when the following is attempted instead
+            # of the current implementation
+            #
+            # spec.mask = spec.mask | spec.spectral_axis.mask
+            # return spec
+            return Spectrum(
+                spectral_axis=spec.spectral_axis[~mask],
+                flux=spec.flux[~mask],
+                uncertainty=spec.uncertainty[~mask],
+                mask=mask[~mask],
+                meta=spec.meta)
+
+        return spec
 
     @property
     def supported_flux_ndim(self):
@@ -147,6 +245,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             return self.asdf_roman_is_valid_flux(item)
         if self.input_type == 'specutils:spectrum':
             return item.get('name') == 'flux'
+        if self.input_type == 'specutils:spectrumlist':
+            return True  # TODO: replace this
         raise NotImplementedError("Unknown input type")
 
     def hdu_is_valid_flux(self, item):
@@ -192,6 +292,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             return self.asdf_roman_is_valid_unc(item)
         if self.input_type == 'specutils:spectrum':
             return item.get('name') == 'uncertainty'
+        if self.input_type == 'specutils:spectrumlist':
+            return False  # TODO: replace this
         raise NotImplementedError("Unknown input type")
 
     def hdu_is_valid_unc(self, item):
@@ -226,6 +328,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             return self.asdf_roman_is_valid_mask(item)
         if self.input_type == 'specutils:spectrum':
             return item.get('name') == 'mask'
+        if self.input_type == 'specutils:spectrumlist':
+            return False  # TODO: replace this
         raise NotImplementedError("Unknown input type")
 
     def hdu_is_valid_mask(self, item):
@@ -251,224 +355,264 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
         # include and pull from the flux extension?
         return False
 
-    @observe('extension_selected',
+    @observe('extension_items',
+             'extension_selected',
              'unc_extension_selected',
              'mask_extension_selected')
     def _on_extension_change(self, change):
-        self._clear_cache('spectrum')
+        self._clear_cache('spectra')
+
+    def _to_list_of_spectra(self, inp):
+        def this_row(field, i):
+            if field is None:
+                return None
+            return field[i, :]
+
+        if isinstance(inp, Spectrum):
+            if inp.flux.ndim == 1:
+                return [self._apply_spectral_mask(inp)]
+
+            # 2D spectrum: split into list of 1D spectra
+            return [Spectrum(spectral_axis=inp.spectral_axis,
+                             flux=this_row(inp.flux, i),
+                             uncertainty=this_row(inp.uncertainty, i),
+                             mask=this_row(inp.mask, i),
+                             meta=inp.meta)
+                    for i in range(inp.flux.shape[0])]
+
+        elif isinstance(inp, (SpectrumList, SpectrumCollection)):
+            return list(itertools.chain(*[self._to_list_of_spectra(spec) for spec in inp]))
+
+        else:
+            raise NotImplementedError(f"{inp} is not supported")
+
+    def _spectrum_from_hdu(self, hdulist, hdu):
+        data = hdu.data
+        header = hdu.header
+        metadata = standardize_metadata(header)
+        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
+
+        wcs = WCS(header, hdulist)
+
+        spectral_axis_index = None
+
+        try:
+            data_unit = u.Unit(header['BUNIT'])
+        except Exception:
+            data_unit = u.count
+
+        if self.unc_extension.selected not in ('', 'None'):
+            unc_hdu = self.unc_extension.selected_obj
+            unc_data = unc_hdu.data
+        else:
+            unc_data = None
+        if self.mask_extension.selected not in ('', 'None'):
+            mask_hdu = self.mask_extension.selected_obj
+            mask_data = mask_hdu.data
+        else:
+            mask_data = None
+
+        if unc_data is not None:
+            unc = StdDevUncertainty(unc_data * data_unit)
+        else:
+            unc = None
+
+        if self.supported_flux_ndim == 2:
+            spectral_axis_index = 1
+            if data.shape[0] > data.shape[1]:
+                data = data.T
+                if unc_data is not None:
+                    unc_data = unc_data.T
+                if mask_data is not None:
+                    mask_data = mask_data.T
+                wcs = wcs.swapaxes(0, 1)
+                self.app.hub.broadcast(SnackbarMessage(
+                    f"Transposed input data to {data.shape}",
+                    sender=self, color="warning"))
+
+        # Check for data types that have a GWCS stored in ASDF
+        telescop = metadata[PRIHDR_KEY].get('TELESCOP', '').lower()
+        exptype = metadata[PRIHDR_KEY].get('EXP_TYPE', '').lower()
+        # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
+        # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
+        filetype = metadata[PRIHDR_KEY].get('FILETYPE', '').lower()
+
+        # Cubes and 2D data need different checks to see if we want WCS from ASDF
+        asdf_3d = (telescop == 'jwst' and ('ifu' in exptype or
+                                           'mrs' in exptype or
+                                           filetype == '3d ifu cube'))
+        asdf_2d = (wcs.world_axis_physical_types == [None, None] or
+                   (hasattr(wcs, 'spectral') and wcs.spectral.naxis == 0))
+
+        if (data.ndim == 2 and asdf_2d) or (data.ndim == 3 and asdf_3d):
+            if 'ASDF' in hdulist:
+                try:
+                    from stdatamodels import asdf_in_fits
+                    tree = asdf_in_fits.open(hdulist).tree
+                    if 'meta' in tree and 'wcs' in tree['meta']:
+                        wcs = tree["meta"]["wcs"]
+                        if isinstance(wcs, (list, tuple)):
+                            wcs = wcs[0]
+                        # Check needed for BSUB files, which we want to allow without worrying
+                        # about the wavelength solution for now
+                        if len(wcs.forward_transform.inputs) == 5:
+                            wcs = None
+                    else:
+                        wcs = None
+                except ValueError:
+                    wcs = None
+            else:
+                wcs = None
+
+        try:
+            sc = Spectrum(flux=data * data_unit, uncertainty=unc,
+                          mask=mask_data, meta=metadata, wcs=wcs,
+                          spectral_axis_index=spectral_axis_index)
+        except ValueError:
+            # In some cases, the above call to Spectrum will fail if no
+            # spectral axis is found in the WCS. Even without a spectral axis,
+            # the Spectrum.read parser may work, so we try that next.
+            # If that also fails, then drop the WCS.
+            try:
+                sc = Spectrum.read(self._parser.input)
+            except Exception:
+                # specutils.Spectrum reader would fail, so use no WCS
+                sc = Spectrum(
+                        flux=data * data_unit, uncertainty=unc,
+                        meta=metadata, spectral_axis_index=self.default_spectral_axis_index)
+            else:
+                # raising an error here will consider this parser as non-valid
+                # so that specutils.Spectrum parser is preferred
+                raise
+
+        # convert flux and uncertainty to per-pix2 if input is not a surface brightness
+        target_flux_unit = None
+        target_wave_unit = None
+        apply_pix2 = 'FLUX' in self.extension.selected or 'ERR' in self.extension.selected
+        flux = sc.flux
+        if (apply_pix2 and
+                (not check_if_unit_is_per_solid_angle(flux.unit))):
+            target_flux_unit = flux.unit / PIX2
+        elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
+            # We need to convert spaxel to pixel squared, since spaxel isn't fully supported
+            # by astropy
+            # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
+            target_flux_unit = flux.unit * u.Unit('spaxel') / PIX2
+        if target_wave_unit is None and hdulist is not None:
+            found_target = False
+            for ext in ('SCI', 'FLUX', 'PRIMARY', 'DATA'):  # In priority order
+                if found_target:
+                    break
+                if ext not in hdulist:
+                    continue
+                hdr = hdulist[ext].header
+                # The WCS could be swapped or unswapped.
+                for cunit_num in (3, 1):
+                    cunit_key = f"CUNIT{cunit_num}"
+                    ctype_key = f"CTYPE{cunit_num}"
+                    if cunit_key in hdr and 'WAV' in hdr[ctype_key]:
+                        target_wave_unit = u.Unit(hdr[cunit_key])
+                        found_target = True
+                        break
+        if target_wave_unit == sc.spectral_axis.unit:
+            target_wave_unit = None
+        if (target_wave_unit is None) and (target_flux_unit is None):  # Nothing to convert
+            new_sc = sc
+        elif target_flux_unit is None:  # Convert wavelength only
+            new_sc = sc.with_spectral_axis_unit(target_wave_unit)
+        elif target_wave_unit is None:  # Convert flux only and only PIX2 stuff
+            new_sc = sc.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
+        else:  # Convert both
+            new_sc = sc.with_spectral_axis_and_flux_units(
+                target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
+        if target_wave_unit is not None:
+            new_sc.meta['_orig_spec'] = sc
+        # Since we create a new Spectrum, we need to copy over any original WCS info
+        # since the WCS will be replaced by a SpectralGWCS object instead of the original
+        # astropy.wcs.WCS object.
+        # This is needed for the subset tools to work properly.
+        if new_sc.flux.ndim == 3 and _get_celestial_wcs(sc.wcs) is not None:
+            new_sc.meta['_orig_spatial_wcs'] = _get_celestial_wcs(sc.wcs)
+
+        return new_sc
+
+    def _spectrum_from_roman_asdf(self, extension, meta):
+        def _to_unit(x):
+            """Coerce str/bytes/Unit to astropy.units.Unit."""
+            if isinstance(x, bytes):
+                x = x.decode()
+            return u.Unit(x)
+
+        if self.supported_flux_ndim == 1:
+            wavelength = np.asarray(extension["wl"])
+            flux = np.asarray(extension["flux"])
+            wl_unit = _to_unit(meta["unit_wl"])
+            flux_unit = _to_unit(meta["unit_flux"])
+
+            # TODO: expose option in unc_extension that defaults to pulling
+            # from flux extension, but also allowing user to set to "None"
+            # to skip loading uncertainty
+            flux_error = extension.get("flux_error", None)
+            variance = extension.get("var", None)
+            uncertainty = None
+        elif self.supported_flux_ndim == 2:
+            # TODO: handle detecting/selecting spectral axis?
+            flux = np.asarray(extension["spectrum"]).transpose()
+            flux_unit = _to_unit(meta["unit_flux"])
+            if extension['wavelength'] is not None:
+                wavelength = np.asarray(extension["wavelength"])
+                wl_unit = _to_unit(meta["unit_wl"])
+            else:
+                wavelength = np.arange(flux.shape[1])
+                wl_unit = u.pix
+
+            flux_error = None
+            variance = extension.get("variance", None)
+            if variance is not None:
+                variance = np.asarray(variance).transpose()
+            uncertainty = None
+        else:
+            raise NotImplementedError("Only 1D and 2D spectra are supported for ASDF Roman data")  # noqa
+
+        if flux_error is not None:
+            uncertainty = StdDevUncertainty(np.asarray(flux_error) * flux_unit)
+        elif variance is not None:
+            var = np.asarray(variance) * (flux_unit ** 2)
+            var = np.where(np.asarray(var.value) < 0, np.nan, var.value) * var.unit
+            uncertainty = StdDevUncertainty(np.sqrt(var))
+        else:
+            uncertainty = None
+
+        spectrum = Spectrum(
+            flux=flux * flux_unit,
+            spectral_axis=wavelength * wl_unit,
+            uncertainty=uncertainty
+        )
+        return spectrum
+
+    @property
+    def spectrum(self):
+        spectra = self.spectra
+        if len(spectra) > 1:
+            raise ValueError("Multiple spectra found; use 'spectra' property instead.")
+        return spectra[0]
 
     @cached_property
-    def spectrum(self):
+    def spectra(self):
         if self.input_type == 'fits:hdulist':
             hdulist = self.input
-            hdu = self.extension.selected_obj
-            data = hdu.data
-            header = hdu.header
-            metadata = standardize_metadata(header)
-            if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-                metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-
-            wcs = WCS(header, hdulist)
-
-            spectral_axis_index = None
-
-            try:
-                data_unit = u.Unit(header['BUNIT'])
-            except Exception:
-                data_unit = u.count
-
-            if self.unc_extension.selected not in ('', 'None'):
-                unc_hdu = self.unc_extension.selected_obj
-                unc_data = unc_hdu.data
-            else:
-                unc_data = None
-            if self.mask_extension.selected not in ('', 'None'):
-                mask_hdu = self.mask_extension.selected_obj
-                mask_data = mask_hdu.data
-            else:
-                mask_data = None
-
-            if unc_data is not None:
-                unc = StdDevUncertainty(unc_data * data_unit)
-            else:
-                unc = None
-
-            if self.supported_flux_ndim == 2:
-                spectral_axis_index = 1
-                if data.shape[0] > data.shape[1]:
-                    data = data.T
-                    if unc_data is not None:
-                        unc_data = unc_data.T
-                    if mask_data is not None:
-                        mask_data = mask_data.T
-                    wcs = wcs.swapaxes(0, 1)
-                    self.app.hub.broadcast(SnackbarMessage(
-                        f"Transposed input data to {data.shape}",
-                        sender=self, color="warning"))
-
-            # Check for data types that have a GWCS stored in ASDF
-            telescop = metadata[PRIHDR_KEY].get('TELESCOP', '').lower()
-            exptype = metadata[PRIHDR_KEY].get('EXP_TYPE', '').lower()
-            # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
-            # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
-            filetype = metadata[PRIHDR_KEY].get('FILETYPE', '').lower()
-
-            # Cubes and 2D data need different checks to see if we want WCS from ASDF
-            asdf_3d = (telescop == 'jwst' and ('ifu' in exptype or
-                                               'mrs' in exptype or
-                                               filetype == '3d ifu cube'))
-            asdf_2d = (wcs.world_axis_physical_types == [None, None] or
-                       (hasattr(wcs, 'spectral') and wcs.spectral.naxis == 0))
-
-            if (data.ndim == 2 and asdf_2d) or (data.ndim == 3 and asdf_3d):
-                if 'ASDF' in hdulist:
-                    try:
-                        from stdatamodels import asdf_in_fits
-                        tree = asdf_in_fits.open(hdulist).tree
-                        if 'meta' in tree and 'wcs' in tree['meta']:
-                            wcs = tree["meta"]["wcs"]
-                            if isinstance(wcs, (list, tuple)):
-                                wcs = wcs[0]
-                            # Check needed for BSUB files, which we want to allow without worrying
-                            # about the wavelength solution for now
-                            if len(wcs.forward_transform.inputs) == 5:
-                                wcs = None
-                        else:
-                            wcs = None
-                    except ValueError:
-                        wcs = None
-                else:
-                    wcs = None
-
-            try:
-                sc = Spectrum(flux=data * data_unit, uncertainty=unc,
-                              mask=mask_data, meta=metadata, wcs=wcs,
-                              spectral_axis_index=spectral_axis_index)
-            except ValueError:
-                # In some cases, the above call to Spectrum will fail if no
-                # spectral axis is found in the WCS. Even without a spectral axis,
-                # the Spectrum.read parser may work, so we try that next.
-                # If that also fails, then drop the WCS.
-                try:
-                    sc = Spectrum.read(self._parser.input)
-                except Exception:
-                    # specutils.Spectrum reader would fail, so use no WCS
-                    sc = Spectrum(
-                            flux=data * data_unit, uncertainty=unc,
-                            meta=metadata, spectral_axis_index=self.default_spectral_axis_index)
-                else:
-                    # raising an error here will consider this parser as non-valid
-                    # so that specutils.Spectrum parser is preferred
-                    raise
-
-            # convert flux and uncertainty to per-pix2 if input is not a surface brightness
-            target_flux_unit = None
-            target_wave_unit = None
-            apply_pix2 = 'FLUX' in self.extension.selected or 'ERR' in self.extension.selected
-            flux = sc.flux
-            if (apply_pix2 and
-                    (not check_if_unit_is_per_solid_angle(flux.unit))):
-                target_flux_unit = flux.unit / PIX2
-            elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
-                # We need to convert spaxel to pixel squared, since spaxel isn't fully supported
-                # by astropy
-                # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
-                target_flux_unit = flux.unit * u.Unit('spaxel') / PIX2
-            if target_wave_unit is None and hdulist is not None:
-                found_target = False
-                for ext in ('SCI', 'FLUX', 'PRIMARY', 'DATA'):  # In priority order
-                    if found_target:
-                        break
-                    if ext not in hdulist:
-                        continue
-                    hdr = hdulist[ext].header
-                    # The WCS could be swapped or unswapped.
-                    for cunit_num in (3, 1):
-                        cunit_key = f"CUNIT{cunit_num}"
-                        ctype_key = f"CTYPE{cunit_num}"
-                        if cunit_key in hdr and 'WAV' in hdr[ctype_key]:
-                            target_wave_unit = u.Unit(hdr[cunit_key])
-                            found_target = True
-                            break
-            if target_wave_unit == sc.spectral_axis.unit:
-                target_wave_unit = None
-            if (target_wave_unit is None) and (target_flux_unit is None):  # Nothing to convert
-                new_sc = sc
-            elif target_flux_unit is None:  # Convert wavelength only
-                new_sc = sc.with_spectral_axis_unit(target_wave_unit)
-            elif target_wave_unit is None:  # Convert flux only and only PIX2 stuff
-                new_sc = sc.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
-            else:  # Convert both
-                new_sc = sc.with_spectral_axis_and_flux_units(
-                    target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
-            if target_wave_unit is not None:
-                new_sc.meta['_orig_spec'] = sc
-            # Since we create a new Spectrum, we need to copy over any original WCS info
-            # since the WCS will be replaced by a SpectralGWCS object instead of the original
-            # astropy.wcs.WCS object.
-            # This is needed for the subset tools to work properly.
-            if new_sc.flux.ndim == 3 and _get_celestial_wcs(sc.wcs) is not None:
-                new_sc.meta['_orig_spatial_wcs'] = _get_celestial_wcs(sc.wcs)
-
-            return new_sc
+            hdus = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
+            return [self._spectrum_from_hdu(hdulist, hdu) for hdu in hdus]
         elif self.input_type == 'asdf:roman':
-            def _to_unit(x):
-                """Coerce str/bytes/Unit to astropy.units.Unit."""
-                if isinstance(x, bytes):
-                    x = x.decode()
-                return u.Unit(x)
-
             roman = self.input["roman"]
             meta = roman["meta"]
-            data = roman["data"]
-            extension = self.extension.selected_obj
-            if self.supported_flux_ndim == 1:
-                wavelength = np.asarray(extension["wl"])
-                flux = np.asarray(extension["flux"])
-                wl_unit = _to_unit(meta["unit_wl"])
-                flux_unit = _to_unit(meta["unit_flux"])
-
-                # TODO: expose option in unc_extension that defaults to pulling
-                # from flux extension, but also allowing user to set to "None"
-                # to skip loading uncertainty
-                flux_error = extension.get("flux_error", None)
-                variance = extension.get("var", None)
-                uncertainty = None
-            elif self.supported_flux_ndim == 2:
-                # TODO: handle detecting/selecting spectral axis?
-                flux = np.asarray(extension["spectrum"]).transpose()
-                flux_unit = _to_unit(meta["unit_flux"])
-                if extension['wavelength'] is not None:
-                    wavelength = np.asarray(extension["wavelength"])
-                    wl_unit = _to_unit(meta["unit_wl"])
-                else:
-                    wavelength = np.arange(flux.shape[1])
-                    wl_unit = u.pix
-
-                flux_error = None
-                variance = extension.get("variance", None)
-                if variance is not None:
-                    variance = np.asarray(variance).transpose()
-                uncertainty = None
-            else:
-                raise NotImplementedError("Only 1D and 2D spectra are supported for ASDF Roman data")  # noqa
-
-            if flux_error is not None:
-                uncertainty = StdDevUncertainty(np.asarray(flux_error) * flux_unit)
-            elif variance is not None:
-                var = np.asarray(variance) * (flux_unit ** 2)
-                var = np.where(np.asarray(var.value) < 0, np.nan, var.value) * var.unit
-                uncertainty = StdDevUncertainty(np.sqrt(var))
-            else:
-                uncertainty = None
-
-            spectrum = Spectrum(
-                flux=flux * flux_unit,
-                spectral_axis=wavelength * wl_unit,
-                uncertainty=uncertainty
-            )
-            return spectrum
+            extensions = self.extension.selected_obj if self.multiselect else [self.extension.selected_obj]  # noqa
+            return [self._spectrum_from_roman_asdf(extension, meta) for extension in extensions]
         elif self.input_type == 'specutils:spectrum':
             spectrum = self.input
             # TODO: remove uncertainty or mask if requested
-            return spectrum
+            return [spectrum]
+        elif self.input_type == 'specutils:spectrumlist':
+            # return list of spectuls.Spectrum objects
+            return self._to_list_of_spectra(self.input)

@@ -17,6 +17,7 @@ __all__ = ['Spectrum2DImporter']
 class Spectrum2DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum2d.vue"
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
+    multiselect = Bool(False).tag(sync=True)
 
     auto_extract = Bool(True).tag(sync=True)
 

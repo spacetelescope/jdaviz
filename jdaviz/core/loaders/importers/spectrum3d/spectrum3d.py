@@ -26,6 +26,7 @@ __all__ = ['Spectrum3DImporter']
 class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixin):
     template_file = __file__, "./spectrum3d.vue"
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
+    multiselect = Bool(False).tag(sync=True)
 
     # Uncertainty Cube
     unc_data_label_value = Unicode().tag(sync=True)
@@ -215,6 +216,7 @@ class Spectrum3DImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMi
 
     @property
     def user_api(self):
+        # TODO: remove flux_only and just have plugins set the extensions for mask/unc
         expose = ['auto_extract', 'ext_data_label', 'ext_viewer', 'flux_only']
         if self.has_unc:
             expose += ['unc_data_label', 'unc_viewer']

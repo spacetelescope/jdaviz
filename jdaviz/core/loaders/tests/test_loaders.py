@@ -176,7 +176,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
     # ldr = deconfigged_helper.loaders['file']
     # ldr.filepath = './jdaviz/notebooks/WFSS_fits/jw01076-o103_t0000_nircam_f356w-grismr_x1d.fits'  # noqa
-    ldr.format = '1D Spectrum List'
+    ldr.format = '1D Spectrum'
 
     # 1_117 is completely masked
     sources_obj = ldr.importer.sources
@@ -231,7 +231,7 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
 
     # may change with future importers
     assert len(ignore_custom_loaders(loader.format.choices)) == 2
-    assert loader.format == '1D Spectrum List'  # default may change with future importers
+    assert loader.format == '1D Spectrum'  # default may change with future importers
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
     loader.target = 'Any'

@@ -5,6 +5,8 @@
       :items="extension_items.map(i => i.label)"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
+      :multiselect="multiselect"
+      :exists_in_dc="existing_data_in_dc"
       label="Extension"
       api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"
@@ -45,12 +47,15 @@
         :items="unc_extension_items.map(i => i.label)"
         :selected.sync="unc_extension_selected"
         :show_if_single_entry="true"
+        :multiselect="multiselect"
+        :nonmultiselect_allow_clear="true"
+        :exists_in_dc="existing_data_in_dc"
         label="Uncertainty Extension"
         api_hint="ldr.importer.unc_extension ="
         :api_hints_enabled="api_hints_enabled"
         hint="Extension from the FITS HDUList to use for the uncertainty cube."
       />
-      <div v-if="unc_extension_selected !== 'None'">
+      <div v-if="unc_extension_selected.length > 0">
         <plugin-auto-label
           :value.sync="unc_data_label_value"
           :default="unc_data_label_default"
@@ -88,12 +93,15 @@
         :items="mask_extension_items.map(i => i.label)"
         :selected.sync="mask_extension_selected"
         :show_if_single_entry="true"
+        :multiselect="multiselect"
+        :nonmultiselect_allow_clear="true"
+        :exists_in_dc="existing_data_in_dc"
         label="Mask Extension"
         api_hint="ldr.importer.mask_extension ="
         :api_hints_enabled="api_hints_enabled"
         hint="Extension from the FITS HDUList to use for the mask cube."
       />
-      <div v-if="mask_extension_selected !== 'None'">
+      <div v-if="mask_extension_selected.length > 0">
         <plugin-auto-label
           :value.sync="mask_data_label_value"
           :default="mask_data_label_default"
@@ -176,7 +184,7 @@
     <v-row justify="end">
       <plugin-action-button
         :spinner="import_spinner"
-        :disabled="import_disabled"
+        :disabled="import_disabled || extension_selected.length === 0"
         :results_isolated_to_plugin="false"
         :api_hints_enabled="api_hints_enabled"
         @click="import_clicked">

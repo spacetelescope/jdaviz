@@ -4,20 +4,25 @@
       :items="extension_items.map(i => i.label)"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
+      :multiselect="multiselect"
+      :exists_in_dc="existing_data_in_dc"
       label="Extension"
       api_hint="ldr.importer.extension ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extension to use from the FITS HDUList."
+      hint="Extension to use for flux."
     />
+    <!-- NOTE: do not pass existing_data_in_dc here since unc does not get its own DC entries -->
     <plugin-select
       v-if="has_unc"
       :items="unc_extension_items.map(i => i.label)"
       :selected.sync="unc_extension_selected"
       :show_if_single_entry="true"
+      :multiselect="multiselect"
+      :nonmultiselect_allow_clear="true"
       label="Uncertainty Extension"
       api_hint="ldr.importer.unc_extension ="
       :api_hints_enabled="api_hints_enabled"
-      hint="Extension to use from the FITS HDUList for uncertainty."
+      hint="Extension to use for uncertainty."
     />
     <plugin-auto-label
       :value.sync="data_label_value"
@@ -90,7 +95,7 @@
     <v-row justify="end">
       <plugin-action-button
         :spinner="import_spinner"
-        :disabled="import_disabled"
+        :disabled="import_disabled || extension_selected.length === 0"
         :results_isolated_to_plugin="false"
         :api_hints_enabled="api_hints_enabled"
         @click="import_clicked">

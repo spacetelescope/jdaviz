@@ -73,7 +73,7 @@ class TestResetAndCheckExistingDataInDC:
         # Now load the data into the data collection
         ldr = deconfigged_helper.loaders['object']
         ldr.object = spectrum_list
-        ldr.format = '1D Spectrum List'
+        ldr.format = '1D Spectrum'
         ldr.importer.sources.selected = '1D Spectrum at index: 0'
         ldr.load()
 
@@ -113,7 +113,7 @@ class TestResetAndCheckExistingDataInDC:
 
         # Choose a source at the end to guarantee everything is different from before
         ldr.object = new_spectrum_list
-        ldr.format = '1D Spectrum List'
+        ldr.format = '1D Spectrum'
         ldr.importer.sources.selected = '1D Spectrum at index: 5'
         ldr.load()
 
