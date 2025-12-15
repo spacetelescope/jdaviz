@@ -36,6 +36,8 @@ New Features
 
 - Add 'Resize in Viewer' to the 'Edit Subset' menu [#3905]
 
+- Update data menu to group children with parents using visual indentation and ordering children below parents. [#3926]
+
 Cubeviz
 ^^^^^^^
 
