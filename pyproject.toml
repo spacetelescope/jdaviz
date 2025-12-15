@@ -158,6 +158,7 @@ filterwarnings = [
 [tool.coverage.run]
 omit = [
     "jdaviz/conftest.py",
+    "jdaviz/pytest_memlog.py",
     "jdaviz/*setup_package*",
     "jdaviz/tests/*",
     "jdaviz/**/tests/*",
