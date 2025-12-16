@@ -8,7 +8,8 @@ from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
                                                    memlog_runtest_logreport,
                                                    memlog_terminal_summary)
 
-from jdaviz.pytest_utilities.pytest_remote_skip import remote_skip_addoption
+from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
+                                                        remote_skip_runtest_makereport)
 
 
 # ============================================================================
@@ -45,6 +46,7 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
 
     memlog_runtest_makereport(item, call, report)
+    remote_skip_runtest_makereport(item, call, report)
 
 
 def pytest_runtest_logreport(report):
