@@ -41,7 +41,10 @@ def pytest_runtest_makereport(item, call):
     """
     Hook wrapper that measures memory usage during test execution.
     """
-    memlog_runtest_makereport(item, call)
+    outcome = yield
+    report = outcome.get_result()
+
+    memlog_runtest_makereport(item, call, report)
 
 
 def pytest_runtest_logreport(report):
