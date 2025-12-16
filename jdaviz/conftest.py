@@ -57,6 +57,11 @@ def pytest_addoption(parser):
     except ValueError:
         pass
 
+    parser.addoption("--skip-remote-failures",
+                     action="store_true",
+                     default=False,
+                     help="Skip remote failures due to network issues.")
+
 
 def pytest_runtest_setup(item):
     """
@@ -142,26 +147,26 @@ def _log_remote_failure(test_name, exc_type_name, exc_message):
         json.dump(failures, f, indent=2)
 
 
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_protocol(item, nextitem):
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
     """
     Hook to handle remote data test failures.
 
-    If --skip-remote-failures is in toxposargs (checked via config), catch
-    specific remote exceptions (HTTPError, Timeout, ConnectionError,
-    etc.) and skip the test with a message instead of failing. Also logs
-    these failures to a JSON file for PR commenting.
+    If --skip-remote-failures is passed, catch specific remote
+    exceptions (HTTPError, Timeout, ConnectionError, etc.) and
+    skip the test instead of failing. Also logs these failures to
+    a JSON file for PR commenting.
     """
-    if '--skip-remote-failures' not in item.config.invocation_params.args:
-        # If --skip-remote-failures not specified, proceed normally
-        yield from item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
-    else:
-        # Wrap test execution to catch remote exceptions
-        outcome = yield
-        # Check if the test failed due to a remote exception
-        exc_info = outcome.excinfo
-        if exc_info is not None:
-            exc_type = exc_info.type
+    outcome = yield
+    report = outcome.get_result()
+
+    # Only process call phase (not setup/teardown) failures
+    if (report.when == 'call'
+            and report.failed
+            and item.config.getoption('skip_remote_failures', default=False)):
+        # Check if failure is due to a remote exception
+        if call.excinfo is not None:
+            exc_type = call.excinfo.type
             # Catch network-related exceptions
             remote_exceptions = (RequestException,
                                  Timeout,
@@ -171,11 +176,14 @@ def pytest_runtest_protocol(item, nextitem):
                                  E19)
             if issubclass(exc_type, remote_exceptions):
                 # Log the failure
-                _log_remote_failure(item.nodeid, exc_type.__name__, str(exc_info.value))
-                msg = (f'Test skipped due to remote data exception: '
-                       f'{exc_type.__name__}: {exc_info.value}')
-                pytest.skip(msg)
-        # If no remote exception, proceed with normal outcome
+                _log_remote_failure(item.nodeid,
+                                    exc_type.__name__,
+                                    str(call.excinfo.value))
+                # Convert failure to skip
+                msg = (f'Skipped due to remote exception: '
+                       f'{exc_type.__name__}: {call.excinfo.value}')
+                report.outcome = 'skipped'
+                report.wasxfail = msg
 
 
 def _catch_validate_known_exceptions(exceptions_to_catch,

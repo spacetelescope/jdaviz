@@ -12,6 +12,10 @@ def pytest_addoption(parser):
     Register pytest options.
     """
     memlog_addoption(parser)
+    parser.addoption("--skip-remote-failures",
+                     action="store_true",
+                     default=False,
+                     help="Skip remote failures due to network issues.")
 
 
 def pytest_runtest_setup(item):
