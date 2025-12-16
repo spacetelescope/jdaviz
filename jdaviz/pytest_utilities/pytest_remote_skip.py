@@ -63,7 +63,7 @@ def _get_remote_failure_log_path():
     return os.path.join(ci_artifacts_dir, 'remote_failures.json')
 
 
-def log_remote_failure(test_name, exc_type_name, exc_message):
+def _log_remote_failure(test_name, exc_type_name, exc_message):
     """
     Log a test failure due to remote exception to a JSON file.
 
@@ -133,7 +133,7 @@ def remote_skip_configure(config):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def remote_skip_runtest_makereport(item, call):
+def remote_skip_runtest_makereport(item, call, report=None):
     """
     Hook wrapper to handle remote data test failures.
 
@@ -148,9 +148,12 @@ def remote_skip_runtest_makereport(item, call):
         The test item.
     call : pytest.CallInfo
         The call information.
+    report : pytest.TestReport, optional
+        The test report object.
     """
-    outcome = yield
-    report = outcome.get_result()
+    if report is None:
+        outcome = yield
+        report = outcome.get_result()
 
     # Only process call phase (not setup/teardown) failures
     if (report.when == 'call'
@@ -162,9 +165,9 @@ def remote_skip_runtest_makereport(item, call):
             exc_type = call.excinfo.type
             if issubclass(exc_type, REMOTE_EXCEPTIONS):
                 # Log the failure
-                log_remote_failure(item.nodeid,
-                                   exc_type.__name__,
-                                   str(call.excinfo.value))
+                _log_remote_failure(item.nodeid,
+                                    exc_type.__name__,
+                                    str(call.excinfo.value))
                 # Convert failure to skip
                 msg = (f'Skipped due to remote exception: '
                        f'{exc_type.__name__}: {call.excinfo.value}')

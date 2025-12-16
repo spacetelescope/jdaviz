@@ -35,8 +35,11 @@ def pytest_runtest_teardown(item, nextitem):
     memlog_runtest_teardown(item, nextitem)
 
 
-# Re-export the hookwrapper directly
-pytest_runtest_makereport = memlog_runtest_makereport
+def pytest_runtest_makereport(item, call):
+    """
+    Hook wrapper that measures memory usage during test execution.
+    """
+    memlog_runtest_makereport(item, call)
 
 
 def pytest_runtest_logreport(report):
