@@ -167,7 +167,8 @@ def pytest_runtest_protocol(item, nextitem):
                                  Timeout,
                                  ConnectionError,
                                  TimeoutError,
-                                 HTTPError,)
+                                 HTTPError,
+                                 E19)
             if issubclass(exc_type, remote_exceptions):
                 # Log the failure
                 _log_remote_failure(item.nodeid, exc_type.__name__, str(exc_info.value))
