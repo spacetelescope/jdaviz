@@ -85,6 +85,20 @@ jobs:
             allow_failure: true
 
     steps:
+    - name: Build toxposargs from labels
+      id: build-toxposargs
+      run:
+        toxposargs="${{ matrix.toxposargs }}"
+        labels="${{ toJSON(github.event.pull_request.labels.*.name) }}"
+        
+        # Add --remote-data if 'remote-data' label is present
+        if echo "$labels" | grep -q 'skip-remote-failures'; then
+          toxposargs="$toxposargs --skip-remote-failures"
+        fi
+        
+        # Output the final toxposargs
+        # echo "toxposargs=$(echo $toxposargs | xargs)" >> $GITHUB_OUTPUT
+
     - name: Checkout code
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
       with:
@@ -137,7 +151,7 @@ jobs:
           echo "No .fits files found in cache - tests will download files as needed"
         fi
     - name: Test/run with tox
-      run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
+      run: tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }}
     - name: Upload coverage to artifacts
       if: "contains(matrix.toxenv, '-cov')"
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
