@@ -279,7 +279,8 @@ def test_catalog_reingestion(imviz_helper, tmp_path, catch_validate_known_except
     from requests.exceptions import HTTPError
     with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
                                          stdout_text_to_check='maintenance'):
-        catalog_plg.search(error_on_fail=True)
+        pass
+    catalog_plg.search(error_on_fail=True)
 
     export_plg.plugin_table = 'Catalog Search: table'
     export_plg.filename = 'test.ecsv'
