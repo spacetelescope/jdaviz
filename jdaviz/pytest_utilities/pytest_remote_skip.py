@@ -23,7 +23,6 @@ The failures are logged to .ci_artifacts/remote_failures.json for review.
 import json
 import os
 
-import pytest
 from requests.exceptions import (RequestException,
                                  Timeout,
                                  ConnectionError,
@@ -168,4 +167,3 @@ def remote_skip_runtest_makereport(item, call, report):
                        f'{exc_type.__name__}: {call.excinfo.value}')
                 report.outcome = 'skipped'
                 report.skip_reason = msg
-
