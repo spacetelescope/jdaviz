@@ -1,7 +1,13 @@
 from jdaviz import __version__
-from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
-                                  memlog_runtest_teardown, memlog_runtest_makereport,
-                                  memlog_runtest_logreport, memlog_terminal_summary)
+from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
+                                                   memlog_configure,
+                                                   memlog_runtest_setup,
+                                                   memlog_runtest_teardown,
+                                                   memlog_runtest_makereport,
+                                                   memlog_runtest_logreport,
+                                                   memlog_terminal_summary)
+
+from jdaviz.pytest_utilities.pytest_remote_skip import remote_skip_addoption
 
 
 # ============================================================================
@@ -12,10 +18,7 @@ def pytest_addoption(parser):
     Register pytest options.
     """
     memlog_addoption(parser)
-    parser.addoption("--skip-remote-failures",
-                     action="store_true",
-                     default=False,
-                     help="Skip remote failures due to network issues.")
+    remote_skip_addoption(parser)
 
 
 def pytest_runtest_setup(item):

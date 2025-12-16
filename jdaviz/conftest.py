@@ -25,13 +25,16 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
 
-from jdaviz import pytest_memlog
-from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
-                                  memlog_runtest_teardown,
-                                  memlog_runtest_logreport, memlog_terminal_summary)
-from jdaviz.pytest_remote_skip import (remote_skip_addoption,
-                                       REMOTE_EXCEPTIONS,
-                                       _log_remote_failure)
+from jdaviz.pytest_utilities import pytest_memlog
+from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
+                                                   memlog_configure,
+                                                   memlog_runtest_setup,
+                                                   memlog_runtest_teardown,
+                                                   memlog_runtest_logreport,
+                                                   memlog_terminal_summary)
+from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
+                                                        REMOTE_EXCEPTIONS,
+                                                        log_remote_failure)
 
 
 if not NUMPY_LT_2_0:
@@ -105,7 +108,8 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
 
     # First, handle memlog functionality (attach memory data)
-    # Uses same logic as memlog_runtest_makereport from pytest_memlog.py
+    # Code reproduced from memlog_runtest_makereport in pytest_memlog.py
+    # due to outcome yield
     if call.when == 'teardown' and pytest_memlog._memlog_enabled_flag:
         mem_before = getattr(item, '_mem_before', None)
         mem_after = getattr(item, '_mem_after', None)
@@ -126,7 +130,8 @@ def pytest_runtest_makereport(item, call):
             report.user_properties.append(('worker_id', worker_id))
 
     # Second, handle remote failure skipping
-    # Uses logic from pytest_remote_skip module
+    # Code reproduced from remote_skip_runtest_makereport in pytest_remote_skip.py
+    # due to outcome yield
     if (report.when == 'call'
             and report.failed
             and item.config.getoption(
@@ -137,7 +142,7 @@ def pytest_runtest_makereport(item, call):
             # Use imported REMOTE_EXCEPTIONS tuple
             if issubclass(exc_type, REMOTE_EXCEPTIONS):
                 # Log the failure using imported function
-                _log_remote_failure(item.nodeid,
+                log_remote_failure(item.nodeid,
                                     exc_type.__name__,
                                     str(call.excinfo.value))
                 # Convert failure to skip

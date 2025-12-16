@@ -63,7 +63,7 @@ def _get_remote_failure_log_path():
     return os.path.join(ci_artifacts_dir, 'remote_failures.json')
 
 
-def _log_remote_failure(test_name, exc_type_name, exc_message):
+def log_remote_failure(test_name, exc_type_name, exc_message):
     """
     Log a test failure due to remote exception to a JSON file.
 
@@ -162,9 +162,9 @@ def remote_skip_runtest_makereport(item, call):
             exc_type = call.excinfo.type
             if issubclass(exc_type, REMOTE_EXCEPTIONS):
                 # Log the failure
-                _log_remote_failure(item.nodeid,
-                                    exc_type.__name__,
-                                    str(call.excinfo.value))
+                log_remote_failure(item.nodeid,
+                                   exc_type.__name__,
+                                   str(call.excinfo.value))
                 # Convert failure to skip
                 msg = (f'Skipped due to remote exception: '
                        f'{exc_type.__name__}: {call.excinfo.value}')
