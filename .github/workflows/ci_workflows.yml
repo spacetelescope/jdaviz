@@ -87,6 +87,7 @@ jobs:
     steps:
     - name: Build toxposargs from labels
       id: build-toxposargs
+      shell: bash
       run: |
         toxposargs="${{ matrix.toxposargs }}"
         labels="${{ toJSON(github.event.pull_request.labels.*.name) }}"
@@ -95,6 +96,9 @@ jobs:
         if echo "$labels" | grep -q 'skip-remote-failures'; then
           toxposargs="$toxposargs --skip-remote-failures"
         fi
+        
+        # Export as step output so later steps can reference it.
+        echo "toxposargs=$toxposargs" >> $GITHUB_OUTPUT
 
     - name: Checkout code
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
