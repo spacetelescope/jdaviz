@@ -304,13 +304,15 @@
 
           <v-row class="row-no-outside-padding row-min-bottom-padding">
             <v-col>
+              <!--
+              TODO: default_filepath does not exist, can we remove this row?
               <v-text-field
                 :value="default_filepath"
                 label="Filepath"
                 hint="Filepath export location."
                 persistent-hint
                 disabled
-              ></v-text-field>
+              ></v-text-field> -->
             </v-col>
           </v-row>
 

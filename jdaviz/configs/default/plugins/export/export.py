@@ -465,7 +465,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         return filename
 
-    def export_to_buffer(self):
+    async def export_to_buffer(self):
         f = io.BytesIO()  # TODO: can we reuse this or should we close/clear it?
         self.export(filename=f)
         return f.getvalue()
@@ -695,11 +695,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         def save_to_file(data):
             try:
                 if isinstance(filename, io.BytesIO):
-                    f = filename
+                    filename.write(data)
                 else:
-                    f = filename.open(mode='bw')
-                with f:
-                    f.write(data)
+                    with filename.open(mode='bw') as f:
+                        f.write(data)
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
                     f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
