@@ -60,6 +60,16 @@ def pytest_addoption(parser):
         pass
 
 
+def pytest_configure(config):
+    """
+    Configure pytest plugins.
+    """
+    try:
+        memlog_configure(config)
+    except ValueError:
+        pass
+
+
 def pytest_runtest_setup(item):
     """
     Setup hook that records memory before test.
