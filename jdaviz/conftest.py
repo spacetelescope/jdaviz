@@ -3,6 +3,7 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
+import json
 import os
 import warnings
 
@@ -15,6 +16,12 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from specutils import Spectrum, SpectrumCollection, SpectrumList
 from astropy.utils.masked import Masked
+
+from requests.exceptions import (RequestException,
+                                 Timeout,
+                                 ConnectionError,
+                                 HTTPError)
+from astropy.io.votable.exceptions import E19
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
@@ -93,6 +100,81 @@ def pytest_terminal_summary(terminalreporter, config=None):
         memlog_terminal_summary(terminalreporter, config)
     except ValueError:
         pass
+
+
+def _get_remote_failure_log_path():
+    """
+    Get the path to the remote failure log file.
+
+    Writes to .ci_artifacts/ directory at repository root for access
+    by GitHub Actions. This directory is gitignored and ephemeral.
+    """
+    # Navigate from jdaviz/conftest.py to repository root
+    repo_root = os.path.abspath(os.path.join(__file__, '..', '..'))
+    ci_artifacts_dir = os.path.join(repo_root, '.ci_artifacts')
+    # Create directory if it doesn't exist
+    os.makedirs(ci_artifacts_dir, exist_ok=True)
+    return os.path.join(ci_artifacts_dir, 'remote_failures.json')
+
+
+def _log_remote_failure(test_name, exc_type_name, exc_message):
+    """
+    Log a test failure due to remote exception to a JSON file.
+
+    The log file is written to the ignored directory .ci_artifacts so that
+    GitHub Actions can read it and post a PR comment.
+    """
+    log_path = _get_remote_failure_log_path()
+
+    failures = []
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, 'r') as f:
+                failures = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            failures = []
+
+    failures.append({'test': test_name,
+                     'exception': exc_type_name,
+                     'message': str(exc_message)})
+
+    with open(log_path, 'w') as f:
+        json.dump(failures, f, indent=2)
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_protocol(item, nextitem):
+    """
+    Hook to handle remote data test failures.
+
+    If --skip-remote-failures is in toxposargs (checked via config), catch
+    specific remote exceptions (HTTPError, Timeout, ConnectionError,
+    etc.) and skip the test with a message instead of failing. Also logs
+    these failures to a JSON file for PR commenting.
+    """
+    if '--skip-remote-failures' not in item.config.invocation_params.args:
+        # If --skip-remote-failures not specified, proceed normally
+        yield from item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+    else:
+        # Wrap test execution to catch remote exceptions
+        outcome = yield
+        # Check if the test failed due to a remote exception
+        exc_info = outcome.excinfo
+        if exc_info is not None:
+            exc_type = exc_info.type
+            # Catch network-related exceptions
+            remote_exceptions = (RequestException,
+                                 Timeout,
+                                 ConnectionError,
+                                 TimeoutError,
+                                 HTTPError,)
+            if issubclass(exc_type, remote_exceptions):
+                # Log the failure
+                _log_remote_failure(item.nodeid, exc_type.__name__, str(exc_info.value))
+                msg = (f'Test skipped due to remote data exception: '
+                       f'{exc_type.__name__}: {exc_info.value}')
+                pytest.skip(msg)
+        # If no remote exception, proceed with normal outcome
 
 
 def _catch_validate_known_exceptions(exceptions_to_catch,
