@@ -132,10 +132,9 @@ def remote_skip_configure(config):
         config._remote_skip_enabled = True
 
 
-@pytest.hookimpl(hookwrapper=True)
-def remote_skip_runtest_makereport(item, call, report=None):
+def remote_skip_runtest_makereport(item, call, report):
     """
-    Hook wrapper to handle remote data test failures.
+    Handle remote data test failures.
 
     If --skip-remote-failures is passed, catch specific remote
     exceptions (HTTPError, Timeout, ConnectionError, etc.) and
@@ -148,13 +147,9 @@ def remote_skip_runtest_makereport(item, call, report=None):
         The test item.
     call : pytest.CallInfo
         The call information.
-    report : pytest.TestReport, optional
+    report : pytest.TestReport
         The test report object.
     """
-    if report is None:
-        outcome = yield
-        report = outcome.get_result()
-
     # Only process call phase (not setup/teardown) failures
     if (report.when == 'call'
             and report.failed
