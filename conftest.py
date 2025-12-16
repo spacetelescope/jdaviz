@@ -1,3 +1,4 @@
+import pytest
 from jdaviz import __version__
 from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
                                                    memlog_configure,
@@ -35,6 +36,7 @@ def pytest_runtest_teardown(item, nextitem):
     memlog_runtest_teardown(item, nextitem)
 
 
+@pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """
     Hook wrapper that measures memory usage during test execution.
