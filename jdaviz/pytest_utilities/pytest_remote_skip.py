@@ -167,5 +167,5 @@ def remote_skip_runtest_makereport(item, call, report):
                 msg = (f'Skipped due to remote exception: '
                        f'{exc_type.__name__}: {call.excinfo.value}')
                 report.outcome = 'skipped'
-                report.wasxfail = msg
+                report.skip_reason = msg
 
