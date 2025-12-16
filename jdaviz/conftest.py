@@ -32,7 +32,7 @@ from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
 
 from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
-                                  memlog_runtest_teardown, memlog_runtest_makereport,
+                                  memlog_runtest_teardown,
                                   memlog_runtest_logreport, memlog_terminal_summary)
 
 
@@ -83,8 +83,79 @@ def pytest_runtest_teardown(item, nextitem):
         pass
 
 
-# Re-export the hookwrapper directly
-pytest_runtest_makereport = memlog_runtest_makereport
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Combined hook wrapper for memlog and remote failure handling.
+
+    This hook:
+    1. Attaches memory measurements to report user_properties (memlog)
+    2. Handles remote data test failures (--skip-remote-failures option)
+
+    The memlog functionality tracks USS, RSS, and Swap for each test,
+    with the analysis focusing on USS + Swap as the primary memory
+    allocation metric.
+
+    If --skip-remote-failures is passed, catch specific remote
+    exceptions (HTTPError, Timeout, ConnectionError, etc.) and
+    skip the test instead of failing. Also logs these failures to
+    a JSON file for PR commenting.
+    """
+    # Let the test run and get the report
+    outcome = yield
+    report = outcome.get_result()
+
+    # First, handle memlog functionality (attach memory data)
+    if call.when == 'teardown':
+        try:
+            # Get memory measurements if memlog is enabled
+            from jdaviz.pytest_memlog import _memlog_enabled_flag
+            if _memlog_enabled_flag:
+                mem_before = getattr(item, '_mem_before', None)
+                mem_after = getattr(item, '_mem_after', None)
+
+                if mem_before is not None and mem_after is not None:
+                    # Attach to user_properties
+                    for prefix in ('uss', 'rss', 'swap'):
+                        before = int(mem_before[prefix])
+                        after = int(mem_after[prefix])
+                        diff = after - before
+
+                        report.user_properties.append((f'{prefix}_before', before))
+                        report.user_properties.append((f'{prefix}_after', after))
+                        report.user_properties.append((f'{prefix}_diff', diff))
+
+                    # Get worker_id from config (xdist sets this)
+                    worker_id = getattr(item.config, 'workerinput', {}).get('workerid', 'master')
+                    report.user_properties.append(('worker_id', worker_id))
+        except (ValueError, ImportError, AttributeError):
+            pass
+
+    # Second, handle remote failure skipping
+    if (report.when == 'call'
+            and report.failed
+            and item.config.getoption(
+                'skip_remote_failures', default=False)):
+        # Check if failure is due to a remote exception
+        if call.excinfo is not None:
+            exc_type = call.excinfo.type
+            # Catch network-related exceptions
+            remote_exceptions = (RequestException,
+                                 Timeout,
+                                 ConnectionError,
+                                 TimeoutError,
+                                 HTTPError,
+                                 E19)
+            if issubclass(exc_type, remote_exceptions):
+                # Log the failure
+                _log_remote_failure(item.nodeid,
+                                    exc_type.__name__,
+                                    str(call.excinfo.value))
+                # Convert failure to skip
+                msg = (f'Skipped due to remote exception: '
+                       f'{exc_type.__name__}: {call.excinfo.value}')
+                report.outcome = 'skipped'
+                report.wasxfail = msg
 
 
 def pytest_runtest_logreport(report):
@@ -147,43 +218,6 @@ def _log_remote_failure(test_name, exc_type_name, exc_message):
         json.dump(failures, f, indent=2)
 
 
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    """
-    Hook to handle remote data test failures.
-
-    If --skip-remote-failures is passed, catch specific remote
-    exceptions (HTTPError, Timeout, ConnectionError, etc.) and
-    skip the test instead of failing. Also logs these failures to
-    a JSON file for PR commenting.
-    """
-    outcome = yield
-    report = outcome.get_result()
-
-    # Only process call phase (not setup/teardown) failures
-    if (report.when == 'call'
-            and report.failed
-            and item.config.getoption('skip_remote_failures', default=False)):
-        # Check if failure is due to a remote exception
-        if call.excinfo is not None:
-            exc_type = call.excinfo.type
-            # Catch network-related exceptions
-            remote_exceptions = (RequestException,
-                                 Timeout,
-                                 ConnectionError,
-                                 TimeoutError,
-                                 HTTPError,
-                                 E19)
-            if issubclass(exc_type, remote_exceptions):
-                # Log the failure
-                _log_remote_failure(item.nodeid,
-                                    exc_type.__name__,
-                                    str(call.excinfo.value))
-                # Convert failure to skip
-                msg = (f'Skipped due to remote exception: '
-                       f'{exc_type.__name__}: {call.excinfo.value}')
-                report.outcome = 'skipped'
-                report.wasxfail = msg
 
 
 def _catch_validate_known_exceptions(exceptions_to_catch,
