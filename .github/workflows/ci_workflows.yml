@@ -87,17 +87,14 @@ jobs:
     steps:
     - name: Build toxposargs from labels
       id: build-toxposargs
-      run:
+      run: |
         toxposargs="${{ matrix.toxposargs }}"
         labels="${{ toJSON(github.event.pull_request.labels.*.name) }}"
         
-        # Add --remote-data if 'remote-data' label is present
+        # Add --skip-remote-failures if 'skip-remote-failures' label is present
         if echo "$labels" | grep -q 'skip-remote-failures'; then
           toxposargs="$toxposargs --skip-remote-failures"
         fi
-        
-        # Output the final toxposargs
-        # echo "toxposargs=$(echo $toxposargs | xargs)" >> $GITHUB_OUTPUT
 
     - name: Checkout code
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
@@ -152,6 +149,46 @@ jobs:
         fi
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }}
+    - name: Post PR comment with remote failures
+      if: |
+        contains(steps.build-toxposargs.outputs.toxposargs, '--skip-remote-failures') &&
+        github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          const logPath = '.ci_artifacts/remote_failures.json';
+          if (!fs.existsSync(logPath)) {
+            console.log('No remote failures log found');
+            return;
+          }
+          
+          const failures = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+          if (failures.length === 0) {
+            console.log('No remote failures recorded');
+            return;
+          }
+          
+          let comment = '## Remote Data Test Failures\n\n';
+          comment += `${failures.length} test(s) failed due to remote data exceptions:\n\n`;
+          
+          failures.forEach((failure, index) => {
+            comment += `### ${index + 1}. ${failure.test}\n`;
+            comment += `- **Exception**: ${failure.exception}\n`;
+            comment += `- **Message**: ${failure.message}\n\n`;
+          });
+          
+          comment += '_These tests were skipped due to `--skip-remote-failures` flag._';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
     - name: Upload coverage to artifacts
       if: "contains(matrix.toxenv, '-cov')"
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
