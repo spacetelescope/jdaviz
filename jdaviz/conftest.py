@@ -3,7 +3,6 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
-import json
 import os
 import warnings
 
@@ -17,11 +16,6 @@ from astropy.wcs import WCS
 from specutils import Spectrum, SpectrumCollection, SpectrumList
 from astropy.utils.masked import Masked
 
-from requests.exceptions import (RequestException,
-                                 Timeout,
-                                 ConnectionError,
-                                 HTTPError)
-from astropy.io.votable.exceptions import E19
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
@@ -31,9 +25,13 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
 
+from jdaviz import pytest_memlog
 from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
                                   memlog_runtest_teardown,
                                   memlog_runtest_logreport, memlog_terminal_summary)
+from jdaviz.pytest_remote_skip import (remote_skip_addoption,
+                                       REMOTE_EXCEPTIONS,
+                                       _log_remote_failure)
 
 
 if not NUMPY_LT_2_0:
@@ -43,10 +41,11 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 
 # ============================================================================
-# Memory logging plugin (memlog) - imported from pytest_memlog.py
-# In CI, the memlog utilities may have already been called
-# from the root conftest.py, so we avoid that by excepting
-# the ValueError pytest throws.
+# Pytest plugins
+# - Memory logging (memlog): imported from pytest_memlog.py
+# - Remote failure skipping: imported from pytest_remote_skip.py
+# In CI, these utilities may have already been called from the root
+# conftest.py, so we avoid errors by catching the ValueError pytest throws.
 # ============================================================================
 def pytest_addoption(parser):
     """
@@ -57,10 +56,10 @@ def pytest_addoption(parser):
     except ValueError:
         pass
 
-    parser.addoption("--skip-remote-failures",
-                     action="store_true",
-                     default=False,
-                     help="Skip remote failures due to network issues.")
+    try:
+        remote_skip_addoption(parser)
+    except ValueError:
+        pass
 
 
 def pytest_runtest_setup(item):
@@ -106,32 +105,28 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
 
     # First, handle memlog functionality (attach memory data)
-    if call.when == 'teardown':
-        try:
-            # Get memory measurements if memlog is enabled
-            from jdaviz.pytest_memlog import _memlog_enabled_flag
-            if _memlog_enabled_flag:
-                mem_before = getattr(item, '_mem_before', None)
-                mem_after = getattr(item, '_mem_after', None)
+    # Uses same logic as memlog_runtest_makereport from pytest_memlog.py
+    if call.when == 'teardown' and pytest_memlog._memlog_enabled_flag:
+        mem_before = getattr(item, '_mem_before', None)
+        mem_after = getattr(item, '_mem_after', None)
 
-                if mem_before is not None and mem_after is not None:
-                    # Attach to user_properties
-                    for prefix in ('uss', 'rss', 'swap'):
-                        before = int(mem_before[prefix])
-                        after = int(mem_after[prefix])
-                        diff = after - before
+        if mem_before is not None and mem_after is not None:
+            # Attach to user_properties
+            for prefix in ('uss', 'rss', 'swap'):
+                before = int(mem_before[prefix])
+                after = int(mem_after[prefix])
+                diff = after - before
 
-                        report.user_properties.append((f'{prefix}_before', before))
-                        report.user_properties.append((f'{prefix}_after', after))
-                        report.user_properties.append((f'{prefix}_diff', diff))
+                report.user_properties.append((f'{prefix}_before', before))
+                report.user_properties.append((f'{prefix}_after', after))
+                report.user_properties.append((f'{prefix}_diff', diff))
 
-                    # Get worker_id from config (xdist sets this)
-                    worker_id = getattr(item.config, 'workerinput', {}).get('workerid', 'master')
-                    report.user_properties.append(('worker_id', worker_id))
-        except (ValueError, ImportError, AttributeError):
-            pass
+            # Get worker_id from config (xdist sets this)
+            worker_id = getattr(item.config, 'workerinput', {}).get('workerid', 'master')
+            report.user_properties.append(('worker_id', worker_id))
 
     # Second, handle remote failure skipping
+    # Uses logic from pytest_remote_skip module
     if (report.when == 'call'
             and report.failed
             and item.config.getoption(
@@ -139,15 +134,9 @@ def pytest_runtest_makereport(item, call):
         # Check if failure is due to a remote exception
         if call.excinfo is not None:
             exc_type = call.excinfo.type
-            # Catch network-related exceptions
-            remote_exceptions = (RequestException,
-                                 Timeout,
-                                 ConnectionError,
-                                 TimeoutError,
-                                 HTTPError,
-                                 E19)
-            if issubclass(exc_type, remote_exceptions):
-                # Log the failure
+            # Use imported REMOTE_EXCEPTIONS tuple
+            if issubclass(exc_type, REMOTE_EXCEPTIONS):
+                # Log the failure using imported function
                 _log_remote_failure(item.nodeid,
                                     exc_type.__name__,
                                     str(call.excinfo.value))
@@ -176,47 +165,6 @@ def pytest_terminal_summary(terminalreporter, config=None):
         memlog_terminal_summary(terminalreporter, config)
     except ValueError:
         pass
-
-
-def _get_remote_failure_log_path():
-    """
-    Get the path to the remote failure log file.
-
-    Writes to .ci_artifacts/ directory at repository root for access
-    by GitHub Actions. This directory is gitignored and ephemeral.
-    """
-    # Navigate from jdaviz/conftest.py to repository root
-    repo_root = os.path.abspath(os.path.join(__file__, '..', '..'))
-    ci_artifacts_dir = os.path.join(repo_root, '.ci_artifacts')
-    # Create directory if it doesn't exist
-    os.makedirs(ci_artifacts_dir, exist_ok=True)
-    return os.path.join(ci_artifacts_dir, 'remote_failures.json')
-
-
-def _log_remote_failure(test_name, exc_type_name, exc_message):
-    """
-    Log a test failure due to remote exception to a JSON file.
-
-    The log file is written to the ignored directory .ci_artifacts so that
-    GitHub Actions can read it and post a PR comment.
-    """
-    log_path = _get_remote_failure_log_path()
-
-    failures = []
-    if os.path.exists(log_path):
-        try:
-            with open(log_path, 'r') as f:
-                failures = json.load(f)
-        except (json.JSONDecodeError, IOError):
-            failures = []
-
-    failures.append({'test': test_name,
-                     'exception': exc_type_name,
-                     'message': str(exc_message)})
-
-    with open(log_path, 'w') as f:
-        json.dump(failures, f, indent=2)
-
 
 
 
