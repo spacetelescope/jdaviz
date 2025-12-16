@@ -376,7 +376,8 @@ def test_astroquery_load_catalog_source(deconfigged_helper, catch_validate_known
     from requests.exceptions import HTTPError
     with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
                                          stdout_text_to_check='maintenance'):
-        ldr.query_archive()
+        pass
+    ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
 
