@@ -378,4 +378,5 @@ def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     from requests.exceptions import HTTPError
     with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
                                          stdout_text_to_check='maintenance'):
-        catalogs_plugin.search(error_on_fail=True)
+        pass
+    catalogs_plugin.search(error_on_fail=True)
