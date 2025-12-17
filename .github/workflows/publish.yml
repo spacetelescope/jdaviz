@@ -27,16 +27,14 @@ jobs:
 
     - name: Build pytestargs from labels
       id: build-pytestargs
-      shell: bash
       run: |
-        pytestargs="${{ matrix.pytestargs }}"
-        labels="${{ toJSON(github.event.pull_request.labels.*.name) }}"
-
+        pytestargs=""
+        
         # Add --skip-remote-failures if 'skip-remote-failures' label is present
-        if echo "$labels" | grep -q 'skip-remote-failures'; then
-          pytestargs="$pytestargs --skip-remote-failures"
+        if ${{ contains(github.event.pull_request.labels.*.name, 'skip-remote-failures') }}; then
+          pytestargs="--skip-remote-failures"
         fi
-
+        
         # Export as step output so later steps can reference it.
         echo "pytestargs=$pytestargs" >> $GITHUB_OUTPUT
 
@@ -85,10 +83,10 @@ jobs:
     - name: Test package
       run: |
         cd ..
-        echo "$pytestargs"
+        echo "pytest args ${{ steps.build-pytestargs.outputs.pytestargs }}"
         python -m venv testenv
         testenv/bin/pip install pytest pytest-astropy pytest-tornasync pytest-xdist jdaviz/dist/*.whl
-        testenv/bin/pytest -p no:warnings -n auto --dist load --astropy-header --remote-data $pytestargs --pyargs jdaviz
+        testenv/bin/pytest -p no:warnings -n auto --dist load --astropy-header --remote-data ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz
 
     # NOTE: Do not run this part for PR testing.
     - name: Publish distribution 📦 to PyPI
