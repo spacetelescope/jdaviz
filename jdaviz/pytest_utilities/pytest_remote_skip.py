@@ -129,6 +129,7 @@ def remote_skip_configure(config):
     if config.getoption('skip_remote_failures', default=False):
         _remote_skip_enabled = True
         config._remote_skip_enabled = True
+        print('***** Skipping remote failures... *****')
 
 
 def remote_skip_runtest_makereport(item, call, report):
