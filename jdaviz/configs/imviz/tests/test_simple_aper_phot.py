@@ -538,3 +538,26 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
     assert_quantity_allclose(tbl['sum'],
                              [5.980836e-12, 2.037396e-10, 5.980836e-12, 2.037396e-10] * u.Jy,
                              rtol=1e-4)
+
+
+@pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
+def test_aper_phot_basic(helper_name, image_nddata_wcs, request):
+    """
+    Test that the most basic aperture photometry workflow (loading an image,
+    creating one subset, and clicking the button) works in both imviz and
+    deconfigged.
+    """
+
+    helper = request.getfixturevalue(helper_name)
+    helper.load_data(image_nddata_wcs)
+
+    # Create and import aperture
+    reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
+    helper.plugins['Subset Tools'].import_region(reg)
+
+    phot_plugin = helper.plugins['Aperture Photometry']
+    phot_plugin.aperture.selected = 'Subset 1'
+    phot_plugin.calculate_photometry()
+
+    tbl = phot_plugin.export_table()
+    assert len(tbl) == 1

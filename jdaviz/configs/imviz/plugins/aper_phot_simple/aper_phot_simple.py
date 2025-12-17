@@ -209,7 +209,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def _has_display_unit_support(self):
-        return self.config != 'imviz' and self.display_unit != ''
+        """
+        Currently, unit conversion in this plugin is only supported for cubes.
+        When this is expanded to images in deconfigged, this logic will need
+        to change.
+        """
+        return self.config != 'imviz' and self.display_unit != '' and self.is_cube
 
     def _on_slice_changed(self, msg):
         self.cube_slice = f"{msg.value:.3e} {msg.value_unit}"
