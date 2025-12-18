@@ -549,7 +549,7 @@ def test_aper_phot_basic(helper_name, image_nddata_wcs, request):
     """
 
     helper = request.getfixturevalue(helper_name)
-    helper.load_data(image_nddata_wcs)
+    helper.load(image_nddata_wcs)
 
     # Create and import aperture
     reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)
