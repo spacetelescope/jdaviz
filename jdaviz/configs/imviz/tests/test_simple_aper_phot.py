@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
+from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose, assert_array_equal
@@ -541,7 +542,7 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
 
 
 @pytest.mark.parametrize('helper_name', ['imviz_helper', 'deconfigged_helper'])
-def test_aper_phot_basic(helper_name, image_nddata_wcs, request):
+def test_aper_phot_basic(helper_name, image_2d_wcs, request):
     """
     Test that the most basic aperture photometry workflow (loading an image,
     creating one subset, and clicking the button) works in both imviz and
@@ -549,7 +550,9 @@ def test_aper_phot_basic(helper_name, image_nddata_wcs, request):
     """
 
     helper = request.getfixturevalue(helper_name)
-    helper.load(image_nddata_wcs)
+
+    data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    helper.load(data)
 
     # Create and import aperture
     reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5)

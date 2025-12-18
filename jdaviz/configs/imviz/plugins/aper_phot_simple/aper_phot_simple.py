@@ -160,6 +160,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Custom dataset filters for Cubes
         def valid_cube_datasets(data):
+
+            if data.ndim < 3:
+                return True
+
             comp = data.get_component(data.main_components[0])
             img_unit = u.Unit(comp.units) if comp.units else u.dimensionless_unscaled
             solid_angle_unit = check_if_unit_is_per_solid_angle(img_unit, return_unit=True)
