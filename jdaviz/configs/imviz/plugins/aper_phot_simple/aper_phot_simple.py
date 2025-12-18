@@ -161,7 +161,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Custom dataset filters for Cubes
         def valid_cube_datasets(data):
 
-            if data.ndim < 3:
+            if self.config == 'deconfigged' and data.ndim < 3:
                 return True
 
             comp = data.get_component(data.main_components[0])
