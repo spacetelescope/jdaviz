@@ -857,25 +857,27 @@ def test_multi_mask_subset(specviz_helper, spectrum1d):
     assert reg["Subset 1"][0]["region"] == 4
 
 
-def test_delete_subsets_toolbar_selection(cubeviz_helper, spectral_cube_wcs):
+@pytest.mark.parametrize('helper_name', ['cubeviz_helper', 'deconfigged_helper'])
+def test_delete_subsets_toolbar_selection(helper_name, spectral_cube_wcs, request):
     """
     Test that the toolbar selections get reset when the subset being actively edited gets deleted.
     """
+    helper = request.getfixturevalue(helper_name)
     data = Spectrum(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
-    cubeviz_helper.load_data(data, data_label="Test Flux")
-    dc = cubeviz_helper.app.data_collection
+    helper.load_data(data, data_label="Test Flux")
+    dc = helper.app.data_collection
 
-    spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
+    spectrum_viewer = helper.app.get_viewer("spectrum-viewer")
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']
-    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    subset_plugin = helper.plugins['Subset Tools']
+    unit = u.Unit(helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset_plugin.import_region(SpectralRegion(6200 * unit, 6800 * unit))
 
     dc.remove_subset_group(dc.subset_groups[0])
 
     assert spectrum_viewer.toolbar.active_tool_id == "jdaviz:selectslice"
 
-    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
+    flux_viewer = helper.app.get_viewer("flux-viewer")
 
     subset_plugin.import_region(RectangularROI(1, 3.5, -0.2, 3.3))
 

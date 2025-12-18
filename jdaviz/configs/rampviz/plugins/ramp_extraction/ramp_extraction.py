@@ -146,6 +146,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # if called before fully initialized
             return
 
+        if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
+            return
+
         subset_lbl = msg.subset.label
         color = msg.subset.style.color
         subset = self.app.get_subsets(subset_lbl)[0]
@@ -188,9 +191,12 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.integration_viewer.reset_limits()
 
     def _on_subset_delete(self, msg={}):
+        if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
+            return
+
         subset_lbl = msg.subset.label
         self.integration_viewer.figure.marks = [
-            mark for mark in self.integration_viewer.figure.marks
+            mark for mark in viewer.figure.marks
             if getattr(mark, 'label', None) != subset_lbl
         ]
 
