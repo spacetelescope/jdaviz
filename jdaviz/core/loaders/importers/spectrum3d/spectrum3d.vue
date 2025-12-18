@@ -2,7 +2,7 @@
   <v-container>
     <j-plugin-section-header>Flux Cube</j-plugin-section-header>
     <plugin-select
-      :items="extension_items.map(i => i.label)"
+      :items="extension_items"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
       :multiselect="multiselect"
@@ -44,7 +44,7 @@
     <div v-if="unc_extension_items.length >= 1">
       <j-plugin-section-header>Uncertainty Cube</j-plugin-section-header>
       <plugin-select
-        :items="unc_extension_items.map(i => i.label)"
+        :items="unc_extension_items"
         :selected.sync="unc_extension_selected"
         :show_if_single_entry="true"
         :multiselect="multiselect"
@@ -90,7 +90,7 @@
     <div v-if="mask_extension_items.length >= 1">
       <j-plugin-section-header>Mask Cube</j-plugin-section-header>
       <plugin-select
-        :items="mask_extension_items.map(i => i.label)"
+        :items="mask_extension_items"
         :selected.sync="mask_extension_selected"
         :show_if_single_entry="true"
         :multiselect="multiselect"

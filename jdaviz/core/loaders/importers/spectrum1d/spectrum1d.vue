@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <plugin-select
-      :items="extension_items.map(i => i.label)"
+      :items="extension_items"
       :selected.sync="extension_selected"
       :show_if_single_entry="true"
       :multiselect="multiselect"
