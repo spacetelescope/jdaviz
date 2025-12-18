@@ -1,6 +1,8 @@
 import warnings
 import pytest
 
+from astropy.utils import minversion
+import gwcs
 import numpy as np
 from stdatamodels.jwst.datamodels.dqflags import pixel as pixel_jwst
 from glue.core.subset import RectangularROI
@@ -10,6 +12,8 @@ from jdaviz.configs.default.plugins.data_quality.dq_utils import (
     load_flag_map, write_flag_map
 )
 from jdaviz.utils import cached_uri
+
+GWCS_LT_0_26_2 = not minversion(gwcs, "0.26.2.dev")
 
 
 @pytest.mark.parametrize(
@@ -227,7 +231,12 @@ def test_cubeviz_layer_visibility_bug(cubeviz_helper):
     mm.n_moment = 1
     mm.reference_wavelength = 6
     mm._obj.add_to_viewer_selected = 'uncert-viewer'
-    mm.calculate_moment()
+    if GWCS_LT_0_26_2:
+        mm.calculate_moment()
+    else:
+        # GWCS changed from logging package to warnings for this
+        with pytest.warns(UserWarning, match="Physical type may be ambiguous"):
+            mm.calculate_moment()
 
     # add the moment map to the flux viewer
     dc = cubeviz_helper.app.data_collection
