@@ -63,6 +63,7 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
+- Fixed bug when deleting subsets in deconfigged. [#3951]
 
 Cubeviz
 ^^^^^^^

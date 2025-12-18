@@ -194,8 +194,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
             return
 
+        viewer = self.integration_viewer
         subset_lbl = msg.subset.label
-        self.integration_viewer.figure.marks = [
+        viewer.figure.marks = [
             mark for mark in viewer.figure.marks
             if getattr(mark, 'label', None) != subset_lbl
         ]
