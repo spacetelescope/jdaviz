@@ -5,12 +5,16 @@ import pytest
 from astropy import units as u
 from astropy.nddata import CCDData
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils import minversion
 from astropy.wcs import WCS
+import gwcs
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.utils import cached_uri
+
+GWCS_LT_0_26_2 = not minversion(gwcs, "0.26.2.dev")
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
@@ -196,7 +200,12 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
         mm.calculate_moment()
 
     mm.reference_wavelength = 4.63e-7
-    mm.calculate_moment()
+    if GWCS_LT_0_26_2:
+        mm.calculate_moment()
+    else:
+        # GWCS changed from logging package to warnings for this
+        with pytest.warns(UserWarning, match="Physical type may be ambiguous"):
+            mm.calculate_moment()
 
     # Make sure coordinate display works
     label_mouseover = cubeviz_helper._coords_info
@@ -215,7 +224,12 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
 
     # Test moment 2 in velocity
     mm.n_moment = 2
-    mm.calculate_moment()
+    if GWCS_LT_0_26_2:
+        mm.calculate_moment()
+    else:
+        # GWCS changed from logging package to warnings for this
+        with pytest.warns(UserWarning, match="Physical type may be ambiguous"):
+            mm.calculate_moment()
 
     label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
                                                         'domain': {'x': 1, 'y': 1}})
