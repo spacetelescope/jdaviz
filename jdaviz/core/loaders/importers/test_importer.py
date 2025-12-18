@@ -74,13 +74,13 @@ class TestResetAndCheckExistingDataInDC:
         ldr = deconfigged_helper.loaders['object']
         ldr.object = spectrum_list
         ldr.format = '1D Spectrum'
-        ldr.importer.sources.selected = '1D Spectrum at index: 0'
+        ldr.importer.extension.selected = '1D Spectrum at index: 0'
         ldr.load()
 
         # The data hashes update in the SpectrumList importer but are different from the
         # data hashes in our original test_obj
-        dh_list = ldr.importer.sources.data_hashes
-        labels_list = ldr.importer.sources.labels
+        dh_list = ldr.importer.extension.data_hashes
+        labels_list = ldr.importer.extension.labels
         # The obj would otherwise have all the data hashes/labels from the SpectrumList
         test_obj.data_hashes = dh_list
         test_obj.hash_map_to_label = dict(zip(dh_list, labels_list))
@@ -114,10 +114,10 @@ class TestResetAndCheckExistingDataInDC:
         # Choose a source at the end to guarantee everything is different from before
         ldr.object = new_spectrum_list
         ldr.format = '1D Spectrum'
-        ldr.importer.sources.selected = '1D Spectrum at index: 5'
+        ldr.importer.extension.selected = '1D Spectrum at index: 5'
         ldr.load()
 
-        dh_list = ldr.importer.sources.data_hashes
+        dh_list = ldr.importer.extension.data_hashes
         test_obj.data_hashes = dh_list
 
         # Although two SpectrumList objects are loaded into the data collection,
