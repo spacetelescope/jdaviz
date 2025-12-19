@@ -214,8 +214,8 @@ def test_rename_data_with_children(deconfigged_helper, spectrum2d):
     This tests the new feature where renaming a parent data entry
     automatically renames all child data entries while preserving
     their suffix. For example:
-    - 'spectrum 2d' -> 'my spectrum'
-    - 'spectrum 2d (auto-ext)' -> 'my spectrum (auto-ext)'
+    - 'spectrum 2d' -> '2d_spectrum_renamed'
+    - 'spectrum 2d (auto-ext)' -> '2d_spectrum_renamed (auto-ext)'
     """
     # Load parent data
     deconfigged_helper.load(spectrum2d, format='2D Spectrum', data_label='2d_spectrum')
@@ -226,11 +226,13 @@ def test_rename_data_with_children(deconfigged_helper, spectrum2d):
     assert '2d_spectrum (auto-ext)' in dcf_dc.labels
 
     # Rename parent data - should also rename child
-    deconfigged_helper.app._rename_data('2d_spectrum', 'new_2d_spectrum', rename_linked_data=True)
+    deconfigged_helper.app._rename_data('2d_spectrum',
+                                        '2d_spectrum_renamed',
+                                        rename_linked_data=True)
 
     # Verify parent and child were renamed
     assert '2d_spectrum' not in dcf_dc.labels
     assert '2d_spectrum (auto-ext)' not in dcf_dc.labels
 
-    assert 'new_2d_spectrum' in dcf_dc.labels
-    assert 'new_2d_spectrum (auto-ext)' in dcf_dc.labels
+    assert '2d_spectrum_renamed' in dcf_dc.labels
+    assert '2d_spectrum_renamed (auto-ext)' in dcf_dc.labels
