@@ -94,6 +94,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
 def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = spectrum2d
+    ldr.format = '2D Spectrum'
 
     assert ldr.importer.viewer.create_new == '2D Spectrum'
     assert ldr.importer.viewer.new_label == '2D Spectrum'

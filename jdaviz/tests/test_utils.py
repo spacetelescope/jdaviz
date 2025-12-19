@@ -196,7 +196,7 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
                                            resolver=deconfigged_helper.loaders['object']._obj,
                                            parser=None,
                                            input=premade_spectrum_list)
-    test_obj = fake_importer.sources
+    test_obj = fake_importer.extension
 
     """
     Left here for reference, premade_spectrum_list has 5 spectra:
