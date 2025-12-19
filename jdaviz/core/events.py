@@ -4,8 +4,8 @@ import astropy.units as u
 from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
-           'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage', 'SubsetRenameMessage',
-           'ViewerVisibleLayersChangedMessage', 'LayersFinalizedMessage',
+           'AddDataMessage', 'DataRenamedMessage', 'SnackbarMessage', 'RemoveDataMessage',
+           'SubsetRenameMessage', 'ViewerVisibleLayersChangedMessage', 'LayersFinalizedMessage',
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage', 'SliceValueUpdatedMessage',
            'SliceToolStateMessage',
@@ -206,6 +206,30 @@ class SubsetRenameMessage(Message):
     @property
     def subset_group(self):
         return self._subset_group
+
+    @property
+    def old_label(self):
+        return self._old_label
+
+    @property
+    def new_label(self):
+        return self._new_label
+
+
+class DataRenamedMessage(Message):
+    """
+    Message emitted when data in the data collection is renamed.
+    """
+    def __init__(self, data, old_label, new_label, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._data = data
+        self._old_label = old_label
+        self._new_label = new_label
+
+    @property
+    def data(self):
+        return self._data
 
     @property
     def old_label(self):
