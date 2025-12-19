@@ -12,7 +12,7 @@ from jdaviz.utils import (alpha_index, download_uri_to_path,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
                           create_data_hash, parallelize_calculation)
 
-from jdaviz.conftest import FakeSpectrumListImporter
+from jdaviz.conftest import FakeSpectrum1DImporter
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
@@ -192,10 +192,10 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
 
     # Making sure a stand-in for a SelectPluginComponent object with an attribute
     # that has `choices` works as expected
-    fake_importer = FakeSpectrumListImporter(app=deconfigged_helper.app,
-                                             resolver=deconfigged_helper.loaders['object']._obj,
-                                             parser=None,
-                                             input=premade_spectrum_list)
+    fake_importer = FakeSpectrum1DImporter(app=deconfigged_helper.app,
+                                           resolver=deconfigged_helper.loaders['object']._obj,
+                                           parser=None,
+                                           input=premade_spectrum_list)
     test_obj = fake_importer.sources
 
     """
