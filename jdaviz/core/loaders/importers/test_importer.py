@@ -142,8 +142,6 @@ class TestResetAndCheckExistingDataInDC:
         input_data = {'Image': image_hdu_wcs,
                       '1D Spectrum': spectrum1d,
                       '2D Spectrum': spectrum2d,
-                      '1D Spectrum List': premade_spectrum_list,
-                      '1D Spectrum Concatenated': premade_spectrum_list,
                       'Catalog': sky_coord_only_source_catalog}
 
         # TODO: Remove when this dev flag is no longer needed
