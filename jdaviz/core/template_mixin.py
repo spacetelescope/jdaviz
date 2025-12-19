@@ -44,8 +44,8 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
                                                     WithSliceSelection)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, RestoreToolbarMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage,
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, DataRenamedMessage,
+                                RestoreToolbarMessage, ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 ViewerVisibleLayersChangedMessage,
                                 ChangeRefDataMessage,
@@ -1347,6 +1347,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return self._default_mode
 
     def _apply_default_selection(self, skip_if_current_valid=True):
+        # Skip if a data rename operation is in progress
+        # This prevents triggering observers when selected becomes
+        # temporarily invalid during rename
+        if getattr(self.app, '_renaming_data', False):
+            return
+
         if self.is_multiselect:
             if skip_if_current_valid and (self.selected is None or len(self.selected) == 0):
                 # current selection is empty and so should remain that way
@@ -1958,6 +1964,8 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetRenameMessage,
                            handler=self._on_subset_renamed)
+        self.hub.subscribe(self, DataRenamedMessage,
+                           handler=self._on_data_renamed)
         self.hub.subscribe(self, ViewerRenamedMessage,
                            self._on_viewer_renamed_message)
 
@@ -2192,6 +2200,40 @@ class LayerSelect(SelectPluginComponent):
                 item['label'] = msg.new_label
                 break
         self.send_state("items")
+
+    def _on_data_renamed(self, msg):
+        """
+        Handle data renamed events by updating items and selected.
+
+        Note: We update selected directly in _trait_values to bypass
+        observers, preventing plugins from re-processing data.
+        """
+        # Update selected if it matches the old label
+        update_selected = False
+        if self.is_multiselect:
+            if msg.old_label in self.selected:
+                update_selected = True
+        else:
+            if self.selected == msg.old_label:
+                update_selected = True
+
+        if update_selected:
+            if self.is_multiselect:
+                new_selected = [
+                    msg.new_label if sel == msg.old_label else sel
+                    for sel in self.selected
+                ]
+                self._trait_values['selected'] = new_selected
+            else:
+                self._trait_values['selected'] = msg.new_label
+            self.send_state('selected')
+
+        # Update items list
+        for item in self.items:
+            if item['label'] == msg.old_label:
+                item['label'] = msg.new_label
+                break
+        self.send_state('items')
 
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
@@ -2552,6 +2594,8 @@ class SubsetSelect(SelectPluginComponent):
                            handler=lambda msg: self._on_delete_subset(msg.subset))
         self.hub.subscribe(self, SubsetRenameMessage,
                            handler=lambda msg: self._on_subset_renamed(msg))
+        self.hub.subscribe(self, DataRenamedMessage,
+                           handler=self._update_items)
 
         self._initialize_choices()
 
@@ -4243,6 +4287,7 @@ class DatasetSelect(SelectPluginComponent):
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._update_items)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._update_items)
         self.hub.subscribe(self, SubsetRenameMessage, handler=self._update_items)
+        self.hub.subscribe(self, DataRenamedMessage, handler=self._on_data_renamed)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
         self.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
@@ -4484,6 +4529,39 @@ class DatasetSelect(SelectPluginComponent):
     def _on_global_display_unit_changed(self, msg=None):
         if msg.axis in ('spectral', 'spectral_y'):
             self._clear_cache('selected_spectrum')
+
+    def _on_data_renamed(self, msg):
+        """
+        Handle data renamed events by updating selected values.
+
+        Note: We do NOT call _update_items() here because the layer_icons
+        callback in app._rename_data will trigger it after this handler runs.
+        We just need to update 'selected' so that when _update_items runs
+        and calls _apply_default_selection, the selected value is valid
+        and won't be changed (which would trigger observers).
+        """
+        # Check if selected needs updating
+        update_selected = False
+        if self.is_multiselect:
+            if msg.old_label in self.selected:
+                update_selected = True
+        else:
+            if self.selected == msg.old_label:
+                update_selected = True
+
+        # Update selected label directly in _trait_values to bypass
+        # observers. This prevents plugins from re-processing data.
+        if update_selected:
+            if self.is_multiselect:
+                new_selected = [
+                    msg.new_label if sel == msg.old_label else sel
+                    for sel in self.selected
+                ]
+                self._trait_values['selected'] = new_selected
+            else:
+                self._trait_values['selected'] = msg.new_label
+            # Sync to frontend
+            self.send_state('selected')
 
 
 class DatasetSelectMixin(VuetifyTemplate, HubListener):
