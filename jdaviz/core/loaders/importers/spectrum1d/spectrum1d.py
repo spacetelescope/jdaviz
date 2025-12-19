@@ -22,19 +22,11 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
     multiselect = Bool(True).tag(sync=True)
 
-    data_label_is_prefix = Bool(False).tag(sync=True)
     concatenate = Bool(False).tag(sync=True)  # only applicable if multiselect=True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.default_data_label_from_resolver:
-            self.data_label_default = self.default_data_label_from_resolver
-        elif self.app.config == 'specviz':
-            self.data_label_default = '1D Spectrum'
-        elif self.app.config == 'specviz2d':
-            self.data_label_default = '1D Spectrum'
-        else:
-            self.data_label_default = '1D Spectrum'
+        self._set_default_data_label()
 
     @staticmethod
     def _get_supported_viewers():
@@ -75,13 +67,28 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
                   'concatenate']
         return ImporterUserApi(self, expose)
 
-    @observe('multiselect')
-    def _on_multiselect_changed(self, event):
-        self.data_label_is_prefix = event['new']
-
     @property
     def supported_flux_ndim(self):
         return 1
+
+    @property
+    def default_data_label_prefix(self):
+        if self.default_data_label_from_resolver:
+            return self.default_data_label_from_resolver
+        else:
+            return '1D Spectrum'
+
+    @observe('extension_selected')
+    def _set_default_data_label(self, event={}):
+        # data_label_is_prefix is set in SpectrumInputExtensionsMixin,
+        # but may be updated after this
+        if not hasattr(self, 'extension'):
+            self.data_label_default = self.default_data_label_prefix
+        elif self.multiselect and len(self.extension.selected) == 1 and len(self.extension.choices) > 1:  # noqa
+            item_dict = self.extension.selected_item_list[0]
+            self.data_label_default = f"{self.default_data_label_prefix}_{item_dict['suffix']}"
+        else:
+            self.data_label_default = self.default_data_label_prefix
 
     @property
     def output(self):
@@ -146,11 +153,9 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         if not self.extension.selected:
             raise ValueError("No extension selected.")
 
-        multi = self.multiselect and len(self.extension.selected_item_list) > 1
-
         with self.app._jdaviz_helper.batch_load():
             for spec_obj, item_dict in zip(self.output, self.extension.selected_item_list):
-                if multi:
+                if self.data_label_is_prefix:
                     data_label = f"{self.data_label_value}_{item_dict['suffix']}"
                 else:
                     data_label = self.data_label_value

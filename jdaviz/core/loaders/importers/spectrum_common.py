@@ -48,6 +48,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
     input_type = Unicode().tag(sync=True)
 
     multiselect = Bool(True).tag(sync=True)
+    data_label_is_prefix = Bool(False).tag(sync=True)
 
     extension_items = List().tag(sync=True)
     extension_selected = Any().tag(sync=True)
@@ -361,6 +362,10 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
              'mask_extension_selected')
     def _on_extension_change(self, change):
         self._clear_cache('spectra')
+
+        if not hasattr(self, 'extension'):
+            return
+        self.data_label_is_prefix = self.multiselect and len(self.extension.selected) > 1
 
     def _to_list_of_spectra(self, inp):
         def this_row(field, i):
