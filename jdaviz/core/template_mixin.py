@@ -4553,10 +4553,8 @@ class DatasetSelect(SelectPluginComponent):
         # observers. This prevents plugins from re-processing data.
         if update_selected:
             if self.is_multiselect:
-                new_selected = [
-                    msg.new_label if sel == msg.old_label else sel
-                    for sel in self.selected
-                ]
+                new_selected = [msg.new_label if sel == msg.old_label else sel
+                                for sel in self.selected]
                 self._trait_values['selected'] = new_selected
             else:
                 self._trait_values['selected'] = msg.new_label
