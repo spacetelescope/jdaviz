@@ -550,7 +550,7 @@ def test_aper_phot_basic(helper_name, image_2d_wcs, request):
     """
 
     helper = request.getfixturevalue(helper_name)
-
+    
     data = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
     helper.load(data)
 

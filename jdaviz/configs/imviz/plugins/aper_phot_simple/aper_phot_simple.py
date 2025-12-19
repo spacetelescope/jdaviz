@@ -218,6 +218,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         When this is expanded to images in deconfigged, this logic will need
         to change.
         """
+
         return self.config != 'imviz' and self.display_unit != '' and self.is_cube
 
     def _on_slice_changed(self, msg):
@@ -240,9 +241,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.is_cube = False
         for dataset in datasets:
-            # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
-            # or images this will need to change.
-            if dataset.ndim > 2:
+            # This assumes all cubes, or no cubes.
+            # 'Is cube' here means is it a cube, or a collapsed cube.
+            if dataset.ndim > 2 or dataset.meta.get('plugin', None) == 'Collapse':
                 self.is_cube = True
                 break
 
