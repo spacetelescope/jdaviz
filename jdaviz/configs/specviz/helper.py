@@ -112,7 +112,7 @@ class Specviz(ConfigHelper, LineListMixin):
         if local_path is not None:
             load_kwargs['local_path'] = local_path
         if sources is not None:
-            load_kwargs['sources'] = sources
+            load_kwargs['extension'] = sources
         if exposures is not None:
             load_kwargs['exposures'] = exposures
 
