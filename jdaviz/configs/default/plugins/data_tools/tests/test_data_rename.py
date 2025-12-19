@@ -191,8 +191,7 @@ def test_rename_data_no_auto_extraction_on_2d_spectrum(deconfigged_helper, spect
     labels_before = set(specviz2d_dc.labels)
 
     # Rename the 2D spectrum
-    deconfigged_helper.app._rename_data('2d_spectrum',
-                                         '2d_spectrum_renamed')
+    deconfigged_helper.app._rename_data('2d_spectrum', '2d_spectrum_renamed')
 
     # Verify rename was successful
     assert '2d_spectrum_renamed' in specviz2d_dc.labels
