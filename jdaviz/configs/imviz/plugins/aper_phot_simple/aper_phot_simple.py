@@ -160,6 +160,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Custom dataset filters for Cubes
         def valid_cube_datasets(data):
+
+            if self.config == 'deconfigged' and data.ndim < 3:
+                return True
+
             comp = data.get_component(data.main_components[0])
             img_unit = u.Unit(comp.units) if comp.units else u.dimensionless_unscaled
             solid_angle_unit = check_if_unit_is_per_solid_angle(img_unit, return_unit=True)
@@ -209,7 +213,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def _has_display_unit_support(self):
-        return self.config != 'imviz' and self.display_unit != ''
+        """
+        Currently, unit conversion in this plugin is only supported for cubes.
+        When this is expanded to images in deconfigged, this logic will need
+        to change.
+        """
+
+        return self.config != 'imviz' and self.display_unit != '' and self.is_cube
 
     def _on_slice_changed(self, msg):
         self.cube_slice = f"{msg.value:.3e} {msg.value_unit}"
@@ -231,9 +241,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.is_cube = False
         for dataset in datasets:
-            # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
-            # or images this will need to change.
-            if dataset.ndim > 2:
+            # This assumes all cubes, or no cubes.
+            # 'Is cube' here means is it a cube, or a collapsed cube.
+            if dataset.ndim > 2 or dataset.meta.get('plugin', None) == 'Collapse':
                 self.is_cube = True
                 break
 
