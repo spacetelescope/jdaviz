@@ -219,41 +219,41 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
 
 
-# def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
-#                                                spectrum1d_cube_custom_fluxunit):
-#     # this test is essentially the same as test_cubeviz_aperphot_cube_sr_and_pix2
-#     # but for a single surface brightness unit and without changing the pixel
-#     # area to make outputs the same. it was requested in review to keep both tests
-#     cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
-#     cubeviz_helper.load_data(cube, data_label="test")
+def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
+                                               spectrum1d_cube_custom_fluxunit):
+    # this test is essentially the same as test_cubeviz_aperphot_cube_sr_and_pix2
+    # but for a single surface brightness unit and without changing the pixel
+    # area to make outputs the same. it was requested in review to keep both tests
+    cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
+    cubeviz_helper.load_data(cube, data_label="test")
 
-#     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
-#     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-#     cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg],
-#                                                          combination_mode='new')
+    aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
+    bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
+    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg],
+                                                         combination_mode='new')
 
-#     plg = cubeviz_helper.plugins["Aperture Photometry"]
-#     plg.dataset.selected = "test[FLUX]"
-#     plg.aperture.selected = "Subset 1"
-#     plg.background.selected = "Subset 2"
+    plg = cubeviz_helper.plugins["Aperture Photometry"]
+    plg.dataset.selected = "test[FLUX]"
+    plg.aperture.selected = "Subset 1"
+    plg.background.selected = "Subset 2"
 
-#     # Make sure per steradian is handled properly.
-#     assert_allclose(plg.pixel_area, 0.01)
-#     assert_allclose(plg.flux_scaling, 0.003631)
+    # Make sure per steradian is handled properly.
+    assert_allclose(plg.pixel_area, 0.01)
+    assert_allclose(plg.flux_scaling, 0.003631)
 
-#     plg._obj.vue_do_aper_phot()
-#     row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
+    plg._obj.vue_do_aper_phot()
+    row = cubeviz_helper.plugins['Aperture Photometry'].export_table()[0]
 
-#     # Basically, we should recover the input rectangle here, minus background.
-#     assert_allclose(row["xcenter"], 3 * u.pix)
-#     assert_allclose(row["ycenter"], 1 * u.pix)
-#     assert_allclose(row["sum"], 1.1752215e-12 * u.MJy)  # (15 - 10) MJy/sr x 2.3504431e-13 sr
-#     assert_allclose(row["sum_aper_area"], 1 * PIX2)
-#     assert_allclose(row["pixarea_tot"], 2.350443053909789e-13 * u.sr)
-#     assert_allclose(row["aperture_sum_mag"], 23.72476627732448 * u.mag)
-#     assert_allclose(row["mean"], 5 * (u.MJy / u.sr))
-#     # TODO: check if slice plugin has value_unit set correctly
-#     assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
+    # Basically, we should recover the input rectangle here, minus background.
+    assert_allclose(row["xcenter"], 3 * u.pix)
+    assert_allclose(row["ycenter"], 1 * u.pix)
+    assert_allclose(row["sum"], 1.1752215e-12 * u.MJy)  # (15 - 10) MJy/sr x 2.3504431e-13 sr
+    assert_allclose(row["sum_aper_area"], 1 * PIX2)
+    assert_allclose(row["pixarea_tot"], 2.350443053909789e-13 * u.sr)
+    assert_allclose(row["aperture_sum_mag"], 23.72476627732448 * u.mag)
+    assert_allclose(row["mean"], 5 * (u.MJy / u.sr))
+    # TODO: check if slice plugin has value_unit set correctly
+    assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
 
 
 def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,

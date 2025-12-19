@@ -4399,7 +4399,6 @@ class DatasetSelect(SelectPluginComponent):
 
         def is_image_or_flux_cube(data):
             return is_image(data) or is_flux_cube(data)
-        
 
         def is_spectrum(data):
             return (len(data.shape) == 1
