@@ -29,9 +29,20 @@
       label="Data Label"
       api_hint="ldr.importer.data_label ="
       :api_hints_enabled="api_hints_enabled"
-      :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.' : 'Label to assign to the new data entry.'"
+      :hint="data_label_is_prefix ? 'Prefix to assign to the new data entry.  Will resolve to the following data labels:' : 'Label to assign to the new data entry.'"
     >
     </plugin-auto-label>
+    <v-row v-if="data_label_is_prefix">
+        <v-chip
+          v-for="suff in data_label_suffices"
+          outlined
+          label
+          :key="suff"
+          style="margin: 4px"
+        >
+          {{data_label_value}}_{{suff}}
+        </v-chip>
+    </v-row>
 
     <plugin-viewer-create-new
       :items="viewer_items"

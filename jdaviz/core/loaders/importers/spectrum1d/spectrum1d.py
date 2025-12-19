@@ -1,7 +1,7 @@
 import numpy as np
 from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum
-from traitlets import Bool, observe
+from traitlets import Bool, List, observe
 import warnings
 
 from jdaviz.core.events import SnackbarMessage
@@ -21,6 +21,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
     template_file = __file__, "./spectrum1d.vue"
     parser_preference = ['fits', 'asdf', 'specutils.Spectrum']
     multiselect = Bool(True).tag(sync=True)
+    data_label_suffices = List().tag(sync=True)
 
     concatenate = Bool(False).tag(sync=True)  # only applicable if multiselect=True
 
@@ -89,6 +90,9 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
             self.data_label_default = f"{self.default_data_label_prefix}_{item_dict['suffix']}"
         else:
             self.data_label_default = self.default_data_label_prefix
+            if self.multiselect and len(self.extension.selected) > 1:
+                self.data_label_suffices = [item_dict['suffix'] for item_dict in
+                                            self.extension.selected_item_list]
 
     @property
     def output(self):
