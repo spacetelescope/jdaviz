@@ -183,14 +183,16 @@ def test_rename_data_no_auto_extraction_on_2d_spectrum(deconfigged_helper, spect
     auto-extraction issue.
     """
     # Load the 2D spectrum
-    deconfigged_helper.load(spectrum2d, format='2D Spectrum', data_label='2d_spectrum')
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum',
+                            data_label='2d_spectrum')
     specviz2d_dc = deconfigged_helper.app.data_collection
 
     # Record the current number of data items
     labels_before = set(specviz2d_dc.labels)
 
     # Rename the 2D spectrum
-    deconfigged_helper.app._rename_data('2d_spectrum', '2d_spectrum_renamed')
+    deconfigged_helper.app._rename_data('2d_spectrum',
+                                         '2d_spectrum_renamed')
 
     # Verify rename was successful
     assert '2d_spectrum_renamed' in specviz2d_dc.labels
@@ -204,3 +206,32 @@ def test_rename_data_no_auto_extraction_on_2d_spectrum(deconfigged_helper, spect
     # The only new labels should be from renaming (if any extraction
     # happened, there would be additional extracted spectrum names)
     assert len(labels_after) == len(labels_before)
+
+
+def test_rename_data_with_children(deconfigged_helper, spectrum2d):
+    """
+    Test renaming parent data also renames child data labels.
+
+    This tests the new feature where renaming a parent data entry
+    automatically renames all child data entries while preserving
+    their suffix. For example:
+    - 'spectrum 2d' -> 'my spectrum'
+    - 'spectrum 2d (auto-ext)' -> 'my spectrum (auto-ext)'
+    """
+    # Load parent data
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum', data_label='2d_spectrum')
+
+    # Verify initial state
+    dcf_dc = deconfigged_helper.app.data_collection
+    assert '2d_spectrum' in dcf_dc.labels
+    assert '2d_spectrum (auto-ext)' in dcf_dc.labels
+
+    # Rename parent data - should also rename child
+    deconfigged_helper.app._rename_data('2d_spectrum', 'new_2d_spectrum', rename_linked_data=True)
+
+    # Verify parent and child were renamed
+    assert '2d_spectrum' not in dcf_dc.labels
+    assert '2d_spectrum (auto-ext)' not in dcf_dc.labels
+
+    assert 'new_2d_spectrum' in dcf_dc.labels
+    assert 'new_2d_spectrum (auto-ext)' in dcf_dc.labels
