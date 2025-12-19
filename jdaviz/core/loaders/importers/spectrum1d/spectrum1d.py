@@ -91,7 +91,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         else:
             self.data_label_default = self.default_data_label_prefix
             if self.multiselect and len(self.extension.selected) > 1:
-                self.data_label_suffices = [item_dict['suffix'] for item_dict in
+                self.data_label_suffices = [f"_{item_dict['suffix']}" for item_dict in
                                             self.extension.selected_item_list]
 
     @property

@@ -40,7 +40,7 @@
           :key="suff"
           style="margin: 4px"
         >
-          {{data_label_value}}_{{suff}}
+          {{data_label_value}}{{suff}}
         </v-chip>
     </v-row>
 

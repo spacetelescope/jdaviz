@@ -76,6 +76,8 @@ class ImageImporter(BaseImporterToDataCollection):
     # whether the current data_label should be treated as a prefix
     # either based on user-setting above or current extension selection
     data_label_is_prefix = Bool(False).tag(sync=True)
+    # suffices that will be applied to the prefix (read-only)
+    data_label_suffices = List().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -231,6 +233,13 @@ class ImageImporter(BaseImporterToDataCollection):
             self.data_label_default = prefix
             self.data_label_is_prefix = False
 
+        if self.data_label_is_prefix:
+            self.data_label_suffices = [self._get_label_with_extension("",
+                                                                       ext_item.get('name'),
+                                                                       ver=ext_item.get('ver', None)
+                                                                       )
+                                        for ext_item in self.ext_items]
+
     @property
     def output(self):
         # NOTE: this should ALWAYS return a list of objects able to be imported into DataCollection
@@ -278,18 +287,21 @@ class ImageImporter(BaseImporterToDataCollection):
 
         return data
 
+    @property
+    def ext_items(self):
+        if self.input_has_extensions:
+            return self.extension.selected_item_list
+        elif isinstance(self.input, NDData):
+            return [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
+        else:
+            return [{}] * len(self.output)
+
     def __call__(self):
 
         base_data_label = self.data_label_value
         # self.output is always a list of Data objects
         outputs = self.output
-
-        if self.input_has_extensions:
-            ext_items = self.extension.selected_item_list
-        elif isinstance(self.input, NDData):
-            ext_items = [{'name': name} for name in ('DATA', 'MASK', 'UNCERTAINTY')]  # noqa must match order in _nddata_to_glue_data
-        else:
-            ext_items = [{}] * len(outputs)
+        ext_items = self.ext_items
 
         parent_selected = self.parent.selected
         for output, ext_item in zip(outputs, ext_items):
