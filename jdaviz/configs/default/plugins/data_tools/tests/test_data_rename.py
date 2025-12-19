@@ -42,7 +42,7 @@ def test_basic_data_rename(deconfigged_helper, input_data, data_format, request)
     dcf_dc = deconfigged_helper.app.data_collection
     # Check state.data_items
     state_items_before = [item['name'] for item in deconfigged_helper.app.state.data_items]
-    
+
     # Verify data was added
     assert 'label_before' in dcf_dc.labels
     assert 'label_before' in state_items_before
