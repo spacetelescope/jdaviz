@@ -64,6 +64,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixed bugs in aperture photometry plugin for images in deconfigged, where the _cube_wave attribute,
+  which is not applicable to images, was being accessed. [#3950]
+
 Cubeviz
 ^^^^^^^
 
