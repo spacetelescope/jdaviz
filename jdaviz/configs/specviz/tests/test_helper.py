@@ -635,7 +635,7 @@ class TestLoadData:
                 data_label='concatenated',
                 concat_by_file=True
             )
-        assert len(specviz_helper.app.data_collection) > initial_count
+        assert len(specviz_helper.app.data_collection) == initial_count + 1
 
     def test_load_data_with_load_as_list(self, specviz_helper, premade_spectrum_list):
         """

@@ -53,9 +53,9 @@ def test_resolver_matching(specviz_helper):
 
     res_sp = find_matching_resolver(specviz_helper.app, sp)
     assert res_sp._obj._registry_label == 'object'
-    assert res_sp.format == '1D Spectrum'
+    assert '1D Spectrum' in res_sp.format.choices
 
-    specviz_helper._load(sp)
+    specviz_helper.load(sp)
     assert len(specviz_helper.app.data_collection) == 1
 
 

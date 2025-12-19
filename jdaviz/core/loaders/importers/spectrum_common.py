@@ -153,7 +153,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                            multiselect='multiselect',
                                                            manual_options=ext_options,
                                                            filters=[self.is_valid_mask],
-                                                           default_mode='empty')
+                                                           default_mode='first')
         self.mask_extension.select_default()
 
     def _cleanup(self):

@@ -144,6 +144,10 @@ class FakeSpectrum1DImporter(SpectrumImporter):
         self._input = value
 
     @property
+    def is_valid(self):
+        return self.config == 'deconfigged'
+
+    @property
     def default_data_label_from_resolver(self):
         if hasattr(self, 'new_default_data_label'):
             return self.new_default_data_label
