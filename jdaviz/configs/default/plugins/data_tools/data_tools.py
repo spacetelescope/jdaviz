@@ -53,7 +53,6 @@ class DataTools(TemplateMixin):
         """
         self.app._rename_data(old_label, new_label, data)
 
-
     def vue_load_data(self, *args, **kwargs):
         if self._file_upload.file_path is None:
             self.error_message = "No file selected"

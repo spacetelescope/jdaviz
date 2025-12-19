@@ -1,4 +1,3 @@
-import contextlib
 import operator
 import os
 import pathlib
