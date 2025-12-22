@@ -1791,7 +1791,8 @@ class Application(VuetifyTemplate, HubListener):
                 # Rename all children, transforming their labels to
                 # maintain the suffix relationship
                 for child_label in children_labels:
-                    new_child_label = child_label.replace(old_label, new_label, count=1)
+                    # only change first instance (just in case)
+                    new_child_label = child_label.replace(old_label, new_label, 1)
                     self._rename_single_data(child_label,
                                              new_child_label,
                                              self.data_collection[child_label])
