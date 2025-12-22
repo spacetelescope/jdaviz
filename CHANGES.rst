@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Datasets can now be renamed via API. [#3960]
+
 Cubeviz
 ^^^^^^^
 
