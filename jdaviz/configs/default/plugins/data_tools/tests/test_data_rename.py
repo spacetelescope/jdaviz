@@ -6,8 +6,7 @@ import pytest
 
 def test_data_rename_message():
     """
-    Test that DataRenamedMessage is properly defined and can be
-    instantiated.
+    Test that DataRenamedMessage is properly defined and can be instantiated.
     """
     from jdaviz.core.events import DataRenamedMessage
 
@@ -42,10 +41,15 @@ def test_basic_data_rename(deconfigged_helper, input_data, data_format, request)
     dcf_dc = deconfigged_helper.app.data_collection
     # Check state.data_items
     state_items_before = [item['name'] for item in deconfigged_helper.app.state.data_items]
+    # Check the layer_icon
+    icon = deconfigged_helper.app.state.layer_icons['label_before']
 
-    # Verify data was added
+    # Verify data was added in the data collection, state.data_items, and layer_icons
     assert 'label_before' in dcf_dc.labels
     assert 'label_before' in state_items_before
+    assert 'label_before' in deconfigged_helper.app.state.layer_icons
+    # Check _renaming_data flag
+    assert deconfigged_helper.app._renaming_data is False
 
     # Rename the data
     deconfigged_helper.app._rename_data('label_before', 'label_after')
@@ -56,32 +60,47 @@ def test_basic_data_rename(deconfigged_helper, input_data, data_format, request)
     # Verify old name is gone and new name exists
     assert 'label_before' not in dcf_dc.labels
     assert 'label_before' not in state_items_after
+
     assert 'label_after' in dcf_dc.labels
     assert 'label_after' in state_items_after
+
+    assert 'label_before' not in deconfigged_helper.app.state.layer_icons
+    assert 'label_after' in deconfigged_helper.app.state.layer_icons
+
+    # Check _renaming_data flag again (can't interrupt during rename, but can check after)
+    assert deconfigged_helper.app._renaming_data is False
 
     # Verify the data object's label was updated
     data_obj = deconfigged_helper.app.data_collection['label_after']
     assert data_obj.label == 'label_after'
 
+    # Verify that the icon reference has changed but not the icon
+    assert deconfigged_helper.app.state.layer_icons['label_after'] == icon
 
-def test_rename_data_invalid_name(deconfigged_helper):
+
+def test_rename_data_errors(deconfigged_helper, image_hdu_wcs):
     """
-    Test that renaming to a non-existent data raises an error.
+    Test that:
+     * renaming to a non-existent data raises an error.
+     * renaming to an existing name raises an error.
+     * renaming to a reserved label raises an error.
     """
+    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='data1')
+
+    # Try to rename non-existent data
     with pytest.raises(ValueError):
         deconfigged_helper.app._rename_data('nonexistent', 'new_name')
 
-
-def test_rename_data_duplicate_name(deconfigged_helper, image_hdu_wcs):
-    """
-    Test that renaming to an existing name raises an error.
-    """
-    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='data1')
     deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='data2')
 
     # Try to rename data1 to data2 (which already exists)
     with pytest.raises(ValueError):
         deconfigged_helper.app._rename_data('data1', 'data2')
+
+    # Try to rename with a reserved label
+    reserved_label = list(deconfigged_helper.app._reserved_labels)[0]
+    with pytest.raises(ValueError):
+        deconfigged_helper.app._rename_data('data1', reserved_label)
 
 
 def test_rename_data_updates_reserved_labels(deconfigged_helper, image_hdu_wcs):
@@ -99,42 +118,6 @@ def test_rename_data_updates_reserved_labels(deconfigged_helper, image_hdu_wcs):
     # Check labels were updated
     assert 'reserved_test' not in deconfigged_helper.app._reserved_labels
     assert 'reserved_test_new' in deconfigged_helper.app._reserved_labels
-
-
-def test_rename_data_with_layer_icons(deconfigged_helper, image_hdu_wcs):
-    """
-    Test that layer icons are updated when renaming data.
-    """
-    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='icon_test')
-
-    # Verify icon exists for the data
-    assert 'icon_test' in deconfigged_helper.app.state.layer_icons
-
-    # Get the icon
-    icon = deconfigged_helper.app.state.layer_icons['icon_test']
-
-    # Rename
-    deconfigged_helper.app._rename_data('icon_test', 'icon_test_new')
-
-    # Verify old icon is gone and new icon exists with same value
-    assert 'icon_test' not in deconfigged_helper.app.state.layer_icons
-    assert 'icon_test_new' in deconfigged_helper.app.state.layer_icons
-    assert deconfigged_helper.app.state.layer_icons['icon_test_new'] == icon
-
-
-def test_rename_data_renaming_flag(deconfigged_helper, image_hdu_wcs):
-    """
-    Test that _renaming_data flag is properly set and cleared.
-    """
-    deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='flag_test')
-
-    # Flag should be False initially
-    assert deconfigged_helper.app._renaming_data is False
-
-    # We can't easily intercept during the rename, but we can verify
-    # it's False afterward
-    deconfigged_helper.app._rename_data('flag_test', 'flag_test_new')
-    assert deconfigged_helper.app._renaming_data is False
 
 
 def test_rename_data_broadcasts_message(deconfigged_helper, image_hdu_wcs):
@@ -168,7 +151,6 @@ def test_rename_data_broadcasts_message(deconfigged_helper, image_hdu_wcs):
     deconfigged_helper.app._rename_data('message_test', 'message_test_new')
 
     # Check message was broadcast
-    assert len(messages_received) > 0
     msg = messages_received[-1]
     assert msg.old_label == 'message_test'
     assert msg.new_label == 'message_test_new'
@@ -176,31 +158,30 @@ def test_rename_data_broadcasts_message(deconfigged_helper, image_hdu_wcs):
 
 def test_rename_data_no_auto_extraction_on_2d_spectrum(deconfigged_helper, spectrum2d):
     """
-    Test that renaming a 2D spectrum does NOT trigger auto-extraction
-    of a 1D spectrum.
-
-    This is the critical test case that verifies the fix for the
-    auto-extraction issue.
+    Test that renaming a 2D spectrum does NOT trigger auto-extraction of a 1D spectrum.
     """
     # Load the 2D spectrum
-    deconfigged_helper.load(spectrum2d, format='2D Spectrum',
-                            data_label='2d_spectrum')
-    specviz2d_dc = deconfigged_helper.app.data_collection
+    deconfigged_helper.load(spectrum2d, format='2D Spectrum', data_label='2d_spectrum')
+    dcf_dc = deconfigged_helper.app.data_collection
+
+    assert '2d_spectrum' in dcf_dc.labels
+    assert '2d_spectrum (auto-ext)' in dcf_dc.labels
 
     # Record the current number of data items
-    labels_before = set(specviz2d_dc.labels)
+    labels_before = set(dcf_dc.labels)
 
     # Rename the 2D spectrum
     deconfigged_helper.app._rename_data('2d_spectrum', '2d_spectrum_renamed')
 
-    # Verify rename was successful
-    assert '2d_spectrum_renamed' in specviz2d_dc.labels
-    assert '2d_spectrum' not in specviz2d_dc.labels
+    # Verify rename (of 2d spectrum only) was successful
+    assert '2d_spectrum' not in dcf_dc.labels
+    assert '2d_spectrum_renamed' in dcf_dc.labels
+    assert '2d_spectrum (auto-ext)' in dcf_dc.labels
 
-    # CRITICAL: Verify NO new data was auto-extracted
+    # Verify no new data was auto-extracted
     # The number of data items should remain the same (or only increase
     # if there was already a 1D spectrum that got its name updated)
-    labels_after = set(specviz2d_dc.labels)
+    labels_after = set(dcf_dc.labels)
 
     # The only new labels should be from renaming (if any extraction
     # happened, there would be additional extracted spectrum names)
@@ -236,3 +217,17 @@ def test_rename_data_with_children(deconfigged_helper, spectrum2d):
 
     assert '2d_spectrum_renamed' in dcf_dc.labels
     assert '2d_spectrum_renamed (auto-ext)' in dcf_dc.labels
+
+    # Rename parent data (again) - should not rename child
+    deconfigged_helper.app._rename_data('2d_spectrum_renamed',
+                                        '2d_spectrum_renamed_again',
+                                        rename_linked_data=False)  # default is False
+
+    # Check the parent label
+    assert '2d_spectrum_renamed' not in dcf_dc.labels
+    assert '2d_spectrum_renamed_again' in dcf_dc.labels
+
+    # Check that the auto-extraction *was not* updated with the new label
+    assert '2d_spectrum_renamed_again (auto-ext)' not in dcf_dc.labels
+    assert '2d_spectrum_renamed (auto-ext)' in dcf_dc.labels
+
