@@ -63,6 +63,7 @@ Other Changes and Additions
 
 Bug Fixes
 ---------
+- Fixed bug when deleting subsets in deconfigged. [#3951]
 
 - Fixed bugs in aperture photometry plugin for images in deconfigged, where the _cube_wave attribute,
   which is not applicable to images, was being accessed. [#3950]
