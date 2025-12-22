@@ -1426,6 +1426,65 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                 self.selected = event['old']
                 raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
 
+    def _update_selected_on_rename(self, old_label, new_label):
+        """
+        Update selected value when an item is renamed.
+
+        This bypasses observers by directly updating _trait_values to prevent
+        plugins from re-processing data unnecessarily.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the renamed item.
+        new_label : str
+            The new label of the renamed item.
+
+        Returns
+        -------
+        updated : bool
+            True if selected was updated, False otherwise.
+        """
+        # Check if selected needs updating
+        update_selected = False
+        if self.is_multiselect:
+            if old_label in self.selected:
+                update_selected = True
+        else:
+            if self.selected == old_label:
+                update_selected = True
+
+        # Update selected label directly in _trait_values to bypass observers
+        if update_selected:
+            if self.is_multiselect:
+                new_selected = [new_label if sel == old_label else sel
+                                for sel in self.selected]
+                self._trait_values['selected'] = new_selected
+            else:
+                self._trait_values['selected'] = new_label
+            # Sync to frontend
+            self.send_state('selected')
+
+        return update_selected
+
+    def _update_items_on_rename(self, old_label, new_label):
+        """
+        Update items list when an item is renamed.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the renamed item.
+        new_label : str
+            The new label of the renamed item.
+        """
+        # Find and update the item in the list
+        for item in self.items:
+            if item['label'] == old_label:
+                item['label'] = new_label
+                break
+        self.send_state('items')
+
 
 class SelectFileExtensionComponent(SelectPluginComponent):
     def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
@@ -2195,11 +2254,7 @@ class LayerSelect(SelectPluginComponent):
 
     def _on_subset_renamed(self, msg):
         # Find the subset in self.items and update the label
-        for item in self.items:
-            if item['label'] == msg.old_label:
-                item['label'] = msg.new_label
-                break
-        self.send_state("items")
+        self._update_items_on_rename(msg.old_label, msg.new_label)
 
     def _on_data_renamed(self, msg):
         """
@@ -2209,31 +2264,10 @@ class LayerSelect(SelectPluginComponent):
         observers, preventing plugins from re-processing data.
         """
         # Update selected if it matches the old label
-        update_selected = False
-        if self.is_multiselect:
-            if msg.old_label in self.selected:
-                update_selected = True
-        else:
-            if self.selected == msg.old_label:
-                update_selected = True
-
-        if update_selected:
-            if self.is_multiselect:
-                new_selected = [
-                    msg.new_label if sel == msg.old_label else sel
-                    for sel in self.selected
-                ]
-                self._trait_values['selected'] = new_selected
-            else:
-                self._trait_values['selected'] = msg.new_label
-            self.send_state('selected')
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
 
         # Update items list
-        for item in self.items:
-            if item['label'] == msg.old_label:
-                item['label'] = msg.new_label
-                break
-        self.send_state('items')
+        self._update_items_on_rename(msg.old_label, msg.new_label)
 
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
@@ -2708,23 +2742,9 @@ class SubsetSelect(SelectPluginComponent):
     def _on_subset_renamed(self, msg):
         if self.mode == 'rename:accept':
             pass
-        # See if we're renaming the selected subset
-        update_selected = False
-        if self.selected == msg.old_label:
-            update_selected = True
-
-        # Find the subset in self.items and update the label
-        for subset in self.items:
-            if subset['label'] == msg.old_label:
-                subset['label'] = msg.new_label
-                break
-
-        # Update the selected label if needed
-        if update_selected:
-            self.selected = msg.new_label
-
-        # Force the traitlet to update.
-        self.send_state('items')
+        # Update selected if needed, then update items list
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
+        self._update_items_on_rename(msg.old_label, msg.new_label)
 
     def _rename_subset(self, old_label, new_label):
         self._on_rename(old_label, new_label)
@@ -4540,26 +4560,8 @@ class DatasetSelect(SelectPluginComponent):
         and calls _apply_default_selection, the selected value is valid
         and won't be changed (which would trigger observers).
         """
-        # Check if selected needs updating
-        update_selected = False
-        if self.is_multiselect:
-            if msg.old_label in self.selected:
-                update_selected = True
-        else:
-            if self.selected == msg.old_label:
-                update_selected = True
-
-        # Update selected label directly in _trait_values to bypass
-        # observers. This prevents plugins from re-processing data.
-        if update_selected:
-            if self.is_multiselect:
-                new_selected = [msg.new_label if sel == msg.old_label else sel
-                                for sel in self.selected]
-                self._trait_values['selected'] = new_selected
-            else:
-                self._trait_values['selected'] = msg.new_label
-            # Sync to frontend
-            self.send_state('selected')
+        # Update selected label directly in _trait_values to bypass observers
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
 
 
 class DatasetSelectMixin(VuetifyTemplate, HubListener):
