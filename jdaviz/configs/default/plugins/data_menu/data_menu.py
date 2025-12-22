@@ -685,7 +685,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
 
-    def rename_data(self, old_label, new_label, data=None):
+    def rename_data(self, old_label, new_label):
         """
         Rename a data item in the application.
 
@@ -695,12 +695,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             The current label of the data item.
         new_label : str
             The new label to assign to the data item.
-        data : object, optional
-            The data object to rename. If None, the application will search
-            for the data item by its label.
         -----------
         """
-        self.app._rename_data(old_label, new_label, data)
+        self.app._rename_data(old_label, new_label)
 
     def create_subset(self, subset_type):
         """
