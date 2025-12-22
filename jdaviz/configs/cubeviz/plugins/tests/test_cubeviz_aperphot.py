@@ -22,7 +22,7 @@ def test_cubeviz_aperphot_cube_orig_flux(request, helper_str, image_cube_hdu_obj
         match_str = r'No data item found with label.*'
 
     elif helper_str == 'deconfigged_helper':
-        helper.load(image_cube_hdu_obj_microns, data_label="test")
+        helper.load(image_cube_hdu_obj_microns, format='3D Spectrum', data_label="test")
         flux_label = 'test'
         unc_viewer = '3D Spectrum (1)'
         match_str = r'Could not identify viewer with reference.*'
