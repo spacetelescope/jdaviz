@@ -209,10 +209,6 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                 return True
         return False
 
-    @property
-    def _is_2d_spectrum(self):
-        return isinstance(self.input, Spectrum) and self.input.flux.ndim == 2
-
     def _apply_spectral_mask(self, spec):
         # The masks (spec.spectral_axis.mask and spec.mask) for WFSS L3 spectra
         # may not be equivalent, so we only apply the spectral_axis mask to avoid
