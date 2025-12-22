@@ -157,6 +157,9 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                                            default_mode='first')
         self.mask_extension.select_default()
 
+        # set default data-label
+        self._on_extension_change()
+
     def _cleanup(self):
         for attr in ('extension', 'unc_extension', 'mask_extension'):
             if not hasattr(self, attr):
@@ -360,7 +363,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
              'extension_selected',
              'unc_extension_selected',
              'mask_extension_selected')
-    def _on_extension_change(self, change):
+    def _on_extension_change(self, change={}):
         self._clear_cache('spectra')
 
         if not hasattr(self, 'extension'):

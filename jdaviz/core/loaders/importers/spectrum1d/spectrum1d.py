@@ -27,7 +27,8 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._set_default_data_label()
+        # set default data-label
+        self._on_extension_change()
 
     @staticmethod
     def _get_supported_viewers():
@@ -79,12 +80,22 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         else:
             return '1D Spectrum'
 
-    @observe('extension_selected')
-    def _set_default_data_label(self, event={}):
+    @observe('extension_items',
+             'extension_selected',
+             'concatenate')
+    def _on_extension_change(self, change={}):
+        # override SpectrumInputExtensionsMixin method to handle concatenate case
+        self._clear_cache('spectra')
+
+        if not hasattr(self, 'extension'):
+            return
+        self.data_label_is_prefix = self.multiselect and len(self.extension.selected) > 1 and not self.concatenate
         # data_label_is_prefix is set in SpectrumInputExtensionsMixin,
         # but may be updated after this
         if not hasattr(self, 'extension'):
             self.data_label_default = self.default_data_label_prefix
+        elif self.multiselect and len(self.extension.selected) > 1 and self.concatenate:
+            self.data_label_default = f"{self.default_data_label_prefix}_concat"
         elif self.multiselect and len(self.extension.selected) == 1 and len(self.extension.choices) > 1:  # noqa
             item_dict = self.extension.selected_item_list[0]
             self.data_label_default = f"{self.default_data_label_prefix}_{item_dict['suffix']}"
@@ -142,11 +153,11 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
             pixar_sr = getattr(spec, 'meta', {}).get('PIXAR_SR', 1.0)
             flux_units = to_flux_density_unit(spec.flux.unit, pixar_sr)
 
-            return combine_lists_to_1d_spectrum(wlallorig,
-                                                fnuallorig,
-                                                dfnuallorig,
-                                                wave_units,
-                                                flux_units)
+            return [combine_lists_to_1d_spectrum(wlallorig,
+                                                 fnuallorig,
+                                                 dfnuallorig,
+                                                 wave_units,
+                                                 flux_units)]
 
         return output
 
