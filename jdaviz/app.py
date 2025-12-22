@@ -1742,7 +1742,7 @@ class Application(VuetifyTemplate, HubListener):
                 f"Data '{data_label}' successfully added.", sender=self, color="success")
             self.hub.broadcast(snackbar_message)
 
-    def _rename_data(self, old_label, new_label, data=None, rename_linked_data=False):
+    def _rename_data(self, old_label, new_label):
         """
         Rename data in the data collection and update all references.
 
@@ -1752,27 +1752,14 @@ class Application(VuetifyTemplate, HubListener):
             The current label of the data to rename.
         new_label : str
             The new label for the data.
-        data : glue.core.Data, optional
-            The data object to rename. If None, the data will be
-            retrieved from the data collection using old_label.
-        rename_linked_data : bool
-            Whether to rename any data linked to the target data
-            that shares the same name/prefix.
         """
-        if data is not None and data.label != old_label:
-            raise ValueError(f'Data label "{data.label}" does not match '
-                             f'old_label "{old_label}".')
-
         # Check if new label already exists in reserved labels
         if new_label in self._reserved_labels and new_label != old_label:
             msg = (f'Cannot rename data to {new_label}: '
-                   'name already exists in data collection or subsets.')
+                   'name already exists in data collection or subsets or is unavailable.')
             raise ValueError(msg)
 
-        if data is None:
-            # No need to wrap this in a try/except since the
-            # error raised is appropriate
-            data = self.data_collection[old_label]
+        data = self.data_collection[old_label]
 
         # Set flag to indicate rename is in progress
         # This allows handlers to skip processing during renames
@@ -1781,81 +1768,8 @@ class Application(VuetifyTemplate, HubListener):
             # Rename the data object
             self._rename_single_data(old_label, new_label, data)
 
-            if rename_linked_data:
-                # Identify children by string matching: find all data labels
-                # that start with old_label and have a suffix (e.g.,
-                # 'spectrum 2d' -> 'spectrum 2d (auto-ext)')
-                children_labels = self._find_child_labels(old_label, new_label)
-                print('children labels found', children_labels)
-
-                # Rename all children, transforming their labels to
-                # maintain the suffix relationship
-                for child_label in children_labels:
-                    # only change first instance (just in case)
-                    new_child_label = child_label.replace(old_label, new_label, 1)
-                    self._rename_single_data(child_label,
-                                             new_child_label,
-                                             self.data_collection[child_label])
-
-            # Update data associations to reflect the new label(s)
-            # if old_label in self._data_associations:
-            #     assoc_entry = self._data_associations.pop(old_label)
-            #     # If we renamed children, update their labels in the
-            #     # children list
-            #     if rename_linked_data:
-            #         assoc_entry['children'] = [
-            #             child.replace(old_label, new_label, count=1)
-            #             for child in assoc_entry['children']
-            #         ]
-            #     self._data_associations[new_label] = assoc_entry
-            #
-            #     # Update children's parent references
-            #     for child in assoc_entry['children']:
-            #         if child in self._data_associations:
-            #             self._data_associations[child]['parent'] = new_label
         finally:
             self._renaming_data = False
-
-    def _find_child_labels(self, old_parent_label, new_parent_label):
-        """
-        Find all data labels that are children of the parent.
-
-        Uses string matching to identify children: any data label that
-        starts with parent_label and has a non-empty suffix is
-        considered a child. For example, 'spectrum 2d' is the parent
-        of 'spectrum 2d (auto-ext)', 'spectrum 2d [SCI,1]', etc.
-
-        Parameters
-        ----------
-        parent_label : str
-            The parent data label to search for children of.
-
-        Returns
-        -------
-        children : list
-            List of child data labels.
-        """
-        children = []
-        for dc_label in self.data_collection.labels:
-            # Check if label starts with new parent label and has an old parent label suffix
-            # Since we renamed the parent first, we have to check both old and new labels
-            if dc_label != new_parent_label and dc_label.startswith(old_parent_label):
-                # Check if the child label and parent label are linked
-                linked = False
-                for link in self.data_collection.external_links:
-                    label1 = link.data1.label
-                    label2 = link.data2.label
-                    print(label1, "<=>", label2)
-                    if ((label1 == new_parent_label and label2 == dc_label) or
-                            (label2 == new_parent_label and label1 == dc_label)):
-                        linked = True
-                        break
-
-                # If linked, and there is a suffix, consider it a child
-                if linked and len(dc_label.replace(old_parent_label, '')) != 0:
-                    children.append(dc_label)
-
-        return children
 
     def _rename_single_data(self, old_label, new_label, data):
         """
