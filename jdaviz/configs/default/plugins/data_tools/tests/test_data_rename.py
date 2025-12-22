@@ -230,4 +230,3 @@ def test_rename_data_with_children(deconfigged_helper, spectrum2d):
     # Check that the auto-extraction *was not* updated with the new label
     assert '2d_spectrum_renamed_again (auto-ext)' not in dcf_dc.labels
     assert '2d_spectrum_renamed (auto-ext)' in dcf_dc.labels
-
