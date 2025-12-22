@@ -29,13 +29,17 @@ def _spectrum_assign_component_type(comp_id, comp, units, physical_type):
     if units in ('ct', 'pixel'):
         physical_type = units
 
-    if physical_type is None:
-        return None
     if comp_id in SPECTRAL_AXIS_COMP_LABELS:
+        if 'Pixel Axis' in comp_id:
+            return 'pixel_spectral_axis'
         if physical_type in ('frequency', 'length', 'pixel'):
             # link frequency to wavelength
             return 'spectral_axis'
-        return f'spectral_axis:{physical_type}'
+        if physical_type is not None:
+            return f'spectral_axis:{physical_type}'
+
+    if physical_type is None:
+        return None
     if comp_id == 'uncertainty':
         # don't link with flux columns
         return f'uncertainty:{physical_type}'
