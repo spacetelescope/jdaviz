@@ -36,23 +36,6 @@ class DataTools(TemplateMixin):
         else:
             self.valid_path = True
 
-    def rename_data(self, old_label, new_label, data=None):
-        """
-        Rename a data item in the application.
-
-        Parameters
-        ----------
-        old_label : str
-            The current label of the data item.
-        new_label : str
-            The new label to assign to the data item.
-        data : object, optional
-            The data object to rename. If None, the application will search
-            for the data item by its label.
-        -----------
-        """
-        self.app._rename_data(old_label, new_label, data)
-
     def vue_load_data(self, *args, **kwargs):
         if self._file_upload.file_path is None:
             self.error_message = "No file selected"
