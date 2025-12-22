@@ -797,18 +797,17 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
+                new_parent_label = self._get_assoc_data_parent(new_data.label)
+                existing_parent_label = self._get_assoc_data_parent(existing_data.label)
+
+                is_related = (
+                    new_parent_label == existing_data.label or
+                    existing_parent_label == new_data.label or
+                    (new_parent_label and new_parent_label == existing_parent_label)
+                )
+
                 # For pixel spectral axes, allows 2D-to-1D linking
                 if new_comp._component_type == 'pixel_spectral_axis':
-                    # Check parent-child relationship using data associations
-                    new_parent_label = self._get_assoc_data_parent(new_data.label)
-                    existing_parent_label = self._get_assoc_data_parent(existing_data.label)
-
-                    is_related = (
-                        new_parent_label == existing_data.label or
-                        existing_parent_label == new_data.label or
-                        (new_parent_label and new_parent_label == existing_parent_label)
-                    )
-
                     # Allow linking if different dimensions with world spectral axes
                     if not is_related and new_data.ndim != existing_data.ndim:
                         is_related = (
@@ -818,12 +817,16 @@ class Application(VuetifyTemplate, HubListener):
                                 for c in existing_data.components)
                         )
 
+                    if not is_related and new_data.ndim == existing_data.ndim:
+                        is_related = True
+
                     if not is_related:
                         continue
 
                 if (new_comp._component_type == 'spectral_axis' and
                    new_data.ndim == existing_data.ndim):
-                    continue
+                    if is_related:
+                        continue
 
                 for existing_comp in existing_data.components:
                     if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
