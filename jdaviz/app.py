@@ -797,8 +797,7 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
-                # For pixel spectral axes, only link if the datasets are related, allowing 2D-to-1D linking
-                # for extracted spectra, preventing linking between independent datasets with different WCS
+                # For pixel spectral axes, allows 2D-to-1D linking
                 if new_comp._component_type == 'pixel_spectral_axis':
                     # Check parent-child relationship using data associations
                     new_parent_label = self._get_assoc_data_parent(new_data.label)
@@ -809,21 +808,21 @@ class Application(VuetifyTemplate, HubListener):
                         existing_parent_label == new_data.label or
                         (new_parent_label and new_parent_label == existing_parent_label)
                     )
-                    
+
                     # Allow linking if different dimensions with world spectral axes
                     if not is_related and new_data.ndim != existing_data.ndim:
                         is_related = (
-                            any(getattr(c, '_component_type', None) == 'spectral_axis' 
+                            any(getattr(c, '_component_type', None) == 'spectral_axis'
                                 for c in new_data.components) and
-                            any(getattr(c, '_component_type', None) == 'spectral_axis' 
+                            any(getattr(c, '_component_type', None) == 'spectral_axis'
                                 for c in existing_data.components)
                         )
-                    
+
                     if not is_related:
                         continue
 
                 if (new_comp._component_type == 'spectral_axis' and
-                    new_data.ndim == existing_data.ndim):
+                   new_data.ndim == existing_data.ndim):
                     continue
 
                 for existing_comp in existing_data.components:
