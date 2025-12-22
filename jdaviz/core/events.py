@@ -375,10 +375,11 @@ class FootprintSelectClickEventMessage(Message):
     Message emitted when a user clicks on a viewer to select an overlay.
     """
 
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, data, mode="nearest", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.x = data["domain"]["x"]
         self.y = data["domain"]["y"]
+        self.mode = mode
 
 
 class FootprintOverlayClickMessage(Message):
@@ -386,10 +387,11 @@ class FootprintOverlayClickMessage(Message):
     Message emitted when a user clicks on a viewer to select a footprint/region overlay.
     """
 
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, data, mode="nearest", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.x = data["domain"]["x"]
         self.y = data["domain"]["y"]
+        self.mode = mode
 
 
 class RedshiftMessage(Message):
