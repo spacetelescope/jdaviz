@@ -186,12 +186,12 @@
                         />
                     </v-list-item-icon>
                     <v-list-item-content>
-                      <span style="display: inline-block">
-                        <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                        <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                        <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                        {{ item.label }}
-                      </span>
+                      <j-rename-text
+                        :value="item.label"
+                        :show-pencil="true"
+                        edit-hint="Rename data"
+                        @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
+                      />
                     </v-list-item-content>
                     <v-list-item-action>
                       <j-tooltip
