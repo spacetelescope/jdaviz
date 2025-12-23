@@ -699,6 +699,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         """
         self.app._rename_data(old_label, new_label)
 
+    def vue_rename_item(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+
+        # Check if this is a subset by looking in subset_groups
+        is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
+
+        if is_subset:
+            self.app._rename_subset(old_label, new_label)
+        else:
+            self.rename_data(old_label, new_label)
+
     def create_subset(self, subset_type):
         """
         Interactively create a new subset in the viewer.  This sets the app-wide subset
