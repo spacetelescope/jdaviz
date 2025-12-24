@@ -10,6 +10,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed a traceback when mousing over a 2D viewer with only 2D (non-cube) data loaded into it. [#3959]
+
 Imviz
 ^^^^^
 
