@@ -1,38 +1,43 @@
 <template>
   <div>
-    <!-- Display mode: shows label with hover effects -->
-    <span
+    <!-- Display mode -->
+    <div
       v-if="!isEditing"
-      style="display: inline-block"
       @mouseenter="hovering = true"
       @mouseleave="hovering = false"
-      @dblclick="startEditing"
+      @click="handleClick"
+      @dblclick.stop="startEditing"
+      style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px;"
     >
-      <span
-        :style="hovering ? 'text-decoration: underline; cursor: pointer;' : ''"
-      >
-        {{ currentValue }}
-      </span>
+      <div style="display: flex; align-items: center; flex-grow: 1;">
+        <span
+          :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
+        >
+          {{ currentValue }}
+        </span>
+      </div>
+
+      <!-- Pencil icon - visible on hover in display mode -->
       <v-icon
         v-if="hovering && showPencil"
         small
-        style="margin-left: 4px; cursor: pointer;"
-        @click="startEditing"
+        style="margin-left: 8px; cursor: pointer; flex-shrink: 0;"
+        @click.stop="startEditing"
       >
         mdi-pencil
       </v-icon>
-    </span>
+    </div>
 
     <!-- Edit mode: shows text field with cancel and confirm buttons -->
     <v-text-field
-      v-else
+      v-if="isEditing"
       v-model="editValue"
       @keyup="handleKeyup"
       autofocus
       dense
       :hint="editHint"
       persistent-hint
-      style="margin-top: -8px"
+      style="margin-top: -8px; flex-grow: 1;"
     >
       <template v-slot:append>
         <j-tooltip tooltipcontent="Cancel change">
@@ -70,7 +75,9 @@ module.exports = {
     return {
       hovering: false,
       isEditing: this.autoEdit,
-      editValue: this.value
+      editValue: this.value,
+      clickTimer: null,
+      clickCount: 0
     };
   },
   computed: {
@@ -86,7 +93,34 @@ module.exports = {
     }
   },
   methods: {
+    handleClick(event) {
+      this.clickCount++;
+
+      // Clear any existing timer
+      if (this.clickTimer) {
+        clearTimeout(this.clickTimer);
+        this.clickTimer = null;
+      }
+
+      // If this is the second click, stop propagation to prevent selection toggle
+      if (this.clickCount > 1) {
+        event.stopPropagation();
+        return;
+      }
+
+      // First click - set timer to reset count after double-click window
+      this.clickTimer = setTimeout(() => {
+        this.clickCount = 0;
+        this.clickTimer = null;
+      }, 250);
+    },
     startEditing() {
+      // Clear the click timer and reset count when editing starts
+      if (this.clickTimer) {
+        clearTimeout(this.clickTimer);
+        this.clickTimer = null;
+      }
+      this.clickCount = 0;
       this.isEditing = true;
       this.editValue = this.value;
     },
