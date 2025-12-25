@@ -465,7 +465,7 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
         self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
-        msg = FootprintSelectClickEventMessage(data, mode="nearest", sender=self)
+        msg = FootprintSelectClickEventMessage(data, sender=self)
         self.viewer.session.hub.broadcast(msg)
 
     def is_visible(self):
