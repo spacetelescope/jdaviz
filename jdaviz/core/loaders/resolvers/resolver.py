@@ -33,7 +33,8 @@ from jdaviz.core.registries import (loader_resolver_registry,
 from jdaviz.core.user_api import LoaderUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.region_translators import is_stcs_string, stcs_string2region
-from jdaviz.utils import download_uri_to_path, find_closest_polygon_mark, layer_is_image_data
+from jdaviz.utils import (download_uri_to_path, find_closest_polygon_mark,
+                          find_polygon_mark_with_skewer, layer_is_image_data)
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 
@@ -320,7 +321,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     's_region' in self.observation_table.headers_avail):
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion']], 'jdaviz:selectregion'  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion', 'jdaviz:skewerregion']], 'jdaviz:selectregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
@@ -657,7 +658,13 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         ]
 
         click_x, click_y = msg.x, msg.y
-        selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
+        
+        # Determine selection mode
+        mode = getattr(msg, 'mode', 'nearest')
+        if mode == 'skewer':
+            selected_idx = find_polygon_mark_with_skewer(click_x, click_y, click_viewer, region_marks)
+        else:
+            selected_idx = find_closest_polygon_mark(click_x, click_y, region_marks)
 
         if selected_idx is not None:
             currently_selected = set()
