@@ -557,7 +557,7 @@ def test_line_analysis_deconfig(deconfigged_helper):
                 break
         return line_visible
     s = Spectrum(spectral_axis=np.arange(0, 100, 1) * u.um, flux=np.arange(0, 100, 1) * u.Jy)
-    deconfigged_helper.load(s)
+    deconfigged_helper.load(s, format='1D Spectrum')
     # Create 1D viewer
     vc = deconfigged_helper.new_viewers['1D Spectrum']
     vc()

@@ -629,19 +629,19 @@ class TestLoadData:
         Test load_data with concat_by_file=True.
         """
         initial_count = len(specviz_helper.app.data_collection)
-        with pytest.warns(UserWarning, match='default source selection'):
+        with pytest.warns(UserWarning, match='default extension selection'):
             specviz_helper.load_data(
                 premade_spectrum_list,
                 data_label='concatenated',
                 concat_by_file=True
             )
-        assert len(specviz_helper.app.data_collection) > initial_count
+        assert len(specviz_helper.app.data_collection) == initial_count + 1
 
     def test_load_data_with_load_as_list(self, specviz_helper, premade_spectrum_list):
         """
         Test load_data with load_as_list=True.
         """
-        with pytest.warns(UserWarning, match='default source selection'):
+        with pytest.warns(UserWarning, match='default extension selection'):
             specviz_helper.load_data(
                 premade_spectrum_list,
                 data_label='as_list',

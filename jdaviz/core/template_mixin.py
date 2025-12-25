@@ -1150,12 +1150,22 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return {'label': item}
 
     def __repr__(self):
+        choices_repr = self._repr_choices()
         if self.allow_multiselect:
             if self.is_multiselect and isinstance(self.selected, list):
                 # NOTE: selected is a list here so should not be wrapped with quotes
-                return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
-            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
-        return f"<selected='{self.selected}' choices={self.choices}>"
+                return f"<selected={self.selected} multiselect={self.multiselect} choices={choices_repr}>"  # noqa
+            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={choices_repr}>"  # noqa
+        return f"<selected='{self.selected}' choices={choices_repr}>"
+
+    def _repr_choices(self):
+        repr_limit = 6
+        choices = list(self.choices)
+        if len(choices) <= repr_limit:
+            return choices
+        # limit how many options we show in repr to keep it manageable
+        preview = choices[:repr_limit]
+        return f"{str(preview)[:-1]}, ... ({len(choices)} total)]"
 
     def __eq__(self, other):
         return self.selected == other
@@ -1373,13 +1383,18 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         default_empty = [] if self.is_multiselect else ''
         if self.default_mode == 'first':
-            self.selected = self.labels[0] if len(self.labels) else default_empty
+            selected = self.labels[0] if len(self.labels) else default_empty
         elif self.default_mode == 'second':
-            self.selected = self.labels[1] if len(self.labels) > 1 else default_empty
+            selected = self.labels[1] if len(self.labels) > 1 else default_empty
         elif self.default_mode == 'default_text':
-            self.selected = self._default_text if self._default_text else default_empty
+            selected = self._default_text if self._default_text else default_empty
         else:
-            self.selected = default_empty
+            selected = default_empty
+
+        if self.is_multiselect:
+            self.selected = [selected]
+        else:
+            self.selected = selected
         self._clear_cache(*self._cached_properties)
 
     def _is_valid_item(self, item, filter_callables={}):
@@ -1422,9 +1437,11 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
 
 class SelectFileExtensionComponent(SelectPluginComponent):
-    def __init__(self, plugin, items, selected, multiselect=None, manual_options=[], filters=[]):
+    def __init__(self, plugin, items, selected, multiselect=None,
+                 manual_options=[], filters=[], default_mode=None):
         super().__init__(plugin, items=items, selected=selected, multiselect=multiselect,
-                         manual_options=manual_options, filters=filters)
+                         manual_options=manual_options, filters=filters,
+                         default_mode=default_mode)
 
     @property
     def selected_index(self):
@@ -1441,6 +1458,8 @@ class SelectFileExtensionComponent(SelectPluginComponent):
     def selected_obj(self):
         # returns HDU (for HDUList) or ndarray (for ImageModel/DataModel)
         if self.is_multiselect:
+            if self.selected_index is None:
+                return []
             return [self._get_selected_obj(index) for index in self.selected_index]
         return self._get_selected_obj(self.selected_index)
 
