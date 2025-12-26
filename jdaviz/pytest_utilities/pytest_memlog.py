@@ -358,18 +358,24 @@ def memlog_runtest_teardown(item, _):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def memlog_runtest_makereport(item, call):
+def memlog_runtest_makereport(item, call, report):
     """
-    Hook wrapper to attach memory measurements to report user_properties.
+    Attach memory measurements to report user_properties.
 
     This runs during report creation when we still have access to the item.
     The user_properties are serialized and sent to master in xdist. We track
     USS, RSS, and Swap for each test, though the analysis focuses on
     USS + Swap as the primary memory allocation metric.
-    """
-    outcome = yield
-    report = outcome.get_result()
 
+    Parameters
+    ----------
+    item : pytest.Item
+        The test item.
+    call : pytest.CallInfo
+        The call information.
+    report : pytest.TestReport
+        The test report object.
+    """
     if call.when != 'teardown':
         return
 
