@@ -452,8 +452,8 @@ def test_roman_1d_spectrum(helper, request):
     ldr = helper.loaders['url']
     # wfi_spec_combined_1d_r0000201001001001001_0002_WFI01.asdf
     ldr.url = 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf'
-    assert len(ldr.importer.extension.choices) > 1
     ldr.format = '1D Spectrum'
+    assert len(ldr.importer.extension.choices) > 1
 
     ldr.load()
     assert len(helper.app.data_collection) == 1
@@ -466,8 +466,8 @@ def test_roman_2d_spectrum(helper, request):
     ldr = helper.loaders['url']
     # wfi_spec_decontaminated_2d_r0000201001001001001_0002_WFI01.asdf
     ldr.url = 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'
-    assert len(ldr.importer.extension.choices) > 1
     ldr.format = '2D Spectrum'
+    assert len(ldr.importer.extension.choices) > 1
 
     ldr.load()
     # 2D spectrum and auto-extracted 1D spectrum
