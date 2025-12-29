@@ -186,3 +186,33 @@ def test_rename_data_no_auto_extraction_on_2d_spectrum(deconfigged_helper, spect
     # The only new labels should be from renaming (if any extraction
     # happened, there would be additional extracted spectrum names)
     assert len(labels_after) == len(labels_before)
+
+
+def test_rename_data_preserves_dataset_selected(deconfigged_helper, spectrum1d):
+    """
+    Test that renaming data preserves dataset_selected in plugins like Model Fitting.
+
+    This test verifies that when _rename_data is called, the dataset_selected
+    trait in plugins is updated to the new name and not reset to a default value.
+    """
+    # Load two spectra so we have multiple options
+    deconfigged_helper.load(spectrum1d, data_label='spectrum_a')
+    deconfigged_helper.load(spectrum1d, data_label='spectrum_b')
+
+    dcf_app = deconfigged_helper.app
+
+    # Test a few plugins that use dataset_selected for posterity
+    for plugin in ['Model Fitting', 'Line Analysis', 'Gaussian Smooth']:
+        model_fitting = deconfigged_helper.plugins[plugin]._obj
+        model_fitting.dataset_selected = 'spectrum_b'
+        dcf_app._rename_data('spectrum_b', 'spectrum_c')
+
+        # Verify the selection was updated to the new name, not reset to default
+        assert model_fitting.dataset_selected == 'spectrum_c'
+
+        # Also verify the data collection was updated
+        assert 'spectrum_b' not in dcf_app.data_collection.labels
+        assert 'spectrum_c' in dcf_app.data_collection.labels
+
+        # Reset
+        dcf_app._rename_data('spectrum_c', 'spectrum_b')

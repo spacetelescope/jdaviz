@@ -1841,12 +1841,10 @@ class Application(VuetifyTemplate, HubListener):
         # Set flag to indicate rename is in progress
         # This allows handlers to skip processing during renames
         self._renaming_data = True
-        try:
-            # Rename the data object
-            self._rename_single_data(old_label, new_label, data)
-
-        finally:
-            self._renaming_data = False
+        # Rename the data object
+        # Note: _rename_single_data will reset _renaming_data at the end
+        # to ensure callbacks have access to the flag during processing
+        self._rename_single_data(old_label, new_label, data)
 
     def _rename_single_data(self, old_label, new_label, data):
         """
@@ -1861,50 +1859,56 @@ class Application(VuetifyTemplate, HubListener):
         data : glue.core.Data
             The data object to rename.
         """
-        # Update the data label in the data object itself
-        data.label = new_label
+        try:
+            # Update the data label in the data object itself
+            data.label = new_label
 
-        # Update state.data_items
-        self._update_data_items_list(old_label, new_label)
+            # Update state.data_items
+            self._update_data_items_list(old_label, new_label)
 
-        # Update live plugin results if metadata exists
-        self._update_live_plugin_results_metadata(data, old_label, new_label, 'data')
+            # Update live plugin results if metadata exists
+            self._update_live_plugin_results_metadata(data, old_label, new_label, 'data')
 
-        # Update metadata in OTHER data that subscribe to the renamed data
-        for d in self.data_collection:
-            if d is data:
-                continue
-            self._update_live_plugin_results_metadata(d, old_label, new_label, 'data')
+            # Update metadata in OTHER data that subscribe to the renamed data
+            for d in self.data_collection:
+                if d is data:
+                    continue
+                self._update_live_plugin_results_metadata(d, old_label, new_label, 'data')
 
-        # Clear cached references to old label
-        self._clear_object_cache(old_label)
+            # Clear cached references to old label
+            self._clear_object_cache(old_label)
 
-        # Update reserved labels
-        if old_label in self._reserved_labels:
-            self._reserved_labels.remove(old_label)
-        self._reserved_labels.add(new_label)
+            # Update reserved labels
+            if old_label in self._reserved_labels:
+                self._reserved_labels.remove(old_label)
+            self._reserved_labels.add(new_label)
 
-        # Broadcast the message BEFORE updating layer_icons
-        # This is critical: layer_icons has callbacks that trigger
-        # _update_items() in DatasetSelect/LayerSelect. If we
-        # broadcast DataRenamedMessage first, the handlers can
-        # update their 'selected' trait values before _update_items()
-        # runs. This prevents _apply_default_selection from changing
-        # 'selected' and triggering observers that would cause
-        # plugins to re-process data (like auto-extraction).
-        self.hub.broadcast(DataRenamedMessage(data, old_label, new_label, sender=self))
+            # Broadcast the message BEFORE updating layer_icons
+            # This is critical: layer_icons has callbacks that trigger
+            # _update_items() in DatasetSelect/LayerSelect. If we
+            # broadcast DataRenamedMessage first, the handlers can
+            # update their 'selected' trait values before _update_items()
+            # runs. This prevents _apply_default_selection from changing
+            # 'selected' and triggering observers that would cause
+            # plugins to re-process data (like auto-extraction).
+            self.hub.broadcast(DataRenamedMessage(data, old_label, new_label, sender=self))
 
-        # Now update layer icons - callbacks will fire but selected
-        # values are already updated
-        self._update_layer_icons(old_label, new_label)
+            # Now update layer icons - callbacks will fire but selected
+            # values are already updated
+            self._update_layer_icons(old_label, new_label)
 
-        # Update viewer layer states and reference data
-        for viewer_id, viewer in self._viewer_store.items():
-            # Update reference data if it matches old label
-            if (hasattr(viewer.state, 'reference_data')
-                    and viewer.state.reference_data is not None
-                    and viewer.state.reference_data.label == old_label):
-                viewer.state.reference_data = data
+            # Update viewer layer states and reference data
+            for viewer_id, viewer in self._viewer_store.items():
+                # Update reference data if it matches old label
+                if (hasattr(viewer.state, 'reference_data')
+                        and viewer.state.reference_data is not None
+                        and viewer.state.reference_data.label == old_label):
+                    viewer.state.reference_data = data
+        finally:
+            # Reset the renaming flag after all callbacks have been processed
+            # This ensures that _apply_default_selection in plugin components
+            # will skip resetting the selected value during the rename process
+            self._renaming_data = False
 
     def return_data_label(self, loaded_object, ext=None, alt_name=None, check_unique=True):
         """

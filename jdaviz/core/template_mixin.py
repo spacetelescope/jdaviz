@@ -1456,12 +1456,14 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         # Update selected label directly in _trait_values to bypass observers
         if update_selected:
+            # Get the actual traitlet name on the plugin
+            selected_trait_name = self._plugin_traitlets.get('selected')
             if self.is_multiselect:
                 new_selected = [new_label if sel == old_label else sel
                                 for sel in self.selected]
-                self._trait_values['selected'] = new_selected
+                self._plugin._trait_values[selected_trait_name] = new_selected
             else:
-                self._trait_values['selected'] = new_label
+                self._plugin._trait_values[selected_trait_name] = new_label
             # Sync to frontend
             self.send_state('selected')
 
