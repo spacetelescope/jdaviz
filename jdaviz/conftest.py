@@ -23,13 +23,6 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
                                               _image_nddata_wcs)
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
-from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
-    SpectrumListImporter,
-    SpectrumListConcatenatedImporter
-)
-from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
-from jdaviz.core.registries import tray_registry
 
 from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
                                   memlog_runtest_teardown, memlog_runtest_makereport,
