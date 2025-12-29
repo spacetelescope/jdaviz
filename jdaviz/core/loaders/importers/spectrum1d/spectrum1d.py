@@ -27,6 +27,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         # set default data-label
         self._on_extension_change()
 
@@ -89,7 +90,9 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
 
         if not hasattr(self, 'extension'):
             return
-        self.data_label_is_prefix = self.multiselect and len(self.extension.selected) > 1 and not self.concatenate
+        self.data_label_is_prefix = (self.multiselect
+                                     and len(self.extension.selected) > 1
+                                     and not self.concatenate)
         # data_label_is_prefix is set in SpectrumInputExtensionsMixin,
         # but may be updated after this
         if not hasattr(self, 'extension'):
