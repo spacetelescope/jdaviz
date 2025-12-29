@@ -198,10 +198,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
 
 @pytest.mark.remote_data
-def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
-
-    def ignore_custom_loaders(existing_choices):
-        return [choice for choice in existing_choices if choice not in fake_classes_in_registries]
+def test_resolver_url(deconfigged_helper):
 
     loader = deconfigged_helper.loaders['url']
 
@@ -221,7 +218,7 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
     # may change with future importers
-    assert len(ignore_custom_loaders(loader.format.choices)) == 4
+    assert len(loader.format.choices) == 4
     assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering
@@ -230,12 +227,12 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
     loader.target = '1D Spectrum'
 
     # may change with future importers
-    assert len(ignore_custom_loaders(loader.format.choices)) == 2
+    assert len(loader.format.choices) == 2
     assert loader.format == '1D Spectrum List'  # default may change with future importers
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
     loader.target = 'Any'
-    assert len(ignore_custom_loaders(loader.format.choices)) == 4
+    assert len(loader.format.choices) == 4
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
