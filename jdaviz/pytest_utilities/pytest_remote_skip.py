@@ -23,6 +23,7 @@ The failures are logged to .ci_artifacts/remote_failures.json for review.
 import json
 import os
 
+from _pytest.warning_types import PytestUnraisableExceptionWarning
 from requests.exceptions import (RequestException,
                                  Timeout,
                                  ConnectionError,
@@ -39,7 +40,8 @@ REMOTE_EXCEPTIONS = (RequestException,
                      ConnectionError,
                      TimeoutError,
                      HTTPError,
-                     E19)
+                     E19,
+                     PytestUnraisableExceptionWarning)
 
 
 def _get_remote_failure_log_path():
@@ -88,9 +90,7 @@ def _log_remote_failure(test_name, exc_type_name, exc_message):
         except (json.JSONDecodeError, IOError):
             failures = []
 
-    failures.append({'test': test_name,
-                     'exception': exc_type_name,
-                     'message': str(exc_message)})
+    failures.append({'test': test_name, 'exception': exc_type_name, 'message': str(exc_message)})
 
     with open(log_path, 'w') as f:
         json.dump(failures, f, indent=2)
@@ -150,18 +150,14 @@ def remote_skip_runtest_makereport(item, call, report):
         The test report object.
     """
     # Only process call phase (not setup/teardown) failures
-    if (report.when == 'call'
-            and report.failed
-            and item.config.getoption(
-                'skip_remote_failures', default=False)):
+    if report.when == 'call' and report.failed and item.config.getoption(
+            'skip_remote_failures', default=False):
         # Check if failure is due to a remote exception
         if call.excinfo is not None:
             exc_type = call.excinfo.type
             if issubclass(exc_type, REMOTE_EXCEPTIONS):
                 # Log the failure
-                _log_remote_failure(item.nodeid,
-                                    exc_type.__name__,
-                                    str(call.excinfo.value))
+                _log_remote_failure(item.nodeid, exc_type.__name__, str(call.excinfo.value))
                 # Convert failure to skip
                 msg = (f'Skipped due to remote exception: '
                        f'{exc_type.__name__}: {call.excinfo.value}')
