@@ -817,14 +817,21 @@ class Application(VuetifyTemplate, HubListener):
                                 for c in existing_data.components)
                         )
 
-                    if not is_related and new_data.ndim == existing_data.ndim:
+                    # Allow linking if same dimensions, but only for 1D data
+                    if not is_related and new_data.ndim == existing_data.ndim == 1:
                         is_related = True
 
                     if not is_related:
                         continue
 
-                if (new_comp._component_type == 'spectral_axis' and
-                   new_data.ndim == existing_data.ndim):
+                # Skip linking any components between unrelated 2D spectra
+                if not is_related and new_data.ndim == existing_data.ndim == 2:
+                    continue
+
+                # For world spectral axes with same dimensions, only link if they're unrelated
+                # Skip linking related data to avoid duplicate world coordinate links
+                if (new_comp._component_type == 'spectral_axis'
+                   and new_data.ndim == existing_data.ndim):
                     if is_related:
                         continue
 
