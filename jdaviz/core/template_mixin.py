@@ -4712,6 +4712,9 @@ class AddResults(BasePluginComponent):
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected,
+                 add_to_viewer_create_new_items, add_to_viewer_create_new_selected,
+                 add_to_viewer_label_value, add_to_viewer_label_default,
+                 add_to_viewer_label_auto, add_to_viewer_label_invalid_msg,
                  auto_update_result=None,
                  label_whitelist_overwrite=[]):
         super().__init__(plugin, label=label,
@@ -4719,6 +4722,12 @@ class AddResults(BasePluginComponent):
                          label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
                          add_to_viewer_items=add_to_viewer_items,
                          add_to_viewer_selected=add_to_viewer_selected,
+                         add_to_viewer_create_new_items=add_to_viewer_create_new_items,
+                         add_to_viewer_create_new_selected=add_to_viewer_create_new_selected,
+                         add_to_viewer_label_value=add_to_viewer_label_value,
+                         add_to_viewer_label_default=add_to_viewer_label_default,
+                         add_to_viewer_label_auto=add_to_viewer_label_auto,
+                         add_to_viewer_label_invalid_msg=add_to_viewer_label_invalid_msg,
                          auto_update_result=auto_update_result)
 
         # DataCollectionAdd/Delete are fired even if remain unchecked in all viewers
@@ -4730,9 +4739,17 @@ class AddResults(BasePluginComponent):
         # allows overwriting specific data entries not from the same plugin
         self.label_whitelist_overwrite = label_whitelist_overwrite
 
-        self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
-                                   manual_options=['None'],
-                                   default_mode=self._handle_default_viewer_selected)
+        self.viewer = ViewerSelectCreateNew(plugin,
+                                            add_to_viewer_items,
+                                            add_to_viewer_selected,
+                                            add_to_viewer_create_new_items,
+                                            add_to_viewer_create_new_selected,
+                                            add_to_viewer_label_value,
+                                            add_to_viewer_label_default,
+                                            add_to_viewer_label_auto,
+                                            add_to_viewer_label_invalid_msg,
+                                            multiselect=False,
+                                            default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoTextField(plugin, label, label_default, label_auto, label_invalid_msg)
         self.add_observe(label, self._on_label_changed)
@@ -4953,6 +4970,13 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
 
+    add_to_viewer_create_new_items = List().tag(sync=True)
+    add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    add_to_viewer_label_value = Unicode().tag(sync=True)
+    add_to_viewer_label_default = Unicode().tag(sync=True)
+    add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
+
     auto_update_result = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -4961,6 +4985,12 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',
                                       'add_to_viewer_items', 'add_to_viewer_selected',
+                                      'add_to_viewer_create_new_items',
+                                      'add_to_viewer_create_new_selected',
+                                      'add_to_viewer_label_value',
+                                      'add_to_viewer_label_default',
+                                      'add_to_viewer_label_auto',
+                                      'add_to_viewer_label_invalid_msg',
                                       'auto_update_result')
 
 

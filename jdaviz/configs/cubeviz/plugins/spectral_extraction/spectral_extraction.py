@@ -102,6 +102,12 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     bg_spec_results_label_overwrite = Bool().tag(sync=True)
     bg_spec_add_to_viewer_items = List().tag(sync=True)
     bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_items = List().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_value = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_default = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    bg_spec_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_spec_spinner = Bool(False).tag(sync=True)
 
     function_items = List().tag(sync=True)
@@ -156,7 +162,13 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                               'bg_spec_results_label_invalid_msg',
                                               'bg_spec_results_label_overwrite',
                                               'bg_spec_add_to_viewer_items',
-                                              'bg_spec_add_to_viewer_selected')
+                                              'bg_spec_add_to_viewer_selected',
+                                              'bg_spec_add_to_viewer_create_new_items',
+                                              'bg_spec_add_to_viewer_create_new_selected',
+                                              'bg_spec_add_to_viewer_label_value',
+                                              'bg_spec_add_to_viewer_label_default',
+                                              'bg_spec_add_to_viewer_label_auto',
+                                              'bg_spec_add_to_viewer_label_invalid_msg')
         self.bg_spec_add_results.viewer.filters = ['is_slice_indicator_viewer']
         self.bg_spec_results_label_default = f'background-{self.resulting_product_name}'
 

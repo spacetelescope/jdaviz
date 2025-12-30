@@ -151,6 +151,12 @@ class SpectralExtraction2D(PluginTemplateMixin):
     trace_results_label_overwrite = Bool().tag(sync=True)
     trace_add_to_viewer_items = List().tag(sync=True)
     trace_add_to_viewer_selected = Unicode().tag(sync=True)
+    trace_add_to_viewer_create_new_items = List().tag(sync=True)
+    trace_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    trace_add_to_viewer_label_value = Unicode().tag(sync=True)
+    trace_add_to_viewer_label_default = Unicode().tag(sync=True)
+    trace_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    trace_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     trace_spinner = Bool(False).tag(sync=True)
 
     # BACKGROUND
@@ -178,6 +184,12 @@ class SpectralExtraction2D(PluginTemplateMixin):
     bg_results_label_overwrite = Bool().tag(sync=True)
     bg_add_to_viewer_items = List().tag(sync=True)
     bg_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_add_to_viewer_create_new_items = List().tag(sync=True)
+    bg_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    bg_add_to_viewer_label_value = Unicode().tag(sync=True)
+    bg_add_to_viewer_label_default = Unicode().tag(sync=True)
+    bg_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    bg_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_img_spinner = Bool(False).tag(sync=True)
 
     bg_spec_results_label = Unicode().tag(sync=True)
@@ -187,6 +199,12 @@ class SpectralExtraction2D(PluginTemplateMixin):
     bg_spec_results_label_overwrite = Bool().tag(sync=True)
     bg_spec_add_to_viewer_items = List().tag(sync=True)
     bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_items = List().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_value = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_default = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    bg_spec_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_spec_spinner = Bool(False).tag(sync=True)
 
     bg_sub_results_label = Unicode().tag(sync=True)
@@ -196,6 +214,12 @@ class SpectralExtraction2D(PluginTemplateMixin):
     bg_sub_results_label_overwrite = Bool().tag(sync=True)
     bg_sub_add_to_viewer_items = List().tag(sync=True)
     bg_sub_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_sub_add_to_viewer_create_new_items = List().tag(sync=True)
+    bg_sub_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    bg_sub_add_to_viewer_label_value = Unicode().tag(sync=True)
+    bg_sub_add_to_viewer_label_default = Unicode().tag(sync=True)
+    bg_sub_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    bg_sub_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_sub_spinner = Bool(False).tag(sync=True)
 
     # EXTRACT
@@ -227,6 +251,12 @@ class SpectralExtraction2D(PluginTemplateMixin):
     ext_results_label_overwrite = Bool().tag(sync=True)
     ext_add_to_viewer_items = List().tag(sync=True)
     ext_add_to_viewer_selected = Unicode().tag(sync=True)
+    ext_add_to_viewer_create_new_items = List().tag(sync=True)
+    ext_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    ext_add_to_viewer_label_value = Unicode().tag(sync=True)
+    ext_add_to_viewer_label_default = Unicode().tag(sync=True)
+    ext_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    ext_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     # uses default "spinner"
 
     def __init__(self, *args, **kwargs):
@@ -266,7 +296,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                             'trace_results_label_invalid_msg',
                                             'trace_results_label_overwrite',
                                             'trace_add_to_viewer_items',
-                                            'trace_add_to_viewer_selected')
+                                            'trace_add_to_viewer_selected',
+                                            'trace_add_to_viewer_create_new_items',
+                                            'trace_add_to_viewer_create_new_selected',
+                                            'trace_add_to_viewer_label_value',
+                                            'trace_add_to_viewer_label_default',
+                                            'trace_add_to_viewer_label_auto',
+                                            'trace_add_to_viewer_label_invalid_msg')
         self.trace_add_results.viewer.filters = ['is_spectrum_2d_viewer']
         self.trace_results_label_default = 'trace'
 
@@ -298,7 +334,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                          'bg_results_label_invalid_msg',
                                          'bg_results_label_overwrite',
                                          'bg_add_to_viewer_items',
-                                         'bg_add_to_viewer_selected')
+                                         'bg_add_to_viewer_selected',
+                                         'bg_add_to_viewer_create_new_items',
+                                         'bg_add_to_viewer_create_new_selected',
+                                         'bg_add_to_viewer_label_value',
+                                         'bg_add_to_viewer_label_default',
+                                         'bg_add_to_viewer_label_auto',
+                                         'bg_add_to_viewer_label_invalid_msg')
         self.bg_add_results.viewer.filters = ['is_spectrum_2d_viewer']
         self.bg_results_label_default = 'background'
 
@@ -308,7 +350,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                               'bg_spec_results_label_invalid_msg',
                                               'bg_spec_results_label_overwrite',
                                               'bg_spec_add_to_viewer_items',
-                                              'bg_spec_add_to_viewer_selected')
+                                              'bg_spec_add_to_viewer_selected',
+                                              'bg_spec_add_to_viewer_create_new_items',
+                                              'bg_spec_add_to_viewer_create_new_selected',
+                                              'bg_spec_add_to_viewer_label_value',
+                                              'bg_spec_add_to_viewer_label_default',
+                                              'bg_spec_add_to_viewer_label_auto',
+                                              'bg_spec_add_to_viewer_label_invalid_msg')
         self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
         self.bg_spec_results_label_default = 'background-spectrum'
 
@@ -318,7 +366,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                              'bg_sub_results_label_invalid_msg',
                                              'bg_sub_results_label_overwrite',
                                              'bg_sub_add_to_viewer_items',
-                                             'bg_sub_add_to_viewer_selected')
+                                             'bg_sub_add_to_viewer_selected',
+                                             'bg_sub_add_to_viewer_create_new_items',
+                                             'bg_sub_add_to_viewer_create_new_selected',
+                                             'bg_sub_add_to_viewer_label_value',
+                                             'bg_sub_add_to_viewer_label_default',
+                                             'bg_sub_add_to_viewer_label_auto',
+                                             'bg_sub_add_to_viewer_label_invalid_msg')
         self.bg_sub_add_results.viewer.filters = ['is_spectrum_2d_viewer']
         self.bg_sub_results_label_default = 'background-subtracted'
 
@@ -351,7 +405,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                           'ext_results_label_invalid_msg',
                                           'ext_results_label_overwrite',
                                           'ext_add_to_viewer_items',
-                                          'ext_add_to_viewer_selected')
+                                          'ext_add_to_viewer_selected',
+                                          'ext_add_to_viewer_create_new_items',
+                                          'ext_add_to_viewer_create_new_selected',
+                                          'ext_add_to_viewer_label_value',
+                                          'ext_add_to_viewer_label_default',
+                                          'ext_add_to_viewer_label_auto',
+                                          'ext_add_to_viewer_label_invalid_msg')
         self.ext_add_results.viewer.filters = ['is_spectrum_viewer']
         # NOTE: defaults to overwriting original spectrum
         self.ext_add_results.label_whitelist_overwrite = ['1D Spectrum', '2D Spectrum (auto-ext)']
