@@ -41,7 +41,7 @@ REMOTE_EXCEPTIONS = (RequestException,
                      TimeoutError,
                      HTTPError,
                      E19,
-                     PytestUnraisableExceptionWarning)
+                     ResourceWarning)
 
 
 def _get_remote_failure_log_path():
