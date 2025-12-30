@@ -11,6 +11,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
                                         AddResults,
+                                        _populate_viewer_items,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
                                         skip_if_not_relevant,
@@ -303,7 +304,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                             'trace_add_to_viewer_label_default',
                                             'trace_add_to_viewer_label_auto',
                                             'trace_add_to_viewer_label_invalid_msg')
-        self.trace_add_results.viewer.filters = ['is_spectrum_2d_viewer']
+        # Populate viewer items using _get_trace_supported_viewers
+        supported_viewers = self._get_trace_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.trace_add_to_viewer_create_new_items = viewer_create_new_items
+        self.trace_add_results.viewer.add_filter(viewer_filter)
+        self.trace_add_results.viewer.select_default()
         self.trace_results_label_default = 'trace'
 
         # BACKGROUND
@@ -341,7 +348,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                          'bg_add_to_viewer_label_default',
                                          'bg_add_to_viewer_label_auto',
                                          'bg_add_to_viewer_label_invalid_msg')
-        self.bg_add_results.viewer.filters = ['is_spectrum_2d_viewer']
+        # Populate viewer items using _get_bg_supported_viewers
+        supported_viewers = self._get_bg_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.bg_add_to_viewer_create_new_items = viewer_create_new_items
+        self.bg_add_results.viewer.add_filter(viewer_filter)
+        self.bg_add_results.viewer.select_default()
         self.bg_results_label_default = 'background'
 
         self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
@@ -357,7 +370,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                               'bg_spec_add_to_viewer_label_default',
                                               'bg_spec_add_to_viewer_label_auto',
                                               'bg_spec_add_to_viewer_label_invalid_msg')
-        self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
+        # Populate viewer items using _get_bg_spec_supported_viewers
+        supported_viewers = self._get_bg_spec_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.bg_spec_add_to_viewer_create_new_items = viewer_create_new_items
+        self.bg_spec_add_results.viewer.add_filter(viewer_filter)
+        self.bg_spec_add_results.viewer.select_default()
         self.bg_spec_results_label_default = 'background-spectrum'
 
         self.bg_sub_add_results = AddResults(self, 'bg_sub_results_label',
@@ -373,7 +392,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                              'bg_sub_add_to_viewer_label_default',
                                              'bg_sub_add_to_viewer_label_auto',
                                              'bg_sub_add_to_viewer_label_invalid_msg')
-        self.bg_sub_add_results.viewer.filters = ['is_spectrum_2d_viewer']
+        # Populate viewer items using _get_bg_sub_supported_viewers
+        supported_viewers = self._get_bg_sub_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.bg_sub_add_to_viewer_create_new_items = viewer_create_new_items
+        self.bg_sub_add_results.viewer.add_filter(viewer_filter)
+        self.bg_sub_add_results.viewer.select_default()
         self.bg_sub_results_label_default = 'background-subtracted'
 
         # EXTRACT
@@ -412,7 +437,13 @@ class SpectralExtraction2D(PluginTemplateMixin):
                                           'ext_add_to_viewer_label_default',
                                           'ext_add_to_viewer_label_auto',
                                           'ext_add_to_viewer_label_invalid_msg')
-        self.ext_add_results.viewer.filters = ['is_spectrum_viewer']
+        # Populate viewer items using _get_ext_supported_viewers
+        supported_viewers = self._get_ext_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.ext_add_to_viewer_create_new_items = viewer_create_new_items
+        self.ext_add_results.viewer.add_filter(viewer_filter)
+        self.ext_add_results.viewer.select_default()
         # NOTE: defaults to overwriting original spectrum
         self.ext_add_results.label_whitelist_overwrite = ['1D Spectrum', '2D Spectrum (auto-ext)']
         self.ext_results_label_default = '2D Spectrum (auto-ext)'
@@ -422,6 +453,26 @@ class SpectralExtraction2D(PluginTemplateMixin):
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['trace_dataset_items'])
+
+    def _get_trace_supported_viewers(self):
+        """Return viewer types that can display trace data."""
+        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
+
+    def _get_bg_supported_viewers(self):
+        """Return viewer types that can display background 2D image."""
+        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
+
+    def _get_bg_spec_supported_viewers(self):
+        """Return viewer types that can display background spectrum."""
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+
+    def _get_bg_sub_supported_viewers(self):
+        """Return viewer types that can display background-subtracted image."""
+        return [{'label': '2D Spectrum', 'reference': 'spectrum-2d-viewer'}]
+
+    def _get_ext_supported_viewers(self):
+        """Return viewer types that can display extracted 1D spectrum."""
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
 
     @property
     def user_api(self):

@@ -17,6 +17,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
                                         AddResults, AddResultsMixin,
+                                        _populate_viewer_items,
                                         skip_if_not_tray_instance,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
@@ -169,7 +170,13 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                               'bg_spec_add_to_viewer_label_default',
                                               'bg_spec_add_to_viewer_label_auto',
                                               'bg_spec_add_to_viewer_label_invalid_msg')
-        self.bg_spec_add_results.viewer.filters = ['is_slice_indicator_viewer']
+        # Populate viewer items using _get_bg_spec_supported_viewers
+        supported_viewers = self._get_bg_spec_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.bg_spec_add_to_viewer_create_new_items = viewer_create_new_items
+        self.bg_spec_add_results.viewer.add_filter(viewer_filter)
+        self.bg_spec_add_results.viewer.select_default()
         self.bg_spec_results_label_default = f'background-{self.resulting_product_name}'
 
         self.function = SelectPluginComponent(
@@ -221,6 +228,16 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 f"{self.__class__.__name__} requires a 3d cube dataset to be loaded, "
                 "please load data to enable this plugin."
             )
+
+    def _get_supported_viewers(self):
+        """Return viewer types that can display the extracted spectrum."""
+        return [{'label': self._default_spectrum_viewer_reference_name.replace('-', ' ').title(),
+                 'reference': self._default_spectrum_viewer_reference_name}]
+
+    def _get_bg_spec_supported_viewers(self):
+        """Return viewer types that can display the background spectrum."""
+        return [{'label': self._default_spectrum_viewer_reference_name.replace('-', ' ').title(),
+                 'reference': self._default_spectrum_viewer_reference_name}]
 
     @property
     def live_update_subscriptions(self):

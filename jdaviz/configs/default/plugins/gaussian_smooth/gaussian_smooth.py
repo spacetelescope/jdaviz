@@ -75,6 +75,22 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         if self.app.config == 'deconfigged':
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display smoothed data based on input data dimensionality."""
+        if not hasattr(self, 'dataset') or self.dataset.selected_dc_item is None:
+            # Default to spectrum viewers if no data selected yet
+            return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+
+        selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
+        if selected_data_is_1d:
+            return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+        else:
+            # Return image viewer for 2D/3D data
+            if self.config == 'cubeviz':
+                return [{'label': 'Flux', 'reference': 'flux-viewer'}]
+            else:
+                return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(

@@ -387,6 +387,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # only want spectral viewers in the options
             self.add_results.viewer.filters = ['is_spectrum_viewer']
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display model fitting results."""
+        if self.cube_fit:
+            # Model fitted to cube, return image viewer
+            if self.config == 'cubeviz':
+                return [{'label': 'Flux', 'reference': 'flux-viewer'}]
+            else:
+                return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
+        else:
+            # Model fitted to spectrum, return spectrum viewer
+            return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+
     @observe('cube_fit')
     def _cube_fit_changed(self, event={}):
         self._update_viewer_filters(event=event)
