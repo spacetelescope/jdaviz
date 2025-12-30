@@ -23,6 +23,7 @@ The failures are logged to .ci_artifacts/remote_failures.json for review.
 import json
 import os
 
+from _pytest.warning_types import PytestUnraisableExceptionWarning
 from requests.exceptions import (RequestException,
                                  Timeout,
                                  ConnectionError,
@@ -40,7 +41,8 @@ REMOTE_EXCEPTIONS = (RequestException,
                      TimeoutError,
                      HTTPError,
                      E19,
-                     ResourceWarning)
+                     PytestUnraisableExceptionWarning,
+                     ExceptionGroup)
 
 
 def _get_remote_failure_log_path():
@@ -55,8 +57,8 @@ def _get_remote_failure_log_path():
     str
         Path to the remote failures JSON log file.
     """
-    # Navigate from jdaviz/pytest_remote_skip.py to repository root
-    repo_root = os.path.abspath(os.path.join(__file__, '..', '..'))
+    # Navigate from jdaviz/pytest_utilities/pytest_remote_skip.py to repository root
+    repo_root = os.path.abspath(os.path.join(__file__, '..', '..', '..'))
     ci_artifacts_dir = os.path.join(repo_root, '.ci_artifacts')
     # Create directory if it doesn't exist
     os.makedirs(ci_artifacts_dir, exist_ok=True)
