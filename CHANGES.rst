@@ -76,6 +76,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Optimization to orientation plugin to reduce overhead when multiple custom orientations are created. [#3896]
+
 Mosviz
 ^^^^^^
 
@@ -190,8 +192,6 @@ Bug Fixes
 
 Imviz
 ^^^^^
-
-- Optimization to orientation plugin to reduce overhead when multiple custom orientations are created. [#3896]
 
 - In the Catalog Search plugin, `Zoom to Selected` button is now moved to below the selection table.
   The button is now hidden when no selection is made. [#3888]
