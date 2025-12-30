@@ -16,6 +16,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Optimization to orientation plugin to reduce overhead when multiple custom orientations are created. [#3896]
+
 Mosviz
 ^^^^^^
 
