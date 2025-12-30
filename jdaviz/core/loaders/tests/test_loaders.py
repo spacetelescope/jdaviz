@@ -451,7 +451,6 @@ class TestRomanLoaders:
     def _setup_class(self):
         try:
             from roman_datamodels import datamodels as rdd
-            import roman_datamodels.datamodels as rdd
             self.rdd = rdd
         except ImportError:
             self.rdd = None
