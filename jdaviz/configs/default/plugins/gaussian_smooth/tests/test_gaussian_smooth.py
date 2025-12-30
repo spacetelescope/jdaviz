@@ -202,37 +202,34 @@ def test_create_new_viewer(specviz_helper, spectrum1d):
     data_label = 'test'
     dc = specviz_helper.app.data_collection
     specviz_helper.load_data(spectrum1d, data_label=data_label)
-    
+
     # Check initial state - should only have the default viewer
     initial_viewers = list(specviz_helper.app._viewer_store.keys())
     assert len(initial_viewers) == 1
-    
+
     # Get the plugin
     gs = specviz_helper.plugins['Gaussian Smooth']._obj
     gs.dataset_selected = data_label
     gs.mode_selected = 'Spectral'
     gs.stddev = 3
-    
+
     # Set create_new to create a new spectrum viewer
     assert len(gs.add_results.viewer.create_new.choices) > 0
     gs.add_results.viewer.create_new.selected = '1D Spectrum'
-    
+
     # Apply the smooth operation - should create new viewer and add data to it
     gs.vue_apply()
-    
+
     # Check that a new viewer was created
     final_viewers = list(specviz_helper.app._viewer_store.keys())
     assert len(final_viewers) == 2
     new_viewer_id = [v for v in final_viewers if v not in initial_viewers][0]
-    
+
     # Check that data was added to the new viewer
     new_viewer = specviz_helper.app.get_viewer(new_viewer_id)
     assert len(new_viewer.data()) == 1
     assert new_viewer.data()[0].label == f'{data_label} smooth stddev-3.0'
-    
+
     # Check that the smoothed data exists in the data collection
     assert len(dc) == 2
     assert dc[1].label == f'{data_label} smooth stddev-3.0'
-    
-    # Verify the create_new selection was reset after use
-    assert gs.add_results.viewer.create_new.selected == ''

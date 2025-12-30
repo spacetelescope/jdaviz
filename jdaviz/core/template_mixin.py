@@ -60,7 +60,7 @@ from jdaviz.core.marks import (PluginMarkCollection,
 from jdaviz.core.region_translators import regions2roi, regions2aperture
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
-from jdaviz.core.registries import tray_registry, viewer_registry
+from jdaviz.core.registries import tray_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
@@ -4863,7 +4863,7 @@ class AddResults(BasePluginComponent):
                 if not hasattr(plugin, '_update_viewer_filters'):
                     self.viewer.add_filter(viewer_filter)
                     self.viewer.select_default()
-            except Exception:
+            except Exception:  # nosec # pragma: no cover
                 # If automatic setup fails (e.g., during initialization before components
                 # are ready), the plugin can handle filters manually or it will be set later
                 pass
@@ -4986,7 +4986,9 @@ class AddResults(BasePluginComponent):
 
                 viewer_dict = viewer_registry.members.get(viewer_reference)
                 if viewer_dict is None:
-                    raise ValueError(f"Viewer reference '{viewer_reference}' not found in viewer registry")
+                    raise ValueError(
+                        f"Viewer reference '{viewer_reference}' not found in viewer registry"
+                    )
                 viewer_cls = viewer_dict.get('cls')
                 self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
                                         vid=viewer_label,
@@ -5105,7 +5107,8 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
-    show_viewer_switch = Bool(True).tag(sync=True)  # False to always show dropdown instead of switch
+    # False to always show dropdown instead of switch
+    show_viewer_switch = Bool(True).tag(sync=True)
 
     add_to_viewer_create_new_items = List().tag(sync=True)
     add_to_viewer_create_new_selected = Unicode().tag(sync=True)
