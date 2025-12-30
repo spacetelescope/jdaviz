@@ -48,7 +48,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, RestoreToolba
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 ViewerVisibleLayersChangedMessage,
-                                ChangeRefDataMessage,
+                                ChangeRefDataMessage, NewViewerMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
                                 PluginPlotAddedMessage, PluginPlotModifiedMessage,
                                 GlobalDisplayUnitChanged, SubsetRenameMessage)
@@ -60,7 +60,7 @@ from jdaviz.core.marks import (PluginMarkCollection,
 from jdaviz.core.region_translators import regions2roi, regions2aperture
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
-from jdaviz.core.registries import tray_registry
+from jdaviz.core.registries import tray_registry, viewer_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
@@ -4846,6 +4846,7 @@ class AddResults(BasePluginComponent):
                                             add_to_viewer_label_auto,
                                             add_to_viewer_label_invalid_msg,
                                             multiselect=False,
+                                            manual_options=['None'],
                                             default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoTextField(plugin, label, label_default, label_auto, label_invalid_msg)
@@ -4853,12 +4854,19 @@ class AddResults(BasePluginComponent):
 
         # If plugin has _get_supported_viewers, use it to populate viewer items and filters
         if hasattr(plugin, '_get_supported_viewers'):
-            supported_viewers = plugin._get_supported_viewers()
-            viewer_create_new_items, viewer_filter = _populate_viewer_items(
-                plugin, supported_viewers)
-            setattr(plugin, add_to_viewer_create_new_items, viewer_create_new_items)
-            self.viewer.add_filter(viewer_filter)
-            self.viewer.select_default()
+            try:
+                supported_viewers = plugin._get_supported_viewers()
+                viewer_create_new_items, viewer_filter = _populate_viewer_items(
+                    plugin, supported_viewers)
+                setattr(plugin, add_to_viewer_create_new_items, viewer_create_new_items)
+                # Only add the filter if the plugin doesn't manage filters manually
+                if not hasattr(plugin, '_update_viewer_filters'):
+                    self.viewer.add_filter(viewer_filter)
+                    self.viewer.select_default()
+            except Exception:
+                # If automatic setup fails (e.g., during initialization before components
+                # are ready), the plugin can handle filters manually or it will be set later
+                pass
 
     def __repr__(self):
         if getattr(self, 'auto_update_result', None) is not None:
@@ -4970,7 +4978,29 @@ class AddResults(BasePluginComponent):
                                 preserve_these[att] = getattr(layer.state, att)
                         preserved_attributes.append(preserve_these)
         else:
-            if self.add_to_viewer_selected == 'None':
+            # Check if user wants to create a new viewer
+            if self.viewer.create_new.selected:
+                # Create the new viewer first
+                viewer_reference = self.viewer.create_new.selected_item.get('reference')
+                viewer_label = self.viewer.new_label.value.strip()
+
+                viewer_dict = viewer_registry.members.get(viewer_reference)
+                if viewer_dict is None:
+                    raise ValueError(f"Viewer reference '{viewer_reference}' not found in viewer registry")
+                viewer_cls = viewer_dict.get('cls')
+                self.app._on_new_viewer(NewViewerMessage(viewer_cls, data=None, sender=self.app),
+                                        vid=viewer_label,
+                                        name=viewer_label,
+                                        open_data_menu_if_empty=False)
+
+                # Now set the selection to the newly created viewer
+                add_to_viewer_refs = [viewer_label]
+                add_to_viewer_vis = [True]
+                preserved_attributes = [{}]
+
+                # Reset create_new selection so it doesn't keep creating viewers
+                self.viewer.create_new.selected = ''
+            elif self.add_to_viewer_selected == 'None':
                 add_to_viewer_refs = []
                 add_to_viewer_vis = []
                 preserved_attributes = []
@@ -5075,6 +5105,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
+    show_viewer_switch = Bool(True).tag(sync=True)  # False to always show dropdown instead of switch
 
     add_to_viewer_create_new_items = List().tag(sync=True)
     add_to_viewer_create_new_selected = Unicode().tag(sync=True)
@@ -5087,6 +5118,9 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # In deconfigged mode, always show full dropdown instead of simple switch
+        if self.app.config == 'deconfigged':
+            self.show_viewer_switch = False
         self.add_results = AddResults(self, 'results_label',
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',

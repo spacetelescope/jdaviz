@@ -14,7 +14,7 @@
       :hint="label_hint ? label_hint : 'Label for the resulting data item.'"
     ></plugin-auto-label>
 
-    <div v-if="add_to_viewer_items.length > 2">
+    <div v-if="add_to_viewer_items.length > 2 || (add_to_viewer_create_new_items && add_to_viewer_create_new_items.length > 0)">
       <v-switch v-if="label_overwrite"
         class="hide-input"
         label="Show in viewers"
@@ -38,13 +38,13 @@
         :new_label_invalid_msg="add_to_viewer_label_invalid_msg"
         show_if_single_entry="true"
         label="Plot in Viewer"
-        :api_hint="add_results_api_hint && add_results_api_hint+'.viewer ='"
+        :api_hint="add_results_api_hint && add_results_api_hint+'.viewer = '"
         :api_hints_enabled="api_hints_enabled && add_results_api_hint"
         :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
       ></plugin-viewer-create-new>
     </div>
 
-    <v-row v-if="add_to_viewer_items.length === 2">
+    <v-row v-if="show_viewer_switch !== false && add_to_viewer_items.length === 2">
       <v-switch v-if="label_overwrite"
         :input-value="add_to_viewer_items.length > 1 && add_to_viewer_selected === add_to_viewer_items[1].label"
         :label="addToViewerText"
@@ -104,7 +104,7 @@
   module.exports = {
     props: ['add_results_api_hint',
             'label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
-            'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint',
+            'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'show_viewer_switch',
             'add_to_viewer_create_new_items', 'add_to_viewer_create_new_selected',
             'add_to_viewer_label_value', 'add_to_viewer_label_default', 'add_to_viewer_label_auto', 'add_to_viewer_label_invalid_msg',
             'auto_update_result',

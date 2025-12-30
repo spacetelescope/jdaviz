@@ -464,7 +464,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
 
     def _get_bg_spec_supported_viewers(self):
         """Return viewer types that can display background spectrum."""
-        return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     def _get_bg_sub_supported_viewers(self):
         """Return viewer types that can display background-subtracted image."""
@@ -472,7 +472,7 @@ class SpectralExtraction2D(PluginTemplateMixin):
 
     def _get_ext_supported_viewers(self):
         """Return viewer types that can display extracted 1D spectrum."""
-        return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     @property
     def user_api(self):

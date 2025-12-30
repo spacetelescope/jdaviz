@@ -54,6 +54,7 @@
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        :show_viewer_switch="show_viewer_switch"
         :add_to_viewer_create_new_items="add_to_viewer_create_new_items"
         :add_to_viewer_create_new_selected.sync="add_to_viewer_create_new_selected"
         :add_to_viewer_label_value.sync="add_to_viewer_label_value"

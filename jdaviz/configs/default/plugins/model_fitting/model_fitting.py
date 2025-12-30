@@ -397,7 +397,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
         else:
             # Model fitted to spectrum, return spectrum viewer
-            return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+            return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     @observe('cube_fit')
     def _cube_fit_changed(self, event={}):

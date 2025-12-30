@@ -79,11 +79,11 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         """Return viewer types that can display smoothed data based on input data dimensionality."""
         if not hasattr(self, 'dataset') or self.dataset.selected_dc_item is None:
             # Default to spectrum viewers if no data selected yet
-            return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+            return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
         selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
         if selected_data_is_1d:
-            return [{'label': '1D Spectrum', 'reference': 'spectrum-viewer'}]
+            return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
         else:
             # Return image viewer for 2D/3D data
             if self.config == 'cubeviz':
