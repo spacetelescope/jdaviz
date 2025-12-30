@@ -23,16 +23,25 @@
         persistent-hint
       >
       </v-switch>
-      <plugin-viewer-select v-else
+      <plugin-viewer-create-new v-else
         :items="add_to_viewer_items"
         :selected="add_to_viewer_selected"
         @update:selected="$emit('update:add_to_viewer_selected', $event)"
+        :create_new_items="add_to_viewer_create_new_items"
+        :create_new_selected="add_to_viewer_create_new_selected"
+        @update:create_new_selected="$emit('update:add_to_viewer_create_new_selected', $event)"
+        :new_label_value="add_to_viewer_label_value"
+        @update:new_label_value="$emit('update:add_to_viewer_label_value', $event)"
+        :new_label_default="add_to_viewer_label_default"
+        :new_label_auto="add_to_viewer_label_auto"
+        @update:new_label_auto="$emit('update:add_to_viewer_label_auto', $event)"
+        :new_label_invalid_msg="add_to_viewer_label_invalid_msg"
         show_if_single_entry="true"
         label="Plot in Viewer"
         :api_hint="add_results_api_hint && add_results_api_hint+'.viewer ='"
         :api_hints_enabled="api_hints_enabled && add_results_api_hint"
         :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
-      ></plugin-viewer-select>
+      ></plugin-viewer-create-new>
     </div>
 
     <v-row v-if="add_to_viewer_items.length === 2">
@@ -95,7 +104,10 @@
   module.exports = {
     props: ['add_results_api_hint',
             'label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
-            'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'auto_update_result',
+            'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint',
+            'add_to_viewer_create_new_items', 'add_to_viewer_create_new_selected',
+            'add_to_viewer_label_value', 'add_to_viewer_label_default', 'add_to_viewer_label_auto', 'add_to_viewer_label_invalid_msg',
+            'auto_update_result',
             'action_disabled', 'action_spinner', 'action_label', 'action_api_hint', 'action_tooltip', 'api_hints_enabled'],
     computed: {
       actionButtonText() {
