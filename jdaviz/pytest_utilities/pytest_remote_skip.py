@@ -23,7 +23,6 @@ The failures are logged to .ci_artifacts/remote_failures.json for review.
 import json
 import os
 
-from _pytest.warning_types import PytestUnraisableExceptionWarning
 from requests.exceptions import (RequestException,
                                  Timeout,
                                  ConnectionError,
