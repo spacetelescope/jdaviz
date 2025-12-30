@@ -57,8 +57,27 @@ def _get_remote_failure_log_path():
     str
         Path to the remote failures JSON log file.
     """
-    # Navigate from jdaviz/pytest_utilities/pytest_remote_skip.py to repository root
-    repo_root = os.path.abspath(os.path.join(__file__, '..', '..', '..'))
+    # When tox runs, it changes directory to .tmp/{envname}
+    # We need to navigate up to the repository root
+    cwd = os.getcwd()
+
+    # Check if we're in a tox temp directory (.tmp/{envname})
+    if '.tmp' in cwd:
+        # Navigate up to repo root
+        repo_root = os.path.abspath(os.path.join(cwd, '..', '..'))
+    else:
+        # If not in tox, assume we're already at or near repo root
+        # Try to find repo root by looking for setup.py or pyproject.toml
+        current = os.path.abspath(cwd)
+        while current != os.path.dirname(current):  # stops at filesystem root
+            if os.path.exists(os.path.join(current, 'pyproject.toml')):
+                repo_root = current
+                break
+            current = os.path.dirname(current)
+        else:
+            # Fallback: use current directory
+            repo_root = cwd
+
     ci_artifacts_dir = os.path.join(repo_root, '.ci_artifacts')
     # Create directory if it doesn't exist
     os.makedirs(ci_artifacts_dir, exist_ok=True)
