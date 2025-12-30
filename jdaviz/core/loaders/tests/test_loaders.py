@@ -449,8 +449,13 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
 class TestRomanLoaders:
     @pytest.fixture(autouse=True)
     def _setup_class(self):
-        import roman_datamodels.datamodels as rdd
-        self.rdd = rdd
+        try:
+            from roman_datamodels import datamodels as rdd
+            import roman_datamodels.datamodels as rdd
+            self.rdd = rdd
+        except ImportError:
+            self.rdd = None
+
         self.roman_uris = {
             '1D Spectrum': 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf',  # noqa
             '2D Spectrum': 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'  # noqa
@@ -458,7 +463,10 @@ class TestRomanLoaders:
 
     @pytest.mark.parametrize('data_type', ['1D Spectrum', '2D Spectrum'])
     def test_rdd_open(self, data_type):
-        self.rdd.open(self.roman_uris[data_type])
+        if self.rdd is not None:
+            self.rdd.open(self.roman_uris[data_type])
+        else:
+            pytest.skip("roman_datamodels not installed")
 
     @pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz_helper'])
     def test_roman_1d_spectrum(self, helper, request):
