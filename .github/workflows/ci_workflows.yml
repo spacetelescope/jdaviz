@@ -186,68 +186,6 @@ jobs:
         path: coverage.xml
         if-no-files-found: error
 
-  post-remote-failures-comment:
-    needs: [ ci_tests ]
-    if: |
-      always() &&
-      github.event_name == 'pull_request' &&
-      contains(github.event.pull_request.labels.*.name, 'skip-remote-failures')
-    permissions:
-      contents: read
-      pull-requests: write
-    runs-on: ubuntu-latest
-    name: Post Remote Failures Comment
-    steps:
-    - name: Download remote failures artifacts
-      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53  # v6.0.0
-      with:
-        path: remote-failures
-        pattern: remote-failures-*
-        merge-multiple: true
-    - name: Post PR comment with remote failures
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const path = require('path');
-          
-          try {
-            const logPath = 'remote-failures/remote_failures.json';
-            if (!fs.existsSync(logPath)) {
-              console.log('No remote failures log found at', logPath);
-              return;
-            }
-            
-            const failures = JSON.parse(fs.readFileSync(logPath, 'utf8'));
-            if (failures.length === 0) {
-              console.log('No remote failures recorded');
-              return;
-            }
-            
-            let comment = '## Remote Data Test Failures\n\n';
-            comment += `${failures.length} test(s) failed due to remote data exceptions:\n\n`;
-            
-            failures.forEach((failure, index) => {
-              comment += `### ${index + 1}. ${failure.test}\n`;
-              comment += `- **Exception**: ${failure.exception}\n`;
-              comment += `- **Message**: ${failure.message}\n\n`;
-            });
-            
-            comment += '_These tests were skipped due to `--skip-remote-failures` flag._';
-            
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
-            
-            console.log('Successfully posted PR comment with', failures.length, 'remote failures');
-          } catch (error) {
-            console.error('Error posting PR comment:', error);
-            core.setFailed(`Failed to post PR comment: ${error.message}`);
-          }
-
 
   upload-codecov:
     needs: [ ci_tests ]
