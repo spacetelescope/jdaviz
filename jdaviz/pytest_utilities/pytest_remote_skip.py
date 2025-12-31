@@ -52,27 +52,22 @@ def _get_remote_failure_log_path():
     Writes to .ci_artifacts/ directory at repository root for access
     by GitHub Actions. This directory is gitignored and ephemeral.
 
+    In GitHub Actions CI, uses GITHUB_WORKSPACE environment variable.
+    Outside CI, searches for repository root by looking for pyproject.toml.
+
     Returns
     -------
     str
         Path to the remote failures JSON log file.
     """
-    # When tox runs, it changes directory to .tmp/{envname}
-    # We need to navigate up to the repository root
-    cwd = os.getcwd()
-
     repo_root = None
 
-    # Check if we're in a tox temp directory (.tmp/{envname})
-    if '.tmp' in cwd:
-        # Navigate up two levels to get to repo root
-        potential_root = os.path.abspath(os.path.join(cwd, '..', '..'))
-        if os.path.exists(os.path.join(potential_root, 'pyproject.toml')):
-            repo_root = potential_root
-
-    # If not found via tox path, try to find repo root by looking for pyproject.toml
-    if repo_root is None:
-        current = os.path.abspath(cwd)
+    # In GitHub Actions, GITHUB_WORKSPACE points to repository root
+    if 'GITHUB_WORKSPACE' in os.environ:
+        repo_root = os.environ['GITHUB_WORKSPACE']
+    else:
+        # Search for repo root by looking for pyproject.toml
+        current = os.path.abspath(os.getcwd())
         while current != os.path.dirname(current):  # stops at filesystem root
             if os.path.exists(os.path.join(current, 'pyproject.toml')):
                 repo_root = current
@@ -81,7 +76,7 @@ def _get_remote_failure_log_path():
 
     # Fallback: use current directory
     if repo_root is None:
-        repo_root = cwd
+        repo_root = os.getcwd()
 
     ci_artifacts_dir = os.path.join(repo_root, '.ci_artifacts')
     # Create directory if it doesn't exist
