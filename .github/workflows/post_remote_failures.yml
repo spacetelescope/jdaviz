@@ -41,12 +41,28 @@ jobs:
       with:
         script: |
           const fs = require('fs');
+          const path = require('path');
           const prNumber = ${{ github.event.pull_request.number }};
           
           try {
-            const logPath = 'remote-failures/remote_failures.json';
-            if (!fs.existsSync(logPath)) {
-              console.log('No remote failures log found at', logPath);
+            // The dawidd6/action-download-artifact creates subdirectories for each artifact
+            // We need to find remote_failures.json in any subdirectory
+            let logPath = null;
+            const remoteFailuresDir = 'remote-failures';
+            
+            if (fs.existsSync(remoteFailuresDir)) {
+              const subdirs = fs.readdirSync(remoteFailuresDir);
+              for (const subdir of subdirs) {
+                const potentialPath = path.join(remoteFailuresDir, subdir, 'remote_failures.json');
+                if (fs.existsSync(potentialPath)) {
+                  logPath = potentialPath;
+                  break;
+                }
+              }
+            }
+            
+            if (!logPath) {
+              console.log('No remote failures log found in', remoteFailuresDir);
               return;
             }
             

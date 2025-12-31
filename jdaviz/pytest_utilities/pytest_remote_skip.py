@@ -61,22 +61,27 @@ def _get_remote_failure_log_path():
     # We need to navigate up to the repository root
     cwd = os.getcwd()
 
+    repo_root = None
+
     # Check if we're in a tox temp directory (.tmp/{envname})
     if '.tmp' in cwd:
-        # Navigate up to repo root
-        repo_root = os.path.abspath(os.path.join(cwd, '..', '..'))
-    else:
-        # If not in tox, assume we're already at or near repo root
-        # Try to find repo root by looking for setup.py or pyproject.toml
+        # Navigate up two levels to get to repo root
+        potential_root = os.path.abspath(os.path.join(cwd, '..', '..'))
+        if os.path.exists(os.path.join(potential_root, 'pyproject.toml')):
+            repo_root = potential_root
+
+    # If not found via tox path, try to find repo root by looking for pyproject.toml
+    if repo_root is None:
         current = os.path.abspath(cwd)
         while current != os.path.dirname(current):  # stops at filesystem root
             if os.path.exists(os.path.join(current, 'pyproject.toml')):
                 repo_root = current
                 break
             current = os.path.dirname(current)
-        else:
-            # Fallback: use current directory
-            repo_root = cwd
+
+    # Fallback: use current directory
+    if repo_root is None:
+        repo_root = cwd
 
     ci_artifacts_dir = os.path.join(repo_root, '.ci_artifacts')
     # Create directory if it doesn't exist
