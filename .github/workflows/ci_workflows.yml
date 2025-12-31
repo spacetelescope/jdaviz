@@ -155,6 +155,20 @@ jobs:
         fi
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ steps.build-toxposargs.outputs.toxposargs }}
+    - name: Copy remote failures log from tox temp directory
+      if: always()
+      shell: bash
+      run: |
+        # tox creates artifacts in .tmp/{toxenv}/.ci_artifacts
+        # Copy to repo root if it exists
+        if [ -f ".tmp/${{ matrix.toxenv }}/.ci_artifacts/remote_failures.json" ]; then
+          mkdir -p .ci_artifacts
+          cp ".tmp/${{ matrix.toxenv }}/.ci_artifacts/remote_failures.json" .ci_artifacts/remote_failures.json
+          echo "Copied remote_failures.json from tox temp directory"
+          cat .ci_artifacts/remote_failures.json
+        else
+          echo "No remote_failures.json found in tox temp directory"
+        fi
     - name: Check for remote failures log
       if: always()
       shell: bash
