@@ -53,9 +53,9 @@ def test_resolver_matching(specviz_helper):
 
     res_sp = find_matching_resolver(specviz_helper.app, sp)
     assert res_sp._obj._registry_label == 'object'
-    assert res_sp.format == '1D Spectrum'
+    assert '1D Spectrum' in res_sp.format.choices
 
-    specviz_helper._load(sp)
+    specviz_helper.load(sp)
     assert len(specviz_helper.app.data_collection) == 1
 
 
@@ -94,6 +94,7 @@ def test_trace_importer(specviz2d_helper, spectrum2d):
 def test_spectrum2d_viewer_options(deconfigged_helper, spectrum2d):
     ldr = deconfigged_helper.loaders['object']
     ldr.object = spectrum2d
+    ldr.format = '2D Spectrum'
 
     assert ldr.importer.viewer.create_new == '2D Spectrum'
     assert ldr.importer.viewer.new_label == '2D Spectrum'
@@ -176,7 +177,7 @@ def test_fits_spectrum_list_L3_wfss(deconfigged_helper):
 
     # ldr = deconfigged_helper.loaders['file']
     # ldr.filepath = './jdaviz/notebooks/WFSS_fits/jw01076-o103_t0000_nircam_f356w-grismr_x1d.fits'  # noqa
-    ldr.format = '1D Spectrum List'
+    ldr.format = '1D Spectrum'
 
     # 1_117 is completely masked
     sources_obj = ldr.importer.sources
@@ -231,7 +232,7 @@ def test_resolver_url(deconfigged_helper, fake_classes_in_registries):
 
     # may change with future importers
     assert len(ignore_custom_loaders(loader.format.choices)) == 2
-    assert loader.format == '1D Spectrum List'  # default may change with future importers
+    assert loader.format == '1D Spectrum'  # default may change with future importers
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
     loader.target = 'Any'

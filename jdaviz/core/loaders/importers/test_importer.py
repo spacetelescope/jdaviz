@@ -73,14 +73,14 @@ class TestResetAndCheckExistingDataInDC:
         # Now load the data into the data collection
         ldr = deconfigged_helper.loaders['object']
         ldr.object = spectrum_list
-        ldr.format = '1D Spectrum List'
-        ldr.importer.sources.selected = '1D Spectrum at index: 0'
+        ldr.format = '1D Spectrum'
+        ldr.importer.extension.selected = '1D Spectrum at index: 0'
         ldr.load()
 
         # The data hashes update in the SpectrumList importer but are different from the
         # data hashes in our original test_obj
-        dh_list = ldr.importer.sources.data_hashes
-        labels_list = ldr.importer.sources.labels
+        dh_list = ldr.importer.extension.data_hashes
+        labels_list = ldr.importer.extension.labels
         # The obj would otherwise have all the data hashes/labels from the SpectrumList
         test_obj.data_hashes = dh_list
         test_obj.hash_map_to_label = dict(zip(dh_list, labels_list))
@@ -113,11 +113,11 @@ class TestResetAndCheckExistingDataInDC:
 
         # Choose a source at the end to guarantee everything is different from before
         ldr.object = new_spectrum_list
-        ldr.format = '1D Spectrum List'
-        ldr.importer.sources.selected = '1D Spectrum at index: 5'
+        ldr.format = '1D Spectrum'
+        ldr.importer.extension.selected = '1D Spectrum at index: 5'
         ldr.load()
 
-        dh_list = ldr.importer.sources.data_hashes
+        dh_list = ldr.importer.extension.data_hashes
         test_obj.data_hashes = dh_list
 
         # Although two SpectrumList objects are loaded into the data collection,
@@ -142,8 +142,6 @@ class TestResetAndCheckExistingDataInDC:
         input_data = {'Image': image_hdu_wcs,
                       '1D Spectrum': spectrum1d,
                       '2D Spectrum': spectrum2d,
-                      '1D Spectrum List': premade_spectrum_list,
-                      '1D Spectrum Concatenated': premade_spectrum_list,
                       'Catalog': sky_coord_only_source_catalog}
 
         # TODO: Remove when this dev flag is no longer needed
