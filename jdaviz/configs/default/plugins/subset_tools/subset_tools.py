@@ -403,8 +403,8 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
         """
         # Only refresh if a subset is currently selected and displayed
         if (self.subset_selected and
-            self.subset_selected != self.subset.default_text and
-            self.subset_definitions):
+                self.subset_selected != self.subset.default_text and
+                self.subset_definitions):
             # Re-generate the subset definitions to pick up any parent label changes
             self._get_subset_definition()
 
@@ -413,8 +413,7 @@ class SubsetTools(PluginTemplateMixin, LoadersMixin):
             # during initial init, this can trigger before the component is initialized
             return
         self.subset_items = [{'label': self.subset.default_text}] + [
-                             self.subset._subset_to_dict(subset) for subset in
-                             self.data_collection.subset_groups]
+            self.subset._subset_to_dict(subset) for subset in self.data_collection.subset_groups]
 
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):
