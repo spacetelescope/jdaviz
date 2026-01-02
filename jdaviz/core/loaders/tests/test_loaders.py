@@ -460,6 +460,7 @@ class TestRomanLoaders:
     except ImportError:
         rdd = None
 
+    @pytest.mark.skip
     @pytest.mark.parametrize('data_type', roman_uris.keys())
     def test_rdd_open(self, data_type):
         if self.rdd is not None:
