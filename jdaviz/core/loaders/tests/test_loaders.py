@@ -447,24 +447,26 @@ def test_gwcs_to_fits_sip(gwcs_to_fits_sip, expected_cls, deconfigged_helper):
 
 @pytest.mark.remote_data
 class TestRomanLoaders:
-    @pytest.fixture(autouse=True)
-    def _setup_class(self):
-        try:
-            from roman_datamodels import datamodels as rdd
-            self.rdd = rdd
-        except ImportError:
-            self.rdd = None
+    # Use dictionary to make it easier to parametrize tests
+    # and extend in the future via parametrization of test_rdd_open
+    roman_uris = {
+        '1D Spectrum': 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf',
+        '2D Spectrum': 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'
+    }
 
-        self.roman_uris = {
-            '1D Spectrum': 'https://stsci.box.com/shared/static/rgasl942so9hno2rq9f1xgdeolav59o5.asdf',  # noqa
-            '2D Spectrum': 'https://stsci.box.com/shared/static/g8yb9hxguy3aedveef9su67lesgd8c6w.asdf'  # noqa
-        }
+    # roman_datamodels isn't a required dependency and some workflows don't install it
+    try:
+        from roman_datamodels import datamodels as rdd
+    except ImportError:
+        rdd = None
 
-    @pytest.mark.parametrize('data_type', ['1D Spectrum', '2D Spectrum'])
+    @pytest.mark.parametrize('data_type', roman_uris.keys())
     def test_rdd_open(self, data_type):
         if self.rdd is not None:
+            # Ensure that roman_datamodels can open the test files
             self.rdd.open(self.roman_uris[data_type])
         else:
+            # Skip the test if roman_datamodels is not installed
             pytest.skip("roman_datamodels not installed")
 
     @pytest.mark.parametrize('helper', ['deconfigged_helper', 'specviz_helper'])
