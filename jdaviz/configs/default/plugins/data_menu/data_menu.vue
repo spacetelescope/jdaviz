@@ -165,8 +165,8 @@
               <div>
                 <draggable v-model="layer_items">
                   <v-list-item
-                    v-for="item in layer_items"
-                    :key="item.label"
+                    v-for="(item, index) in layer_items"
+                    :key="index"
                     class="layer-select"
                     :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
                     @dragstart="onDragStart($event)"
@@ -186,12 +186,12 @@
                         />
                     </v-list-item-icon>
                     <v-list-item-content>
-                      <span style="display: inline-block">
-                        <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                        <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                        <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                        {{ item.label }}
-                      </span>
+                      <j-rename-text
+                        :value="item.label"
+                        :show-pencil="true"
+                        edit-hint="Rename data"
+                        @rename="(newLabel) => {handleRename(index, item.label, newLabel)}"
+                      />
                     </v-list-item-content>
                     <v-list-item-action>
                       <j-tooltip
@@ -337,6 +337,11 @@
       }
     },
     methods: {
+      handleRename(index, oldLabel, newLabel) {
+
+        // Call the Python rename
+        this.rename_item({old_label: oldLabel, new_label: newLabel});
+      },
       isSafari() {
         const ua = navigator.userAgent;
         return ua.includes('Safari') && !ua.match(/Chrome|Chromium|Edg/);
