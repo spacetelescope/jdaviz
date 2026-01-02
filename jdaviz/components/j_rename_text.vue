@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop="onRootKeydown">
     <!-- Display mode -->
     <div
       v-if="!isEditing"
@@ -23,6 +23,7 @@
         small
         style="margin-left: 8px; cursor: pointer; flex-shrink: 0;"
         @click.stop="startEditing"
+        @mousedown.stop
       >
         mdi-pencil
       </v-icon>
@@ -32,7 +33,10 @@
     <v-text-field
       v-if="isEditing"
       v-model="editValue"
-      @keyup="handleKeyup"
+      @keydown.enter.prevent="acceptEdit"
+      @keydown.escape.prevent="cancelEdit"
+      @click.stop
+      @mousedown.stop
       autofocus
       dense
       :hint="editHint"
@@ -41,10 +45,10 @@
     >
       <template v-slot:append>
         <j-tooltip tooltipcontent="Cancel change">
-          <v-icon style="cursor: pointer" @click="cancelEdit">mdi-close</v-icon>
+          <v-icon style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
         </j-tooltip>
         <j-tooltip tooltipcontent="Accept change">
-          <v-icon style="cursor: pointer" @click="acceptEdit">mdi-check</v-icon>
+          <v-icon style="cursor: pointer" @click.stop="acceptEdit" @mousedown.stop>mdi-check</v-icon>
         </j-tooltip>
       </template>
     </v-text-field>
@@ -77,7 +81,8 @@ module.exports = {
       isEditing: this.autoEdit,
       editValue: this.value,
       clickTimer: null,
-      clickCount: 0
+      clickCount: 0,
+      suppressPropagation: false
     };
   },
   computed: {
@@ -125,8 +130,13 @@ module.exports = {
       this.editValue = this.value;
     },
     cancelEdit() {
+      this.suppressPropagation = true;
       this.isEditing = false;
       this.editValue = this.value;
+      // Clear the flag after the event loop to allow normal behavior again
+      this.$nextTick(() => {
+        this.suppressPropagation = false;
+      });
     },
     acceptEdit() {
       const trimmedValue = this.editValue.trim();
@@ -136,13 +146,32 @@ module.exports = {
         // Keep the new value in editValue so it displays while waiting for backend update
         this.editValue = trimmedValue;
       }
+      this.suppressPropagation = true;
       this.isEditing = false;
+      // Clear the flag after the event loop to allow normal behavior again
+      this.$nextTick(() => {
+        this.suppressPropagation = false;
+      });
     },
-    handleKeyup(event) {
-      if (event.key === 'Enter') {
-        this.acceptEdit();
-      } else if (event.key === 'Escape') {
-        this.cancelEdit();
+    onRootClick(event) {
+      // Stop propagation when in edit mode or when suppression flag is set
+      // (suppression flag prevents selection changes after keyboard-triggered edit completion)
+      if (this.isEditing || this.suppressPropagation) {
+        event.stopPropagation();
+      }
+    },
+    onRootMousedown(event) {
+      // Also stop mousedown propagation when in edit mode or when suppression flag is set
+      // Some components handle selection on mousedown rather than click
+      if (this.isEditing || this.suppressPropagation) {
+        event.stopPropagation();
+      }
+    },
+    onRootKeydown() {
+      // Stop keydown propagation when in edit mode or when suppression flag is set
+      // This prevents the v-list-item-group from processing Enter/Escape keys
+      if (this.isEditing || this.suppressPropagation) {
+        // Already stopped by @keydown.stop, but keep the logic explicit
       }
     }
   }
