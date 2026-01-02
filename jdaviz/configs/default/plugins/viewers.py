@@ -188,7 +188,7 @@ class JdavizViewerMixin(WithCache):
                     continue
                 setattr(new_layer_state, k, v)
 
-        return new_viewer.user_api
+        return JdavizViewerWindow(new_viewer, app=self.jdaviz_app).user_api
 
     def reset_limits(self):
         """
