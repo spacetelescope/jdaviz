@@ -165,8 +165,8 @@
               <div>
                 <draggable v-model="layer_items">
                   <v-list-item
-                    v-for="item in layer_items"
-                    :key="item.label"
+                    v-for="(item, index) in layer_items"
+                    :key="index"
                     class="layer-select"
                     :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
                     @dragstart="onDragStart($event)"
@@ -190,7 +190,7 @@
                         :value="item.label"
                         :show-pencil="true"
                         edit-hint="Rename data"
-                        @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
+                        @rename="(newLabel) => {handleRename(index, item.label, newLabel)}"
                       />
                     </v-list-item-content>
                     <v-list-item-action>
@@ -337,6 +337,11 @@
       }
     },
     methods: {
+      handleRename(index, oldLabel, newLabel) {
+
+        // Call the Python rename
+        this.rename_item({old_label: oldLabel, new_label: newLabel});
+      },
       isSafari() {
         const ua = navigator.userAgent;
         return ua.includes('Safari') && !ua.match(/Chrome|Chromium|Edg/);
