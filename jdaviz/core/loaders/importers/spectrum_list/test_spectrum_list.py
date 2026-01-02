@@ -10,10 +10,10 @@ from specutils import Spectrum, SpectrumList
 
 from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
     SpectrumListImporter,
+    SpectrumListConcatenatedImporter,
     combine_lists_to_1d_spectrum
 )
 
-from jdaviz.conftest import FakeSpectrumListImporter, FakeSpectrumListConcatenatedImporter
 from jdaviz.utils import create_data_hash
 
 
@@ -43,10 +43,10 @@ class TestSpectrumListImporter:
                                     '1D Spectrum_EXP-0_ID-1111',
                                     '1D Spectrum_EXP-1_ID-1111']
 
-        return FakeSpectrumListImporter(app=config_helper.app,
-                                        resolver=config_helper.loaders['object']._obj,
-                                        parser=None,
-                                        input=input_obj)
+        return SpectrumListImporter(app=config_helper.app,
+                                    resolver=config_helper.loaders['object']._obj,
+                                    parser=None,
+                                    input=input_obj)
 
     def test_spectrum_list_importer_init_attributes(self, specviz_helper, deconfigged_helper,
                                                     premade_spectrum_list):
@@ -125,16 +125,16 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         assert importer_obj.is_valid
 
-        importer_obj.input = make_empty_spectrum
+        importer_obj._input = make_empty_spectrum
         assert not importer_obj.is_valid
 
-        importer_obj.input = spectrum1d
+        importer_obj._input = spectrum1d
         assert not importer_obj.is_valid
 
-        importer_obj.input = spectrum2d
+        importer_obj._input = spectrum2d
         assert importer_obj.is_valid
 
-        importer_obj.input = spectrum_collection
+        importer_obj._input = spectrum_collection
         assert importer_obj.is_valid
 
     def test_on_sources_selected(self, deconfigged_helper, premade_spectrum_list):
@@ -337,7 +337,7 @@ class TestSpectrumListImporter:
         assert importer_obj.output[0] == spec_dict['obj']
 
         # Check that is_valid is enforced in the output
-        importer_obj.input = spectrum1d
+        importer_obj._input = spectrum1d
         assert importer_obj.output is None
 
     @pytest.mark.parametrize('selection', [[],
@@ -350,6 +350,7 @@ class TestSpectrumListImporter:
         importer_obj = self.setup_importer_obj(deconfigged_helper, premade_spectrum_list)
         sources_data_labels = self.sources_data_labels
 
+        dc_len = None
         if not selection:
             importer_obj.user_api.sources = selection
             error_msg = "No sources selected."
@@ -427,10 +428,10 @@ class TestSpectrumListConcatenatedImporter:
 
     @staticmethod
     def setup_importer_obj(config_helper, input_obj):
-        return FakeSpectrumListConcatenatedImporter(app=config_helper.app,
-                                                    resolver=config_helper.loaders['object']._obj,
-                                                    parser=None,
-                                                    input=input_obj)
+        return SpectrumListConcatenatedImporter(app=config_helper.app,
+                                                resolver=config_helper.loaders['object']._obj,
+                                                parser=None,
+                                                input=input_obj)
 
     def setup_combined_spectrum(self, with_uncertainty):
         wl = [1, 2, 3] * u.nm
