@@ -70,6 +70,8 @@ Bug Fixes
 - Fixed bugs in aperture photometry plugin for images in deconfigged, where the _cube_wave attribute,
   which is not applicable to images, was being accessed. [#3950]
 
+- Fixes traceback when loading two 2D spectra into the deconfigged app. [#3957]
+
 Cubeviz
 ^^^^^^^
 

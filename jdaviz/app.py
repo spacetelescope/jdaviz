@@ -801,6 +801,46 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
+                new_parent_label = self._get_assoc_data_parent(new_data.label)
+                existing_parent_label = self._get_assoc_data_parent(existing_data.label)
+
+                is_related = (
+                    new_parent_label == existing_data.label or
+                    existing_parent_label == new_data.label or
+                    (new_parent_label and new_parent_label == existing_parent_label)
+                )
+
+                # For pixel spectral axes, allows 2D-to-1D linking
+                if new_comp._component_type == 'pixel_spectral_axis':
+                    # Allow linking if different dimensions with world spectral axes
+                    if not is_related and new_data.ndim != existing_data.ndim:
+                        is_related = (
+                            any(getattr(c, '_component_type', None) == 'spectral_axis'
+                                for c in new_data.components) and
+                            any(getattr(c, '_component_type', None) == 'spectral_axis'
+                                for c in existing_data.components)
+                        )
+
+                    # Allow linking if same dimensions, but only for 1D data
+                    if not is_related and new_data.ndim == existing_data.ndim == 1:
+                        is_related = True
+
+                    if not is_related:
+                        continue
+
+                # For world spectral axes with same dimensions, only link if they're unrelated
+                if (new_comp._component_type == 'spectral_axis'
+                   and new_data.ndim == existing_data.ndim):
+                    if is_related:
+                        continue
+
+                # Skip linking WCS coordinate components between unrelated 2D spectra
+                # But allow flux/uncertainty linking for subset propagation
+                if (not is_related and new_data.ndim == existing_data.ndim == 2):
+                    if (new_comp._component_type in ('spectral_axis', 'angle') or
+                       (new_comp._component_type and ':angle' in new_comp._component_type)):
+                        continue
+
                 for existing_comp in existing_data.components:
                     if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
                         continue
@@ -831,7 +871,7 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config in CONFIGS_WITH_LOADERS and self.config not in ['specviz2d', 'deconfigged']:
+        if self.config in CONFIGS_WITH_LOADERS:
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -876,12 +916,6 @@ class Application(VuetifyTemplate, HubListener):
             links = [LinkSame(linked_data.components[0], ref_data.components[0]),
                      LinkSame(linked_data.components[1], ref_data.components[1])]
 
-            dc.add_link(links)
-            return
-        elif (ref_data.ndim == 2 and linked_data.ndim == 1):
-            # Needed for subset linking between 1D and 2D viewers
-            # Spectrum 1D: Pixel Axis 0 [x] <=> Spectrum 2D: Pixel Axis 1 [x]
-            links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
             dc.add_link(links)
             return
 

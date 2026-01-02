@@ -453,6 +453,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
                     if layer.layer.label not in data_and_children:
                         for x in children_blocks:
+                            if not x:
+                                continue
                             # If the projected new_zorder falls within a block of
                             # data+children, adjust to be just above or below the block
                             # depending on if the layer came from below or above, respectively
