@@ -318,7 +318,12 @@ class BaseImporterToDataCollection(BaseImporter):
                                     vid=viewer_label,
                                     name=viewer_label,
                                     open_data_menu_if_empty=False)
-            self.app.add_data_to_viewer(viewer_label, data_label)
+            # Bypass data menu filters for child layers
+            if parent is not None:
+                self.app.add_data_to_viewer(viewer_label, data_label)
+            else:
+                viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+                viewer.data_menu.add_data(data_label)
 
             # default to selecting this new viewer for next import
             viewer_select.create_new.selected = ''
@@ -337,8 +342,11 @@ class BaseImporterToDataCollection(BaseImporter):
             exceptions = []
             for viewer_label in viewer_select.selected:
                 try:
-                    # Bypass data menu filters (e.g., for auto-extracted child layers)
-                    self.app.add_data_to_viewer(viewer_label, data_label)
+                    if parent is not None:
+                        self.app.add_data_to_viewer(viewer_label, data_label)
+                    else:
+                        viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+                        viewer.data_menu.add_data(data_label)
                 except Exception as e:
                     failed_viewers.append(viewer_label)
                     exceptions.append(str(e))
