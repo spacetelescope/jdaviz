@@ -824,15 +824,17 @@ class Application(VuetifyTemplate, HubListener):
                     if not is_related:
                         continue
 
-                # Skip linking any components between unrelated 2D spectra
-                if not is_related and new_data.ndim == existing_data.ndim == 2:
-                    continue
-
                 # For world spectral axes with same dimensions, only link if they're unrelated
-                # Skip linking related data to avoid duplicate world coordinate links
                 if (new_comp._component_type == 'spectral_axis'
                    and new_data.ndim == existing_data.ndim):
                     if is_related:
+                        continue
+
+                # Skip linking WCS coordinate components between unrelated 2D spectra
+                # But allow flux/uncertainty linking for subset propagation
+                if (not is_related and new_data.ndim == existing_data.ndim == 2):
+                    if (new_comp._component_type in ('spectral_axis', 'angle') or
+                       (new_comp._component_type and ':angle' in new_comp._component_type)):
                         continue
 
                 for existing_comp in existing_data.components:
