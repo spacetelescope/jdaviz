@@ -3524,7 +3524,7 @@ class Application(VuetifyTemplate, HubListener):
                 break
 
         if ret_item is None:
-            raise KeyError(f'{name} not found')
+            raise KeyError(f'\'{name}\' not found')
 
         return ret_item
 

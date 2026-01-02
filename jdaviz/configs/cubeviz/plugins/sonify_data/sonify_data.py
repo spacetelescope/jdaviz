@@ -102,6 +102,10 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display sonified data."""
+        return [{'label': 'Flux', 'reference': 'flux-viewer'}]
+
     @property
     def user_api(self):
         expose = ['sonify_cube']

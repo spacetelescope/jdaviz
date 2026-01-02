@@ -129,6 +129,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display moment map 2D image."""
+        return [{'label': 'Flux', 'reference': 'flux-viewer'}]
+
     @property
     def _default_image_viewer_reference_name(self):
         return getattr(
