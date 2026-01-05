@@ -189,7 +189,6 @@
                       <j-rename-text
                         :value="item.label"
                         :show-pencil="true"
-                        edit-hint="Rename data"
                         :rename-error-message="rename_error_messages[item.label] || ''"
                         @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
                         @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"

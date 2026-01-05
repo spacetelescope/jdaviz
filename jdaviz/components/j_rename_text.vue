@@ -1,5 +1,5 @@
 <template>
-  <div @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop>
+  <div @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: flex; align-items: center; width: 100%; min-height: 48px;">
     <!-- Display mode -->
     <div
       v-if="!isEditing"
@@ -7,7 +7,7 @@
       @mouseleave="hovering = false"
       @mousedown.stop
       @dblclick.stop="startEditing"
-      style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px;"
+      style="display: flex; align-items: center; justify-content: space-between; width: 100%;"
     >
       <div style="display: flex; align-items: center; flex-grow: 1;">
         <span
@@ -19,9 +19,10 @@
 
       <!-- Pencil icon - visible on hover in display mode -->
       <v-icon
-        v-if="hovering && showPencil"
+        v-if="showPencil"
         small
-        style="margin-left: 8px; cursor: pointer; flex-shrink: 0;"
+        style="margin-left: 8px; cursor: pointer; flex-shrink: 0; width: 24px; visibility: hidden;"
+        :style="hovering ? 'visibility: visible;' : ''"
         @click.stop="startEditing"
         @mousedown.stop
       >
@@ -39,10 +40,10 @@
       @mousedown.stop
       autofocus
       dense
-      :hint="renameErrorMessage || editHint"
+      :hint="renameErrorMessage"
       :error-messages="renameErrorMessage ? [renameErrorMessage] : []"
       persistent-hint
-      style="margin-top: -8px; flex-grow: 1;"
+      style="flex-grow: 1; margin: 0; padding: 0;"
     >
       <template v-slot:append>
         <j-tooltip tooltipcontent="Cancel change">
