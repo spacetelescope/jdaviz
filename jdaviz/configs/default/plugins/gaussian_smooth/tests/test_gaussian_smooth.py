@@ -197,18 +197,17 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     np.testing.assert_allclose(gp_mark.y, smoothed_spectrum.flux.value)
 
 
-def test_create_new_viewer(specviz_helper, spectrum1d):
+def test_create_new_viewer(deconfigged_helper, spectrum1d):
     """Test that the plugin can create a new viewer when add_results.viewer.create_new is set."""
     data_label = 'test'
-    dc = specviz_helper.app.data_collection
-    specviz_helper.load_data(spectrum1d, data_label=data_label)
-
+    dc = deconfigged_helper.app.data_collection
+    deconfigged_helper.load_data(spectrum1d, data_label=data_label)
     # Check initial state - should only have the default viewer
-    initial_viewers = list(specviz_helper.app._viewer_store.keys())
+    initial_viewers = list(deconfigged_helper.app._viewer_store.keys())
     assert len(initial_viewers) == 1
 
     # Get the plugin
-    gs = specviz_helper.plugins['Gaussian Smooth']._obj
+    gs = deconfigged_helper.plugins['Gaussian Smooth']._obj
     gs.dataset_selected = data_label
     gs.mode_selected = 'Spectral'
     gs.stddev = 3
@@ -221,12 +220,12 @@ def test_create_new_viewer(specviz_helper, spectrum1d):
     gs.vue_apply()
 
     # Check that a new viewer was created
-    final_viewers = list(specviz_helper.app._viewer_store.keys())
+    final_viewers = list(deconfigged_helper.app._viewer_store.keys())
     assert len(final_viewers) == 2
     new_viewer_id = [v for v in final_viewers if v not in initial_viewers][0]
 
     # Check that data was added to the new viewer
-    new_viewer = specviz_helper.app.get_viewer(new_viewer_id)
+    new_viewer = deconfigged_helper.app.get_viewer(new_viewer_id)
     assert len(new_viewer.data()) == 1
     assert new_viewer.data()[0].label == f'{data_label} smooth stddev-3.0'
 
