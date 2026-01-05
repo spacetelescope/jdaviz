@@ -707,9 +707,16 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
 
         if is_subset:
-            self.app._rename_subset(old_label, new_label)
+            rename_meth = self.app._rename_subset
         else:
-            self.rename_data(old_label, new_label)
+            rename_meth = self.rename_data
+
+        try:
+            # Catch ValueError to show snackbar message instead of raising
+            # in console.
+            rename_meth(old_label, new_label)
+        except ValueError as ve:
+            self.hub.broadcast(SnackbarMessage(str(ve), sender=self, color='error'))
 
     def create_subset(self, subset_type):
         """
