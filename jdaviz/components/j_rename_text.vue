@@ -1,5 +1,5 @@
 <template>
-  <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: center;">
+  <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: flex-start; min-width: 0; flex: 1;">
     <!-- Display mode -->
     <span
       v-if="!isEditing"
@@ -7,10 +7,11 @@
       @mouseleave="hovering = false"
       @mousedown.stop
       @dblclick.stop="startEditing"
-      style="display: inline-flex; align-items: center;"
+      style="display: inline-flex; align-items: flex-start; min-width: 0; flex: 1;"
     >
       <span
         :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
+        style="min-width: 0; overflow-wrap: break-word;"
       >
         {{ value }}
       </span>
@@ -51,7 +52,7 @@
           <v-icon
             style="cursor: pointer"
             :style="renameErrorMessage ? 'opacity: 0.5; cursor: not-allowed;' : ''"
-            @click.stop="!renameErrorMessage && acceptEdit"
+            @click.stop="renameErrorMessage ? null : acceptEdit()"
             @mousedown.stop
           >mdi-check</v-icon>
         </j-tooltip>
