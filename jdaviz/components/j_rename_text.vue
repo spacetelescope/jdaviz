@@ -39,7 +39,8 @@
       @mousedown.stop
       autofocus
       dense
-      :hint="editHint"
+      :hint="renameErrorMessage || editHint"
+      :error-messages="renameErrorMessage ? [renameErrorMessage] : []"
       persistent-hint
       style="margin-top: -8px; flex-grow: 1;"
     >
@@ -47,8 +48,13 @@
         <j-tooltip tooltipcontent="Cancel change">
           <v-icon style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
         </j-tooltip>
-        <j-tooltip tooltipcontent="Accept change">
-          <v-icon style="cursor: pointer" @click.stop="acceptEdit" @mousedown.stop>mdi-check</v-icon>
+        <j-tooltip :tooltipcontent="renameErrorMessage || 'Accept change'">
+          <v-icon
+            style="cursor: pointer"
+            :style="renameErrorMessage ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+            @click.stop="!renameErrorMessage && acceptEdit"
+            @mousedown.stop
+          >mdi-check</v-icon>
         </j-tooltip>
       </template>
     </v-text-field>
@@ -73,6 +79,10 @@ module.exports = {
     autoEdit: {
       type: Boolean,
       default: false
+    },
+    renameErrorMessage: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -87,6 +97,12 @@ module.exports = {
     value(newVal) {
       if (!this.isEditing) {
         this.editValue = newVal;
+      }
+    },
+    editValue(newVal) {
+      if (this.isEditing) {
+        // Emit input event as user types
+        this.$emit('input', newVal);
       }
     }
   },

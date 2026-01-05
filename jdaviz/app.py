@@ -1820,7 +1820,20 @@ class Application(VuetifyTemplate, HubListener):
 
         return modified
 
-    def _rename_data(self, old_label, new_label):
+    def check_rename_availability(self, old_label, new_label, is_subset=False):
+        """
+        Check if new label already exists in reserved labels.
+        Used by front-end for dynamic user warning.
+        """
+        if is_subset:
+            self._check_valid_subset_label(new_label)
+
+        if new_label in self._reserved_labels and new_label != old_label:
+            msg = (f'Cannot rename data to {new_label}: '
+                   'name already exists in data collection or subsets or is unavailable.')
+            raise ValueError(msg)
+
+    def rename_data(self, old_label, new_label):
         """
         Rename data in the data collection and update all references.
 
@@ -1831,12 +1844,7 @@ class Application(VuetifyTemplate, HubListener):
         new_label : str
             The new label for the data.
         """
-        # Check if new label already exists in reserved labels
-        if new_label in self._reserved_labels and new_label != old_label:
-            msg = (f'Cannot rename data to {new_label}: '
-                   'name already exists in data collection or subsets or is unavailable.')
-            raise ValueError(msg)
-
+        self.check_rename_availability(old_label, new_label)
         data = self.data_collection[old_label]
 
         # Set flag to indicate rename is in progress
@@ -1849,7 +1857,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def _rename_single_data(self, old_label, new_label, data):
         """
-        Rename a single data entry. This is a helper method used by _rename_data.
+        Rename a single data entry. This is a helper method used by rename_data.
 
         Parameters
         ----------

@@ -118,6 +118,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_modes = List().tag(sync=True)
 
+    rename_error_messages = Dict({}).tag(sync=True)
+
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -697,7 +699,33 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             The new label to assign to the data item.
         -----------
         """
-        self.app._rename_data(old_label, new_label)
+        self.app.rename_data(old_label, new_label)
+
+    def _reset_rename_error_messages(self, old_label):
+        """
+        Clear all stored rename error messages.
+        """
+        if old_label in self.rename_error_messages:
+            self.rename_error_messages = {k: v for k, v in self.rename_error_messages.items()
+                                          if k != old_label}
+
+    def vue_check_rename(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+        is_subset = info.get('is_subset', False)
+
+        if old_label == new_label:
+            self._reset_rename_error_messages(old_label)
+            return
+
+        try:
+            self.app.check_rename_availability(old_label, new_label, is_subset=is_subset)
+        except ValueError as e:
+            # Store error message for this specific layer
+            self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
+        else:
+            # Clear error for this specific layer
+            self._reset_rename_error_messages(old_label)
 
     def vue_rename_item(self, info, *args):  # pragma: no cover
         old_label = info.get('old_label')
@@ -712,11 +740,14 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             rename_meth = self.rename_data
 
         try:
-            # Catch ValueError to show snackbar message instead of raising
-            # in console.
             rename_meth(old_label, new_label)
-        except ValueError as ve:
-            self.hub.broadcast(SnackbarMessage(str(ve), sender=self, color='error'))
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(f"Failed to rename: {repr(e)}",
+                                               color='error', sender=self, traceback=e))
+        else:
+            self._reset_rename_error_messages(old_label)
+            self.hub.broadcast(SnackbarMessage(f"Renamed '{old_label}' to '{new_label}'",
+                                               color='info', sender=self))
 
     def create_subset(self, subset_type):
         """
