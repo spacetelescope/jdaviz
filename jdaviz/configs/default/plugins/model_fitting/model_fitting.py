@@ -392,7 +392,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.cube_fit:
             # Model fitted to cube, return image viewer
             if self.config == 'cubeviz':
-                return [{'label': 'Flux', 'reference': 'flux-viewer'}]
+                return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
             else:
                 return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
         else:

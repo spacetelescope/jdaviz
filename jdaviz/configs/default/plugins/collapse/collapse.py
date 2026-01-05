@@ -67,7 +67,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     def _get_supported_viewers(self):
         """Return viewer types that can display collapsed 2D image."""
         if self.config == 'cubeviz':
-            return [{'label': 'Flux', 'reference': 'flux-viewer'}]
+            return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
         else:
             return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
 
