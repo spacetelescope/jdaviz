@@ -469,6 +469,8 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_subset_delete_message)
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_subset_create_message)
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=self._on_subset_rename_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
@@ -561,6 +563,13 @@ class Application(VuetifyTemplate, HubListener):
     def _on_subset_create_message(self, msg):
         self._reserved_labels.add(msg.subset.label)
         self._on_layers_changed(msg)
+
+    def _on_subset_rename_message(self, msg):
+        # Update _reserved_labels when a subset is renamed
+        # msg has old_label and new_label attributes
+        if msg.old_label in self._reserved_labels:
+            self._reserved_labels.remove(msg.old_label)
+        self._reserved_labels.add(msg.new_label)
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
