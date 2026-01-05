@@ -29,7 +29,7 @@ from glue_jupyter import jglue
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
-from glue_jupyter.registries import viewer_registry
+from glue_jupyter.registries import viewer_registry as glue_viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
@@ -60,7 +60,7 @@ from jdaviz.core.marks import (PluginMarkCollection,
 from jdaviz.core.region_translators import regions2roi, regions2aperture
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
-from jdaviz.core.registries import tray_registry
+from jdaviz.core.registries import tray_registry, viewer_registry
 from jdaviz.core.sonified_layers import SonifiedDataLayerArtist
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
@@ -108,8 +108,8 @@ GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att', 'x_att', 'y_att')
 # but may be added in the future.  If it is not in the registry, we'll add it now.
 # Once glue-jupyter with https://github.com/glue-viz/glue-jupyter/pull/402 is pinned,
 # we can safely remove this block.
-if 'histogram' not in viewer_registry.members.keys():
-    @viewer_registry('histogram')
+if 'histogram' not in glue_viewer_registry.members.keys():
+    @glue_viewer_registry('histogram')
     class RegisteredHistogramViewer(BqplotHistogramView):
         pass
 
@@ -3944,11 +3944,11 @@ class ViewerSelect(SelectPluginComponent):
 
     @property
     def ids(self):
-        return [item['id'] for item in self.items]
+        return [item['id'] for item in self.items if 'id' in item]
 
     @property
     def references(self):
-        return [item['reference'] for item in self.items]
+        return [item['reference'] for item in self.items if 'reference' in item]
 
     def _get_selected_item(self, selected):
         if selected in self.manual_options:
@@ -4134,7 +4134,7 @@ class ViewerSelectCreateNew(ViewerSelect):
         # ensure the default label is unique for the data-collection
         self.new_label.default = self.app.return_unique_name(self.new_label.default, typ='viewer')
 
-        for viewer in self.app._jdaviz_helper.viewers.keys():
+        for viewer in getattr(self.app._jdaviz_helper, 'viewers', {}).keys():
             if self.new_label.value.strip() == viewer:
                 self.new_label.invalid_msg = f"new_label='{self.new_label.value}' already in use"
                 return

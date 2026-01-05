@@ -231,13 +231,11 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def _get_supported_viewers(self):
         """Return viewer types that can display the extracted spectrum."""
-        return [{'label': self._default_spectrum_viewer_reference_name.replace('-', ' ').title(),
-                 'reference': self._default_spectrum_viewer_reference_name}]
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     def _get_bg_spec_supported_viewers(self):
         """Return viewer types that can display the background spectrum."""
-        return [{'label': self._default_spectrum_viewer_reference_name.replace('-', ' ').title(),
-                 'reference': self._default_spectrum_viewer_reference_name}]
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     @property
     def live_update_subscriptions(self):
