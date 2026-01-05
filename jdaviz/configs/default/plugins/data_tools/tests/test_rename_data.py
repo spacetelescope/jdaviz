@@ -52,7 +52,7 @@ def test_basic_data_rename(deconfigged_helper, input_data, data_format, request)
     assert deconfigged_helper.app._renaming_data is False
 
     # Rename the data
-    deconfigged_helper.app._rename_data('label_before', 'label_after')
+    deconfigged_helper.app.rename_data('label_before', 'label_after')
 
     # Check state.data_items was updated
     state_items_after = [item['name'] for item in deconfigged_helper.app.state.data_items]
@@ -89,18 +89,18 @@ def test_rename_data_errors(deconfigged_helper, image_hdu_wcs):
 
     # Try to rename non-existent data
     with pytest.raises(ValueError):
-        deconfigged_helper.app._rename_data('nonexistent', 'new_name')
+        deconfigged_helper.app.rename_data('nonexistent', 'new_name')
 
     deconfigged_helper.load(image_hdu_wcs, format='Image', data_label='data2')
 
     # Try to rename data1 to data2 (which already exists)
     with pytest.raises(ValueError):
-        deconfigged_helper.app._rename_data('data1', 'data2')
+        deconfigged_helper.app.rename_data('data1', 'data2')
 
     # Try to rename with a reserved label
     reserved_label = list(deconfigged_helper.app._reserved_labels)[0]
     with pytest.raises(ValueError):
-        deconfigged_helper.app._rename_data('data1', reserved_label)
+        deconfigged_helper.app.rename_data('data1', reserved_label)
 
 
 def test_rename_data_updates_reserved_labels(deconfigged_helper, image_hdu_wcs):
@@ -113,7 +113,7 @@ def test_rename_data_updates_reserved_labels(deconfigged_helper, image_hdu_wcs):
     assert 'reserved_test' in deconfigged_helper.app._reserved_labels
 
     # Rename
-    deconfigged_helper.app._rename_data('reserved_test', 'reserved_test_new')
+    deconfigged_helper.app.rename_data('reserved_test', 'reserved_test_new')
 
     # Check labels were updated
     assert 'reserved_test' not in deconfigged_helper.app._reserved_labels
@@ -148,7 +148,7 @@ def test_rename_data_broadcasts_message(deconfigged_helper, image_hdu_wcs):
                                          handler=listener.handle_data_renamed)
 
     # Rename
-    deconfigged_helper.app._rename_data('message_test', 'message_test_new')
+    deconfigged_helper.app.rename_data('message_test', 'message_test_new')
 
     # Check message was broadcast
     msg = messages_received[-1]
@@ -171,7 +171,7 @@ def test_rename_data_no_auto_extraction_on_2d_spectrum(deconfigged_helper, spect
     labels_before = set(dcf_dc.labels)
 
     # Rename the 2D spectrum
-    deconfigged_helper.app._rename_data('2d_spectrum', '2d_spectrum_renamed')
+    deconfigged_helper.app.rename_data('2d_spectrum', '2d_spectrum_renamed')
 
     # Verify rename (of 2d spectrum only) was successful
     assert '2d_spectrum' not in dcf_dc.labels
@@ -192,7 +192,7 @@ def test_rename_data_preserves_dataset_selected(deconfigged_helper, spectrum1d):
     """
     Test that renaming data preserves dataset_selected in plugins like Model Fitting.
 
-    This test verifies that when _rename_data is called, the dataset_selected
+    This test verifies that when rename_data is called, the dataset_selected
     trait in plugins is updated to the new name and not reset to a default value.
     """
     # Load two spectra so we have multiple options
@@ -205,7 +205,7 @@ def test_rename_data_preserves_dataset_selected(deconfigged_helper, spectrum1d):
     for plugin in ['Model Fitting', 'Line Analysis', 'Gaussian Smooth']:
         model_fitting = deconfigged_helper.plugins[plugin]._obj
         model_fitting.dataset_selected = 'spectrum_b'
-        dcf_app._rename_data('spectrum_b', 'spectrum_c')
+        dcf_app.rename_data('spectrum_b', 'spectrum_c')
 
         # Verify the selection was updated to the new name, not reset to default
         assert model_fitting.dataset_selected == 'spectrum_c'
@@ -215,4 +215,4 @@ def test_rename_data_preserves_dataset_selected(deconfigged_helper, spectrum1d):
         assert 'spectrum_c' in dcf_app.data_collection.labels
 
         # Reset
-        dcf_app._rename_data('spectrum_c', 'spectrum_b')
+        dcf_app.rename_data('spectrum_c', 'spectrum_b')
