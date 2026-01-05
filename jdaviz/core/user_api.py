@@ -153,6 +153,10 @@ class UserApiWrapper:
                 return _value(item.to_dict())
             if hasattr(item, 'selected'):
                 return item.selected
+            # Handle AutoTextField objects by returning their value
+            from jdaviz.core.template_mixin import AutoTextField
+            if isinstance(item, AutoTextField):
+                return item.value
             return item
 
         return {k: _value(getattr(self, k)) for k in self._expose
