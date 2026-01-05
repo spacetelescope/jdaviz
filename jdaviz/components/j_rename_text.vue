@@ -1,5 +1,5 @@
 <template>
-  <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: flex-start; min-width: 0; flex: 1;">
+  <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: center; min-width: 0; flex: 1;">
     <!-- Display mode -->
     <span
       v-if="!isEditing"
@@ -7,7 +7,7 @@
       @mouseleave="hovering = false"
       @mousedown.stop
       @dblclick.stop="startEditing"
-      style="display: inline-flex; align-items: flex-start; min-width: 0; flex: 1;"
+      style="display: inline-flex; align-items: center; min-width: 0; flex: 1;"
     >
       <span
         :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
@@ -16,11 +16,11 @@
         {{ value }}
       </span>
 
-      <!-- Pencil icon - visible on hover in display mode -->
+      <!-- Pencil icon - visible on hover in display mode, fixed to the right -->
       <v-icon
         v-if="showPencil"
         small
-        style="margin-left: 8px; cursor: pointer; flex-shrink: 0; visibility: hidden;"
+        style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden;"
         :style="hovering ? 'visibility: visible;' : ''"
         @click.stop="startEditing"
         @mousedown.stop
