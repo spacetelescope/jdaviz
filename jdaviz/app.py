@@ -1758,6 +1758,25 @@ class Application(VuetifyTemplate, HubListener):
             self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
             _ = self.state.layer_icons.pop(old_label)
 
+        # Update _data_associations to maintain parent-child relationships
+        if old_label in self._data_associations:
+            # Move the association entry to the new label
+            self._data_associations[new_label] = self._data_associations.pop(old_label)
+
+            # Update parent references in children
+            children = self._data_associations[new_label].get('children', [])
+            for child_label in children:
+                if child_label in self._data_associations:
+                    self._data_associations[child_label]['parent'] = new_label
+
+        # Check if this is a child being renamed - update parent's children list
+        for data_label, assoc_data in self._data_associations.items():
+            if old_label in assoc_data.get('children', []):
+                # Replace old label with new label in children list
+                children = assoc_data['children']
+                children[children.index(old_label)] = new_label
+                break
+
     def _update_data_items_list(self, old_label, new_label):
         """
         Update state.data_items list when renaming an item.
