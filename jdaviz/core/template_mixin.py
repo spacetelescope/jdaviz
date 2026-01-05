@@ -2336,12 +2336,12 @@ class LayerSelect(SelectPluginComponent):
         if is_renaming and hasattr(self, 'items') and self.items:
             # Preserve existing order by matching against current items
             existing_labels = [item['label'] for item in self.items
-                             if item.get('label') not in self.manual_options]
+                               if item.get('label') not in self.manual_options]
 
             # Build layer_items in the same order as existing items
             layer_items = []
             label_to_dict = {label: self._layer_to_dict(label)
-                           for label in unique_layer_labels}
+                             for label in unique_layer_labels}
 
             # First, add items in the existing order
             for existing_label in existing_labels:
