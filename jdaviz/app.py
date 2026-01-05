@@ -1844,13 +1844,16 @@ class Application(VuetifyTemplate, HubListener):
         Check if new label already exists in reserved labels.
         Used by front-end for dynamic user warning.
         """
-        if is_subset:
-            self._check_valid_subset_label(new_label)
-
-        if new_label in self._reserved_labels and new_label != old_label:
-            msg = (f'Cannot rename data to {new_label}: '
+        # Always check that the new label doesn't already exist in reserved labels
+        # (unless we're just keeping the same name)
+        if new_label != old_label and new_label in self._reserved_labels:
+            msg = (f'Cannot rename to {new_label}: '
                    'name already exists in data collection or subsets or is unavailable.')
             raise ValueError(msg)
+
+        # When renaming a subset, also perform subset-specific validation
+        if is_subset:
+            self._check_valid_subset_label(new_label)
 
     def rename_data(self, old_label, new_label):
         """
@@ -2447,14 +2450,15 @@ class Application(VuetifyTemplate, HubListener):
         else:
             subset_selected = self.session.edit_subset_mode.edit_subset[0].label
 
-        # remove the current selection label from the set of labels, because its ok
-        # if the new subset shares the name of the current selection (renaming to current name)
-        if subset_selected in self._reserved_labels:
-            self._reserved_labels.remove(subset_selected)
+        # Create a copy of reserved labels to check against, excluding the current
+        # selection label, to allow subsets to keep their current name
+        reserved_labels_to_check = set(self._reserved_labels)
+        if subset_selected in reserved_labels_to_check:
+            reserved_labels_to_check.remove(subset_selected)
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
-        if subset_name in self._reserved_labels:
+        if subset_name in reserved_labels_to_check:
             if raise_if_invalid:
                 raise ValueError("Cannot rename subset to name of an existing subset"
                                  f" or data item: ({subset_name}).")
