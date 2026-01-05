@@ -4678,11 +4678,15 @@ def _populate_viewer_items(plugin, supported_viewers):
                                  if item.get('reference') == 'imviz-image-viewer']
 
     # Extract items that can be created (default to True if not specified)
-    viewer_create_new_items = [item.copy() for item in supported_viewers
-                               if item.get('allow_create', True)]
-    # Remove 'allow_create' key from the items (it's not needed in the UI)
-    for item in viewer_create_new_items:
-        item.pop('allow_create', None)
+    # In non-deconfigged mode, hide the create new viewer options
+    if plugin.app.config == 'deconfigged':
+        viewer_create_new_items = [item.copy() for item in supported_viewers
+                                   if item.get('allow_create', True)]
+        # Remove 'allow_create' key from the items (it's not needed in the UI)
+        for item in viewer_create_new_items:
+            item.pop('allow_create', None)
+    else:
+        viewer_create_new_items = []
 
     # Create filter function for existing viewers
     def viewer_in_registry_names(viewer):
