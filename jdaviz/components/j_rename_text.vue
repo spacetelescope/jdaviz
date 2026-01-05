@@ -1,34 +1,32 @@
 <template>
-  <div @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: flex; align-items: center; width: 100%; min-height: 48px;">
+  <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: center;">
     <!-- Display mode -->
-    <div
+    <span
       v-if="!isEditing"
       @mouseenter="hovering = true"
       @mouseleave="hovering = false"
       @mousedown.stop
       @dblclick.stop="startEditing"
-      style="display: flex; align-items: center; justify-content: space-between; width: 100%;"
+      style="display: inline-flex; align-items: center;"
     >
-      <div style="display: flex; align-items: center; flex-grow: 1;">
-        <span
-          :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
-        >
-          {{ value }}
-        </span>
-      </div>
+      <span
+        :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
+      >
+        {{ value }}
+      </span>
 
       <!-- Pencil icon - visible on hover in display mode -->
       <v-icon
         v-if="showPencil"
         small
-        style="margin-left: 8px; cursor: pointer; flex-shrink: 0; width: 24px; visibility: hidden;"
+        style="margin-left: 8px; cursor: pointer; flex-shrink: 0; visibility: hidden;"
         :style="hovering ? 'visibility: visible;' : ''"
         @click.stop="startEditing"
         @mousedown.stop
       >
         mdi-pencil
       </v-icon>
-    </div>
+    </span>
 
     <!-- Edit mode: shows text field with cancel and confirm buttons -->
     <v-text-field
@@ -59,7 +57,7 @@
         </j-tooltip>
       </template>
     </v-text-field>
-  </div>
+  </span>
 </template>
 
 <script>

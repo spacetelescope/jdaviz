@@ -186,21 +186,18 @@
                         />
                     </v-list-item-icon>
                     <v-list-item-content>
-                      <div style="display: flex; align-items: center;">
-                        <span style="margin-left: 30px; margin-right: 4px; line-height: 28px; display: flex; align-items: center; gap: 4px;">
-                          <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                          <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                          <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                        </span>
+                      <span style="line-height: 28px">
+                        <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                        <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
+                        <j-plugin-live-results-icon v-if="item.live_plugin_results" />
                         <j-rename-text
                           :value="item.label"
                           :show-pencil="true"
                           :rename-error-message="rename_error_messages[item.label] || ''"
                           @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
                           @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
-                          style="flex-grow: 1;"
                         />
-                      </div>
+                      </span>
                     </v-list-item-content>
                     <v-list-item-action>
                       <j-tooltip
