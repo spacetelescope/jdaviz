@@ -148,6 +148,9 @@ module.exports = {
         this.$emit('rename', trimmedValue);
         // Keep the new value in editValue so it displays while waiting for backend update
         this.editValue = trimmedValue;
+      } else {
+        // No change was made, treat as cancel
+        this.$emit('cancel');
       }
       this.suppressPropagation = true;
       this.isEditing = false;
