@@ -140,6 +140,8 @@ filterwarnings = [
     "error",
     # This line handles the DeprecationWarning from jupyter_core
     "ignore:Jupyter is migrating its paths.*:DeprecationWarning:jupyter_core.utils",
+    # This ignores AstropyPendingDeprecationWarning from spectral_cube
+    "ignore:COPY_IF_NEEDED is no longer needed now that astropy only supports numpy >= 2",
     "ignore:numpy\\.ufunc size changed:RuntimeWarning",
     "ignore:numpy\\.ndarray size changed:RuntimeWarning",
     "ignore:Passing unrecognized arguments to super:DeprecationWarning",
