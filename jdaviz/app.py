@@ -1861,7 +1861,7 @@ class Application(VuetifyTemplate, HubListener):
             raise ValueError(msg)
 
         # When renaming a subset, also perform subset-specific validation
-        if is_subset:
+        if is_subset and new_label is not None:
             self._check_valid_subset_label(new_label)
 
     def rename_data(self, old_label, new_label):
