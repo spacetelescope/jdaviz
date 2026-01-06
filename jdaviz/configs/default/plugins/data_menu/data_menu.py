@@ -709,11 +709,21 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def _reset_rename_error_messages(self, old_label):
         """
-        Clear all stored rename error messages.
+        Clear rename error messages for the given label.
+
+        Also clears error messages in other labels that reference this label
+        (e.g., if editing label A and error says "same as label B", when B is renamed,
+        this clears the error for A since the conflict no longer exists).
+
+        Parameters
+        ----------
+        old_label : str
+            The label for which to clear error messages.
         """
-        if old_label in self.rename_error_messages:
-            self.rename_error_messages = {k: v for k, v in self.rename_error_messages.items()
-                                          if k != old_label}
+        # Build new dictionary excluding old_label and any messages that mention it
+        self.rename_error_messages = {label: msg
+                                      for label, msg in self.rename_error_messages.items()
+                                      if label != old_label and old_label not in msg}
 
     def vue_check_rename(self, info, *args):  # pragma: no cover
         old_label = info.get('old_label')

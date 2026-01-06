@@ -199,7 +199,7 @@
                           :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
                           :show-api-hint="api_hints_enabled"
                           @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
-                          @cancel="() => {check_rename({old_label: item.label, new_label: item.label, is_subset: item.is_subset})}"
+                          @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
                           @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
                         />
                       </div>
