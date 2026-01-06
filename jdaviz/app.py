@@ -1855,13 +1855,16 @@ class Application(VuetifyTemplate, HubListener):
         """
         # Always check that the new label doesn't already exist in reserved labels
         # (unless we're just keeping the same name)
-        if new_label != old_label and new_label in self._reserved_labels:
+        if new_label is None:
+            return
+
+        if new_label != old_label and new_label.strip() in self._reserved_labels:
             msg = (f'Cannot rename to {new_label}: '
                    'name already exists in data collection or subsets or is unavailable.')
             raise ValueError(msg)
 
         # When renaming a subset, also perform subset-specific validation
-        if is_subset and new_label is not None:
+        if is_subset:
             self._check_valid_subset_label(new_label)
 
     def rename_data(self, old_label, new_label):
