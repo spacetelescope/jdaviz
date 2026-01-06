@@ -642,7 +642,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
                     # Create list of potentially needed equivalencies for flux/sb unit conversions
                     pixar_sr = self.app.data_collection[0].meta.get('PIXAR_SR', 1)
-                    cube_wave = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
+                    if viewer.slice_value is not None:
+                        spectral_unit = self.app._get_display_unit('spectral')
+                        cube_wave = viewer.slice_value * u.Unit(spectral_unit)
+                    else:
+                        cube_wave = None
 
                     equivalencies = all_flux_unit_conversion_equivs(pixar_sr,
                                                                     cube_wave)

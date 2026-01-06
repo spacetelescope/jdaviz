@@ -117,7 +117,7 @@ jobs:
     - name: Restore existing cache
       id: cache-restore
       if: ${{ inputs.append_to_cache }}
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ./
         key: use-restore-keys-below-to-match-in-priority-order
@@ -140,7 +140,7 @@ jobs:
 
     - name: Save updated cache (overwrite)
       if: ${{ !inputs.skip_cache }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         key: mast-cache-${{ steps.date.outputs.year }}-${{ steps.date.outputs.week }}-${{ steps.date.outputs.day }}-${{ github.run_number }}-${{ steps.date.outputs.trigger }}
         path: ./

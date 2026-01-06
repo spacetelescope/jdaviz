@@ -185,7 +185,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data',
-                  'view_info', 'remove_from_viewer', 'remove_from_app']
+                  'rename_data', 'view_info', 'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
                       if e not in ('set_layer_visibility', 'toggle_layer_visibility',
@@ -684,6 +684,20 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
+
+    def rename_data(self, old_label, new_label):
+        """
+        Rename a data item in the application.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data item.
+        new_label : str
+            The new label to assign to the data item.
+        -----------
+        """
+        self.app._rename_data(old_label, new_label)
 
     def create_subset(self, subset_type):
         """

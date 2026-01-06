@@ -337,6 +337,8 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
 
 
 @pytest.mark.remote_data
+# TODO: remove this when GAIA archive issues are resolved
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
