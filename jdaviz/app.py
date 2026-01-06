@@ -571,6 +571,11 @@ class Application(VuetifyTemplate, HubListener):
             self._reserved_labels.remove(msg.old_label)
         self._reserved_labels.add(msg.new_label)
 
+        # Update metadata in all data entries that reference the old subset label
+        # This ensures auto-update tracking continues after subset renaming
+        for data in self.data_collection:
+            self._update_live_plugin_results_metadata(data, msg.old_label, msg.new_label, 'subset')
+
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
             # plugin was instantiated after the app was created, ignore
@@ -1838,13 +1843,14 @@ class Application(VuetifyTemplate, HubListener):
                 modified = True
 
         # Update add_results label if it exists and matches
-        if 'add_results' in results_dict:
+        # This ensures that auto-update tracking continues after data renaming
+        if 'add_results' in results_dict and isinstance(results_dict['add_results'], dict):
             if results_dict['add_results'].get('label') == old_label:
                 results_dict['add_results']['label'] = new_label
                 modified = True
 
-        if modified:
-            data.meta['_update_live_plugin_results'] = results_dict
+        # Note: We modify the dict in place, which is sufficient for the metadata
+        # to be updated. No need to reassign to data.meta
 
         return modified
 

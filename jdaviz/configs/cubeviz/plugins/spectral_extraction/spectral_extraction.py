@@ -260,6 +260,19 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for item in msg['new']:
             if item['label'] not in orig_labels:
                 subset_lbl = item.get('label')
+                # Check if this is a renamed subset that already has an auto-extracted spectrum
+                # by looking for data with metadata referencing this subset label
+                already_has_extraction = False
+                for data in self.app.data_collection:
+                    plugin_inputs = data.meta.get('_update_live_plugin_results', None)
+                    if plugin_inputs is None:
+                        continue
+                    # Check if this data's aperture matches the new subset label
+                    if plugin_inputs.get('aperture') == subset_lbl:
+                        already_has_extraction = True
+                        break
+                if already_has_extraction:
+                    continue
                 try:
                     self._extract_in_new_instance(subset_lbl=subset_lbl,
                                                   auto_update=True, add_data=True)
