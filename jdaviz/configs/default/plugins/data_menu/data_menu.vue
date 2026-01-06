@@ -196,6 +196,8 @@
                           :value="item.label"
                           :show-pencil="true"
                           :rename-error-message="rename_error_messages[item.label] || ''"
+                          :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
+                          :show-api-hint="api_hints_enabled"
                           @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
                           @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
                         />

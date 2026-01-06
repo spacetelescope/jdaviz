@@ -1,64 +1,69 @@
 <template>
-  <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: center; min-width: 0; flex: 1;">
-    <!-- Display mode -->
-    <span
-      v-if="!isEditing"
-      @mouseenter="hovering = true"
-      @mouseleave="hovering = false"
-      @mousedown.stop
-      @dblclick.stop="startEditing"
-      style="display: inline-flex; align-items: center; min-width: 0; flex: 1;"
-    >
+  <div style="display: flex; flex-direction: column; min-width: 0; width: 100%;">
+    <span v-if="isEditing && apiHintRename && showApiHint" class="api-hint" style="display: block; margin-bottom: 8px;">
+      {{ apiHintRename }}
+    </span>
+    <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: center; min-width: 0; flex: 1; width: 100%;">
+      <!-- Display mode -->
       <span
-        :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
-        style="min-width: 0; overflow-wrap: break-word;"
+        v-if="!isEditing"
+        @mouseenter="hovering = true"
+        @mouseleave="hovering = false"
+        @mousedown.stop
+        @dblclick.stop="startEditing"
+        style="display: inline-flex; align-items: center; min-width: 0; flex: 1; width: 100%;"
       >
-        {{ value }}
+        <span
+          :style="hovering ? 'cursor: pointer; text-decoration: underline;' : 'cursor: pointer;'"
+          style="min-width: 0; overflow-wrap: break-word;"
+        >
+          {{ value }}
+        </span>
+
+        <!-- Pencil icon - visible on hover in display mode, fixed to the right -->
+        <v-icon
+          v-if="showPencil"
+          small
+          style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden; width: 24px; min-width: 24px;"
+          :style="hovering ? 'visibility: visible;' : ''"
+          @click.stop="startEditing"
+          @mousedown.stop
+        >
+          mdi-pencil
+        </v-icon>
       </span>
 
-      <!-- Pencil icon - visible on hover in display mode, fixed to the right -->
-      <v-icon
-        v-if="showPencil"
-        small
-        style="margin-left: auto; cursor: pointer; flex-shrink: 0; visibility: hidden;"
-        :style="hovering ? 'visibility: visible;' : ''"
-        @click.stop="startEditing"
+      <!-- Edit mode: shows text field with cancel and confirm buttons -->
+      <v-text-field
+        v-if="isEditing"
+        v-model="editValue"
+        @keydown.enter.prevent="acceptEdit"
+        @keydown.escape.prevent="cancelEdit"
+        @click.stop
         @mousedown.stop
+        autofocus
+        dense
+        :hint="renameErrorMessage"
+        :error-messages="renameErrorMessage ? [renameErrorMessage] : []"
+        persistent-hint
+        style="flex-grow: 1; margin: 0; padding: 0; width: 100%;"
       >
-        mdi-pencil
-      </v-icon>
+        <template v-slot:append>
+          <j-tooltip tooltipcontent="Cancel change">
+            <v-icon style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
+          </j-tooltip>
+          <j-tooltip :tooltipcontent="renameErrorMessage || 'Accept change'">
+            <v-icon
+              style="cursor: pointer"
+              :style="renameErrorMessage ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+              @click.stop="renameErrorMessage ? null : acceptEdit()"
+              @mousedown.stop
+            >mdi-check</v-icon>
+          </j-tooltip>
+        </template>
+      </v-text-field>
     </span>
-
-    <!-- Edit mode: shows text field with cancel and confirm buttons -->
-    <v-text-field
-      v-if="isEditing"
-      v-model="editValue"
-      @keydown.enter.prevent="acceptEdit"
-      @keydown.escape.prevent="cancelEdit"
-      @click.stop
-      @mousedown.stop
-      autofocus
-      dense
-      :hint="renameErrorMessage"
-      :error-messages="renameErrorMessage ? [renameErrorMessage] : []"
-      persistent-hint
-      style="flex-grow: 1; margin: 0; padding: 0;"
-    >
-      <template v-slot:append>
-        <j-tooltip tooltipcontent="Cancel change">
-          <v-icon style="cursor: pointer" @click.stop="cancelEdit" @mousedown.stop>mdi-close</v-icon>
-        </j-tooltip>
-        <j-tooltip :tooltipcontent="renameErrorMessage || 'Accept change'">
-          <v-icon
-            style="cursor: pointer"
-            :style="renameErrorMessage ? 'opacity: 0.5; cursor: not-allowed;' : ''"
-            @click.stop="renameErrorMessage ? null : acceptEdit()"
-            @mousedown.stop
-          >mdi-check</v-icon>
-        </j-tooltip>
-      </template>
-    </v-text-field>
-  </span>
+  </div>
 </template>
 
 <script>
@@ -83,6 +88,14 @@ module.exports = {
     renameErrorMessage: {
       type: String,
       default: ''
+    },
+    apiHintRename: {
+      type: String,
+      default: ''
+    },
+    showApiHint: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
