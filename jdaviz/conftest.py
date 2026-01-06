@@ -116,7 +116,6 @@ def pytest_terminal_summary(terminalreporter, config=None):
         pass
 
 
-
 def _catch_validate_known_exceptions(exceptions_to_catch,
                                      stdout_text_to_check=''):
     """
