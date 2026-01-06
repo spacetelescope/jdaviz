@@ -1,7 +1,7 @@
 <template>
   <div style="display: flex; flex-direction: column; min-width: 0; width: 100%;">
     <span v-if="isEditing && apiHintRename && showApiHint" class="api-hint" style="display: block; margin-bottom: 8px;">
-      {{ apiHintRename }}
+      {{ apiHintRename }}('{{ value }}', '{{ editValue }}')
     </span>
     <span @click="onRootClick" @mousedown="onRootMousedown" @keydown.stop style="display: inline-flex; align-items: center; min-width: 0; flex: 1; width: 100%;">
       <!-- Display mode -->

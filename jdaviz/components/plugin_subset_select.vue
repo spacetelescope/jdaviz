@@ -103,14 +103,14 @@
       </template>
     </v-alert>
     <div v-else-if="['rename'].indexOf(mode) !== -1" style="width: 100%">
-      <span v-if="api_hints_enabled && api_hint_rename" class="api-hint" style="display: block; margin-bottom: 8px;">
-        {{api_hint_rename}}('{{selected}}', '{{edit_value}}')
-      </span>
       <j-rename-text
-        :value="edit_value"
+        :value="selected"
         :edit-hint="'Rename '+label.toLowerCase()"
         :show-pencil="false"
         :auto-edit="true"
+        :api-hint-rename="api_hint_rename"
+        :show-api-hint="api_hints_enabled"
+        @input="(newLabel) => {$emit('update:edit_value', newLabel)}"
         @rename="handleRename"
         @cancel="handleCancel"
       />
