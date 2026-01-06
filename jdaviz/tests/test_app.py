@@ -395,3 +395,9 @@ def test_update_existing_data_in_dc(deconfigged_helper,
     deconfigged_helper.app.data_item_remove(dc_data.label)
     assert len(deconfigged_helper.app.existing_data_in_dc) != len_before
     assert dh not in deconfigged_helper.app.existing_data_in_dc
+
+
+@pytest.mark.remote_data
+def test_remote_failure():
+    from astropy.io.votable.exceptions import E19
+    raise E19('test votable exception')
