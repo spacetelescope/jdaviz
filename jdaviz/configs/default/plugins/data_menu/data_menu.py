@@ -687,7 +687,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
 
-    def rename_data(self, old_label, new_label):
+    def rename(self, old_label, new_label):
         """
         Rename a data item in the application.
 
@@ -699,7 +699,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             The new label to assign to the data item.
         -----------
         """
-        self.app.rename_data(old_label, new_label)
+        # Check if this is a subset by looking in subset_groups
+        is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
+
+        if is_subset:
+            self.app._rename_subset(old_label, new_label)
+        else:
+            self.app.rename_data(old_label, new_label)
 
     def _reset_rename_error_messages(self, old_label):
         """
@@ -731,16 +737,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         old_label = info.get('old_label')
         new_label = info.get('new_label')
 
-        # Check if this is a subset by looking in subset_groups
-        is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
-
-        if is_subset:
-            rename_meth = self.app._rename_subset
-        else:
-            rename_meth = self.rename_data
-
         try:
-            rename_meth(old_label, new_label)
+            self.rename(old_label, new_label)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(f"Failed to rename: {repr(e)}",
                                                color='error', sender=self, traceback=e))
