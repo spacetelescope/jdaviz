@@ -134,6 +134,8 @@ module.exports = {
       this.suppressPropagation = true;
       this.isEditing = false;
       this.editValue = this.value;
+      // Emit cancel event so parent can clear validation errors
+      this.$emit('cancel');
       // Clear the flag after the event loop to allow normal behavior again
       this.$nextTick(() => {
         this.suppressPropagation = false;
