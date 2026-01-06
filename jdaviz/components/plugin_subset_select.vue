@@ -112,6 +112,7 @@
         :show-pencil="false"
         :auto-edit="true"
         @rename="handleRename"
+        @cancel="handleCancel"
       />
     </div>
     <span v-else>
@@ -140,6 +141,10 @@ module.exports = {
     handleRename(newLabel) {
       this.$emit('update:edit_value', newLabel);
       this.$emit('update:mode', 'rename:accept');
+    },
+    handleCancel() {
+      this.$emit('update:edit_value', this.selected);
+      this.$emit('update:mode', 'select');
     },
     changeCancel() {
       this.$emit('update:edit_value', this.selected);
