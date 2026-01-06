@@ -16,7 +16,6 @@ from astropy.wcs import WCS
 from specutils import Spectrum, SpectrumCollection, SpectrumList
 from astropy.utils.masked import Masked
 
-
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz, App
 from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
                                               _image_hdu_nowcs,
