@@ -7,7 +7,7 @@ import pytest
 from astropy.io import fits
 from astropy.units.quantity import Quantity
 
-from jdaviz.core.loaders import SpectrumListImporter
+from jdaviz.core.loaders import SpectrumImporter
 from jdaviz.utils import (alpha_index, download_uri_to_path,
                           get_cloud_fits, cached_uri, escape_brackets,
                           has_wildcard, wildcard_match, _clean_data_for_hash,
@@ -191,10 +191,10 @@ def test_wildcard_match_basic(deconfigged_helper, premade_spectrum_list):
 
     # Making sure a stand-in for a SelectPluginComponent object with an attribute
     # that has `choices` works as expected
-    test_importer = SpectrumListImporter(app=deconfigged_helper.app,
-                                         resolver=deconfigged_helper.loaders['object']._obj,
-                                         parser=None,
-                                         input=premade_spectrum_list)
+    test_importer = SpectrumImporter(app=deconfigged_helper.app,
+                                     resolver=deconfigged_helper.loaders['object']._obj,
+                                     parser=None,
+                                     input=premade_spectrum_list)
     test_obj = test_importer.sources
 
     """
