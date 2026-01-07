@@ -169,6 +169,9 @@ class UserApiWrapper:
         for k in self._expose:
             if k not in d:
                 continue
+            # Skip readonly attributes - they shouldn't be set from dict
+            if k in self._readonly:
+                continue
             v = d.get(k)
             if hasattr(getattr(self, k), '__call__'):
                 raise ValueError(f"cannot overwrite callable {k}")
