@@ -4147,7 +4147,8 @@ class ViewerSelectCreateNew(ViewerSelect):
                 self.create_new.selected = ''
                 self.select_all()
             else:
-                self.selected = self.choices[0]
+                # Use parent class logic to respect default_mode
+                super().select_default()
         elif len(self.create_new.choices) > 0:
             self.create_new.selected = self.create_new.choices[0]
 
