@@ -24,9 +24,15 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
 
-from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
-                                  memlog_runtest_teardown, memlog_runtest_makereport,
-                                  memlog_runtest_logreport, memlog_terminal_summary)
+from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
+                                                   memlog_configure,
+                                                   memlog_runtest_setup,
+                                                   memlog_runtest_teardown,
+                                                   memlog_runtest_makereport,
+                                                   memlog_runtest_logreport,
+                                                   memlog_terminal_summary)
+from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
+                                                        remote_skip_runtest_makereport)
 
 
 if not NUMPY_LT_2_0:
@@ -36,10 +42,11 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 
 # ============================================================================
-# Memory logging plugin (memlog) - imported from pytest_memlog.py
-# In CI, the memlog utilities may have already been called
-# from the root conftest.py, so we avoid that by excepting
-# the ValueError pytest throws.
+# Pytest plugins
+# - Memory logging (memlog): imported from pytest_memlog.py
+# - Remote failure skipping: imported from pytest_remote_skip.py
+# In CI, these utilities may have already been called from the root
+# conftest.py, so we avoid errors by catching the ValueError pytest throws.
 # ============================================================================
 def pytest_addoption(parser):
     """
@@ -47,6 +54,7 @@ def pytest_addoption(parser):
     """
     try:
         memlog_addoption(parser)
+        remote_skip_addoption(parser)
     except ValueError:
         pass
 
@@ -71,8 +79,20 @@ def pytest_runtest_teardown(item, nextitem):
         pass
 
 
-# Re-export the hookwrapper directly
-pytest_runtest_makereport = memlog_runtest_makereport
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Combined hook wrapper for memlog and remote failure handling.
+
+    This hook:
+    1. Attaches memory measurements to report user_properties (memlog)
+    2. Handles remote data test failures (--skip-remote-failures option)
+    """
+    outcome = yield
+    report = outcome.get_result()
+
+    memlog_runtest_makereport(item, call, report)
+    remote_skip_runtest_makereport(item, call, report)
 
 
 def pytest_runtest_logreport(report):
@@ -93,50 +113,6 @@ def pytest_terminal_summary(terminalreporter, config=None):
         memlog_terminal_summary(terminalreporter, config)
     except ValueError:
         pass
-
-
-def _catch_validate_known_exceptions(exceptions_to_catch,
-                                     stdout_text_to_check=''):
-    """
-    Context manager to catch known exceptions in CI tests. Validates the exception
-    by checking for specific text in stdout. If matched, the test is skipped. If
-    no text is provided, any occurrence of the exception will trigger the skip. If
-    the match fails, the exception is re-raised.
-
-    Use as:
-    with _catch_known_exception(Exceptions):  # or via fixture catch_known_exceptions
-        catalog_plg.search(error_on_fail=True)
-
-    Parameters
-    ----------
-    exceptions_to_catch : Exception or tuple of Exceptions to catch.
-    stdout_text_to_check : str, optional
-        Text to match in stdout via substring matching.
-        Default is '' (matches any string).
-    """
-    import contextlib
-    import io
-
-    @contextlib.contextmanager
-    def _cm():
-        buf = io.StringIO()
-        try:
-            with contextlib.redirect_stdout(buf):
-                yield buf
-        except exceptions_to_catch as etc:
-            stdout_text = buf.getvalue()
-            if stdout_text_to_check in stdout_text or isinstance(etc, TimeoutError):
-                pytest.skip(str(etc))
-            else:
-                raise
-
-    return _cm()
-
-
-@pytest.fixture(scope='function')
-def catch_validate_known_exceptions():
-    """Context manager fixture to catch and validate known exceptions in testing."""
-    return _catch_validate_known_exceptions
 
 
 @pytest.fixture

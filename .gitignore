@@ -63,6 +63,7 @@ pip-wheel-metadata
 .tmp
 .eggs
 .python-version
+.ci_artifacts
 
 # Mac OSX
 .DS_Store
