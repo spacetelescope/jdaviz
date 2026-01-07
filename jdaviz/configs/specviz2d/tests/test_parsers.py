@@ -44,7 +44,8 @@ def test_2d_parser_jwst(specviz2d_helper):
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 def test_2d_parser_ext_hdulist(specviz2d_helper):
     # jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d
-    specviz2d_helper.load('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits', cache=True)  # noqa
+    specviz2d_helper.load('https://stsci.box.com/shared/static/l1dmioxuvtzyuq1p7o9wvjq8pph2yqkk.fits',  # noqa
+                          format='2D Spectrum', cache=True)
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (29, 3416)
 

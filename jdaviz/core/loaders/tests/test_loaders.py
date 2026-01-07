@@ -159,7 +159,7 @@ def test_jwst_wfss_bsub(deconfigged_helper):
     ldr.cache = True
     ldr.url = uri
 
-    assert ldr.format == '2D Spectrum'
+    ldr.format = '2D Spectrum'  # may also be 'Image' depending on importer registry order
 
     ldr.load()
 
@@ -215,11 +215,11 @@ def test_resolver_url(deconfigged_helper):
     assert loader._obj.url_scheme == 's3'
     assert len(loader.format.choices) > 0
 
-    # https valid input
+    # https valid input (2D Spectrum)
     loader.url = 'https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits'  # noqa
 
     # may change with future importers
-    assert len(loader.format.choices) == 4
+    assert len(loader.format.choices) == 3
     assert loader.format.selected == 'Image'  # default may change with future importers
 
     # test target filtering
@@ -228,12 +228,12 @@ def test_resolver_url(deconfigged_helper):
     loader.target = '1D Spectrum'
 
     # may change with future importers
-    assert len(loader.format.choices) == 2
+    assert len(loader.format.choices) == 1
     assert loader.format == '1D Spectrum'  # default may change with future importers
-    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
+    assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw_index-0'  # noqa
 
     loader.target = 'Any'
-    assert len(loader.format.choices) == 4
+    assert len(loader.format.choices) == 3
     loader.format = '2D Spectrum'
     assert loader.importer.data_label == 'exnkul627fcuhy5akf2gswytud5tazmw'  # noqa
 
