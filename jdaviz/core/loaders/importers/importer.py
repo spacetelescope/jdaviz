@@ -253,7 +253,6 @@ class BaseImporterToDataCollection(BaseImporter):
         return physical_type
 
     def add_to_data_collection(self, data, data_label=None, data_hash=None,
-                               parent=None,
                                viewer_select=None,
                                cls=None):
 
@@ -283,8 +282,6 @@ class BaseImporterToDataCollection(BaseImporter):
         data.meta['_data_hash'] = data_hash if data_hash is not None else create_data_hash(data)
 
         self.app.add_data(data, data_label=data_label)
-        if parent is not None:
-            self.app._set_assoc_data_as_child(data_label, parent)
 
         def _physical_type_from_component(comp_id, comp):
             import astropy.units as u
@@ -318,12 +315,8 @@ class BaseImporterToDataCollection(BaseImporter):
                                     vid=viewer_label,
                                     name=viewer_label,
                                     open_data_menu_if_empty=False)
-            # Bypass data menu filters for child layers
-            if parent is not None:
-                self.app.add_data_to_viewer(viewer_label, data_label)
-            else:
-                viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
-                viewer.data_menu.add_data(data_label)
+            viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+            viewer.data_menu.add_data(data_label)
 
             # default to selecting this new viewer for next import
             viewer_select.create_new.selected = ''
@@ -342,11 +335,8 @@ class BaseImporterToDataCollection(BaseImporter):
             exceptions = []
             for viewer_label in viewer_select.selected:
                 try:
-                    if parent is not None:
-                        self.app.add_data_to_viewer(viewer_label, data_label)
-                    else:
-                        viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
-                        viewer.data_menu.add_data(data_label)
+                    viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+                    viewer.data_menu.add_data(data_label)
                 except Exception as e:
                     failed_viewers.append(viewer_label)
                     exceptions.append(str(e))

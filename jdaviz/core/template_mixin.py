@@ -2023,15 +2023,8 @@ class LayerSelect(SelectPluginComponent):
 
     def _is_valid_item(self, lyr):
         def not_child_layer(lyr):
-            # ignore layers that are children in associations, except for
-            # auto-extracted 1D spectra which should be selectable in plugins
-            parent = self.app._get_assoc_data_parent(lyr.label)
-            if parent is None:
-                return True
-            importer = lyr.meta.get('_importer', '')
-            if importer == 'Spectrum2DImporter':
-                return True
-            return False
+            # ignore layers that are children in associations
+            return self.app._get_assoc_data_parent(lyr.label) is None
 
         def not_spatial_subset_in_profile_viewer(lyr):
             if self.plugin.config not in ('cubeviz', 'deconfigged'):
@@ -4451,13 +4444,7 @@ class DatasetSelect(SelectPluginComponent):
             return not data.meta.get(_wcs_only_label, False)
 
         def not_child_layer(data):
-            parent = self.app._get_assoc_data_parent(data.label)
-            if parent is None:
-                return True
-            importer = data.meta.get('_importer', '')
-            if importer == 'Spectrum2DImporter':
-                return True
-            return False
+            return self.app._get_assoc_data_parent(data.label) is None
 
         def same_mosviz_row(data):
             # NOTE: requires calling _update_items on a change to row

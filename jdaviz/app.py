@@ -797,42 +797,10 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
-                new_parent_label = self._get_assoc_data_parent(new_data.label)
-                existing_parent_label = self._get_assoc_data_parent(existing_data.label)
-
-                is_related = (
-                    new_parent_label == existing_data.label or
-                    existing_parent_label == new_data.label or
-                    (new_parent_label and new_parent_label == existing_parent_label)
-                )
-
-                # For pixel spectral axes, allows 2D-to-1D linking
-                if new_comp._component_type == 'pixel_spectral_axis':
-                    # Allow linking if different dimensions with world spectral axes
-                    if not is_related and new_data.ndim != existing_data.ndim:
-                        is_related = (
-                            any(getattr(c, '_component_type', None) == 'spectral_axis'
-                                for c in new_data.components) and
-                            any(getattr(c, '_component_type', None) == 'spectral_axis'
-                                for c in existing_data.components)
-                        )
-
-                    # Allow linking if same dimensions, but only for 1D data
-                    if not is_related and new_data.ndim == existing_data.ndim == 1:
-                        is_related = True
-
-                    if not is_related:
-                        continue
-
-                # For world spectral axes with same dimensions, only link if they're unrelated
-                if (new_comp._component_type == 'spectral_axis'
-                   and new_data.ndim == existing_data.ndim):
-                    if is_related:
-                        continue
-
-                # Skip linking WCS coordinate components between unrelated 2D spectra
-                # But allow flux/uncertainty linking for subset propagation
-                if (not is_related and new_data.ndim == existing_data.ndim == 2):
+                # Skip linking WCS coordinate components between 2D spectra
+                # (these can interfere with coordinate transformations)
+                # But allow flux/uncertainty and pixel_spectral_axis linking for subset propagation
+                if new_data.ndim == existing_data.ndim == 2:
                     if (new_comp._component_type in ('spectral_axis', 'angle') or
                        (new_comp._component_type and ':angle' in new_comp._component_type)):
                         continue
