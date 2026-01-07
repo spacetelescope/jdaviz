@@ -6,6 +6,9 @@ New Features
 
 - Datasets can now be renamed via API. [#3960]
 
+- "Spectrum List" and "Spectrum List Concatenated" loaders have now been absorbed into the "1D Spectrum" loader
+  via the ``extension`` and ``concatenate`` options. [#3953]
+
 Cubeviz
 ^^^^^^^
 
