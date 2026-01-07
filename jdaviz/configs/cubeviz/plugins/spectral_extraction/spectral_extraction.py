@@ -194,6 +194,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         )
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_slice_indicator_viewer']
+        self.add_results.viewer.select_default()
 
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
