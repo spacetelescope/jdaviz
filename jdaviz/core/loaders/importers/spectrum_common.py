@@ -385,7 +385,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                              meta=inp.meta)
                     for i in range(inp.flux.shape[0])]
 
-        elif isinstance(inp, (SpectrumList, SpectrumCollection)):
+        elif isinstance(inp, (list, SpectrumList, SpectrumCollection)):
             return list(itertools.chain(*[self._to_list_of_spectra(spec) for spec in inp]))
 
         else:
@@ -619,5 +619,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
             # TODO: remove uncertainty or mask if requested
             return [spectrum]
         elif self.input_type == 'specutils:spectrumlist':
-            # return list of spectuls.Spectrum objects
-            return self._to_list_of_spectra(self.input)
+            # return list of specutils.Spectrum objects
+            selected_spectra = (self.extension.selected_obj if self.multiselect
+                                else [self.extension.selected_obj])
+            return self._to_list_of_spectra(selected_spectra)
