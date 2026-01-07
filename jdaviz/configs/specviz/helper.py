@@ -130,8 +130,10 @@ class Specviz(ConfigHelper, LineListMixin):
 
         if load_as_list:
             load_kwargs['concatenate'] = False
+            load_kwargs.setdefault('extension', '*')
         elif concat_by_file:
             load_kwargs['concatenate'] = True
+            load_kwargs.setdefault('extension', '*')
         elif (isinstance(data, (SpectrumList, SpectrumCollection))
                 or (isinstance(data, Spectrum) and len(data.shape) == 2)):
             load_kwargs['concatenate'] = False
