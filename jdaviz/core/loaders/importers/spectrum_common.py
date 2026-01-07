@@ -127,7 +127,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                            if getattr(self.input, attr, None) is not None
                            ]
         elif isinstance(self.input, Spectrum) and self.input.flux.ndim > self.supported_flux_ndim:
-            if self.supported_flux_ndim != 1:
+            if self.supported_flux_ndim != 1 or self.input.flux.ndim != 2:
+                # currently only support 2D Spectrum > list of 1D Spectra
                 raise ValueError("Input spectrum has more than supported number of dimensions.")
             # convert 2D Spectrum to SpectrumList of 1D Spectra
             self.input_type = 'specutils:spectrumlist'
