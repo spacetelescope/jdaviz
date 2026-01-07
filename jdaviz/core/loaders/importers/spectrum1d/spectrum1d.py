@@ -43,7 +43,7 @@ class SpectrumImporter(BaseImporterToDataCollection, SpectrumInputExtensionsMixi
         if not len(self.extension.choices):
             return False
         try:
-            if np.any([spectrum.flux.ndim != 1 for spectrum in self.spectra]):
+            if np.any([spectrum.flux.ndim not in (1, 2) for spectrum in self.spectra]):
                 return False
         except Exception:
             return False

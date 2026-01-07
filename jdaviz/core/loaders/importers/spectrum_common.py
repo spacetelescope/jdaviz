@@ -115,7 +115,7 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                                     'suffix': suffix,
                                     'data_hash': create_data_hash(spec),
                                     'obj': spec})
-        elif isinstance(self.input, Spectrum):
+        elif isinstance(self.input, Spectrum) and self.input.flux.ndim == self.supported_flux_ndim:
             self.input_type = 'specutils:spectrum'
             ext_options = [{'label': f'spectrum.{attr}',
                             'name': attr,
@@ -125,6 +125,21 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                             'obj': self.input}
                            for ind, attr in enumerate(('flux', 'uncertainty', 'mask'))
                            if getattr(self.input, attr, None) is not None
+                           ]
+        elif isinstance(self.input, Spectrum) and self.input.flux.ndim > self.supported_flux_ndim:
+            if self.supported_flux_ndim != 1:
+                raise ValueError("Input spectrum has more than supported number of dimensions.")
+            # convert 2D Spectrum to SpectrumList of 1D Spectra
+            self.input_type = 'specutils:spectrumlist'
+            spectra = self._to_list_of_spectra(self.input)
+            ext_options = [{'label': f'1D Spectrum at index: {index}',
+                            'index': index,
+                            'name': index,
+                            'name_ver': index,
+                            'suffix': f"index-{index}",
+                            'data_hash': create_data_hash(spec),
+                            'obj': spec}
+                           for index, spec in enumerate(spectra)
                            ]
         else:
             raise TypeError(f"Input type not supported for SpectrumInputExtensionsMixin: "
