@@ -318,7 +318,6 @@ class BaseImporterToDataCollection(BaseImporter):
                                     vid=viewer_label,
                                     name=viewer_label,
                                     open_data_menu_if_empty=False)
-
             self.app.add_data_to_viewer(viewer_label, data_label)
 
             # default to selecting this new viewer for next import
@@ -338,7 +337,6 @@ class BaseImporterToDataCollection(BaseImporter):
             exceptions = []
             for viewer_label in viewer_select.selected:
                 try:
-                    # Bypass data menu filters (e.g., for auto-extracted child layers)
                     self.app.add_data_to_viewer(viewer_label, data_label)
                 except Exception as e:
                     failed_viewers.append(viewer_label)
