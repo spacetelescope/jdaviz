@@ -318,7 +318,8 @@ class BaseImporterToDataCollection(BaseImporter):
                                     vid=viewer_label,
                                     name=viewer_label,
                                     open_data_menu_if_empty=False)
-            self.app.add_data_to_viewer(viewer_label, data_label)
+            viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
+            viewer.data_menu.add_data(data_label)
 
             # default to selecting this new viewer for next import
             viewer_select.create_new.selected = ''
@@ -336,8 +337,9 @@ class BaseImporterToDataCollection(BaseImporter):
             failed_viewers = []
             exceptions = []
             for viewer_label in viewer_select.selected:
+                viewer = self.app._jdaviz_helper.viewers.get(viewer_label)
                 try:
-                    self.app.add_data_to_viewer(viewer_label, data_label)
+                    viewer.data_menu.add_data(data_label)
                 except Exception as e:
                     failed_viewers.append(viewer_label)
                     exceptions.append(str(e))
