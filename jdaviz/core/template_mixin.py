@@ -2023,7 +2023,6 @@ class LayerSelect(SelectPluginComponent):
 
     def _is_valid_item(self, lyr):
         def not_child_layer(lyr):
-            # ignore layers that are children in associations
             return self.app._get_assoc_data_parent(lyr.label) is None
 
         def not_spatial_subset_in_profile_viewer(lyr):
@@ -4444,6 +4443,7 @@ class DatasetSelect(SelectPluginComponent):
             return not data.meta.get(_wcs_only_label, False)
 
         def not_child_layer(data):
+            # ignore layers that are children in associations:
             return self.app._get_assoc_data_parent(data.label) is None
 
         def same_mosviz_row(data):
