@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Datasets can now be renamed via API. [#3960]
+- Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968]
 
 Cubeviz
 ^^^^^^^

@@ -196,7 +196,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'data-menu-add': 'components/data_menu_add.vue',
                      'data-menu-remove': 'components/data_menu_remove.vue',
                      'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
-                     'hover-api-hint': 'components/hover_api_hint.vue'}
+                     'hover-api-hint': 'components/hover_api_hint.vue',
+                     'j-rename-text': 'components/j_rename_text.vue'}
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
@@ -468,6 +469,8 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_subset_delete_message)
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_subset_create_message)
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=self._on_subset_rename_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
@@ -560,6 +563,18 @@ class Application(VuetifyTemplate, HubListener):
     def _on_subset_create_message(self, msg):
         self._reserved_labels.add(msg.subset.label)
         self._on_layers_changed(msg)
+
+    def _on_subset_rename_message(self, msg):
+        # Update _reserved_labels when a subset is renamed
+        # msg has old_label and new_label attributes
+        if msg.old_label in self._reserved_labels:
+            self._reserved_labels.remove(msg.old_label)
+        self._reserved_labels.add(msg.new_label)
+
+        # Update metadata in all data entries that reference the old subset label
+        # This ensures auto-update tracking continues after subset renaming
+        for data in self.data_collection:
+            self._update_live_plugin_results_metadata(data, msg.old_label, msg.new_label, 'subset')
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -1757,6 +1772,25 @@ class Application(VuetifyTemplate, HubListener):
             self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
             _ = self.state.layer_icons.pop(old_label)
 
+        # Update _data_associations to maintain parent-child relationships
+        if old_label in self._data_associations:
+            # Move the association entry to the new label
+            self._data_associations[new_label] = self._data_associations.pop(old_label)
+
+            # Update parent references in children
+            children = self._data_associations[new_label].get('children', [])
+            for child_label in children:
+                if child_label in self._data_associations:
+                    self._data_associations[child_label]['parent'] = new_label
+
+        # Check if this is a child being renamed - update parent's children list
+        for data_label, assoc_data in self._data_associations.items():
+            if old_label in assoc_data.get('children', []):
+                # Replace old label with new label in children list
+                children = assoc_data['children']
+                children[children.index(old_label)] = new_label
+                break
+
     def _update_data_items_list(self, old_label, new_label):
         """
         Update state.data_items list when renaming an item.
@@ -1809,17 +1843,37 @@ class Application(VuetifyTemplate, HubListener):
                 modified = True
 
         # Update add_results label if it exists and matches
-        if 'add_results' in results_dict:
+        # This ensures that auto-update tracking continues after data renaming
+        if 'add_results' in results_dict and isinstance(results_dict['add_results'], dict):
             if results_dict['add_results'].get('label') == old_label:
                 results_dict['add_results']['label'] = new_label
                 modified = True
 
-        if modified:
-            data.meta['_update_live_plugin_results'] = results_dict
+        # Note: We modify the dict in place, which is sufficient for the metadata
+        # to be updated. No need to reassign to data.meta
 
         return modified
 
-    def _rename_data(self, old_label, new_label):
+    def check_rename_availability(self, old_label, new_label, is_subset=False):
+        """
+        Check if new label already exists in reserved labels.
+        Used by front-end for dynamic user warning.
+        """
+        # Always check that the new label doesn't already exist in reserved labels
+        # (unless we're just keeping the same name)
+        if new_label is None:
+            return
+
+        if new_label != old_label and new_label.strip() in self._reserved_labels:
+            msg = (f'Cannot rename to {new_label}: '
+                   'name already exists in data collection or subsets or is unavailable.')
+            raise ValueError(msg)
+
+        # When renaming a subset, also perform subset-specific validation
+        if is_subset:
+            self._check_valid_subset_label(new_label)
+
+    def rename_data(self, old_label, new_label):
         """
         Rename data in the data collection and update all references.
 
@@ -1830,12 +1884,7 @@ class Application(VuetifyTemplate, HubListener):
         new_label : str
             The new label for the data.
         """
-        # Check if new label already exists in reserved labels
-        if new_label in self._reserved_labels and new_label != old_label:
-            msg = (f'Cannot rename data to {new_label}: '
-                   'name already exists in data collection or subsets or is unavailable.')
-            raise ValueError(msg)
-
+        self.check_rename_availability(old_label, new_label)
         data = self.data_collection[old_label]
 
         # Set flag to indicate rename is in progress
@@ -1848,7 +1897,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def _rename_single_data(self, old_label, new_label, data):
         """
-        Rename a single data entry. This is a helper method used by _rename_data.
+        Rename a single data entry. This is a helper method used by rename_data.
 
         Parameters
         ----------
@@ -2419,14 +2468,15 @@ class Application(VuetifyTemplate, HubListener):
         else:
             subset_selected = self.session.edit_subset_mode.edit_subset[0].label
 
-        # remove the current selection label from the set of labels, because its ok
-        # if the new subset shares the name of the current selection (renaming to current name)
-        if subset_selected in self._reserved_labels:
-            self._reserved_labels.remove(subset_selected)
+        # Create a copy of reserved labels to check against, excluding the current
+        # selection label, to allow subsets to keep their current name
+        reserved_labels_to_check = set(self._reserved_labels)
+        if subset_selected in reserved_labels_to_check:
+            reserved_labels_to_check.remove(subset_selected)
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
-        if subset_name in self._reserved_labels:
+        if subset_name in reserved_labels_to_check:
             if raise_if_invalid:
                 raise ValueError("Cannot rename subset to name of an existing subset"
                                  f" or data item: ({subset_name}).")

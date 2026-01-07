@@ -2328,7 +2328,32 @@ class LayerSelect(SelectPluginComponent):
         # if remove_subset provided, subset has already been removed, enforcing the removal here
         # so data menu updates accordingly
         unique_layer_labels = list(set(layer_labels) - {remove_subset})
-        layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
+
+        # During rename operations, preserve the existing order to prevent parent-child
+        # layers from being reordered
+        is_renaming = getattr(self.app, '_renaming_data', False)
+
+        if is_renaming and hasattr(self, 'items') and self.items:
+            # Preserve existing order by matching against current items
+            existing_labels = [item['label'] for item in self.items
+                               if item.get('label') not in self.manual_options]
+
+            # Build layer_items in the same order as existing items
+            layer_items = []
+            label_to_dict = {label: self._layer_to_dict(label)
+                             for label in unique_layer_labels}
+
+            # First, add items in the existing order
+            for existing_label in existing_labels:
+                if existing_label in label_to_dict:
+                    layer_items.append(label_to_dict[existing_label])
+
+            # Then add any new items at the end
+            for label in unique_layer_labels:
+                if label not in existing_labels:
+                    layer_items.append(label_to_dict[label])
+        else:
+            layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
             icon = items_dict['icon']
@@ -2341,7 +2366,10 @@ class LayerSelect(SelectPluginComponent):
                 zorder = 0
             return -1 * zorder
 
-        if self.sort_by == 'zorder':
+        if is_renaming:
+            # Skip sorting during rename to preserve order
+            pass
+        elif self.sort_by == 'zorder':
             layer_items.sort(key=_sort_by_zorder)
 
             # Group parent data with their children and place children below parents

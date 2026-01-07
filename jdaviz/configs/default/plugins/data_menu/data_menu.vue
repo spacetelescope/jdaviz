@@ -165,8 +165,8 @@
               <div>
                 <draggable v-model="layer_items">
                   <v-list-item
-                    v-for="item in layer_items"
-                    :key="item.label"
+                    v-for="(item, index) in layer_items"
+                    :key="index"
                     class="layer-select"
                     :style="/\d/.test(item.icon) ? 'padding-left: 32px' : ''"
                     @dragstart="onDragStart($event)"
@@ -186,12 +186,23 @@
                         />
                     </v-list-item-icon>
                     <v-list-item-content>
-                      <span style="display: inline-block">
-                        <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                        <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
-                        <j-plugin-live-results-icon v-if="item.live_plugin_results" />
-                        {{ item.label }}
-                      </span>
+                      <div style="display: flex; align-items: flex-start; line-height: 28px; min-width: 0;">
+                        <span style="display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 4px;">
+                          <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                          <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
+                          <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                        </span>
+                        <j-rename-text
+                          :value="item.label"
+                          :show-pencil="true"
+                          :rename-error-message="rename_error_messages[item.label] || ''"
+                          :api-hint-rename="api_hints_enabled ? 'dm.rename(\'' + item.label + '\', \'<new_name>\')' : ''"
+                          :show-api-hint="api_hints_enabled"
+                          @input="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                          @cancel="(newLabel) => {check_rename({old_label: item.label, new_label: newLabel, is_subset: item.is_subset})}"
+                          @rename="(newLabel) => {rename_item({old_label: item.label, new_label: newLabel})}"
+                        />
+                      </div>
                     </v-list-item-content>
                     <v-list-item-action>
                       <j-tooltip
