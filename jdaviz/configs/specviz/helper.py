@@ -112,7 +112,7 @@ class Specviz(ConfigHelper, LineListMixin):
         if local_path is not None:
             load_kwargs['local_path'] = local_path
         if sources is not None:
-            load_kwargs['sources'] = sources
+            load_kwargs['extension'] = sources
         if exposures is not None:
             load_kwargs['exposures'] = exposures
 
@@ -129,17 +129,18 @@ class Specviz(ConfigHelper, LineListMixin):
             return
 
         if load_as_list:
-            format = '1D Spectrum List'
+            load_kwargs['concatenate'] = False
+            load_kwargs.setdefault('extension', '*')
         elif concat_by_file:
-            format = '1D Spectrum Concatenated'
+            load_kwargs['concatenate'] = True
+            load_kwargs.setdefault('extension', '*')
         elif (isinstance(data, (SpectrumList, SpectrumCollection))
                 or (isinstance(data, Spectrum) and len(data.shape) == 2)):
-            format = '1D Spectrum List'
-        else:
-            format = '1D Spectrum'
+            load_kwargs['concatenate'] = False
+
         if data_label is not None:
             data_label = self.app.return_unique_name(data_label)
-        self.load(data, format=format,
+        self.load(data, format='1D Spectrum',
                   data_label=data_label,
                   viewer='*' if show_in_viewer else [],
                   **load_kwargs)

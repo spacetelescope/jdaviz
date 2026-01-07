@@ -457,6 +457,7 @@ def test_load_2d_flux(specviz_helper):
     spec = Spectrum(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
                     flux=np.ones((4, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
+    # NOTE: this maps to specviz_helper.load(spec, data_label='test', extension='*')
     specviz_helper.load_data(spec, data_label="test", sources='*')
 
     assert len(specviz_helper.app.data_collection) == 4
@@ -467,6 +468,7 @@ def test_load_2d_flux(specviz_helper):
 
     # Make sure 2D spectra in a SpectrumList also get split properly.
     spec_list = SpectrumList([spec, spec2])
+    # NOTE: this maps to specviz_helper.load(spec_list, data_label='second test', extension='*')
     specviz_helper.load_data(spec_list, data_label="second test", sources='*')
 
     assert len(specviz_helper.app.data_collection) == 6
@@ -629,24 +631,22 @@ class TestLoadData:
         Test load_data with concat_by_file=True.
         """
         initial_count = len(specviz_helper.app.data_collection)
-        with pytest.warns(UserWarning, match='default source selection'):
-            specviz_helper.load_data(
-                premade_spectrum_list,
-                data_label='concatenated',
-                concat_by_file=True
-            )
-        assert len(specviz_helper.app.data_collection) > initial_count
+        specviz_helper.load_data(
+            premade_spectrum_list,
+            data_label='concatenated',
+            concat_by_file=True
+        )
+        assert len(specviz_helper.app.data_collection) == initial_count + 1
 
     def test_load_data_with_load_as_list(self, specviz_helper, premade_spectrum_list):
         """
         Test load_data with load_as_list=True.
         """
-        with pytest.warns(UserWarning, match='default source selection'):
-            specviz_helper.load_data(
-                premade_spectrum_list,
-                data_label='as_list',
-                load_as_list=True
-            )
+        specviz_helper.load_data(
+            premade_spectrum_list,
+            data_label='as_list',
+            load_as_list=True
+        )
         assert 'as_list_index-0' in specviz_helper.app.data_collection.labels
 
 
