@@ -127,7 +127,8 @@ class SpectrumInputExtensionsMixin(VuetifyTemplate, HubListener):
                            if getattr(self.input, attr, None) is not None
                            ]
         else:
-            raise TypeError("Input type not supported for SpectrumInputExtensionsMixin")
+            raise TypeError(f"Input type not supported for SpectrumInputExtensionsMixin: "
+                            f"{type(self.input).__name__} ({type(self.input).__module__})")
 
         self.extension = SelectFileExtensionComponent(self,
                                                       items='extension_items',
