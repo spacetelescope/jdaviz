@@ -337,9 +337,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
 
 
 @pytest.mark.remote_data
-# TODO: remove this when GAIA archive issues are resolved
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
+def test_markers_gwcs_lonlat(imviz_helper):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
     with asdf.open(gw_file) as af:
@@ -366,16 +364,4 @@ def test_markers_gwcs_lonlat(imviz_helper, catch_validate_known_exceptions):
     catalogs_plugin = imviz_helper.plugins['Catalog Search']
     catalogs_plugin.catalog.selected = 'Gaia'
     catalogs_plugin.max_sources = 10
-
-    # TODO: remove catch_validate_known_exception
-    #  when GAIA completes system maintenance (December 10, 2025 9:00 CET,
-    #  this has so far proven to be a moving target...)
-    # Use exception context manager to handle occasional VOTable parsing
-    # errors via retrieval failures and HTTP 500 errors. Both currently due
-    # to scheduled maintenance. These errors are reported as (and caught):
-    # 'File does not appear to be a VOTABLE' / HTTPError: Error 500
-    from astropy.io.votable.exceptions import E19
-    from requests.exceptions import HTTPError
-    with catch_validate_known_exceptions((E19, HTTPError, TimeoutError),
-                                         stdout_text_to_check='maintenance'):
-        catalogs_plugin.search(error_on_fail=True)
+    catalogs_plugin.search(error_on_fail=True)

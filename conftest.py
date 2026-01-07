@@ -1,7 +1,15 @@
+import pytest
 from jdaviz import __version__
-from jdaviz.pytest_memlog import (memlog_addoption, memlog_configure, memlog_runtest_setup,
-                                  memlog_runtest_teardown, memlog_runtest_makereport,
-                                  memlog_runtest_logreport, memlog_terminal_summary)
+from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
+                                                   memlog_configure,
+                                                   memlog_runtest_setup,
+                                                   memlog_runtest_teardown,
+                                                   memlog_runtest_makereport,
+                                                   memlog_runtest_logreport,
+                                                   memlog_terminal_summary)
+
+from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
+                                                        remote_skip_runtest_makereport)
 
 
 # ============================================================================
@@ -12,6 +20,7 @@ def pytest_addoption(parser):
     Register pytest options.
     """
     memlog_addoption(parser)
+    remote_skip_addoption(parser)
 
 
 def pytest_runtest_setup(item):
@@ -28,8 +37,16 @@ def pytest_runtest_teardown(item, nextitem):
     memlog_runtest_teardown(item, nextitem)
 
 
-# Re-export the hookwrapper directly
-pytest_runtest_makereport = memlog_runtest_makereport
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Hook wrapper that measures memory usage during test execution.
+    """
+    outcome = yield
+    report = outcome.get_result()
+
+    memlog_runtest_makereport(item, call, report)
+    remote_skip_runtest_makereport(item, call, report)
 
 
 def pytest_runtest_logreport(report):
