@@ -45,7 +45,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'get_reference_image_data', 'standardize_roman_metadata',
            'wildcard_match', 'cmap_samples', 'glue_colormaps',
            'att_to_componentid', 'create_data_hash',
-           'RA_COMPS', 'DEC_COMPS', 'SPECTRAL_AXIS_COMP_LABELS']
+           'in_ra_comps', 'in_dec_comps', 'RA_COMPS', 'DEC_COMPS',
+           'SPECTRAL_AXIS_COMP_LABELS']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 STDATAMODELS_LT_402 = not minversion(stdatamodels, "4.0.2.dev")
@@ -62,14 +63,35 @@ SPECTRAL_AXIS_COMP_LABELS = ('Wavelength', 'Wave', 'Frequency', 'Energy',
                              'Velocity', 'Wavenumber',
                              'World 0', 'World 1',
                              'Pixel Axis 0 [x]', 'Pixel Axis 1 [x]')
+# NOTE: RA_COMPS and DEC_COMPS are compared without any delimeters and in lowercase
 RA_COMPS = ['rightascension', 'ra', 'radeg', 'radeg',
             'radegrees', 'rightascensiondegrees', 'rightascensiondeg',
             'raobj', 'objra', 'sourcera', 'rasource', 'raj2000', 'ra2000',
-            'worldra', 'targ_ra', 'sci_ra']
+            'worldra', 'targra', 'scira']
 DEC_COMPS = ['declination', 'dec', 'decdeg', 'decdeg',
              'decdegrees', 'declinationdegrees', 'declinationdeg',
              'decobj', 'objdec', 'decsource', 'sourcedec', 'decj2000', 'dec2000',
-             'worlddec', 'targ_dec', 'sci_dec']
+             'worlddec', 'targdec', 'scidec']
+
+
+def in_ra_comps(comp):
+    return (str(comp).lower()
+            .replace(' ', '')
+            .replace('_', '')
+            .replace('-', '')
+            .replace('"', '')
+            .replace('(', '')
+            .replace(')', '') in RA_COMPS)
+
+
+def in_dec_comps(comp):
+    return (str(comp).lower()
+            .replace(' ', '')
+            .replace('_', '')
+            .replace('-', '')
+            .replace('"', '')
+            .replace('(', '')
+            .replace(')', '') in DEC_COMPS)
 
 
 class SnackbarQueue:
