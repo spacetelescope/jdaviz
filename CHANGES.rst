@@ -70,6 +70,9 @@ Bug Fixes
 - Fixed bugs in aperture photometry plugin for images in deconfigged, where the _cube_wave attribute,
   which is not applicable to images, was being accessed. [#3950]
 
+- Fixed bug when deleting a viewer with WCS-linked data in deconfigged, and readding the same data 
+  into a new viewer. [#3949]
+
 Cubeviz
 ^^^^^^^
 
