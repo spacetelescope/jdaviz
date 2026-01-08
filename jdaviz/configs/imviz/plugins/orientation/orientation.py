@@ -303,6 +303,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _get_wcs_angles(self, first_loaded_image=None):
         if first_loaded_image is None:
+            if self.viewer.selected_obj is None:
+                # No viewer selected, return default values
+                return 0, 0, 0
             first_loaded_image = self.viewer.selected_obj.first_loaded_data
             if first_loaded_image is None:
                 # These won't end up getting used in this case, but we need an actual number
@@ -368,6 +371,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if wrt_data is None:
             # if not specified, use first-loaded image layer as the
             # default rotation:
+            if self.viewer.selected_obj is None:
+                msg = "Viewer must be selected to add an orientation."
+                if from_ui:
+                    self.hub.broadcast(SnackbarMessage(msg, color="error",
+                                                       timeout=6000, sender=self))
+                else:
+                    raise ValueError(msg)
+                return
             wrt_data = self.viewer.selected_obj.first_loaded_data
             if wrt_data is None:  # Nothing in viewer
                 msg = "Viewer must have data loaded to add an orientation."
@@ -446,13 +457,27 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
         for viewer_ref in viewers_to_update:
             viewer_dm = self.app._jdaviz_helper.viewers.get(viewer_ref).data_menu
+            # Get the actual viewer object for this viewer_ref, not the selected viewer
+            viewer_obj = self.app.get_viewer_by_id(viewer_ref)
+            if viewer_obj is None:
+                continue
+
+            # Get list of data labels currently in the viewer using the data() method
+            # which is more reliable than checking layer states
+            try:
+                viewer_data_labels = [d.label for d in viewer_obj.data()]
+            except Exception:
+                # If we can't get the data list, skip this viewer
+                continue
+
             for wcs_layer in wcs_only_layers:
-                if wcs_layer not in self.viewer.selected_obj.layers:
+                if wcs_layer not in viewer_data_labels:
                     self.app.add_data_to_viewer(viewer_ref, wcs_layer)
             if (
                 self.orientation.selected not in
                     wcs_only_layers and
-                    self.align_by_selected == 'WCS'
+                    self.align_by_selected == 'WCS' and
+                    base_wcs_layer_label in viewer_dm.orientation.choices
             ):
                 viewer_dm.orientation.selected = base_wcs_layer_label
         self._ensure_layer_icon_exists(base_wcs_layer_label)
@@ -478,7 +503,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 orientation, viewer_id=viewer_id
             )
             viewer_item = self.app._viewer_item_by_id(viewer_id)
-            if viewer_item['reference_data_label'] != orientation:
+            if viewer_item is not None and viewer_item['reference_data_label'] != orientation:
                 viewer_item['reference_data_label'] = orientation
 
     @observe('orientation_layer_selected')
@@ -490,6 +515,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
             viewer = self.viewer.selected_obj
+
+            if viewer is None:
+                return
 
             # don't select until reference data are available:
             if ref_data is not None:
@@ -520,13 +548,15 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'viewer'):
             return None
         viewer = self.app.get_viewer(self.viewer.selected)
-        if not hasattr(viewer, 'state'):
+        if viewer is None or not hasattr(viewer, 'state'):
             return None
-        return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
+        return viewer.state.reference_data
 
     @property
     def _refdata_change_available(self):
         viewer = self.app.get_viewer(self.viewer.selected)
+        if viewer is None:
+            return False
         selected_layer = [lyr.layer for lyr in viewer.layers
                           if lyr.layer.label == self.orientation.selected]
         if len(selected_layer):
