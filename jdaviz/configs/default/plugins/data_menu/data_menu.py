@@ -285,7 +285,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         if layers is None:
             return
-        if not hasattr(self._viewer, '_get_alignment_method'):
+        if not isinstance(self._viewer, BqplotImageView):
             # then not an image viewer that supports WCS linking anyways
             return
 
