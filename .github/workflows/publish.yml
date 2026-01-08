@@ -17,13 +17,26 @@ jobs:
     if: github.repository == 'spacetelescope/jdaviz'
 
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
       with:
         fetch-depth: 0
 
     - uses: actions/setup-python@cfd55ca82492758d853442341ad4d8010466803a  # v5.6.0
       with:
         python-version: '3.11'
+
+    - name: Build pytestargs from labels
+      id: build-pytestargs
+      run: |
+        pytestargs=""
+        
+        # Add --skip-remote-failures if 'skip-remote-failures' label is present
+        if ${{ contains(github.event.pull_request.labels.*.name, 'skip-remote-failures') }}; then
+          pytestargs="--skip-remote-failures"
+        fi
+        
+        # Export as step output so later steps can reference it.
+        echo "pytestargs=$pytestargs" >> $GITHUB_OUTPUT
 
     - name: Install python-build and twine
       run: python -m pip install build "twine>=3.3" "importlib_metadata!=8.0.0"
@@ -46,7 +59,7 @@ jobs:
 
     - name: Restore MAST cache
       id: cache-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ./
         key: use-restore-keys-below-to-match-in-priority-order
@@ -70,9 +83,10 @@ jobs:
     - name: Test package
       run: |
         cd ..
+        echo "pytest args ${{ steps.build-pytestargs.outputs.pytestargs }}"
         python -m venv testenv
         testenv/bin/pip install pytest pytest-astropy pytest-tornasync pytest-xdist jdaviz/dist/*.whl
-        testenv/bin/pytest -p no:warnings -n auto --dist loadscope --astropy-header --remote-data --pyargs jdaviz
+        testenv/bin/pytest -p no:warnings -n auto --dist load --astropy-header --remote-data ${{ steps.build-pytestargs.outputs.pytestargs }} --pyargs jdaviz
 
     # NOTE: Do not run this part for PR testing.
     - name: Publish distribution 📦 to PyPI

@@ -102,24 +102,19 @@
         </j-tooltip>
       </template>
     </v-alert>
-    <v-text-field
-      v-else-if="['rename'].indexOf(mode) !== -1"
-      v-model="edit_value"
-      @keyup="if ($event.key == 'Enter') {changeAccept()} else if ($event.key == 'Escape') {changeCancel()} else {$emit('update:edit_value', $event.target.value)}"
-      :label="textFieldLabel"
-      :class="textFieldClass"
-      :hint="'Rename '+label.toLowerCase()"
-      persistent-hint
-    >
-      <template v-slot:append>
-        <j-tooltip v-if="items.length > 0" tooltipcontent="Cancel change">
-          <v-icon style="cursor: pointer" @click="changeCancel">mdi-close</v-icon>
-        </j-tooltip>
-        <j-tooltip tooltipcontent="Accept change">
-          <v-icon style="cursor: pointer" @click="changeAccept">mdi-check</v-icon>
-        </j-tooltip>
-      </template>
-    </v-text-field>
+    <div v-else-if="['rename'].indexOf(mode) !== -1" style="width: 100%">
+      <j-rename-text
+        :value="selected"
+        :edit-hint="'Rename '+label.toLowerCase()"
+        :show-pencil="false"
+        :auto-edit="true"
+        :api-hint-rename="api_hint_rename"
+        :show-api-hint="api_hints_enabled"
+        @input="(newLabel) => {$emit('update:edit_value', newLabel)}"
+        @rename="handleRename"
+        @cancel="handleCancel"
+      />
+    </div>
     <span v-else>
       <v-alert
         type="success"
@@ -142,23 +137,15 @@ module.exports = {
   props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
           'api_hint', 'api_hints_enabled', 'api_hint_rename', 'api_hint_remove', 'edit_value', 'mode'
   ],
-  computed: {
-    textFieldLabel() {
-      if (this.api_hints_enabled && this.mode == 'rename' && this.api_hint_rename) {
-        return this.api_hint_rename+'(\''+this.selected+'\', \''+this.edit_value+'\')';
-      } else {
-        return this.label || 'Subset';
-      }
-    },
-    textFieldClass() {
-      if (this.api_hints_enabled && this.mode == 'rename' && this.api_hint_rename) {
-        return 'api-hint';
-      } else {
-        return null;
-      }
-    }
-  },
   methods: {
+    handleRename(newLabel) {
+      this.$emit('update:edit_value', newLabel);
+      this.$emit('update:mode', 'rename:accept');
+    },
+    handleCancel() {
+      this.$emit('update:edit_value', this.selected);
+      this.$emit('update:mode', 'select');
+    },
     changeCancel() {
       this.$emit('update:edit_value', this.selected);
       this.$emit('update:mode', 'select');

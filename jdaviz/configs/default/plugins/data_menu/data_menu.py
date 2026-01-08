@@ -118,6 +118,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_modes = List().tag(sync=True)
 
+    rename_error_messages = Dict({}).tag(sync=True)
+
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -185,7 +187,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data',
-                  'view_info', 'remove_from_viewer', 'remove_from_app']
+                  'rename', 'view_info', 'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
                       if e not in ('set_layer_visibility', 'toggle_layer_visibility',
@@ -684,6 +686,76 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
+
+    def rename(self, old_label, new_label):
+        """
+        Rename a data item in the application.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data item.
+        new_label : str
+            The new label to assign to the data item.
+        -----------
+        """
+        # Check if this is a subset by looking in subset_groups
+        is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
+
+        if is_subset:
+            self.app._rename_subset(old_label, new_label)
+        else:
+            self.app.rename_data(old_label, new_label)
+
+    def _reset_rename_error_messages(self, old_label):
+        """
+        Clear rename error messages for the given label.
+
+        Also clears error messages in other labels that reference this label
+        (e.g., if editing label A and error says "same as label B", when B is renamed,
+        this clears the error for A since the conflict no longer exists).
+
+        Parameters
+        ----------
+        old_label : str
+            The label for which to clear error messages.
+        """
+        # Build new dictionary excluding old_label and any messages that mention it
+        self.rename_error_messages = {label: msg
+                                      for label, msg in self.rename_error_messages.items()
+                                      if label != old_label and old_label not in msg}
+
+    def vue_check_rename(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+        is_subset = info.get('is_subset', False)
+
+        if old_label == new_label:
+            self._reset_rename_error_messages(old_label)
+            return
+
+        try:
+            self.app.check_rename_availability(old_label, new_label, is_subset=is_subset)
+        except ValueError as e:
+            # Store error message for this specific layer
+            self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
+        else:
+            # Clear error for this specific layer
+            self._reset_rename_error_messages(old_label)
+
+    def vue_rename_item(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+
+        try:
+            self.rename(old_label, new_label)
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(f"Failed to rename: {repr(e)}",
+                                               color='error', sender=self, traceback=e))
+        else:
+            self._reset_rename_error_messages(old_label)
+            self.hub.broadcast(SnackbarMessage(f"Renamed '{old_label}' to '{new_label}'",
+                                               color='info', sender=self))
 
     def create_subset(self, subset_type):
         """
