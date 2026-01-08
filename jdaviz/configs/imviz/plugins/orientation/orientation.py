@@ -466,8 +466,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             # which is more reliable than checking layer states
             try:
                 viewer_data_labels = [d.label for d in viewer_obj.data()]
-            except Exception:
-                # If we can't get the data list, skip this viewer
+            except (AttributeError, TypeError, RuntimeError):
+                # Skip viewers that don't support data() method or have issues accessing data.
+                # This can happen with viewers that are being destroyed or haven't fully initialized.
                 continue
 
             for wcs_layer in wcs_only_layers:
