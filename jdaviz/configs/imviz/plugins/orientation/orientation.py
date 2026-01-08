@@ -468,7 +468,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 viewer_data_labels = [d.label for d in viewer_obj.data()]
             except (AttributeError, TypeError, RuntimeError):
                 # Skip viewers that don't support data() method or have issues accessing data.
-                # This can happen with viewers that are being destroyed or haven't fully initialized.
+                # This can happen with viewers that are being destroyed/haven't fully initialized.
                 continue
 
             for wcs_layer in wcs_only_layers:
