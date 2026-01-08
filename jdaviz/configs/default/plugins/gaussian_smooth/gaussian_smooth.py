@@ -144,6 +144,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
                 # only want image viewers in the options
                 self.add_results.viewer.filters = ['is_image_viewer']
 
+            # After updating filters, select the default viewer
+            self.add_results.viewer.select_default()
+
     @observe("mode_selected")
     def _update_dataset_viewer_filters(self, event={}):
         if event.get('new', self.mode_selected) == 'Spatial':
