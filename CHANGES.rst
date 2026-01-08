@@ -71,7 +71,7 @@ Bug Fixes
   which is not applicable to images, was being accessed. [#3950]
 
 - Fixed bug when deleting a viewer with WCS-linked data in deconfigged, and readding the same data 
-  into a new viewer. [#3949]
+  into a new viewer. [#3976]
 
 Cubeviz
 ^^^^^^^
