@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Allow creating new viewers (in deconfigged) when adding results from plugins. [#3966]
+
 Cubeviz
 ^^^^^^^
 
