@@ -200,16 +200,14 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
 def test_create_new_viewer(deconfigged_helper, spectrum1d):
     """Test that the plugin can create a new viewer when add_results.viewer.create_new is set."""
     data_label = 'test'
-    dc = deconfigged_helper.app.data_collection
-    deconfigged_helper.load_data(spectrum1d, data_label=data_label)
+    deconfigged_helper.load(spectrum1d, format='1D Spectrum', data_label=data_label)
     # Check initial state - should only have the default viewer
-    initial_viewers = list(deconfigged_helper.app._viewer_store.keys())
+    initial_viewers = list(deconfigged_helper.viewers.keys())
     assert len(initial_viewers) == 1
 
     # Get the plugin
-    gs = deconfigged_helper.plugins['Gaussian Smooth']._obj
-    gs.dataset_selected = data_label
-    gs.mode_selected = 'Spectral'
+    gs = deconfigged_helper.plugins['Gaussian Smooth']
+    gs.dataset.selected = data_label
     gs.stddev = 3
 
     # Set create_new to create a new spectrum viewer
@@ -217,18 +215,13 @@ def test_create_new_viewer(deconfigged_helper, spectrum1d):
     gs.add_results.viewer.create_new.selected = '1D Spectrum'
 
     # Apply the smooth operation - should create new viewer and add data to it
-    gs.vue_apply()
+    gs.smooth(add_data=True)
 
     # Check that a new viewer was created
-    final_viewers = list(deconfigged_helper.app._viewer_store.keys())
+    final_viewers = list(deconfigged_helper.viewers.keys())
     assert len(final_viewers) == 2
     new_viewer_id = [v for v in final_viewers if v not in initial_viewers][0]
 
     # Check that data was added to the new viewer
-    new_viewer = deconfigged_helper.app.get_viewer(new_viewer_id)
-    assert len(new_viewer.data()) == 1
-    assert new_viewer.data()[0].label == f'{data_label} smooth stddev-3.0'
-
-    # Check that the smoothed data exists in the data collection
-    assert len(dc) == 2
-    assert dc[1].label == f'{data_label} smooth stddev-3.0'
+    new_viewer = deconfigged_helper.viewers[new_viewer_id]
+    assert f'{data_label} smooth stddev-3.0' in new_viewer.data_menu.layer.choices

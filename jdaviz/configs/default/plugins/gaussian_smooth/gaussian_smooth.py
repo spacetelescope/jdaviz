@@ -106,7 +106,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     @property
     def user_api(self):
         expose = ['dataset', 'stddev', 'add_results', 'smooth']
-        if self.config == "cubeviz":
+        if self.config in ["cubeviz", "deconfigged"]:
             expose += ['mode']
         return PluginUserApi(self, expose=expose)
 
