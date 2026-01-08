@@ -59,6 +59,9 @@ class FileResolver(BaseResolver):
             return
         self.filepath_reactive.value = Path(self.filepath)
         self._resolver_input_updated()
+        if not os.path.exists(self.filepath) or not os.path.isfile(self.filepath):
+            # consider empty if a directory or non-existent file is selected
+            self.parsed_input_is_empty = True
 
     @property
     def is_valid(self):

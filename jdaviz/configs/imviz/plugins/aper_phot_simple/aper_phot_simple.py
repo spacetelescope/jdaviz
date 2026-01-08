@@ -76,6 +76,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         ``multiselect=False``
     * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
         Table with photometry results.
+    * ``cube_slice``
+      Current slice wavelength being used for aperture photometry (cubes only, read-only).
     """
     template_file = __file__, "aper_phot_simple.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -122,7 +124,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Perform aperture photometry for drawn regions.'
 
-        self.dataset.add_filter('is_cube_or_image')
+        self.dataset.add_filter('is_image_or_flux_cube')
 
         self.background = SubsetSelect(self,
                                        'background_items',
@@ -158,6 +160,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Custom dataset filters for Cubes
         def valid_cube_datasets(data):
+
+            if self.config == 'deconfigged' and data.ndim < 3:
+                return True
+
             comp = data.get_component(data.main_components[0])
             img_unit = u.Unit(comp.units) if comp.units else u.dimensionless_unscaled
             solid_angle_unit = check_if_unit_is_per_solid_angle(img_unit, return_unit=True)
@@ -196,7 +202,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                   'export_table', 'fitted_models', 'current_plot_type',
                   'fit_radial_profile', 'plot')
 
-        return PluginUserApi(self, expose=expose)
+        if self.config == 'Imviz':
+            return PluginUserApi(self, expose=expose)
+        else:
+            return PluginUserApi(self, expose=expose, readonly=('cube_slice',))
 
     @property
     def fitted_models(self):
@@ -204,7 +213,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def _has_display_unit_support(self):
-        return self.config != 'imviz' and self.display_unit != ''
+        """
+        Currently, unit conversion in this plugin is only supported for cubes.
+        When this is expanded to images in deconfigged, this logic will need
+        to change.
+        """
+
+        return self.config != 'imviz' and self.display_unit != '' and self.is_cube
 
     def _on_slice_changed(self, msg):
         self.cube_slice = f"{msg.value:.3e} {msg.value_unit}"
@@ -213,19 +228,55 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe("dataset_selected")
     def _on_dataset_selected_changed(self, event={}):
         # self.dataset might not exist when app is setting itself up.
-        if hasattr(self, "dataset") and self.dataset.choices != []:
-            if isinstance(self.dataset.selected_dc_item, list):
-                datasets = self.dataset.selected_dc_item
-            else:
-                datasets = [self.dataset.selected_dc_item]
+        if not hasattr(self, "dataset"):
+            return
 
-            self.is_cube = False
-            for dataset in datasets:
-                # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
-                # or images this will need to change.
-                if dataset.ndim > 2:
-                    self.is_cube = True
-                    break
+        if self.dataset.selected_dc_item is None:
+            return
+
+        if isinstance(self.dataset.selected_dc_item, list):
+            datasets = self.dataset.selected_dc_item
+        else:
+            datasets = [self.dataset.selected_dc_item]
+
+        self.is_cube = False
+        for dataset in datasets:
+            # This assumes all cubes, or no cubes.
+            # 'Is cube' here means is it a cube, or a collapsed cube.
+            if dataset.ndim > 2 or dataset.meta.get('plugin', None) == 'Collapse':
+                self.is_cube = True
+                break
+
+        if self.multiselect:
+            # defaults are applied within the loop if the auto-switches are enabled,
+            # but we still need to update the flux-scaling warning
+            self._multiselect_flux_scaling_warning()
+            return
+
+        try:
+            defaults = self._get_defaults_from_metadata()
+            self.counts_factor = 0
+            self.pixel_area = defaults.get('pixel_area', 0)
+            self.flux_scaling = defaults.get('flux_scaling', 0)
+            if 'flux_scaling' in defaults:
+                self.flux_scaling_warning = ''
+            else:
+                self.flux_scaling_warning = ('Could not determine flux scaling for '
+                                             f'{self.dataset.selected}, defaulting to zero.')
+
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to extract {self.dataset_selected}: {repr(e)}",
+                color='error', sender=self,
+                traceback=e))
+
+        # get correct display unit for newly selected dataset
+        if self._has_display_unit_support:
+            # sets display_unit and flux_scaling_display_unit traitlets
+            self._set_display_unit_of_selected_dataset()
+
+        # auto-populate background, if applicable.
+        self._aperture_selected_changed()
 
     def _on_display_units_changed(self, event={}):
         """
@@ -415,44 +466,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # disable warning once user changes value
             self.flux_scaling_warning = ''
 
-    @observe('dataset_selected')
-    def _dataset_selected_changed(self, event={}):
-        if not hasattr(self, 'dataset'):
-            # plugin not fully initialized
-            return
-        if self.dataset.selected_dc_item is None:
-            return
-        if self.multiselect:
-            # defaults are applied within the loop if the auto-switches are enabled,
-            # but we still need to update the flux-scaling warning
-            self._multiselect_flux_scaling_warning()
-            return
-
-        try:
-            defaults = self._get_defaults_from_metadata()
-            self.counts_factor = 0
-            self.pixel_area = defaults.get('pixel_area', 0)
-            self.flux_scaling = defaults.get('flux_scaling', 0)
-            if 'flux_scaling' in defaults:
-                self.flux_scaling_warning = ''
-            else:
-                self.flux_scaling_warning = ('Could not determine flux scaling for '
-                                             f'{self.dataset.selected}, defaulting to zero.')
-
-        except Exception as e:
-            self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {self.dataset_selected}: {repr(e)}",
-                color='error', sender=self,
-                traceback=e))
-
-        # get correct display unit for newly selected dataset
-        if self._has_display_unit_support:
-            # sets display_unit and flux_scaling_display_unit traitlets
-            self._set_display_unit_of_selected_dataset()
-
-        # auto-populate background, if applicable.
-        self._aperture_selected_changed()
-
     def _on_subset_update(self, msg):
         if not self.dataset_selected or not self.aperture_selected:
             return
@@ -511,7 +524,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def _cube_slice_ind(self):
         # TODO: performance improvements, change to listen to slice change event
-        slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
+        slice_plugin = self.app._jdaviz_helper.plugins.get('Spectral Slice', None)
         if slice_plugin is None:
             return None
 

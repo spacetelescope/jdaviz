@@ -245,7 +245,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_plugin(self):
-        return self.app._jdaviz_helper.plugins['Slice']
+        return self.app._jdaviz_helper.plugins['Spectral Slice']
 
     @observe('aperture_items')
     @skip_if_not_tray_instance()
@@ -260,6 +260,20 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for item in msg['new']:
             if item['label'] not in orig_labels:
                 subset_lbl = item.get('label')
+                # Check if an auto-extracted spectrum already exists for this subset
+                # by checking metadata (not data labels, since user may have renamed)
+                already_has_extraction = False
+                for data in self.app.data_collection:
+                    plugin_inputs = data.meta.get('_update_live_plugin_results', None)
+                    if plugin_inputs is None:
+                        continue
+                    # Simply check if aperture and dataset match - covers all rename scenarios
+                    if (plugin_inputs.get('aperture') == subset_lbl and
+                            plugin_inputs.get('dataset') == self.dataset.selected):
+                        already_has_extraction = True
+                        break
+                if already_has_extraction:
+                    continue
                 try:
                     self._extract_in_new_instance(subset_lbl=subset_lbl,
                                                   auto_update=True, add_data=True)
@@ -285,6 +299,9 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         plg.aperture_method.selected = 'Center'
         plg.function.selected = function
         plg.add_results.auto_update_result = auto_update
+        # TODO: once add_results.viewer supports multiselect, this should call select_all()
+        # for now it will select the first valid viewer to send results.
+        plg.add_results.viewer.select_default()
         # all other settings remain at their plugin defaults
         return plg(add_data=add_data)
 
@@ -680,7 +697,11 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
                 spec.meta['_default_color'] = default_color
-            self.add_results.add_results_from_plugin(spec, format=self.extracted_format)
+            viewer = self.add_results.viewer.selected
+            if viewer == 'None':
+                viewer = []
+            self.add_results.add_results_from_plugin(spec, format=self.extracted_format,
+                                                     load_kwargs={'viewer': viewer})
 
             snackbar_message = SnackbarMessage(
                 f"{self.resulting_product_name.title()} extracted successfully.",

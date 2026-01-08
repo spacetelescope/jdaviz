@@ -23,13 +23,17 @@ from jdaviz.configs.imviz.tests.utils import (create_wfi_image_model,
                                               _image_nddata_wcs)
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
-from jdaviz.core.loaders.importers.spectrum_list.spectrum_list import (
-    SpectrumListImporter,
-    SpectrumListConcatenatedImporter
-)
-from jdaviz.core.registries import loader_importer_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
-from jdaviz.core.registries import tray_registry
+
+from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
+                                                   memlog_configure,
+                                                   memlog_runtest_setup,
+                                                   memlog_runtest_teardown,
+                                                   memlog_runtest_makereport,
+                                                   memlog_runtest_logreport,
+                                                   memlog_terminal_summary)
+from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
+                                                        remote_skip_runtest_makereport)
+
 
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
@@ -37,81 +41,78 @@ if not NUMPY_LT_2_0:
 SPECTRUM_SIZE = 10  # length of spectrum
 
 
-@pytest.fixture
-def fake_classes_in_registries():
+# ============================================================================
+# Pytest plugins
+# - Memory logging (memlog): imported from pytest_memlog.py
+# - Remote failure skipping: imported from pytest_remote_skip.py
+# In CI, these utilities may have already been called from the root
+# conftest.py, so we avoid errors by catching the ValueError pytest throws.
+# ============================================================================
+def pytest_addoption(parser):
     """
-    This fixture is meant to be used in cases where a test
-    needs to check items in the registry. It provides a
-    list of fake items in the various registries that could
-    potentially throw off those tests if not accounted for.
+    Register pytest options.
     """
-    return ('Test Fake Plugin',
-            'Test Fake 1D Spectrum List',
-            'Test Fake 1D Spectrum List Concatenated')
+    try:
+        memlog_addoption(parser)
+        remote_skip_addoption(parser)
+    except ValueError:
+        pass
 
 
-@tray_registry('test-fake-plugin', label='Test Fake Plugin', category='core')
-class FakePlugin(PluginTemplateMixin):
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-@loader_importer_registry('Test Fake 1D Spectrum List')
-class FakeSpectrumListImporter(SpectrumListImporter):
-    """A fake importer for testing/convenience purposes only.
-    Mostly used to hot-update input for clean code/speed purposes.
-
-    Usage Example:
-    x = FakeSpectrumListImporter(app=deconfigged_helper.app,
-                                 resolver=deconfigged_helper.loaders['object']._obj,
-                                 input=premade_spectrum_list)
+def pytest_runtest_setup(item):
     """
-    template = ''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.new_default_data_label = None
-
-    @property
-    def input(self):
-        return super().input
-
-    @input.setter
-    def input(self, value):
-        self._input = value
-
-    @property
-    def default_data_label_from_resolver(self):
-        if hasattr(self, 'new_default_data_label'):
-            return self.new_default_data_label
-        return None
+    Setup hook that records memory before test.
+    """
+    try:
+        memlog_runtest_setup(item)
+    except ValueError:
+        pass
 
 
-@loader_importer_registry('Test Fake 1D Spectrum List Concatenated')
-class FakeSpectrumListConcatenatedImporter(SpectrumListConcatenatedImporter):
-    """A fake importer for testing/convenience purposes only.
-    Mostly used to hot-update input for clean code/speed purposes."""
-    template = ''
+def pytest_runtest_teardown(item, nextitem):
+    """
+    Teardown hook that records memory after test.
+    """
+    try:
+        memlog_runtest_teardown(item, nextitem)
+    except ValueError:
+        pass
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.new_default_data_label = None
 
-    @property
-    def input(self):
-        return super().input
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Combined hook wrapper for memlog and remote failure handling.
 
-    @input.setter
-    def input(self, value):
-        self._input = value
+    This hook:
+    1. Attaches memory measurements to report user_properties (memlog)
+    2. Handles remote data test failures (--skip-remote-failures option)
+    """
+    outcome = yield
+    report = outcome.get_result()
 
-    @property
-    def default_data_label_from_resolver(self):
-        if hasattr(self, 'new_default_data_label'):
-            return self.new_default_data_label
-        return None
+    memlog_runtest_makereport(item, call, report)
+    remote_skip_runtest_makereport(item, call, report)
+
+
+def pytest_runtest_logreport(report):
+    """
+    Log report hook that collects memory measurements from user_properties.
+    """
+    try:
+        memlog_runtest_logreport(report)
+    except ValueError:
+        pass
+
+
+def pytest_terminal_summary(terminalreporter, config=None):
+    """
+    Terminal summary hook that prints memlog summary.
+    """
+    try:
+        memlog_terminal_summary(terminalreporter, config)
+    except ValueError:
+        pass
 
 
 @pytest.fixture
@@ -645,6 +646,13 @@ except ImportError:
 
 
 def pytest_configure(config):
+    """
+    Configure pytest, including memlog initialization.
+    """
+    # Initialize memlog
+    memlog_configure(config)
+
+    # Configure pytest header modules
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'

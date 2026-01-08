@@ -1,4 +1,67 @@
+import pytest
 from jdaviz import __version__
+from jdaviz.pytest_utilities.pytest_memlog import (memlog_addoption,
+                                                   memlog_configure,
+                                                   memlog_runtest_setup,
+                                                   memlog_runtest_teardown,
+                                                   memlog_runtest_makereport,
+                                                   memlog_runtest_logreport,
+                                                   memlog_terminal_summary)
+
+from jdaviz.pytest_utilities.pytest_remote_skip import (remote_skip_addoption,
+                                                        remote_skip_runtest_makereport)
+
+
+# ============================================================================
+# Memory logging plugin (memlog) - imported from pytest_memlog.py
+# ============================================================================
+def pytest_addoption(parser):
+    """
+    Register pytest options.
+    """
+    memlog_addoption(parser)
+    remote_skip_addoption(parser)
+
+
+def pytest_runtest_setup(item):
+    """
+    Setup hook that records memory before test.
+    """
+    memlog_runtest_setup(item)
+
+
+def pytest_runtest_teardown(item, nextitem):
+    """
+    Teardown hook that records memory after test.
+    """
+    memlog_runtest_teardown(item, nextitem)
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Hook wrapper that measures memory usage during test execution.
+    """
+    outcome = yield
+    report = outcome.get_result()
+
+    memlog_runtest_makereport(item, call, report)
+    remote_skip_runtest_makereport(item, call, report)
+
+
+def pytest_runtest_logreport(report):
+    """
+    Log report hook that collects memory measurements from user_properties.
+    """
+    memlog_runtest_logreport(report)
+
+
+def pytest_terminal_summary(terminalreporter, config=None):
+    """
+    Terminal summary hook that prints memlog summary.
+    """
+    memlog_terminal_summary(terminalreporter, config)
+
 
 try:
     from pytest_astropy_header.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
@@ -10,6 +73,9 @@ except ImportError:
 # This is repeated from jdaviz/conftest.py because tox cannot grab test
 # header from that file.
 def pytest_configure(config):
+    # Initialize memlog
+    memlog_configure(config)
+
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'

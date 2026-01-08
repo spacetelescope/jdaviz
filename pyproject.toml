@@ -11,12 +11,12 @@ dependencies = [
     "matplotlib>=3.6",
     "traitlets>=5.0.5",
     "bqplot>=0.12.45,<0.13",
-    "glue-core>=1.23.0",
+    "glue-core>=1.24.0",
     "glue-jupyter>=0.25.0",
     "echo>=0.11.0",
-    "ipykernel>=6.19.4",
+    "ipykernel>=7.1.0",
     "ipyvue>=1.6",
-    "ipyvuetify>=1.7.0",
+    "ipyvuetify>=1.7.0,<3.0",
     "ipysplitpanes>=0.1.0",
     "ipygoldenlayout>=0.3.0",
     "ipywidgets>=8.0.6",
@@ -140,6 +140,8 @@ filterwarnings = [
     "error",
     # This line handles the DeprecationWarning from jupyter_core
     "ignore:Jupyter is migrating its paths.*:DeprecationWarning:jupyter_core.utils",
+    # This ignores AstropyPendingDeprecationWarning from spectral_cube
+    "ignore:COPY_IF_NEEDED is no longer needed now that astropy only supports numpy >= 2",
     "ignore:numpy\\.ufunc size changed:RuntimeWarning",
     "ignore:numpy\\.ndarray size changed:RuntimeWarning",
     "ignore:Passing unrecognized arguments to super:DeprecationWarning",
@@ -158,6 +160,7 @@ filterwarnings = [
 [tool.coverage.run]
 omit = [
     "jdaviz/conftest.py",
+    "jdaviz/pytest_utilities/*",
     "jdaviz/*setup_package*",
     "jdaviz/tests/*",
     "jdaviz/**/tests/*",

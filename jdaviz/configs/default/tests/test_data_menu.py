@@ -1,4 +1,5 @@
 from astropy.io import fits
+from astropy.nddata import NDData
 import astropy.units as u
 import pytest
 import numpy as np
@@ -187,7 +188,7 @@ def test_data_menu_dq_layers(imviz_helper):
     imviz_helper.load_data(data, data_label="image", ext=('SCI', 'DQ'), show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.glue_viewer.data_menu
-    assert dm.layer.choices == ['image[DQ,1]', 'image[SCI,1]']
+    assert dm.layer.choices == ['image[SCI,1]', 'image[DQ,1]']
     assert len(dm._obj.visible_layers) == 2
 
     # turning off image (parent) data-layer should also turn off DQ
@@ -400,3 +401,36 @@ class TestResizeSubset:
         msg = 'Selected subset does not have a supported ROI.'
         with pytest.raises(ValueError, match=msg):
             self.imviz_dm.resize_subset_in_viewer()
+
+
+def test_catalog_excluded_from_layer_reordering(imviz_helper, image_2d_wcs,
+                                                sky_coord_only_source_catalog):
+    """
+    Test that catalog layers are excluded from zordermanagement in image viewers.
+
+    To do this, load an image, align by WCS, then load a catalog. The catalog
+    layer should always be at the top of the layer stack. Then, add a subset to
+    ensure the catalog layer remains on top. The addition of a 'Default Orientation'
+    and a subset layer will test the reordering functionality of the data menu, and
+    ensure that catalog layers are excluded from reordering and always remain on top.
+    """
+
+    data = NDData(np.ones((128, 128)), wcs=image_2d_wcs)
+    imviz_helper.load(data)
+
+    imviz_helper.plugins['Orientation'].align_by = 'WCS'
+
+    # load catalog
+    imviz_helper.app.state.catalogs_in_dc = True
+    imviz_helper.load(sky_coord_only_source_catalog, data_label='catalog')
+
+    # load catalog. with the presence of a 'Default Orientation' layer that is
+    # NOT listed in the data menu, loading a catalog will cause the layer
+    # reordering logic in data_menu to run, and scatter layers should remain unchanged
+    layers = imviz_helper.default_viewer.data_menu._obj._viewer.layers
+    assert layers[-1].layer.label == 'catalog'
+
+    # Now add a subset and ensure catalog layer remains on top
+    subset_tools = imviz_helper.plugins['Subset Tools']
+    subset_tools.import_region(CircularROI(xc=0, yc=0, radius=1))
+    assert layers[-1].layer.label == 'catalog'

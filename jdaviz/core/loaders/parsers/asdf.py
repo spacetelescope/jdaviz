@@ -20,7 +20,9 @@ class ASDFParser(BaseParser):
 
     @property
     def is_valid(self):
-        if self.app.config not in ('deconfigged', 'imviz', 'rampviz'):
+        if self.app.config not in ('deconfigged', 'imviz',
+                                   'specviz', 'specviz2d',
+                                   'rampviz'):
             # NOTE: temporary during deconfig process
             return False
 
@@ -36,7 +38,7 @@ class ASDFParser(BaseParser):
         if HAS_ROMAN_DATAMODELS:
             try:
                 return rdd.open(self.input)
-            except ImportError as e:  # noqa: F841
+            except (ImportError, TypeError) as e:  # noqa: F841
                 warnings.warn(
                     f"{self.input} could not be opened with the `roman_datamodels` package, "
                     "as it gave the following error: {e}. This file will be loaded with the `asdf` directly",  # noqa: E501

@@ -353,7 +353,29 @@ class ViewerClone(Tool):
         self.viewer.clone_viewer()
 
     def is_visible(self):
-        return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d', 'cubeviz', 'mosviz']
+        return self.viewer.jdaviz_app.config not in ['specviz', 'specviz2d',
+                                                     'cubeviz', 'mosviz',
+                                                     'rampviz']
+
+
+@viewer_tool
+class TableSubset(Tool):
+    icon = os.path.join(ICON_DIR, 'table_subset.svg')
+    tool_id = 'jdaviz:table_subset'
+    action_text = 'Create subset from table selection'
+    tool_tip = 'Create a new subset based on the current table selection'
+
+    def activate(self):
+        if not len(self.viewer.widget_table.checked):
+            return
+        self.viewer.apply_filter()
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return len(self.viewer.widget_table.checked) > 0
 
 
 @viewer_tool

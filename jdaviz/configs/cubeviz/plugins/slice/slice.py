@@ -9,11 +9,12 @@ from astropy.units import UnitsWarning
 from traitlets import Bool, Int, Unicode, observe
 
 from jdaviz.configs.cubeviz.plugins.viewers import (
-    WithSliceIndicator, WithSliceSelection, CubevizImageView
+    WithSliceIndicator, WithSliceSelection,
+    CubevizImageView, CubevizProfileView
 )
 from jdaviz.configs.cubeviz.helper import _spectral_axis_names
 from jdaviz.configs.rampviz.helper import _temporal_axis_names
-from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
+from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
@@ -24,11 +25,10 @@ from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
 
 
-__all__ = ['Slice']
+__all__ = ['BaseSlicePlugin', 'SpectralSlice', 'RampSlice']
 
 
-@tray_registry('cube-slice', label="Slice", category="app:options")
-class Slice(PluginTemplateMixin, ViewerSelectMixin):
+class BaseSlicePlugin(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Slice Plugin Documentation <slice>` for more details.
 
@@ -109,8 +109,7 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
                                    handler=self._on_global_display_unit_changed)
         self._initialize_location()
 
-        self.docs_description = 'The slice can also be changed interactively\
-                                 in the spectrum viewer by activating the slice tool.'
+        self.docs_description = ''
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['viewer_items'])
@@ -152,7 +151,8 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
                     str(viewer.state.x_att_pixel) not in self.valid_slice_att_names):
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 continue
-            if self.app._get_display_unit(viewer.slice_display_unit_name) == '':
+            if (self.app._get_display_unit(viewer.slice_display_unit_name) == ''
+                    and not isinstance(viewer, RampvizProfileView)):
                 # viewer is not ready to retrieve slice_values in display units
                 continue
             slice_values = viewer.slice_values
@@ -163,22 +163,11 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def slice_display_unit_name(self):
-        # global display unit "axis" corresponding to the slice axis
-        if self.app.config in ('cubeviz', 'deconfigged'):
-            return 'spectral'
-        elif self.app.config == 'rampviz':
-            return 'temporal'
+        raise NotImplementedError("slice_display_unit_name must be implemented in subclass")
 
     @property
     def valid_slice_att_names(self):
-        if self.app.config in ('cubeviz', 'deconfigged'):
-            for dc in self.app.data_collection:
-                if dc.ndim == 3 and 'spectral_axis_index' in dc.meta:
-                    spectral_axis = dc.meta['spectral_axis_index']
-                    return _spectral_axis_names + [f'Pixel Axis {spectral_axis} [x]']
-            return _spectral_axis_names
-        elif self.app.config == 'rampviz':
-            return _temporal_axis_names + ['Pixel Axis 2 [x]']
+        raise NotImplementedError("valid_slice_att_names must be implemented in subclass")
 
     @property
     def slice_selection_viewers(self):
@@ -194,6 +183,13 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
         if self.allow_disable_snapping:
             expose += ['snap_to_slice']
         return PluginUserApi(self, expose=expose)
+
+    @observe('viewer_items')
+    def _set_relevant(self, *args):
+        if not len(self.viewer_items):
+            self.irrelevant_msg = 'No valid viewers'
+        else:
+            self.irrelevant_msg = ''
 
     def _check_if_cube_viewer_exists(self, *args):
         if len(self.viewer.choices) > 0:
@@ -418,3 +414,71 @@ class Slice(PluginTemplateMixin, ViewerSelectMixin):
         self.is_playing = True
         self._player = threading.Thread(target=self._player_worker)
         self._player.start()
+
+
+@tray_registry('cube-slice', label="Spectral Slice", category="app:options")
+class SpectralSlice(BaseSlicePlugin):
+    _cube_viewer_cls = CubevizImageView
+    _cube_viewer_default_label = 'cube'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.plugin_key = "Spectral Slice"
+        self._plugin_description = 'Select spectral cube slice across all viewers.'
+        self.docs_description = 'The slice can also be changed interactively\
+                                 in the spectrum viewer by activating the slice tool.'
+        self.allow_disable_snapping = False
+
+        self.viewer.add_filter(lambda viewer: isinstance(viewer, (CubevizImageView, CubevizProfileView)))  # noqa
+        self._set_relevant()
+
+    @observe('vdocs')
+    def _update_docs_link(self, *args):
+        self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/cubeviz/plugins.html#slice'
+
+    @property
+    def slice_display_unit_name(self):
+        # global display unit "axis" corresponding to the slice axis
+        # global display unit "axis" corresponding to the slice axis
+        return 'spectral'
+
+    @property
+    def valid_slice_att_names(self):
+        att_names = []
+        for dc in self.app.data_collection:
+            if dc.ndim == 3 and 'spectral_axis_index' in dc.meta:
+                spectral_axis = dc.meta['spectral_axis_index']
+                att_names += [f'Pixel Axis {spectral_axis} [x]']
+        att_names += _spectral_axis_names
+
+        return att_names
+
+
+@tray_registry('ramp-slice', label="Ramp Slice", category="app:options")
+class RampSlice(BaseSlicePlugin):
+    _cube_viewer_cls = RampvizImageView
+    _cube_viewer_default_label = 'ramp'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.plugin_key = "Ramp Slice"
+        self._plugin_description = 'Select ramp cube slice across all viewers.'
+        self.docs_description = 'The slice can also be changed interactively\
+                                 in the integration viewer by activating the slice tool.'
+        self.allow_disable_snapping = False
+
+        self.viewer.add_filter(lambda viewer: isinstance(viewer, (RampvizImageView, RampvizProfileView)))  # noqa
+        self._set_relevant()
+
+    @observe('vdocs')
+    def _update_docs_link(self, *args):
+        self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/cubeviz/plugins.html#slice'
+
+    @property
+    def slice_display_unit_name(self):
+        # global display unit "axis" corresponding to the slice axis
+        return 'temporal'
+
+    @property
+    def valid_slice_att_names(self):
+        return _temporal_axis_names + ['Pixel Axis 2 [x]']

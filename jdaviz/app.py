@@ -43,10 +43,10 @@ from jdaviz import __version__
 from jdaviz import style_registry
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                                SnackbarMessage, RemoveDataMessage, SubsetRenameMessage,
-                                AddDataToViewerMessage, RemoveDataFromViewerMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage,
-                                ViewerRenamedMessage, ChangeRefDataMessage,
+                                DataRenamedMessage, SnackbarMessage, RemoveDataMessage,
+                                SubsetRenameMessage, AddDataToViewerMessage,
+                                RemoveDataFromViewerMessage, ViewerAddedMessage,
+                                ViewerRemovedMessage, ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage, LayersFinalizedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry,
                                     viewer_registry, viewer_creator_registry,
@@ -196,7 +196,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'data-menu-add': 'components/data_menu_add.vue',
                      'data-menu-remove': 'components/data_menu_remove.vue',
                      'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
-                     'hover-api-hint': 'components/hover_api_hint.vue'}
+                     'hover-api-hint': 'components/hover_api_hint.vue',
+                     'j-rename-text': 'components/j_rename_text.vue'}
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
@@ -306,6 +307,7 @@ class ApplicationState(State):
     # https://github.com/spacetelescope/jdaviz/pull/3856
     # https://github.com/spacetelescope/jdaviz/pull/3863
     # https://github.com/spacetelescope/jdaviz/pull/3867 - table viewer
+    # https://github.com/spacetelescope/jdaviz/pull/3930 - table viewer subset select
     # https://github.com/spacetelescope/jdaviz/pull/3906 - SDSS/Gaia in astroquery resolver
     # https://github.com/spacetelescope/jdaviz/pull/3912
     # https://github.com/spacetelescope/jdaviz/pull/3899
@@ -396,6 +398,10 @@ class Application(VuetifyTemplate, HubListener):
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
 
+        # Flag to indicate a data rename operation is in progress
+        # Handlers can check this to skip processing during renames
+        self._renaming_data = False
+
         from jdaviz.core.events import PluginTableAddedMessage, PluginPlotAddedMessage
         self._plugin_tables = {}
         self.hub.subscribe(self, PluginTableAddedMessage,
@@ -464,6 +470,8 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_subset_delete_message)
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_subset_create_message)
+        self.hub.subscribe(self, SubsetRenameMessage,
+                           handler=self._on_subset_rename_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
@@ -556,6 +564,18 @@ class Application(VuetifyTemplate, HubListener):
     def _on_subset_create_message(self, msg):
         self._reserved_labels.add(msg.subset.label)
         self._on_layers_changed(msg)
+
+    def _on_subset_rename_message(self, msg):
+        # Update _reserved_labels when a subset is renamed
+        # msg has old_label and new_label attributes
+        if msg.old_label in self._reserved_labels:
+            self._reserved_labels.remove(msg.old_label)
+        self._reserved_labels.add(msg.new_label)
+
+        # Update metadata in all data entries that reference the old subset label
+        # This ensures auto-update tracking continues after subset renaming
+        for data in self.data_collection:
+            self._update_live_plugin_results_metadata(data, msg.old_label, msg.new_label, 'subset')
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -660,10 +680,11 @@ class Application(VuetifyTemplate, HubListener):
                                           layer_name: orientation_icons.get(layer_name,
                                                                             wcs_only_refdata_icon)}
             elif not is_not_child:
-                parent_icon = self.state.layer_icons.get(self._get_assoc_data_parent(layer_name))
+                parent_label = self._get_assoc_data_parent(layer_name)
+                parent_icon = self.state.layer_icons.get(parent_label)
                 index = len([ln for ln, ic in self.state.layer_icons.items()
                              if not ic[:4] == 'mdi-' and
-                             self._get_assoc_data_parent(ln) == parent_icon]) + 1
+                             self._get_assoc_data_parent(ln) == parent_label]) + 1
                 self.state.layer_icons = {
                     **self.state.layer_icons,
                     layer_name: f"{parent_icon}{index}"
@@ -1737,6 +1758,208 @@ class Application(VuetifyTemplate, HubListener):
                 f"Data '{data_label}' successfully added.", sender=self, color="success")
             self.hub.broadcast(snackbar_message)
 
+    def _update_layer_icons(self, old_label, new_label):
+        """
+        Update layer icons dictionary when renaming an item.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the item.
+        new_label : str
+            The new label of the item.
+        """
+        if old_label in self.state.layer_icons:
+            self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
+            _ = self.state.layer_icons.pop(old_label)
+
+        # Update _data_associations to maintain parent-child relationships
+        if old_label in self._data_associations:
+            # Move the association entry to the new label
+            self._data_associations[new_label] = self._data_associations.pop(old_label)
+
+            # Update parent references in children
+            children = self._data_associations[new_label].get('children', [])
+            for child_label in children:
+                if child_label in self._data_associations:
+                    self._data_associations[child_label]['parent'] = new_label
+
+        # Check if this is a child being renamed - update parent's children list
+        for data_label, assoc_data in self._data_associations.items():
+            if old_label in assoc_data.get('children', []):
+                # Replace old label with new label in children list
+                children = assoc_data['children']
+                children[children.index(old_label)] = new_label
+                break
+
+    def _update_data_items_list(self, old_label, new_label):
+        """
+        Update state.data_items list when renaming an item.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the item.
+        new_label : str
+            The new label of the item.
+        """
+        for data_item in self.state.data_items:
+            if data_item['name'] == old_label:
+                data_item['name'] = new_label
+                break
+
+    def _update_live_plugin_results_metadata(self, data, old_label, new_label, subscription_type):
+        """
+        Update live plugin results metadata when renaming an item.
+
+        Parameters
+        ----------
+        data : glue.core.Data
+            The data object containing metadata to update.
+        old_label : str
+            The old label of the item.
+        new_label : str
+            The new label of the item.
+        subscription_type : str
+            The type of subscription to update ('data' or 'subset').
+
+        Returns
+        -------
+        modified : bool
+            True if metadata was modified, False otherwise.
+        """
+        if not (hasattr(data, 'meta') and '_update_live_plugin_results' in data.meta):
+            return False
+
+        results_dict = data.meta['_update_live_plugin_results']
+
+        # Get list of attribute names that reference the item
+        attrs = results_dict.get('_subscriptions', {}).get(subscription_type, [])
+
+        # Update any reference attributes that match old_label
+        modified = False
+        for attr_name in attrs:
+            if results_dict.get(attr_name) == old_label:
+                results_dict[attr_name] = new_label
+                modified = True
+
+        # Update add_results label if it exists and matches
+        # This ensures that auto-update tracking continues after data renaming
+        if 'add_results' in results_dict and isinstance(results_dict['add_results'], dict):
+            if results_dict['add_results'].get('label') == old_label:
+                results_dict['add_results']['label'] = new_label
+                modified = True
+
+        # Note: We modify the dict in place, which is sufficient for the metadata
+        # to be updated. No need to reassign to data.meta
+
+        return modified
+
+    def check_rename_availability(self, old_label, new_label, is_subset=False):
+        """
+        Check if new label already exists in reserved labels.
+        Used by front-end for dynamic user warning.
+        """
+        # Always check that the new label doesn't already exist in reserved labels
+        # (unless we're just keeping the same name)
+        if new_label is None:
+            return
+
+        if new_label != old_label and new_label.strip() in self._reserved_labels:
+            msg = (f'Cannot rename to {new_label}: '
+                   'name already exists in data collection or subsets or is unavailable.')
+            raise ValueError(msg)
+
+        # When renaming a subset, also perform subset-specific validation
+        if is_subset:
+            self._check_valid_subset_label(new_label)
+
+    def rename_data(self, old_label, new_label):
+        """
+        Rename data in the data collection and update all references.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data to rename.
+        new_label : str
+            The new label for the data.
+        """
+        self.check_rename_availability(old_label, new_label)
+        data = self.data_collection[old_label]
+
+        # Set flag to indicate rename is in progress
+        # This allows handlers to skip processing during renames
+        self._renaming_data = True
+        # Rename the data object
+        # Note: _rename_single_data will reset _renaming_data at the end
+        # to ensure callbacks have access to the flag during processing
+        self._rename_single_data(old_label, new_label, data)
+
+    def _rename_single_data(self, old_label, new_label, data):
+        """
+        Rename a single data entry. This is a helper method used by rename_data.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data to rename.
+        new_label : str
+            The new label for the data.
+        data : glue.core.Data
+            The data object to rename.
+        """
+        try:
+            # Update the data label in the data object itself
+            data.label = new_label
+
+            # Update state.data_items
+            self._update_data_items_list(old_label, new_label)
+
+            # Update live plugin results if metadata exists
+            self._update_live_plugin_results_metadata(data, old_label, new_label, 'data')
+
+            # Update metadata in OTHER data that subscribe to the renamed data
+            for d in self.data_collection:
+                if d is data:
+                    continue
+                self._update_live_plugin_results_metadata(d, old_label, new_label, 'data')
+
+            # Clear cached references to old label
+            self._clear_object_cache(old_label)
+
+            # Update reserved labels
+            if old_label in self._reserved_labels:
+                self._reserved_labels.remove(old_label)
+            self._reserved_labels.add(new_label)
+
+            # Broadcast the message BEFORE updating layer_icons
+            # This is critical: layer_icons has callbacks that trigger
+            # _update_items() in DatasetSelect/LayerSelect. If we
+            # broadcast DataRenamedMessage first, the handlers can
+            # update their 'selected' trait values before _update_items()
+            # runs. This prevents _apply_default_selection from changing
+            # 'selected' and triggering observers that would cause
+            # plugins to re-process data (like auto-extraction).
+            self.hub.broadcast(DataRenamedMessage(data, old_label, new_label, sender=self))
+
+            # Now update layer icons - callbacks will fire but selected
+            # values are already updated
+            self._update_layer_icons(old_label, new_label)
+
+            # Update viewer layer states and reference data
+            for viewer_id, viewer in self._viewer_store.items():
+                # Update reference data if it matches old label
+                if (hasattr(viewer.state, 'reference_data')
+                        and viewer.state.reference_data is not None
+                        and viewer.state.reference_data.label == old_label):
+                    viewer.state.reference_data = data
+        finally:
+            # Reset the renaming flag after all callbacks have been processed
+            # This ensures that _apply_default_selection in plugin components
+            # will skip resetting the selected value during the rename process
+            self._renaming_data = False
+
     def return_data_label(self, loaded_object, ext=None, alt_name=None, check_unique=True):
         """
         Returns a unique data label that can be safely used to load data into data collection.
@@ -2246,14 +2469,15 @@ class Application(VuetifyTemplate, HubListener):
         else:
             subset_selected = self.session.edit_subset_mode.edit_subset[0].label
 
-        # remove the current selection label from the set of labels, because its ok
-        # if the new subset shares the name of the current selection (renaming to current name)
-        if subset_selected in self._reserved_labels:
-            self._reserved_labels.remove(subset_selected)
+        # Create a copy of reserved labels to check against, excluding the current
+        # selection label, to allow subsets to keep their current name
+        reserved_labels_to_check = set(self._reserved_labels)
+        if subset_selected in reserved_labels_to_check:
+            reserved_labels_to_check.remove(subset_selected)
 
         # now check `subset_name` against list of non-active current subset labels
         # and warn and return if it is
-        if subset_name in self._reserved_labels:
+        if subset_name in reserved_labels_to_check:
             if raise_if_invalid:
                 raise ValueError("Cannot rename subset to name of an existing subset"
                                  f" or data item: ({subset_name}).")
@@ -2294,36 +2518,32 @@ class Application(VuetifyTemplate, HubListener):
             subset_group.label = new_label
 
         # Update layer icon
-        self.state.layer_icons[new_label] = self.state.layer_icons[old_label]
-        _ = self.state.layer_icons.pop(old_label)
+        self._update_layer_icons(old_label, new_label)
 
         # Updated derived data if applicable
         for d in self.data_collection:
             data_renamed = False
             # Extracted spectra are named, e.g., 'Data (Subset 1, sum)'
-            if d.label.split("(")[-1].split(",")[0] == old_label:
+            if d.label.split('(')[-1].split(',')[0] == old_label:
                 old_data_label = d.label
                 new_data_label = d.label.replace(old_label, new_label)
                 d.label = new_data_label
-                self.state.layer_icons[new_data_label] = self.state.layer_icons[old_data_label]
-                _ = self.state.layer_icons.pop(old_data_label)
+                self._update_layer_icons(old_data_label, new_data_label)
 
                 # Update the entries in the old data menu
-                for data_item in self.state.data_items:
-                    if data_item['name'] == old_data_label:
-                        data_item['name'] = new_data_label
+                self._update_data_items_list(old_data_label, new_data_label)
+                data_renamed = True
 
             # Update live plugin results subscriptions
-            if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
-                results_dict = d.meta['_update_live_plugin_results']
-                for key in results_dict.get('_subscriptions', {}).get('subset'):
-                    if results_dict[key] == old_label:
-                        results_dict[key] = new_label
+            modified = self._update_live_plugin_results_metadata(d, old_label, new_label, 'subset')
 
-                if data_renamed:
-                    results_dict['add_results']['label'] = new_data_label
-
-                d.meta['_update_live_plugin_results'] = results_dict
+            # If derived data was renamed, update the label in add_results
+            if data_renamed and modified:
+                if hasattr(d, 'meta') and '_update_live_plugin_results' in d.meta:
+                    results_dict = d.meta['_update_live_plugin_results']
+                    if 'add_results' in results_dict:
+                        results_dict['add_results']['label'] = new_data_label
+                        d.meta['_update_live_plugin_results'] = results_dict
 
         self.hub.broadcast(SubsetRenameMessage(subset_group, old_label, new_label, sender=self))
 

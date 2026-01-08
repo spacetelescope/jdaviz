@@ -44,8 +44,8 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator,
                                                     WithSliceSelection)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, RestoreToolbarMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage,
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, DataRenamedMessage,
+                                RestoreToolbarMessage, ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 ViewerVisibleLayersChangedMessage,
                                 ChangeRefDataMessage,
@@ -169,8 +169,9 @@ def show_widget(widget, loc, title, height=None):  # pragma: no cover
 
 
 def _is_spectrum_viewer(viewer):
-    return ('ProfileView' in viewer.__class__.__name__
-            or viewer.__class__.__name__ == 'Spectrum1DViewer')
+    return viewer.__class__.__name__ in ('CubevizProfileView',
+                                         'MosvizProfileView',
+                                         'Spectrum1DViewer')
 
 
 def _is_spectrum_2d_viewer(viewer):
@@ -1346,6 +1347,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return self._default_mode
 
     def _apply_default_selection(self, skip_if_current_valid=True):
+        # Skip if a data rename operation is in progress
+        # This prevents triggering observers when selected becomes
+        # temporarily invalid during rename
+        if getattr(self.app, '_renaming_data', False):
+            return
+
         if self.is_multiselect:
             if skip_if_current_valid and (self.selected is None or len(self.selected) == 0):
                 # current selection is empty and so should remain that way
@@ -1418,6 +1425,67 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             if event['new'] not in valid + ['']:
                 self.selected = event['old']
                 raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
+
+    def _update_selected_on_rename(self, old_label, new_label):
+        """
+        Update selected value when an item is renamed.
+
+        This bypasses observers by directly updating _trait_values to prevent
+        plugins from re-processing data unnecessarily.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the renamed item.
+        new_label : str
+            The new label of the renamed item.
+
+        Returns
+        -------
+        updated : bool
+            True if selected was updated, False otherwise.
+        """
+        # Check if selected needs updating
+        update_selected = False
+        if self.is_multiselect:
+            if old_label in self.selected:
+                update_selected = True
+        else:
+            if self.selected == old_label:
+                update_selected = True
+
+        # Update selected label directly in _trait_values to bypass observers
+        if update_selected:
+            # Get the actual traitlet name on the plugin
+            selected_trait_name = self._plugin_traitlets.get('selected')
+            if self.is_multiselect:
+                new_selected = [new_label if sel == old_label else sel
+                                for sel in self.selected]
+                self._plugin._trait_values[selected_trait_name] = new_selected
+            else:
+                self._plugin._trait_values[selected_trait_name] = new_label
+            # Sync to frontend
+            self.send_state('selected')
+
+        return update_selected
+
+    def _update_items_on_rename(self, old_label, new_label):
+        """
+        Update items list when an item is renamed.
+
+        Parameters
+        ----------
+        old_label : str
+            The old label of the renamed item.
+        new_label : str
+            The new label of the renamed item.
+        """
+        # Find and update the item in the list
+        for item in self.items:
+            if item['label'] == old_label:
+                item['label'] = new_label
+                break
+        self.send_state('items')
 
 
 class SelectFileExtensionComponent(SelectPluginComponent):
@@ -1957,6 +2025,8 @@ class LayerSelect(SelectPluginComponent):
                            handler=lambda _: self._update_items())
         self.hub.subscribe(self, SubsetRenameMessage,
                            handler=self._on_subset_renamed)
+        self.hub.subscribe(self, DataRenamedMessage,
+                           handler=self._on_data_renamed)
         self.hub.subscribe(self, ViewerRenamedMessage,
                            self._on_viewer_renamed_message)
 
@@ -2186,11 +2256,20 @@ class LayerSelect(SelectPluginComponent):
 
     def _on_subset_renamed(self, msg):
         # Find the subset in self.items and update the label
-        for item in self.items:
-            if item['label'] == msg.old_label:
-                item['label'] = msg.new_label
-                break
-        self.send_state("items")
+        self._update_items_on_rename(msg.old_label, msg.new_label)
+
+    def _on_data_renamed(self, msg):
+        """
+        Handle data renamed events by updating items and selected.
+
+        Note: We update selected directly in _trait_values to bypass
+        observers, preventing plugins from re-processing data.
+        """
+        # Update selected if it matches the old label
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
+
+        # Update items list
+        self._update_items_on_rename(msg.old_label, msg.new_label)
 
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
@@ -2249,7 +2328,32 @@ class LayerSelect(SelectPluginComponent):
         # if remove_subset provided, subset has already been removed, enforcing the removal here
         # so data menu updates accordingly
         unique_layer_labels = list(set(layer_labels) - {remove_subset})
-        layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
+
+        # During rename operations, preserve the existing order to prevent parent-child
+        # layers from being reordered
+        is_renaming = getattr(self.app, '_renaming_data', False)
+
+        if is_renaming and hasattr(self, 'items') and self.items:
+            # Preserve existing order by matching against current items
+            existing_labels = [item['label'] for item in self.items
+                               if item.get('label') not in self.manual_options]
+
+            # Build layer_items in the same order as existing items
+            layer_items = []
+            label_to_dict = {label: self._layer_to_dict(label)
+                             for label in unique_layer_labels}
+
+            # First, add items in the existing order
+            for existing_label in existing_labels:
+                if existing_label in label_to_dict:
+                    layer_items.append(label_to_dict[existing_label])
+
+            # Then add any new items at the end
+            for label in unique_layer_labels:
+                if label not in existing_labels:
+                    layer_items.append(label_to_dict[label])
+        else:
+            layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
             icon = items_dict['icon']
@@ -2262,8 +2366,58 @@ class LayerSelect(SelectPluginComponent):
                 zorder = 0
             return -1 * zorder
 
-        if self.sort_by == 'zorder':
+        if is_renaming:
+            # Skip sorting during rename to preserve order
+            pass
+        elif self.sort_by == 'zorder':
             layer_items.sort(key=_sort_by_zorder)
+
+            # Group parent data with their children and place children below parents
+            # First, identify all parent-child relationships
+            parent_to_children = {}
+            child_to_parent = {}
+
+            if hasattr(self._plugin.app, '_get_assoc_data_children'):
+                for item in layer_items:
+                    label = item['label']
+                    children = self._plugin.app._get_assoc_data_children(label)
+                    if children:
+                        parent_to_children[label] = children
+                        for child in children:
+                            child_to_parent[child] = label
+
+            # Now build the grouped list, skipping children and adding them after their parent
+            grouped_items = []
+            processed = set()
+
+            for item in layer_items:
+                label = item['label']
+
+                # Skip if already processed
+                if label in processed:
+                    continue
+
+                # Skip if this is a child (it will be added when we process its parent)
+                if label in child_to_parent:
+                    continue
+
+                # Add the parent/standalone layer
+                grouped_items.append(item)
+                processed.add(label)
+
+                # Add any children immediately after
+                if label in parent_to_children:
+                    for child_label in parent_to_children[label]:
+                        for child_item in layer_items:
+                            if (child_item['label'] == child_label and
+                                    child_label not in processed):
+                                grouped_items.append(child_item)
+                                processed.add(child_label)
+                                break
+
+            # Only use grouped items if we actually reorganized something
+            if len(grouped_items) > 0:
+                layer_items = grouped_items
         else:  # icon
             layer_items.sort(key=_sort_by_icon)
 
@@ -2504,6 +2658,8 @@ class SubsetSelect(SelectPluginComponent):
                            handler=lambda msg: self._on_delete_subset(msg.subset))
         self.hub.subscribe(self, SubsetRenameMessage,
                            handler=lambda msg: self._on_subset_renamed(msg))
+        self.hub.subscribe(self, DataRenamedMessage,
+                           handler=self._update_items)
 
         self._initialize_choices()
 
@@ -2616,23 +2772,9 @@ class SubsetSelect(SelectPluginComponent):
     def _on_subset_renamed(self, msg):
         if self.mode == 'rename:accept':
             pass
-        # See if we're renaming the selected subset
-        update_selected = False
-        if self.selected == msg.old_label:
-            update_selected = True
-
-        # Find the subset in self.items and update the label
-        for subset in self.items:
-            if subset['label'] == msg.old_label:
-                subset['label'] = msg.new_label
-                break
-
-        # Update the selected label if needed
-        if update_selected:
-            self.selected = msg.new_label
-
-        # Force the traitlet to update.
-        self.send_state('items')
+        # Update selected if needed, then update items list
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
+        self._update_items_on_rename(msg.old_label, msg.new_label)
 
     def _rename_subset(self, old_label, new_label):
         self._on_rename(old_label, new_label)
@@ -2707,6 +2849,7 @@ class SubsetSelect(SelectPluginComponent):
 
         # Use Glue's to_mask method directly rather than translating the whole Data object to
         # output class (e.g., Spectrum)
+        glue_mask = None
         for sg in self.app.data_collection.subset_groups:
             if sg.label == subset:
                 if hasattr(self.plugin, "cube_fit") and self.plugin.cube_fit:
@@ -2716,6 +2859,11 @@ class SubsetSelect(SelectPluginComponent):
                     data = self.app.data_collection[dataset]
                 glue_mask = ~sg.subset_state.to_mask(data)
                 break
+
+        # If no subset group was found return True (no masking)
+        if glue_mask is None:
+            data = self.app.data_collection[dataset]
+            glue_mask = np.zeros(data.shape, dtype=bool)
 
         if self.app.data_collection[dataset].ndim == 3 and glue_mask.ndim == 1:
             data = self.app.data_collection[dataset]
@@ -4189,6 +4337,7 @@ class DatasetSelect(SelectPluginComponent):
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._update_items)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._update_items)
         self.hub.subscribe(self, SubsetRenameMessage, handler=self._update_items)
+        self.hub.subscribe(self, DataRenamedMessage, handler=self._on_data_renamed)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
         self.hub.subscribe(self, ViewerVisibleLayersChangedMessage,
@@ -4343,8 +4492,8 @@ class DatasetSelect(SelectPluginComponent):
         def is_cube(data):
             return len(data.shape) == 3
 
-        def is_cube_or_image(data):
-            return len(data.shape) >= 2
+        def is_image_or_flux_cube(data):
+            return is_image(data) or is_flux_cube(data)
 
         def is_spectrum(data):
             return (len(data.shape) == 1
@@ -4356,15 +4505,35 @@ class DatasetSelect(SelectPluginComponent):
                     and data.coords is not None
                     and wcs_is_spectral(getattr(data, 'coords', None))) or 'Trace' in data.meta
 
-        def is_spectrum_or_cube(data):
-            return is_spectrum(data) or is_cube(data)
+        def is_spectrum_or_flux_cube(data):
+            return is_spectrum(data) or is_flux_cube(data)
 
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
                 uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
             else:
                 uncert_label = None
-            return is_cube(data) and not_child_layer(data) and data.label != uncert_label
+            return (data.meta.get('_importer') == 'Spectrum3DImporter'
+                    and is_cube(data)
+                    and not_child_layer(data)
+                    and data.label != uncert_label)
+
+        def is_ramp_cube(data):
+            return is_ramp_group_cube(data) or is_ramp_diff_cube(data)
+
+        def is_ramp_group_cube(data):
+            return (data.meta.get('_importer') == 'RampImporter'
+                    and data.meta.get('_ramp_type') == 'group')
+
+        def is_ramp_diff_cube(data):
+            return (data.meta.get('_importer') == 'RampImporter'
+                    and data.meta.get('_ramp_type') == 'diff')
+
+        def is_ramp_integration(data):
+            return data.meta.get('_importer') == 'RampIntegrationImporter'
+
+        def not_ramp(data):
+            return data.meta.get('_importer') not in ('RampImporter', 'RampIntegrationImporter')
 
         def is_not_wcs_only(data):
             return not data.meta.get(_wcs_only_label, False)
@@ -4410,6 +4579,19 @@ class DatasetSelect(SelectPluginComponent):
     def _on_global_display_unit_changed(self, msg=None):
         if msg.axis in ('spectral', 'spectral_y'):
             self._clear_cache('selected_spectrum')
+
+    def _on_data_renamed(self, msg):
+        """
+        Handle data renamed events by updating selected values.
+
+        Note: We do NOT call _update_items() here because the layer_icons
+        callback in app._rename_data will trigger it after this handler runs.
+        We just need to update 'selected' so that when _update_items runs
+        and calls _apply_default_selection, the selected value is valid
+        and won't be changed (which would trigger observers).
+        """
+        # Update selected label directly in _trait_values to bypass observers
+        self._update_selected_on_rename(msg.old_label, msg.new_label)
 
 
 class DatasetSelectMixin(VuetifyTemplate, HubListener):
@@ -4803,7 +4985,8 @@ class AddResults(BasePluginComponent):
         if self.app.config in CONFIGS_WITH_LOADERS and format is not None:
             self.app._jdaviz_helper.load(data_item,
                                          loader='object', format=format,
-                                         data_label=label, viewer=[], **load_kwargs)
+                                         data_label=label, viewer=load_kwargs.pop('viewer', []),
+                                         **load_kwargs)
         else:
             # NOTE: eventually remove this entirely once all plugins are set to go through
             # the new loaders infrastructure above

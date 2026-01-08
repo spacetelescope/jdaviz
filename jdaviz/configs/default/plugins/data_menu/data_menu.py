@@ -21,6 +21,8 @@ from glue.core.subset import CompositeSubsetState, RangeSubsetState, RoiSubsetSt
 
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
+from glue.viewers.scatter.state import ScatterLayerState
+from glue_jupyter.bqplot.image import BqplotImageView
 
 import ipyvuedraggable
 
@@ -116,6 +118,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     subset_edit_modes = List().tag(sync=True)
 
+    rename_error_messages = Dict({}).tag(sync=True)
+
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -183,7 +187,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def user_api(self):
         expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'resize_subset_in_viewer', 'add_data',
-                  'view_info', 'remove_from_viewer', 'remove_from_app']
+                  'rename', 'view_info', 'remove_from_viewer', 'remove_from_app']
         if not self.viewer_supports_visible_toggle:
             expose = [e for e in expose
                       if e not in ('set_layer_visibility', 'toggle_layer_visibility',
@@ -292,9 +296,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         for layer in layers:
             if hasattr(layer, 'meta'):
                 if layer.meta.get('_importer') == 'CatalogImporter':
+                    ra_col = layer.meta.get('_jdaviz_loader_ra_col')
+                    dec_col = layer.meta.get('_jdaviz_loader_dec_col')
+                    x_col = layer.meta.get('_jdaviz_loader_x_col')
+                    y_col = layer.meta.get('_jdaviz_loader_y_col')
+
                     comp_labels = [str(x) for x in layer.component_ids()]
-                    has_world = 'Right Ascension' in comp_labels and 'Declination' in comp_labels
-                    has_pixel = 'X' in comp_labels and 'Y' in comp_labels
+
+                    has_world = ra_col in comp_labels and dec_col in comp_labels
+                    has_pixel = x_col in comp_labels and y_col in comp_labels
                     align_by_wcs = self.orientation_align_by_wcs
 
                     if not ((align_by_wcs and has_world) or (not align_by_wcs and has_pixel)):  # noqa
@@ -409,18 +419,73 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
             self.prevent_layer_items_recursion = True
 
-            label_order = [li['label'] for li in event["new"] if li['is_subset'] is not None]
-            not_in_order = [layer.layer.label for layer in self._viewer.layers if layer.layer.label
-                            not in label_order]
+            label_order = [li['label'] for li in event["new"]
+                           if li['is_subset'] is not None]
+            not_in_order = [layer.layer.label for layer in self._viewer.layers
+                            if layer.layer.label not in label_order]
+
+            children_blocks = []
+            data_and_children = []
+
+            def _return_zorder_of_layers(layers):
+                return [x.zorder for x in self._viewer.state.layers
+                        if x.layer.label in layers]
+            for data in self.app.data_collection:
+                if self.app._get_assoc_data_children(data.label):
+                    # If data has children, find their zorder blocks
+                    # and return that as a list within a list of all
+                    # data+children blocks
+                    data_and_children.append(data.label)
+                    data_and_children += (
+                        self.app._get_assoc_data_children(data.label))
+                    children_blocks.append(
+                        _return_zorder_of_layers(
+                            [data.label] +
+                            self.app._get_assoc_data_children(data.label)))
+
+            # Find old zorder of all layers previous to change
+            old_layers = {item['label']: item['zorder'] for item in event['old']}
+
+            # Build a map of child to parent for zorder adjustments
+            child_to_parent = {child: data.label for data in self.app.data_collection
+                               for child in self.app._get_assoc_data_children(data.label)}
 
             for layer in self._viewer.layers:
+                # Skip reordering scatter layers in image viewers.
+                if isinstance(self._viewer, BqplotImageView) and isinstance(layer.state, ScatterLayerState):  # noqa
+                    continue
                 if layer.layer.label in label_order:
                     new_zorder = len(label_order) - label_order.index(layer.layer.label)
+                    if layer.layer.label not in data_and_children:
+                        for x in children_blocks:
+                            # If the projected new_zorder falls within a block of
+                            # data+children, adjust to be just above or below the block
+                            # depending on if the layer came from below or above, respectively
+                            if min(x) <= new_zorder <= max(x):
+                                # The old zorder was above the block and is moving down
+                                if new_zorder < old_layers[layer.layer.label]:
+                                    new_zorder = min(x)
+                                # The old zorder was below the block and is moving up
+                                else:
+                                    new_zorder = max(x)
+                    # If this is a child layer, ensure it stays above its parent
+                    elif layer.layer.label in child_to_parent:
+                        parent_label = child_to_parent[layer.layer.label]
+                        # Find the parent's zorder
+                        parent_zorder = None
+                        for parent_layer in self._viewer.layers:
+                            if parent_layer.layer.label == parent_label:
+                                parent_zorder = parent_layer.zorder
+                                break
+                        # Child must have higher zorder than parent (rendered on top)
+                        if parent_zorder is not None and new_zorder <= parent_zorder:
+                            new_zorder = parent_zorder + 0.1
                 else:
                     new_zorder = len(not_in_order) + len(label_order) - not_in_order.index(layer.layer.label)  # noqa
 
                 if new_zorder != layer.zorder:
                     layer.zorder = new_zorder
+                    self.layer._update_items()
 
             self.prevent_layer_items_recursion = False
 
@@ -576,7 +641,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             if layer.state.visible != layer.visible:
                 layer.state.visible = layer.visible
 
-            self.layer._update_items()
+        # Update items once after all visibility changes are made
+        self.layer._update_items()
 
         if visible and (parent_label := self.app._get_assoc_data_parent(layer_label)):
             # ensure the parent layer is also visible
@@ -623,6 +689,76 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
+
+    def rename(self, old_label, new_label):
+        """
+        Rename a data item in the application.
+
+        Parameters
+        ----------
+        old_label : str
+            The current label of the data item.
+        new_label : str
+            The new label to assign to the data item.
+        -----------
+        """
+        # Check if this is a subset by looking in subset_groups
+        is_subset = any(sg.label == old_label for sg in self.app.data_collection.subset_groups)
+
+        if is_subset:
+            self.app._rename_subset(old_label, new_label)
+        else:
+            self.app.rename_data(old_label, new_label)
+
+    def _reset_rename_error_messages(self, old_label):
+        """
+        Clear rename error messages for the given label.
+
+        Also clears error messages in other labels that reference this label
+        (e.g., if editing label A and error says "same as label B", when B is renamed,
+        this clears the error for A since the conflict no longer exists).
+
+        Parameters
+        ----------
+        old_label : str
+            The label for which to clear error messages.
+        """
+        # Build new dictionary excluding old_label and any messages that mention it
+        self.rename_error_messages = {label: msg
+                                      for label, msg in self.rename_error_messages.items()
+                                      if label != old_label and old_label not in msg}
+
+    def vue_check_rename(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+        is_subset = info.get('is_subset', False)
+
+        if old_label == new_label:
+            self._reset_rename_error_messages(old_label)
+            return
+
+        try:
+            self.app.check_rename_availability(old_label, new_label, is_subset=is_subset)
+        except ValueError as e:
+            # Store error message for this specific layer
+            self.rename_error_messages = {**self.rename_error_messages, old_label: str(e)}
+        else:
+            # Clear error for this specific layer
+            self._reset_rename_error_messages(old_label)
+
+    def vue_rename_item(self, info, *args):  # pragma: no cover
+        old_label = info.get('old_label')
+        new_label = info.get('new_label')
+
+        try:
+            self.rename(old_label, new_label)
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(f"Failed to rename: {repr(e)}",
+                                               color='error', sender=self, traceback=e))
+        else:
+            self._reset_rename_error_messages(old_label)
+            self.hub.broadcast(SnackbarMessage(f"Renamed '{old_label}' to '{new_label}'",
+                                               color='info', sender=self))
 
     def create_subset(self, subset_type):
         """

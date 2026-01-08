@@ -22,6 +22,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.configs.rampviz.plugins.viewers import RampvizProfileView
 
 
 __all__ = ['RampExtraction']
@@ -30,7 +31,8 @@ rng = np.random.default_rng(seed=42)
 
 
 @tray_registry(
-    'ramp-extraction', label="Ramp Extraction"
+    'ramp-extraction', label="Ramp Extraction",
+    category='data:reduction'
 )
 class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                      DatasetSelectMixin, AddResultsMixin):
@@ -88,7 +90,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # description displayed under plugin title in tray
         self._plugin_description = 'Extract a ramp from a ramp cube.'
 
-        self.dataset.filters = ['is_flux_cube']
+        self.dataset.filters = ['is_ramp_group_cube']
 
         # TODO: in the future this could be generalized with support in SelectPluginComponent
         self.aperture._default_text = 'Entire Cube'
@@ -130,12 +132,15 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
 
+        if self.config == "deconfigged":
+            self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
     @property
     def integration_viewer(self):
-        viewer = self.app.get_viewer(
-            self.app._jdaviz_helper._default_integration_viewer_reference_name
-        )
-        return viewer
+        viewers = self.app.get_viewers_of_cls(RampvizProfileView)
+        if viewers:
+            return viewers[0]
+        return None
 
     def _on_subset_update(self, msg={}):
         if not hasattr(self.app._jdaviz_helper, 'cube_cache'):
@@ -184,18 +189,17 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.integration_viewer.reset_limits()
 
     def _on_subset_delete(self, msg={}):
+
+        viewer = self.integration_viewer
         subset_lbl = msg.subset.label
-        self.integration_viewer.figure.marks = [
-            mark for mark in self.integration_viewer.figure.marks
+        viewer.figure.marks = [
+            mark for mark in viewer.figure.marks
             if getattr(mark, 'label', None) != subset_lbl
         ]
 
     @observe('is_active', 'show_subset_preview', 'aperture_selected')
     def _update_subset_previews(self, msg={}):
         # remove preview marks for non-selected subsets
-
-        if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
-            return
 
         for mark in self.integration_viewer.figure.marks:
             if isinstance(mark, PluginLine) and mark.label is not None:
@@ -260,7 +264,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_plugin(self):
-        return self.app._jdaviz_helper.plugins['Slice']
+        return self.app._jdaviz_helper.plugins['Ramp Slice']
 
     def _extract_in_new_instance(self, dataset=None, function='Mean', subset_lbl=None,
                                  auto_update=False, add_data=False):
@@ -417,8 +421,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def marks(self):
         if not self._tray_instance:
             return {}
-        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
+        if not len(self.slice_indicator_viewers):
+            return {}
 
+        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]
         marks = {'extract': PluginLine(sv, visible=self.is_active)}
         sv.figure.marks = sv.figure.marks + [marks['extract'],]
