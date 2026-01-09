@@ -801,7 +801,11 @@ class Application(VuetifyTemplate, HubListener):
                 # (these can interfere with coordinate transformations)
                 # But allow flux/uncertainty and pixel_spectral_axis linking for subset propagation
                 if new_data.ndim == existing_data.ndim == 2:
-                    if (new_comp._component_type in ('spectral_axis', 'angle') or
+                    has_spectral = any(
+                        (getattr(c, '_component_type', None) or '').startswith('spectral_axis')
+                        for c in new_data.components
+                    )
+                    if has_spectral and (new_comp._component_type in ('spectral_axis', 'angle') or
                        (new_comp._component_type and ':angle' in new_comp._component_type)):
                         continue
 
