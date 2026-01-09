@@ -302,6 +302,246 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
+        /* Description Section */
+        .description-section {
+            max-width: 940px;
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .description-section p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .description-section code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .description-section a {
+            color: #53CBFF;
+            text-decoration: underline;
+        }
+
+        .description-section a:hover {
+            color: #ACE1FF;
+        }
+
+        .description-more {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .description-more.expanded {
+            max-height: 2000px;
+        }
+
+        .description-more .note {
+            background: rgba(33, 150, 243, 0.15);
+            border-left: 4px solid #2196F3;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 4px;
+        }
+
+        .description-more .warning {
+            background: rgba(255, 193, 7, 0.15);
+            border-left: 4px solid #FFC107;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 4px;
+        }
+
+        .description-toggle {
+            display: block;
+            width: 100%;
+            background: rgba(0, 125, 164, 0.6);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+        }
+
+        .description-toggle:hover {
+            background: rgba(0, 125, 164, 0.8);
+        }
+
+        /* Wireframe Section */
+        .wireframe-section {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+        }
+
+        .wireframe-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .wireframe-container {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .wireframe-toolbar {
+            background: #003B4D;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .wireframe-toolbar-icon {
+            width: 32px;
+            height: 32px;
+            background-color: rgba(0, 125, 164, 0.5);
+            background-size: 20px 20px;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .wireframe-toolbar-icon:hover {
+            background-color: rgba(0, 125, 164, 0.8);
+            transform: scale(1.1);
+        }
+
+        .wireframe-toolbar-icon.active {
+            background-color: rgba(199, 81, 9, 0.8);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .wireframe-toolbar-divider {
+            width: 2px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 4px;
+        }
+
+        .wireframe-toolbar-spacer {
+            flex: 1;
+        }
+
+        .wireframe-main {
+            display: flex;
+            height: 400px;
+        }
+
+        .wireframe-sidebar {
+            width: 0;
+            background: rgba(0, 59, 77, 0.6);
+            overflow: hidden;
+            transition: width 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .wireframe-viewer {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .wireframe-sidebar.visible {
+            width: 300px;
+        }
+
+        .wireframe-sidebar-content {
+            padding: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .wireframe-sidebar-link {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 8px 16px;
+            background: rgba(0, 125, 164, 0.6);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .wireframe-sidebar-link:hover {
+            background: rgba(0, 125, 164, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .wireframe-sidebar-tabs {
+            display: flex;
+            gap: 0;
+            background: #00617E;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .wireframe-sidebar-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.8);
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .wireframe-sidebar-tab.active {
+            background: rgba(0, 125, 164, 0.3);
+            color: white;
+            border-bottom-color: #C75109;
+        }
+
+        .wireframe-sidebar-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .wireframe-label {
+            text-align: center;
+            padding: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-style: italic;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .grid-container {
@@ -348,6 +588,167 @@
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Handle description toggle
+            const descToggle = document.getElementById('description-toggle');
+            const descMore = document.getElementById('description-more');
+
+            if (descToggle && descMore) {
+                descToggle.addEventListener('click', function() {
+                    descMore.classList.toggle('expanded');
+                    descToggle.textContent = descMore.classList.contains('expanded') ? 'Show Less' : 'Show More';
+                });
+            }
+
+            // Handle wireframe toolbar interactions
+            const wireframeIcons = document.querySelectorAll('.wireframe-toolbar-icon');
+            const wireframeSidebar = document.getElementById('wireframe-sidebar');
+
+            // SVG icon data (embedded directly as background-image) - matching grid item icons
+            const iconSvgs = {
+                'database-import': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M19,19V5H5V19H19M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5C3,3.89 3.9,3 5,3H19M11,7H13V11H17V13H13V17H11V13H7V11H11V7Z\" /></svg>')",
+                'download': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z\" /></svg>')",
+                'tune': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z\" /></svg>')",
+                'information': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z\" /></svg>')",
+                'wrench': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M8 13C6.14 13 4.59 14.28 4.14 16H2V18H4.14C4.59 19.72 6.14 21 8 21S11.41 19.72 11.86 18H22V16H11.86C11.41 14.28 9.86 13 8 13M8 19C6.9 19 6 18.1 6 17C6 15.9 6.9 15 8 15S10 15.9 10 17C10 18.1 9.1 19 8 19M19.86 6C19.41 4.28 17.86 3 16 3S12.59 4.28 12.14 6H2V8H12.14C12.59 9.72 14.14 11 16 11S19.41 9.72 19.86 8H22V6H19.86M16 9C14.9 9 14 8.1 14 7C14 5.9 14.9 5 16 5S18 5.9 18 7C18 8.1 17.1 9 16 9Z\" /></svg>')",
+                'selection': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M2 2H8V4H4V8H2V2M2 16H4V20H8V22H2V16M16 2H22V8H20V4H16V2M20 16H22V22H16V20H20V16Z\" /></svg>')",
+                'help-circle': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M15.07,11.25L14.17,12.17C13.45,12.89 13,13.5 13,15H11V14.5C11,13.39 11.45,12.39 12.17,11.67L13.41,10.41C13.78,10.05 14,9.55 14,9C14,7.89 13.1,7 12,7A2,2 0 0,0 10,9H8A4,4 0 0,1 12,5A4,4 0 0,1 16,9C16,9.88 15.64,10.67 15.07,11.25M13,19H11V17H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2Z\" /></svg>')"
+            };
+
+            // Apply SVG backgrounds to icons
+            wireframeIcons.forEach(function(icon) {
+                const iconName = icon.dataset.icon;
+                if (iconName && iconSvgs[iconName]) {
+                    icon.style.backgroundImage = iconSvgs[iconName];
+                }
+            });
+
+            const sidebarContent_map = {
+                'loaders': {
+                    tabs: ['Data', 'Viewer'],
+                    content: [
+                        'Load astronomical data from files, URLs, or databases. Supports FITS, ASDF, ECSV, and other formats. Browse your filesystem or paste a URL to import data.<br><a href="#grid-loaders" class="wireframe-sidebar-link">Learn more about data import →</a>',
+                        'Create new viewers to visualize your data. Choose from image viewers, spectrum viewers, or specialized viewers for different data types.<br><a href="#grid-loaders" class="wireframe-sidebar-link">Explore viewer options →</a>'
+                    ],
+                    scrollId: 'grid-loaders'
+                },
+                'save': {
+                    tabs: null,
+                    content: 'Export plots, data, subsets, and analysis results. Save viewers as images (PNG, SVG), export data tables, or save regions and subsets for later use.<br><a href="#grid-export" class="wireframe-sidebar-link">See export options →</a>',
+                    scrollId: 'grid-export'
+                },
+                'settings': {
+                    tabs: ['Plot Options', 'Units'],
+                    content: [
+                        'Customize viewer appearance including axes labels, limits, stretching, color maps, markers, and display options. Settings apply to the active viewer.<br><a href="#grid-settings" class="wireframe-sidebar-link">View plot customization →</a>',
+                        'Convert and display data in different unit systems. Choose spectral units (wavelength, frequency, energy) and flux units appropriate for your analysis.<br><a href="#grid-settings" class="wireframe-sidebar-link">Learn about units →</a>'
+                    ],
+                    scrollId: 'grid-settings'
+                },
+                'info': {
+                    tabs: ['Metadata', 'Markers', 'Logger'],
+                    content: [
+                        'View FITS header information, WCS coordinates, and other metadata for loaded datasets. Access detailed information about data provenance and observational parameters.<br><a href="#grid-info" class="wireframe-sidebar-link">Explore metadata tools →</a>',
+                        'Interactive table showing coordinates and metadata for marked points in viewers. Export marker tables or use them to track features of interest in your data.<br><a href="#grid-info" class="wireframe-sidebar-link">Learn about markers →</a>',
+                        'System messages, warnings, and operation history. Monitor plugin execution, data loading status, and any issues that arise during analysis.<br><a href="#grid-info" class="wireframe-sidebar-link">View logging options →</a>'
+                    ],
+                    scrollId: 'grid-info'
+                },
+                'plugins': {
+                    tabs: null,
+                    content: 'Data analysis tools including spectral line analysis, model fitting, aperture photometry, moment maps, and more. Search for plugins or browse by category.<br><a href="#grid-plugins" class="wireframe-sidebar-link">Browse analysis plugins →</a>',
+                    scrollId: 'grid-plugins'
+                },
+                'subsets': {
+                    tabs: null,
+                    content: 'Create spatial and spectral regions for focused analysis. Draw selections in viewers, combine them with boolean operations, and apply subsets across multiple datasets.<br><a href="#grid-subsets" class="wireframe-sidebar-link">Learn about subsets →</a>',
+                    scrollId: 'grid-subsets'
+                },
+                'help': {
+                    tabs: null,
+                    content: 'Access documentation, tutorials, API reference, and interactive help. Links to user guides, example notebooks, and the jdaviz community support forum.',
+                    scrollId: null
+                }
+            };
+
+            let currentSidebar = null;
+
+            wireframeIcons.forEach(function(icon) {
+                icon.addEventListener('click', function() {
+                    const sidebarType = icon.dataset.sidebar;
+
+                    if (currentSidebar === sidebarType) {
+                        // Close sidebar if clicking the same icon
+                        wireframeSidebar.classList.remove('visible');
+                        icon.classList.remove('active');
+                        currentSidebar = null;
+                    } else {
+                        // Remove active from all icons
+                        wireframeIcons.forEach(i => i.classList.remove('active'));
+
+                        // Update sidebar content
+                        if (sidebarContent_map[sidebarType]) {
+                            const data = sidebarContent_map[sidebarType];
+
+                            // Clear and rebuild sidebar with tabs as header (if available) or just content
+                            wireframeSidebar.innerHTML = '';
+
+                            if (data.tabs) {
+                                const tabsHtml = '<div class="wireframe-sidebar-tabs">' +
+                                    data.tabs.map((tab, i) =>
+                                        '<button class="wireframe-sidebar-tab' + (i === 0 ? ' active' : '') + '" data-tab-index="' + i + '">' + tab + '</button>'
+                                    ).join('') +
+                                    '</div>';
+                                wireframeSidebar.innerHTML += tabsHtml;
+
+                                // Add content div with first tab's content
+                                wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + data.content[0] + '</div>';
+
+                                // Add click handlers to tabs
+                                const tabs = wireframeSidebar.querySelectorAll('.wireframe-sidebar-tab');
+                                tabs.forEach(function(tab) {
+                                    tab.addEventListener('click', function() {
+                                        const tabIndex = parseInt(tab.dataset.tabIndex);
+
+                                        // Update active state
+                                        tabs.forEach(t => t.classList.remove('active'));
+                                        tab.classList.add('active');
+
+                                        // Update content
+                                        const contentDiv = document.getElementById('sidebar-tab-content');
+                                        if (contentDiv && data.content[tabIndex]) {
+                                            contentDiv.innerHTML = data.content[tabIndex];
+                                        }
+                                    });
+                                });
+                            } else {
+                                // No tabs, just show content
+                                wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content">' + data.content + '</div>';
+                            }
+
+                            // Add scroll behavior for links
+                            setTimeout(function() {
+                                const links = wireframeSidebar.querySelectorAll('.wireframe-sidebar-link');
+                                links.forEach(function(link) {
+                                    link.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        const targetId = link.getAttribute('href').substring(1);
+                                        const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
+                                        if (targetElement) {
+                                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                    });
+                                });
+                            }, 100);
+                        }
+
+                        // Show sidebar and activate icon
+                        wireframeSidebar.classList.add('visible');
+                        icon.classList.add('active');
+                        currentSidebar = sidebarType;
+                    }
+                });
+            });
+
             // Handle filter tabs
             const filterTabs = document.querySelectorAll('.filter-tab');
             const pluginLinks = document.querySelectorAll('.grid-item[data-icon="mdi-tune-variant"] .grid-item-link');
@@ -429,10 +830,94 @@
             <a href="#" class="install-button">Installation</a>
         </div>
 
+        <!-- Description Section -->
+        <div class="description-section">
+            <p>
+                <code>jdaviz</code> is a package of astronomical data analysis visualization
+                tools based on the Jupyter platform. These GUI-based
+                tools link data visualization and interactive analysis. They are designed
+                to work within a Jupyter notebook cell, as a standalone desktop application,
+                or as embedded windows within a website -- all with nearly identical
+                user interfaces.
+            </p>
+
+            <div class="description-more" id="description-more">
+                <p>
+                    <code>jdaviz</code> applications currently include tools for interactive
+                    visualization of spectroscopic and imaging data primarily developed for use with
+                    the James Webb Space Telescope (JWST) instrument modes.
+                    These tools can, however, be used with data from other astronomical telescopes.
+                    <strong>Imviz</strong> is a tool for visualization and quick-look analysis for 2D astronomical images.
+                    <strong>Specviz</strong> is a tool for visualization and quick-look analysis of 1D astronomical spectra.
+                    <strong>Specviz2d</strong> is a tool for visualization and quick-look analysis of 2D astronomical spectra.
+                    <strong>Cubeviz</strong> provides a view of spectroscopic data cubes (like those
+                    to be produced by JWST MIRI), along with 1D spectra extracted from the
+                    cube.
+                    <strong>Mosviz</strong> is a visualization tool for many astronomical
+                    spectra, typically the output of a multi-object spectrograph (e.g.,
+                    JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
+                    contextual information like on-sky views of the spectrograph slit.
+                    <strong>Rampviz</strong> is a visualization tool for Level 1 "ramp" data products.
+                </p>
+
+                <div class="warning">
+                    <strong>Warning:</strong> As of <code>jdaviz</code> version 4.2, please use Python 3.11 or
+                    greater to get the latest bug fixes and feature additions for <code>jdaviz</code>.
+                </div>
+
+                <div class="note">
+                    <strong>Note:</strong> <code>jdaviz</code> is one tool that is part of STScI's larger
+                    <a href="https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis" target="_blank">Data Analysis Tools Ecosystem</a>.
+                </div>
+
+                <div class="note">
+                    <strong>Note:</strong> The offline version of this documentation can be downloaded from
+                    <a href="https://readthedocs.org/projects/jdaviz/downloads/" target="_blank">Jdaviz zipped HTML downloads page</a>.
+                </div>
+
+                <div class="note">
+                    <strong>Note:</strong> Recordings and instructional notebooks from live Jdaviz tutorials can be found at
+                    <a href="https://www.stsci.edu/jwst/science-execution/jwebbinars" target="_blank">the JWebbinar website</a>
+                    under the "Materials and Videos" expandable section. Scroll down to the bottom of that section
+                    to find materials from the most recent session (JWebbinar 24, March 2023).
+                </div>
+            </div>
+
+            <button class="description-toggle" id="description-toggle">Show More</button>
+        </div>
+
+        <!-- Wireframe Section -->
+        <div class="wireframe-section">
+            <div class="wireframe-container">
+                <div class="wireframe-toolbar">
+                    <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
+                    <div class="wireframe-toolbar-divider"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+                </div>
+                <div class="wireframe-main">
+                    <div class="wireframe-sidebar" id="wireframe-sidebar">
+                        <div class="wireframe-sidebar-content">
+                            Click toolbar icons to toggle different sidebars
+                        </div>
+                    </div>
+                    <div class="wireframe-viewer">
+                        Viewer Area
+                    </div>
+                </div>
+            </div>
+            <div class="wireframe-label">
+                Click toolbar icons to preview different panels
+            </div>
+        </div>
+
         <!-- Grid Section -->
         <div class="grid-container">
             <!-- Grid Item 1 -->
-            <div class="grid-item" data-icon="mdi-plus-box">
+            <div class="grid-item" data-icon="mdi-plus-box" data-grid-id="grid-loaders">
                 <div class="grid-item-content">
                     <h3>Import Data from Multiple Sources</h3>
                     <div class="grid-item-links two-column">
@@ -456,7 +941,7 @@
             </div>
 
             <!-- Grid Item 2 -->
-            <div class="grid-item" data-icon="mdi-tune-variant">
+            <div class="grid-item" data-icon="mdi-tune-variant" data-grid-id="grid-plugins">
                 <div class="grid-item-content">
                     <h3>Data Analysis Plugins</h3>
                     <div class="filter-tabs">
@@ -513,7 +998,7 @@
             </div>
 
             <!-- Grid Item 4 -->
-            <div class="grid-item" data-icon="mdi-selection">
+            <div class="grid-item" data-icon="mdi-selection" data-grid-id="grid-subsets">
                 <div class="grid-item-content">
                     <h3>Select Subsets of Data</h3>
                     <div class="grid-item-links two-column">
@@ -530,7 +1015,7 @@
             </div>
 
             <!-- Grid Item 5 -->
-            <div class="grid-item" data-icon="mdi-content-save">
+            <div class="grid-item" data-icon="mdi-content-save" data-grid-id="grid-export">
                 <div class="grid-item-content">
                     <h3>Export to File</h3>
                     <div class="grid-item-links two-column">
@@ -544,7 +1029,7 @@
             </div>
 
             <!-- Grid Item 6 -->
-            <div class="grid-item" data-icon="mdi-cog">
+            <div class="grid-item" data-icon="mdi-cog" data-grid-id="grid-settings">
                 <div class="grid-item-content">
                     <h3>Flexible Settings & Options</h3>
                     <div class="grid-item-links two-column">
@@ -555,7 +1040,7 @@
             </div>
 
             <!-- Grid Item 7 -->
-            <div class="grid-item" data-icon="mdi-information-outline">
+            <div class="grid-item" data-icon="mdi-information-outline" data-grid-id="grid-info">
                 <div class="grid-item-content">
                     <h3>Access to Data Info</h3>
                     <div class="grid-item-links two-column">
