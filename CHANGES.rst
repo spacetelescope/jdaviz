@@ -6,6 +6,8 @@ New Features
 
 - Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968]
 
+- Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
+
 Cubeviz
 ^^^^^^^
 

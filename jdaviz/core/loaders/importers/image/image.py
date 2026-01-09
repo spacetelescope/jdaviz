@@ -22,8 +22,8 @@ from jdaviz.core.registries import loader_importer_registry
 from jdaviz.core.user_api import ImporterUserApi
 
 from jdaviz.utils import (
-    PRIHDR_KEY, standardize_metadata, standardize_roman_metadata,
-    _try_gwcs_to_fits_sip, create_data_hash, RA_COMPS, DEC_COMPS
+    PRIHDR_KEY, in_dec_comps, in_ra_comps, standardize_metadata, standardize_roman_metadata,
+    _try_gwcs_to_fits_sip, create_data_hash
 )
 
 try:
@@ -42,9 +42,9 @@ def _spatial_assign_component_type(comp_id, comp, units, physical_type):
         physical_type = 'pixel'
         return f'{comp_id[-2]}:pixel'
 
-    if comp_id.lower() in RA_COMPS and physical_type == 'angle':
+    if in_ra_comps(comp_id) and physical_type == 'angle':
         return f'RA:{physical_type}'
-    elif comp_id.lower() in DEC_COMPS and physical_type == 'angle':
+    elif in_dec_comps(comp_id) and physical_type == 'angle':
         return f'DEC:{physical_type}'
 
     return physical_type
