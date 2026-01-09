@@ -153,6 +153,10 @@ class UserApiWrapper:
                 return _value(item.to_dict())
             if hasattr(item, 'selected'):
                 return item.selected
+            # Handle AutoTextField objects by returning their value
+            from jdaviz.core.template_mixin import AutoTextField
+            if isinstance(item, AutoTextField):
+                return item.value
             return item
 
         return {k: _value(getattr(self, k)) for k in self._expose
@@ -164,6 +168,9 @@ class UserApiWrapper:
         # loop through expose so that plugins can dictate the order that items should be populated
         for k in self._expose:
             if k not in d:
+                continue
+            # Skip readonly attributes - they shouldn't be set from dict
+            if k in self._readonly:
                 continue
             v = d.get(k)
             if hasattr(getattr(self, k), '__call__'):

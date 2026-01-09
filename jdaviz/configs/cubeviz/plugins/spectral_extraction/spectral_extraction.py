@@ -17,6 +17,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
                                         AddResults, AddResultsMixin,
+                                        _populate_viewer_items,
                                         skip_if_not_tray_instance,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
@@ -102,6 +103,12 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
     bg_spec_results_label_overwrite = Bool().tag(sync=True)
     bg_spec_add_to_viewer_items = List().tag(sync=True)
     bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_items = List().tag(sync=True)
+    bg_spec_add_to_viewer_create_new_selected = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_value = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_default = Unicode().tag(sync=True)
+    bg_spec_add_to_viewer_label_auto = Bool(True).tag(sync=True)
+    bg_spec_add_to_viewer_label_invalid_msg = Unicode('').tag(sync=True)
     bg_spec_spinner = Bool(False).tag(sync=True)
 
     function_items = List().tag(sync=True)
@@ -156,8 +163,20 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                               'bg_spec_results_label_invalid_msg',
                                               'bg_spec_results_label_overwrite',
                                               'bg_spec_add_to_viewer_items',
-                                              'bg_spec_add_to_viewer_selected')
-        self.bg_spec_add_results.viewer.filters = ['is_slice_indicator_viewer']
+                                              'bg_spec_add_to_viewer_selected',
+                                              'bg_spec_add_to_viewer_create_new_items',
+                                              'bg_spec_add_to_viewer_create_new_selected',
+                                              'bg_spec_add_to_viewer_label_value',
+                                              'bg_spec_add_to_viewer_label_default',
+                                              'bg_spec_add_to_viewer_label_auto',
+                                              'bg_spec_add_to_viewer_label_invalid_msg')
+        # Populate viewer items using _get_bg_spec_supported_viewers
+        supported_viewers = self._get_bg_spec_supported_viewers()
+        viewer_create_new_items, viewer_filter = _populate_viewer_items(
+            self, supported_viewers)
+        self.bg_spec_add_to_viewer_create_new_items = viewer_create_new_items
+        self.bg_spec_add_results.viewer.add_filter(viewer_filter)
+        self.bg_spec_add_results.viewer.select_default()
         self.bg_spec_results_label_default = f'background-{self.resulting_product_name}'
 
         self.function = SelectPluginComponent(
@@ -175,6 +194,7 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
         )
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_slice_indicator_viewer']
+        self.add_results.viewer.select_default()
 
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
@@ -209,6 +229,14 @@ class SpectralExtraction3D(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 f"{self.__class__.__name__} requires a 3d cube dataset to be loaded, "
                 "please load data to enable this plugin."
             )
+
+    def _get_supported_viewers(self):
+        """Return viewer types that can display the extracted spectrum."""
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
+
+    def _get_bg_spec_supported_viewers(self):
+        """Return viewer types that can display the background spectrum."""
+        return [{'label': '1D Spectrum', 'reference': 'spectrum-1d-viewer'}]
 
     @property
     def live_update_subscriptions(self):
