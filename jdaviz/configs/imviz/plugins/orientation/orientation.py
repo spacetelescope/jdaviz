@@ -457,19 +457,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
         for viewer_ref in viewers_to_update:
             viewer_dm = self.app._jdaviz_helper.viewers.get(viewer_ref).data_menu
-            # Get the actual viewer object for this viewer_ref, not the selected viewer
-            viewer_obj = self.app.get_viewer_by_id(viewer_ref)
-            if viewer_obj is None:
-                continue
 
-            # Get list of data labels currently in the viewer using the data() method
-            # which is more reliable than checking layer states
-            try:
-                viewer_data_labels = [d.label for d in viewer_obj.data()]
-            except (AttributeError, TypeError, RuntimeError):
-                # Skip viewers that don't support data() method or have issues accessing data.
-                # This can happen with viewers that are being destroyed/haven't fully initialized.
-                continue
+            # Get list of data labels currently loaded in the viewer
+            viewer_data_labels = viewer_dm.data_labels_loaded
 
             for wcs_layer in wcs_only_layers:
                 if wcs_layer not in viewer_data_labels:
