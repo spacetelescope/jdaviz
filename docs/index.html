@@ -33,11 +33,20 @@
         }
 
         .logo {
-            max-width: 500px;
+            max-width: 400px;
             width: 100%;
             height: auto;
             display: block;
-            margin: 0 auto 40px;
+            margin: 0 auto;
+        }
+
+        /* Installation Button Section */
+        .install-section {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+            text-align: center;
         }
 
         /* Installation Button */
@@ -53,7 +62,7 @@
             border-radius: 8px;
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            max-width: 500px;
+            max-width: 100%;
             width: 100%;
         }
 
@@ -304,7 +313,8 @@
 
         /* Description Section */
         .description-section {
-            max-width: 940px;
+            width: 90%;
+            max-width: 1000px;
             margin: 40px auto;
             padding: 30px;
             background: rgba(255, 255, 255, 0.1);
@@ -384,9 +394,10 @@
 
         /* Wireframe Section */
         .wireframe-section {
+            width: 90%;
             max-width: 1000px;
             margin: 40px auto;
-            padding: 30px;
+            padding: 0px;
         }
 
         .wireframe-title {
@@ -588,12 +599,29 @@
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Auto-cycling state
+            let autoCycling = true;
+            let cycleInterval = null;
+            let currentCycleIndex = 0;
+            const sidebarOrder = ['loaders', 'save', 'settings', 'info', 'plugins', 'subsets'];
+
+            function stopAutoCycle() {
+                if (autoCycling) {
+                    autoCycling = false;
+                    if (cycleInterval) {
+                        clearInterval(cycleInterval);
+                        cycleInterval = null;
+                    }
+                }
+            }
+
             // Handle description toggle
             const descToggle = document.getElementById('description-toggle');
             const descMore = document.getElementById('description-more');
 
             if (descToggle && descMore) {
                 descToggle.addEventListener('click', function() {
+                    stopAutoCycle();
                     descMore.classList.toggle('expanded');
                     descToggle.textContent = descMore.classList.contains('expanded') ? 'Show Less' : 'Show More';
                 });
@@ -672,8 +700,82 @@
 
             let currentSidebar = null;
 
+            function activateSidebar(sidebarType, tabIndex) {
+                const icon = document.querySelector('.wireframe-toolbar-icon[data-sidebar="' + sidebarType + '"]');
+
+                if (!icon) return;
+
+                // Remove active from all icons
+                wireframeIcons.forEach(i => i.classList.remove('active'));
+
+                // Update sidebar content
+                if (sidebarContent_map[sidebarType]) {
+                    const data = sidebarContent_map[sidebarType];
+
+                    // Clear and rebuild sidebar with tabs as header (if available) or just content
+                    wireframeSidebar.innerHTML = '';
+
+                    if (data.tabs) {
+                        const activeIndex = tabIndex !== undefined ? tabIndex : 0;
+                        const tabsHtml = '<div class="wireframe-sidebar-tabs">' +
+                            data.tabs.map((tab, i) =>
+                                '<button class="wireframe-sidebar-tab' + (i === activeIndex ? ' active' : '') + '" data-tab-index="' + i + '">' + tab + '</button>'
+                            ).join('') +
+                            '</div>';
+                        wireframeSidebar.innerHTML += tabsHtml;
+
+                        // Add content div with specified tab's content
+                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + data.content[activeIndex] + '</div>';
+
+                        // Add click handlers to tabs
+                        const tabs = wireframeSidebar.querySelectorAll('.wireframe-sidebar-tab');
+                        tabs.forEach(function(tab) {
+                            tab.addEventListener('click', function() {
+                                stopAutoCycle();
+                                const tabIndex = parseInt(tab.dataset.tabIndex);
+
+                                // Update active state
+                                tabs.forEach(t => t.classList.remove('active'));
+                                tab.classList.add('active');
+
+                                // Update content
+                                const contentDiv = document.getElementById('sidebar-tab-content');
+                                if (contentDiv && data.content[tabIndex]) {
+                                    contentDiv.innerHTML = data.content[tabIndex];
+                                }
+                            });
+                        });
+                    } else {
+                        // No tabs, just show content
+                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content">' + data.content + '</div>';
+                    }
+
+                    // Add scroll behavior for links
+                    setTimeout(function() {
+                        const links = wireframeSidebar.querySelectorAll('.wireframe-sidebar-link');
+                        links.forEach(function(link) {
+                            link.addEventListener('click', function(e) {
+                                stopAutoCycle();
+                                e.preventDefault();
+                                const targetId = link.getAttribute('href').substring(1);
+                                const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
+                                if (targetElement) {
+                                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            });
+                        });
+                    }, 100);
+                }
+
+                // Show sidebar and activate icon
+                wireframeSidebar.classList.add('visible');
+                icon.classList.add('active');
+                currentSidebar = sidebarType;
+            }
+
             wireframeIcons.forEach(function(icon) {
                 icon.addEventListener('click', function() {
+                    stopAutoCycle();
                     const sidebarType = icon.dataset.sidebar;
 
                     if (currentSidebar === sidebarType) {
@@ -682,71 +784,64 @@
                         icon.classList.remove('active');
                         currentSidebar = null;
                     } else {
-                        // Remove active from all icons
-                        wireframeIcons.forEach(i => i.classList.remove('active'));
-
-                        // Update sidebar content
-                        if (sidebarContent_map[sidebarType]) {
-                            const data = sidebarContent_map[sidebarType];
-
-                            // Clear and rebuild sidebar with tabs as header (if available) or just content
-                            wireframeSidebar.innerHTML = '';
-
-                            if (data.tabs) {
-                                const tabsHtml = '<div class="wireframe-sidebar-tabs">' +
-                                    data.tabs.map((tab, i) =>
-                                        '<button class="wireframe-sidebar-tab' + (i === 0 ? ' active' : '') + '" data-tab-index="' + i + '">' + tab + '</button>'
-                                    ).join('') +
-                                    '</div>';
-                                wireframeSidebar.innerHTML += tabsHtml;
-
-                                // Add content div with first tab's content
-                                wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + data.content[0] + '</div>';
-
-                                // Add click handlers to tabs
-                                const tabs = wireframeSidebar.querySelectorAll('.wireframe-sidebar-tab');
-                                tabs.forEach(function(tab) {
-                                    tab.addEventListener('click', function() {
-                                        const tabIndex = parseInt(tab.dataset.tabIndex);
-
-                                        // Update active state
-                                        tabs.forEach(t => t.classList.remove('active'));
-                                        tab.classList.add('active');
-
-                                        // Update content
-                                        const contentDiv = document.getElementById('sidebar-tab-content');
-                                        if (contentDiv && data.content[tabIndex]) {
-                                            contentDiv.innerHTML = data.content[tabIndex];
-                                        }
-                                    });
-                                });
-                            } else {
-                                // No tabs, just show content
-                                wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content">' + data.content + '</div>';
-                            }
-
-                            // Add scroll behavior for links
-                            setTimeout(function() {
-                                const links = wireframeSidebar.querySelectorAll('.wireframe-sidebar-link');
-                                links.forEach(function(link) {
-                                    link.addEventListener('click', function(e) {
-                                        e.preventDefault();
-                                        const targetId = link.getAttribute('href').substring(1);
-                                        const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
-                                        if (targetElement) {
-                                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        }
-                                    });
-                                });
-                            }, 100);
-                        }
-
-                        // Show sidebar and activate icon
-                        wireframeSidebar.classList.add('visible');
-                        icon.classList.add('active');
-                        currentSidebar = sidebarType;
+                        activateSidebar(sidebarType);
                     }
                 });
+            });
+
+            // Auto-cycle function
+            function autoCycleSidebars() {
+                if (!autoCycling) return;
+
+                const sidebarType = sidebarOrder[currentCycleIndex];
+                const data = sidebarContent_map[sidebarType];
+
+                if (data && data.tabs) {
+                    // Sidebar has tabs, cycle through them
+                    const numTabs = data.tabs.length;
+                    let tabCycleIndex = 0;
+
+                    // Activate first tab
+                    activateSidebar(sidebarType, 0);
+
+                    // Set up tab cycling
+                    const tabCycleInterval = setInterval(function() {
+                        if (!autoCycling) {
+                            clearInterval(tabCycleInterval);
+                            return;
+                        }
+
+                        tabCycleIndex++;
+                        if (tabCycleIndex < numTabs) {
+                            activateSidebar(sidebarType, tabCycleIndex);
+                        } else {
+                            // Done with tabs, move to next sidebar
+                            clearInterval(tabCycleInterval);
+                            currentCycleIndex = (currentCycleIndex + 1) % sidebarOrder.length;
+                            setTimeout(autoCycleSidebars, 2000);
+                        }
+                    }, 2000);
+                } else {
+                    // No tabs, just show the sidebar
+                    activateSidebar(sidebarType);
+                    currentCycleIndex = (currentCycleIndex + 1) % sidebarOrder.length;
+                    setTimeout(autoCycleSidebars, 3000);
+                }
+            }
+
+            // Start auto-cycling after a brief delay
+            setTimeout(function() {
+                if (autoCycling) {
+                    autoCycleSidebars();
+                }
+            }, 1000);
+
+            // Stop cycling on any user interaction
+            document.addEventListener('click', function(e) {
+                // Only stop if clicking on interactive elements
+                if (e.target.closest('.wireframe-toolbar-icon, .wireframe-sidebar-tab, .wireframe-sidebar-link, .grid-item-link, .filter-tab, .toggle-more, .description-toggle, .extensions-button')) {
+                    stopAutoCycle();
+                }
             });
 
             // Handle filter tabs
@@ -827,7 +922,34 @@
         <!-- Logo Section -->
         <div class="logo-section">
             <img src="logos/jdaviz.svg" alt="Jdaviz Logo" class="logo">
-            <a href="#" class="install-button">Installation</a>
+        </div>
+
+        <!-- Wireframe Section -->
+        <div class="wireframe-section">
+            <div class="wireframe-container">
+                <div class="wireframe-toolbar">
+                    <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
+                    <div class="wireframe-toolbar-divider"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+                </div>
+                <div class="wireframe-main">
+                    <div class="wireframe-sidebar" id="wireframe-sidebar">
+                        <div class="wireframe-sidebar-content">
+                            Click toolbar icons to toggle different sidebars
+                        </div>
+                    </div>
+                    <div class="wireframe-viewer">
+                        Viewer Area
+                    </div>
+                </div>
+            </div>
+            <div class="wireframe-label">
+                Click toolbar icons to preview different panels
+            </div>
         </div>
 
         <!-- Description Section -->
@@ -886,32 +1008,9 @@
             <button class="description-toggle" id="description-toggle">Show More</button>
         </div>
 
-        <!-- Wireframe Section -->
-        <div class="wireframe-section">
-            <div class="wireframe-container">
-                <div class="wireframe-toolbar">
-                    <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
-                    <div class="wireframe-toolbar-divider"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
-                </div>
-                <div class="wireframe-main">
-                    <div class="wireframe-sidebar" id="wireframe-sidebar">
-                        <div class="wireframe-sidebar-content">
-                            Click toolbar icons to toggle different sidebars
-                        </div>
-                    </div>
-                    <div class="wireframe-viewer">
-                        Viewer Area
-                    </div>
-                </div>
-            </div>
-            <div class="wireframe-label">
-                Click toolbar icons to preview different panels
-            </div>
+        <!-- Installation Button Section -->
+        <div class="install-section">
+            <a href="#" class="install-button">Installation</a>
         </div>
 
         <!-- Grid Section -->
