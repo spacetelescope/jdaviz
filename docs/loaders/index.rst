@@ -11,6 +11,7 @@ Learn how to import data into Jdaviz from various sources and in different forma
 
    sources/index
    formats/index
+   extensions
 
 Overview
 ========

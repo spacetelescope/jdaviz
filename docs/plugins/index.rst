@@ -30,6 +30,7 @@ Jdaviz provides a wide range of data analysis plugins for different types of ast
    spectral_slice
    ramp_slice
    slit_overlay
+   extensions
 
 Overview
 ========

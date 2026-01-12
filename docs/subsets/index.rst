@@ -16,6 +16,7 @@ Create and manage spatial and spectral subsets of your data.
    annulus
    range
    composite
+   extensions
 
 Overview
 ========

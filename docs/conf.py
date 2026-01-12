@@ -342,7 +342,7 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
         return links
 
     for filename in sorted(os.listdir(dir_path)):
-        if filename.endswith('.rst') and filename != 'index.rst':
+        if filename.endswith('.rst') and filename != 'index.rst' and filename != 'extensions.rst':
             # Convert filename to title (e.g., 'file_drop.rst' -> 'File Drop')
             name = filename[:-4].replace('_', ' ').title()
             # Create relative path for Sphinx
@@ -357,6 +357,14 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
             links.append(link_data)
 
     return links
+
+
+def check_extensions_exists(base_path, directory):
+    """Check if extensions.rst exists in the directory."""
+    extensions_path = os.path.join(base_path, directory, 'extensions.rst')
+    if os.path.exists(extensions_path):
+        return os.path.join(directory, 'extensions')
+    return None
 
 
 # Unified descriptions for grid items and wireframe sidebars
@@ -402,7 +410,7 @@ grid_items_data = [
             scan_directory_for_links(docs_dir, 'loaders/sources'),
             scan_directory_for_links(docs_dir, 'loaders/formats')
         ],
-        'extensions_button': True
+        'extensions_path': check_extensions_exists(docs_dir, 'loaders')
     },
     {
         'title': 'Data Analysis Plugins',
@@ -419,7 +427,7 @@ grid_items_data = [
             {'name': 'Ramp', 'id': 'ramp'}
         ],
         'links': scan_directory_for_links(docs_dir, 'plugins', plugin_data_types),
-        'extensions_button': True
+        'extensions_path': check_extensions_exists(docs_dir, 'plugins')
     },
     {
         'title': 'Viewers',
@@ -427,7 +435,7 @@ grid_items_data = [
         'icon': 'mdi-plus-box',
         'grid_id': 'grid-viewers',
         'links': scan_directory_for_links(docs_dir, 'viewers'),
-        'extensions_button': True
+        'extensions_path': check_extensions_exists(docs_dir, 'viewers')
     },
     {
         'title': 'Subsets',
@@ -435,7 +443,7 @@ grid_items_data = [
         'icon': 'mdi-selection',
         'grid_id': 'grid-subsets',
         'links': scan_directory_for_links(docs_dir, 'subsets'),
-        'extensions_button': True
+        'extensions_path': check_extensions_exists(docs_dir, 'subsets')
     },
     {
         'title': 'Export',

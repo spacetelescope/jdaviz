@@ -516,10 +516,10 @@
         }
 
         .extensions-button:hover {
-            background: var(--button-hover);
-            color: var(--text-color);
-            border-color: var(--grid-border);
-            transform: scale(1.05);
+            background: var(--grid-hover);
+            color: #ffffff;
+            border-color: #ffffff;
+            transform: translateY(-2px);
         }
 
         /* Description Section */
@@ -1762,8 +1762,8 @@
                         {% endfor %}
                         {% endif %}
 
-                        {% if item.extensions_button %}
-                        <a href="#" class="extensions-button">More from Extensions</a>
+                        {% if item.extensions_path %}
+                        <a href="{{ pathto(item.extensions_path) }}" class="extensions-button">More from Extensions</a>
                         {% endif %}
                     </div>
                 </div>

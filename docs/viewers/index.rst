@@ -16,6 +16,7 @@ Jdaviz provides specialized viewers for different types of astronomical data.
    table
    scatter
    histogram
+   extensions
 
 Overview
 ========
