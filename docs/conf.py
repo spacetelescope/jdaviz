@@ -201,7 +201,7 @@ html_context = {
     "github_repo": "jdaviz",
     "github_version": "main",
     "doc_path": "docs",
-    "jdaviz_version": release,
+    "jdaviz_version": version if dev else release,  # Use short version for dev builds
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -439,6 +439,7 @@ class JdavizLandingPageDirective(SphinxDirective):
         template = jinja_env.get_template('index.html')
         context = {
             'grid_items': html_context.get('grid_items', []),
+            'jdaviz_version': html_context.get('jdaviz_version', ''),
             'pathto': pathto
         }
         html_content = template.render(context)
