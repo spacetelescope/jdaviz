@@ -57,6 +57,9 @@ highlight_language = 'python3'
 # directories to ignore when looking for source files.
 exclude_patterns.append('_templates')  # noqa: F405
 
+# Templates path for custom layouts (separate from excluded RST templates)
+templates_path = ['_templates']
+
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
 rst_epilog += """
@@ -179,6 +182,7 @@ extlinks = {
 
 html_static_path = ["_static"]
 html_css_files = ["jdaviz.css"]
+html_js_files = ["platform-context.js"]
 html_copy_source = False
 
 html_theme_options.update(  # noqa: F405

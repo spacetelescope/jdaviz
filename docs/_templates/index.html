@@ -6,6 +6,18 @@
     <title>Jdaviz - Astronomical Data Visualization</title>
     <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
+    <!--
+        PLATFORM CONTEXT SYSTEM:
+        This landing page sets platform context (desktop/mast/jupyter/platform) via:
+        1. sessionStorage when users interact with platform tabs
+        2. URL query parameters (?platform=X) for shareable links
+
+        Platform context persists across documentation navigation using:
+        - platform-context.js in _static/ (auto-included on all pages)
+        - CSS classes in jdaviz.css for platform-specific content visibility
+
+        See docs/platform_content_example.rst for usage examples.
+    -->
     <style>
         /* Fix Sphinx theme conflicts */
         .bd-main .bd-content .bd-article-container {
@@ -540,6 +552,7 @@
             display: flex;
             align-items: flex-start;
             justify-content: center;
+            max-height: 200px;
         }
 
         .description-content {
@@ -2155,6 +2168,11 @@
                 // Get platform type
                 const platformType = platformTabs[index].getAttribute('data-platform');
 
+                // Store platform context in sessionStorage for persistence across pages
+                if (platformType) {
+                    sessionStorage.setItem('jdaviz-platform', platformType);
+                }
+
                 // Update tabs
                 platformTabs.forEach(function(tab, i) {
                     if (i === index) {
@@ -2188,7 +2206,7 @@
                 if (installButton) {
                     if (platformType === 'desktop') {
                         installButton.textContent = 'Install Standalone Desktop UI';
-                        installButton.href = 'setup/desktop.html';
+                        installButton.href = 'setup/desktop.html?platform=desktop';
                         installButton.target = '_self';
                     } else if (platformType === 'mast') {
                         installButton.textContent = 'Launch Jdaviz@MAST';
@@ -2196,11 +2214,11 @@
                         installButton.target = '_blank';
                     } else if (platformType === 'jupyter') {
                         installButton.textContent = 'Install Jdaviz';
-                        installButton.href = 'setup/local.html';
+                        installButton.href = 'setup/local.html?platform=jupyter';
                         installButton.target = '_self';
                     } else if (platformType === 'platform') {
                         installButton.textContent = 'Run Jdaviz on a Platform';
-                        installButton.href = 'setup/platform.html';
+                        installButton.href = 'setup/platform.html?platform=platform';
                         installButton.target = '_self';
                     }
                 }
