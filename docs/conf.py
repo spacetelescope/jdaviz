@@ -360,6 +360,7 @@ grid_items_data = [
     {
         'title': 'Show Data in Viewers',
         'icon': 'mdi-plus-box',
+        'grid_id': 'grid-viewers',
         'links': scan_directory_for_links(docs_dir, 'viewers'),
         'extensions_button': True
     },
@@ -391,6 +392,7 @@ grid_items_data = [
     {
         'title': 'API Access in Notebook',
         'icon': 'api',
+        'grid_id': 'grid-userapi',
         'links': scan_directory_for_links(docs_dir, 'userapi')
     }
 ]
