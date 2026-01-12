@@ -125,6 +125,8 @@ Using Jdaviz
   export/index
   settings/index
   info/index
+  data_menu/index
+  mouseover/index
   userapi/index
 
 *******************************

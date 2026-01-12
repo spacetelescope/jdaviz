@@ -202,7 +202,6 @@ html_context = {
     "github_version": "main",
     "doc_path": "docs",
     "jdaviz_version": version if dev else release,  # Use short version for dev builds
-    "descriptions": descriptions,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -350,6 +349,8 @@ descriptions = {
     'info_logger': ('System messages, warnings, and operation history. Monitor plugin execution, '
                     'data loading status, and any issues that arise during analysis.'),
     'userapi': 'script advanced and reproducible workflows in the notebook mimicing UI-operations',
+    'data_menu': 'Control data and subset layer order and visibility for each viewer',
+    'mouseover': 'See information about the data directly below your cursor',
 }
 
 
@@ -358,7 +359,7 @@ docs_dir = os.path.dirname(__file__)
 
 grid_items_data = [
     {
-        'title': 'Import Data from Multiple Sources',
+        'title': 'Data Loaders',
         'description': descriptions['loaders'],
         'icon': 'mdi-plus-box',
         'grid_id': 'grid-loaders',
@@ -388,7 +389,7 @@ grid_items_data = [
         'extensions_button': True
     },
     {
-        'title': 'Show Data in Viewers',
+        'title': 'Viewers',
         'description': descriptions['viewers'],
         'icon': 'mdi-plus-box',
         'grid_id': 'grid-viewers',
@@ -396,7 +397,7 @@ grid_items_data = [
         'extensions_button': True
     },
     {
-        'title': 'Select Subsets of Data',
+        'title': 'Subsets',
         'description': descriptions['subsets'],
         'icon': 'mdi-selection',
         'grid_id': 'grid-subsets',
@@ -404,7 +405,7 @@ grid_items_data = [
         'extensions_button': True
     },
     {
-        'title': 'Export to File',
+        'title': 'Export',
         'description': descriptions['export'],
         'icon': 'mdi-content-save',
         'grid_id': 'grid-export',
@@ -425,6 +426,20 @@ grid_items_data = [
         'links': scan_directory_for_links(docs_dir, 'info')
     },
     {
+        'title': 'Data Menu',
+        'description': descriptions['data_menu'],
+        'icon': 'mdi-alpha-a-box-outline',
+        'grid_id': 'grid-data-menu',
+        'links': scan_directory_for_links(docs_dir, 'data_menu')
+    },
+    {
+        'title': 'Mouseover',
+        'description': descriptions['mouseover'],
+        'icon': 'mdi-auto-fix',
+        'grid_id': 'grid-mouseover',
+        'links': scan_directory_for_links(docs_dir, 'mouseover')
+    },
+    {
         'title': 'API Access in Notebook',
         'description': descriptions['userapi'],
         'icon': 'api',
@@ -437,6 +452,7 @@ grid_items_data = [
 if 'html_context' not in locals():
     html_context = {}
 html_context['grid_items'] = grid_items_data
+html_context['descriptions'] = descriptions
 
 
 # -- Custom directive -------------------------------------------
