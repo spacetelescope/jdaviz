@@ -45,7 +45,7 @@ You can create custom subset tools by:
 3. Creating UI components if needed
 4. Packaging and distributing your extension
 
-See the :ref:`dev-extensions` documentation for details on creating subset extensions.
+Refer to the jdaviz developer documentation for details on creating subset extensions.
 
 Working with Subsets Programmatically
 ======================================

@@ -36,4 +36,4 @@ You can create custom data loaders for jdaviz by:
 2. Registering your loader with jdaviz's extension system
 3. Distributing your package for others to use
 
-See the :ref:`dev-extensions` documentation for details on creating extensions.
+Refer to the jdaviz developer documentation for details on creating extensions.

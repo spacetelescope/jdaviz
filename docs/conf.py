@@ -369,27 +369,27 @@ def check_extensions_exists(base_path, directory):
 
 # Unified descriptions for grid items and wireframe sidebars
 descriptions = {
-    'loaders': 'import data of multiple formats and from multiple sources into jdaviz',
-    'plugins': 'do basic data reduction and analysis tasks for specific science use-cases',
-    'viewers': ('show data in a variety of different viewers, '
+    'loaders': 'Import data of multiple formats and from multiple sources into jdaviz',
+    'plugins': 'Do basic data reduction and analysis tasks for specific science use-cases',
+    'viewers': ('Show data in a variety of different viewers '
                 'custom built for exploring astronomical data'),
-    'subsets': ('select regions of interest in your data, see that synced across all '
+    'subsets': ('Select regions of interest in your data, see that synced across all '
                 'viewers, and use as inputs to data analysis tasks'),
-    'export': 'export generated data, selected subsets, and viewers',
-    'settings': 'choose how to visualize your data',
+    'export': 'Export generated data, selected subsets, and viewers',
+    'settings': 'Choose how to visualize your data',
     'settings_plot': ('Customize viewer appearance including axes labels, limits, stretching, '
                       'color maps, markers, and display options.'),
     'settings_units': ('Convert and display data in different unit systems. Choose spectral '
                        'units (wavelength, frequency, energy) and flux units appropriate for '
                        'your analysis.'),
-    'info': 'interactive access to information about your data and generated results',
+    'info': 'Interactive access to information about your data and generated results',
     'info_metadata': ('View FITS header information, WCS coordinates, and other metadata for '
                       'loaded datasets.'),
-    'info_markers': ('interactively create markers in any viewer and information about the '
+    'info_markers': ('Interactively create markers in any viewer and information about the '
                      'underlying data will be exposed and available to export into the notebook'),
     'info_logger': ('System messages, warnings, and operation history. Monitor plugin execution, '
                     'data loading status, and any issues that arise during analysis.'),
-    'userapi': 'script advanced and reproducible workflows in the notebook mimicing UI-operations',
+    'userapi': 'Script advanced and reproducible workflows in the notebook mimicing UI-operations',
     'data_menu': 'Control data and subset layer order and visibility for each viewer',
     'mouseover': 'See information about the data directly below your cursor',
 }

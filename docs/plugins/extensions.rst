@@ -44,5 +44,4 @@ You can create custom analysis plugins by:
 3. Registering it with jdaviz's extension system
 4. Distributing it to the community
 
-See the :ref:`plugin_api` documentation and :ref:`dev-extensions` guide for details on
-creating plugin extensions.
+See the :ref:`plugin-apis` documentation for details on creating plugin extensions.

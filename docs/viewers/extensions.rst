@@ -44,7 +44,7 @@ You can create custom viewers by:
 3. Packaging your viewer as a Python package
 4. Registering it with jdaviz's extension system
 
-See the :ref:`dev-extensions` documentation for details on creating custom viewers.
+Refer to the jdaviz developer documentation for details on creating custom viewers.
 
 Integration with Configurations
 ================================
