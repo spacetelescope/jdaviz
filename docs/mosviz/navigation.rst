@@ -2,6 +2,8 @@
 Navigating the UI
 *****************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 The Mosviz User Interface contains an image viewer in the top left section and
 a 2D spectrum viewer over a specviz viewer in the top right section. The bottom
 section houses the :ref:`table viewer<table-viewer>`.

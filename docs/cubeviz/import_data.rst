@@ -4,6 +4,8 @@
 Importing Data into Cubeviz
 ***************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 By design, Cubeviz only supports data that can be parsed as
 :class:`~specutils.Spectrum` objects. :class:`~specutils.Spectrum` supports 3D cubes
 and allows the Python-level interface and parsing tools to

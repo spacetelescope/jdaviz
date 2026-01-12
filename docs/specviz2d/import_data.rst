@@ -4,6 +4,8 @@
 Importing Data Into Specviz2D
 *****************************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 By design, Specviz2D only supports data that can be parsed as :class:`~specutils.Spectrum` objects,
 as that allows the Python-level interface and parsing tools to be defined in ``specutils``
 instead of being duplicated in Jdaviz.

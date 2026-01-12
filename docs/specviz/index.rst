@@ -7,6 +7,8 @@
 |specviz_logo| Specviz
 ######################
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 .. image:: https://stsci.box.com/shared/static/qlrlsf12fl9v9wjy321hwrjk8d9jf5h8.gif
     :alt: Introductory video tour of the Specviz configuration and its features
 

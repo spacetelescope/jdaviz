@@ -4,6 +4,8 @@
 Displaying Images
 *****************
 
+.. include:: ../_templates/deprecated_config_banner.rst
+
 Imviz uses image viewers to visualize data from supported formats.
 Much of the functionality is available both from the application GUI and
 from the Jupyter notebook using API calls.
