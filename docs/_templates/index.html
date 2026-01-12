@@ -108,6 +108,11 @@
             margin: 0 auto;
         }
 
+        /* Fix logo background in dark mode */
+        html[data-theme="dark"] .logo {
+            filter: brightness(0) invert(1);
+        }
+
         /* Installation Button Section */
         .install-section {
             width: 90%;
@@ -415,6 +420,19 @@
 
         .description-section a:hover {
             color: var(--link-hover);
+        }
+
+        /* Prevent visited link styling */
+        a:visited {
+            color: inherit;
+        }
+
+        .grid-item-link:visited,
+        .wireframe-sidebar-link:visited,
+        .extensions-button:visited,
+        .install-button:visited,
+        .description-section a:visited {
+            color: inherit;
         }
 
         .description-more {
