@@ -308,7 +308,33 @@ linkcheck_ignore = [
 
 # -- Grid items data for landing page -------------------------------------------
 
-def scan_directory_for_links(base_path, directory):
+# Plugin data type mappings for filtering
+plugin_data_types = {
+    'aperture_photometry': ['image'],
+    'catalog_search': ['image', 'catalog'],
+    'collapse': ['3d'],
+    'compass': ['image'],
+    'cross_dispersion_profile': ['2d'],
+    'data_quality': ['image', '1d', '2d', '3d'],
+    'footprints': ['image'],
+    'gaussian_smooth': ['1d', '2d', '3d'],
+    'line_analysis': ['1d'],
+    'line_lists': ['1d', '2d'],
+    'line_profiles': ['3d'],
+    'model_fitting': ['1d'],
+    'moment_maps': ['3d'],
+    'orientation': ['image'],
+    'ramp_extraction': ['ramp'],
+    'ramp_slice': ['ramp'],
+    'slit_overlay': ['image', '2d'],
+    'sonify': ['1d'],
+    'spectral_extraction_2d': ['2d'],
+    'spectral_extraction_3d': ['3d'],
+    'spectral_slice': ['2d'],
+}
+
+
+def scan_directory_for_links(base_path, directory, data_type_map=None):
     """Scan a directory for RST files and return link information."""
     links = []
     dir_path = os.path.join(base_path, directory)
@@ -321,7 +347,14 @@ def scan_directory_for_links(base_path, directory):
             name = filename[:-4].replace('_', ' ').title()
             # Create relative path for Sphinx
             rel_path = os.path.join(directory, filename[:-4])
-            links.append({'text': name, 'href': rel_path})
+
+            link_data = {'text': name, 'href': rel_path}
+
+            # Add data types if mapping is provided
+            if data_type_map and filename[:-4] in data_type_map:
+                link_data['data_types'] = ' '.join(data_type_map[filename[:-4]])
+
+            links.append(link_data)
 
     return links
 
@@ -385,7 +418,7 @@ grid_items_data = [
             {'name': 'Catalog', 'id': 'catalog'},
             {'name': 'Ramp', 'id': 'ramp'}
         ],
-        'links': scan_directory_for_links(docs_dir, 'plugins'),
+        'links': scan_directory_for_links(docs_dir, 'plugins', plugin_data_types),
         'extensions_button': True
     },
     {
