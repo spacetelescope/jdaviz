@@ -1,5 +1,4 @@
-.. raw:: html
-   :file: _templates/index.html
+.. jdavizlanding::
 
 .. toctree::
    :maxdepth: 2

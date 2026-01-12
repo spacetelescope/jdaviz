@@ -118,6 +118,14 @@ Using Jdaviz
   :maxdepth: 2
 
   index_using_jdaviz
+  loaders/index
+  plugins/index
+  viewers/index
+  subsets/index
+  export/index
+  settings/index
+  info/index
+  userapi/index
 
 *******************************
 JWST Instrument Modes in Jdaviz

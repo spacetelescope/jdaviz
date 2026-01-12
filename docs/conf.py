@@ -26,6 +26,7 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
+import os
 import subprocess
 import sys
 
@@ -303,6 +304,103 @@ linkcheck_ignore = [
     'https://pypi.org/project/jdaviz/#files'
 ]
 
+
+# -- Grid items data for landing page -------------------------------------------
+
+def scan_directory_for_links(base_path, directory):
+    """Scan a directory for RST files and return link information."""
+    links = []
+    dir_path = os.path.join(base_path, directory)
+    if not os.path.exists(dir_path):
+        return links
+
+    for filename in sorted(os.listdir(dir_path)):
+        if filename.endswith('.rst') and filename != 'index.rst':
+            # Convert filename to title (e.g., 'file_drop.rst' -> 'File Drop')
+            name = filename[:-4].replace('_', ' ').title()
+            # Create relative path for Sphinx
+            rel_path = os.path.join(directory, filename[:-4])
+            links.append({'text': name, 'href': rel_path})
+
+    return links
+
+
+# Build grid items structure
+docs_dir = os.path.dirname(__file__)
+
+grid_items_data = [
+    {
+        'title': 'Import Data from Multiple Sources',
+        'icon': 'mdi-plus-box',
+        'grid_id': 'grid-loaders',
+        'two_column': True,
+        'column_headers': ['Sources:', 'Formats:'],
+        'links': [
+            scan_directory_for_links(docs_dir, 'loaders/sources'),
+            scan_directory_for_links(docs_dir, 'loaders/formats')
+        ],
+        'extensions_button': True
+    },
+    {
+        'title': 'Data Analysis Plugins',
+        'icon': 'mdi-tune-variant',
+        'grid_id': 'grid-plugins',
+        'filters': [
+            {'name': 'All', 'id': 'all', 'active': True},
+            {'name': 'Images', 'id': 'image'},
+            {'name': '1D Spectra', 'id': '1d'},
+            {'name': '2D Spectra', 'id': '2d'},
+            {'name': '3D Spectra', 'id': '3d'},
+            {'name': 'Catalog', 'id': 'catalog'},
+            {'name': 'Ramp', 'id': 'ramp'}
+        ],
+        'links': scan_directory_for_links(docs_dir, 'plugins'),
+        'extensions_button': True
+    },
+    {
+        'title': 'Show Data in Viewers',
+        'icon': 'mdi-plus-box',
+        'links': scan_directory_for_links(docs_dir, 'viewers'),
+        'extensions_button': True
+    },
+    {
+        'title': 'Select Subsets of Data',
+        'icon': 'mdi-selection',
+        'grid_id': 'grid-subsets',
+        'links': scan_directory_for_links(docs_dir, 'subsets'),
+        'extensions_button': True
+    },
+    {
+        'title': 'Export to File',
+        'icon': 'mdi-content-save',
+        'grid_id': 'grid-export',
+        'links': scan_directory_for_links(docs_dir, 'export')
+    },
+    {
+        'title': 'Flexible Settings & Options',
+        'icon': 'mdi-cog',
+        'grid_id': 'grid-settings',
+        'links': scan_directory_for_links(docs_dir, 'settings')
+    },
+    {
+        'title': 'Access to Data Info',
+        'icon': 'mdi-information-outline',
+        'grid_id': 'grid-info',
+        'links': scan_directory_for_links(docs_dir, 'info')
+    },
+    {
+        'title': 'API Access in Notebook',
+        'icon': 'api',
+        'links': scan_directory_for_links(docs_dir, 'userapi')
+    }
+]
+
+# Make grid items available to templates
+if 'html_context' not in locals():
+    html_context = {}
+html_context['grid_items'] = grid_items_data
+
+
 # -- Custom directive -------------------------------------------
 
 class JdavizCLIHelpDirective(SphinxDirective):
@@ -313,5 +411,40 @@ class JdavizCLIHelpDirective(SphinxDirective):
         return [paragraph_node]
 
 
+class JdavizLandingPageDirective(SphinxDirective):
+    """Render the landing page template with Jinja2 processing."""
+
+    def run(self):
+        import jinja2
+
+        # Get the template directory
+        template_dir = os.path.join(self.env.srcdir, '_templates')
+
+        # Create a Jinja2 environment
+        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+
+        # Add pathto function to the environment
+        def pathto(otheruri, resource=False):
+            """Generate relative path to another document."""
+            if resource:
+                return otheruri
+            if not otheruri.endswith('.html') and not otheruri.startswith('#'):
+                otheruri = otheruri + '.html'
+            return otheruri
+
+        # Load and render the template with context
+        template = jinja_env.get_template('index.html')
+        context = {
+            'grid_items': html_context.get('grid_items', []),
+            'pathto': pathto
+        }
+        html_content = template.render(context)
+
+        # Create raw HTML node
+        raw_node = nodes.raw('', html_content, format='html')
+        return [raw_node]
+
+
 def setup(app):
     app.add_directive('jdavizclihelp', JdavizCLIHelpDirective)
+    app.add_directive('jdavizlanding', JdavizLandingPageDirective)
