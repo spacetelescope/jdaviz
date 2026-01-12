@@ -4,5 +4,5 @@
    :maxdepth: 2
    :hidden:
 
-   overview
+   configs_index
 

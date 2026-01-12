@@ -404,6 +404,11 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            margin-bottom: 0;
+        }
+
+        .description-content p {
+            margin-bottom: 0 !important;
         }
 
         .description-toggle {
@@ -499,6 +504,57 @@
             padding: 12px 16px;
             margin: 16px 0;
             border-radius: 4px;
+        }
+
+        /* Announcement Banner */
+        .announcement-banner {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+            background: linear-gradient(135deg, #00617E 0%, #007DA4 100%);
+            border-radius: 12px;
+            border: 2px solid var(--grid-border);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .announcement-header {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--text-color);
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .announcement-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin-bottom: 24px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .announcement-button {
+            display: inline-block;
+            background: var(--sidebar-active);
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 12px 32px;
+            border: 2px solid var(--grid-border);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .announcement-button:hover {
+            background: var(--sidebar-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
         /* Wireframe Section */
@@ -1119,6 +1175,17 @@
             </div>
 
             <button id="description-toggle" class="description-toggle">Show More</button>
+        </div>
+
+        <!-- Announcement Banner -->
+        <div class="announcement-banner">
+            <h2 class="announcement-header">Introducing the new generalized Jdaviz</h2>
+            <p class="announcement-text">
+                Version 5.0 of Jdaviz introduces a new generalized Jdaviz capable of advanced mixed workflows.
+                No longer do you need to choose between the different configurations - just load the data
+                you want to analyze into jdaviz and the interface and tools will adjust accordingly.
+            </p>
+            <a href="{{ pathto('configs_index') }}" class="announcement-button">View Deprecated Configuration-Specific Documentation</a>
         </div>
 
         <!-- Wireframe Section -->
