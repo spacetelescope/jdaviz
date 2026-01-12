@@ -93,11 +93,19 @@
             height: auto;
             display: block;
             margin: 0 auto;
+            background: transparent !important;
+            background-color: transparent !important
         }
 
-        /* Fix logo background in dark mode */
+        /* Fix logo for dark mode - make it white on transparent */
         html[data-theme="dark"] .logo {
             filter: brightness(0) invert(1);
+            background: transparent;
+        }
+
+        /* Ensure logo background is transparent in light mode too */
+        html[data-theme="light"] .logo {
+            background: transparent;
         }
 
         /* Installation Button Section */
@@ -411,15 +419,24 @@
 
         /* Prevent visited link styling */
         a:visited {
-            color: inherit;
+            color: inherit !important;
+        }
+
+        a:visited:hover {
+            color: inherit !important;
         }
 
         .grid-item-link:visited,
+        .grid-item-link:visited:hover,
         .wireframe-sidebar-link:visited,
+        .wireframe-sidebar-link:visited:hover,
         .extensions-button:visited,
+        .extensions-button:visited:hover,
         .install-button:visited,
-        .description-section a:visited {
-            color: inherit;
+        .install-button:visited:hover,
+        .description-section a:visited,
+        .description-section a:visited:hover {
+            color: inherit !important;
         }
 
         .description-more {
@@ -601,6 +618,7 @@
 
         .wireframe-sidebar-link:hover {
             background: var(--button-hover);
+            color: var(--text-color) !important;
             transform: translateY(-2px);
         }
 
