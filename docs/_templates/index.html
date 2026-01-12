@@ -115,6 +115,48 @@
             text-align: center;
         }
 
+        /* Citation and License Section */
+        .citation-section {
+            width: 90%;
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .citation-section h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-top: 30px;
+            margin-bottom: 16px;
+        }
+
+        .citation-section h2:first-child {
+            margin-top: 0;
+        }
+
+        .citation-section p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin-bottom: 12px;
+        }
+
+        .citation-section a {
+            color: var(--link-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .citation-section a:hover {
+            color: var(--link-hover);
+        }
+
+        .citation-section img {
+            margin: 8px 0;
+        }
+
         /* Full Width Button (Installation, GitHub, etc.) */
         .full-width-button {
             display: inline-block;
@@ -1437,6 +1479,21 @@
         <!-- GitHub Repository Button Section -->
         <div class="install-section">
             <a href="https://github.com/spacetelescope/jdaviz" target="_blank" class="full-width-button">GitHub Repository</a>
+        </div>
+
+        <!-- Citation and License Section -->
+        <div class="citation-section">
+            <h2>Citation</h2>
+            <p>If you use <strong>jdaviz</strong>, please cite us via our Zenodo record:</p>
+            <p>
+                <a href="https://doi.org/10.5281/zenodo.5513927" target="_blank">
+                    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5513927.svg" alt="DOI">
+                </a>
+            </p>
+
+            <h2>License</h2>
+            <p>This project is Copyright (c) JDADF Developers and licensed under the terms of the BSD 3-Clause license.</p>
+            <p>This package is based upon the <a href="https://github.com/astropy/package-template" target="_blank">Astropy package template</a> which is licensed under the BSD 3-clause licence. See the <a href="https://github.com/spacetelescope/jdaviz/tree/main/licenses" target="_blank">licenses folder</a> for more information.</p>
         </div>
     </div>
 </body>
