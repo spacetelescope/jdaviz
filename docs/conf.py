@@ -180,6 +180,9 @@ html_static_path = ["_static"]
 html_css_files = ["jdaviz.css"]
 html_copy_source = False
 
+# Use custom HTML index page
+html_additional_pages = {'index': 'index.html'}
+
 html_theme_options.update(  # noqa: F405
     {
         "github_url": "https://github.com/spacetelescope/jdaviz",
