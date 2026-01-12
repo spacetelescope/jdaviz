@@ -81,18 +81,16 @@
             margin: 0 auto;
         }
 
-        /* Logo Section */
+        /* Logo Section - now part of description */
         .logo-section {
-            text-align: center;
-            margin-bottom: 40px;
+            display: none; /* Hide standalone logo section */
         }
 
         .logo {
-            max-width: 400px;
+            max-width: 100%;
             width: 100%;
             height: auto;
             display: block;
-            margin: 0 auto;
             background: transparent !important;
             background-color: transparent !important
         }
@@ -113,7 +111,7 @@
             width: 90%;
             max-width: 1000px;
             margin: 40px auto;
-            padding: 30px;
+            padding: 0px;
             text-align: center;
         }
 
@@ -227,6 +225,7 @@
             left: 0;
             right: 0;
             background: var(--sidebar-active);
+            opacity: 0.5;
             color: var(--text-color);
             border: none;
             border-top: 1px solid var(--grid-border);
@@ -242,6 +241,7 @@
 
         .toggle-more:hover {
             background: var(--button-hover);
+            opacity: 0.7;
         }
 
         .grid-item:hover {
@@ -386,11 +386,46 @@
             width: 90%;
             max-width: 1000px;
             margin: 40px auto;
-            padding: 30px;
-            background: var(--description-bg);
-            border-radius: 12px;
+            padding: 0px;
             backdrop-filter: blur(10px);
-            border: 2px solid var(--description-border);
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .description-logo {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .description-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .description-toggle {
+            grid-column: 1 / -1; /* Span both columns for full width */
+            display: block;
+            width: 100%;
+            background: var(--sidebar-active);
+            opacity: 0.8;
+            color: var(--text-color);
+            border: 1px solid var(--description-border);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0;
+        }
+
+        .description-toggle:hover {
+            background: var(--sidebar-hover);
+            opacity: 1.0;
         }
 
         .description-section p {
@@ -443,6 +478,7 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease;
+            grid-column: 1 / -1; /* Span both columns when expanded */
         }
 
         .description-more.expanded {
@@ -463,25 +499,6 @@
             padding: 12px 16px;
             margin: 16px 0;
             border-radius: 4px;
-        }
-
-        .description-toggle {
-            display: block;
-            width: 100%;
-            background: var(--sidebar-active);
-            color: var(--text-color);
-            border: 1px solid var(--description-border);
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 16px;
-        }
-
-        .description-toggle:hover {
-            background: var(--sidebar-hover);
         }
 
         /* Wireframe Section */
@@ -666,6 +683,11 @@
         /* Responsive Design */
         @media (max-width: 768px) {
             .grid-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .description-section {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
@@ -1029,49 +1051,26 @@
 </head>
 <body>
     <div class="container">
-        <!-- Logo Section -->
+        <!-- Logo Section - kept for potential use elsewhere but hidden by CSS -->
         <div class="logo-section">
             <img src="_static/logos/jdaviz.svg" alt="Jdaviz Logo" class="logo">
         </div>
 
-        <!-- Wireframe Section -->
-        <div class="wireframe-section">
-            <div class="wireframe-container">
-                <div class="wireframe-toolbar">
-                    <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
-                    <div class="wireframe-toolbar-divider"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
-                </div>
-                <div class="wireframe-main">
-                    <div class="wireframe-sidebar" id="wireframe-sidebar">
-                        <div class="wireframe-sidebar-content">
-                            Click toolbar icons to toggle different sidebars
-                        </div>
-                    </div>
-                    <div class="wireframe-viewer">
-                        Viewer Area
-                    </div>
-                </div>
-            </div>
-            <div class="wireframe-label">
-                Click toolbar icons to preview different panels
-            </div>
-        </div>
-
-        <!-- Description Section -->
+        <!-- Description Section with embedded logo -->
         <div class="description-section">
-            <p>
-                <code>jdaviz</code> is a package of astronomical data analysis visualization
-                tools based on the Jupyter platform. These GUI-based
-                tools link data visualization and interactive analysis. They are designed
-                to work within a Jupyter notebook cell, as a standalone desktop application,
-                or as embedded windows within a website -- all with nearly identical
-                user interfaces.
-            </p>
+            <div class="description-logo">
+                <img src="_static/logos/jdaviz.svg" alt="Jdaviz Logo" class="logo">
+            </div>
+            <div class="description-content">
+                <p>
+                    <code>jdaviz</code> is a package of astronomical data analysis visualization
+                    tools based on the Jupyter platform. These GUI-based
+                    tools link data visualization and interactive analysis. They are designed
+                    to work within a Jupyter notebook cell, as a standalone desktop application,
+                    or as embedded windows within a website -- all with nearly identical
+                    user interfaces.
+                </p>
+            </div>
 
             <div class="description-more" id="description-more">
                 <p>
@@ -1115,7 +1114,32 @@
                 </div>
             </div>
 
-            <button class="description-toggle" id="description-toggle">Show More</button>
+            <button id="description-toggle" class="description-toggle">Show More</button>
+        </div>
+
+        <!-- Wireframe Section -->
+        <div class="wireframe-section">
+            <div class="wireframe-container">
+                <div class="wireframe-toolbar">
+                    <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
+                    <div class="wireframe-toolbar-divider"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
+                    <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+                </div>
+                <div class="wireframe-main">
+                    <div class="wireframe-sidebar" id="wireframe-sidebar">
+                        <div class="wireframe-sidebar-content">
+                            Click toolbar icons to toggle different sidebars
+                        </div>
+                    </div>
+                    <div class="wireframe-viewer">
+                        Viewer Area
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Installation Button Section -->
@@ -1271,6 +1295,11 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- GitHub Repository Button Section -->
+        <div class="install-section">
+            <a href="https://github.com/spacetelescope/jdaviz" target="_blank" class="install-button">GitHub Repository</a>
         </div>
     </div>
 </body>
