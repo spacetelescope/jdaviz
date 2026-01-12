@@ -1184,6 +1184,25 @@
                 }
             });
 
+            // Handle search bar click - trigger Sphinx search
+            const wireframeSearchInput = document.getElementById('wireframe-search-input');
+            if (wireframeSearchInput) {
+                wireframeSearchInput.addEventListener('click', function() {
+                    stopAutoCycle();
+                    // Try multiple selectors to find the Sphinx search trigger
+                    const searchButton = document.querySelector('button.search-button, .search-button, button[aria-label="Search"], button[data-bs-toggle="search"]');
+                    if (searchButton) {
+                        searchButton.click();
+                    } else {
+                        // If no button found, try to focus the search input field
+                        const searchInput = document.querySelector('input[type="search"], input.search-input, #searchbox input');
+                        if (searchInput) {
+                            searchInput.focus();
+                        }
+                    }
+                });
+            }
+
             const sidebarContent_map = {
                 'loaders': {
                     tabs: ['Data', 'Viewer'],
@@ -1593,7 +1612,7 @@
                     <div class="wireframe-toolbar-spacer"></div>
                     <div class="wireframe-toolbar-right">
                         <div class="wireframe-toolbar-search-row">
-                            <input type="text" class="wireframe-toolbar-search" placeholder="Search documentation..." readonly onclick="document.querySelector('.search-button').click()" />
+                            <input type="text" class="wireframe-toolbar-search" id="wireframe-search-input" placeholder="Search documentation..." readonly />
                         </div>
                         <div class="wireframe-toolbar-version-row">
                             <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
