@@ -474,7 +474,7 @@ grid_items_data = [
         'links': scan_directory_for_links(docs_dir, 'data_menu')
     },
     {
-        'title': 'Mouseover',
+        'title': 'Mouseover Information',
         'description': descriptions['mouseover'],
         'icon': 'mdi-auto-fix',
         'grid_id': 'grid-mouseover',

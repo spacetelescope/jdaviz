@@ -902,6 +902,50 @@
         .wireframe-viewer {
             flex: 1;
             background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .viewer-toolbar {
+            background: #205f76;
+            padding: 0;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            border-bottom: 1px solid var(--wireframe-border);
+        }
+
+        .viewer-toolbar-icon {
+            width: 42px;
+            height: 42px;
+            background-color: transparent;
+            background-size: 24px 24px;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .viewer-toolbar-icon:hover {
+            background-color: rgba(0, 125, 164, 0.3);
+        }
+
+        .viewer-toolbar-icon.active {
+            background-color: #c75109 !important;
+        }
+
+        .viewer-toolbar-spacer {
+            flex: 1;
+        }
+
+        .viewer-content {
+            flex: 1;
+            position: relative;
+            background: var(--sidebar-bg);
             opacity: 0.5;
             display: flex;
             align-items: center;
@@ -909,6 +953,158 @@
             color: var(--text-color);
             font-size: 18px;
             font-weight: 600;
+        }
+
+        .data-menu-legend {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .legend-item {
+            display: flex;
+            flex-direction: row-reverse;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 59, 77, 0.95);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: fit-content;
+        }
+
+        .legend-item:hover {
+            background: rgba(0, 75, 95, 0.95);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            display: block;
+        }
+
+        .legend-text {
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            max-width: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .legend-item:hover .legend-text {
+            max-width: 200px;
+            opacity: 1;
+        }
+
+        .data-menu-popup {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 400px;
+            max-height: 500px;
+            background: rgba(0, 97, 126, 1);
+            border: 2px solid var(--wireframe-border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            z-index: 20;
+            display: none;
+            flex-direction: column;
+        }
+
+        .data-menu-popup.visible {
+            display: flex;
+        }
+
+        .data-menu-header {
+            padding: 16px;
+            background: #003B4D;
+            border-bottom: 2px solid var(--wireframe-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .data-menu-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .data-menu-close {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .data-menu-close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .data-menu-content {
+            padding: 20px;
+            color: var(--text-color);
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .data-menu-description {
+            font-size: 14px;
+            font-weight: 100;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .data-menu-api-snippet {
+            margin: 16px 0;
+            display: none;
+        }
+
+        body.api-mode-active .data-menu-api-snippet {
+            display: block;
+        }
+
+        .data-menu-api-snippet .api-snippet {
+            margin: 0;
+        }
+
+        .data-menu-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--sidebar-active);
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid var(--grid-border);
+            cursor: pointer;
+        }
+
+        .data-menu-button:hover {
+            background: var(--button-hover);
+            color: var(--text-color) !important;
+            transform: translateY(-2px);
         }
 
         .wireframe-sidebar.visible {
@@ -1141,7 +1337,204 @@
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 67 47"><g><path fill="%231a1a1a" d="M11.6,19.5c0-.3,0-.7,0-1.1,2.1-1.1,4.3-1.7,6.6-1.7s4.1.4,5.1,1.3c1,.9,1.5,2.4,1.5,4.5v7.1c.8.2,1.4.3,1.8.6v2.9c-1.1.5-2.7.8-4.8.8-.2-.6-.4-1.3-.6-2.1-1,1.4-2.7,2.1-5.2,2.1s-2.8-.4-3.8-1.3-1.6-2-1.6-3.5.5-2.7,1.5-3.5c1-.9,2.5-1.3,4.4-1.3h3.6v-1.6c0-1.7-.9-2.6-2.8-2.6s-1.3,0-1.7.2c0,.9-.2,1.6-.4,2.2h-3.3c-.4-.8-.6-1.8-.6-3ZM17.6,30.5c1.1,0,2-.3,2.7-1v-2.7h-2.3c-1.6,0-2.4.6-2.4,1.8s.2,1,.5,1.4c.3.4.8.5,1.5.5Z"/><path fill="%231a1a1a" d="M27.9,17c1.2-.3,2.3-.4,3.3-.4s1.8,0,2.4,0v1.6c1.5-1,3.1-1.6,4.7-1.6s3.8.6,4.8,1.9c1,1.3,1.5,3.4,1.5,6.3s-.2,3-.7,4.1c-.5,1.2-1.1,2.1-1.9,2.8-1.5,1.3-3.3,2-5.4,2s-1.8,0-2.6-.3v2.9c1.3.4,2.1.8,2.5,1.2l-.3,2.6h-8.3l-.3-2.6c.3-.4.9-.8,1.8-1.1v-15.9c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM36.3,30.5c1.1,0,2-.5,2.6-1.5.6-1,1-2.3,1-4.1s-.2-2.9-.5-3.6c-.4-.6-1-1-1.9-1-1.4,0-2.5.3-3.4,1v8.8c.7.2,1.4.3,2.3.3Z"/><path fill="%231a1a1a" d="M46.8,17c1.2-.3,2.4-.4,3.5-.4s2,0,2.7,0v13.2c.9.3,1.5.7,1.8,1.1l-.3,2.6h-7.6l-.3-2.6c.3-.4.9-.8,1.8-1.1v-9.2c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM50.6,14.7c-1.8,0-2.8-.8-2.8-2.5s.9-2.5,2.8-2.5,2.8.8,2.8,2.5-.9,2.5-2.8,2.5Z"/></g></svg>');
         }
 
-        /* Responsive Design */
+        /* Viewer Toolbar Icon Styles */
+        .viewer-toolbar-icon[data-icon="bqplot:home"] {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" /></svg>');
+        }
+
+        .viewer-toolbar-icon[data-icon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzAxMDEwMTt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo="] {
+            background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6I0ZGRkZGRjt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo=");
+        }
+
+        .viewer-toolbar-icon[data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMTAxMDE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+"] {
+            background-image: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNGRkZGRkY7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+");
+        }
+
+        .viewer-toolbar-icon[data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMyMzFmMjA7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg=="] {
+            background-image: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNGRkZGRkY7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg==");
+        }
+
+        .legend-icon[data-icon="chart-box-outline"] {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M9,17H7V10H9V17M13,17H11V7H13V17M17,17H15V13H17V17M19,19H5V5H19V19.1M19,3H5C3.9,3 3,3.9 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.9 20.1,3 19,3Z" /></svg>');
+        }
+
+        /* Jupyter Cell Section */
+        .jupyter-cell-section {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0;
+        }
+
+        .jupyter-cell-container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--sidebar-bg);
+            border: 1px solid var(--grid-border);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .jupyter-cell-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 59, 77, 0.3);
+            border-bottom: 1px solid var(--grid-border);
+            gap: 8px;
+        }
+
+        .jupyter-cell-prompt {
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .jupyter-cell-code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #ffffff;
+            line-height: 1.6;
+            white-space: pre;
+        }
+
+        .jupyter-api-snippet {
+            display: none;
+        }
+
+        .jupyter-api-snippet.visible {
+            display: block;
+        }
+
+        .jupyter-api-snippet-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 59, 77, 0.3);
+            border-top: 1px solid var(--grid-border);
+            border-bottom: 1px solid var(--grid-border);
+            gap: 8px;
+        }
+
+        .jupyter-api-snippet-prompt {
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .jupyter-api-snippet-code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #ffffff;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Platform Tabs Section */
+        .platform-tabs-section {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0;
+        }
+
+        .platform-tabs-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .platform-tabs-header {
+            display: flex;
+            gap: 0;
+            flex-wrap: nowrap;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .platform-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--sidebar-bg);
+            color: var(--text-color);
+            opacity: 0.6;
+            border: 1px solid var(--grid-border);
+            border-right: none;
+            border-radius: 0;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .platform-tab:last-child {
+            border-right: 1px solid var(--grid-border);
+        }
+
+        .platform-tab:hover {
+            background: var(--sidebar-hover);
+            opacity: 0.9;
+            border-color: var(--grid-border);
+        }
+
+        .platform-tab.active {
+            background: var(--sidebar-active);
+            color: var(--text-color);
+            opacity: 1;
+            border-color: var(--grid-border);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .platform-tab-content {
+            display: none;
+        }
+
+        .platform-tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .platform-content-section {
+            margin-top: 30px;
+            margin-bottom: 40px;
+        }
+
+        .platform-tab-additional-content {
+            margin-top: 20px;
+        }
+
+        .platform-content-placeholder {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        /* Wireframe Section - now inside platform tabs */
+        .wireframe-section {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+        }
         @media (max-width: 768px) {
             .grid-container {
                 grid-template-columns: 1fr;
@@ -1180,6 +1573,19 @@
 
             .wireframe-toolbar-right {
                 display: none;
+            }
+
+            .platform-tabs-header {
+                flex-direction: column;
+            }
+
+            .platform-tab {
+                border-right: 1px solid var(--grid-border);
+                border-bottom: none;
+            }
+
+            .platform-tab:last-child {
+                border-bottom: 1px solid var(--grid-border);
             }
         }
 
@@ -1343,6 +1749,41 @@
             let currentSidebar = null;
             let apiModeActive = false;
 
+            // Helper function to update Jupyter cell API snippet
+            function updateJupyterApiSnippet(data, tabIndex) {
+                if (!apiModeActive) return;
+
+                const jupyterApiSnippet = document.getElementById('jupyter-api-snippet');
+                const jupyterApiContent = document.getElementById('jupyter-api-snippet-content');
+
+                if (!jupyterApiSnippet || !jupyterApiContent) return;
+
+                let apiText = '';
+
+                if (data.apiSnippets && tabIndex !== undefined) {
+                    // Multi-tab sidebar
+                    const apiHtml = data.apiSnippets[tabIndex];
+                    if (apiHtml) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = apiHtml;
+                        const preElement = tempDiv.querySelector('pre.api-snippet');
+                        if (preElement) {
+                            apiText = preElement.textContent;
+                        }
+                    }
+                } else if (data.apiSnippet) {
+                    // Single content sidebar
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.apiSnippet;
+                    const preElement = tempDiv.querySelector('pre.api-snippet');
+                    if (preElement) {
+                        apiText = preElement.textContent;
+                    }
+                }
+
+                jupyterApiContent.textContent = apiText || '# No API snippet available for this section';
+            }
+
             function activateSidebar(sidebarType, tabIndex) {
                 const icon = document.querySelector('.wireframe-toolbar-icon[data-sidebar="' + sidebarType + '"]');
 
@@ -1375,6 +1816,9 @@
                         const apiSnippet = data.apiSnippets && data.apiSnippets[activeIndex] ? data.apiSnippets[activeIndex] : '';
                         wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + data.content[activeIndex] + apiSnippet + '</div>';
 
+                        // Update Jupyter cell API snippet
+                        updateJupyterApiSnippet(data, activeIndex);
+
                         // Add click handlers to tabs
                         const tabs = wireframeSidebar.querySelectorAll('.wireframe-sidebar-tab');
                         tabs.forEach(function(tab) {
@@ -1392,12 +1836,18 @@
                                     const apiSnippet = data.apiSnippets && data.apiSnippets[tabIndex] ? data.apiSnippets[tabIndex] : '';
                                     contentDiv.innerHTML = data.content[tabIndex] + apiSnippet;
                                 }
+
+                                // Update Jupyter cell API snippet
+                                updateJupyterApiSnippet(data, tabIndex);
                             });
                         });
                     } else {
                         // No tabs, just show content with API snippet if available
                         const apiSnippet = data.apiSnippet || '';
                         wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content">' + data.content + apiSnippet + '</div>';
+
+                        // Update Jupyter cell API snippet
+                        updateJupyterApiSnippet(data);
                     }
 
                     // Add scroll behavior for links
@@ -1442,16 +1892,56 @@
             wireframeIcons.forEach(function(icon) {
                 icon.addEventListener('click', function() {
                     stopAutoCycle();
+                    stopPlatformCycle();
 
                     // Handle API button separately
                     if (icon.classList.contains('api-button')) {
                         apiModeActive = !apiModeActive;
+                        const jupyterApiSnippet = document.getElementById('jupyter-api-snippet');
+                        const jupyterApiContent = document.getElementById('jupyter-api-snippet-content');
+                        const dataMenuApiSnippets = document.querySelectorAll('.data-menu-api-snippet');
+
                         if (apiModeActive) {
                             icon.classList.add('active');
                             document.body.classList.add('api-mode-active');
+
+                            // Show API snippet in Jupyter cell and update content based on current sidebar
+                            if (jupyterApiSnippet && jupyterApiContent) {
+                                jupyterApiSnippet.classList.add('visible');
+
+                                // Get current sidebar API snippet if available
+                                if (currentSidebar && sidebarContent_map[currentSidebar]) {
+                                    const data = sidebarContent_map[currentSidebar];
+                                    let apiText = '';
+
+                                    if (data.apiSnippet) {
+                                        // Extract text from HTML
+                                        const tempDiv = document.createElement('div');
+                                        tempDiv.innerHTML = data.apiSnippet;
+                                        const preElement = tempDiv.querySelector('pre.api-snippet');
+                                        if (preElement) {
+                                            apiText = preElement.textContent;
+                                        }
+                                    }
+
+                                    jupyterApiContent.textContent = apiText || '# Select a sidebar to see API snippets';
+                                } else {
+                                    jupyterApiContent.textContent = '# Select a sidebar to see API snippets';
+                                }
+                            }
                         } else {
                             icon.classList.remove('active');
                             document.body.classList.remove('api-mode-active');
+
+                            // Hide API snippet in Jupyter cell
+                            if (jupyterApiSnippet) {
+                                jupyterApiSnippet.classList.remove('visible');
+                            }
+                        }
+
+                        // Re-activate current sidebar to update API snippets
+                        if (currentSidebar) {
+                            activateSidebar(currentSidebar);
                         }
                         return;
                     }
@@ -1543,6 +2033,7 @@
                 // Only stop if clicking on interactive elements
                 if (e.target.closest('.wireframe-toolbar-icon, .wireframe-sidebar-tab, .wireframe-sidebar-link, .grid-item-link, .filter-tab, .toggle-more, .description-toggle, .extensions-button')) {
                     stopAutoCycle();
+                    stopPlatformCycle();
                 }
             });
 
@@ -1616,6 +2107,139 @@
                     item.appendChild(toggleBtn);
                 }
             });
+
+            // Data menu popup handler
+            const dataMenuTriggers = document.querySelectorAll('.data-menu-trigger');
+            const dataMenuPopup = document.getElementById('data-menu-popup');
+            const dataMenuClose = document.getElementById('data-menu-close');
+
+            if (dataMenuTriggers.length > 0 && dataMenuPopup && dataMenuClose) {
+                dataMenuTriggers.forEach(function(trigger) {
+                    trigger.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        dataMenuPopup.classList.toggle('visible');
+                    });
+                });
+
+                dataMenuClose.addEventListener('click', function() {
+                    dataMenuPopup.classList.remove('visible');
+                });
+
+                // Close popup when clicking outside
+                document.addEventListener('click', function(e) {
+                    const isClickInsidePopup = dataMenuPopup.contains(e.target);
+                    const isClickOnTrigger = Array.from(dataMenuTriggers).some(trigger => trigger.contains(e.target));
+
+                    if (!isClickInsidePopup && !isClickOnTrigger) {
+                        dataMenuPopup.classList.remove('visible');
+                    }
+                });
+            }
+
+            // Platform tabs handler with auto-cycling
+            const platformTabs = document.querySelectorAll('.platform-tab');
+            const platformTabContents = document.querySelectorAll('.platform-tab-content');
+            let platformCycling = true;
+            let currentPlatformIndex = 2; // Start with Jupyter (index 2)
+            let platformCycleTimeout = null;
+
+            function stopPlatformCycle() {
+                platformCycling = false;
+                if (platformCycleTimeout) {
+                    clearTimeout(platformCycleTimeout);
+                    platformCycleTimeout = null;
+                }
+            }
+
+            function activatePlatformTab(index) {
+                // Get platform type
+                const platformType = platformTabs[index].getAttribute('data-platform');
+
+                // Update tabs
+                platformTabs.forEach(function(tab, i) {
+                    if (i === index) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+
+                // Update content
+                platformTabContents.forEach(function(content, i) {
+                    if (i === index) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+
+                // Show/hide API button based on platform
+                const apiButton = document.querySelector('.api-button');
+                if (apiButton) {
+                    if (platformType === 'jupyter' || platformType === 'platform') {
+                        apiButton.style.display = 'block';
+                    } else {
+                        apiButton.style.display = 'none';
+                    }
+                }
+
+                // Update installation button based on platform
+                const installButton = document.getElementById('install-button');
+                if (installButton) {
+                    if (platformType === 'desktop') {
+                        installButton.textContent = 'Install Standalone Desktop UI';
+                        installButton.href = 'setup/desktop.html';
+                        installButton.target = '_self';
+                    } else if (platformType === 'mast') {
+                        installButton.textContent = 'Launch Jdaviz@MAST';
+                        installButton.href = 'https://mast.stsci.edu/viz/ui/#/';
+                        installButton.target = '_blank';
+                    } else if (platformType === 'jupyter') {
+                        installButton.textContent = 'Install Jdaviz';
+                        installButton.href = 'setup/local.html';
+                        installButton.target = '_self';
+                    } else if (platformType === 'platform') {
+                        installButton.textContent = 'Run Jdaviz on a Platform';
+                        installButton.href = 'setup/platform.html';
+                        installButton.target = '_self';
+                    }
+                }
+            }
+
+            function autoCyclePlatformTabs() {
+                if (!platformCycling) return;
+
+                currentPlatformIndex = (currentPlatformIndex + 1) % platformTabs.length;
+                activatePlatformTab(currentPlatformIndex);
+
+                platformCycleTimeout = setTimeout(autoCyclePlatformTabs, 5000);
+            }
+
+            // Add click handlers to platform tabs
+            platformTabs.forEach(function(tab, index) {
+                tab.addEventListener('click', function() {
+                    stopPlatformCycle();
+                    currentPlatformIndex = index;
+                    activatePlatformTab(index);
+                });
+            });
+
+            // Stop cycling when clicking on platform tab content
+            platformTabContents.forEach(function(content) {
+                content.addEventListener('click', function() {
+                    stopPlatformCycle();
+                });
+            });
+
+            // Initialize API button visibility for starting tab (jupyter)
+            activatePlatformTab(currentPlatformIndex);
+
+            // Start platform tabs auto-cycling after a brief delay
+            setTimeout(function() {
+                if (platformCycling) {
+                    autoCyclePlatformTabs();
+                }
+            }, 5000);
         });
     </script>
 </head>
@@ -1636,7 +2260,7 @@
                     <code>jdaviz</code> is a package of astronomical data analysis visualization
                     tools based on the Jupyter platform. These GUI-based
                     tools link data visualization and interactive analysis. They are designed
-                    to work within a Jupyter notebook cell, as a standalone desktop application,
+                    to work within a Jupyter lab (notebook) cell, as a standalone desktop application,
                     or as embedded windows within a website -- all with nearly identical
                     user interfaces.
                 </p>
@@ -1690,6 +2314,16 @@
             <a href="{{ pathto('configs_index') }}" class="announcement-button">View Deprecated Configuration-Specific Documentation</a>
         </div>
 
+        <!-- Platform Tabs Section -->
+        <div class="platform-tabs-section">
+            <div class="platform-tabs-header">
+                <button class="platform-tab" data-platform="desktop">Desktop UI</button>
+                <button class="platform-tab" data-platform="mast">Jdaviz@MAST</button>
+                <button class="platform-tab active" data-platform="jupyter">Local Jupyter Notebook/Lab</button>
+                <button class="platform-tab" data-platform="platform">Platform (TIKE, Roman Nexus)</button>
+            </div>
+        </div>
+
         <!-- Wireframe Section -->
         <div class="wireframe-section">
             <div class="wireframe-container">
@@ -1710,7 +2344,7 @@
                         </div>
                         <div class="wireframe-toolbar-version-row">
                             <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
-                            <div class="api-button" data-icon="api" title="Toggle API Snippets"></div>
+                            <div class="api-button" data-icon="api" title="Toggle API Snippets" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -1721,15 +2355,98 @@
                         </div>
                     </div>
                     <div class="wireframe-viewer">
-                        Viewer Area
+                        <!-- Viewer Toolbar -->
+                        <div class="viewer-toolbar">
+                            <div class="viewer-toolbar-spacer"></div>
+                            <div class="viewer-toolbar-icon" data-icon="bqplot:home" title="Home"></div>
+                            <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzAxMDEwMTt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo=" title="Pan/Zoom"></div>
+                            <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMTAxMDE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+" title="Rectangular ROI"></div>
+                            <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMyMzFmMjA7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg==" title="Circular ROI"></div>
+                        </div>
+
+                        <!-- Viewer Content Area -->
+                        <div class="viewer-content">
+                            Viewer Area
+
+                            <!-- Data Menu Legend -->
+                            <div class="data-menu-legend">
+                                <div class="legend-item data-menu-trigger">
+                                    <svg class="legend-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M3,5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5M11,7A2,2 0 0,0 9,9V17H11V13H13V17H15V9A2,2 0 0,0 13,7H11M11,9H13V11H11V9Z" /></svg>
+                                    <div class="legend-text">1D Spectrum</div>
+                                </div>
+                                <div class="legend-item data-menu-trigger">
+                                    <svg class="legend-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M15,10.5V9A2,2 0 0,0 13,7H9V17H13A2,2 0 0,0 15,15V13.5C15,12.7 14.3,12 13.5,12C14.3,12 15,11.3 15,10.5M13,15H11V13H13V15M13,11H11V9H13V11Z" /></svg>
+                                    <div class="legend-text">Subset 1</div>
+                                </div>
+                            </div>
+
+                            <!-- Data Menu Popup -->
+                            <div class="data-menu-popup" id="data-menu-popup">
+                                <div class="data-menu-header">
+                                    <div class="data-menu-title">Data Menu</div>
+                                    <button class="data-menu-close" id="data-menu-close">×</button>
+                                </div>
+                                <div class="data-menu-content">
+                                    <p class="data-menu-description">
+                                        Control data and subset layer order and visibility for each viewer.
+                                        Toggle layer visibility, reorder layers by dragging, and manage which data appears in the viewer.
+                                    </p>
+                                    <div class="data-menu-api-snippet">
+                                        <pre class="api-snippet">dm = jd.viewers[viewer].data_menu</pre>
+                                    </div>
+                                    <a href="#grid-data-menu" class="data-menu-button wireframe-sidebar-link">Learn more about Data Menu →</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab-specific Content -->
+        <div class="platform-content-section">
+            <!-- Desktop UI Content -->
+            <div class="platform-tab-content" data-platform-content="desktop">
+                <div class="platform-content-placeholder">
+                    Run Jdaviz as a native desktop application, without the need to run jupyter or use any python.  Note that with this installation, you will not have access to running API commands.
+                </div>
+            </div>
+
+            <!-- Jdaviz@MAST Content -->
+            <div class="platform-tab-content" data-platform-content="mast">
+                <div class="platform-content-placeholder">
+                    Preview data directly from the MAST archive in Jdaviz, without having to install Jdaviz or download any data.  If you want to move the analysis to your local machine or benefit from API access, install Jdaviz and download a notebook from MAST to get started with the same data on your own machine.
+                </div>
+            </div>
+
+            <!-- Local Jupyter Notebook/Lab Content -->
+            <div class="platform-tab-content active" data-platform-content="jupyter">
+                <div class="jupyter-cell-container">
+                    <div class="jupyter-cell-header">
+                        <span class="jupyter-cell-prompt">In [1]:</span>
+                    </div>
+                    <div class="jupyter-cell-code">import jdaviz as jd
+jd.show()</div>
+                    <div class="jupyter-api-snippet" id="jupyter-api-snippet">
+                        <div class="jupyter-api-snippet-header">
+                            <span class="jupyter-api-snippet-prompt">In [2]:</span>
+                        </div>
+                        <div class="jupyter-api-snippet-code" id="jupyter-api-snippet-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform (TIKE, Roman Nexus) Content -->
+            <div class="platform-tab-content" data-platform-content="platform">
+                <div class="platform-content-placeholder">
+                    Platform integration content coming soon
                 </div>
             </div>
         </div>
 
         <!-- Installation Button Section -->
         <div class="install-section">
-            <a href="installation.html" class="full-width-button">Installation</a>
+            <a href="setup/local.html" class="full-width-button" id="install-button" target="_self">Install Jdaviz</a>
         </div>
 
         <!-- Grid Section -->
