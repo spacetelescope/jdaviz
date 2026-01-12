@@ -7,6 +7,73 @@
     <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
     <style>
+        /* Fix Sphinx theme conflicts */
+        .bd-main .bd-content .bd-article-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+
+        /* Hide secondary sidebar on landing page */
+        .pst-secondary-sidebar {
+            display: none !important;
+        }
+
+        /* Remove gap above header */
+        .bd-header {
+            margin-top: 0 !important;
+        }
+
+        .bd-content {
+            padding-top: 0 !important;
+        }
+
+        article.bd-article {
+            padding-top: 0 !important;
+        }
+
+        /* Theme variables - Dark mode (default) */
+        :root,
+        html[data-theme="dark"] {
+            --bg-gradient-start: #000000;
+            --bg-gradient-end: #00617E;
+            --text-color: #ffffff;
+            --grid-bg: rgba(255, 255, 255, 0.1);
+            --grid-border: rgba(255, 255, 255, 0.3);
+            --description-bg: rgba(255, 255, 255, 0.1);
+            --description-border: rgba(255, 255, 255, 0.3);
+            --wireframe-bg: #003B4D;
+            --wireframe-border: rgba(255, 255, 255, 0.3);
+            --sidebar-bg: rgba(0, 97, 126, 0.4);
+            --sidebar-hover: rgba(0, 125, 164, 0.6);
+            --sidebar-active: #007DA4;
+            --tab-content-bg: rgba(0, 97, 126, 0.3);
+            --button-primary: #007DA4;
+            --button-hover: #C75109;
+            --link-color: #00B4E6;
+            --link-hover: #C75109;
+        }
+
+        /* Light mode */
+        html[data-theme="light"] {
+            --bg-gradient-start: #f0f8ff;
+            --bg-gradient-end: #b3ddef;
+            --text-color: #1a1a1a;
+            --grid-bg: rgba(255, 255, 255, 0.8);
+            --grid-border: rgba(0, 97, 126, 0.3);
+            --description-bg: rgba(255, 255, 255, 0.8);
+            --description-border: rgba(0, 97, 126, 0.3);
+            --wireframe-bg: #ffffff;
+            --wireframe-border: rgba(0, 59, 77, 0.2);
+            --sidebar-bg: rgba(0, 125, 164, 0.15);
+            --sidebar-hover: rgba(0, 125, 164, 0.25);
+            --sidebar-active: #007DA4;
+            --tab-content-bg: rgba(0, 125, 164, 0.1);
+            --button-primary: #007DA4;
+            --button-hover: #C75109;
+            --link-color: #005a7a;
+            --link-hover: #C75109;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,11 +81,12 @@
         }
 
         body {
-            background: linear-gradient(135deg, #000000 0%, #00617E 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             font-family: 'Overpass', sans-serif;
-            color: white;
+            color: var(--text-color);
             min-height: 100vh;
             padding: 40px 20px;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .container {
