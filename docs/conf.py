@@ -202,6 +202,7 @@ html_context = {
     "github_version": "main",
     "doc_path": "docs",
     "jdaviz_version": version if dev else release,  # Use short version for dev builds
+    "descriptions": descriptions,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -326,12 +327,39 @@ def scan_directory_for_links(base_path, directory):
     return links
 
 
+# Unified descriptions for grid items and wireframe sidebars
+descriptions = {
+    'loaders': 'import data of multiple formats and from multiple sources into jdaviz',
+    'plugins': 'do basic data reduction and analysis tasks for specific science use-cases',
+    'viewers': ('show data in a variety of different viewers, '
+                'custom built for exploring astronomical data'),
+    'subsets': ('select regions of interest in your data, see that synced across all '
+                'viewers, and use as inputs to data analysis tasks'),
+    'export': 'export generated data, selected subsets, and viewers',
+    'settings': 'choose how to visualize your data',
+    'settings_plot': ('Customize viewer appearance including axes labels, limits, stretching, '
+                      'color maps, markers, and display options.'),
+    'settings_units': ('Convert and display data in different unit systems. Choose spectral '
+                       'units (wavelength, frequency, energy) and flux units appropriate for '
+                       'your analysis.'),
+    'info': 'interactive access to information about your data and generated results',
+    'info_metadata': ('View FITS header information, WCS coordinates, and other metadata for '
+                      'loaded datasets.'),
+    'info_markers': ('interactively create markers in any viewer and information about the '
+                     'underlying data will be exposed and available to export into the notebook'),
+    'info_logger': ('System messages, warnings, and operation history. Monitor plugin execution, '
+                    'data loading status, and any issues that arise during analysis.'),
+    'userapi': 'script advanced and reproducible workflows in the notebook mimicing UI-operations',
+}
+
+
 # Build grid items structure
 docs_dir = os.path.dirname(__file__)
 
 grid_items_data = [
     {
         'title': 'Import Data from Multiple Sources',
+        'description': descriptions['loaders'],
         'icon': 'mdi-plus-box',
         'grid_id': 'grid-loaders',
         'two_column': True,
@@ -344,6 +372,7 @@ grid_items_data = [
     },
     {
         'title': 'Data Analysis Plugins',
+        'description': descriptions['plugins'],
         'icon': 'mdi-tune-variant',
         'grid_id': 'grid-plugins',
         'filters': [
@@ -360,6 +389,7 @@ grid_items_data = [
     },
     {
         'title': 'Show Data in Viewers',
+        'description': descriptions['viewers'],
         'icon': 'mdi-plus-box',
         'grid_id': 'grid-viewers',
         'links': scan_directory_for_links(docs_dir, 'viewers'),
@@ -367,6 +397,7 @@ grid_items_data = [
     },
     {
         'title': 'Select Subsets of Data',
+        'description': descriptions['subsets'],
         'icon': 'mdi-selection',
         'grid_id': 'grid-subsets',
         'links': scan_directory_for_links(docs_dir, 'subsets'),
@@ -374,24 +405,28 @@ grid_items_data = [
     },
     {
         'title': 'Export to File',
+        'description': descriptions['export'],
         'icon': 'mdi-content-save',
         'grid_id': 'grid-export',
         'links': scan_directory_for_links(docs_dir, 'export')
     },
     {
         'title': 'Flexible Settings & Options',
+        'description': descriptions['settings'],
         'icon': 'mdi-cog',
         'grid_id': 'grid-settings',
         'links': scan_directory_for_links(docs_dir, 'settings')
     },
     {
         'title': 'Access to Data Info',
+        'description': descriptions['info'],
         'icon': 'mdi-information-outline',
         'grid_id': 'grid-info',
         'links': scan_directory_for_links(docs_dir, 'info')
     },
     {
         'title': 'API Access in Notebook',
+        'description': descriptions['userapi'],
         'icon': 'api',
         'grid_id': 'grid-userapi',
         'links': scan_directory_for_links(docs_dir, 'userapi')
@@ -440,6 +475,7 @@ class JdavizLandingPageDirective(SphinxDirective):
         context = {
             'grid_items': html_context.get('grid_items', []),
             'jdaviz_version': html_context.get('jdaviz_version', ''),
+            'descriptions': html_context.get('descriptions', {}),
             'pathto': pathto
         }
         html_content = template.render(context)

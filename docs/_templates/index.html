@@ -445,6 +445,15 @@
             grid-column: span 1;
         }
 
+        .grid-item-description {
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin: 0 0 12px 0;
+            line-height: 1.4;
+            grid-column: span 1;
+        }
+
         .grid-item-link {
             display: inline-block;
             background: var(--sidebar-bg);
@@ -1207,8 +1216,8 @@
                 'loaders': {
                     tabs: ['Data', 'Viewer'],
                     content: [
-                        'Load astronomical data from files, URLs, or databases. Supports FITS, ASDF, ECSV, and other formats. Browse your filesystem or paste a URL to import data.<br><a href="#grid-loaders" class="wireframe-sidebar-link">Learn more about data import →</a>',
-                        'Create new viewers to visualize your data. Choose from image viewers, spectrum viewers, or specialized viewers for different data types.<br><a href="#grid-viewers" class="wireframe-sidebar-link">Explore viewer options →</a>'
+                        '{{ descriptions.loaders|capitalize }}.<br><a href="#grid-loaders" class="wireframe-sidebar-link">Learn more about data import →</a>',
+                        '{{ descriptions.viewers|capitalize }}.<br><a href="#grid-viewers" class="wireframe-sidebar-link">Explore viewer options →</a>'
                     ],
                     apiSnippets: [
                         '<div class="api-snippet-container"><div class="api-snippet-title">Load Data via API</div><pre class="api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load_file(\'path/to/file.fits\')</pre><div class="api-snippet-desc">Access data loaders to import files programmatically</div></div>',
@@ -1218,15 +1227,15 @@
                 },
                 'save': {
                     tabs: null,
-                    content: 'Export plots, data, subsets, and analysis results. Save viewers as images (PNG, SVG), export data tables, or save regions and subsets for later use.<br><a href="#grid-export" class="wireframe-sidebar-link">See export options →</a>',
+                    content: '{{ descriptions.export|capitalize }}.<br><a href="#grid-export" class="wireframe-sidebar-link">See export options →</a>',
                     apiSnippet: '<div class="api-snippet-container"><div class="api-snippet-title">Export Data via API</div><pre class="api-snippet">data = jd.app.get_data_from_viewer(\'<i>viewer_name</i>\')\ndata.write(\'output.fits\')</pre><div class="api-snippet-desc">Export data and results from viewers</div></div>',
                     scrollId: 'grid-export'
                 },
                 'settings': {
                     tabs: ['Plot Options', 'Units'],
                     content: [
-                        'Customize viewer appearance including axes labels, limits, stretching, color maps, markers, and display options. Settings apply to the active viewer.<br><a href="#grid-settings" class="wireframe-sidebar-link">View plot customization →</a>',
-                        'Convert and display data in different unit systems. Choose spectral units (wavelength, frequency, energy) and flux units appropriate for your analysis.<br><a href="#grid-settings" class="wireframe-sidebar-link">Learn about units →</a>'
+                        '{{ descriptions.settings_plot }}<br><a href="#grid-settings" class="wireframe-sidebar-link">View plot customization →</a>',
+                        '{{ descriptions.settings_units }}<br><a href="#grid-settings" class="wireframe-sidebar-link">Learn about units →</a>'
                     ],
                     apiSnippets: [
                         '<div class="api-snippet-container"><div class="api-snippet-title">Configure Plot Options</div><pre class="api-snippet">viewer = jd.app.get_viewer(\'<i>viewer_name</i>\')\nviewer.state.x_min = <i>value</i>\nviewer.state.x_max = <i>value</i></pre><div class="api-snippet-desc">Adjust plot options and viewer settings</div></div>',
@@ -1237,9 +1246,9 @@
                 'info': {
                     tabs: ['Metadata', 'Markers', 'Logger'],
                     content: [
-                        'View FITS header information, WCS coordinates, and other metadata for loaded datasets. Access detailed information about data provenance and observational parameters.<br><a href="#grid-info" class="wireframe-sidebar-link">Explore metadata tools →</a>',
-                        'Interactive table showing coordinates and metadata for marked points in viewers. Export marker tables or use them to track features of interest in your data.<br><a href="#grid-info" class="wireframe-sidebar-link">Learn about markers →</a>',
-                        'System messages, warnings, and operation history. Monitor plugin execution, data loading status, and any issues that arise during analysis.<br><a href="#grid-info" class="wireframe-sidebar-link">View logging options →</a>'
+                        '{{ descriptions.info_metadata }}<br><a href="#grid-info" class="wireframe-sidebar-link">Explore metadata tools →</a>',
+                        '{{ descriptions.info_markers|capitalize }}.<br><a href="#grid-info" class="wireframe-sidebar-link">Learn about markers →</a>',
+                        '{{ descriptions.info_logger }}<br><a href="#grid-info" class="wireframe-sidebar-link">View logging options →</a>'
                     ],
                     apiSnippets: [
                         '<div class="api-snippet-container"><div class="api-snippet-title">Access Metadata</div><pre class="api-snippet">data = jd.app.data_collection[<i>index</i>]\nmeta = data.meta\nheader = meta[\'header\']</pre><div class="api-snippet-desc">Access metadata, headers, and data properties</div></div>',
@@ -1250,13 +1259,13 @@
                 },
                 'plugins': {
                     tabs: null,
-                    content: 'Data analysis tools including spectral line analysis, model fitting, aperture photometry, moment maps, and more. Search for plugins or browse by category.<br><a href="#grid-plugins" class="wireframe-sidebar-link">Browse analysis plugins →</a>',
+                    content: '{{ descriptions.plugins|capitalize }}.<br><a href="#grid-plugins" class="wireframe-sidebar-link">Browse analysis plugins →</a>',
                     apiSnippet: '<div class="api-snippet-container"><div class="api-snippet-title">Access Plugins via API</div><pre class="api-snippet">plg = jd.plugins[\'<i>plugin_name</i>\']\nresult = plg.run()</pre><div class="api-snippet-desc">Access and control analysis plugins via API</div></div>',
                     scrollId: 'grid-plugins'
                 },
                 'subsets': {
                     tabs: null,
-                    content: 'Create spatial and spectral regions for focused analysis. Draw selections in viewers, combine them with boolean operations, and apply subsets across multiple datasets.<br><a href="#grid-subsets" class="wireframe-sidebar-link">Learn about subsets →</a>',
+                    content: '{{ descriptions.subsets|capitalize }}.<br><a href="#grid-subsets" class="wireframe-sidebar-link">Learn about subsets →</a>',
                     apiSnippet: '<div class="api-snippet-container"><div class="api-snippet-title">Work with Subsets</div><pre class="api-snippet">subset = jd.app.data_collection[<i>index</i>].get_subset_object()\nregion = subset.to_region()</pre><div class="api-snippet-desc">Create and manipulate subsets programmatically</div></div>',
                     scrollId: 'grid-subsets'
                 },
@@ -1647,6 +1656,7 @@
                  {% if item.grid_id %}data-grid-id="{{ item.grid_id }}"{% endif %}>
                 <div class="grid-item-content">
                     <h3>{{ item.title }}</h3>
+                    {% if item.description %}<p class="grid-item-description">{{ item.description }}</p>{% endif %}
 
                     {% if item.filters %}
                     <!-- Filter tabs for plugins -->
