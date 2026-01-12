@@ -120,13 +120,13 @@
         /* Installation Button */
         .install-button {
             display: inline-block;
-            background: #007DA4;
-            color: white;
+            background: var(--button-primary);
+            color: var(--text-color);
             text-decoration: none;
             font-size: 24px;
             font-weight: 700;
             padding: 18px 50px;
-            border: 3px solid white;
+            border: 3px solid var(--grid-border);
             border-radius: 8px;
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -135,7 +135,7 @@
         }
 
         .install-button:hover {
-            background: #C75109;
+            background: var(--button-hover);
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
         }
@@ -149,8 +149,8 @@
         }
 
         .grid-item {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: var(--grid-bg);
+            border: 2px solid var(--grid-border);
             border-radius: 12px;
             padding: 30px;
             position: relative;
@@ -182,9 +182,10 @@
 
         .filter-tab {
             padding: 6px 14px;
-            background: rgba(0, 125, 164, 0.2);
-            color: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: var(--sidebar-bg);
+            color: var(--text-color);
+            opacity: 0.6;
+            border: 1px solid var(--grid-border);
             border-right: none;
             border-radius: 0;
             font-size: 12px;
@@ -195,23 +196,24 @@
         }
 
         .filter-tab:last-child {
-            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            border-right: 1px solid var(--grid-border);
         }
 
         .filter-tab.active:last-child {
-            border-right: 1px solid rgba(255, 255, 255, 0.6);
+            border-right: 1px solid var(--grid-border);
         }
 
         .filter-tab:hover {
-            background: rgba(0, 125, 164, 0.4);
-            color: rgba(255, 255, 255, 0.8);
-            border-color: rgba(255, 255, 255, 0.25);
+            background: var(--sidebar-hover);
+            opacity: 0.9;
+            border-color: var(--grid-border);
         }
 
         .filter-tab.active {
-            background: rgba(0, 125, 164, 0.9);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.6);
+            background: var(--sidebar-active);
+            color: var(--text-color);
+            opacity: 1;
+            border-color: var(--grid-border);
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
@@ -224,10 +226,10 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 125, 164, 0.8);
-            color: white;
+            background: var(--sidebar-active);
+            color: var(--text-color);
             border: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-top: 1px solid var(--grid-border);
             border-radius: 0 0 10px 10px;
             padding: 12px;
             font-size: 13px;
@@ -239,13 +241,13 @@
         }
 
         .toggle-more:hover {
-            background: rgba(199, 81, 9, 0.9);
+            background: var(--button-hover);
         }
 
         .grid-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.5);
+            border-color: var(--grid-border);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            filter: brightness(1.1);
         }
 
         .grid-item:hover::before {
@@ -325,7 +327,7 @@
         .grid-item-links.two-column .column-header {
             font-weight: 700;
             font-size: 15px;
-            color: rgba(255, 255, 255, 0.95);
+            color: var(--text-color);
             margin-top: 4px;
             margin-bottom: 8px;
             grid-column: span 1;
@@ -333,48 +335,48 @@
 
         .grid-item-link {
             display: inline-block;
-            background: rgba(0, 125, 164, 0.3);
-            color: rgba(255, 255, 255, 0.7);
+            background: var(--sidebar-bg);
+            color: var(--text-color);
             text-decoration: none;
             padding: 8px 16px;
             border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--grid-border);
         }
 
         .grid-item:hover .grid-item-link {
-            background: rgba(0, 125, 164, 0.6);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.3);
+            background: var(--sidebar-hover);
+            border-color: var(--grid-border);
         }
 
         .grid-item-link:hover {
-            background: rgba(199, 81, 9, 0.8);
-            border-color: rgba(255, 255, 255, 0.6);
+            background: var(--button-hover);
+            color: var(--text-color);
+            border-color: var(--grid-border);
             transform: scale(1.05);
         }
 
         .extensions-button {
             display: block;
-            background: rgba(199, 81, 9, 0.7);
-            color: white;
+            background: var(--button-hover);
+            color: var(--text-color);
             text-decoration: none;
             padding: 10px 16px;
             border-radius: 6px;
             font-size: 14px;
             font-weight: 700;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--grid-border);
             text-align: center;
             margin-top: 16px;
             grid-column: span 2;
         }
 
         .extensions-button:hover {
-            background: rgba(199, 81, 9, 0.95);
-            border-color: rgba(255, 255, 255, 0.7);
+            filter: brightness(1.2);
+            border-color: var(--grid-border);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
@@ -385,21 +387,21 @@
             max-width: 1000px;
             margin: 40px auto;
             padding: 30px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--description-bg);
             border-radius: 12px;
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid var(--description-border);
         }
 
         .description-section p {
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 16px;
-            color: rgba(255, 255, 255, 0.95);
+            color: var(--text-color);
         }
 
         .description-section code {
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--sidebar-bg);
             padding: 2px 6px;
             border-radius: 3px;
             font-family: monospace;
@@ -407,12 +409,12 @@
         }
 
         .description-section a {
-            color: #53CBFF;
+            color: var(--link-color);
             text-decoration: underline;
         }
 
         .description-section a:hover {
-            color: #ACE1FF;
+            color: var(--link-hover);
         }
 
         .description-more {
@@ -444,9 +446,9 @@
         .description-toggle {
             display: block;
             width: 100%;
-            background: rgba(0, 125, 164, 0.6);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: var(--sidebar-active);
+            color: var(--text-color);
+            border: 1px solid var(--description-border);
             border-radius: 6px;
             padding: 10px;
             font-size: 14px;
@@ -457,7 +459,7 @@
         }
 
         .description-toggle:hover {
-            background: rgba(0, 125, 164, 0.8);
+            background: var(--sidebar-hover);
         }
 
         /* Wireframe Section */
@@ -473,12 +475,12 @@
             font-size: 28px;
             font-weight: 700;
             margin-bottom: 30px;
-            color: white;
+            color: var(--text-color);
         }
 
         .wireframe-container {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: var(--wireframe-bg);
+            border: 2px solid var(--wireframe-border);
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
@@ -490,30 +492,30 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid var(--wireframe-border);
         }
 
         .wireframe-toolbar-icon {
             width: 32px;
             height: 32px;
-            background-color: rgba(0, 125, 164, 0.5);
+            background-color: var(--sidebar-bg);
             background-size: 20px 20px;
             background-position: center;
             background-repeat: no-repeat;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid var(--wireframe-border);
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .wireframe-toolbar-icon:hover {
-            background-color: rgba(0, 125, 164, 0.8);
+            background-color: var(--sidebar-hover);
             transform: scale(1.1);
         }
 
         .wireframe-toolbar-icon.active {
-            background-color: rgba(199, 81, 9, 0.8);
-            border-color: rgba(255, 255, 255, 0.5);
+            background-color: var(--button-hover);
+            border-color: var(--grid-border);
         }
 
         .wireframe-toolbar-divider {
@@ -534,21 +536,22 @@
 
         .wireframe-sidebar {
             width: 0;
-            background: rgba(0, 59, 77, 0.6);
+            background: var(--sidebar-bg);
             overflow: hidden;
             transition: width 0.3s ease;
             display: flex;
             flex-direction: column;
-            border-right: 2px solid rgba(255, 255, 255, 0.2);
+            border-right: 2px solid var(--wireframe-border);
         }
 
         .wireframe-viewer {
             flex: 1;
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--sidebar-bg);
+            opacity: 0.5;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--text-color);
             font-size: 18px;
             font-weight: 600;
         }
@@ -559,7 +562,7 @@
 
         .wireframe-sidebar-content {
             padding: 16px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-color);
             font-size: 14px;
             line-height: 1.6;
         }
@@ -568,18 +571,18 @@
             display: inline-block;
             margin-top: 16px;
             padding: 8px 16px;
-            background: rgba(0, 125, 164, 0.6);
-            color: white;
+            background: var(--sidebar-active);
+            color: var(--text-color);
             text-decoration: none;
             border-radius: 4px;
             font-size: 13px;
             font-weight: 600;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid var(--grid-border);
         }
 
         .wireframe-sidebar-link:hover {
-            background: rgba(0, 125, 164, 0.8);
+            background: var(--button-hover);
             transform: translateY(-2px);
         }
 
@@ -587,14 +590,15 @@
             display: flex;
             gap: 0;
             background: #00617E;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid var(--wireframe-border);
         }
 
         .wireframe-sidebar-tab {
             flex: 1;
             padding: 12px 16px;
             background: transparent;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-color);
+            opacity: 0.8;
             border: none;
             cursor: pointer;
             font-size: 14px;
@@ -604,19 +608,21 @@
         }
 
         .wireframe-sidebar-tab.active {
-            background: rgba(0, 125, 164, 0.3);
-            color: white;
+            background: var(--tab-content-bg);
+            color: var(--text-color);
+            opacity: 1;
             border-bottom-color: #C75109;
         }
 
         .wireframe-sidebar-tab:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--sidebar-hover);
         }
 
         .wireframe-label {
             text-align: center;
             padding: 8px;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-color);
+            opacity: 0.6;
             font-size: 12px;
             font-style: italic;
         }
