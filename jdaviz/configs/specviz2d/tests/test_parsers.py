@@ -5,6 +5,8 @@ from astropy.utils.data import download_file
 from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import XRangeROI
 from specutils import Spectrum
+from astropy.wcs import WCS
+import numpy as np
 
 from jdaviz.utils import PRIHDR_KEY, cached_uri
 from jdaviz.configs.imviz.tests.utils import create_example_gwcs
@@ -82,6 +84,46 @@ def test_hlsp_goods_s2d_deconfigged(deconfigged_helper):
     assert isinstance(deconfigged_helper.get_data('2D Spectrum'), Spectrum)
 
 
+def test_load_two_2d_spectra_deconfigged(deconfigged_helper):
+    header_wcs = {
+        'WCSAXES': 2,
+        'CRPIX1': 0.0, 'CRPIX2': 5.0,
+        'CDELT1': 1E-06, 'CDELT2': 1.0,
+        'CUNIT1': 'm', 'CUNIT2': 'pix',
+        'CTYPE1': 'WAVE', 'CTYPE2': 'PIXEL',
+        'CRVAL1': 1.0e-6, 'CRVAL2': 0.0,
+        'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'
+    }
+    np.random.seed(42)
+    data_wcs = np.random.random((10, 20)) * u.Jy
+    wcs = WCS(header_wcs)
+    spectrum2d_with_wcs = Spectrum(data_wcs, wcs=wcs, meta=header_wcs)
+
+    # Load first 2D spectrum with auto-extraction
+    deconfigged_helper.load(spectrum2d_with_wcs,
+                            format='2D Spectrum',
+                            data_label='2D Spectrum 1',
+                            auto_extract=True)
+
+    dc_2d_1 = deconfigged_helper.app.data_collection['2D Spectrum 1']
+    dc_1d_1 = deconfigged_helper.app.data_collection['2D Spectrum 1 (auto-ext)']
+
+    assert dc_2d_1.get_component('flux').shape == (10, 20)
+    assert dc_1d_1.get_component('flux').ndim == 1
+
+    # Load second 2D spectrum with auto-extraction
+    deconfigged_helper.load(spectrum2d_with_wcs,
+                            format='2D Spectrum',
+                            data_label='2D Spectrum 2',
+                            auto_extract=True)
+
+    dc_2d_2 = deconfigged_helper.app.data_collection['2D Spectrum 2']
+    dc_1d_2 = deconfigged_helper.app.data_collection['2D Spectrum 2 (auto-ext)']
+
+    assert dc_2d_2.get_component('flux').shape == (10, 20)
+    assert dc_1d_2.get_component('flux').ndim == 1
+
+
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(mos_spectrum2d, spectrum_2d_label='my_2d_spec')
     assert len(specviz2d_helper.app.data_collection) == 2
@@ -112,7 +154,6 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert label_mouseover.as_text() == ('Cursor 7.20000e-06, 3.00000e+00',
                                          'Wave 7.00000e-06 m (6 pix)',
                                          'Flux 6.92896e-02 Jy')
-
     assert label_mouseover.icon == 'b'
 
 

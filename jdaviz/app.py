@@ -797,6 +797,18 @@ class Application(VuetifyTemplate, HubListener):
                 if existing_data.label == new_data_label:
                     continue
 
+                # Skip linking WCS coordinate components between 2D spectra
+                # (these can interfere with coordinate transformations)
+                # But allow flux/uncertainty and pixel_spectral_axis linking for subset propagation
+                if new_data.ndim == existing_data.ndim == 2:
+                    has_spectral = any(
+                        (getattr(c, '_component_type', None) or '').startswith('spectral_axis')
+                        for c in new_data.components
+                    )
+                    if has_spectral and (new_comp._component_type in ('spectral_axis', 'angle') or
+                       (new_comp._component_type and ':angle' in new_comp._component_type)):
+                        continue
+
                 for existing_comp in existing_data.components:
                     if getattr(existing_comp, '_component_type', None) in (None, 'unknown'):
                         continue
@@ -827,7 +839,7 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
-        if self.config in CONFIGS_WITH_LOADERS and self.config not in ['specviz2d', 'deconfigged']:
+        if self.config in CONFIGS_WITH_LOADERS:
             # automatic linking based on component physical types handled by importers
             return
         elif not self.auto_link:
@@ -872,12 +884,6 @@ class Application(VuetifyTemplate, HubListener):
             links = [LinkSame(linked_data.components[0], ref_data.components[0]),
                      LinkSame(linked_data.components[1], ref_data.components[1])]
 
-            dc.add_link(links)
-            return
-        elif (ref_data.ndim == 2 and linked_data.ndim == 1):
-            # Needed for subset linking between 1D and 2D viewers
-            # Spectrum 1D: Pixel Axis 0 [x] <=> Spectrum 2D: Pixel Axis 1 [x]
-            links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1])]
             dc.add_link(links)
             return
 
