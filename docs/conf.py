@@ -201,6 +201,7 @@ html_context = {
     "github_repo": "jdaviz",
     "github_version": "main",
     "doc_path": "docs",
+    "jdaviz_version": release,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

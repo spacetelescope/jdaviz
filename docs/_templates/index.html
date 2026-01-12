@@ -471,26 +471,24 @@
         }
 
         .extensions-button {
-            display: block;
-            background: var(--button-hover);
+            display: inline-block;
+            background: var(--sidebar-bg);
             color: var(--text-color);
             text-decoration: none;
-            padding: 10px 16px;
+            padding: 8px 16px;
             border-radius: 6px;
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 600;
             transition: all 0.3s ease;
             border: 1px solid var(--grid-border);
-            text-align: center;
-            margin-top: 16px;
             grid-column: span 2;
         }
 
         .extensions-button:hover {
-            filter: brightness(1.2);
+            background: var(--button-hover);
+            color: var(--text-color);
             border-color: var(--grid-border);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
         }
 
         /* Description Section */
@@ -517,6 +515,7 @@
             flex-direction: column;
             justify-content: flex-end;
             margin-bottom: 0;
+            align-self: end;
         }
 
         .description-content p {
@@ -700,7 +699,7 @@
             align-items: stretch;
             gap: 0;
             border-bottom: 2px solid var(--wireframe-border);
-            height: 48px;
+            height: 72px;
         }
 
         .wireframe-toolbar-icon {
@@ -747,6 +746,81 @@
 
         .wireframe-toolbar-spacer {
             flex: 1;
+        }
+
+        .wireframe-toolbar-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px 8px;
+            gap: 4px;
+            min-width: 200px;
+        }
+
+        .wireframe-toolbar-search-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .wireframe-toolbar-search {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: #ffffff;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .wireframe-toolbar-search:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .wireframe-toolbar-search::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .wireframe-toolbar-version-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .wireframe-toolbar-version {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .wireframe-toolbar-right .api-button {
+            width: 32px;
+            height: 28px;
+            padding: 0;
+            border-radius: 3px;
+            background-color: transparent;
+            background-size: 20px 20px;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wireframe-toolbar-right .api-button:hover {
+            background-color: rgba(0, 125, 164, 0.3);
+        }
+
+        .wireframe-toolbar-right .api-button.active {
+            background-color: var(--button-hover);
         }
 
         .wireframe-main {
@@ -846,6 +920,71 @@
             opacity: 0.6;
             font-size: 12px;
             font-style: italic;
+        }
+
+        /* API Snippet Styles */
+        .api-snippet-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .api-snippet {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--grid-border);
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0 12px 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: #ffffff;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        html[data-theme="light"] .api-snippet {
+            background: rgba(0, 97, 126, 0.1);
+            color: #1a1a1a;
+        }
+
+        .api-snippet-desc {
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 16px;
+        }
+
+        .api-learn-more {
+            display: block;
+            background: var(--sidebar-active);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            border: 1px solid var(--grid-border);
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .api-learn-more:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Hide API snippets by default */
+        .api-snippet-container {
+            display: none;
+        }
+
+        /* Show API snippets when API mode is active */
+        body.api-mode-active .api-snippet-container {
+            display: block;
         }
 
         /* Light Theme Overrides - Keep text white on dark blue backgrounds */
@@ -1022,7 +1161,7 @@
             }
 
             // Handle wireframe toolbar interactions
-            const wireframeIcons = document.querySelectorAll('.wireframe-toolbar-icon');
+            const wireframeIcons = document.querySelectorAll('.wireframe-toolbar-icon, .api-button');
             const wireframeSidebar = document.getElementById('wireframe-sidebar');
 
             // SVG icon data (embedded directly as background-image) - matching grid item icons
@@ -1033,7 +1172,8 @@
                 'information': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z\" /></svg>')",
                 'wrench': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M8 13C6.14 13 4.59 14.28 4.14 16H2V18H4.14C4.59 19.72 6.14 21 8 21S11.41 19.72 11.86 18H22V16H11.86C11.41 14.28 9.86 13 8 13M8 19C6.9 19 6 18.1 6 17C6 15.9 6.9 15 8 15S10 15.9 10 17C10 18.1 9.1 19 8 19M19.86 6C19.41 4.28 17.86 3 16 3S12.59 4.28 12.14 6H2V8H12.14C12.59 9.72 14.14 11 16 11S19.41 9.72 19.86 8H22V6H19.86M16 9C14.9 9 14 8.1 14 7C14 5.9 14.9 5 16 5S18 5.9 18 7C18 8.1 17.1 9 16 9Z\" /></svg>')",
                 'selection': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M2 2H8V4H4V8H2V2M2 16H4V20H8V22H2V16M16 2H22V8H20V4H16V2M20 16H22V22H16V20H20V16Z\" /></svg>')",
-                'help-circle': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M15.07,11.25L14.17,12.17C13.45,12.89 13,13.5 13,15H11V14.5C11,13.39 11.45,12.39 12.17,11.67L13.41,10.41C13.78,10.05 14,9.55 14,9C14,7.89 13.1,7 12,7A2,2 0 0,0 10,9H8A4,4 0 0,1 12,5A4,4 0 0,1 16,9C16,9.88 15.64,10.67 15.07,11.25M13,19H11V17H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2Z\" /></svg>')"
+                'help-circle': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M15.07,11.25L14.17,12.17C13.45,12.89 13,13.5 13,15H11V14.5C11,13.39 11.45,12.39 12.17,11.67L13.41,10.41C13.78,10.05 14,9.55 14,9C14,7.89 13.1,7 12,7A2,2 0 0,0 10,9H8A4,4 0 0,1 12,5A4,4 0 0,1 16,9C16,9.88 15.64,10.67 15.07,11.25M13,19H11V17H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2Z\" /></svg>')",
+                'api': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 67 47\"><g><path fill=\"white\" d=\"M11.6,19.5c0-.3,0-.7,0-1.1,2.1-1.1,4.3-1.7,6.6-1.7s4.1.4,5.1,1.3c1,.9,1.5,2.4,1.5,4.5v7.1c.8.2,1.4.3,1.8.6v2.9c-1.1.5-2.7.8-4.8.8-.2-.6-.4-1.3-.6-2.1-1,1.4-2.7,2.1-5.2,2.1s-2.8-.4-3.8-1.3-1.6-2-1.6-3.5.5-2.7,1.5-3.5c1-.9,2.5-1.3,4.4-1.3h3.6v-1.6c0-1.7-.9-2.6-2.8-2.6s-1.3,0-1.7.2c0,.9-.2,1.6-.4,2.2h-3.3c-.4-.8-.6-1.8-.6-3ZM17.6,30.5c1.1,0,2-.3,2.7-1v-2.7h-2.3c-1.6,0-2.4.6-2.4,1.8s.2,1,.5,1.4c.3.4.8.5,1.5.5Z\"/><path fill=\"white\" d=\"M27.9,17c1.2-.3,2.3-.4,3.3-.4s1.8,0,2.4,0v1.6c1.5-1,3.1-1.6,4.7-1.6s3.8.6,4.8,1.9c1,1.3,1.5,3.4,1.5,6.3s-.2,3-.7,4.1c-.5,1.2-1.1,2.1-1.9,2.8-1.5,1.3-3.3,2-5.4,2s-1.8,0-2.6-.3v2.9c1.3.4,2.1.8,2.5,1.2l-.3,2.6h-8.3l-.3-2.6c.3-.4.9-.8,1.8-1.1v-15.9c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM36.3,30.5c1.1,0,2-.5,2.6-1.5.6-1,1-2.3,1-4.1s-.2-2.9-.5-3.6c-.4-.6-1-1-1.9-1-1.4,0-2.5.3-3.4,1v8.8c.7.2,1.4.3,2.3.3Z\"/><path fill=\"white\" d=\"M46.8,17c1.2-.3,2.4-.4,3.5-.4s2,0,2.7,0v13.2c.9.3,1.5.7,1.8,1.1l-.3,2.6h-7.6l-.3-2.6c.3-.4.9-.8,1.8-1.1v-9.2c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM50.6,14.7c-1.8,0-2.8-.8-2.8-2.5s.9-2.5,2.8-2.5,2.8.8,2.8,2.5-.9,2.5-2.8,2.5Z\"/></g></svg>')"
             };
 
             // Apply SVG backgrounds to icons
@@ -1051,11 +1191,16 @@
                         'Load astronomical data from files, URLs, or databases. Supports FITS, ASDF, ECSV, and other formats. Browse your filesystem or paste a URL to import data.<br><a href="#grid-loaders" class="wireframe-sidebar-link">Learn more about data import →</a>',
                         'Create new viewers to visualize your data. Choose from image viewers, spectrum viewers, or specialized viewers for different data types.<br><a href="#grid-viewers" class="wireframe-sidebar-link">Explore viewer options →</a>'
                     ],
+                    apiSnippets: [
+                        '<div class="api-snippet-container"><div class="api-snippet-title">Load Data via API</div><pre class="api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load_file(\'path/to/file.fits\')</pre><div class="api-snippet-desc">Access data loaders to import files programmatically</div></div>',
+                        '<div class="api-snippet-container"><div class="api-snippet-title">Create New Viewer</div><pre class="api-snippet">vc = jd.new_viewers[\'<i>viewer_type</i>\']\nvc.create()</pre><div class="api-snippet-desc">Create and configure new viewers programmatically</div></div>'
+                    ],
                     scrollId: 'grid-loaders'
                 },
                 'save': {
                     tabs: null,
                     content: 'Export plots, data, subsets, and analysis results. Save viewers as images (PNG, SVG), export data tables, or save regions and subsets for later use.<br><a href="#grid-export" class="wireframe-sidebar-link">See export options →</a>',
+                    apiSnippet: '<div class="api-snippet-container"><div class="api-snippet-title">Export Data via API</div><pre class="api-snippet">data = jd.app.get_data_from_viewer(\'<i>viewer_name</i>\')\ndata.write(\'output.fits\')</pre><div class="api-snippet-desc">Export data and results from viewers</div></div>',
                     scrollId: 'grid-export'
                 },
                 'settings': {
@@ -1063,6 +1208,10 @@
                     content: [
                         'Customize viewer appearance including axes labels, limits, stretching, color maps, markers, and display options. Settings apply to the active viewer.<br><a href="#grid-settings" class="wireframe-sidebar-link">View plot customization →</a>',
                         'Convert and display data in different unit systems. Choose spectral units (wavelength, frequency, energy) and flux units appropriate for your analysis.<br><a href="#grid-settings" class="wireframe-sidebar-link">Learn about units →</a>'
+                    ],
+                    apiSnippets: [
+                        '<div class="api-snippet-container"><div class="api-snippet-title">Configure Plot Options</div><pre class="api-snippet">viewer = jd.app.get_viewer(\'<i>viewer_name</i>\')\nviewer.state.x_min = <i>value</i>\nviewer.state.x_max = <i>value</i></pre><div class="api-snippet-desc">Adjust plot options and viewer settings</div></div>',
+                        '<div class="api-snippet-container"><div class="api-snippet-title">Set Units</div><pre class="api-snippet">viewer.state.x_display_unit = \'<i>unit</i>\'\nviewer.state.y_display_unit = \'<i>unit</i>\'</pre><div class="api-snippet-desc">Control display units for axes</div></div>'
                     ],
                     scrollId: 'grid-settings'
                 },
@@ -1073,16 +1222,23 @@
                         'Interactive table showing coordinates and metadata for marked points in viewers. Export marker tables or use them to track features of interest in your data.<br><a href="#grid-info" class="wireframe-sidebar-link">Learn about markers →</a>',
                         'System messages, warnings, and operation history. Monitor plugin execution, data loading status, and any issues that arise during analysis.<br><a href="#grid-info" class="wireframe-sidebar-link">View logging options →</a>'
                     ],
+                    apiSnippets: [
+                        '<div class="api-snippet-container"><div class="api-snippet-title">Access Metadata</div><pre class="api-snippet">data = jd.app.data_collection[<i>index</i>]\nmeta = data.meta\nheader = meta[\'header\']</pre><div class="api-snippet-desc">Access metadata, headers, and data properties</div></div>',
+                        '<div class="api-snippet-container"><div class="api-snippet-title">Get Markers</div><pre class="api-snippet">table = jd.plugins[\'<i>markers</i>\'].export_table()</pre><div class="api-snippet-desc">Export marker coordinates and metadata</div></div>',
+                        '<div class="api-snippet-container"><div class="api-snippet-title">Logger Messages</div><pre class="api-snippet">from jdaviz import logger\nlogger.info(\'message\')</pre><div class="api-snippet-desc">Access logging functionality</div></div>'
+                    ],
                     scrollId: 'grid-info'
                 },
                 'plugins': {
                     tabs: null,
                     content: 'Data analysis tools including spectral line analysis, model fitting, aperture photometry, moment maps, and more. Search for plugins or browse by category.<br><a href="#grid-plugins" class="wireframe-sidebar-link">Browse analysis plugins →</a>',
+                    apiSnippet: '<div class="api-snippet-container"><div class="api-snippet-title">Access Plugins via API</div><pre class="api-snippet">plg = jd.plugins[\'<i>plugin_name</i>\']\nresult = plg.run()</pre><div class="api-snippet-desc">Access and control analysis plugins via API</div></div>',
                     scrollId: 'grid-plugins'
                 },
                 'subsets': {
                     tabs: null,
                     content: 'Create spatial and spectral regions for focused analysis. Draw selections in viewers, combine them with boolean operations, and apply subsets across multiple datasets.<br><a href="#grid-subsets" class="wireframe-sidebar-link">Learn about subsets →</a>',
+                    apiSnippet: '<div class="api-snippet-container"><div class="api-snippet-title">Work with Subsets</div><pre class="api-snippet">subset = jd.app.data_collection[<i>index</i>].get_subset_object()\nregion = subset.to_region()</pre><div class="api-snippet-desc">Create and manipulate subsets programmatically</div></div>',
                     scrollId: 'grid-subsets'
                 },
                 'help': {
@@ -1093,14 +1249,19 @@
             };
 
             let currentSidebar = null;
+            let apiModeActive = false;
 
             function activateSidebar(sidebarType, tabIndex) {
                 const icon = document.querySelector('.wireframe-toolbar-icon[data-sidebar="' + sidebarType + '"]');
 
                 if (!icon) return;
 
-                // Remove active from all icons
-                wireframeIcons.forEach(i => i.classList.remove('active'));
+                // Remove active from all icons (except API button)
+                wireframeIcons.forEach(function(i) {
+                    if (!i.classList.contains('api-button')) {
+                        i.classList.remove('active');
+                    }
+                });
 
                 // Update sidebar content
                 if (sidebarContent_map[sidebarType]) {
@@ -1118,8 +1279,9 @@
                             '</div>';
                         wireframeSidebar.innerHTML += tabsHtml;
 
-                        // Add content div with specified tab's content
-                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + data.content[activeIndex] + '</div>';
+                        // Add content div with specified tab's content and API snippet if available
+                        const apiSnippet = data.apiSnippets && data.apiSnippets[activeIndex] ? data.apiSnippets[activeIndex] : '';
+                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + data.content[activeIndex] + apiSnippet + '</div>';
 
                         // Add click handlers to tabs
                         const tabs = wireframeSidebar.querySelectorAll('.wireframe-sidebar-tab');
@@ -1135,13 +1297,15 @@
                                 // Update content
                                 const contentDiv = document.getElementById('sidebar-tab-content');
                                 if (contentDiv && data.content[tabIndex]) {
-                                    contentDiv.innerHTML = data.content[tabIndex];
+                                    const apiSnippet = data.apiSnippets && data.apiSnippets[tabIndex] ? data.apiSnippets[tabIndex] : '';
+                                    contentDiv.innerHTML = data.content[tabIndex] + apiSnippet;
                                 }
                             });
                         });
                     } else {
-                        // No tabs, just show content
-                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content">' + data.content + '</div>';
+                        // No tabs, just show content with API snippet if available
+                        const apiSnippet = data.apiSnippet || '';
+                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content">' + data.content + apiSnippet + '</div>';
                     }
 
                     // Add scroll behavior for links
@@ -1186,7 +1350,24 @@
             wireframeIcons.forEach(function(icon) {
                 icon.addEventListener('click', function() {
                     stopAutoCycle();
+
+                    // Handle API button separately
+                    if (icon.classList.contains('api-button')) {
+                        apiModeActive = !apiModeActive;
+                        if (apiModeActive) {
+                            icon.classList.add('active');
+                            document.body.classList.add('api-mode-active');
+                        } else {
+                            icon.classList.remove('active');
+                            document.body.classList.remove('api-mode-active');
+                        }
+                        return;
+                    }
+
+                    // Get the sidebar type
                     const sidebarType = icon.dataset.sidebar;
+
+                    if (!sidebarType) return;
 
                     if (currentSidebar === sidebarType) {
                         // Close sidebar if clicking the same icon
@@ -1409,6 +1590,16 @@
                     <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
                     <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
                     <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+                    <div class="wireframe-toolbar-spacer"></div>
+                    <div class="wireframe-toolbar-right">
+                        <div class="wireframe-toolbar-search-row">
+                            <input type="text" class="wireframe-toolbar-search" placeholder="Search documentation..." readonly onclick="document.querySelector('.search-button').click()" />
+                        </div>
+                        <div class="wireframe-toolbar-version-row">
+                            <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
+                            <div class="api-button" data-icon="api" title="Toggle API Snippets"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="wireframe-main">
                     <div class="wireframe-sidebar" id="wireframe-sidebar">
@@ -1493,7 +1684,7 @@
 
             <h2>License</h2>
             <p>This project is Copyright (c) JDADF Developers and licensed under the terms of the BSD 3-Clause license.</p>
-            <p>This package is based upon the <a href="https://github.com/astropy/package-template" target="_blank">Astropy package template</a> which is licensed under the BSD 3-clause licence. See the <a href="https://github.com/spacetelescope/jdaviz/tree/main/licenses" target="_blank">licenses folder</a> for more information.</p>
+            <p>This package is based upon the <a href="https://github.com/astropy/package-template" target="_blank">Astropy package template</a> which is licensed under the BSD 3-clause licence. See the <a href="https://github.com/spacetelescope/jdaviz/tree/main/licenses" target="_blank">licenses directory</a> for more information.</p>
         </div>
     </div>
 </body>
