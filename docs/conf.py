@@ -357,10 +357,26 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
     if not os.path.exists(dir_path):
         return links
 
+    # Special case handling for acronyms in titles
+    acronyms = {
+        'vo': 'VO',
+        'api': 'API',
+        'url': 'URL',
+    }
+
     for filename in sorted(os.listdir(dir_path)):
         if filename.endswith('.rst') and filename != 'index.rst' and filename != 'extensions.rst':
             # Convert filename to title (e.g., 'file_drop.rst' -> 'File Drop')
             name = filename[:-4].replace('_', ' ').title()
+
+            # Replace known acronyms with proper capitalization
+            name_words = name.split()
+            for i, word in enumerate(name_words):
+                word_lower = word.lower()
+                if word_lower in acronyms:
+                    name_words[i] = acronyms[word_lower]
+            name = ' '.join(name_words)
+
             # Create relative path for Sphinx
             rel_path = os.path.join(directory, filename[:-4])
 

@@ -211,7 +211,7 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 30px;
-            margin-top: 60px;
+            margin-top: 24px;
             margin-bottom: 24px;
         }
 
@@ -266,7 +266,7 @@
         .global-filters-section {
             width: 90%;
             max-width: 1000px;
-            margin: 40px auto 20px auto;
+            margin: 60px auto 0px auto;
             text-align: center;
         }
 
@@ -1426,30 +1426,6 @@
             color: #ffffff !important;
         }
 
-        /* Light theme - Improve wireframe contrast */
-        html[data-theme="light"] .wireframe-viewer {
-            background: #e8e8e8;
-        }
-
-        html[data-theme="light"] .viewer-content {
-            background: #e8e8e8;
-            color: #1a1a1a;
-            opacity: 0.8;
-        }
-
-        html[data-theme="light"] .wireframe-sidebar {
-            background: #f0f0f0;
-        }
-
-        html[data-theme="light"] .viewer-toolbar {
-            background: #a0a0a0;
-            color: #1a1a1a;
-        }
-
-        html[data-theme="light"] .viewer-toolbar-icon {
-            filter: brightness(0) saturate(100%);
-        }
-
         /* Light Mode - Fix overlay icons to use page background color */
         html[data-theme="light"] .grid-item[data-icon]::before {
             background-color: var(--bg-gradient-start) !important;
@@ -1528,6 +1504,26 @@
 
         .jupyter-api-snippet.visible {
             display: block;
+        }
+
+        /* Light theme - Improve jupyter-cell contrast */
+        html[data-theme="light"] .jupyter-cell-container {
+            background: #e8e8e8;
+        }
+
+        html[data-theme="light"] .jupyter-cell-header {
+            background: #a0a0a0;
+            color: #1a1a1a;
+        }
+
+        html[data-theme="light"] .jupyter-cell-prompt {
+            color: #1a1a1a;
+            opacity: 0.7;
+        }
+
+        html[data-theme="light"] .jupyter-cell-code {
+            background: #f5f5f5;
+            color: #1a1a1a;
         }
 
         .jupyter-api-snippet-header {
