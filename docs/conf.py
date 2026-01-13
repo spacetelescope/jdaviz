@@ -599,80 +599,159 @@ class PluginApiReferencesDirective(SphinxDirective):
                     from unittest.mock import MagicMock
                     self.hub = MagicMock()
 
-            # Try to instantiate and get exposed attributes
-            try:
-                # Most plugins need an app parameter
-                from unittest.mock import MagicMock
-                mock_app = MagicMock()
-                mock_app.hub = MagicMock()
-                instance = plugin_class(app=mock_app)
-                user_api = instance.user_api
-                exposed = list(user_api._expose)
-            except Exception:
-                # If instantiation fails, try to inspect the user_api property
-                # by reading the source code
-                import inspect
-                source = inspect.getsource(plugin_class.user_api.fget)
-                # Look for expose= pattern
-                import re
-                match = re.search(
-                    r"expose\s*=\s*[\(\[]([^\)\]]+)[\)\]]",
-                    source,
-                    re.DOTALL
-                )
-                if match:
-                    # Extract the tuple/list items
-                    expose_str = match.group(1)
-                    # Parse quoted strings
-                    exposed = re.findall(r"['\"]([^'\"]+)['\"]", expose_str)
-                else:
-                    exposed = []
-
-            # Build the RST content
+            # Get the class docstring and process it
             rst_lines = [
                 '',
                 'API References',
                 '--------------',
                 '',
-                f'For detailed API documentation, see the '
-                f':class:`~{module_path}.{class_name}` API reference.',
-                '',
             ]
 
-            if not exposed:
+            # Extract exposed attributes to validate documentation coverage
+            exposed_attrs = []
+            try:
+                # Try to get the exposed attributes from user_api
+                from unittest.mock import MagicMock
+                mock_app = MagicMock()
+                mock_app.hub = MagicMock()
+                instance = plugin_class(app=mock_app)
+                user_api = instance.user_api
+                exposed_attrs = list(user_api._expose)
+            except Exception:
+                # If instantiation fails, parse source to get exposed list
+                import inspect
+                try:
+                    source = inspect.getsource(plugin_class.user_api.fget)
+                    import re
+                    match = re.search(
+                        r"expose\s*=\s*[\(\[]([^\)\]]+)[\)\]]",
+                        source,
+                        re.DOTALL
+                    )
+                    if match:
+                        expose_str = match.group(1)
+                        exposed_attrs = re.findall(r"['\"]([^'\"]+)['\"]", expose_str)
+                except Exception:
+                    exposed_attrs = []
+
+            if plugin_class.__doc__:
+                docstring = plugin_class.__doc__.strip()
+
+                # Remove the intro paragraph that references the current page
+                # This typically ends with "for more details."
+                lines = docstring.split('\n')
+                filtered_lines = []
+                skip_intro = False
+
+                for i, line in enumerate(lines):
+                    stripped = line.strip()
+                    # Check if this line contains a self-reference to the plugin page
+                    if ':ref:`' in stripped and 'for more details' in stripped.lower():
+                        skip_intro = True
+                        continue
+                    # Skip the sentence before the self-reference too
+                    next_line = lines[i+1] if i < len(lines) - 1 else ''
+                    if ':ref:`' in next_line and 'for more details' in next_line.lower():
+                        skip_intro = True
+                        continue
+                    # Once we hit the "Only the following" section, stop skipping
+                    starts_list = stripped.startswith('*')
+                    if skip_intro and ('Only the following' in stripped or starts_list):
+                        skip_intro = False
+
+                    if not skip_intro:
+                        filtered_lines.append(line)
+
+                # Join and clean up
+                docstring_content = '\n'.join(filtered_lines).strip()
+
+                # Expand short-form Sphinx references to full paths
+                # This converts :meth:`method_name` to :meth:`~module.Class.method_name`
+                if docstring_content:
+                    import re
+
+                    # Pattern for short-form :meth: without module path
+                    # Matches :meth:`name` but not :meth:`~path.name` or :meth:`path.name`
+                    def expand_meth_ref(match):
+                        method_name = match.group(1)
+                        # If already has a path, leave it alone
+                        if '.' in method_name or method_name.startswith('~'):
+                            return match.group(0)
+                        # Otherwise, expand to full path with ~ to show just the method name
+                        return f':meth:`~{module_path}.{class_name}.{method_name}`'
+
+                    docstring_content = re.sub(
+                        r':meth:`([^`]+)`',
+                        expand_meth_ref,
+                        docstring_content
+                    )
+
+                    # Pattern for short-form :attr: without module path
+                    def expand_attr_ref(match):
+                        attr_name = match.group(1)
+                        if '.' in attr_name or attr_name.startswith('~'):
+                            return match.group(0)
+                        return f':attr:`~{module_path}.{class_name}.{attr_name}`'
+
+                    docstring_content = re.sub(
+                        r':attr:`([^`]+)`',
+                        expand_attr_ref,
+                        docstring_content
+                    )
+
+                # Validate that all exposed attributes are documented
+                if exposed_attrs and docstring_content:
+                    import re
+                    # Find all documented attributes (methods and properties)
+                    # Look for :meth:`method_name` or ``attr_name``
+                    documented = set()
+                    # Match :meth:`name` or :meth:`~path.name`
+                    for match in re.finditer(r':meth:`[~]?(?:[^.`]+\.)*([^`]+)`',
+                                             docstring_content):
+                        documented.add(match.group(1))
+                    # Match ``attr_name`` patterns
+                    for match in re.finditer(r'``([a-z_][a-z0-9_]*)``', docstring_content):
+                        documented.add(match.group(1))
+
+                    # Check for undocumented attributes
+                    undocumented = [
+                        attr for attr in exposed_attrs if attr not in documented
+                    ]
+
+                    if undocumented:
+                        from sphinx.util import logging
+                        logger = logging.getLogger(__name__)
+                        logger.warning(
+                            f'{class_name}: The following user API attributes are not '
+                            f'documented in the class docstring: {", ".join(undocumented)}',
+                            location=(self.env.docname, self.lineno)
+                        )
+
+                # Add the docstring content
+                if docstring_content:
+                    rst_lines.append(docstring_content)
+                    rst_lines.append('')
+                else:
+                    rst_lines.append(
+                        'This plugin is primarily UI-driven. '
+                        'See the :ref:`plugin-apis` documentation for general '
+                        'plugin API methods.'
+                    )
+                    rst_lines.append('')
+            else:
                 rst_lines.append(
-                    'This plugin is primarily UI-driven and does not '
-                    'expose additional API attributes.'
-                )
-                rst_lines.append(
+                    'This plugin is primarily UI-driven. '
                     'See the :ref:`plugin-apis` documentation for general '
                     'plugin API methods.'
                 )
-            else:
-                rst_lines.append('**Exposed Attributes:**')
                 rst_lines.append('')
 
-                # Determine if each attribute is a method or property
-                method_verbs = [
-                    'calculate', 'fit', 'get', 'set', 'load', 'erase',
-                    'clear', 'export', 'add', 'remove', 'search', 'extract',
-                    'smooth', 'collapse', 'unpack', 'from_', 'save', 'open',
-                    'close', 'show', 'select', 'update', 'create', 'delete',
-                    'run', 'execute', 'perform', 'apply', 'reset'
-                ]
-
-                for attr in exposed:
-                    # Check if it's a method based on naming patterns
-                    is_method = any(verb in attr for verb in method_verbs)
-
-                    if is_method:
-                        rst_lines.append(
-                            f'- :meth:`~{module_path}.{class_name}.{attr}`'
-                        )
-                    else:
-                        rst_lines.append(
-                            f'- :attr:`~{module_path}.{class_name}.{attr}`'
-                        )
+            # Add a simple reference to the full class documentation
+            # Use full module path with ~ to show just the class name
+            rst_lines.append(
+                f'For detailed API documentation, see :class:`~{module_path}.{class_name}`.'
+            )
+            rst_lines.append('')
 
             # Parse the RST and return nodes
             from docutils.parsers.rst import Parser

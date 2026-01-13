@@ -29,9 +29,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to use for computing line statistics.
-    * ``mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
       Only available for Cubeviz.  Whether to use spatial or spectral smoothing.
-    * :attr:`stddev`:
+    * ``stddev``
       Standard deviation of the gaussian to use for smoothing.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`smooth`

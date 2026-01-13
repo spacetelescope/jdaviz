@@ -36,10 +36,16 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.clear_table`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     * :meth:`import_catalog`
     * :meth:`zoom_to_selected`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.select_rows`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.select_all`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.select_none`
     * :meth:`search`
-    * :attr:`max_sources`
+    * ``max_sources``
+      Maximum number of catalog sources to retrieve.
     * ``catalog`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``table`` (:class:`~jdaviz.core.template_mixin.Table`):
       Table containing all search results.

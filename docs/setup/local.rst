@@ -1,8 +1,8 @@
 
 .. _setup-local:
 
-Install Jdaviz for Local Jupyter
-=================================
+Local Jupyter Installation
+==========================
 
 Install Jdaviz in your local Python environment to use it within Jupyter Notebook or Jupyter Lab.
 

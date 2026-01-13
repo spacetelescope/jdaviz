@@ -33,6 +33,8 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to use for computing line statistics.
+    * ``function`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      Function to use for the collapse operation (Mean, Median, Min, Max, Sum).
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the line, or ``Entire Spectrum``.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)

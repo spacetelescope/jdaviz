@@ -1,8 +1,8 @@
 
 .. _setup-desktop:
 
-Install Standalone Desktop UI
-==============================
+Standalone Desktop UI Installation
+==================================
 
 The standalone desktop application provides a native Jdaviz experience without requiring
 a Python installation or Jupyter environment.

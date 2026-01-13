@@ -11,6 +11,7 @@ Here is some documentation specific for developers.
 
   release
   infrastructure
+  new_plugin
   ui_description
   ui_style_guide
   ui_plugin_components

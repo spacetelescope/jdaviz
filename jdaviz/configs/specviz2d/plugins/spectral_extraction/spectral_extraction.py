@@ -49,22 +49,29 @@ class SpectralExtraction2D(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * :attr:`interactive_extract`
-    * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``interactive_extract``
+      Whether to automatically extract when parameters change.
+    * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
       controls the input dataset for generating the trace.
-    * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
       controls the type of trace to be generated.
-    * ``trace_peak_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``trace_peak_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
       only applicable if ``trace_type`` is not ``Flat``.
-    * :attr:`trace_pixel` :
+    * ``trace_pixel``
       pixel of the trace.  If ``trace_type`` is not ``Flat``, then this
       is the "guess" for the automated trace.
-    * :attr:`trace_do_binning` :
+    * ``trace_do_binning``
       only applicable if ``trace_type`` is not ``Flat``.  Bin the input data when fitting the
       trace.
-    * :attr:`trace_bins` :
+    * ``trace_bins``
       only applicable if ``trace_type`` is not ``Flat`` and ``trace_do_binning``.
-    * :attr:`trace_window` :
+    * ``trace_order``
+      order of the polynomial fit for the trace.
+    * ``trace_offset``
+      offset to apply to the trace.
+    * ``trace_trace`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+      existing trace to use as a reference.
+    * ``trace_window``
       full width of the trace.
     * :meth:`import_trace`
     * :meth:`export_trace`
@@ -72,14 +79,16 @@ class SpectralExtraction2D(PluginTemplateMixin):
       controls the input dataset for generating the background.
     * ``bg_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       controls the type of background to be generated.
-    * :attr:`bg_trace_pixel` :
+    * ``bg_trace`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+      existing trace to use as a reference for the background.
+    * ``bg_trace_pixel``
       only applicable if ``bg_type`` is set to ``Manual``
-    * :attr:`bg_separation` :
+    * ``bg_separation``
       only applicable if ``bg_type`` set set to ``OneSided`` or ``TwoSided``.
       Separation from the referenced trace for the center of each of the background window(s).
-    * :attr:`bg_width` :
+    * ``bg_width``
       full width of each background window(s).
-    * ``bg_statistic`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``bg_statistic`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
       statistic to use when computing the background.  'Average' will account for partial pixel
       weights, 'Median' will include all partial pixels.
     * ``bg_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
@@ -95,17 +104,17 @@ class SpectralExtraction2D(PluginTemplateMixin):
       background extraction, select the original input 2D spectrum.
     * ``ext_trace`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`)
     * ``ext_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
-    * :attr:`ext_width` :
+    * ``ext_width``
       full width of the extraction window.
-    * ``horne_ext_profile`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``horne_ext_profile`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
       For Horne extract, choice of 'Gaussian' or 'Self (interpolated)' to use
       empirical profile from data.
-    * :attr:`self_prof_n_bins` :
+    * ``self_prof_n_bins``
       Number of bins to use when computing the self-derived profile for Horne Extract.
-    * :attr:`self_prof_interp_degree_x` :
+    * ``self_prof_interp_degree_x``
       Interpolation degree (in X) to use when computing the self-derived profile
       for Horne Extract.
-    * :attr:`self_prof_interp_degree_y` :
+    * ``self_prof_interp_degree_y``
       Interpolation degree (in Y) to use when computing the self-derived profile
       for Horne Extract.
     * ``ext_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
