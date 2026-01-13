@@ -1,5 +1,8 @@
 .. _loaders-format-ramp:
 
+:data-types: ramp
+
+
 ******************
 Ramp Format
 ******************

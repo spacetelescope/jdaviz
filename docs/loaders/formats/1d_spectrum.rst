@@ -1,5 +1,7 @@
 .. _loaders-format-1d-spectrum:
 
+:data-types: 1d
+
 ***************************
 1D Spectrum Format
 ***************************

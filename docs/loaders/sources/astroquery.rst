@@ -1,5 +1,7 @@
 .. _loaders-source-astroquery:
 
+:excl_platforms: mast
+
 ***************************
 Loading from Astroquery
 ***************************

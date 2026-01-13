@@ -12,6 +12,27 @@
 html[data-theme=dark] .sd-card img[src*='.svg'] {
     filter: invert(0.82) brightness(0.8) contrast(1.2);
 }
+
+/* Override Sphinx theme purple secondary color with jdaviz blue */
+:root {
+    --pst-color-secondary: #007DA4 !important;
+    --pst-color-secondary-highlight: #00B4E6 !important;
+}
+
+html[data-theme="light"] {
+    --pst-color-secondary: #005a7a !important;
+    --pst-color-secondary-highlight: #007DA4 !important;
+}
+
+/* Match GitHub icon opacity to other navbar icons */
+.navbar-icon-links a.nav-link {
+    opacity: 0.7 !important;
+}
+
+.navbar-icon-links a.nav-link:hover {
+    opacity: 1 !important;
+}
+
 /* Platform-specific content visibility */
 
 /* Hide API sections for platforms without API access (desktop and MAST) */

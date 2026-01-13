@@ -1,5 +1,7 @@
 .. _loaders-format-catalog:
 
+:data-types: catalog
+
 *********************
 Catalog Format
 *********************

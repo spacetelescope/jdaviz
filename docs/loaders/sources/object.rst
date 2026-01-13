@@ -1,5 +1,7 @@
 .. _loaders-source-object:
 
+:excl_platforms: desktop mast
+
 ************************
 Loading Python Objects
 ************************

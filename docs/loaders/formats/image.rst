@@ -1,5 +1,7 @@
 .. _loaders-format-image:
 
+:data-types: image
+
 *********************
 Image Format
 *********************

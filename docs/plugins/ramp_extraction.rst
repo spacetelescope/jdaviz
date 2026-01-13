@@ -5,6 +5,8 @@
 Ramp Extraction
 ***************
 
+.. plugin-availability::
+
 Extract ramp profiles from detector data.
 
 Description

@@ -4,6 +4,8 @@
 3D Spectral Extraction
 ************************
 
+.. plugin-availability::
+
 Extract 1D spectra from 3D spectral cubes.
 
 Description

@@ -1,5 +1,7 @@
 .. _loaders-source-url:
 
+:excl_platforms: mast
+
 *******************
 Loading from URL
 *******************

@@ -1,5 +1,7 @@
 .. _loaders-source-vo:
 
+:excl_platforms: mast
+
 *********************************
 Loading from Virtual Observatory
 *********************************

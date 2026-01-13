@@ -6,18 +6,6 @@
     <title>Jdaviz - Astronomical Data Visualization</title>
     <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
-    <!--
-        PLATFORM CONTEXT SYSTEM:
-        This landing page sets platform context (desktop/mast/jupyter/platform) via:
-        1. sessionStorage when users interact with platform tabs
-        2. URL query parameters (?platform=X) for shareable links
-
-        Platform context persists across documentation navigation using:
-        - platform-context.js in _static/ (auto-included on all pages)
-        - CSS classes in jdaviz.css for platform-specific content visibility
-
-        See docs/platform_content_example.rst for usage examples.
-    -->
     <style>
         /* Fix Sphinx theme conflicts */
         .bd-main .bd-content .bd-article-container {
@@ -38,6 +26,20 @@
         #pst-back-to-top {
             background-color: var(--button-primary) !important;
             color: var(--text-color) !important;
+        }
+
+        /* Override Sphinx theme purple hover effects with dark blue */
+        :root {
+            --pst-color-primary: #007DA4 !important;
+            --pst-color-primary-highlight: #00B4E6 !important;
+            --pst-color-link: #00B4E6 !important;
+            --pst-color-link-hover: #007DA4 !important;
+        }
+
+        a:hover,
+        .bd-sidebar a:hover,
+        .bd-links a:hover {
+            color: #007DA4 !important;
         }
 
         /* Theme variables - Dark mode (default) */
@@ -259,25 +261,31 @@
             margin-bottom: 0;
         }
 
-        .filter-tabs {
-            display: flex;
+        /* Global Filters Section */
+        .global-filters-section {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto 20px auto;
+            text-align: center;
+        }
+
+        .global-filter-tabs {
+            display: inline-flex;
             gap: 0;
-            margin-bottom: 16px;
             flex-wrap: nowrap;
             border-radius: 6px;
             overflow: hidden;
-            width: fit-content;
         }
 
-        .filter-tab {
-            padding: 4px 10px;
+        .global-filter-tab {
+            padding: 10px 20px;
             background: var(--sidebar-bg);
             color: var(--text-color);
             opacity: 0.6;
             border: 1px solid var(--grid-border);
             border-right: none;
             border-radius: 0;
-            font-size: 11px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -285,26 +293,38 @@
             white-space: nowrap;
         }
 
-        .filter-tab:last-child {
+        .global-filter-tab:last-child {
             border-right: 1px solid var(--grid-border);
         }
 
-        .filter-tab.active:last-child {
-            border-right: 1px solid var(--grid-border);
-        }
-
-        .filter-tab:hover {
+        .global-filter-tab:hover {
             background: var(--sidebar-hover);
             opacity: 0.9;
             border-color: var(--grid-border);
         }
 
-        .filter-tab.active {
+        .global-filter-tab.active {
             background: var(--sidebar-active);
             color: var(--text-color);
             opacity: 1;
             border-color: var(--grid-border);
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Hide local filter tabs in grid items */
+        .filter-tabs {
+            display: none;
+        }
+
+        /* Disabled state for platform-filtered items */
+        .grid-item-link.platform-disabled {
+            opacity: 0.4;
+            color: #888;
+        }
+
+        .grid-item-link.platform-disabled:hover {
+            opacity: 0.6;
+            color: #aaa;
         }
 
         .grid-item.has-toggle .grid-item-content {
@@ -482,6 +502,13 @@
             color: var(--text-color);
             margin-top: 4px;
             margin-bottom: 8px;
+            grid-column: span 1;
+        }
+
+        .grid-item-links.two-column .column-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             grid-column: span 1;
         }
 
@@ -1354,6 +1381,55 @@
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 67 47"><g><path fill="%231a1a1a" d="M11.6,19.5c0-.3,0-.7,0-1.1,2.1-1.1,4.3-1.7,6.6-1.7s4.1.4,5.1,1.3c1,.9,1.5,2.4,1.5,4.5v7.1c.8.2,1.4.3,1.8.6v2.9c-1.1.5-2.7.8-4.8.8-.2-.6-.4-1.3-.6-2.1-1,1.4-2.7,2.1-5.2,2.1s-2.8-.4-3.8-1.3-1.6-2-1.6-3.5.5-2.7,1.5-3.5c1-.9,2.5-1.3,4.4-1.3h3.6v-1.6c0-1.7-.9-2.6-2.8-2.6s-1.3,0-1.7.2c0,.9-.2,1.6-.4,2.2h-3.3c-.4-.8-.6-1.8-.6-3ZM17.6,30.5c1.1,0,2-.3,2.7-1v-2.7h-2.3c-1.6,0-2.4.6-2.4,1.8s.2,1,.5,1.4c.3.4.8.5,1.5.5Z"/><path fill="%231a1a1a" d="M27.9,17c1.2-.3,2.3-.4,3.3-.4s1.8,0,2.4,0v1.6c1.5-1,3.1-1.6,4.7-1.6s3.8.6,4.8,1.9c1,1.3,1.5,3.4,1.5,6.3s-.2,3-.7,4.1c-.5,1.2-1.1,2.1-1.9,2.8-1.5,1.3-3.3,2-5.4,2s-1.8,0-2.6-.3v2.9c1.3.4,2.1.8,2.5,1.2l-.3,2.6h-8.3l-.3-2.6c.3-.4.9-.8,1.8-1.1v-15.9c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM36.3,30.5c1.1,0,2-.5,2.6-1.5.6-1,1-2.3,1-4.1s-.2-2.9-.5-3.6c-.4-.6-1-1-1.9-1-1.4,0-2.5.3-3.4,1v8.8c.7.2,1.4.3,2.3.3Z"/><path fill="%231a1a1a" d="M46.8,17c1.2-.3,2.4-.4,3.5-.4s2,0,2.7,0v13.2c.9.3,1.5.7,1.8,1.1l-.3,2.6h-7.6l-.3-2.6c.3-.4.9-.8,1.8-1.1v-9.2c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM50.6,14.7c-1.8,0-2.8-.8-2.8-2.5s.9-2.5,2.8-2.5,2.8.8,2.8,2.5-.9,2.5-2.8,2.5Z"/></g></svg>');
         }
 
+        /* Light Mode Additional Overrides */
+        html[data-theme="light"] .platform-tab {
+            color: #ffffff !important;
+        }
+
+        html[data-theme="light"] .platform-tab.active {
+            color: #ffffff !important;
+        }
+
+        html[data-theme="light"] .platform-content-placeholder {
+            color: #1a1a1a;
+        }
+
+        html[data-theme="light"] .extensions-button {
+            background: var(--sidebar-bg);
+            color: #005a7a !important;
+            border-color: var(--grid-border);
+        }
+
+        html[data-theme="light"] .extensions-button:hover {
+            background: var(--sidebar-hover);
+            color: #007DA4 !important;
+        }
+
+        html[data-theme="light"] .filter-tab.active {
+            color: #ffffff !important;
+        }
+
+        html[data-theme="light"] .global-filter-tab {
+            color: #ffffff !important;
+        }
+
+        html[data-theme="light"] .global-filter-tab.active {
+            color: #ffffff !important;
+        }
+
+        html[data-theme="light"] .description-toggle {
+            color: #ffffff !important;
+        }
+
+        html[data-theme="light"] .description-toggle:hover {
+            color: #ffffff !important;
+        }
+
+        /* Light Mode - Fix overlay icons to use page background color */
+        html[data-theme="light"] .grid-item[data-icon]::before {
+            background-color: var(--bg-gradient-start) !important;
+        }
+
         /* Viewer Toolbar Icon Styles */
         .viewer-toolbar-icon[data-icon="bqplot:home"] {
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" /></svg>');
@@ -2094,46 +2170,146 @@
                 }
             });
 
-            // Handle filter tabs
-            const filterTabs = document.querySelectorAll('.filter-tab');
-            const pluginLinks = document.querySelectorAll('.grid-item[data-icon="mdi-tune-variant"] .grid-item-link');
+            // Handle global filter tabs
+            const globalFilterTabs = document.querySelectorAll('.global-filter-tab');
+            const allGridLinks = document.querySelectorAll('.grid-item .grid-item-link');
 
-            filterTabs.forEach(function(tab) {
-                tab.addEventListener('click', function() {
-                    // Toggle active state (allow multiple selections)
-                    if (tab.dataset.filter === 'all') {
-                        // If "All" is clicked, deactivate other tabs and activate "All"
-                        filterTabs.forEach(t => t.classList.remove('active'));
-                        tab.classList.add('active');
-                    } else {
-                        // If a specific filter is clicked, deactivate "All"
-                        filterTabs[0].classList.remove('active');
-                        tab.classList.toggle('active');
+            // Track current platform (initialized when platform tabs are set up)
+            let currentPlatform = 'jupyter';
 
-                        // If no filters are active, reactivate "All"
-                        const anyActive = Array.from(filterTabs).slice(1).some(t => t.classList.contains('active'));
-                        if (!anyActive) {
-                            filterTabs[0].classList.add('active');
+            function applyGlobalFilters() {
+                if (globalFilterTabs.length === 0) return;
+
+                // Get active data type filters
+                const activeFilters = Array.from(globalFilterTabs)
+                    .filter(t => t.classList.contains('active'))
+                    .map(t => t.dataset.filter);
+
+                // Filter all grid item links
+                allGridLinks.forEach(function(link) {
+                    let shouldShow = true;
+                    let platformDisabled = false;
+
+                    // Check data type filter (hide if doesn't match)
+                    if (link.dataset.types) {
+                        const types = link.dataset.types.split(' ');
+                        const matchesDataType = activeFilters.includes('all') ||
+                                               activeFilters.some(filter => types.includes(filter));
+                        if (!matchesDataType) {
+                            shouldShow = false;
                         }
                     }
 
-                    // Get active filters
-                    const activeFilters = Array.from(filterTabs)
-                        .filter(t => t.classList.contains('active'))
-                        .map(t => t.dataset.filter);
-
-                    // Filter plugins
-                    pluginLinks.forEach(function(link) {
-                        const types = link.dataset.types.split(' ');
-
-                        if (activeFilters.includes('all') || activeFilters.some(filter => types.includes(filter))) {
-                            link.style.display = 'inline-block';
-                        } else {
-                            link.style.display = 'none';
+                    // Check platform filter (disable if excluded from current platform)
+                    if (link.dataset.exclPlatforms) {
+                        const exclPlatforms = link.dataset.exclPlatforms.split(' ');
+                        // If current platform is in excluded list, disable the button
+                        if (exclPlatforms.includes(currentPlatform)) {
+                            platformDisabled = true;
                         }
+                    }
+
+                    // Apply visibility based on data type filtering
+                    link.style.display = shouldShow ? 'inline-block' : 'none';
+
+                    // Apply disabled state based on platform filtering
+                    if (shouldShow) {
+                        if (platformDisabled) {
+                            link.classList.add('platform-disabled');
+                            
+                            // Store original text if not already stored
+                            if (!link.dataset.originalText) {
+                                link.dataset.originalText = link.textContent;
+                            }
+                            
+                            // Remove any existing listeners to avoid duplicates
+                            link.onmouseenter = null;
+                            link.onmouseleave = null;
+                            
+                            // Add hover listeners to change text as warning
+                            link.onmouseenter = function() {
+                                const platformName = currentPlatform.charAt(0).toUpperCase() + currentPlatform.slice(1);
+                                link.textContent = `Unavailable in ${platformName}`;
+                            };
+                            
+                            link.onmouseleave = function() {
+                                link.textContent = link.dataset.originalText;
+                            };
+                        } else {
+                            link.classList.remove('platform-disabled');
+                            // Restore original text if it was changed
+                            if (link.dataset.originalText) {
+                                link.textContent = link.dataset.originalText;
+                            }
+                            // Remove hover listeners
+                            link.onmouseenter = null;
+                            link.onmouseleave = null;
+                        }
+                    }
+                });
+            }
+
+            if (globalFilterTabs.length > 0) {
+                globalFilterTabs.forEach(function(tab) {
+                    tab.addEventListener('click', function() {
+                        stopAutoCycle();
+
+                        // Single-select: deactivate all tabs and activate clicked one
+                        globalFilterTabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+
+                        applyGlobalFilters();
                     });
                 });
-            });
+
+                // Apply filters on initial load
+                setTimeout(applyGlobalFilters, 100);
+            }
+
+            // Handle filter tabs (legacy - now hidden but keep for compatibility)
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            const pluginLinks = document.querySelectorAll('.grid-item[data-icon="mdi-tune-variant"] .grid-item-link');
+
+            if (filterTabs.length > 0) {
+                filterTabs.forEach(function(tab) {
+                    tab.addEventListener('click', function() {
+                        // Toggle active state (allow multiple selections)
+                        if (tab.dataset.filter === 'all') {
+                            // If "All" is clicked, deactivate other tabs and activate "All"
+                            filterTabs.forEach(t => t.classList.remove('active'));
+                            tab.classList.add('active');
+                        } else {
+                            // If a specific filter is clicked, deactivate "All"
+                            if (filterTabs[0]) {
+                                filterTabs[0].classList.remove('active');
+                            }
+                            tab.classList.toggle('active');
+
+                            // If no filters are active, reactivate "All"
+                            const anyActive = Array.from(filterTabs).slice(1).some(t => t.classList.contains('active'));
+                            if (!anyActive && filterTabs[0]) {
+                                filterTabs[0].classList.add('active');
+                            }
+                        }
+
+                        // Get active filters
+                        const activeFilters = Array.from(filterTabs)
+                            .filter(t => t.classList.contains('active'))
+                            .map(t => t.dataset.filter);
+
+                        // Filter plugins
+                        pluginLinks.forEach(function(link) {
+                            const types = link.dataset.types.split(' ');
+
+                            if (activeFilters.includes('all') || activeFilters.some(filter => types.includes(filter))) {
+                                link.style.display = 'inline-block';
+                            } else {
+                                link.style.display = 'none';
+                            }
+                        });
+                    });
+                });
+            }
 
             // Check each grid item to see if it needs a toggle button
             const gridItems = document.querySelectorAll('.grid-item');
@@ -2212,9 +2388,9 @@
                 // Get platform type
                 const platformType = platformTabs[index].getAttribute('data-platform');
 
-                // Store platform context in sessionStorage for persistence across pages
+                // Update currentPlatform variable
                 if (platformType) {
-                    sessionStorage.setItem('jdaviz-platform', platformType);
+                    currentPlatform = platformType;
                 }
 
                 // Update tabs
@@ -2265,6 +2441,11 @@
                         installButton.href = 'setup/platform.html?platform=platform';
                         installButton.target = '_self';
                     }
+                }
+
+                // Apply global filters to update platform-disabled buttons
+                if (typeof applyGlobalFilters === 'function') {
+                    applyGlobalFilters();
                 }
             }
 
@@ -2479,6 +2660,19 @@ jd.show()</div>
             <a href="setup/local.html" class="full-width-button" id="install-button" target="_self">Install Jdaviz</a>
         </div>
 
+        <!-- Global Filters Section -->
+        <div class="global-filters-section">
+            <div class="global-filter-tabs">
+                <div class="global-filter-tab active" data-filter="all" data-filter-type="data-type">All</div>
+                <div class="global-filter-tab" data-filter="image" data-filter-type="data-type">Images</div>
+                <div class="global-filter-tab" data-filter="1d" data-filter-type="data-type">1D Spectra</div>
+                <div class="global-filter-tab" data-filter="2d" data-filter-type="data-type">2D Spectra</div>
+                <div class="global-filter-tab" data-filter="3d" data-filter-type="data-type">3D Spectra</div>
+                <div class="global-filter-tab" data-filter="catalog" data-filter-type="data-type">Catalog</div>
+                <div class="global-filter-tab" data-filter="ramp" data-filter-type="data-type">Ramp</div>
+            </div>
+        </div>
+
         <!-- Grid Section -->
         <div class="grid-container">
             {% for item in grid_items %}
@@ -2505,17 +2699,26 @@ jd.show()</div>
                         <!-- Two column layout with headers -->
                         <div class="column-header">{{ item.column_headers[0] }}</div>
                         <div class="column-header">{{ item.column_headers[1] }}</div>
+                        <div class="column-content">
                         {% for link in item.links[0] %}
-                        <a href="{{ pathto(link.href) }}" class="grid-item-link">{{ link.text }}</a>
+                        <a href="{{ pathto(link.href) }}" class="grid-item-link"
+                           {% if link.data_types %}data-types="{{ link.data_types }}"{% endif %}
+                           {% if link.excl_platforms %}data-excl-platforms="{{ link.excl_platforms }}"{% endif %}>{{ link.text }}</a>
                         {% endfor %}
+                        </div>
+                        <div class="column-content">
                         {% for link in item.links[1] %}
-                        <a href="{{ pathto(link.href) }}" class="grid-item-link">{{ link.text }}</a>
+                        <a href="{{ pathto(link.href) }}" class="grid-item-link"
+                           {% if link.data_types %}data-types="{{ link.data_types }}"{% endif %}
+                           {% if link.excl_platforms %}data-excl-platforms="{{ link.excl_platforms }}"{% endif %}>{{ link.text }}</a>
                         {% endfor %}
+                        </div>
                         {% else %}
                         <!-- Two-column layout for dynamically generated items -->
                         {% for link in item.links %}
                         <a href="{{ pathto(link.href) }}" class="grid-item-link"
-                           {% if link.data_types %}data-types="{{ link.data_types }}"{% endif %}>{{ link.text }}</a>
+                           {% if link.data_types %}data-types="{{ link.data_types }}"{% endif %}
+                           {% if link.excl_platforms %}data-excl-platforms="{{ link.excl_platforms }}"{% endif %}>{{ link.text }}</a>
                         {% endfor %}
                         {% endif %}
 

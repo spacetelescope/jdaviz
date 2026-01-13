@@ -23,11 +23,17 @@
     if (currentPlatform) {
         sessionStorage.setItem('jdaviz-platform', currentPlatform);
 
-        // Add platform class to body for CSS targeting
-        document.body.classList.add('platform-' + currentPlatform);
-
-        // Store as data attribute for easy access
-        document.body.setAttribute('data-jdaviz-platform', currentPlatform);
+        // Add platform class to body for CSS targeting (when DOM is ready)
+        if (document.body) {
+            document.body.classList.add('platform-' + currentPlatform);
+            document.body.setAttribute('data-jdaviz-platform', currentPlatform);
+        } else {
+            // DOM not ready yet, wait for it
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('platform-' + currentPlatform);
+                document.body.setAttribute('data-jdaviz-platform', currentPlatform);
+            });
+        }
     }
 
     // Function to append platform parameter to URL

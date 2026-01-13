@@ -1,5 +1,7 @@
 .. _loaders-format-2d-spectrum:
 
+:data-types: 2d
+
 ***************************
 2D Spectrum Format
 ***************************

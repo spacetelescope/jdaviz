@@ -1,5 +1,7 @@
 .. _loaders-source-file-drop:
 
+:excl_platforms: mast
+
 ************************
 Loading via File Drop
 ************************

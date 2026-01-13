@@ -1,5 +1,7 @@
 .. _loaders-source-file:
 
+:excl_platforms: mast
+
 ********************
 Loading from File
 ********************

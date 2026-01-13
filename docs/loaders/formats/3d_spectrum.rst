@@ -1,5 +1,7 @@
 .. _loaders-format-3d-spectrum:
 
+:data-types: 3d
+
 ***************************
 3D Spectrum Format
 ***************************

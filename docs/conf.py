@@ -346,7 +346,12 @@ plugin_data_types = {
 
 
 def scan_directory_for_links(base_path, directory, data_type_map=None):
-    """Scan a directory for RST files and return link information."""
+    """Scan a directory for RST files and return link information.
+
+    Reads metadata from RST files in the format:
+    :data-types: image 2d 3d
+    :excl_platforms: desktop mast
+    """
     links = []
     dir_path = os.path.join(base_path, directory)
     if not os.path.exists(dir_path):
@@ -361,13 +366,137 @@ def scan_directory_for_links(base_path, directory, data_type_map=None):
 
             link_data = {'text': name, 'href': rel_path}
 
-            # Add data types if mapping is provided
-            if data_type_map and filename[:-4] in data_type_map:
+            # Parse RST file for metadata
+            rst_path = os.path.join(dir_path, filename)
+            try:
+                with open(rst_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # Look for field list metadata at the start of the file
+                    for line in content.split('\n')[:20]:  # Check first 20 lines
+                        line = line.strip()
+                        if line.startswith(':data-types:'):
+                            data_types = line.split(':', 2)[2].strip()
+                            if data_types:
+                                link_data['data_types'] = data_types
+                        elif line.startswith(':excl_platforms:'):
+                            excl_platforms = line.split(':', 2)[2].strip()
+                            if excl_platforms:
+                                link_data['excl_platforms'] = excl_platforms
+            except Exception as e:
+                print(f"Warning: Could not parse {rst_path}: {e}")
+
+            # Fallback to data_type_map if provided and no metadata found
+            if 'data_types' not in link_data and data_type_map and filename[:-4] in data_type_map:
                 link_data['data_types'] = ' '.join(data_type_map[filename[:-4]])
+
+            # For plugins directory, automatically extract data-types from Python code
+            if 'data_types' not in link_data and directory == 'plugins':
+                extracted_types = extract_data_types_from_plugin(
+                    base_path, filename[:-4]
+                )
+                if extracted_types:
+                    link_data['data_types'] = ' '.join(sorted(extracted_types))
 
             links.append(link_data)
 
     return links
+
+
+def extract_data_types_from_plugin(base_path, plugin_name):
+    """
+    Extract data types from plugin Python code by analyzing dataset.filters.
+
+    Returns a set of data type strings (e.g., {'1d', '2d', '3d', 'image', ...})
+    """
+    import re
+
+    # Mapping from filter names to data types
+    filter_to_datatype = {
+        'is_flux_cube': '3d',
+        'is_cube': '3d',
+        'is_ramp_cube': 'ramp',
+        'is_ramp_group_cube': 'ramp',
+        'is_ramp_diff_cube': 'ramp',
+        'is_ramp_integration': 'ramp',
+        'is_spectrum': '1d',
+        'is_spectrum_2d': '2d',
+        'is_image': 'image',
+        'is_catalog': 'catalog',
+        'is_image_not_spectrum': 'image',
+        'is_catalog_or_image_not_spectrum': ['catalog', 'image'],
+    }
+
+    generic_filters = {
+        'is_not_wcs_only', 'not_child_layer', 'layer_in_viewers',
+        'layer_is_not_dq', 'not_ramp', 'same_mosviz_row',
+    }
+
+    # Find the plugin Python file
+    jdaviz_dir = os.path.abspath(os.path.join(base_path, '..', 'jdaviz'))
+    configs = ['default', 'cubeviz', 'specviz', 'specviz2d',
+               'mosviz', 'imviz', 'rampviz']
+
+    python_files = []
+
+    # Strategy 1: Exact match
+    for config in configs:
+        plugin_py_file = os.path.join(
+            jdaviz_dir, 'configs', config, 'plugins',
+            plugin_name, f'{plugin_name}.py'
+        )
+        if os.path.exists(plugin_py_file):
+            python_files.append(plugin_py_file)
+
+    # Strategy 2: Partial match
+    if not python_files:
+        for config in configs:
+            plugins_dir = os.path.join(jdaviz_dir, 'configs', config, 'plugins')
+            if os.path.exists(plugins_dir):
+                for subdir in os.listdir(plugins_dir):
+                    if (subdir in plugin_name or plugin_name in subdir):
+                        subdir_path = os.path.join(plugins_dir, subdir)
+                        if os.path.isdir(subdir_path):
+                            for py_file in os.listdir(subdir_path):
+                                if (py_file.endswith('.py') and
+                                        not py_file.startswith('__')):
+                                    python_files.append(
+                                        os.path.join(subdir_path, py_file)
+                                    )
+
+    if not python_files:
+        return set()
+
+    # Parse the first matching file for filters
+    try:
+        with open(python_files[0], 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Look for self.dataset.filters = [...]
+        filter_match = re.search(
+            r'self\.dataset\.filters\s*=\s*\[(.*?)\]',
+            content, re.DOTALL
+        )
+
+        if not filter_match:
+            return set()
+
+        filter_names = re.findall(r"'([^']+)'", filter_match.group(1))
+
+        data_types = set()
+        for filter_name in filter_names:
+            if filter_name in generic_filters:
+                continue
+            if filter_name in filter_to_datatype:
+                dtype = filter_to_datatype[filter_name]
+                if isinstance(dtype, list):
+                    data_types.update(dtype)
+                else:
+                    data_types.add(dtype)
+
+        return data_types
+
+    except Exception:
+        return set()
 
 
 def check_extensions_exists(base_path, directory):
@@ -376,6 +505,197 @@ def check_extensions_exists(base_path, directory):
     if os.path.exists(extensions_path):
         return os.path.join(directory, 'extensions')
     return None
+
+
+def validate_plugin_data_types(base_path, docs_dir):
+    """
+    Validate that :data-types: in plugin RST files match the dataset filters in plugin Python code.
+
+    Returns a list of validation warnings.
+    """
+    import re
+    warnings = []
+
+    # Mapping from dataset filter names to data-type categories
+    # These map the filter function names used in plugin code to the data-type tags used in RST
+    filter_to_datatype = {
+        'is_flux_cube': '3d',
+        'is_cube': '3d',
+        'is_ramp_cube': 'ramp',
+        'is_ramp_group_cube': 'ramp',
+        'is_ramp_diff_cube': 'ramp',
+        'is_ramp_integration': 'ramp',
+        'is_spectrum': '1d',
+        'is_spectrum_2d': '2d',
+        'is_image': 'image',
+        'is_catalog': 'catalog',
+        'is_image_not_spectrum': 'image',
+        'is_catalog_or_image_not_spectrum': ['catalog', 'image'],
+    }
+
+    # Filters that don't correspond to specific data types (generic filters)
+    # These are used for data management and shouldn't trigger warnings
+    generic_filters = {
+        'is_not_wcs_only',
+        'not_child_layer',
+        'layer_in_viewers',
+        'layer_is_not_dq',
+        'not_ramp',
+        'same_mosviz_row',
+    }
+
+    # Scan plugin RST files in docs/plugins/
+    plugin_docs_dir = os.path.join(docs_dir, 'plugins')
+    if not os.path.exists(plugin_docs_dir):
+        return warnings
+
+    for filename in os.listdir(plugin_docs_dir):
+        if not filename.endswith('.rst') or filename in ['index.rst', 'extensions.rst']:
+            continue
+
+        rst_path = os.path.join(plugin_docs_dir, filename)
+        plugin_name = filename[:-4]  # Remove .rst
+
+        # Read data-types from RST file
+        rst_data_types = None
+        try:
+            with open(rst_path, 'r', encoding='utf-8') as f:
+                for line in f.read().split('\n')[:20]:
+                    if line.strip().startswith(':data-types:'):
+                        rst_data_types = set(line.split(':', 2)[2].strip().split())
+                        break
+        except Exception as e:
+            warnings.append(f"Warning: Could not read {rst_path}: {e}")
+            continue
+
+        # Find corresponding Python file in jdaviz/configs/**/plugins/
+        # Try multiple strategies to find the plugin file
+        python_files = []
+        jdaviz_dir = os.path.abspath(os.path.join(base_path, '..', 'jdaviz'))
+
+        # Strategy 1: Look for exact name match
+        configs = ['default', 'cubeviz', 'specviz', 'specviz2d',
+                   'mosviz', 'imviz', 'rampviz']
+        for config in configs:
+            plugin_py_dir = os.path.join(jdaviz_dir, 'configs', config,
+                                         'plugins', plugin_name)
+            plugin_py_file = os.path.join(plugin_py_dir, f'{plugin_name}.py')
+            if os.path.exists(plugin_py_file):
+                python_files.append(plugin_py_file)
+
+        # Strategy 2: Search for plugin files containing the plugin name
+        if not python_files:
+            for config in configs:
+                plugins_dir = os.path.join(jdaviz_dir, 'configs', config,
+                                           'plugins')
+                if os.path.exists(plugins_dir):
+                    for subdir in os.listdir(plugins_dir):
+                        subdir_path = os.path.join(plugins_dir, subdir)
+                        if os.path.isdir(subdir_path):
+                            # Look for Python file with similar name
+                            for py_file_name in os.listdir(subdir_path):
+                                is_py = py_file_name.endswith('.py')
+                                not_init = not py_file_name.startswith('__')
+                                if is_py and not_init:
+                                    # Check if plugin_name is in dir/file name
+                                    # or if dir name is contained in plugin_name
+                                    # (e.g., spectral_extraction dir matches
+                                    #  spectral_extraction_3d.rst)
+                                    name_match = (
+                                        plugin_name in subdir or
+                                        subdir in plugin_name or
+                                        plugin_name.replace('_', '') in
+                                        subdir.replace('_', '')
+                                    )
+                                    if name_match:
+                                        py_file = os.path.join(
+                                            subdir_path, py_file_name
+                                        )
+                                        python_files.append(py_file)
+
+        if not python_files:
+            # Plugin file not found - this is okay, might be documented but not implemented yet
+            continue
+
+        # Parse Python file for dataset.filters
+        all_code_data_types = []
+        all_py_files = []
+
+        for py_file in python_files:
+            try:
+                with open(py_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Look for self.dataset.filters = [...]
+                filter_match = re.search(
+                    r'self\.dataset\.filters\s*=\s*\[(.*?)\]',
+                    content,
+                    re.DOTALL
+                )
+
+                if not filter_match:
+                    # No dataset filters defined
+                    continue
+
+                filter_content = filter_match.group(1)
+                # Extract filter function names from the list
+                filter_names = re.findall(r"'([^']+)'", filter_content)
+
+                # Convert filter names to data types (skip generic filters)
+                code_data_types = set()
+                for filter_name in filter_names:
+                    if filter_name in generic_filters:
+                        # Skip generic filters that don't indicate data type
+                        continue
+                    if filter_name in filter_to_datatype:
+                        dtype = filter_to_datatype[filter_name]
+                        if isinstance(dtype, list):
+                            code_data_types.update(dtype)
+                        else:
+                            code_data_types.add(dtype)
+
+                if code_data_types:
+                    all_code_data_types.append(code_data_types)
+                    all_py_files.append(py_file)
+
+            except Exception as e:
+                warnings.append(f"Warning: Could not parse {py_file}: {e}")
+
+        # Skip if multiple plugins found with different data types
+        # (ambiguous match - e.g., spectral_extraction_2d matches both
+        # cubeviz and specviz2d plugins)
+        if len(all_code_data_types) > 1:
+            unique_types = [tuple(sorted(dt)) for dt in all_code_data_types]
+            if len(set(unique_types)) > 1:
+                # Different plugins have different data types - skip
+                continue
+
+        # If we found any code data types, validate
+        if all_code_data_types:
+            code_data_types = all_code_data_types[0]
+            py_file = all_py_files[0]
+
+            # Compare RST data-types with code data-types
+            if rst_data_types is None:
+                # Plugin has filters but RST has no data-types
+                warnings.append(
+                    f"Missing :data-types: in {filename}:\n"
+                    f"  RST has no :data-types: field\n"
+                    f"  Code filters for: {sorted(code_data_types)}\n"
+                    f"  (from {os.path.relpath(py_file, base_path)})\n"
+                    f"  Add this to the RST file: :data-types: "
+                    f"{' '.join(sorted(code_data_types))}"
+                )
+            elif rst_data_types != code_data_types:
+                # Mismatch between RST and code
+                warnings.append(
+                    f"Data type mismatch in {filename}:\n"
+                    f"  RST declares: {sorted(rst_data_types)}\n"
+                    f"  Code filters for: {sorted(code_data_types)}\n"
+                    f"  (from {os.path.relpath(py_file, base_path)})"
+                )
+
+    return warnings
 
 
 # Unified descriptions for grid items and wireframe sidebars
@@ -409,6 +729,27 @@ descriptions = {
 # Build grid items structure
 docs_dir = os.path.dirname(__file__)
 
+# Data type mappings for loaders/formats
+loader_formats_data_types = {
+    '1d_spectrum': ['1d'],
+    '2d_spectrum': ['2d'],
+    '3d_spectrum': ['3d'],
+    'catalog': ['catalog'],
+    'image': ['image'],
+    'ramp': ['ramp']
+}
+
+# Data type mappings for viewers
+viewer_data_types = {
+    'spectrum_1d': ['1d'],
+    'profile_1d': ['1d', '2d', '3d'],
+    'spectrum_2d': ['2d'],
+    'image_2d': ['image', '2d', '3d'],
+    'table': ['catalog'],
+    'histogram': ['1d', 'image', '2d', '3d'],
+    'scatter': ['catalog']
+}
+
 grid_items_data = [
     {
         'title': 'Data Loaders',
@@ -419,7 +760,7 @@ grid_items_data = [
         'column_headers': ['Sources:', 'Formats:'],
         'links': [
             scan_directory_for_links(docs_dir, 'loaders/sources'),
-            scan_directory_for_links(docs_dir, 'loaders/formats')
+            scan_directory_for_links(docs_dir, 'loaders/formats', loader_formats_data_types)
         ],
         'extensions_path': check_extensions_exists(docs_dir, 'loaders')
     },
@@ -445,7 +786,7 @@ grid_items_data = [
         'description': descriptions['viewers'],
         'icon': 'mdi-plus-box',
         'grid_id': 'grid-viewers',
-        'links': scan_directory_for_links(docs_dir, 'viewers'),
+        'links': scan_directory_for_links(docs_dir, 'viewers', viewer_data_types),
         'extensions_path': check_extensions_exists(docs_dir, 'viewers')
     },
     {
@@ -508,6 +849,204 @@ html_context['descriptions'] = descriptions
 
 
 # -- Custom directive -------------------------------------------
+
+class PluginAvailabilityDirective(SphinxDirective):
+    """
+    Automatically generate plugin availability information from Python code.
+
+    Reads the plugin's __init__ to extract:
+    - observe_traitlets_for_relevancy
+    - dataset.filters
+    - viewer filters
+
+    Generates a banner showing when the plugin is available/visible.
+    """
+
+    def run(self):
+        # Get the current document's name (e.g., 'plugins/spectral_extraction_3d')
+        doc_name = self.env.docname
+
+        # Extract plugin name from doc path
+        if not doc_name.startswith('plugins/'):
+            error_node = nodes.warning(
+                '',
+                nodes.paragraph(text='This directive can only be used in plugin documentation.')
+            )
+            return [error_node]
+
+        plugin_name = doc_name.split('/')[-1]  # e.g., 'spectral_extraction_3d'
+
+        # Find the plugin Python file
+        jdaviz_dir = os.path.abspath(os.path.join(self.env.srcdir, '..', 'jdaviz'))
+        python_file = self._find_plugin_file(jdaviz_dir, plugin_name)
+
+        if not python_file:
+            # No plugin file found - skip silently
+            return []
+
+        # Parse the plugin file
+        try:
+            with open(python_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception as e:
+            error_node = nodes.warning(
+                '',
+                nodes.paragraph(text=f'Could not read plugin file: {e}')
+            )
+            return [error_node]
+
+        # Extract information
+        data_types = self._extract_data_types(content)
+        relevancy_info = self._extract_relevancy(content)
+
+        # Generate availability text
+        availability_parts = []
+
+        if data_types:
+            dtype_names = {
+                '1d': '1D spectra',
+                '2d': '2D spectra',
+                '3d': '3D spectral cubes',
+                'image': 'images',
+                'catalog': 'catalogs',
+                'ramp': 'ramp data'
+            }
+            dtype_list = [dtype_names.get(dt, dt) for dt in sorted(data_types)]
+            if len(dtype_list) == 1:
+                availability_parts.append(f"This plugin works with **{dtype_list[0]}**.")
+            else:
+                availability_parts.append(
+                    f"This plugin works with **{', '.join(dtype_list[:-1])} "
+                    f"and {dtype_list[-1]}**."
+                )
+
+        if relevancy_info:
+            if relevancy_info['type'] == 'dataset_items':
+                availability_parts.append(
+                    "The plugin will be visible when at least one compatible dataset "
+                    "is loaded."
+                )
+            elif relevancy_info['type'] == 'viewer_items':
+                availability_parts.append(
+                    "The plugin will be visible when at least one viewer is available."
+                )
+            elif relevancy_info['type'] == 'trace_dataset_items':
+                availability_parts.append(
+                    "The plugin will be visible when trace data is loaded."
+                )
+
+        if not availability_parts:
+            # No specific information found
+            return []
+
+        # Create an admonition node
+        admonition_node = nodes.admonition()
+        admonition_node += nodes.title(text='Plugin Availability')
+        admonition_node['classes'].append('note')
+
+        for part in availability_parts:
+            # Parse the reStructuredText to handle inline markup
+            paragraph = nodes.paragraph()
+            # Use string list for nested_parse
+            from docutils.statemachine import StringList
+            text_list = StringList([part], source='<plugin-availability>')
+            self.state.nested_parse(text_list, 0, paragraph)
+            admonition_node += paragraph
+
+        return [admonition_node]
+
+    def _find_plugin_file(self, jdaviz_dir, plugin_name):
+        """Find the Python file for a plugin."""
+        configs = ['default', 'cubeviz', 'specviz', 'specviz2d',
+                   'mosviz', 'imviz', 'rampviz']
+
+        # Strategy 1: Exact match
+        for config in configs:
+            plugin_py_file = os.path.join(
+                jdaviz_dir, 'configs', config, 'plugins',
+                plugin_name, f'{plugin_name}.py'
+            )
+            if os.path.exists(plugin_py_file):
+                return plugin_py_file
+
+        # Strategy 2: Partial match (e.g., spectral_extraction_3d -> spectral_extraction)
+        for config in configs:
+            plugins_dir = os.path.join(jdaviz_dir, 'configs', config, 'plugins')
+            if os.path.exists(plugins_dir):
+                for subdir in os.listdir(plugins_dir):
+                    if subdir in plugin_name or plugin_name in subdir:
+                        for py_file in os.listdir(os.path.join(plugins_dir, subdir)):
+                            if py_file.endswith('.py') and not py_file.startswith('__'):
+                                full_path = os.path.join(plugins_dir, subdir, py_file)
+                                return full_path
+
+        return None
+
+    def _extract_data_types(self, content):
+        """Extract data types from dataset.filters."""
+        import re
+
+        # Mapping from filter names to data types
+        filter_to_datatype = {
+            'is_flux_cube': '3d',
+            'is_cube': '3d',
+            'is_ramp_cube': 'ramp',
+            'is_ramp_group_cube': 'ramp',
+            'is_ramp_diff_cube': 'ramp',
+            'is_ramp_integration': 'ramp',
+            'is_spectrum': '1d',
+            'is_spectrum_2d': '2d',
+            'is_image': 'image',
+            'is_catalog': 'catalog',
+            'is_image_not_spectrum': 'image',
+            'is_catalog_or_image_not_spectrum': ['catalog', 'image'],
+        }
+
+        generic_filters = {
+            'is_not_wcs_only', 'not_child_layer', 'layer_in_viewers',
+            'layer_is_not_dq', 'not_ramp', 'same_mosviz_row',
+        }
+
+        # Look for self.dataset.filters = [...]
+        filter_match = re.search(
+            r'self\.dataset\.filters\s*=\s*\[(.*?)\]',
+            content, re.DOTALL
+        )
+
+        if not filter_match:
+            return set()
+
+        filter_names = re.findall(r"'([^']+)'", filter_match.group(1))
+
+        data_types = set()
+        for filter_name in filter_names:
+            if filter_name in generic_filters:
+                continue
+            if filter_name in filter_to_datatype:
+                dtype = filter_to_datatype[filter_name]
+                if isinstance(dtype, list):
+                    data_types.update(dtype)
+                else:
+                    data_types.add(dtype)
+
+        return data_types
+
+    def _extract_relevancy(self, content):
+        """Extract relevancy observation info."""
+        import re
+
+        # Look for observe_traitlets_for_relevancy
+        relevancy_match = re.search(
+            r'observe_traitlets_for_relevancy\s*\(\s*traitlets_to_observe\s*=\s*\[\'([^\']+)\'\]',
+            content
+        )
+
+        if relevancy_match:
+            traitlet = relevancy_match.group(1)
+            return {'type': traitlet}
+
+        return None
+
 
 class JdavizCLIHelpDirective(SphinxDirective):
 
@@ -778,3 +1317,31 @@ def setup(app):
     app.add_directive('jdavizclihelp', JdavizCLIHelpDirective)
     app.add_directive('jdavizlanding', JdavizLandingPageDirective)
     app.add_directive('plugin-api-refs', PluginApiReferencesDirective)
+    app.add_directive('plugin-availability', PluginAvailabilityDirective)
+
+    # Validate plugin data-types at build time
+    def validate_on_build(app, exception):
+        """Run validation after build completes."""
+        print("\n[jdaviz] Running plugin data-type validation...")
+        if exception is not None:
+            print(f"[jdaviz] Skipping validation due to build error: {exception}")
+            return
+
+        base_path = os.path.abspath(os.path.dirname(__file__))
+        docs_dir = os.path.dirname(__file__)
+        validation_warnings = validate_plugin_data_types(base_path, docs_dir)
+
+        if validation_warnings:
+            print("\n" + "="*70)
+            print("PLUGIN DATA-TYPE VALIDATION WARNINGS:")
+            print("="*70)
+            for warning in validation_warnings:
+                print(warning)
+                print("-"*70)
+            print("\nPlease update the :data-types: field in the RST files to match")
+            print("the dataset.filters defined in the plugin Python code.")
+            print("="*70 + "\n")
+        else:
+            print("[jdaviz] No data-type mismatches found!")
+
+    app.connect('build-finished', validate_on_build)

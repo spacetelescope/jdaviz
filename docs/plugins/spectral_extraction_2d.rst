@@ -4,6 +4,8 @@
 2D Spectral Extraction
 ************************
 
+.. plugin-availability::
+
 Extract 1D spectra from 2D spectroscopic data.
 
 Description
