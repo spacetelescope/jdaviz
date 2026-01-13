@@ -5,18 +5,8 @@
 {# Custom navbar - show different items based on page metadata #}
 {% block header %}
   {% if pagename == 'index' %}
-    {# Landing page - hide the standard navbar completely #}
-    <style>
-      #pst-page-navigation-contents {
-        display: none !important;
-      }
-      .bd-header {
-        display: none !important;
-      }
-      .bd-header__inner {
-        display: none !important;
-      }
-    </style>
+    {# Landing page - show navbar #}
+    {{ super() }}
   {% elif meta and meta.get('navbar_style') == 'minimal' %}
     {# New pages - show simplified navbar #}
     {{ super() }}
