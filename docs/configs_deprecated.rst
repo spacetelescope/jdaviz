@@ -1,10 +1,6 @@
-#####################
-Configs (Deprecated)
-#####################
-
-.. include:: _templates/deprecated_config_banner.rst
-
-Config-specific documentation (deprecated in favor of feature-based organization).
+######
+Jdaviz
+######
 
 .. grid:: 3
    :gutter: 1
@@ -68,6 +64,96 @@ Config-specific documentation (deprecated in favor of feature-based organization
          :click-parent:
 
          Jump to Rampviz
+
+``jdaviz`` is a package of astronomical data analysis visualization
+tools based on the Jupyter platform. These GUI-based
+tools link data visualization and interactive analysis. They are designed
+to work within a Jupyter notebook cell, as a standalone desktop application,
+or as embedded windows within a website -- all with nearly identical
+user interfaces.
+
+``jdaviz`` applications currently include tools for interactive
+visualization of spectroscopic and imaging data primarily developed for use with
+the James Webb Space Telescope (JWST) instrument modes.
+These tools can, however, be used with data from other astronomical telescopes.
+:ref:`imviz` is a tool for visualization and quick-look analysis for 2D astronomical images.
+:ref:`specviz` is a tool for visualization and quick-look analysis of 1D astronomical spectra.
+:ref:`specviz2d` is a tool for visualization and quick-look analysis of 2D astronomical spectra.
+:ref:`cubeviz` provides a view of spectroscopic data cubes (like those
+to be produced by JWST MIRI), along with 1D spectra extracted from the
+cube.
+:ref:`mosviz` is a visualization tool for many astronomical
+spectra, typically the output of a multi-object spectrograph (e.g.,
+JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
+contextual information like on-sky views of the spectrograph slit.
+:ref:`rampviz` is a visualization tool for Level 1 "ramp" data products.
+
+.. warning::
+
+   As of ``jdaviz`` version 4.2, please use Python 3.11 or
+   greater to get the latest bug fixes and feature additions for ``jdaviz``.
+
+.. note::
+
+   ``jdaviz`` is one tool that is part of STScI's larger
+   `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
+
+.. note::
+
+   The offline version of this documentation can be downloaded from
+   `Jdaviz zipped HTML downloads page <https://readthedocs.org/projects/jdaviz/downloads/>`_.
+
+.. note::
+
+   Recordings and instructional notebooks from live Jdaviz tutorials can be found at
+   `the JWebbinar website <https://www.stsci.edu/jwst/science-execution/jwebbinars>`_
+   under the "Materials and Videos" expandable section. Scroll down to the bottom of that section
+   to find materials from the most recent session (JWebbinar 24, March 2023).
+
+************
+Using Jdaviz
+************
+
+.. toctree::
+  :maxdepth: 2
+
+  loaders/index
+  plugins/index
+  viewers/index
+  subsets/index
+  export/index
+  settings/index
+  info/index
+  data_menu/index
+  mouseover/index
+  userapi/index
+
+*******************************
+JWST Instrument Modes in Jdaviz
+*******************************
+
+.. toctree::
+  :maxdepth: 2
+
+  index_jwst_modes
+
+*****************
+Development Guide
+*****************
+
+.. toctree::
+   :maxdepth: 2
+
+   index_ref_api
+
+*********************
+License & Attribution
+*********************
+
+.. toctree::
+   :maxdepth: 2
+
+   index_citation
 
 *************************
 Deprecated Config Access

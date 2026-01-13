@@ -51,4 +51,4 @@ API Access
 See Also
 ========
 
-* :ref:`imviz-line-profiles` - Imviz line profiles documentation
+* :ref:`line-profile-xy` - Imviz-specific line profiles documentation

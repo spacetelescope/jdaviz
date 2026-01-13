@@ -2437,7 +2437,7 @@
                 if (installButton) {
                     if (platformType === 'desktop') {
                         installButton.textContent = 'Install Standalone Desktop UI';
-                        installButton.href = 'setup/desktop.html?platform=desktop';
+                        installButton.href = 'setup/desktop.html';
                         installButton.target = '_self';
                     } else if (platformType === 'mast') {
                         installButton.textContent = 'Launch Jdaviz@MAST';
@@ -2445,11 +2445,11 @@
                         installButton.target = '_blank';
                     } else if (platformType === 'jupyter') {
                         installButton.textContent = 'Install Jdaviz';
-                        installButton.href = 'setup/local.html?platform=jupyter';
+                        installButton.href = 'setup/local.html';
                         installButton.target = '_self';
                     } else if (platformType === 'platform') {
                         installButton.textContent = 'Run Jdaviz on a Platform';
-                        installButton.href = 'setup/platform.html?platform=platform';
+                        installButton.href = 'setup/platform.html';
                         installButton.target = '_self';
                     }
                 }

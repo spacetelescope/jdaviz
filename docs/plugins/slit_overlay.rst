@@ -43,8 +43,3 @@ API Access
 .. plugin-api-refs::
    :module: jdaviz.configs.mosviz.plugins.slit_overlay.slit_overlay
    :class: SlitOverlay
-
-See Also
-========
-
-* :ref:`specviz2d-slit-overlay` - Slit overlay documentation
