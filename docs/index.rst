@@ -5,5 +5,8 @@
    :hidden:
 
    setup/index
-   configs_index
+   docs_index
+   api_index
+   dev_index
+   configs_deprecated
 

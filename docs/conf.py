@@ -188,8 +188,15 @@ html_copy_source = False
 html_theme_options.update(  # noqa: F405
     {
         "github_url": "https://github.com/spacetelescope/jdaviz",
-        "external_links": [
-            {"name": "Help Desk", "url": "http://jwsthelp.stsci.edu/"},
+        "navbar_start": ["navbar-logo"],  # Keep logo
+        # navbar_center will auto-populate from top-level toctree
+        "navbar_end": ["theme-switcher", "navbar-icon-links"],  # Help Desk will be in icon links
+        "icon_links": [
+            {
+                "name": "Help Desk",
+                "url": "http://jwsthelp.stsci.edu/",
+                "icon": "fa-solid fa-circle-question",
+            }
         ],
         "use_edit_page_button": True,
         # https://github.com/pydata/pydata-sphinx-theme/issues/1492

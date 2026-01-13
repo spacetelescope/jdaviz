@@ -1,8 +1,8 @@
 .. _using-jdaviz:
 
-**********
-User Guide
-**********
+*************************
+Deprecated Config Access
+*************************
 
 .. toctree::
   :maxdepth: 2

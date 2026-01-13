@@ -117,7 +117,6 @@ Using Jdaviz
 .. toctree::
   :maxdepth: 2
 
-  index_using_jdaviz
   loaders/index
   plugins/index
   viewers/index
@@ -155,3 +154,12 @@ License & Attribution
    :maxdepth: 2
 
    index_citation
+
+*************************
+Deprecated Config Access
+*************************
+
+.. toctree::
+  :maxdepth: 2
+
+  index_using_jdaviz
