@@ -1,8 +1,12 @@
 .. _plugins-model-fitting:
 
 *******************
+
 Model Fitting
+
 *******************
+
+.. plugin-availability::
 
 Fit analytical models to spectroscopic data.
 

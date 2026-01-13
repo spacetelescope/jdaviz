@@ -1,8 +1,12 @@
 .. _plugins-ramp_slice:
 
 **********
+
 Ramp Slice
+
 **********
+
+.. plugin-availability::
 
 Navigate through detector ramp integrations and groups.
 

@@ -1,9 +1,13 @@
 .. _plugins-line_profiles:
 .. _imviz-line-profiles:
 
+
 *************
+
 Line Profiles
 *************
+
+.. plugin-availability::
 
 Extract and analyze spatial line profiles from images.
 

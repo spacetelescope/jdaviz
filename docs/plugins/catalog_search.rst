@@ -1,8 +1,12 @@
 .. _plugins-catalog_search:
 
 **************
+
 Catalog Search
+
 **************
+
+.. plugin-availability::
 
 Query astronomical catalogs and overlay sources on images.
 

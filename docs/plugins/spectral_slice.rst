@@ -1,8 +1,12 @@
 .. _plugins-spectral_slice:
 
 **************
+
 Spectral Slice
+
 **************
+
+.. plugin-availability::
 
 Navigate and visualize spectral slices in cubes.
 

@@ -1,8 +1,12 @@
 .. _plugins-data_quality:
 
 ************
+
 Data Quality
+
 ************
+
+.. plugin-availability::
 
 Visualize and filter data quality flags.
 

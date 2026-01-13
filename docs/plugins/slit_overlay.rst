@@ -1,9 +1,13 @@
 .. _plugins-slit_overlay:
 .. _specviz2d-slit-overlay:
 
+
 ************
+
 Slit Overlay
 ************
+
+.. plugin-availability::
 
 Overlay spectrograph slit positions on images.
 

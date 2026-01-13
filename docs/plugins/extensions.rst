@@ -1,8 +1,12 @@
 .. _plugins-extensions:
 
 **********************************
+
 Plugin Extensions
+
 **********************************
+
+.. plugin-availability::
 
 Additional analysis plugins provided by extensions and third-party packages.
 

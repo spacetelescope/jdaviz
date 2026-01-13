@@ -1,8 +1,12 @@
 .. _plugins-collapse:
 
 ********
+
 Collapse
+
 ********
+
+.. plugin-availability::
 
 Collapse a spectral cube along the spectral axis to create a 2D image.
 

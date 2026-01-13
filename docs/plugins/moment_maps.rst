@@ -1,8 +1,12 @@
 .. _plugins-moment_maps:
 
 ***********
+
 Moment Maps
+
 ***********
+
+.. plugin-availability::
 
 Create moment maps from spectral cubes.
 

@@ -1,8 +1,12 @@
 .. _plugins-compass:
 
 *******
+
 Compass
+
 *******
+
+.. plugin-availability::
 
 Display orientation compass on images.
 

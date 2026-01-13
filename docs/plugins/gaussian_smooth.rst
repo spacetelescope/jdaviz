@@ -1,8 +1,12 @@
 .. _plugins-gaussian_smooth:
 
 ***************
+
 Gaussian Smooth
+
 ***************
+
+.. plugin-availability::
 
 Smooth spectra or cubes using a Gaussian kernel.
 

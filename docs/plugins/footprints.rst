@@ -1,8 +1,12 @@
 .. _plugins-footprints:
 
 **********
+
 Footprints
+
 **********
+
+.. plugin-availability::
 
 Overlay instrument footprints on sky images.
 

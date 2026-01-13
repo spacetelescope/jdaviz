@@ -1,8 +1,12 @@
 .. _plugins-aperture_photometry:
 
 ********************
+
 Aperture Photometry
+
 ********************
+
+.. plugin-availability::
 
 Perform photometry measurements within defined apertures.
 

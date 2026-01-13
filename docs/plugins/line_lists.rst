@@ -1,8 +1,12 @@
 .. _plugins-line_lists:
 
 **********
+
 Line Lists
+
 **********
+
+.. plugin-availability::
 
 Display and manage spectral line identifications.
 

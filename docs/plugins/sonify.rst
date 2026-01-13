@@ -1,8 +1,12 @@
 .. _plugins-sonify:
 
 ************
+
 Sonify Data
+
 ************
+
+.. plugin-availability::
 
 Convert data to audio for sonification analysis.
 

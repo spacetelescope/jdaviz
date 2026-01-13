@@ -212,6 +212,7 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 30px;
             margin-top: 60px;
+            margin-bottom: 24px;
         }
 
         .grid-item {
@@ -1410,7 +1411,7 @@
         }
 
         html[data-theme="light"] .global-filter-tab {
-            color: #ffffff !important;
+            color: #1a1a1a !important;
         }
 
         html[data-theme="light"] .global-filter-tab.active {
@@ -1423,6 +1424,30 @@
 
         html[data-theme="light"] .description-toggle:hover {
             color: #ffffff !important;
+        }
+
+        /* Light theme - Improve wireframe contrast */
+        html[data-theme="light"] .wireframe-viewer {
+            background: #e8e8e8;
+        }
+
+        html[data-theme="light"] .viewer-content {
+            background: #e8e8e8;
+            color: #1a1a1a;
+            opacity: 0.8;
+        }
+
+        html[data-theme="light"] .wireframe-sidebar {
+            background: #f0f0f0;
+        }
+
+        html[data-theme="light"] .viewer-toolbar {
+            background: #a0a0a0;
+            color: #1a1a1a;
+        }
+
+        html[data-theme="light"] .viewer-toolbar-icon {
+            filter: brightness(0) saturate(100%);
         }
 
         /* Light Mode - Fix overlay icons to use page background color */
@@ -2216,22 +2241,22 @@
                     if (shouldShow) {
                         if (platformDisabled) {
                             link.classList.add('platform-disabled');
-                            
+
                             // Store original text if not already stored
                             if (!link.dataset.originalText) {
                                 link.dataset.originalText = link.textContent;
                             }
-                            
+
                             // Remove any existing listeners to avoid duplicates
                             link.onmouseenter = null;
                             link.onmouseleave = null;
-                            
+
                             // Add hover listeners to change text as warning
                             link.onmouseenter = function() {
                                 const platformName = currentPlatform.charAt(0).toUpperCase() + currentPlatform.slice(1);
                                 link.textContent = `Unavailable in ${platformName}`;
                             };
-                            
+
                             link.onmouseleave = function() {
                                 link.textContent = link.dataset.originalText;
                             };
@@ -2369,20 +2394,10 @@
                 });
             }
 
-            // Platform tabs handler with auto-cycling
+            // Platform tabs handler
             const platformTabs = document.querySelectorAll('.platform-tab');
             const platformTabContents = document.querySelectorAll('.platform-tab-content');
-            let platformCycling = true;
-            let currentPlatformIndex = 2; // Start with Jupyter (index 2)
-            let platformCycleTimeout = null;
-
-            function stopPlatformCycle() {
-                platformCycling = false;
-                if (platformCycleTimeout) {
-                    clearTimeout(platformCycleTimeout);
-                    platformCycleTimeout = null;
-                }
-            }
+            let currentPlatformIndex = 2; // Default to Jupyter (index 2)
 
             function activatePlatformTab(index) {
                 // Get platform type
@@ -2449,40 +2464,16 @@
                 }
             }
 
-            function autoCyclePlatformTabs() {
-                if (!platformCycling) return;
-
-                currentPlatformIndex = (currentPlatformIndex + 1) % platformTabs.length;
-                activatePlatformTab(currentPlatformIndex);
-
-                platformCycleTimeout = setTimeout(autoCyclePlatformTabs, 5000);
-            }
-
             // Add click handlers to platform tabs
             platformTabs.forEach(function(tab, index) {
                 tab.addEventListener('click', function() {
-                    stopPlatformCycle();
                     currentPlatformIndex = index;
                     activatePlatformTab(index);
                 });
             });
 
-            // Stop cycling when clicking on platform tab content
-            platformTabContents.forEach(function(content) {
-                content.addEventListener('click', function() {
-                    stopPlatformCycle();
-                });
-            });
-
-            // Initialize API button visibility for starting tab (jupyter)
+            // Initialize with Jupyter tab active
             activatePlatformTab(currentPlatformIndex);
-
-            // Start platform tabs auto-cycling after a brief delay
-            setTimeout(function() {
-                if (platformCycling) {
-                    autoCyclePlatformTabs();
-                }
-            }, 5000);
         });
     </script>
 </head>

@@ -1,8 +1,12 @@
 .. _plugins-orientation:
 
 ***********
+
 Orientation
+
 ***********
+
+.. plugin-availability::
 
 Control image display orientation and alignment.
 
