@@ -540,10 +540,10 @@ class JdavizLandingPageDirective(SphinxDirective):
 
         # Load and render the template with context
         template = jinja_env.get_template('index.html')
-        
+
         # Get html_context from the Sphinx app config
         app_html_context = self.env.app.config.html_context
-        
+
         context = {
             'grid_items': app_html_context.get('grid_items', []),
             'jdaviz_version': app_html_context.get('jdaviz_version', ''),

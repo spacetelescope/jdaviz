@@ -557,7 +557,6 @@
             display: flex;
             align-items: flex-start;
             justify-content: center;
-            max-height: 200px;
         }
 
         .description-content {
@@ -565,7 +564,7 @@
             flex-direction: column;
             justify-content: flex-end;
             margin-bottom: 12px;
-            align-self: end;
+            align-self: end !important;
         }
 
         .description-content p {
@@ -2280,50 +2279,16 @@
             </div>
             <div class="description-content">
                 <p>
-                    <code>jdaviz</code> is a package of astronomical data analysis visualization
-                    tools based on the Jupyter platform. These GUI-based
-                    tools link data visualization and interactive analysis. They are designed
-                    to work within a Jupyter lab (notebook) cell, as a standalone desktop application,
-                    or as embedded windows within a website -- all with nearly identical
-                    user interfaces.
+                    <code>jdaviz</code> provides a set of interactive data visualization and
+                    data analysis tools for astronomical data. They are designed
+                    to work within Jupyter lab (notebook) either on your own machine or on a dedicated
+                    cloud platform, as a standalone desktop application,
+                    or embedded within a website -- all with nearly identical
+                    user interfaces.  <code>jdaviz</code> allows for users to choose between
+                    any mix of interactive point-and-click operations and advanced scripting
+                    via a Python API for bulk and reproducible analysis.
                 </p>
             </div>
-
-            <div class="description-more" id="description-more">
-                <p>
-                    <code>jdaviz</code> currently include tools for interactive
-                    visualization of spectroscopic and imaging data primarily developed for use with
-                    the James Webb Space Telescope (JWST) instrument modes.
-                    These tools can, however, be used with data from other astronomical telescopes.
-
-                    Native <a href="#grid-loaders">supported data types</a> include:
-                    <ul>
-                      <li><strong>Images</strong> - 2D astronomical images</li>
-                      <li><strong>Spectra</strong> - 1D and 2D astronomical spectra</li>
-                      <li><strong>Cubes</strong> - 3D spectroscopic data cubes</li>
-                      <li><strong>Ramps</strong> - JWST Level 1 "ramp" data products</li>
-                    </ul>
-                </p>
-
-                <div class="note">
-                    <strong>Note:</strong> <code>jdaviz</code> is one tool that is part of STScI's larger
-                    <a href="https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis" target="_blank">Data Analysis Tools Ecosystem</a>.
-                </div>
-
-                <div class="note">
-                    <strong>Note:</strong> The offline version of this documentation can be downloaded from
-                    <a href="https://readthedocs.org/projects/jdaviz/downloads/" target="_blank">Jdaviz zipped HTML downloads page</a>.
-                </div>
-
-                <div class="note">
-                    <strong>Note:</strong> Recordings and instructional notebooks from live Jdaviz tutorials can be found at
-                    <a href="https://www.stsci.edu/jwst/science-execution/jwebbinars" target="_blank">the JWebbinar website</a>
-                    under the "Materials and Videos" expandable section. Scroll down to the bottom of that section
-                    to find materials from the most recent session (JWebbinar 24, March 2023).
-                </div>
-            </div>
-
-            <button id="description-toggle" class="description-toggle">Show More</button>
         </div>
 
         <!-- Announcement Banner -->
