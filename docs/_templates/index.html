@@ -1457,17 +1457,52 @@
             white-space: pre-wrap;
         }
 
+        /* Content Border Wrapper */
+        .content-border-wrapper {
+            width: 99%;
+            max-width: 2200px;
+            margin: 80px auto;
+            padding: 20px 60px;
+            border: 2px solid var(--sidebar-active);
+            border-radius: 12px;
+            background: transparent;
+            position: relative;
+        }
+
         /* Platform Tabs Section */
         .platform-tabs-section {
-            width: 90%;
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0;
+            width: calc(100% + 120px);
+            max-width: none;
+            margin: -40px -60px 0 -60px; /* Negative margin to bring tabs over border and extend to edges */
+            padding: 0 60px; /* Add padding back inside */
+            position: relative;
+            z-index: 10; /* Ensure tabs are above the border */
+        }
+
+        /* Remove the ::after pseudo-element */
+        .platform-tabs-section::after {
+            display: none;
         }
 
         .platform-tabs-container {
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+
+        /* Constrain inner content width */
+        .wireframe-section,
+        .platform-content-section,
+        .install-section,
+        .grid-container {
+            max-width: 1500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Remove line through middle of tabs */
+        .platform-tabs-header::before {
+            display: none;
         }
 
         .platform-tabs-header {
@@ -1477,14 +1512,19 @@
             border-radius: 6px;
             overflow: hidden;
             margin-bottom: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            background: var(--sidebar-bg); /* Ensure header has opaque background */
+            z-index: 10; /* Ensure it's above the border */
         }
 
         .platform-tab {
             flex: 1;
             padding: 12px 16px;
-            background: var(--sidebar-bg);
+            background: rgb(0 59 77);
             color: var(--text-color);
-            opacity: 0.6;
+            opacity: 1.0;
             border: 1px solid var(--grid-border);
             border-right: none;
             border-radius: 0;
@@ -1502,8 +1542,7 @@
         }
 
         .platform-tab:hover {
-            background: var(--sidebar-hover);
-            opacity: 0.9;
+            background: var(--sidebar-active);
             border-color: var(--grid-border);
         }
 
@@ -1550,6 +1589,7 @@
             width: 100%;
             max-width: 1000px;
             margin: 0 auto;
+            margin-top: 40px;
             padding: 0;
         }
         @media (max-width: 768px) {
@@ -2280,11 +2320,11 @@
             <div class="description-content">
                 <p>
                     <code>jdaviz</code> provides a set of interactive data visualization and
-                    data analysis tools for astronomical data. They are designed
+                    data analysis tools for astronomical data. These tools are designed
                     to work within Jupyter lab (notebook) either on your own machine or on a dedicated
                     cloud platform, as a standalone desktop application,
                     or embedded within a website -- all with nearly identical
-                    user interfaces.  <code>jdaviz</code> allows for users to choose between
+                    user interfaces.  <code>jdaviz</code> allows for
                     any mix of interactive point-and-click operations and advanced scripting
                     via a Python API for bulk and reproducible analysis.
                 </p>
@@ -2302,8 +2342,10 @@
             <a href="{{ pathto('configs_index') }}" class="announcement-button">View Deprecated Configuration-Specific Documentation</a>
         </div>
 
-        <!-- Platform Tabs Section -->
-        <div class="platform-tabs-section">
+        <!-- Content Border Wrapper -->
+        <div class="content-border-wrapper">
+            <!-- Platform Tabs Section -->
+            <div class="platform-tabs-section">
             <div class="platform-tabs-header">
                 <button class="platform-tab" data-platform="desktop">Desktop UI</button>
                 <button class="platform-tab" data-platform="mast">Jdaviz@MAST</button>
@@ -2485,6 +2527,7 @@ jd.show()</div>
             </div>
             {% endfor %}
         </div>
+        </div><!-- End Content Border Wrapper -->
 
         <!-- GitHub Repository Button Section -->
         <div class="install-section">
