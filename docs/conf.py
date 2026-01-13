@@ -557,6 +557,145 @@ class JdavizLandingPageDirective(SphinxDirective):
         return [raw_node]
 
 
+class PluginApiReferencesDirective(SphinxDirective):
+    """
+    Auto-generate API reference links for plugin exposed attributes.
+
+    Usage:
+        .. plugin-api-refs::
+           :module: jdaviz.configs.default.plugins.collapse.collapse
+           :class: Collapse
+    """
+    required_arguments = 0
+    optional_arguments = 0
+    option_spec = {
+        'module': str,
+        'class': str,
+    }
+
+    def run(self):
+        module_path = self.options.get('module')
+        class_name = self.options.get('class')
+
+        if not module_path or not class_name:
+            error_node = nodes.error()
+            error_node += nodes.paragraph(
+                text='plugin-api-refs directive requires :module: and :class: options'
+            )
+            return [error_node]
+
+        try:
+            # Import the module and get the class
+            import importlib
+            module = importlib.import_module(module_path)
+            plugin_class = getattr(module, class_name)
+
+            # Create a temporary instance to access user_api
+            # We need to mock the required attributes for plugin initialization
+            class MockApp:
+                hub = None
+
+                def __init__(self):
+                    from unittest.mock import MagicMock
+                    self.hub = MagicMock()
+
+            # Try to instantiate and get exposed attributes
+            try:
+                # Most plugins need an app parameter
+                from unittest.mock import MagicMock
+                mock_app = MagicMock()
+                mock_app.hub = MagicMock()
+                instance = plugin_class(app=mock_app)
+                user_api = instance.user_api
+                exposed = list(user_api._expose)
+            except Exception:
+                # If instantiation fails, try to inspect the user_api property
+                # by reading the source code
+                import inspect
+                source = inspect.getsource(plugin_class.user_api.fget)
+                # Look for expose= pattern
+                import re
+                match = re.search(
+                    r"expose\s*=\s*[\(\[]([^\)\]]+)[\)\]]",
+                    source,
+                    re.DOTALL
+                )
+                if match:
+                    # Extract the tuple/list items
+                    expose_str = match.group(1)
+                    # Parse quoted strings
+                    exposed = re.findall(r"['\"]([^'\"]+)['\"]", expose_str)
+                else:
+                    exposed = []
+
+            # Build the RST content
+            rst_lines = [
+                '',
+                'API References',
+                '--------------',
+                '',
+                f'For detailed API documentation, see the '
+                f':class:`~{module_path}.{class_name}` API reference.',
+                '',
+            ]
+
+            if not exposed:
+                rst_lines.append(
+                    'This plugin is primarily UI-driven and does not '
+                    'expose additional API attributes.'
+                )
+                rst_lines.append(
+                    'See the :ref:`plugin-apis` documentation for general '
+                    'plugin API methods.'
+                )
+            else:
+                rst_lines.append('**Exposed Attributes:**')
+                rst_lines.append('')
+
+                # Determine if each attribute is a method or property
+                method_verbs = [
+                    'calculate', 'fit', 'get', 'set', 'load', 'erase',
+                    'clear', 'export', 'add', 'remove', 'search', 'extract',
+                    'smooth', 'collapse', 'unpack', 'from_', 'save', 'open',
+                    'close', 'show', 'select', 'update', 'create', 'delete',
+                    'run', 'execute', 'perform', 'apply', 'reset'
+                ]
+
+                for attr in exposed:
+                    # Check if it's a method based on naming patterns
+                    is_method = any(verb in attr for verb in method_verbs)
+
+                    if is_method:
+                        rst_lines.append(
+                            f'- :meth:`~{module_path}.{class_name}.{attr}`'
+                        )
+                    else:
+                        rst_lines.append(
+                            f'- :attr:`~{module_path}.{class_name}.{attr}`'
+                        )
+
+            # Parse the RST and return nodes
+            from docutils.parsers.rst import Parser
+            from docutils.utils import new_document
+
+            rst_text = '\n'.join(rst_lines)
+            parser = Parser()
+            doc = new_document('<plugin-api-refs>')
+            doc.settings = self.state.document.settings
+            parser.parse(rst_text, doc)
+
+            return doc.children
+
+        except Exception as e:
+            # Return an error node if something goes wrong
+            error_node = nodes.error()
+            error_node += nodes.paragraph(
+                text=f'Error generating plugin API references: {str(e)}'
+            )
+            return [error_node]
+
+
 def setup(app):
     app.add_directive('jdavizclihelp', JdavizCLIHelpDirective)
     app.add_directive('jdavizlanding', JdavizLandingPageDirective)
+    app.add_directive('plugin-api-refs', PluginApiReferencesDirective)
