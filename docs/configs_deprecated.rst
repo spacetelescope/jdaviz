@@ -1,6 +1,6 @@
-######
-Jdaviz
-######
+########################
+Deprecated Config Access
+########################
 
 .. grid:: 3
    :gutter: 1
@@ -117,16 +117,14 @@ Using Jdaviz
 .. toctree::
   :maxdepth: 2
 
-  loaders/index
-  plugins/index
-  viewers/index
-  subsets/index
-  export/index
-  settings/index
-  info/index
-  data_menu/index
-  mouseover/index
-  userapi/index
+  installation
+  imviz/index
+  specviz/index
+  cubeviz/index
+  specviz2d/index
+  mosviz/index
+  rampviz/index
+
 
 *******************************
 JWST Instrument Modes in Jdaviz
@@ -137,15 +135,6 @@ JWST Instrument Modes in Jdaviz
 
   index_jwst_modes
 
-*****************
-Development Guide
-*****************
-
-.. toctree::
-   :maxdepth: 2
-
-   index_ref_api
-
 *********************
 License & Attribution
 *********************
@@ -155,11 +144,3 @@ License & Attribution
 
    index_citation
 
-*************************
-Deprecated Config Access
-*************************
-
-.. toctree::
-  :maxdepth: 2
-
-  index_using_jdaviz

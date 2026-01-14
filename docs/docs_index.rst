@@ -13,7 +13,6 @@ Using Jdaviz
 
   quickstart
   load
-  video_tutorials
   loaders/index
   plugins/index
   viewers/index
@@ -25,24 +24,7 @@ Using Jdaviz
   mouseover/index
   save_state
   display
+  video_tutorials
   sample_notebooks
   create_products
   known_bugs
-
-*******************************
-JWST Instrument Modes in Jdaviz
-*******************************
-
-.. toctree::
-  :maxdepth: 2
-
-  index_jwst_modes
-
-*********************
-License & Attribution
-*********************
-
-.. toctree::
-   :maxdepth: 2
-
-   index_citation

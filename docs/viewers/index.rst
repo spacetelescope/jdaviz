@@ -1,8 +1,8 @@
 .. _viewers:
 
-*******************
-Data Viewers
-*******************
+*******
+Viewers
+*******
 
 Jdaviz provides specialized viewers for different types of astronomical data.
 

@@ -52,4 +52,3 @@ See Also
 
 - :doc:`../quickstart` - Getting started with Jdaviz
 - :doc:`../plugin_api` - Plugin API documentation
-- :doc:`../index_ref_api` - Full API reference

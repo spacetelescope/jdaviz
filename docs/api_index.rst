@@ -9,4 +9,4 @@ Programmatic access to Jdaviz functionality for notebook workflows.
 
    userapi/index
    plugin_api
-   index_ref_api
+   reference/api

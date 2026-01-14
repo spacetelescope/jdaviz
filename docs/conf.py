@@ -748,10 +748,33 @@ class PluginAvailabilityDirective(SphinxDirective):
 
         if relevancy_info:
             if relevancy_info['type'] == 'dataset_items':
-                availability_parts.append(
-                    "The plugin will be visible when at least one compatible dataset "
-                    "is loaded."
-                )
+                # Build dataset type requirement text
+                if data_types:
+                    dtype_names = {
+                        '1d': '1D spectrum',
+                        '2d': '2D spectrum',
+                        '3d': '3D spectral cube',
+                        'image': 'image',
+                        'catalog': 'catalog',
+                        'ramp': 'ramp data'
+                    }
+                    dtype_list = [dtype_names.get(dt, dt) for dt in sorted(data_types)]
+                    if len(dtype_list) == 1:
+                        dataset_desc = f"**{dtype_list[0]}** dataset"
+                    else:
+                        dataset_desc = "dataset: **{}, or {}**".format(
+                            '**, **'.join(dtype_list[:-1]), dtype_list[-1]
+                        )
+                    availability_parts.append(
+                        f"The plugin will be visible when at least one {dataset_desc} "
+                        "is loaded."
+                    )
+                else:
+                    # Fallback if no data types detected
+                    availability_parts.append(
+                        "The plugin will be visible when at least one compatible dataset "
+                        "is loaded."
+                    )
             elif relevancy_info['type'] == 'viewer_items':
                 availability_parts.append(
                     "The plugin will be visible when at least one viewer is available."
