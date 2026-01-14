@@ -1,6 +1,7 @@
 .. _viewers-scatter:
 
-Placeholder
-===========
+*******
+Scatter
+*******
 
 Documentation coming soon.

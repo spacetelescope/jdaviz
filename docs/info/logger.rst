@@ -1,6 +1,7 @@
 .. _info-logger:
 
-Placeholder
-===========
+******
+Logger
+******
 
 Documentation coming soon.

@@ -1,6 +1,7 @@
 .. _info-markers:
 
-Placeholder
-===========
+*******
+Markers
+*******
 
 Documentation coming soon.

@@ -1,6 +1,7 @@
 .. _viewers-image_2d:
 
-Placeholder
-===========
+********
+2D Image
+********
 
 Documentation coming soon.

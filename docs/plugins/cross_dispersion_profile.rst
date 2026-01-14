@@ -1,9 +1,7 @@
 .. _plugins-cross_dispersion_profile:
 
 *************************
-
 Cross Dispersion Profile
-
 *************************
 
 .. plugin-availability::

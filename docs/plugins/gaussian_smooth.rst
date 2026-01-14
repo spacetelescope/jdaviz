@@ -1,9 +1,7 @@
 .. _plugins-gaussian_smooth:
 
 ***************
-
 Gaussian Smooth
-
 ***************
 
 .. plugin-availability::

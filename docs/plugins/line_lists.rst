@@ -1,9 +1,7 @@
 .. _plugins-line_lists:
 
 **********
-
 Line Lists
-
 **********
 
 .. plugin-availability::

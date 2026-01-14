@@ -1,9 +1,7 @@
 .. _plugins-collapse:
 
 ********
-
 Collapse
-
 ********
 
 .. plugin-availability::

@@ -1,9 +1,7 @@
 .. _plugins-slit_overlay:
 .. _specviz2d-slit-overlay:
 
-
 ************
-
 Slit Overlay
 ************
 

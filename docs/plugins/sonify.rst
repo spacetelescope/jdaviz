@@ -1,10 +1,8 @@
 .. _plugins-sonify:
 
-************
-
+***********
 Sonify Data
-
-************
+***********
 
 .. plugin-availability::
 

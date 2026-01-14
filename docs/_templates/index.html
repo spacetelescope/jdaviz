@@ -2046,7 +2046,6 @@
             wireframeIcons.forEach(function(icon) {
                 icon.addEventListener('click', function() {
                     stopAutoCycle();
-                    stopPlatformCycle();
 
                     // Handle API button separately
                     if (icon.classList.contains('api-button')) {
@@ -2185,9 +2184,8 @@
             // Stop cycling on any user interaction
             document.addEventListener('click', function(e) {
                 // Only stop if clicking on interactive elements
-                if (e.target.closest('.wireframe-toolbar-icon, .wireframe-sidebar-tab, .wireframe-sidebar-link, .grid-item-link, .filter-tab, .toggle-more, .description-toggle, .extensions-button')) {
+                if (e.target.closest('.wireframe-toolbar-icon, .wireframe-sidebar-tab, .wireframe-sidebar-link')) {
                     stopAutoCycle();
-                    stopPlatformCycle();
                 }
             });
 

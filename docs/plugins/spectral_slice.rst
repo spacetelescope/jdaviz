@@ -1,9 +1,7 @@
 .. _plugins-spectral_slice:
 
 **************
-
 Spectral Slice
-
 **************
 
 .. plugin-availability::

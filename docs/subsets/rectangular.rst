@@ -1,6 +1,7 @@
 .. _subsets-rectangular:
 
-Placeholder
-===========
+***********
+Rectangular
+***********
 
 Documentation coming soon.

@@ -1,9 +1,7 @@
 .. _plugins-catalog_search:
 
 **************
-
 Catalog Search
-
 **************
 
 .. plugin-availability::

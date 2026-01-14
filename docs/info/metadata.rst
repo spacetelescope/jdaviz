@@ -1,6 +1,7 @@
 .. _info-metadata:
 
-Placeholder
-===========
+********
+Metadata
+********
 
 Documentation coming soon.

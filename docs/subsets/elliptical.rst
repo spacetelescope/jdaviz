@@ -1,6 +1,7 @@
 .. _subsets-elliptical:
 
-Placeholder
-===========
+**********
+Elliptical
+**********
 
 Documentation coming soon.

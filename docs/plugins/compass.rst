@@ -1,9 +1,7 @@
 .. _plugins-compass:
 
 *******
-
 Compass
-
 *******
 
 .. plugin-availability::

@@ -1,6 +1,7 @@
 .. _viewers-histogram:
 
-Placeholder
-===========
+*********
+Histogram
+*********
 
 Documentation coming soon.

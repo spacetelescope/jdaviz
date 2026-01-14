@@ -1,6 +1,7 @@
 .. _viewers-spectrum_2d:
 
-Placeholder
-===========
+************
+2D Spectrum
+************
 
 Documentation coming soon.

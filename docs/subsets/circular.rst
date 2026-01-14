@@ -1,6 +1,7 @@
 .. _subsets-circular:
 
-Placeholder
-===========
+********
+Circular
+********
 
 Documentation coming soon.

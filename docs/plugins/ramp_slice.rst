@@ -1,9 +1,7 @@
 .. _plugins-ramp_slice:
 
 **********
-
 Ramp Slice
-
 **********
 
 .. plugin-availability::

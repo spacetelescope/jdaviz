@@ -1,10 +1,8 @@
 .. _plugins-model-fitting:
 
-*******************
-
+*************
 Model Fitting
-
-*******************
+*************
 
 .. plugin-availability::
 

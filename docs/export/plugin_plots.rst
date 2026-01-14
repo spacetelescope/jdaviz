@@ -1,6 +1,7 @@
 .. _export-plugin_plots:
 
-Placeholder
-===========
+************
+Plugin Plots
+************
 
 Documentation coming soon. See :doc:`../save_state` for general export information.

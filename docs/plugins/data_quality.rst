@@ -1,9 +1,7 @@
 .. _plugins-data_quality:
 
 ************
-
 Data Quality
-
 ************
 
 .. plugin-availability::

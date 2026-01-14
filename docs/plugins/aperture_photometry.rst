@@ -1,9 +1,7 @@
 .. _plugins-aperture_photometry:
 
 ********************
-
 Aperture Photometry
-
 ********************
 
 .. plugin-availability::

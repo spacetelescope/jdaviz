@@ -1,9 +1,7 @@
 .. _plugins-line_profiles:
 .. _imviz-line-profiles:
 
-
 *************
-
 Line Profiles
 *************
 

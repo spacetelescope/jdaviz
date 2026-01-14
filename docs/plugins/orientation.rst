@@ -1,9 +1,7 @@
 .. _plugins-orientation:
 
 ***********
-
 Orientation
-
 ***********
 
 .. plugin-availability::

@@ -1,6 +1,7 @@
 .. _subsets-range:
 
-Placeholder
-===========
+*****
+Range
+*****
 
 Documentation coming soon.

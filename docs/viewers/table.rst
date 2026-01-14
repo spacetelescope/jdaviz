@@ -1,6 +1,7 @@
 .. _viewers-table:
 
-Placeholder
-===========
+*****
+Table
+*****
 
 Documentation coming soon.

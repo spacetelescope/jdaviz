@@ -1,6 +1,7 @@
 .. _viewers-profile_1d:
 
-Placeholder
-===========
+**********
+1D Profile
+**********
 
 Documentation coming soon.

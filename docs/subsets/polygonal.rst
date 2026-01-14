@@ -1,6 +1,7 @@
 .. _subsets-polygonal:
 
-Placeholder
-===========
+*********
+Polygonal
+*********
 
 Documentation coming soon.

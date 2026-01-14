@@ -1,6 +1,7 @@
 .. _settings-display_units:
 
-Placeholder
-===========
+*************
+Display Units
+*************
 
 Documentation coming soon. See :ref:`display` for related information.

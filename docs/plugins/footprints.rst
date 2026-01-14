@@ -1,9 +1,7 @@
 .. _plugins-footprints:
 
 **********
-
 Footprints
-
 **********
 
 .. plugin-availability::

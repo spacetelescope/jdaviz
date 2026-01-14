@@ -1,6 +1,7 @@
 .. _subsets-composite:
 
-Placeholder
-===========
+*********
+Composite
+*********
 
 Documentation coming soon.

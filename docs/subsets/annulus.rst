@@ -1,6 +1,7 @@
 .. _subsets-annulus:
 
-Placeholder
-===========
+*******
+Annulus
+*******
 
 Documentation coming soon.

@@ -1,6 +1,7 @@
 .. _viewers-spectrum_1d:
 
-Placeholder
-===========
+************
+1D Spectrum
+************
 
 Documentation coming soon.

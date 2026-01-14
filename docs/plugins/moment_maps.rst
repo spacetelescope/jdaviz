@@ -1,9 +1,7 @@
 .. _plugins-moment_maps:
 
 ***********
-
 Moment Maps
-
 ***********
 
 .. plugin-availability::
