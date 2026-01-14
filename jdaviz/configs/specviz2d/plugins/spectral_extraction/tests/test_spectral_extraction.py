@@ -516,9 +516,10 @@ class TestTwo2dSpectra:
         # 2D Spectrum (auto-ext) <=> 2D Spectrum [spectral flux density]
         # Another 2D Spectrum <=> 2D Spectrum [spectral axis]
         # Another 2D Spectrum <=> 2D Spectrum [spectral flux density]
+        # Another 2D Spectrum <=> 2D Spectrum [Pixel Axis 1 [x]]
         # Another 2D Spectral Extraction <=> 2D Spectrum [spectral axis]
         # Another 2D Spectral Extraction <=> 2D Spectrum
-        assert len(dc.external_links) == 9
+        assert len(dc.external_links) == 10
         for link in dc.external_links:
             # Check that linking is correct by confirming that both
             # are in `expected_labels`

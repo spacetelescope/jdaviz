@@ -90,6 +90,7 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+- Fixed bug where loading two 2D spectra failed to display in the spectrum-2d viewer. [#3983]
 
 4.5 (2025-12-15)
 ================
