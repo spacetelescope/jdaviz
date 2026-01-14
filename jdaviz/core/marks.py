@@ -539,7 +539,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
             if value > 0:
                 power = abs(np.log10(value))
                 if power >= 3:
-                 # use scientific notation
+                    # use scientific notation
                     return f'{value:0.4e}'
             return f'{value:0.4f}'
 
