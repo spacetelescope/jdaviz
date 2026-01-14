@@ -1186,6 +1186,9 @@
             font-weight: 600;
             transition: all 0.3s ease;
             border: 1px solid var(--grid-border);
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
         }
 
         .wireframe-sidebar-link:hover {
@@ -1268,6 +1271,9 @@
             border: 1px solid var(--grid-border);
             text-align: center;
             margin-top: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
         }
 
         .api-learn-more:hover {
@@ -1850,8 +1856,8 @@
                 'loaders': {
                     tabs: ['Data', 'Viewer'],
                     content: [
-                        '{{ descriptions.loaders|capitalize }}.<br><a href="#grid-loaders" class="wireframe-sidebar-link">Learn more about data import →</a>',
-                        '{{ descriptions.viewers|capitalize }}.<br><a href="#grid-viewers" class="wireframe-sidebar-link">Explore viewer options →</a>'
+                        '{{ descriptions.loaders|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-loaders">Learn more about data import →</button>',
+                        '{{ descriptions.viewers|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-loaders">Explore viewer options →</button>'
                     ],
                     apiSnippets: [
                         '<div class="api-snippet-container"><pre class="api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load()</pre><a href="#grid-userapi" class="api-learn-more">Learn about API access</a></div>',
@@ -1861,46 +1867,46 @@
                 },
                 'save': {
                     tabs: null,
-                    content: '{{ descriptions.export|capitalize }}.<br><a href="#grid-export" class="wireframe-sidebar-link">See export options →</a>',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Export\']</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>',
+                    content: '{{ descriptions.export|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-export">See export options →</button>',
+                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Export\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
                     scrollId: 'grid-export'
                 },
                 'settings': {
                     tabs: ['Plot Options', 'Units'],
                     content: [
-                        '{{ descriptions.settings_plot }}<br><a href="#grid-settings" class="wireframe-sidebar-link">View plot customization →</a>',
-                        '{{ descriptions.settings_units }}<br><a href="#grid-settings" class="wireframe-sidebar-link">Learn about units →</a>'
+                        '{{ descriptions.settings_plot }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-settings">View plot customization →</button>',
+                        '{{ descriptions.settings_units }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-settings">Learn about units →</button>'
                     ],
                     apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Display Units\']</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>'
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Display Units\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>'
                     ],
                     scrollId: 'grid-settings'
                 },
                 'info': {
                     tabs: ['Metadata', 'Markers', 'Logger'],
                     content: [
-                        '{{ descriptions.info_metadata }}<br><a href="#grid-info" class="wireframe-sidebar-link">Explore metadata tools →</a>',
-                        '{{ descriptions.info_markers|capitalize }}.<br><a href="#grid-info" class="wireframe-sidebar-link">Learn about markers →</a>',
-                        '{{ descriptions.info_logger }}<br><a href="#grid-info" class="wireframe-sidebar-link">View logging options →</a>'
+                        '{{ descriptions.info_metadata }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-info">Explore metadata tools →</button>',
+                        '{{ descriptions.info_markers|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-info">Learn about markers →</button>',
+                        '{{ descriptions.info_logger }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-info">View logging options →</button>'
                     ],
                     apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Metadata\']</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']\nplg.export_table()</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Logger\']\nplg.history</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>'
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Metadata\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']\nplg.export_table()</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Logger\']\nplg.history</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>'
                     ],
                     scrollId: 'grid-info'
                 },
                 'plugins': {
                     tabs: null,
-                    content: '{{ descriptions.plugins|capitalize }}.<br><a href="#grid-plugins" class="wireframe-sidebar-link">Browse analysis plugins →</a>',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'<i>plugin_name</i>\']</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>',
+                    content: '{{ descriptions.plugins|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-plugins">Browse analysis plugins →</button>',
+                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'<i>plugin_name</i>\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
                     scrollId: 'grid-plugins'
                 },
                 'subsets': {
                     tabs: null,
-                    content: '{{ descriptions.subsets|capitalize }}.<br><a href="#grid-subsets" class="wireframe-sidebar-link">Learn about subsets →</a>',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Subset Tools\']</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>',
+                    content: '{{ descriptions.subsets|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-subsets">Learn about subsets →</button>',
+                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Subset Tools\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
                     scrollId: 'grid-subsets'
                 },
                 'help': {
@@ -1999,6 +2005,38 @@
                                 if (contentDiv && data.content[tabIndex]) {
                                     const apiSnippet = data.apiSnippets && data.apiSnippets[tabIndex] ? data.apiSnippets[tabIndex] : '';
                                     contentDiv.innerHTML = data.content[tabIndex] + apiSnippet;
+
+                                    // Re-attach scroll behavior for buttons in new content
+                                    setTimeout(function() {
+                                        const links = contentDiv.querySelectorAll('.wireframe-sidebar-link');
+                                        links.forEach(function(link) {
+                                            link.addEventListener('click', function(e) {
+                                                stopAutoCycle();
+                                                const targetId = link.getAttribute('data-scroll-target');
+                                                const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
+                                                if (targetElement) {
+                                                    // Always scroll, even if already at the target
+                                                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                                                    // Highlight the target grid item
+                                                    setTimeout(function() {
+                                                        // Remove highlight from any previously highlighted items
+                                                        document.querySelectorAll('.grid-item.highlighted').forEach(function(el) {
+                                                            el.classList.remove('highlighted');
+                                                        });
+
+                                                        // Add highlight to current target
+                                                        targetElement.classList.add('highlighted');
+
+                                                        // Remove highlight after 3 seconds
+                                                        setTimeout(function() {
+                                                            targetElement.classList.remove('highlighted');
+                                                        }, 3000);
+                                                    }, 500);
+                                                }
+                                            });
+                                        });
+                                    }, 100);
                                 }
 
                                 // Update Jupyter cell API snippet
@@ -2014,16 +2052,16 @@
                         updateJupyterApiSnippet(data);
                     }
 
-                    // Add scroll behavior for links
+                    // Add scroll behavior for buttons
                     setTimeout(function() {
                         const links = wireframeSidebar.querySelectorAll('.wireframe-sidebar-link');
                         links.forEach(function(link) {
                             link.addEventListener('click', function(e) {
                                 stopAutoCycle();
-                                e.preventDefault();
-                                const targetId = link.getAttribute('href').substring(1);
+                                const targetId = link.getAttribute('data-scroll-target');
                                 const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
                                 if (targetElement) {
+                                    // Always scroll, even if already at the target
                                     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                                     // Highlight the target grid item
@@ -2600,7 +2638,7 @@
                                     <div class="data-menu-api-snippet">
                                         <pre class="api-snippet">dm = jd.viewers[viewer].data_menu</pre>
                                     </div>
-                                    <a href="#grid-data-menu" class="data-menu-button wireframe-sidebar-link">Learn more about Data Menu →</a>
+                                    <button class="data-menu-button wireframe-sidebar-link" data-scroll-target="grid-data-menu">Learn more about Data Menu →</button>
                                 </div>
                             </div>
                         </div>

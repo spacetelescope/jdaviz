@@ -17,11 +17,13 @@ html[data-theme=dark] .sd-card img[src*='.svg'] {
 :root {
     --pst-color-secondary: #007DA4 !important;
     --pst-color-secondary-highlight: #00B4E6 !important;
+    --pst-color-accent: #c75d2c !important; /* active orange */
 }
 
 html[data-theme="light"] {
     --pst-color-secondary: #005a7a !important;
     --pst-color-secondary-highlight: #007DA4 !important;
+    --pst-color-accent: #c75d2c !important; /* active orange */
 }
 
 /* Match GitHub icon opacity to other navbar icons */
