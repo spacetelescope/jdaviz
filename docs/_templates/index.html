@@ -778,6 +778,63 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .wireframe-cycle-control {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 59, 77, 0.9);
+            border: 2px solid var(--wireframe-border);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        .wireframe-cycle-control:hover {
+            background: rgba(0, 125, 164, 0.9);
+            transform: scale(1.05);
+        }
+
+        .wireframe-cycle-control-icon {
+            width: 24px;
+            height: 24px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 0.2s ease;
+        }
+
+        .wireframe-cycle-control-icon.hidden {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .wireframe-cycle-control::after {
+            content: attr(data-flyout-text);
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-right: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .wireframe-cycle-control:hover::after {
+            opacity: 1;
         }
 
         .wireframe-toolbar {
@@ -952,6 +1009,7 @@
             display: flex;
             flex-direction: column;
             border-right: 2px solid var(--wireframe-border);
+            height: 100%;
         }
 
         .wireframe-viewer {
@@ -1166,18 +1224,58 @@
             width: 300px;
         }
 
+        .wireframe-sidebar-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
         .wireframe-sidebar-content {
             padding: 16px;
             color: var(--text-color);
             font-size: 14px;
             line-height: 1.6;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .wireframe-sidebar-footer {
+            padding: 12px 16px;
+            background: var(--sidebar-bg);
+            border-top: 1px solid var(--wireframe-border);
+            flex-shrink: 0;
+        }
+
+        .wireframe-sidebar-footer-button {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            background: var(--sidebar-active);
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid var(--grid-border);
+            cursor: pointer;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .wireframe-sidebar-footer-button:hover {
+            background: var(--button-hover);
+            color: var(--text-color) !important;
+            transform: translateY(-2px);
         }
 
         .wireframe-sidebar-link {
-            display: inline-block;
+            display: block;
             margin-top: 16px;
             padding: 8px 16px;
-            width: 100%;
+            width: calc(100% - 32px);
             background: var(--sidebar-active);
             color: var(--text-color);
             text-decoration: none;
@@ -1189,6 +1287,7 @@
             cursor: pointer;
             font-family: inherit;
             text-align: left;
+            box-sizing: border-box;
         }
 
         .wireframe-sidebar-link:hover {
@@ -1202,6 +1301,7 @@
             gap: 0;
             background: #00617E;
             border-bottom: 2px solid var(--wireframe-border);
+            flex-shrink: 0;
         }
 
         .wireframe-sidebar-tab {
@@ -1236,6 +1336,54 @@
             opacity: 0.6;
             font-size: 12px;
             font-style: italic;
+        }
+
+        /* Wireframe Form Controls */
+        .wireframe-form-group {
+            margin: 16px 0;
+        }
+
+        .wireframe-form-label {
+            display: block;
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            opacity: 0.9;
+        }
+
+        .wireframe-select {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            border: 1px solid var(--grid-border);
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .wireframe-select:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .wireframe-button {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+            border: 1px solid var(--grid-border);
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* API Snippet Styles */
@@ -1757,6 +1905,34 @@
             .platform-tab:last-child {
                 border-bottom: 1px solid var(--grid-border);
             }
+
+            /* Reduce padding in content-border-wrapper for mobile */
+            .content-border-wrapper {
+                margin: 40px auto;
+                padding: 20px;
+            }
+
+            .platform-tabs-section {
+                width: calc(100% + 40px);
+                margin: -30px -20px 0 -20px;
+                padding: 0 20px;
+            }
+
+            /* Stack global filter tabs vertically on mobile */
+            .global-filter-tabs {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .global-filter-tab {
+                border-right: 1px solid var(--grid-border);
+                border-bottom: none;
+            }
+
+            .global-filter-tab:last-child {
+                border-bottom: 1px solid var(--grid-border);
+            }
         }
 
         @media (max-width: 480px) {
@@ -1776,6 +1952,34 @@
             .grid-item h3 {
                 font-size: 20px;
             }
+
+            /* Further reduce padding for very small screens */
+            .content-border-wrapper {
+                margin: 30px auto;
+                padding: 20px;
+            }
+
+            .platform-tabs-section {
+                width: calc(100% + 30px);
+                margin: -25px -15px 0 -15px;
+                padding: 0 15px;
+            }
+
+            /* Stack global filter tabs vertically on small mobile */
+            .global-filter-tabs {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .global-filter-tab {
+                border-right: 1px solid var(--grid-border);
+                border-bottom: none;
+            }
+
+            .global-filter-tab:last-child {
+                border-bottom: 1px solid var(--grid-border);
+            }
         }
     </style>
     <script>
@@ -1793,8 +1997,87 @@
                         clearInterval(cycleInterval);
                         cycleInterval = null;
                     }
+                    updateCycleControlButton();
                 }
             }
+
+            function updateCycleControlButton() {
+                const cycleIconPlay = document.getElementById('cycle-icon-play');
+                const cycleIconPause = document.getElementById('cycle-icon-pause');
+                
+                if (autoCycling) {
+                    // Show play icon when cycling
+                    if (cycleIconPlay) cycleIconPlay.classList.remove('hidden');
+                    if (cycleIconPause) cycleIconPause.classList.add('hidden');
+                } else {
+                    // Show pause icon when stopped
+                    if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
+                    if (cycleIconPause) cycleIconPause.classList.remove('hidden');
+                }
+            }
+
+            function restartAutoCycle() {
+                // Stop any existing cycle
+                if (cycleInterval) {
+                    clearInterval(cycleInterval);
+                    cycleInterval = null;
+                }
+                
+                // Reset state
+                autoCycling = true;
+                currentCycleIndex = 0;
+                hasStartedCycling = true;
+                
+                // Update button
+                updateCycleControlButton();
+                
+                // Start cycling
+                autoCycleSidebars();
+            }
+
+            // Extract dropdown options from grid items
+            function extractDropdownOptions() {
+                const options = {
+                    sources: [],
+                    formats: [],
+                    viewerTypes: []
+                };
+
+                // Find the loaders grid item (has two-column layout with Sources and Formats)
+                const loadersGrid = document.querySelector('[data-grid-id="grid-loaders"]');
+                if (loadersGrid) {
+                    const columnContents = loadersGrid.querySelectorAll('.column-content');
+
+                    // First column should be sources, second should be formats
+                    if (columnContents.length >= 2) {
+                        // Extract sources from first column
+                        const sourceLinks = columnContents[0].querySelectorAll('.grid-item-link');
+                        sourceLinks.forEach(function(link) {
+                            options.sources.push(link.textContent.trim());
+                        });
+
+                        // Extract formats from second column
+                        const formatLinks = columnContents[1].querySelectorAll('.grid-item-link');
+                        formatLinks.forEach(function(link) {
+                            options.formats.push(link.textContent.trim());
+                        });
+                    }
+                }
+
+                // Find viewers grid item
+                const viewersGrid = document.querySelector('[data-grid-id="grid-viewers"]');
+                if (viewersGrid) {
+                    const links = viewersGrid.querySelectorAll('.grid-item-link');
+                    links.forEach(function(link) {
+                        options.viewerTypes.push(link.textContent.trim());
+                    });
+                }
+
+                return options;
+            }
+
+            // Populate dropdowns dynamically
+            const dropdownOptions = extractDropdownOptions();
 
             // Handle description toggle
             const descToggle = document.getElementById('description-toggle');
@@ -1814,6 +2097,9 @@
 
             // SVG icon data (embedded directly as background-image) - matching grid item icons
             const iconSvgs = {
+                'play': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M8,5.14V19.14L19,12.14L8,5.14Z\" /></svg>')",
+                'pause': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M14,19H18V5H14M6,19H10V5H6V19Z\" /></svg>')",
+                'restart': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M12,4C14.1,4 16.1,4.8 17.6,6.3C20.7,9.4 20.7,14.5 17.6,17.6C15.8,19.5 13.3,20.2 10.9,19.9L11.4,17.9C13.1,18.1 14.9,17.5 16.2,16.2C18.5,13.9 18.5,10.1 16.2,7.7C15.1,6.6 13.5,6 12,6V10.6L7,5.6L12,0.6V4M6.3,17.6C3.7,15 3.3,11 5.1,7.9L6.6,9.4C5.5,11.6 5.9,14.4 7.8,16.2C8.3,16.7 8.9,17.1 9.6,17.4L9,19.4C8,19 7.1,18.4 6.3,17.6Z\" /></svg>')",
                 'database-import': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M19,19V5H5V19H19M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5C3,3.89 3.9,3 5,3H19M11,7H13V11H17V13H13V17H11V13H7V11H11V7Z\" /></svg>')",
                 'download': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z\" /></svg>')",
                 'tune': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z\" /></svg>')",
@@ -1832,6 +2118,15 @@
                     icon.style.backgroundImage = iconSvgs[iconName];
                 }
             });
+
+            // Apply SVG backgrounds to cycle control icons
+            const cycleIconPlay = document.getElementById('cycle-icon-play');
+            const cycleIconPause = document.getElementById('cycle-icon-pause');
+            const cycleIconRestart = document.getElementById('cycle-icon-restart');
+            
+            if (cycleIconPlay) cycleIconPlay.style.backgroundImage = iconSvgs['play'];
+            if (cycleIconPause) cycleIconPause.style.backgroundImage = iconSvgs['pause'];
+            if (cycleIconRestart) cycleIconRestart.style.backgroundImage = iconSvgs['restart'];
 
             // Handle search bar click - trigger Sphinx search
             const wireframeSearchInput = document.getElementById('wireframe-search-input');
@@ -1856,57 +2151,87 @@
                 'loaders': {
                     tabs: ['Data', 'Viewer'],
                     content: [
-                        '{{ descriptions.loaders|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-loaders">Learn more about data import →</button>',
-                        '{{ descriptions.viewers|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-loaders">Explore viewer options →</button>'
+                        '{{ descriptions.loaders|capitalize }}.<br>' +
+                        '<div class="wireframe-form-group">' +
+                        '<label class="wireframe-form-label">Source</label>' +
+                        '<select class="wireframe-select" id="source-select"></select>' +
+                        '</div>' +
+                        '<div class="wireframe-form-group">' +
+                        '<label class="wireframe-form-label">Format</label>' +
+                        '<select class="wireframe-select" id="format-select"></select>' +
+                        '</div>' +
+                        '<button class="wireframe-button">Load</button>',
+                        '{{ descriptions.viewers|capitalize }}.<br>' +
+                        '<div class="wireframe-form-group">' +
+                        '<label class="wireframe-form-label">Viewer Type</label>' +
+                        '<select class="wireframe-select" id="viewer-type-select"></select>' +
+                        '</div>' +
+                        '<button class="wireframe-button">Create Viewer</button>'
                     ],
                     apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load()</pre><a href="#grid-userapi" class="api-learn-more">Learn about API access</a></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">vc = jd.new_viewers[\'<i>viewer_type</i>\']\nvc.create()</pre><a href="#grid-userapi" class="api-learn-more wireframe-sidebar-link">Learn about API access</a></div>'
+                        '<div class="api-snippet-container"><pre class="api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load()</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                        '<div class="api-snippet-container"><pre class="api-snippet">vc = jd.new_viewers[\'<i>viewer_type</i>\']\nvc.create()</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>'
+                    ],
+                    learnMore: [
+                        { text: 'Learn more about data import →', target: 'grid-loaders' },
+                        { text: 'Explore viewer options →', target: 'grid-loaders' }
                     ],
                     scrollId: 'grid-loaders'
                 },
                 'save': {
                     tabs: null,
-                    content: '{{ descriptions.export|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-export">See export options →</button>',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Export\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                    content: '{{ descriptions.export|capitalize }}.',
+                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Export\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                    learnMore: { text: 'See export options →', target: 'grid-export' },
                     scrollId: 'grid-export'
                 },
                 'settings': {
                     tabs: ['Plot Options', 'Units'],
                     content: [
-                        '{{ descriptions.settings_plot }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-settings">View plot customization →</button>',
-                        '{{ descriptions.settings_units }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-settings">Learn about units →</button>'
+                        '{{ descriptions.settings_plot }}',
+                        '{{ descriptions.settings_units }}'
                     ],
                     apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Display Units\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>'
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Display Units\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>'
+                    ],
+                    learnMore: [
+                        { text: 'View plot customization →', target: 'grid-settings' },
+                        { text: 'Learn about units →', target: 'grid-settings' }
                     ],
                     scrollId: 'grid-settings'
                 },
                 'info': {
                     tabs: ['Metadata', 'Markers', 'Logger'],
                     content: [
-                        '{{ descriptions.info_metadata }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-info">Explore metadata tools →</button>',
-                        '{{ descriptions.info_markers|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-info">Learn about markers →</button>',
-                        '{{ descriptions.info_logger }}<br><button class="wireframe-sidebar-link" data-scroll-target="grid-info">View logging options →</button>'
+                        '{{ descriptions.info_metadata }}',
+                        '{{ descriptions.info_markers|capitalize }}.',
+                        '{{ descriptions.info_logger }}'
                     ],
                     apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Metadata\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']\nplg.export_table()</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Logger\']\nplg.history</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>'
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Metadata\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']\nplg.export_table()</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Logger\']\nplg.history</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>'
+                    ],
+                    learnMore: [
+                        { text: 'Explore metadata tools →', target: 'grid-info' },
+                        { text: 'Learn about markers →', target: 'grid-info' },
+                        { text: 'View logging options →', target: 'grid-info' }
                     ],
                     scrollId: 'grid-info'
                 },
                 'plugins': {
                     tabs: null,
-                    content: '{{ descriptions.plugins|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-plugins">Browse analysis plugins →</button>',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'<i>plugin_name</i>\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                    content: '{{ descriptions.plugins|capitalize }}.',
+                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'<i>plugin_name</i>\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                    learnMore: { text: 'Browse analysis plugins →', target: 'grid-plugins' },
                     scrollId: 'grid-plugins'
                 },
                 'subsets': {
                     tabs: null,
-                    content: '{{ descriptions.subsets|capitalize }}.<br><button class="wireframe-sidebar-link" data-scroll-target="grid-subsets">Learn about subsets →</button>',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Subset Tools\']</pre><button class="api-learn-more wireframe-sidebar-link" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                    content: '{{ descriptions.subsets|capitalize }}.',
+                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Subset Tools\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
+                    learnMore: { text: 'Learn about subsets →', target: 'grid-subsets' },
                     scrollId: 'grid-subsets'
                 },
                 'help': {
@@ -1971,20 +2296,38 @@
                     const data = sidebarContent_map[sidebarType];
 
                     // Clear and rebuild sidebar with tabs as header (if available) or just content
-                    wireframeSidebar.innerHTML = '';
+                    let sidebarHtml = '';
 
                     if (data.tabs) {
                         const activeIndex = tabIndex !== undefined ? tabIndex : 0;
-                        const tabsHtml = '<div class="wireframe-sidebar-tabs">' +
+                        
+                        // Build tabs
+                        sidebarHtml += '<div class="wireframe-sidebar-tabs">' +
                             data.tabs.map((tab, i) =>
                                 '<button class="wireframe-sidebar-tab' + (i === activeIndex ? ' active' : '') + '" data-tab-index="' + i + '">' + tab + '</button>'
                             ).join('') +
                             '</div>';
-                        wireframeSidebar.innerHTML += tabsHtml;
 
-                        // Add content div with specified tab's content and API snippet if available
+                        // Start sidebar body wrapper
+                        sidebarHtml += '<div class="wireframe-sidebar-body">';
+
+                        // Build content with API snippet before content if available
                         const apiSnippet = data.apiSnippets && data.apiSnippets[activeIndex] ? data.apiSnippets[activeIndex] : '';
-                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + data.content[activeIndex] + apiSnippet + '</div>';
+                        sidebarHtml += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + apiSnippet + data.content[activeIndex] + '</div>';
+
+                        // Build footer with learn more button
+                        const learnMoreData = data.learnMore && data.learnMore[activeIndex] ? data.learnMore[activeIndex] : null;
+                        if (learnMoreData) {
+                            sidebarHtml += '<div class="wireframe-sidebar-footer">' +
+                                '<button class="wireframe-sidebar-footer-button" data-scroll-target="' + learnMoreData.target + '">' + learnMoreData.text + '</button>' +
+                                '</div>';
+                        }
+
+                        // Close sidebar body wrapper
+                        sidebarHtml += '</div>';
+
+                        // Set all HTML at once
+                        wireframeSidebar.innerHTML = sidebarHtml;
 
                         // Update Jupyter cell API snippet
                         updateJupyterApiSnippet(data, activeIndex);
@@ -2004,15 +2347,59 @@
                                 const contentDiv = document.getElementById('sidebar-tab-content');
                                 if (contentDiv && data.content[tabIndex]) {
                                     const apiSnippet = data.apiSnippets && data.apiSnippets[tabIndex] ? data.apiSnippets[tabIndex] : '';
-                                    contentDiv.innerHTML = data.content[tabIndex] + apiSnippet;
+                                    contentDiv.innerHTML = apiSnippet + data.content[tabIndex];
 
-                                    // Re-attach scroll behavior for buttons in new content
+                                    // Update footer learn more button
+                                    const footerButton = wireframeSidebar.querySelector('.wireframe-sidebar-footer-button');
+                                    const learnMoreData = data.learnMore && data.learnMore[tabIndex] ? data.learnMore[tabIndex] : null;
+                                    if (footerButton && learnMoreData) {
+                                        footerButton.textContent = learnMoreData.text;
+                                        footerButton.setAttribute('data-scroll-target', learnMoreData.target);
+                                    }
+
+                                    // Repopulate dropdowns for loaders sidebar
+                                    if (sidebarType === 'loaders') {
+                                        setTimeout(function() {
+                                            const sourceSelect = document.getElementById('source-select');
+                                            const formatSelect = document.getElementById('format-select');
+                                            const viewerTypeSelect = document.getElementById('viewer-type-select');
+
+                                            // Populate source dropdown
+                                            if (sourceSelect && dropdownOptions.sources.length > 0) {
+                                                sourceSelect.innerHTML = dropdownOptions.sources.map(function(source) {
+                                                    return '<option>' + source + '</option>';
+                                                }).join('');
+                                            } else if (sourceSelect) {
+                                                sourceSelect.innerHTML = '<option>File</option><option>File Drop</option><option>URL</option>';
+                                            }
+
+                                            // Populate format dropdown
+                                            if (formatSelect && dropdownOptions.formats.length > 0) {
+                                                formatSelect.innerHTML = dropdownOptions.formats.map(function(format) {
+                                                    return '<option>' + format + '</option>';
+                                                }).join('');
+                                            } else if (formatSelect) {
+                                                formatSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option>';
+                                            }
+
+                                            // Populate viewer type dropdown
+                                            if (viewerTypeSelect && dropdownOptions.viewerTypes.length > 0) {
+                                                viewerTypeSelect.innerHTML = dropdownOptions.viewerTypes.map(function(type) {
+                                                    return '<option>' + type + '</option>';
+                                                }).join('');
+                                            } else if (viewerTypeSelect) {
+                                                viewerTypeSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option><option>Histogram</option><option>Scatter</option>';
+                                            }
+                                        }, 50);
+                                    }
+
+                                    // Re-attach scroll behavior for footer button
                                     setTimeout(function() {
-                                        const links = contentDiv.querySelectorAll('.wireframe-sidebar-link');
-                                        links.forEach(function(link) {
-                                            link.addEventListener('click', function(e) {
+                                        const footerButton = wireframeSidebar.querySelector('.wireframe-sidebar-footer-button');
+                                        if (footerButton) {
+                                            footerButton.addEventListener('click', function(e) {
                                                 stopAutoCycle();
-                                                const targetId = link.getAttribute('data-scroll-target');
+                                                const targetId = footerButton.getAttribute('data-scroll-target');
                                                 const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
                                                 if (targetElement) {
                                                     // Always scroll, even if already at the target
@@ -2035,7 +2422,7 @@
                                                     }, 500);
                                                 }
                                             });
-                                        });
+                                        }
                                     }, 100);
                                 }
 
@@ -2044,17 +2431,76 @@
                             });
                         });
                     } else {
-                        // No tabs, just show content with API snippet if available
+                        // No tabs, build HTML string then set all at once
+                        let sidebarHtml = '';
+                        
+                        // Start sidebar body wrapper
+                        sidebarHtml += '<div class="wireframe-sidebar-body">';
+
+                        // Build content with API snippet before content if available
                         const apiSnippet = data.apiSnippet || '';
-                        wireframeSidebar.innerHTML += '<div class="wireframe-sidebar-content">' + data.content + apiSnippet + '</div>';
+                        sidebarHtml += '<div class="wireframe-sidebar-content">' + apiSnippet + data.content + '</div>';
+
+                        // Build footer with learn more button
+                        const learnMoreData = data.learnMore || null;
+                        if (learnMoreData) {
+                            sidebarHtml += '<div class="wireframe-sidebar-footer">' +
+                                '<button class="wireframe-sidebar-footer-button" data-scroll-target="' + learnMoreData.target + '">' + learnMoreData.text + '</button>' +
+                                '</div>';
+                        }
+
+                        // Close sidebar body wrapper
+                        sidebarHtml += '</div>';
+
+                        // Set all HTML at once
+                        wireframeSidebar.innerHTML = sidebarHtml;
 
                         // Update Jupyter cell API snippet
                         updateJupyterApiSnippet(data);
                     }
 
-                    // Add scroll behavior for buttons
+                    // Populate dropdowns for loaders sidebar
+                    if (sidebarType === 'loaders') {
+                        setTimeout(function() {
+                            const sourceSelect = document.getElementById('source-select');
+                            const formatSelect = document.getElementById('format-select');
+                            const viewerTypeSelect = document.getElementById('viewer-type-select');
+
+                            // Populate source dropdown
+                            if (sourceSelect && dropdownOptions.sources.length > 0) {
+                                sourceSelect.innerHTML = dropdownOptions.sources.map(function(source) {
+                                    return '<option>' + source + '</option>';
+                                }).join('');
+                            } else if (sourceSelect) {
+                                // Fallback options
+                                sourceSelect.innerHTML = '<option>File</option><option>File Drop</option><option>URL</option>';
+                            }
+
+                            // Populate format dropdown
+                            if (formatSelect && dropdownOptions.formats.length > 0) {
+                                formatSelect.innerHTML = dropdownOptions.formats.map(function(format) {
+                                    return '<option>' + format + '</option>';
+                                }).join('');
+                            } else if (formatSelect) {
+                                // Fallback options
+                                formatSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option>';
+                            }
+
+                            // Populate viewer type dropdown
+                            if (viewerTypeSelect && dropdownOptions.viewerTypes.length > 0) {
+                                viewerTypeSelect.innerHTML = dropdownOptions.viewerTypes.map(function(type) {
+                                    return '<option>' + type + '</option>';
+                                }).join('');
+                            } else if (viewerTypeSelect) {
+                                // Fallback options
+                                viewerTypeSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option><option>Histogram</option><option>Scatter</option>';
+                            }
+                        }, 50);
+                    }
+
+                    // Add scroll behavior for footer button and any other scroll links
                     setTimeout(function() {
-                        const links = wireframeSidebar.querySelectorAll('.wireframe-sidebar-link');
+                        const links = wireframeSidebar.querySelectorAll('[data-scroll-target]');
                         links.forEach(function(link) {
                             link.addEventListener('click', function(e) {
                                 stopAutoCycle();
@@ -2189,8 +2635,68 @@
                 const sidebarType = sidebarOrder[currentCycleIndex];
                 const data = sidebarContent_map[sidebarType];
 
-                if (data && data.tabs) {
-                    // Sidebar has tabs, cycle through them
+                // Special handling for loaders sidebar with animations
+                if (sidebarType === 'loaders' && data && data.tabs) {
+                    const numTabs = data.tabs.length;
+                    let animationStep = 0;
+
+                    // Step 0: Show Data tab
+                    activateSidebar(sidebarType, 0);
+
+                    const loaderAnimation = setInterval(function() {
+                        if (!autoCycling) {
+                            clearInterval(loaderAnimation);
+                            return;
+                        }
+
+                        animationStep++;
+
+                        if (animationStep === 1) {
+                            // Step 1: Change format select to "2D Spectrum"
+                            const formatSelect = document.getElementById('format-select');
+                            if (formatSelect) {
+                                // Find the option with "2D Spectrum" (case-insensitive)
+                                const options = formatSelect.querySelectorAll('option');
+                                let found = false;
+                                options.forEach(function(option, index) {
+                                    if (option.textContent.toLowerCase().includes('2d spectrum')) {
+                                        formatSelect.selectedIndex = index;
+                                        found = true;
+                                    }
+                                });
+                                // If "2D Spectrum" not found, try to select second option
+                                if (!found && options.length > 1) {
+                                    formatSelect.selectedIndex = 1;
+                                }
+                            }
+                        } else if (animationStep === 2) {
+                            // Step 2: Flash Load button orange
+                            const loadButton = wireframeSidebar.querySelector('.wireframe-button');
+                            if (loadButton) {
+                                loadButton.style.background = '#c75d2c';
+                                loadButton.style.opacity = '1';
+                                loadButton.style.transform = 'scale(0.98)';
+                                setTimeout(function() {
+                                    if (loadButton) {
+                                        loadButton.style.background = '';
+                                        loadButton.style.opacity = '';
+                                        loadButton.style.transform = '';
+                                    }
+                                }, 800);
+                            }
+                        } else if (animationStep === 3) {
+                            // Step 3: Switch to Viewer tab
+                            activateSidebar(sidebarType, 1);
+                        } else {
+                            // Done with loaders, move to next sidebar
+                            clearInterval(loaderAnimation);
+                            currentCycleIndex = (currentCycleIndex + 1) % sidebarOrder.length;
+                            setTimeout(autoCycleSidebars, 2000);
+                        }
+                    }, 2000);
+
+                } else if (data && data.tabs) {
+                    // Regular sidebar with tabs, cycle through them
                     const numTabs = data.tabs.length;
                     let tabCycleIndex = 0;
 
@@ -2222,12 +2728,92 @@
                 }
             }
 
-            // Start auto-cycling after a brief delay
-            setTimeout(function() {
-                if (autoCycling) {
+            // Start auto-cycling only when wireframe is in view
+            const wireframeSection = document.querySelector('.wireframe-section');
+            let hasStartedCycling = false;
+
+            function checkWireframeInView() {
+                if (!autoCycling || hasStartedCycling || !wireframeSection) {
+                    return;
+                }
+
+                const rect = wireframeSection.getBoundingClientRect();
+                const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+
+                // Check if entire wireframe is visible in viewport
+                const isFullyVisible = (
+                    rect.top >= 0 &&
+                    rect.bottom <= windowHeight
+                );
+
+                if (isFullyVisible) {
+                    hasStartedCycling = true;
                     autoCycleSidebars();
                 }
-            }, 1000);
+            }
+
+            // Check on scroll and initial load
+            window.addEventListener('scroll', checkWireframeInView);
+            window.addEventListener('resize', checkWireframeInView);
+            setTimeout(checkWireframeInView, 1000);
+
+            // Handle cycle control button
+            const cycleControlButton = document.getElementById('wireframe-cycle-control');
+            if (cycleControlButton) {
+                // Hover: show pause when playing, restart when paused
+                cycleControlButton.addEventListener('mouseenter', function() {
+                    const cycleIconPlay = document.getElementById('cycle-icon-play');
+                    const cycleIconPause = document.getElementById('cycle-icon-pause');
+                    const cycleIconRestart = document.getElementById('cycle-icon-restart');
+                    
+                    if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
+                    if (cycleIconRestart) cycleIconRestart.classList.add('hidden');
+                    
+                    if (autoCycling) {
+                        // Show pause icon and text when currently playing
+                        if (cycleIconPause) cycleIconPause.classList.remove('hidden');
+                        cycleControlButton.setAttribute('data-flyout-text', 'pause demo');
+                    } else {
+                        // Show restart icon and text when paused
+                        if (cycleIconPause) cycleIconPause.classList.add('hidden');
+                        if (cycleIconRestart) cycleIconRestart.classList.remove('hidden');
+                        cycleControlButton.setAttribute('data-flyout-text', 'restart demo');
+                    }
+                });
+                
+                cycleControlButton.addEventListener('mouseleave', function() {
+                    const cycleIconRestart = document.getElementById('cycle-icon-restart');
+                    if (cycleIconRestart) cycleIconRestart.classList.add('hidden');
+                    updateCycleControlButton();
+                });
+                
+                // Click: pause when playing, restart when paused
+                cycleControlButton.addEventListener('click', function() {
+                    if (autoCycling) {
+                        // Pause/cancel the cycle
+                        stopAutoCycle();
+                        // Update hover state immediately - show restart since now paused
+                        const cycleIconPlay = document.getElementById('cycle-icon-play');
+                        const cycleIconPause = document.getElementById('cycle-icon-pause');
+                        const cycleIconRestart = document.getElementById('cycle-icon-restart');
+                        if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
+                        if (cycleIconPause) cycleIconPause.classList.add('hidden');
+                        if (cycleIconRestart) cycleIconRestart.classList.remove('hidden');
+                        cycleControlButton.setAttribute('data-flyout-text', 'restart demo');
+                    } else {
+                        // Restart the cycle
+                        restartAutoCycle();
+                        // Update hover state immediately - show pause since now playing
+                        const cycleIconPlay = document.getElementById('cycle-icon-play');
+                        const cycleIconPause = document.getElementById('cycle-icon-pause');
+                        const cycleIconRestart = document.getElementById('cycle-icon-restart');
+                        if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
+                        if (cycleIconRestart) cycleIconRestart.classList.add('hidden');
+                        if (cycleIconPause) cycleIconPause.classList.remove('hidden');
+                        cycleControlButton.setAttribute('data-flyout-text', 'pause demo');
+                    }
+                });
+            }
 
             // Stop cycling on any user interaction
             document.addEventListener('click', function(e) {
@@ -2637,12 +3223,19 @@
                                     </p>
                                     <div class="data-menu-api-snippet">
                                         <pre class="api-snippet">dm = jd.viewers[viewer].data_menu</pre>
+                                        <button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button>
                                     </div>
                                     <button class="data-menu-button wireframe-sidebar-link" data-scroll-target="grid-data-menu">Learn more about Data Menu →</button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+                <!-- Auto-cycle control button -->
+                <div class="wireframe-cycle-control" id="wireframe-cycle-control" data-flyout-text="pause demo">
+                    <div class="wireframe-cycle-control-icon" id="cycle-icon-play"></div>
+                    <div class="wireframe-cycle-control-icon hidden" id="cycle-icon-pause"></div>
+                    <div class="wireframe-cycle-control-icon hidden" id="cycle-icon-restart"></div>
                 </div>
             </div>
         </div>
