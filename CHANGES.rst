@@ -142,6 +142,8 @@ Specviz2d
 ^^^^^^^^^
 - Fixed an issue with GWCS 1.0.3 by updating the ``try/except`` to an if check against ``pixel_n_dim``. [#4032]
 
+- Fixed bug where loading two 2D spectra failed to display in the spectrum-2d viewer. [#3983]
+
 4.5 (2025-12-15)
 ================
 
