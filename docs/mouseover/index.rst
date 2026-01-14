@@ -11,9 +11,11 @@ See information about the data directly below your cursor.
    :maxdepth: 1
 
    image_viewer
-   table_viewer
-   spectrum_viewer
-   profile_viewer
+   spectrum1d_viewer
+   spectrum2d_viewer
+   spectrum3d_viewer
+   scatter_viewer
+   histogram_viewer
 
 Overview
 ========

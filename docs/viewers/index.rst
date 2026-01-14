@@ -12,8 +12,8 @@ Jdaviz provides specialized viewers for different types of astronomical data.
 
    spectrum_1d
    spectrum_2d
+   spectrum_3d
    image_2d
-   profile_1d
    table
    scatter
    histogram
