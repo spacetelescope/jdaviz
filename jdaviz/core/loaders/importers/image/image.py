@@ -459,7 +459,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, ext=None, try_gwcs_to_fits_sip=False):
     else:
         ext_values = file_obj['roman'][ext]
     bunit = getattr(ext_values, 'unit', '')
-    component = Component(np.array(ext_values), units=bunit)
+    component = Component(np.asarray(ext_values), units=bunit)
     data.add_component(component=component, label=comp_label)
     data.meta.update(standardize_metadata(dict(meta)))
 

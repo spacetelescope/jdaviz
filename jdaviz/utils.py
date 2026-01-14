@@ -5,6 +5,7 @@ import threading
 import warnings
 from collections import deque
 from urllib.parse import urlparse
+import fsspec
 import fnmatch
 import re
 import hashlib
@@ -785,6 +786,23 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             # and this web path needs to be split with a forward slash
             local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
         return local_path
+
+    elif parsed_uri.scheme.lower() == 's3':
+        # this dir will be created if it doesn't exist:
+        s3_download_dir = './s3_downloads/'
+        local_cache_name = os.path.join(
+            s3_download_dir,
+            os.path.basename(possible_uri)
+        )
+
+        # download the S3 object to local path, if needed:
+        if not os.path.exists(local_cache_name):
+            fs = fsspec.filesystem('s3', anon=True)
+            s3_download_dir = './s3_downloads/'
+            os.makedirs(s3_download_dir, exist_ok=True)
+            fs.get(possible_uri, local_cache_name)
+
+        return local_cache_name
 
     elif parsed_uri.scheme.lower() in ('http', 'https', 'ftp'):
         if cache_warning:
