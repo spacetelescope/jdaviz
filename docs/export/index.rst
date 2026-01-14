@@ -1,8 +1,9 @@
 .. _export:
+.. rst-class:: section-icon-mdi-content-save
 
-*******************
+***************
 Exporting Data
-*******************
+***************
 
 Export data, plots, and analysis results from Jdaviz to files.
 

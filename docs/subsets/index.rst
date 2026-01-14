@@ -1,4 +1,5 @@
 .. _subsets:
+.. rst-class:: section-icon-mdi-selection
 
 *******************
 Subsets & Regions

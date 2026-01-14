@@ -1,4 +1,5 @@
 .. _viewers:
+.. rst-class:: section-icon-mdi-plus-box
 
 *******
 Viewers

@@ -1,4 +1,5 @@
 .. _userapi:
+.. rst-class:: section-icon-mdi-code-tags
 
 ************************
 API & Notebook Access

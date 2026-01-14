@@ -181,7 +181,10 @@ extlinks = {
 # global configuration are listed below, commented out.
 
 html_static_path = ["_static"]
-html_css_files = ["jdaviz.css"]
+html_css_files = [
+    "jdaviz.css",
+    "https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css"
+]
 html_js_files = ["platform-context.js"]
 html_copy_source = False
 

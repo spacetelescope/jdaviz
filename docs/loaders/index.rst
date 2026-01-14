@@ -1,8 +1,9 @@
 .. _loaders:
+.. rst-class:: section-icon-mdi-plus-box
 
-*************************
+************
 Data Loaders
-*************************
+************
 
 Learn how to import data into Jdaviz from various sources and in different formats.
 

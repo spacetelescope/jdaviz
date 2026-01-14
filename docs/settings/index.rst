@@ -1,4 +1,5 @@
 .. _settings:
+.. rst-class:: section-icon-mdi-cog
 
 *******************
 Settings & Options

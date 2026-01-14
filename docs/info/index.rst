@@ -1,4 +1,5 @@
 .. _info:
+.. rst-class:: section-icon-mdi-information-outline
 
 ************************
 Data Information Tools

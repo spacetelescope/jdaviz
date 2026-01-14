@@ -1,4 +1,5 @@
 .. _mouseover:
+.. rst-class:: section-icon-mdi-auto-fix
 
 *********
 Mouseover

@@ -1,4 +1,5 @@
 .. _data_menu:
+.. rst-class:: section-icon-mdi-alpha-a-box-outline
 
 *********
 Data Menu
