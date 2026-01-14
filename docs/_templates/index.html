@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jdaviz - Astronomical Data Visualization</title>
+    <script>
+        // Suppress ReadTheDocs custom element registration errors
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('CustomElementRegistry') && e.message.includes('readthedocs')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, true);
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
     <style>
