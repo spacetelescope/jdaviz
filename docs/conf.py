@@ -652,7 +652,7 @@ grid_items_data = [
         'description': descriptions['data_menu'],
         'icon': 'mdi-alpha-a-box-outline',
         'grid_id': 'grid-data-menu',
-        'links': scan_directory_for_links(docs_dir, 'data_menu')
+        'links': [{'text': 'Data Menu', 'href': 'data_menu/index'}]
     },
     {
         'title': 'Mouseover Information',
