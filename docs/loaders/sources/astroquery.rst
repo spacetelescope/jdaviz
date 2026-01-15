@@ -27,7 +27,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:astroquery
+   :demo: loaders,loaders:select-dropdown=Source:astroquery
    :enable-only: loaders
    :demo-repeat: false
 

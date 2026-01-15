@@ -120,19 +120,6 @@ set various loader attributes. For example:
 The hints update as you interact with the UI, showing you the exact Python code
 needed to reproduce your actions programmatically.
 
-Differences from load_data()
-============================
-
-The ``load()`` method replaces the older ``load_data()`` method. Key differences:
-
-1. Loader Auto-detection - ``load()`` attempts to auto-detect the appropriate loader based on the input
-
-2. Format Selection - Provides more control over data format via the ``format`` parameter
-
-3. Target Specification - Can direct data to specific viewers using ``target``
-
-4. Consistent Interface - Works consistently across different data types
-
 Differences from the Loaders API
 ================================
 
@@ -142,8 +129,6 @@ For most use cases, ``load()`` provides a simpler interface. Use the Loaders API
 - Interactive configuration
 - Data preview before loading
 - Access to specialized loader features
-
-While ``load_data()`` is still supported for backwards compatibility, ``load()`` is recommended for new code.
 
 
 Learn More

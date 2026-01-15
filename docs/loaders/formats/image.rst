@@ -48,7 +48,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:Image
+   :demo: loaders,loaders:select-dropdown=Format:Image
    :enable-only: loaders
    :demo-repeat: false
 

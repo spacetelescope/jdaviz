@@ -26,7 +26,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:Object
+   :demo: loaders,loaders:select-dropdown=Source:object
    :enable-only: loaders
    :demo-repeat: false
 

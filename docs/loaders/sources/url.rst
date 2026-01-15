@@ -25,7 +25,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:URL
+   :demo: loaders,loaders:select-dropdown=Source:url
    :enable-only: loaders
    :demo-repeat: false
 

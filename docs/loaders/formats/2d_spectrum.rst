@@ -48,7 +48,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:2D Spectrum
+   :demo: loaders,loaders:select-dropdown=Format:2D Spectrum
    :enable-only: loaders
    :demo-repeat: false
 

@@ -20,7 +20,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:VO
+   :demo: loaders,loaders:select-dropdown=Source:virtual observatory
    :enable-only: loaders
    :demo-repeat: false
 

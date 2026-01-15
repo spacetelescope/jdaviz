@@ -10,6 +10,6 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: export
-   :enable-only: export
+   :demo: save
+   :enable-only: save
    :demo-repeat: false

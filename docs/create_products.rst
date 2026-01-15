@@ -61,11 +61,4 @@ Providing scripts to load the data as Spectrum objects
 If none of the above is an acceptable option, the user can create the data
 products with their custom format and provide scripts or Jupyter Notebooks
 that show how to read the products and create :class:`~specutils.Spectrum` objects
-that can be read into ``jdaviz``. More about
-how to create :class:`~specutils.Spectrum` objects for the 1D, 2D, and 3D cases can be
-found in the corresponding "Importing data" sections of the various configurations:
-
-* :ref:`specviz-import-data`
-* :ref:`cubeviz-import-data`
-* :ref:`specviz2d-import-data`
-* :ref:`mosviz-import-api`
+that can be read into ``jdaviz``.

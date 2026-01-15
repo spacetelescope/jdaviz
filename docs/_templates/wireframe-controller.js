@@ -325,10 +325,10 @@ function initializeWireframeController(container) {
 
             // First column should be sources, second should be formats
             if (columnContents.length >= 2) {
-                // Extract sources from first column
+                // Extract sources from first column (lowercase for consistency)
                 const sourceLinks = columnContents[0].querySelectorAll('.grid-item-link');
                 sourceLinks.forEach(function(link) {
-                    options.sources.push(link.textContent.trim());
+                    options.sources.push(link.textContent.trim().toLowerCase());
                 });
 
                 // Extract formats from second column
@@ -1303,6 +1303,14 @@ function initializeWireframeController(container) {
 
         // Add scroll behavior for buttons inside the data menu popup
         const dataMenuScrollLinks = dataMenuPopup.querySelectorAll('[data-scroll-target]');
+        
+        // Hide scroll-to buttons if showScrollTo is false
+        if (!showScrollTo) {
+            dataMenuScrollLinks.forEach(function(link) {
+                link.style.display = 'none';
+            });
+        }
+        
         dataMenuScrollLinks.forEach(function(link) {
             link.addEventListener('click', function(e) {
                 stopAutoCycle();
