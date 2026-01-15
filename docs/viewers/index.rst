@@ -58,7 +58,7 @@ Each viewer has a legend in the top-right indicating what layers are currently d
 - Remove layers from the viewer
 - Rename viewers
 
-For more information, see :ref:`data-menu`.
+For more information, see :ref:`data_menu`.
 
 Plot Options
 ============

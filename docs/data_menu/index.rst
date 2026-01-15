@@ -5,28 +5,29 @@
 Data Menu
 *********
 
-Control data and subset layer order and visibility for each viewer.
+The Data Menu allows you to control data and subset layer order and visibility for each viewer.
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
-   data_menu
-
-Overview
+Features
 ========
 
-The Data Menu provides controls for managing layers in your viewers, allowing you to:
+* Toggle visibility of data and subset layers
+* Reorder layers by dragging
+* Control which layers are displayed in each viewer
+* Manage layer properties and styling
 
-* Reorder data and subset layers
-* Control layer visibility
-* Manage which data appears in each viewer
+.. note::
+   The Data Menu is accessible from the viewer area and provides fine-grained control over layer display and ordering.
 
 UI Access
 =========
 
 .. wireframe-demo::
    :demo: open-data-menu
-   :enable-only: loaders
+   :enable-only:
    :demo-repeat: false
 
 API Access
