@@ -10,8 +10,10 @@ Bug Fixes
 
 - Fixes traceback when loading two 2D spectra into the deconfigged app. [#3957]
 
-- Fixed bug when deleting a viewer with WCS-linked data in deconfigged, and readding the same data 
+- Fixed bug when deleting a viewer with WCS-linked data in deconfigged, and readding the same data
   into a new viewer. [#3976]
+
+- Fixed a traceback when zooming 2D spectra in deconfigged. [#3981]
 
 Cubeviz
 ^^^^^^^
