@@ -338,6 +338,19 @@
             color: #aaa;
         }
 
+        /* Show warning message on hover */
+        .grid-item-link.platform-disabled:hover::before {
+            content: attr(data-platform-warning);
+        }
+
+        .grid-item-link.platform-disabled:hover {
+            font-size: 0; /* Hide original text */
+        }
+
+        .grid-item-link.platform-disabled:hover::before {
+            font-size: 12px; /* Smaller font size for warning */
+        }
+
         .grid-item.has-toggle .grid-item-content {
             margin-bottom: 50px;
         }
@@ -552,9 +565,9 @@
 
         .grid-item-link:hover {
             background: var(--button-hover);
-            color: var(--text-color);
+            color: var(--text-color) !important;
             border-color: var(--grid-border);
-            transform: scale(1.05);
+            transform: scale(1.02);
         }
 
         .extensions-button {
@@ -1575,5 +1588,109 @@ jd.show()</div>
             <p>This package is based upon the <a href="https://github.com/astropy/package-template" target="_blank">Astropy package template</a> which is licensed under the BSD 3-clause licence. See the <a href="https://github.com/spacetelescope/jdaviz/tree/main/licenses" target="_blank">licenses directory</a> for more information.</p>
         </div>
     </div>
+
+    <script>
+        // Platform tabs functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const platformTabs = document.querySelectorAll('.platform-tab');
+            const platformContents = document.querySelectorAll('.platform-tab-content');
+            const gridLinks = document.querySelectorAll('.grid-item-link[data-excl-platforms]');
+
+            // Map platform IDs to display names
+            const platformNames = {
+                'desktop': 'Desktop UI',
+                'mast': 'Jdaviz@MAST',
+                'jupyter': 'Jupyter Notebook',
+                'platform': 'Science Platforms'
+            };
+
+            // Function to update platform-disabled state on links
+            function updatePlatformDisabledLinks(platform) {
+                // First, clear all platform-disabled states
+                gridLinks.forEach(function(link) {
+                    link.classList.remove('platform-disabled');
+                    link.removeAttribute('data-platform-warning');
+                });
+
+                // Then apply disabled state where needed
+                gridLinks.forEach(function(link) {
+                    const exclPlatforms = link.getAttribute('data-excl-platforms');
+                    if (exclPlatforms) {
+                        const excludedList = exclPlatforms.split(' ');
+                        if (excludedList.indexOf(platform) !== -1) {
+                            link.classList.add('platform-disabled');
+                            const platformName = platformNames[platform] || platform;
+                            link.setAttribute('data-platform-warning', 'not available on ' + platformName);
+                        }
+                    }
+                });
+            }
+
+            // Initialize with default platform (jupyter)
+            updatePlatformDisabledLinks('jupyter');
+
+            platformTabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    const platform = this.getAttribute('data-platform');
+
+                    // Update active state on tabs
+                    platformTabs.forEach(function(t) {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Update visible content
+                    platformContents.forEach(function(content) {
+                        const contentPlatform = content.getAttribute('data-platform-content');
+                        if (contentPlatform === platform) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+
+                    // Update body class for platform-specific content in documentation
+                    document.body.className = document.body.className.replace(/platform-\w+/g, '');
+                    document.body.classList.add('platform-' + platform);
+
+                    // Update platform-disabled state on links
+                    updatePlatformDisabledLinks(platform);
+                });
+            });
+        });
+
+        // Data-type filter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterTabs = document.querySelectorAll('.global-filter-tab[data-filter-type="data-type"]');
+            const allLinks = document.querySelectorAll('.grid-item-link[data-types]');
+
+            filterTabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    const filterValue = this.getAttribute('data-filter');
+
+                    // Update active state
+                    filterTabs.forEach(function(t) {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Filter links
+                    allLinks.forEach(function(link) {
+                        const dataTypes = link.getAttribute('data-types');
+                        if (filterValue === 'all') {
+                            link.style.display = '';
+                        } else {
+                            // Check if the link's data-types contains the filter value
+                            if (dataTypes && dataTypes.split(' ').indexOf(filterValue) !== -1) {
+                                link.style.display = '';
+                            } else {
+                                link.style.display = 'none';
+                            }
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>
