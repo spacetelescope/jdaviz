@@ -38,22 +38,13 @@ Ramp data typically contains:
 This data format is specific to JWST observations before they are processed through
 the calibration pipeline.
 
-Compatible Tools
-================
+UI Access
+=========
 
-Data loaded with this format can be visualized in:
-
-- **Rampviz**: For visualizing and analyzing raw ramp data
-
-Features Available in Rampviz
-==============================
-
-When viewing ramp data in Rampviz, you can:
-
-- View individual reads and groups
-- Examine ramp profiles for individual pixels
-- Identify cosmic ray hits and other artifacts
-- Assess data quality before calibration
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:Ramp
+   :enable-only: loaders
+   :demo-repeat: false
 
 See Also
 ========

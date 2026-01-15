@@ -70,8 +70,18 @@ Plugins provide specialized analysis capabilities tailored to different data typ
   - Catalog Search
   - Data Quality
 
-Accessing Plugins
-=================
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: plugins
+   :enable-only: plugins
+   :plugin-panel-opened: false
+   :demo-repeat: true
+
+
+API Access
+==========
 
 Plugins can be accessed from the plugin toolbar in the Jdaviz interface, or
 programmatically via the API:
@@ -79,9 +89,12 @@ programmatically via the API:
 .. code-block:: python
 
     # Access a plugin
-    plugin = app.plugins['Model Fitting']
+    plg = jd.plugins['Model Fitting']
 
-    # View plugin parameters
-    plugin
+    # Show in tray
+    plg.open_in_tray()
+
+    # Show in-line in notebook
+    plg.show()
 
 See the individual plugin pages for detailed usage information.

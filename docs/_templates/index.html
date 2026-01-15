@@ -756,634 +756,96 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
-        /* Wireframe Section */
-        .wireframe-section {
-            width: 90%;
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0px;
-        }
-
-        .wireframe-title {
-            text-align: center;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 30px;
-            color: var(--text-color);
-        }
-
-        .wireframe-container {
-            background: var(--wireframe-bg);
-            border: 2px solid var(--wireframe-border);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .wireframe-cycle-control {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: 44px;
-            height: 44px;
-            background: rgba(0, 59, 77, 0.9);
-            border: 2px solid var(--wireframe-border);
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            z-index: 100;
-        }
-
-        .wireframe-cycle-control:hover {
-            background: rgba(0, 125, 164, 0.9);
-            transform: scale(1.05);
-        }
-
-        .wireframe-cycle-control-icon {
-            width: 24px;
-            height: 24px;
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            transition: opacity 0.2s ease;
-        }
-
-        .wireframe-cycle-control-icon.hidden {
-            opacity: 0;
-            position: absolute;
-        }
-
-        .wireframe-cycle-control::after {
-            content: attr(data-flyout-text);
-            position: absolute;
-            right: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            margin-right: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: white;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .wireframe-cycle-control:hover::after {
-            opacity: 1;
-        }
-
-        .wireframe-toolbar {
-            background: #003B4D;
-            padding: 0;
-            display: flex;
-            align-items: stretch;
-            gap: 0;
-            border-bottom: 2px solid var(--wireframe-border);
-            height: 72px;
-        }
-
-        .wireframe-toolbar-icon {
-            width: 48px;
-            height: 100%;
-            background-color: transparent;
-            background-size: 24px 24px;
-            background-position: center;
-            background-repeat: no-repeat;
-            border: none;
-            border-radius: 0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wireframe-toolbar-icon:hover {
-            background-color: rgba(0, 125, 164, 0.3);
-        }
-
-        .wireframe-toolbar-icon.active {
-            background-color: var(--button-hover);
-        }
-
-        .wireframe-toolbar-icon.mouseover-button {
-            position: relative;
-        }
-
-        .wireframe-toolbar-icon.mouseover-button:hover {
-            background-color: var(--button-hover);
-        }
-
-        .wireframe-toolbar-icon.mouseover-button::after {
-            content: 'Learn about mouseover';
-            position: absolute;
-            left: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            margin-left: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: white;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .wireframe-toolbar-icon.mouseover-button:hover::after {
-            opacity: 1;
-        }
-
-        .wireframe-toolbar-divider {
-            width: 12px;
-            height: 100%;
-            background: transparent;
-            position: relative;
-        }
-
-        .wireframe-toolbar-divider::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 20%;
-            bottom: 20%;
-            width: 1px;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateX(-50%);
-        }
-
-        .wireframe-toolbar-spacer {
-            flex: 1;
-        }
-
-        .wireframe-toolbar-right {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 6px 8px;
-            gap: 4px;
-            min-width: 200px;
-        }
-
-        .wireframe-toolbar-search-row {
-            display: flex;
-            align-items: center;
-        }
-
-        .wireframe-toolbar-search {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            padding: 4px 8px;
-            color: #ffffff;
-            font-size: 13px;
-            outline: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .wireframe-toolbar-search:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .wireframe-toolbar-search::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .wireframe-toolbar-version-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .wireframe-toolbar-version {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .wireframe-toolbar-right .api-button {
-            width: 32px;
-            height: 28px;
-            padding: 0;
-            border-radius: 3px;
-            background-color: transparent;
-            background-size: 20px 20px;
-            background-position: center;
-            background-repeat: no-repeat;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wireframe-toolbar-right .api-button:hover {
-            background-color: rgba(0, 125, 164, 0.3);
-        }
-
-        .wireframe-toolbar-right .api-button.active {
-            background-color: var(--button-hover);
-        }
-
-        .wireframe-main {
-            display: flex;
-            height: 400px;
-        }
-
-        .wireframe-sidebar {
-            width: 0;
-            background: var(--sidebar-bg);
-            overflow: hidden;
-            transition: width 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            border-right: 2px solid var(--wireframe-border);
-            height: 100%;
-        }
-
-        .wireframe-viewer {
-            flex: 1;
-            background: var(--sidebar-bg);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .viewer-toolbar {
-            background: #205f76;
-            padding: 0;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            gap: 0;
-            border-bottom: 1px solid var(--wireframe-border);
-        }
-
-        .viewer-toolbar-icon {
-            width: 42px;
-            height: 42px;
-            background-color: transparent;
-            background-size: 24px 24px;
-            background-position: center;
-            background-repeat: no-repeat;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .viewer-toolbar-icon:hover {
-            background-color: rgba(0, 125, 164, 0.3);
-        }
-
-        .viewer-toolbar-icon.active {
-            background-color: #c75109 !important;
-        }
-
-        .viewer-toolbar-spacer {
-            flex: 1;
-        }
-
-        .viewer-content {
-            flex: 1;
-            position: relative;
-            background: var(--sidebar-bg);
-            opacity: 0.5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-color);
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .data-menu-legend {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .legend-item {
-            display: flex;
-            flex-direction: row-reverse;
-            align-items: center;
-            gap: 8px;
-            background: rgba(0, 59, 77, 0.95);
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: fit-content;
-        }
-
-        .legend-item:hover {
-            background: rgba(0, 75, 95, 0.95);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-
-        .legend-icon {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-            display: block;
-        }
-
-        .legend-text {
-            color: white;
-            font-size: 13px;
-            font-weight: 500;
-            white-space: nowrap;
-            max-width: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-        .legend-item:hover .legend-text {
-            max-width: 200px;
-            opacity: 1;
-        }
-
+        /* Data Menu Popup */
         .data-menu-popup {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 400px;
-            max-height: 500px;
-            background: rgba(0, 97, 126, 1);
-            border: 2px solid var(--wireframe-border);
+            max-width: 90%;
+            background: var(--wireframe-bg);
+            border: 2px solid var(--grid-border);
             border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            z-index: 20;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
             display: none;
-            flex-direction: column;
         }
 
         .data-menu-popup.visible {
-            display: flex;
+            display: block;
         }
 
         .data-menu-header {
-            padding: 16px;
-            background: #003B4D;
-            border-bottom: 2px solid var(--wireframe-border);
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--grid-border);
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .data-menu-title {
-            color: white;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
+            color: var(--text-color);
         }
 
         .data-menu-close {
-            width: 32px;
-            height: 32px;
-            background: transparent;
+            background: none;
             border: none;
-            color: white;
+            color: var(--text-color);
             font-size: 24px;
             cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 4px;
-            transition: background-color 0.2s ease;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
         }
 
         .data-menu-close:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            opacity: 1;
         }
 
         .data-menu-content {
             padding: 20px;
-            color: var(--text-color);
-            flex: 1;
+            max-height: 400px;
             overflow-y: auto;
         }
 
         .data-menu-description {
             font-size: 14px;
-            font-weight: 100;
             line-height: 1.6;
+            color: var(--text-color);
             margin-bottom: 16px;
         }
 
-        .data-menu-api-snippet {
-            margin: 16px 0;
-            display: none;
-        }
-
-        body.api-mode-active .data-menu-api-snippet {
-            display: block;
-        }
-
-        .data-menu-api-snippet .api-snippet {
-            margin: 0;
-        }
-
         .data-menu-button {
-            display: inline-block;
-            padding: 10px 20px;
+            display: block;
             background: var(--sidebar-active);
-            color: var(--text-color);
+            color: #ffffff !important;
             text-decoration: none;
-            border-radius: 4px;
+            padding: 10px 16px;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             transition: all 0.3s ease;
             border: 1px solid var(--grid-border);
+            text-align: center;
+            margin-top: 20px;
             cursor: pointer;
+            font-family: inherit;
+            width: 100%;
         }
 
         .data-menu-button:hover {
             background: var(--button-hover);
-            color: var(--text-color) !important;
             transform: translateY(-2px);
-        }
-
-        .wireframe-sidebar.visible {
-            width: 300px;
-        }
-
-        .wireframe-sidebar-body {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .wireframe-sidebar-content {
-            padding: 16px;
-            color: var(--text-color);
-            font-size: 14px;
-            line-height: 1.6;
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        .wireframe-sidebar-footer {
-            padding: 12px 16px;
-            background: var(--sidebar-bg);
-            border-top: 1px solid var(--wireframe-border);
-            flex-shrink: 0;
-        }
-
-        .wireframe-sidebar-footer-button {
-            display: block;
-            width: 100%;
-            padding: 10px 16px;
-            background: var(--sidebar-active);
-            color: var(--text-color);
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 1px solid var(--grid-border);
-            cursor: pointer;
-            font-family: inherit;
-            text-align: center;
-        }
-
-        .wireframe-sidebar-footer-button:hover {
-            background: var(--button-hover);
-            color: var(--text-color) !important;
-            transform: translateY(-2px);
-        }
-
-        .wireframe-sidebar-link {
-            display: block;
-            margin-top: 16px;
-            padding: 8px 16px;
-            width: calc(100% - 32px);
-            background: var(--sidebar-active);
-            color: var(--text-color);
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 1px solid var(--grid-border);
-            cursor: pointer;
-            font-family: inherit;
-            text-align: left;
-            box-sizing: border-box;
-        }
-
-        .wireframe-sidebar-link:hover {
-            background: var(--button-hover);
-            color: var(--text-color) !important;
-            transform: translateY(-2px);
-        }
-
-        .wireframe-sidebar-tabs {
-            display: flex;
-            gap: 0;
-            background: #00617E;
-            border-bottom: 2px solid var(--wireframe-border);
-            flex-shrink: 0;
-        }
-
-        .wireframe-sidebar-tab {
-            flex: 1;
-            padding: 12px 16px;
-            background: transparent;
-            color: var(--text-color);
-            opacity: 0.8;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            border-bottom: 3px solid transparent;
-        }
-
-        .wireframe-sidebar-tab.active {
-            background: var(--tab-content-bg);
-            color: var(--text-color);
-            opacity: 1;
-            border-bottom-color: #C75109;
-        }
-
-        .wireframe-sidebar-tab:hover {
-            background: var(--sidebar-hover);
-        }
-
-        .wireframe-label {
-            text-align: center;
-            padding: 8px;
-            color: var(--text-color);
-            opacity: 0.6;
-            font-size: 12px;
-            font-style: italic;
-        }
-
-        /* Wireframe Form Controls */
-        .wireframe-form-group {
-            margin: 16px 0;
-        }
-
-        .wireframe-form-label {
-            display: block;
-            color: var(--text-color);
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            opacity: 0.9;
-        }
-
-        .wireframe-select {
-            width: 100%;
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-color);
-            border: 1px solid var(--grid-border);
-            border-radius: 4px;
-            font-size: 13px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .wireframe-select:hover {
-            background: rgba(0, 0, 0, 0.4);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-
-        .wireframe-button {
-            display: block;
-            width: 100%;
-            padding: 10px 16px;
-            margin-top: 16px;
-            background: rgba(0, 0, 0, 0.2);
-            color: var(--text-color);
-            border: 1px solid var(--grid-border);
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-            opacity: 0.5;
-            cursor: not-allowed;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
         /* API Snippet Styles */
@@ -1440,6 +902,328 @@
             display: block;
         }
 
+        /* Jupyter Cell Section */
+        .jupyter-cell-section {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0;
+        }
+
+        .jupyter-cell-container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--sidebar-bg);
+            border: 1px solid var(--grid-border);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .jupyter-cell-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 59, 77, 0.3);
+            border-bottom: 1px solid var(--grid-border);
+            gap: 8px;
+        }
+
+        .jupyter-cell-prompt {
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .jupyter-cell-code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #ffffff;
+            line-height: 1.6;
+            white-space: pre;
+        }
+
+        .jupyter-api-snippet {
+            display: none;
+        }
+
+        .jupyter-api-snippet.visible {
+            display: block;
+        }
+
+        /* Light theme - Improve jupyter-cell contrast */
+        html[data-theme="light"] .jupyter-cell-container {
+            background: #e8e8e8;
+        }
+
+        html[data-theme="light"] .jupyter-cell-header {
+            background: #a0a0a0;
+            color: #1a1a1a;
+        }
+
+        html[data-theme="light"] .jupyter-cell-prompt {
+            color: #1a1a1a;
+            opacity: 0.7;
+        }
+
+        html[data-theme="light"] .jupyter-cell-code {
+            background: #f5f5f5;
+            color: #1a1a1a;
+        }
+
+        /* Content Border Wrapper */
+        .content-border-wrapper {
+            width: 99%;
+            max-width: 2200px;
+            margin: 80px auto;
+            padding: 20px 60px;
+            border: 2px solid var(--sidebar-active);
+            border-radius: 12px;
+            background: transparent;
+            position: relative;
+        }
+
+        /* Platform Tabs Section */
+        .platform-tabs-section {
+            width: calc(100% + 120px);
+            max-width: none;
+            margin: -40px -60px 0 -60px;
+            padding: 0 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .platform-tabs-section::after {
+            display: none;
+        }
+
+        .platform-tabs-container {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Constrain inner content width */
+        .wireframe-section,
+        .platform-content-section,
+        .install-section,
+        .grid-container {
+            max-width: 1500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .platform-tabs-header::before {
+            display: none;
+        }
+
+        .platform-tabs-header {
+            display: flex;
+            gap: 0;
+            flex-wrap: nowrap;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            background: var(--sidebar-bg);
+            z-index: 10;
+        }
+
+        .platform-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgb(0 59 77);
+            color: var(--text-color);
+            opacity: 1.0;
+            border: 1px solid var(--grid-border);
+            border-right: none;
+            border-radius: 0;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .platform-tab:last-child {
+            border-right: 1px solid var(--grid-border);
+        }
+
+        .platform-tab:hover {
+            background: var(--sidebar-active);
+            border-color: var(--grid-border);
+        }
+
+        .platform-tab.active {
+            background: var(--sidebar-active);
+            color: var(--text-color);
+            opacity: 1;
+            border-color: var(--grid-border);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .platform-tab-content {
+            display: none;
+        }
+
+        .platform-tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .platform-content-section {
+            margin-top: 30px;
+            margin-bottom: 40px;
+        }
+
+        .platform-tab-additional-content {
+            margin-top: 20px;
+        }
+
+        .platform-content-placeholder {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        /* Wireframe Section - now inside platform tabs */
+        .wireframe-section {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            margin-top: 40px;
+            padding: 0;
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .description-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .logo {
+                max-width: 350px;
+            }
+
+            .full-width-button {
+                font-size: 20px;
+                padding: 15px 40px;
+            }
+
+            .grid-item {
+                padding: 25px;
+            }
+
+            .grid-item h3 {
+                font-size: 22px;
+            }
+
+            .platform-tabs-header {
+                flex-direction: column;
+            }
+
+            .platform-tab {
+                border-right: 1px solid var(--grid-border);
+                border-bottom: none;
+            }
+
+            .platform-tab:last-child {
+                border-bottom: 1px solid var(--grid-border);
+            }
+
+            .content-border-wrapper {
+                margin: 40px auto;
+                padding: 20px;
+            }
+
+            .platform-tabs-section {
+                width: calc(100% + 40px);
+                margin: -30px -20px 0 -20px;
+                padding: 0 20px;
+            }
+
+            .global-filter-tabs {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .global-filter-tab {
+                border-right: 1px solid var(--grid-border);
+                border-bottom: none;
+            }
+
+            .global-filter-tab:last-child {
+                border-bottom: 1px solid var(--grid-border);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .logo {
+                max-width: 280px;
+            }
+
+            .full-width-button {
+                font-size: 18px;
+                padding: 12px 30px;
+            }
+
+            .grid-item h3 {
+                font-size: 20px;
+            }
+
+            .content-border-wrapper {
+                margin: 30px auto;
+                padding: 20px;
+            }
+
+            .platform-tabs-section {
+                width: calc(100% + 30px);
+                margin: -25px -15px 0 -15px;
+                padding: 0 15px;
+            }
+
+            .global-filter-tabs {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .global-filter-tab {
+                border-right: 1px solid var(--grid-border);
+                border-bottom: none;
+            }
+
+            .global-filter-tab:last-child {
+                border-bottom: 1px solid var(--grid-border);
+            }
+        }
+
         /* Light Theme Overrides - Keep text white on dark blue backgrounds */
         html[data-theme="light"] .announcement-banner,
         html[data-theme="light"] .announcement-header,
@@ -1448,24 +1232,19 @@
             color: #ffffff !important;
         }
 
-        html[data-theme="light"] .wireframe-sidebar-tabs {
-            color: #ffffff;
-        }
-
-        html[data-theme="light"] .wireframe-sidebar-tab {
-            color: #ffffff !important;
-        }
-
-        html[data-theme="light"] .wireframe-sidebar-link {
-            color: #ffffff !important;
-        }
-
         html[data-theme="light"] .full-width-button {
             color: #ffffff !important;
         }
 
         html[data-theme="light"] .extensions-button {
-            color: #ffffff !important;
+            background: var(--sidebar-bg);
+            color: #005a7a !important;
+            border-color: var(--grid-border);
+        }
+
+        html[data-theme="light"] .extensions-button:hover {
+            background: var(--sidebar-hover);
+            color: #007DA4 !important;
         }
 
         /* Light Theme - Make grid item headers and icons dark */
@@ -1559,21 +1338,6 @@
             color: #1a1a1a;
         }
 
-        html[data-theme="light"] .extensions-button {
-            background: var(--sidebar-bg);
-            color: #005a7a !important;
-            border-color: var(--grid-border);
-        }
-
-        html[data-theme="light"] .extensions-button:hover {
-            background: var(--sidebar-hover);
-            color: #007DA4 !important;
-        }
-
-        html[data-theme="light"] .filter-tab.active {
-            color: #ffffff !important;
-        }
-
         html[data-theme="light"] .global-filter-tab {
             color: #1a1a1a !important;
         }
@@ -1595,1515 +1359,16 @@
             background-color: var(--bg-gradient-start) !important;
         }
 
-        /* Viewer Toolbar Icon Styles */
-        .viewer-toolbar-icon[data-icon="bqplot:home"] {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" /></svg>');
-        }
-
-        .viewer-toolbar-icon[data-icon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzAxMDEwMTt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo="] {
-            background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6I0ZGRkZGRjt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo=");
-        }
-
-        .viewer-toolbar-icon[data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMTAxMDE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+"] {
-            background-image: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNGRkZGRkY7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+");
-        }
-
-        .viewer-toolbar-icon[data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMyMzFmMjA7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg=="] {
-            background-image: url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNGRkZGRkY7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg==");
-        }
-
-        .legend-icon[data-icon="chart-box-outline"] {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M9,17H7V10H9V17M13,17H11V7H13V17M17,17H15V13H17V17M19,19H5V5H19V19.1M19,3H5C3.9,3 3,3.9 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.9 20.1,3 19,3Z" /></svg>');
-        }
-
-        /* Jupyter Cell Section */
-        .jupyter-cell-section {
-            width: 90%;
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0;
-        }
-
-        .jupyter-cell-container {
-            width: 90%;
-            max-width: 1000px;
-            margin: 0 auto;
-            background: var(--sidebar-bg);
-            border: 1px solid var(--grid-border);
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .jupyter-cell-header {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            background: rgba(0, 59, 77, 0.3);
-            border-bottom: 1px solid var(--grid-border);
-            gap: 8px;
-        }
-
-        .jupyter-cell-prompt {
-            color: rgba(255, 255, 255, 0.6);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            font-weight: 600;
-            min-width: 60px;
-        }
-
-        .jupyter-cell-code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 16px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            color: #ffffff;
-            line-height: 1.6;
-            white-space: pre;
-        }
-
-        .jupyter-api-snippet {
-            display: none;
-        }
-
-        .jupyter-api-snippet.visible {
-            display: block;
-        }
-
-        /* Light theme - Improve jupyter-cell contrast */
-        html[data-theme="light"] .jupyter-cell-container {
-            background: #e8e8e8;
-        }
-
-        html[data-theme="light"] .jupyter-cell-header {
-            background: #a0a0a0;
-            color: #1a1a1a;
-        }
-
-        html[data-theme="light"] .jupyter-cell-prompt {
-            color: #1a1a1a;
-            opacity: 0.7;
-        }
-
-        html[data-theme="light"] .jupyter-cell-code {
-            background: #f5f5f5;
-            color: #1a1a1a;
-        }
-
-        .jupyter-api-snippet-header {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            background: rgba(0, 59, 77, 0.3);
-            border-top: 1px solid var(--grid-border);
-            border-bottom: 1px solid var(--grid-border);
-            gap: 8px;
-        }
-
-        .jupyter-api-snippet-prompt {
-            color: rgba(255, 255, 255, 0.6);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            font-weight: 600;
-            min-width: 60px;
-        }
-
-        .jupyter-api-snippet-code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 16px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            color: #ffffff;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-
-        /* Content Border Wrapper */
-        .content-border-wrapper {
-            width: 99%;
-            max-width: 2200px;
-            margin: 80px auto;
-            padding: 20px 60px;
-            border: 2px solid var(--sidebar-active);
-            border-radius: 12px;
-            background: transparent;
-            position: relative;
-        }
-
-        /* Platform Tabs Section */
-        .platform-tabs-section {
-            width: calc(100% + 120px);
-            max-width: none;
-            margin: -40px -60px 0 -60px; /* Negative margin to bring tabs over border and extend to edges */
-            padding: 0 60px; /* Add padding back inside */
-            position: relative;
-            z-index: 10; /* Ensure tabs are above the border */
-        }
-
-        /* Remove the ::after pseudo-element */
-        .platform-tabs-section::after {
-            display: none;
-        }
-
-        .platform-tabs-container {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        /* Constrain inner content width */
-        .wireframe-section,
-        .platform-content-section,
-        .install-section,
-        .grid-container {
-            max-width: 1500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Remove line through middle of tabs */
-        .platform-tabs-header::before {
-            display: none;
-        }
-
-        .platform-tabs-header {
-            display: flex;
-            gap: 0;
-            flex-wrap: nowrap;
-            border-radius: 6px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            margin-left: auto;
-            margin-right: auto;
-            position: relative;
-            background: var(--sidebar-bg); /* Ensure header has opaque background */
-            z-index: 10; /* Ensure it's above the border */
-        }
-
-        .platform-tab {
-            flex: 1;
-            padding: 12px 16px;
-            background: rgb(0 59 77);
-            color: var(--text-color);
-            opacity: 1.0;
-            border: 1px solid var(--grid-border);
-            border-right: none;
-            border-radius: 0;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            user-select: none;
-            white-space: nowrap;
-            text-align: center;
-        }
-
-        .platform-tab:last-child {
-            border-right: 1px solid var(--grid-border);
-        }
-
-        .platform-tab:hover {
-            background: var(--sidebar-active);
-            border-color: var(--grid-border);
-        }
-
-        .platform-tab.active {
-            background: var(--sidebar-active);
-            color: var(--text-color);
-            opacity: 1;
-            border-color: var(--grid-border);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .platform-tab-content {
-            display: none;
-        }
-
-        .platform-tab-content.active {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .platform-content-section {
-            margin-top: 30px;
-            margin-bottom: 40px;
-        }
-
-        .platform-tab-additional-content {
-            margin-top: 20px;
-        }
-
-        .platform-content-placeholder {
-            width: 90%;
-            max-width: 1000px;
-            margin: 0 auto;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 16px;
-            padding: 40px 20px;
-            font-style: italic;
-        }
-
-        /* Wireframe Section - now inside platform tabs */
-        .wireframe-section {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-            margin-top: 40px;
-            padding: 0;
-        }
-        @media (max-width: 768px) {
-            .grid-container {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .description-section {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .logo {
-                max-width: 350px;
-            }
-
-            .full-width-button {
-                font-size: 20px;
-                padding: 15px 40px;
-            }
-
-            .grid-item {
-                padding: 25px;
-            }
-
-            .grid-item h3 {
-                font-size: 22px;
-            }
-
-            .wireframe-viewer {
-                display: none;
-            }
-
-            .wireframe-toolbar-icon.mouseover-button {
-                display: none;
-            }
-
-            .wireframe-toolbar-right {
-                display: none;
-            }
-
-            .platform-tabs-header {
-                flex-direction: column;
-            }
-
-            .platform-tab {
-                border-right: 1px solid var(--grid-border);
-                border-bottom: none;
-            }
-
-            .platform-tab:last-child {
-                border-bottom: 1px solid var(--grid-border);
-            }
-
-            /* Reduce padding in content-border-wrapper for mobile */
-            .content-border-wrapper {
-                margin: 40px auto;
-                padding: 20px;
-            }
-
-            .platform-tabs-section {
-                width: calc(100% + 40px);
-                margin: -30px -20px 0 -20px;
-                padding: 0 20px;
-            }
-
-            /* Stack global filter tabs vertically on mobile */
-            .global-filter-tabs {
-                display: flex;
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .global-filter-tab {
-                border-right: 1px solid var(--grid-border);
-                border-bottom: none;
-            }
-
-            .global-filter-tab:last-child {
-                border-bottom: 1px solid var(--grid-border);
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 20px 15px;
-            }
-
-            .logo {
-                max-width: 280px;
-            }
-
-            .full-width-button {
-                font-size: 18px;
-                padding: 12px 30px;
-            }
-
-            .grid-item h3 {
-                font-size: 20px;
-            }
-
-            /* Further reduce padding for very small screens */
-            .content-border-wrapper {
-                margin: 30px auto;
-                padding: 20px;
-            }
-
-            .platform-tabs-section {
-                width: calc(100% + 30px);
-                margin: -25px -15px 0 -15px;
-                padding: 0 15px;
-            }
-
-            /* Stack global filter tabs vertically on small mobile */
-            .global-filter-tabs {
-                display: flex;
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .global-filter-tab {
-                border-right: 1px solid var(--grid-border);
-                border-bottom: none;
-            }
-
-            .global-filter-tab:last-child {
-                border-bottom: 1px solid var(--grid-border);
-            }
-        }
+        /* Wireframe styles loaded from external file */
     </style>
+    <link rel="stylesheet" href="{{ pathto('_static/wireframe-demo.css', 1) }}">
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-cycling state
-            let autoCycling = true;
-            let cycleInterval = null;
-            let currentCycleIndex = 0;
-            const sidebarOrder = ['loaders', 'save', 'settings', 'info', 'plugins', 'subsets'];
-
-            function stopAutoCycle() {
-                if (autoCycling) {
-                    autoCycling = false;
-                    if (cycleInterval) {
-                        clearInterval(cycleInterval);
-                        cycleInterval = null;
-                    }
-                    updateCycleControlButton();
-                }
-            }
-
-            function updateCycleControlButton() {
-                const cycleIconPlay = document.getElementById('cycle-icon-play');
-                const cycleIconPause = document.getElementById('cycle-icon-pause');
-                
-                if (autoCycling) {
-                    // Show play icon when cycling
-                    if (cycleIconPlay) cycleIconPlay.classList.remove('hidden');
-                    if (cycleIconPause) cycleIconPause.classList.add('hidden');
-                } else {
-                    // Show pause icon when stopped
-                    if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
-                    if (cycleIconPause) cycleIconPause.classList.remove('hidden');
-                }
-            }
-
-            function restartAutoCycle() {
-                // Stop any existing cycle
-                if (cycleInterval) {
-                    clearInterval(cycleInterval);
-                    cycleInterval = null;
-                }
-                
-                // Reset state
-                autoCycling = true;
-                currentCycleIndex = 0;
-                hasStartedCycling = true;
-                
-                // Update button
-                updateCycleControlButton();
-                
-                // Start cycling
-                autoCycleSidebars();
-            }
-
-            // Extract dropdown options from grid items
-            function extractDropdownOptions() {
-                const options = {
-                    sources: [],
-                    formats: [],
-                    viewerTypes: []
-                };
-
-                // Find the loaders grid item (has two-column layout with Sources and Formats)
-                const loadersGrid = document.querySelector('[data-grid-id="grid-loaders"]');
-                if (loadersGrid) {
-                    const columnContents = loadersGrid.querySelectorAll('.column-content');
-
-                    // First column should be sources, second should be formats
-                    if (columnContents.length >= 2) {
-                        // Extract sources from first column
-                        const sourceLinks = columnContents[0].querySelectorAll('.grid-item-link');
-                        sourceLinks.forEach(function(link) {
-                            options.sources.push(link.textContent.trim());
-                        });
-
-                        // Extract formats from second column
-                        const formatLinks = columnContents[1].querySelectorAll('.grid-item-link');
-                        formatLinks.forEach(function(link) {
-                            options.formats.push(link.textContent.trim());
-                        });
-                    }
-                }
-
-                // Find viewers grid item
-                const viewersGrid = document.querySelector('[data-grid-id="grid-viewers"]');
-                if (viewersGrid) {
-                    const links = viewersGrid.querySelectorAll('.grid-item-link');
-                    links.forEach(function(link) {
-                        options.viewerTypes.push(link.textContent.trim());
-                    });
-                }
-
-                return options;
-            }
-
-            // Populate dropdowns dynamically
-            const dropdownOptions = extractDropdownOptions();
-
-            // Handle description toggle
-            const descToggle = document.getElementById('description-toggle');
-            const descMore = document.getElementById('description-more');
-
-            if (descToggle && descMore) {
-                descToggle.addEventListener('click', function() {
-                    stopAutoCycle();
-                    descMore.classList.toggle('expanded');
-                    descToggle.textContent = descMore.classList.contains('expanded') ? 'Show Less' : 'Show More';
-                });
-            }
-
-            // Handle wireframe toolbar interactions
-            const wireframeIcons = document.querySelectorAll('.wireframe-toolbar-icon, .api-button');
-            const wireframeSidebar = document.getElementById('wireframe-sidebar');
-
-            // SVG icon data (embedded directly as background-image) - matching grid item icons
-            const iconSvgs = {
-                'play': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M8,5.14V19.14L19,12.14L8,5.14Z\" /></svg>')",
-                'pause': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M14,19H18V5H14M6,19H10V5H6V19Z\" /></svg>')",
-                'restart': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M12,4C14.1,4 16.1,4.8 17.6,6.3C20.7,9.4 20.7,14.5 17.6,17.6C15.8,19.5 13.3,20.2 10.9,19.9L11.4,17.9C13.1,18.1 14.9,17.5 16.2,16.2C18.5,13.9 18.5,10.1 16.2,7.7C15.1,6.6 13.5,6 12,6V10.6L7,5.6L12,0.6V4M6.3,17.6C3.7,15 3.3,11 5.1,7.9L6.6,9.4C5.5,11.6 5.9,14.4 7.8,16.2C8.3,16.7 8.9,17.1 9.6,17.4L9,19.4C8,19 7.1,18.4 6.3,17.6Z\" /></svg>')",
-                'database-import': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M19,19V5H5V19H19M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5C3,3.89 3.9,3 5,3H19M11,7H13V11H17V13H13V17H11V13H7V11H11V7Z\" /></svg>')",
-                'download': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z\" /></svg>')",
-                'tune': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z\" /></svg>')",
-                'information': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z\" /></svg>')",
-                'wrench': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M8 13C6.14 13 4.59 14.28 4.14 16H2V18H4.14C4.59 19.72 6.14 21 8 21S11.41 19.72 11.86 18H22V16H11.86C11.41 14.28 9.86 13 8 13M8 19C6.9 19 6 18.1 6 17C6 15.9 6.9 15 8 15S10 15.9 10 17C10 18.1 9.1 19 8 19M19.86 6C19.41 4.28 17.86 3 16 3S12.59 4.28 12.14 6H2V8H12.14C12.59 9.72 14.14 11 16 11S19.41 9.72 19.86 8H22V6H19.86M16 9C14.9 9 14 8.1 14 7C14 5.9 14.9 5 16 5S18 5.9 18 7C18 8.1 17.1 9 16 9Z\" /></svg>')",
-                'selection': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M2 2H8V4H4V8H2V2M2 16H4V20H8V22H2V16M16 2H22V8H20V4H16V2M20 16H22V22H16V20H20V16Z\" /></svg>')",
-                'help-circle': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M15.07,11.25L14.17,12.17C13.45,12.89 13,13.5 13,15H11V14.5C11,13.39 11.45,12.39 12.17,11.67L13.41,10.41C13.78,10.05 14,9.55 14,9C14,7.89 13.1,7 12,7A2,2 0 0,0 10,9H8A4,4 0 0,1 12,5A4,4 0 0,1 16,9C16,9.88 15.64,10.67 15.07,11.25M13,19H11V17H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2Z\" /></svg>')",
-                'auto-fix': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"white\" d=\"M7.5,5.6L5,7L6.4,4.5L5,2L7.5,3.4L10,2L8.6,4.5L10,7L7.5,5.6M19.5,15.4L22,14L20.6,16.5L22,19L19.5,17.6L17,19L18.4,16.5L17,14L19.5,15.4M22,2L20.6,4.5L22,7L19.5,5.6L17,7L18.4,4.5L17,2L19.5,3.4L22,2M13.34,12.78L15.78,10.34L13.66,8.22L11.22,10.66L13.34,12.78M14.37,7.29L16.71,9.63C17.1,10 17.1,10.65 16.71,11.04L5.04,22.71C4.65,23.1 4,23.1 3.63,22.71L1.29,20.37C0.9,20 0.9,19.35 1.29,18.96L12.96,7.29C13.35,6.9 14,6.9 14.37,7.29Z\" /></svg>')",
-                'api': "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 67 47\"><g><path fill=\"white\" d=\"M11.6,19.5c0-.3,0-.7,0-1.1,2.1-1.1,4.3-1.7,6.6-1.7s4.1.4,5.1,1.3c1,.9,1.5,2.4,1.5,4.5v7.1c.8.2,1.4.3,1.8.6v2.9c-1.1.5-2.7.8-4.8.8-.2-.6-.4-1.3-.6-2.1-1,1.4-2.7,2.1-5.2,2.1s-2.8-.4-3.8-1.3-1.6-2-1.6-3.5.5-2.7,1.5-3.5c1-.9,2.5-1.3,4.4-1.3h3.6v-1.6c0-1.7-.9-2.6-2.8-2.6s-1.3,0-1.7.2c0,.9-.2,1.6-.4,2.2h-3.3c-.4-.8-.6-1.8-.6-3ZM17.6,30.5c1.1,0,2-.3,2.7-1v-2.7h-2.3c-1.6,0-2.4.6-2.4,1.8s.2,1,.5,1.4c.3.4.8.5,1.5.5Z\"/><path fill=\"white\" d=\"M27.9,17c1.2-.3,2.3-.4,3.3-.4s1.8,0,2.4,0v1.6c1.5-1,3.1-1.6,4.7-1.6s3.8.6,4.8,1.9c1,1.3,1.5,3.4,1.5,6.3s-.2,3-.7,4.1c-.5,1.2-1.1,2.1-1.9,2.8-1.5,1.3-3.3,2-5.4,2s-1.8,0-2.6-.3v2.9c1.3.4,2.1.8,2.5,1.2l-.3,2.6h-8.3l-.3-2.6c.3-.4.9-.8,1.8-1.1v-15.9c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM36.3,30.5c1.1,0,2-.5,2.6-1.5.6-1,1-2.3,1-4.1s-.2-2.9-.5-3.6c-.4-.6-1-1-1.9-1-1.4,0-2.5.3-3.4,1v8.8c.7.2,1.4.3,2.3.3Z\"/><path fill=\"white\" d=\"M46.8,17c1.2-.3,2.4-.4,3.5-.4s2,0,2.7,0v13.2c.9.3,1.5.7,1.8,1.1l-.3,2.6h-7.6l-.3-2.6c.3-.4.9-.8,1.8-1.1v-9.2c-.8-.3-1.4-.6-1.8-1.1l.3-2.6ZM50.6,14.7c-1.8,0-2.8-.8-2.8-2.5s.9-2.5,2.8-2.5,2.8.8,2.8,2.5-.9,2.5-2.8,2.5Z\"/></g></svg>')"
-            };
-
-            // Apply SVG backgrounds to icons
-            wireframeIcons.forEach(function(icon) {
-                const iconName = icon.dataset.icon;
-                if (iconName && iconSvgs[iconName]) {
-                    icon.style.backgroundImage = iconSvgs[iconName];
-                }
-            });
-
-            // Apply SVG backgrounds to cycle control icons
-            const cycleIconPlay = document.getElementById('cycle-icon-play');
-            const cycleIconPause = document.getElementById('cycle-icon-pause');
-            const cycleIconRestart = document.getElementById('cycle-icon-restart');
-            
-            if (cycleIconPlay) cycleIconPlay.style.backgroundImage = iconSvgs['play'];
-            if (cycleIconPause) cycleIconPause.style.backgroundImage = iconSvgs['pause'];
-            if (cycleIconRestart) cycleIconRestart.style.backgroundImage = iconSvgs['restart'];
-
-            // Handle search bar click - trigger Sphinx search
-            const wireframeSearchInput = document.getElementById('wireframe-search-input');
-            if (wireframeSearchInput) {
-                wireframeSearchInput.addEventListener('click', function() {
-                    stopAutoCycle();
-                    // Try multiple selectors to find the Sphinx search trigger
-                    const searchButton = document.querySelector('button.search-button, .search-button, button[aria-label="Search"], button[data-bs-toggle="search"]');
-                    if (searchButton) {
-                        searchButton.click();
-                    } else {
-                        // If no button found, try to focus the search input field
-                        const searchInput = document.querySelector('input[type="search"], input.search-input, #searchbox input');
-                        if (searchInput) {
-                            searchInput.focus();
-                        }
-                    }
-                });
-            }
-
-            const sidebarContent_map = {
-                'loaders': {
-                    tabs: ['Data', 'Viewer'],
-                    content: [
-                        '{{ descriptions.loaders|capitalize }}.<br>' +
-                        '<div class="wireframe-form-group">' +
-                        '<label class="wireframe-form-label">Source</label>' +
-                        '<select class="wireframe-select" id="source-select"></select>' +
-                        '</div>' +
-                        '<div class="wireframe-form-group">' +
-                        '<label class="wireframe-form-label">Format</label>' +
-                        '<select class="wireframe-select" id="format-select"></select>' +
-                        '</div>' +
-                        '<button class="wireframe-button">Load</button>',
-                        '{{ descriptions.viewers|capitalize }}.<br>' +
-                        '<div class="wireframe-form-group">' +
-                        '<label class="wireframe-form-label">Viewer Type</label>' +
-                        '<select class="wireframe-select" id="viewer-type-select"></select>' +
-                        '</div>' +
-                        '<button class="wireframe-button">Create Viewer</button>'
-                    ],
-                    apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">ldr = jd.loaders[\'<i>source</i>\']\nldr.load()</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">vc = jd.new_viewers[\'<i>viewer_type</i>\']\nvc.create()</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>'
-                    ],
-                    learnMore: [
-                        { text: 'Learn more about data import →', target: 'grid-loaders' },
-                        { text: 'Explore viewer options →', target: 'grid-loaders' }
-                    ],
-                    scrollId: 'grid-loaders'
-                },
-                'save': {
-                    tabs: null,
-                    content: '{{ descriptions.export|capitalize }}.',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Export\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                    learnMore: { text: 'See export options →', target: 'grid-export' },
-                    scrollId: 'grid-export'
-                },
-                'settings': {
-                    tabs: ['Plot Options', 'Units'],
-                    content: [
-                        '{{ descriptions.settings_plot }}',
-                        '{{ descriptions.settings_units }}'
-                    ],
-                    apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Display Units\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>'
-                    ],
-                    learnMore: [
-                        { text: 'View plot customization →', target: 'grid-settings' },
-                        { text: 'Learn about units →', target: 'grid-settings' }
-                    ],
-                    scrollId: 'grid-settings'
-                },
-                'info': {
-                    tabs: ['Metadata', 'Markers', 'Logger'],
-                    content: [
-                        '{{ descriptions.info_metadata }}',
-                        '{{ descriptions.info_markers|capitalize }}.',
-                        '{{ descriptions.info_logger }}'
-                    ],
-                    apiSnippets: [
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Metadata\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Plot Options\']\nplg.export_table()</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                        '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Logger\']\nplg.history</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>'
-                    ],
-                    learnMore: [
-                        { text: 'Explore metadata tools →', target: 'grid-info' },
-                        { text: 'Learn about markers →', target: 'grid-info' },
-                        { text: 'View logging options →', target: 'grid-info' }
-                    ],
-                    scrollId: 'grid-info'
-                },
-                'plugins': {
-                    tabs: null,
-                    content: '{{ descriptions.plugins|capitalize }}.',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'<i>plugin_name</i>\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                    learnMore: { text: 'Browse analysis plugins →', target: 'grid-plugins' },
-                    scrollId: 'grid-plugins'
-                },
-                'subsets': {
-                    tabs: null,
-                    content: '{{ descriptions.subsets|capitalize }}.',
-                    apiSnippet: '<div class="api-snippet-container"><pre class="api-snippet">plg = jd.plugins[\'Subset Tools\']</pre><button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button></div>',
-                    learnMore: { text: 'Learn about subsets →', target: 'grid-subsets' },
-                    scrollId: 'grid-subsets'
-                },
-                'help': {
-                    tabs: null,
-                    content: 'Access documentation, tutorials, API reference, and interactive help. Links to user guides, example notebooks, and the jdaviz community support forum.',
-                    scrollId: null
-                }
-            };
-
-            let currentSidebar = null;
-            let apiModeActive = false;
-
-            // Helper function to update Jupyter cell API snippet
-            function updateJupyterApiSnippet(data, tabIndex) {
-                if (!apiModeActive) return;
-
-                const jupyterApiSnippet = document.getElementById('jupyter-api-snippet');
-                const jupyterApiContent = document.getElementById('jupyter-api-snippet-content');
-
-                if (!jupyterApiSnippet || !jupyterApiContent) return;
-
-                let apiText = '';
-
-                if (data.apiSnippets && tabIndex !== undefined) {
-                    // Multi-tab sidebar
-                    const apiHtml = data.apiSnippets[tabIndex];
-                    if (apiHtml) {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = apiHtml;
-                        const preElement = tempDiv.querySelector('pre.api-snippet');
-                        if (preElement) {
-                            apiText = preElement.textContent;
-                        }
-                    }
-                } else if (data.apiSnippet) {
-                    // Single content sidebar
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data.apiSnippet;
-                    const preElement = tempDiv.querySelector('pre.api-snippet');
-                    if (preElement) {
-                        apiText = preElement.textContent;
-                    }
-                }
-
-                jupyterApiContent.textContent = apiText || '# No API snippet available for this section';
-            }
-
-            function activateSidebar(sidebarType, tabIndex) {
-                const icon = document.querySelector('.wireframe-toolbar-icon[data-sidebar="' + sidebarType + '"]');
-
-                if (!icon) return;
-
-                // Remove active from all icons (except API button)
-                wireframeIcons.forEach(function(i) {
-                    if (!i.classList.contains('api-button')) {
-                        i.classList.remove('active');
-                    }
-                });
-
-                // Update sidebar content
-                if (sidebarContent_map[sidebarType]) {
-                    const data = sidebarContent_map[sidebarType];
-
-                    // Clear and rebuild sidebar with tabs as header (if available) or just content
-                    let sidebarHtml = '';
-
-                    if (data.tabs) {
-                        const activeIndex = tabIndex !== undefined ? tabIndex : 0;
-                        
-                        // Build tabs
-                        sidebarHtml += '<div class="wireframe-sidebar-tabs">' +
-                            data.tabs.map((tab, i) =>
-                                '<button class="wireframe-sidebar-tab' + (i === activeIndex ? ' active' : '') + '" data-tab-index="' + i + '">' + tab + '</button>'
-                            ).join('') +
-                            '</div>';
-
-                        // Start sidebar body wrapper
-                        sidebarHtml += '<div class="wireframe-sidebar-body">';
-
-                        // Build content with API snippet before content if available
-                        const apiSnippet = data.apiSnippets && data.apiSnippets[activeIndex] ? data.apiSnippets[activeIndex] : '';
-                        sidebarHtml += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + apiSnippet + data.content[activeIndex] + '</div>';
-
-                        // Build footer with learn more button
-                        const learnMoreData = data.learnMore && data.learnMore[activeIndex] ? data.learnMore[activeIndex] : null;
-                        if (learnMoreData) {
-                            sidebarHtml += '<div class="wireframe-sidebar-footer">' +
-                                '<button class="wireframe-sidebar-footer-button" data-scroll-target="' + learnMoreData.target + '">' + learnMoreData.text + '</button>' +
-                                '</div>';
-                        }
-
-                        // Close sidebar body wrapper
-                        sidebarHtml += '</div>';
-
-                        // Set all HTML at once
-                        wireframeSidebar.innerHTML = sidebarHtml;
-
-                        // Update Jupyter cell API snippet
-                        updateJupyterApiSnippet(data, activeIndex);
-
-                        // Add click handlers to tabs
-                        const tabs = wireframeSidebar.querySelectorAll('.wireframe-sidebar-tab');
-                        tabs.forEach(function(tab) {
-                            tab.addEventListener('click', function() {
-                                stopAutoCycle();
-                                const tabIndex = parseInt(tab.dataset.tabIndex);
-
-                                // Update active state
-                                tabs.forEach(t => t.classList.remove('active'));
-                                tab.classList.add('active');
-
-                                // Update content
-                                const contentDiv = document.getElementById('sidebar-tab-content');
-                                if (contentDiv && data.content[tabIndex]) {
-                                    const apiSnippet = data.apiSnippets && data.apiSnippets[tabIndex] ? data.apiSnippets[tabIndex] : '';
-                                    contentDiv.innerHTML = apiSnippet + data.content[tabIndex];
-
-                                    // Update footer learn more button
-                                    const footerButton = wireframeSidebar.querySelector('.wireframe-sidebar-footer-button');
-                                    const learnMoreData = data.learnMore && data.learnMore[tabIndex] ? data.learnMore[tabIndex] : null;
-                                    if (footerButton && learnMoreData) {
-                                        footerButton.textContent = learnMoreData.text;
-                                        footerButton.setAttribute('data-scroll-target', learnMoreData.target);
-                                    }
-
-                                    // Repopulate dropdowns for loaders sidebar
-                                    if (sidebarType === 'loaders') {
-                                        setTimeout(function() {
-                                            const sourceSelect = document.getElementById('source-select');
-                                            const formatSelect = document.getElementById('format-select');
-                                            const viewerTypeSelect = document.getElementById('viewer-type-select');
-
-                                            // Populate source dropdown
-                                            if (sourceSelect && dropdownOptions.sources.length > 0) {
-                                                sourceSelect.innerHTML = dropdownOptions.sources.map(function(source) {
-                                                    return '<option>' + source + '</option>';
-                                                }).join('');
-                                            } else if (sourceSelect) {
-                                                sourceSelect.innerHTML = '<option>File</option><option>File Drop</option><option>URL</option>';
-                                            }
-
-                                            // Populate format dropdown
-                                            if (formatSelect && dropdownOptions.formats.length > 0) {
-                                                formatSelect.innerHTML = dropdownOptions.formats.map(function(format) {
-                                                    return '<option>' + format + '</option>';
-                                                }).join('');
-                                            } else if (formatSelect) {
-                                                formatSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option>';
-                                            }
-
-                                            // Populate viewer type dropdown
-                                            if (viewerTypeSelect && dropdownOptions.viewerTypes.length > 0) {
-                                                viewerTypeSelect.innerHTML = dropdownOptions.viewerTypes.map(function(type) {
-                                                    return '<option>' + type + '</option>';
-                                                }).join('');
-                                            } else if (viewerTypeSelect) {
-                                                viewerTypeSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option><option>Histogram</option><option>Scatter</option>';
-                                            }
-                                        }, 50);
-                                    }
-
-                                    // Re-attach scroll behavior for footer button
-                                    setTimeout(function() {
-                                        const footerButton = wireframeSidebar.querySelector('.wireframe-sidebar-footer-button');
-                                        if (footerButton) {
-                                            footerButton.addEventListener('click', function(e) {
-                                                stopAutoCycle();
-                                                const targetId = footerButton.getAttribute('data-scroll-target');
-                                                const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
-                                                if (targetElement) {
-                                                    // Always scroll, even if already at the target
-                                                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                                                    // Highlight the target grid item
-                                                    setTimeout(function() {
-                                                        // Remove highlight from any previously highlighted items
-                                                        document.querySelectorAll('.grid-item.highlighted').forEach(function(el) {
-                                                            el.classList.remove('highlighted');
-                                                        });
-
-                                                        // Add highlight to current target
-                                                        targetElement.classList.add('highlighted');
-
-                                                        // Remove highlight after 3 seconds
-                                                        setTimeout(function() {
-                                                            targetElement.classList.remove('highlighted');
-                                                        }, 3000);
-                                                    }, 500);
-                                                }
-                                            });
-                                        }
-                                    }, 100);
-                                }
-
-                                // Update Jupyter cell API snippet
-                                updateJupyterApiSnippet(data, tabIndex);
-                            });
-                        });
-                    } else {
-                        // No tabs, build HTML string then set all at once
-                        let sidebarHtml = '';
-                        
-                        // Start sidebar body wrapper
-                        sidebarHtml += '<div class="wireframe-sidebar-body">';
-
-                        // Build content with API snippet before content if available
-                        const apiSnippet = data.apiSnippet || '';
-                        sidebarHtml += '<div class="wireframe-sidebar-content">' + apiSnippet + data.content + '</div>';
-
-                        // Build footer with learn more button
-                        const learnMoreData = data.learnMore || null;
-                        if (learnMoreData) {
-                            sidebarHtml += '<div class="wireframe-sidebar-footer">' +
-                                '<button class="wireframe-sidebar-footer-button" data-scroll-target="' + learnMoreData.target + '">' + learnMoreData.text + '</button>' +
-                                '</div>';
-                        }
-
-                        // Close sidebar body wrapper
-                        sidebarHtml += '</div>';
-
-                        // Set all HTML at once
-                        wireframeSidebar.innerHTML = sidebarHtml;
-
-                        // Update Jupyter cell API snippet
-                        updateJupyterApiSnippet(data);
-                    }
-
-                    // Populate dropdowns for loaders sidebar
-                    if (sidebarType === 'loaders') {
-                        setTimeout(function() {
-                            const sourceSelect = document.getElementById('source-select');
-                            const formatSelect = document.getElementById('format-select');
-                            const viewerTypeSelect = document.getElementById('viewer-type-select');
-
-                            // Populate source dropdown
-                            if (sourceSelect && dropdownOptions.sources.length > 0) {
-                                sourceSelect.innerHTML = dropdownOptions.sources.map(function(source) {
-                                    return '<option>' + source + '</option>';
-                                }).join('');
-                            } else if (sourceSelect) {
-                                // Fallback options
-                                sourceSelect.innerHTML = '<option>File</option><option>File Drop</option><option>URL</option>';
-                            }
-
-                            // Populate format dropdown
-                            if (formatSelect && dropdownOptions.formats.length > 0) {
-                                formatSelect.innerHTML = dropdownOptions.formats.map(function(format) {
-                                    return '<option>' + format + '</option>';
-                                }).join('');
-                            } else if (formatSelect) {
-                                // Fallback options
-                                formatSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option>';
-                            }
-
-                            // Populate viewer type dropdown
-                            if (viewerTypeSelect && dropdownOptions.viewerTypes.length > 0) {
-                                viewerTypeSelect.innerHTML = dropdownOptions.viewerTypes.map(function(type) {
-                                    return '<option>' + type + '</option>';
-                                }).join('');
-                            } else if (viewerTypeSelect) {
-                                // Fallback options
-                                viewerTypeSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option><option>Histogram</option><option>Scatter</option>';
-                            }
-                        }, 50);
-                    }
-
-                    // Add scroll behavior for footer button and any other scroll links
-                    setTimeout(function() {
-                        const links = wireframeSidebar.querySelectorAll('[data-scroll-target]');
-                        links.forEach(function(link) {
-                            link.addEventListener('click', function(e) {
-                                stopAutoCycle();
-                                const targetId = link.getAttribute('data-scroll-target');
-                                const targetElement = document.querySelector('[data-grid-id="' + targetId + '"]');
-                                if (targetElement) {
-                                    // Always scroll, even if already at the target
-                                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                                    // Highlight the target grid item
-                                    setTimeout(function() {
-                                        // Remove highlight from any previously highlighted items
-                                        document.querySelectorAll('.grid-item.highlighted').forEach(function(el) {
-                                            el.classList.remove('highlighted');
-                                        });
-
-                                        // Add highlight to current target
-                                        targetElement.classList.add('highlighted');
-
-                                        // Remove highlight after 3 seconds
-                                        setTimeout(function() {
-                                            targetElement.classList.remove('highlighted');
-                                        }, 3000);
-                                    }, 500);
-                                }
-                            });
-                        });
-                    }, 100);
-                }
-
-                // Show sidebar and activate icon
-                wireframeSidebar.classList.add('visible');
-                icon.classList.add('active');
-                currentSidebar = sidebarType;
-            }
-
-            wireframeIcons.forEach(function(icon) {
-                icon.addEventListener('click', function() {
-                    stopAutoCycle();
-
-                    // Handle API button separately
-                    if (icon.classList.contains('api-button')) {
-                        apiModeActive = !apiModeActive;
-                        const jupyterApiSnippet = document.getElementById('jupyter-api-snippet');
-                        const jupyterApiContent = document.getElementById('jupyter-api-snippet-content');
-                        const dataMenuApiSnippets = document.querySelectorAll('.data-menu-api-snippet');
-
-                        if (apiModeActive) {
-                            icon.classList.add('active');
-                            document.body.classList.add('api-mode-active');
-
-                            // Show API snippet in Jupyter cell and update content based on current sidebar
-                            if (jupyterApiSnippet && jupyterApiContent) {
-                                jupyterApiSnippet.classList.add('visible');
-
-                                // Get current sidebar API snippet if available
-                                if (currentSidebar && sidebarContent_map[currentSidebar]) {
-                                    const data = sidebarContent_map[currentSidebar];
-                                    let apiText = '';
-
-                                    if (data.apiSnippet) {
-                                        // Extract text from HTML
-                                        const tempDiv = document.createElement('div');
-                                        tempDiv.innerHTML = data.apiSnippet;
-                                        const preElement = tempDiv.querySelector('pre.api-snippet');
-                                        if (preElement) {
-                                            apiText = preElement.textContent;
-                                        }
-                                    }
-
-                                    jupyterApiContent.textContent = apiText || '# Select a sidebar to see API snippets';
-                                } else {
-                                    jupyterApiContent.textContent = '# Select a sidebar to see API snippets';
-                                }
-                            }
-                        } else {
-                            icon.classList.remove('active');
-                            document.body.classList.remove('api-mode-active');
-
-                            // Hide API snippet in Jupyter cell
-                            if (jupyterApiSnippet) {
-                                jupyterApiSnippet.classList.remove('visible');
-                            }
-                        }
-
-                        // Re-activate current sidebar to update API snippets
-                        if (currentSidebar) {
-                            activateSidebar(currentSidebar);
-                        }
-                        return;
-                    }
-
-                    // Handle Mouseover button separately - scroll to section
-                    if (icon.classList.contains('mouseover-button')) {
-                        const targetElement = document.querySelector('[data-grid-id="grid-mouseover"]');
-                        if (targetElement) {
-                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            // Highlight effect
-                            setTimeout(function() {
-                                document.querySelectorAll('.grid-item.highlighted').forEach(function(el) {
-                                    el.classList.remove('highlighted');
-                                });
-                                targetElement.classList.add('highlighted');
-                                setTimeout(function() {
-                                    targetElement.classList.remove('highlighted');
-                                }, 3000);
-                            }, 500);
-                        }
-                        return;
-                    }
-
-                    // Get the sidebar type
-                    const sidebarType = icon.dataset.sidebar;
-
-                    if (!sidebarType) return;
-
-                    if (currentSidebar === sidebarType) {
-                        // Close sidebar if clicking the same icon
-                        wireframeSidebar.classList.remove('visible');
-                        icon.classList.remove('active');
-                        currentSidebar = null;
-                    } else {
-                        activateSidebar(sidebarType);
-                    }
-                });
-            });
-
-            // Auto-cycle function
-            function autoCycleSidebars() {
-                if (!autoCycling) return;
-
-                const sidebarType = sidebarOrder[currentCycleIndex];
-                const data = sidebarContent_map[sidebarType];
-
-                // Special handling for loaders sidebar with animations
-                if (sidebarType === 'loaders' && data && data.tabs) {
-                    const numTabs = data.tabs.length;
-                    let animationStep = 0;
-
-                    // Step 0: Show Data tab
-                    activateSidebar(sidebarType, 0);
-
-                    const loaderAnimation = setInterval(function() {
-                        if (!autoCycling) {
-                            clearInterval(loaderAnimation);
-                            return;
-                        }
-
-                        animationStep++;
-
-                        if (animationStep === 1) {
-                            // Step 1: Change format select to "2D Spectrum"
-                            const formatSelect = document.getElementById('format-select');
-                            if (formatSelect) {
-                                // Find the option with "2D Spectrum" (case-insensitive)
-                                const options = formatSelect.querySelectorAll('option');
-                                let found = false;
-                                options.forEach(function(option, index) {
-                                    if (option.textContent.toLowerCase().includes('2d spectrum')) {
-                                        formatSelect.selectedIndex = index;
-                                        found = true;
-                                    }
-                                });
-                                // If "2D Spectrum" not found, try to select second option
-                                if (!found && options.length > 1) {
-                                    formatSelect.selectedIndex = 1;
-                                }
-                            }
-                        } else if (animationStep === 2) {
-                            // Step 2: Flash Load button orange
-                            const loadButton = wireframeSidebar.querySelector('.wireframe-button');
-                            if (loadButton) {
-                                loadButton.style.background = '#c75d2c';
-                                loadButton.style.opacity = '1';
-                                loadButton.style.transform = 'scale(0.98)';
-                                setTimeout(function() {
-                                    if (loadButton) {
-                                        loadButton.style.background = '';
-                                        loadButton.style.opacity = '';
-                                        loadButton.style.transform = '';
-                                    }
-                                }, 800);
-                            }
-                        } else if (animationStep === 3) {
-                            // Step 3: Switch to Viewer tab
-                            activateSidebar(sidebarType, 1);
-                        } else {
-                            // Done with loaders, move to next sidebar
-                            clearInterval(loaderAnimation);
-                            currentCycleIndex = (currentCycleIndex + 1) % sidebarOrder.length;
-                            setTimeout(autoCycleSidebars, 2000);
-                        }
-                    }, 2000);
-
-                } else if (data && data.tabs) {
-                    // Regular sidebar with tabs, cycle through them
-                    const numTabs = data.tabs.length;
-                    let tabCycleIndex = 0;
-
-                    // Activate first tab
-                    activateSidebar(sidebarType, 0);
-
-                    // Set up tab cycling
-                    const tabCycleInterval = setInterval(function() {
-                        if (!autoCycling) {
-                            clearInterval(tabCycleInterval);
-                            return;
-                        }
-
-                        tabCycleIndex++;
-                        if (tabCycleIndex < numTabs) {
-                            activateSidebar(sidebarType, tabCycleIndex);
-                        } else {
-                            // Done with tabs, move to next sidebar
-                            clearInterval(tabCycleInterval);
-                            currentCycleIndex = (currentCycleIndex + 1) % sidebarOrder.length;
-                            setTimeout(autoCycleSidebars, 2000);
-                        }
-                    }, 2000);
-                } else {
-                    // No tabs, just show the sidebar
-                    activateSidebar(sidebarType);
-                    currentCycleIndex = (currentCycleIndex + 1) % sidebarOrder.length;
-                    setTimeout(autoCycleSidebars, 3000);
-                }
-            }
-
-            // Start auto-cycling only when wireframe is in view
-            const wireframeSection = document.querySelector('.wireframe-section');
-            let hasStartedCycling = false;
-
-            function checkWireframeInView() {
-                if (!autoCycling || hasStartedCycling || !wireframeSection) {
-                    return;
-                }
-
-                const rect = wireframeSection.getBoundingClientRect();
-                const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-
-                // Check if entire wireframe is visible in viewport
-                const isFullyVisible = (
-                    rect.top >= 0 &&
-                    rect.bottom <= windowHeight
-                );
-
-                if (isFullyVisible) {
-                    hasStartedCycling = true;
-                    autoCycleSidebars();
-                }
-            }
-
-            // Check on scroll and initial load
-            window.addEventListener('scroll', checkWireframeInView);
-            window.addEventListener('resize', checkWireframeInView);
-            setTimeout(checkWireframeInView, 1000);
-
-            // Handle cycle control button
-            const cycleControlButton = document.getElementById('wireframe-cycle-control');
-            if (cycleControlButton) {
-                // Hover: show pause when playing, restart when paused
-                cycleControlButton.addEventListener('mouseenter', function() {
-                    const cycleIconPlay = document.getElementById('cycle-icon-play');
-                    const cycleIconPause = document.getElementById('cycle-icon-pause');
-                    const cycleIconRestart = document.getElementById('cycle-icon-restart');
-                    
-                    if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
-                    if (cycleIconRestart) cycleIconRestart.classList.add('hidden');
-                    
-                    if (autoCycling) {
-                        // Show pause icon and text when currently playing
-                        if (cycleIconPause) cycleIconPause.classList.remove('hidden');
-                        cycleControlButton.setAttribute('data-flyout-text', 'pause demo');
-                    } else {
-                        // Show restart icon and text when paused
-                        if (cycleIconPause) cycleIconPause.classList.add('hidden');
-                        if (cycleIconRestart) cycleIconRestart.classList.remove('hidden');
-                        cycleControlButton.setAttribute('data-flyout-text', 'restart demo');
-                    }
-                });
-                
-                cycleControlButton.addEventListener('mouseleave', function() {
-                    const cycleIconRestart = document.getElementById('cycle-icon-restart');
-                    if (cycleIconRestart) cycleIconRestart.classList.add('hidden');
-                    updateCycleControlButton();
-                });
-                
-                // Click: pause when playing, restart when paused
-                cycleControlButton.addEventListener('click', function() {
-                    if (autoCycling) {
-                        // Pause/cancel the cycle
-                        stopAutoCycle();
-                        // Update hover state immediately - show restart since now paused
-                        const cycleIconPlay = document.getElementById('cycle-icon-play');
-                        const cycleIconPause = document.getElementById('cycle-icon-pause');
-                        const cycleIconRestart = document.getElementById('cycle-icon-restart');
-                        if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
-                        if (cycleIconPause) cycleIconPause.classList.add('hidden');
-                        if (cycleIconRestart) cycleIconRestart.classList.remove('hidden');
-                        cycleControlButton.setAttribute('data-flyout-text', 'restart demo');
-                    } else {
-                        // Restart the cycle
-                        restartAutoCycle();
-                        // Update hover state immediately - show pause since now playing
-                        const cycleIconPlay = document.getElementById('cycle-icon-play');
-                        const cycleIconPause = document.getElementById('cycle-icon-pause');
-                        const cycleIconRestart = document.getElementById('cycle-icon-restart');
-                        if (cycleIconPlay) cycleIconPlay.classList.add('hidden');
-                        if (cycleIconRestart) cycleIconRestart.classList.add('hidden');
-                        if (cycleIconPause) cycleIconPause.classList.remove('hidden');
-                        cycleControlButton.setAttribute('data-flyout-text', 'pause demo');
-                    }
-                });
-            }
-
-            // Stop cycling on any user interaction
-            document.addEventListener('click', function(e) {
-                // Only stop if clicking on interactive elements
-                if (e.target.closest('.wireframe-toolbar-icon, .wireframe-sidebar-tab, .wireframe-sidebar-link')) {
-                    stopAutoCycle();
-                }
-            });
-
-            // Handle global filter tabs
-            const globalFilterTabs = document.querySelectorAll('.global-filter-tab');
-            const allGridLinks = document.querySelectorAll('.grid-item .grid-item-link');
-
-            // Track current platform (initialized when platform tabs are set up)
-            let currentPlatform = 'jupyter';
-
-            function applyGlobalFilters() {
-                if (globalFilterTabs.length === 0) return;
-
-                // Get active data type filters
-                const activeFilters = Array.from(globalFilterTabs)
-                    .filter(t => t.classList.contains('active'))
-                    .map(t => t.dataset.filter);
-
-                // Filter all grid item links
-                allGridLinks.forEach(function(link) {
-                    let shouldShow = true;
-                    let platformDisabled = false;
-
-                    // Check data type filter (hide if doesn't match)
-                    if (link.dataset.types) {
-                        const types = link.dataset.types.split(' ');
-                        const matchesDataType = activeFilters.includes('all') ||
-                                               activeFilters.some(filter => types.includes(filter));
-                        if (!matchesDataType) {
-                            shouldShow = false;
-                        }
-                    }
-
-                    // Check platform filter (disable if excluded from current platform)
-                    if (link.dataset.exclPlatforms) {
-                        const exclPlatforms = link.dataset.exclPlatforms.split(' ');
-                        // If current platform is in excluded list, disable the button
-                        if (exclPlatforms.includes(currentPlatform)) {
-                            platformDisabled = true;
-                        }
-                    }
-
-                    // Apply visibility based on data type filtering
-                    link.style.display = shouldShow ? 'inline-block' : 'none';
-
-                    // Apply disabled state based on platform filtering
-                    if (shouldShow) {
-                        if (platformDisabled) {
-                            link.classList.add('platform-disabled');
-
-                            // Store original text if not already stored
-                            if (!link.dataset.originalText) {
-                                link.dataset.originalText = link.textContent;
-                            }
-
-                            // Remove any existing listeners to avoid duplicates
-                            link.onmouseenter = null;
-                            link.onmouseleave = null;
-
-                            // Add hover listeners to change text as warning
-                            link.onmouseenter = function() {
-                                const platformName = currentPlatform.charAt(0).toUpperCase() + currentPlatform.slice(1);
-                                link.textContent = `Unavailable in ${platformName}`;
-                            };
-
-                            link.onmouseleave = function() {
-                                link.textContent = link.dataset.originalText;
-                            };
-                        } else {
-                            link.classList.remove('platform-disabled');
-                            // Restore original text if it was changed
-                            if (link.dataset.originalText) {
-                                link.textContent = link.dataset.originalText;
-                            }
-                            // Remove hover listeners
-                            link.onmouseenter = null;
-                            link.onmouseleave = null;
-                        }
-                    }
-                });
-            }
-
-            if (globalFilterTabs.length > 0) {
-                globalFilterTabs.forEach(function(tab) {
-                    tab.addEventListener('click', function() {
-                        stopAutoCycle();
-
-                        // Single-select: deactivate all tabs and activate clicked one
-                        globalFilterTabs.forEach(t => t.classList.remove('active'));
-                        tab.classList.add('active');
-
-                        applyGlobalFilters();
-                    });
-                });
-
-                // Apply filters on initial load
-                setTimeout(applyGlobalFilters, 100);
-            }
-
-            // Handle filter tabs (legacy - now hidden but keep for compatibility)
-            const filterTabs = document.querySelectorAll('.filter-tab');
-            const pluginLinks = document.querySelectorAll('.grid-item[data-icon="mdi-tune-variant"] .grid-item-link');
-
-            if (filterTabs.length > 0) {
-                filterTabs.forEach(function(tab) {
-                    tab.addEventListener('click', function() {
-                        // Toggle active state (allow multiple selections)
-                        if (tab.dataset.filter === 'all') {
-                            // If "All" is clicked, deactivate other tabs and activate "All"
-                            filterTabs.forEach(t => t.classList.remove('active'));
-                            tab.classList.add('active');
-                        } else {
-                            // If a specific filter is clicked, deactivate "All"
-                            if (filterTabs[0]) {
-                                filterTabs[0].classList.remove('active');
-                            }
-                            tab.classList.toggle('active');
-
-                            // If no filters are active, reactivate "All"
-                            const anyActive = Array.from(filterTabs).slice(1).some(t => t.classList.contains('active'));
-                            if (!anyActive && filterTabs[0]) {
-                                filterTabs[0].classList.add('active');
-                            }
-                        }
-
-                        // Get active filters
-                        const activeFilters = Array.from(filterTabs)
-                            .filter(t => t.classList.contains('active'))
-                            .map(t => t.dataset.filter);
-
-                        // Filter plugins
-                        pluginLinks.forEach(function(link) {
-                            const types = link.dataset.types.split(' ');
-
-                            if (activeFilters.includes('all') || activeFilters.some(filter => types.includes(filter))) {
-                                link.style.display = 'inline-block';
-                            } else {
-                                link.style.display = 'none';
-                            }
-                        });
-                    });
-                });
-            }
-
-            // Check each grid item to see if it needs a toggle button
-            const gridItems = document.querySelectorAll('.grid-item');
-
-            gridItems.forEach(function(item, index) {
-                const content = item.querySelector('.grid-item-content');
-                const linksContainer = item.querySelector('.grid-item-links');
-
-                // Use higher threshold for first two items (0 and 1 index)
-                const heightThreshold = (index < 2) ? 280 : 180;
-
-                // Check if content overflows
-                if (linksContainer && linksContainer.scrollHeight > heightThreshold) {
-                    // Add class to indicate this item has a toggle
-                    item.classList.add('has-toggle');
-
-                    // Create toggle button
-                    const toggleBtn = document.createElement('button');
-                    toggleBtn.className = 'toggle-more';
-                    toggleBtn.textContent = 'Show More';
-
-                    // Add click handler
-                    toggleBtn.addEventListener('click', function() {
-                        item.classList.toggle('expanded');
-                        toggleBtn.textContent = item.classList.contains('expanded') ? 'Show Less' : 'Show More';
-                    });
-
-                    item.appendChild(toggleBtn);
-                }
-            });
-
-            // Data menu popup handler
-            const dataMenuTriggers = document.querySelectorAll('.data-menu-trigger');
-            const dataMenuPopup = document.getElementById('data-menu-popup');
-            const dataMenuClose = document.getElementById('data-menu-close');
-
-            if (dataMenuTriggers.length > 0 && dataMenuPopup && dataMenuClose) {
-                dataMenuTriggers.forEach(function(trigger) {
-                    trigger.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        dataMenuPopup.classList.toggle('visible');
-                    });
-                });
-
-                dataMenuClose.addEventListener('click', function() {
-                    dataMenuPopup.classList.remove('visible');
-                });
-
-                // Close popup when clicking outside
-                document.addEventListener('click', function(e) {
-                    const isClickInsidePopup = dataMenuPopup.contains(e.target);
-                    const isClickOnTrigger = Array.from(dataMenuTriggers).some(trigger => trigger.contains(e.target));
-
-                    if (!isClickInsidePopup && !isClickOnTrigger) {
-                        dataMenuPopup.classList.remove('visible');
-                    }
-                });
-            }
-
-            // Platform tabs handler
-            const platformTabs = document.querySelectorAll('.platform-tab');
-            const platformTabContents = document.querySelectorAll('.platform-tab-content');
-            let currentPlatformIndex = 2; // Default to Jupyter (index 2)
-
-            function activatePlatformTab(index) {
-                // Get platform type
-                const platformType = platformTabs[index].getAttribute('data-platform');
-
-                // Update currentPlatform variable
-                if (platformType) {
-                    currentPlatform = platformType;
-                }
-
-                // Update tabs
-                platformTabs.forEach(function(tab, i) {
-                    if (i === index) {
-                        tab.classList.add('active');
-                    } else {
-                        tab.classList.remove('active');
-                    }
-                });
-
-                // Update content
-                platformTabContents.forEach(function(content, i) {
-                    if (i === index) {
-                        content.classList.add('active');
-                    } else {
-                        content.classList.remove('active');
-                    }
-                });
-
-                // Show/hide API button based on platform
-                const apiButton = document.querySelector('.api-button');
-                if (apiButton) {
-                    if (platformType === 'jupyter' || platformType === 'platform') {
-                        apiButton.style.display = 'block';
-                    } else {
-                        apiButton.style.display = 'none';
-                    }
-                }
-
-                // Update installation button based on platform
-                const installButton = document.getElementById('install-button');
-                if (installButton) {
-                    if (platformType === 'desktop') {
-                        installButton.textContent = 'Install Standalone Desktop UI';
-                        installButton.href = 'setup/desktop.html';
-                        installButton.target = '_self';
-                    } else if (platformType === 'mast') {
-                        installButton.textContent = 'Launch Jdaviz@MAST';
-                        installButton.href = 'https://mast.stsci.edu/viz/ui/#/';
-                        installButton.target = '_blank';
-                    } else if (platformType === 'jupyter') {
-                        installButton.textContent = 'Install Jdaviz';
-                        installButton.href = 'setup/local.html';
-                        installButton.target = '_self';
-                    } else if (platformType === 'platform') {
-                        installButton.textContent = 'Run Jdaviz on a Platform';
-                        installButton.href = 'setup/platform.html';
-                        installButton.target = '_self';
-                    }
-                }
-
-                // Apply global filters to update platform-disabled buttons
-                if (typeof applyGlobalFilters === 'function') {
-                    applyGlobalFilters();
-                }
-            }
-
-            // Add click handlers to platform tabs
-            platformTabs.forEach(function(tab, index) {
-                tab.addEventListener('click', function() {
-                    currentPlatformIndex = index;
-                    activatePlatformTab(index);
-                });
-            });
-
-            // Initialize with Jupyter tab active
-            activatePlatformTab(currentPlatformIndex);
-        });
+        // Configure wireframe for landing page (show all features)
+        window.wireframeConfig = {
+            showScrollTo: true
+        };
     </script>
+    <script src="{{ pathto('_static/wireframe-controller.js', 1) }}"></script>
 </head>
 <body>
     <div class="container">
@@ -3154,91 +1419,23 @@
             </div>
         </div>
 
-        <!-- Wireframe Section -->
-        <div class="wireframe-section">
-            <div class="wireframe-container">
-                <div class="wireframe-toolbar">
-                    <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
-                    <div class="wireframe-toolbar-divider"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
-                    <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
-                    <div class="wireframe-toolbar-divider"></div>
-                    <div class="wireframe-toolbar-icon mouseover-button" data-icon="auto-fix" title="Mouseover Info"></div>
-                    <div class="wireframe-toolbar-spacer"></div>
-                    <div class="wireframe-toolbar-right">
-                        <div class="wireframe-toolbar-search-row">
-                            <input type="text" class="wireframe-toolbar-search" id="wireframe-search-input" placeholder="Search documentation..." readonly />
-                        </div>
-                        <div class="wireframe-toolbar-version-row">
-                            <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
-                            <div class="api-button" data-icon="api" title="Toggle API Snippets" style="display: none;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="wireframe-main">
-                    <div class="wireframe-sidebar" id="wireframe-sidebar">
-                        <div class="wireframe-sidebar-content">
-                            Click toolbar icons to toggle different sidebars
-                        </div>
-                    </div>
-                    <div class="wireframe-viewer">
-                        <!-- Viewer Toolbar -->
-                        <div class="viewer-toolbar">
-                            <div class="viewer-toolbar-spacer"></div>
-                            <div class="viewer-toolbar-icon" data-icon="bqplot:home" title="Home"></div>
-                            <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzAxMDEwMTt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo=" title="Pan/Zoom"></div>
-                            <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMTAxMDE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+" title="Rectangular ROI"></div>
-                            <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMyMzFmMjA7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg==" title="Circular ROI"></div>
-                        </div>
+        <!-- Wireframe Section (loaded from external file) -->
+        <div id="wireframe-placeholder"></div>
+        <script>
+            // Load wireframe HTML
+            fetch("{{ pathto('_static/wireframe-base.html', 1) }}")
+                .then(response => response.text())
+                .then(html => {
+                    // Replace Jinja2 variable with actual value
+                    const version = "{{ jdaviz_version }}";
+                    html = html.replace("{{ jdaviz_version }}", version);
+                    document.getElementById("wireframe-placeholder").innerHTML = html;
 
-                        <!-- Viewer Content Area -->
-                        <div class="viewer-content">
-                            Viewer Area
-
-                            <!-- Data Menu Legend -->
-                            <div class="data-menu-legend">
-                                <div class="legend-item data-menu-trigger">
-                                    <svg class="legend-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M3,5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5M11,7A2,2 0 0,0 9,9V17H11V13H13V17H15V9A2,2 0 0,0 13,7H11M11,9H13V11H11V9Z" /></svg>
-                                    <div class="legend-text">1D Spectrum</div>
-                                </div>
-                                <div class="legend-item data-menu-trigger">
-                                    <svg class="legend-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M15,10.5V9A2,2 0 0,0 13,7H9V17H13A2,2 0 0,0 15,15V13.5C15,12.7 14.3,12 13.5,12C14.3,12 15,11.3 15,10.5M13,15H11V13H13V15M13,11H11V9H13V11Z" /></svg>
-                                    <div class="legend-text">Subset 1</div>
-                                </div>
-                            </div>
-
-                            <!-- Data Menu Popup -->
-                            <div class="data-menu-popup" id="data-menu-popup">
-                                <div class="data-menu-header">
-                                    <div class="data-menu-title">Data Menu</div>
-                                    <button class="data-menu-close" id="data-menu-close">×</button>
-                                </div>
-                                <div class="data-menu-content">
-                                    <p class="data-menu-description">
-                                        Control data and subset layer order and visibility for each viewer.
-                                        Toggle layer visibility, reorder layers by dragging, and manage which data appears in the viewer.
-                                    </p>
-                                    <div class="data-menu-api-snippet">
-                                        <pre class="api-snippet">dm = jd.viewers[viewer].data_menu</pre>
-                                        <button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button>
-                                    </div>
-                                    <button class="data-menu-button wireframe-sidebar-link" data-scroll-target="grid-data-menu">Learn more about Data Menu →</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Auto-cycle control button -->
-                <div class="wireframe-cycle-control" id="wireframe-cycle-control" data-flyout-text="pause demo">
-                    <div class="wireframe-cycle-control-icon" id="cycle-icon-play"></div>
-                    <div class="wireframe-cycle-control-icon hidden" id="cycle-icon-pause"></div>
-                    <div class="wireframe-cycle-control-icon hidden" id="cycle-icon-restart"></div>
-                </div>
-            </div>
-        </div>
+                    // Manually trigger wireframe initialization after HTML is injected
+                    // Dispatch a custom event that the controller can listen for
+                    document.dispatchEvent(new CustomEvent('wireframe-loaded'));
+                });
+        </script>
 
         <!-- Tab-specific Content -->
         <div class="platform-content-section">

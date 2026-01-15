@@ -3,7 +3,6 @@
 **************
 Catalog Search
 **************
-
 .. plugin-availability::
 
 Query astronomical catalogs and overlay sources on images.
@@ -24,8 +23,6 @@ objects and cross-match with observations.
 * Export catalog results
 * Source table display
 
-**Available in:** Imviz
-
 Details
 =======
 
@@ -35,6 +32,13 @@ and in a sortable table.
 
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Catalog Search
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Catalog Search` icon in the plugin toolbar to:
 

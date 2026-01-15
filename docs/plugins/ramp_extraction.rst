@@ -4,7 +4,6 @@
 ***************
 Ramp Extraction
 ***************
-
 .. plugin-availability::
 
 Extract ramp profiles from detector data.
@@ -22,10 +21,15 @@ integration-level time series for pixels or regions.
 * Integration visualization
 * Uncertainty propagation
 
-**Available in:** Rampviz
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Ramp Extraction
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Ramp Extraction` icon in the plugin toolbar to:
 

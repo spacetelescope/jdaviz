@@ -20,3 +20,19 @@ The Data Menu provides controls for managing layers in your viewers, allowing yo
 * Reorder data and subset layers
 * Control layer visibility
 * Manage which data appears in each viewer
+
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: open-data-menu
+   :enable-only: loaders
+   :demo-repeat: false
+
+API Access
+==========
+
+.. code-block:: python
+
+    viewer = jd.viewers['spectrum-viewer']
+    data_menu = viewer.data_menu

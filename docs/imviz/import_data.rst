@@ -31,8 +31,8 @@ Multiple data files may be provided:
 
 .. _imviz-import-gui:
 
-Importing data through the GUI
-==============================
+Importing data through the UI
+=============================
 
 You can load your data into the Imviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's

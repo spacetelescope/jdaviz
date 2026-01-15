@@ -5,18 +5,6 @@
 Data Information Tools
 ************************
 
-Access metadata, place markers, and view system logs.
-
-.. toctree::
-   :maxdepth: 1
-
-   metadata
-   markers
-   logger
-
-Overview
-========
-
 Jdaviz provides tools to inspect and interact with your data:
 
 **Metadata Viewer**
@@ -29,20 +17,20 @@ Jdaviz provides tools to inspect and interact with your data:
 **Logger**
   View system messages, warnings, and errors from Jdaviz operations.
 
-Accessing Information Tools
-============================
 
-These tools can be accessed through the plugin toolbar or programmatically:
+.. toctree::
+   :maxdepth: 1
 
-.. code-block:: python
+   metadata
+   markers
+   logger
 
-    # Access metadata
-    metadata = app.plugins['Metadata']
 
-    # View available information
-    print(metadata)
+UI Access
+=========
 
-See Also
-========
+.. wireframe-demo::
+   :demo: info
+   :enable-only: info
+   :demo-repeat: false
 
-- Individual information tool pages for detailed usage

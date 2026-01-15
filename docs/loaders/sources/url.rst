@@ -1,6 +1,6 @@
-.. _loaders-source-url:
-
 :excl_platforms: mast
+
+.. _loaders-source-url:
 
 *******************
 Loading from URL
@@ -8,8 +8,29 @@ Loading from URL
 
 The URL loader allows you to load data directly from remote URLs.
 
-Usage
-=====
+Supported Protocols
+===================
+
+The URL loader supports:
+
+- HTTP and HTTPS URLs
+- FTP URLs
+- Data URLs
+
+The file at the URL should be in one of the supported formats (FITS, ASDF, etc.).
+
+See :ref:`loaders-formats` for information on available data formats.
+
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:URL
+   :enable-only: loaders
+   :demo-repeat: false
+
+API Access
+==========
 
 .. code-block:: python
 
@@ -24,16 +45,3 @@ Usage
     ldr.url = 'https://example.com/data.fits'
     ldr.format = '1D Spectrum'
     ldr.load()
-
-Supported Protocols
-===================
-
-The URL loader supports:
-
-- HTTP and HTTPS URLs
-- FTP URLs
-- Data URLs
-
-The file at the URL should be in one of the supported formats (FITS, ASDF, etc.).
-
-See :ref:`loaders-formats` for information on available data formats.

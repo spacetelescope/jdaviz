@@ -43,13 +43,13 @@ Supported File Formats
 
 The loader automatically detects and parses standard spectroscopic data formats.
 
-Compatible Tools
-================
+UI Access
+=========
 
-Data loaded with this format can be visualized in:
-
-- **Specviz**: For 1D spectral analysis
-- **Mosviz**: As part of multi-object spectroscopy datasets
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:1D Spectrum
+   :enable-only: loaders
+   :demo-repeat: false
 
 See Also
 ========

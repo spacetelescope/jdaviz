@@ -27,19 +27,13 @@ Future support will include:
 - Selecting sources for analysis
 - Cross-matching with loaded data
 
-Temporary Workaround
-====================
+UI Access
+=========
 
-Currently, you can load catalogs using the Catalog Search plugin in Imviz:
-
-.. code-block:: python
-
-    from jdaviz import Imviz
-    imviz = Imviz()
-    imviz.show()
-    imviz.load('image.fits', format='Image')
-
-    # Use the Catalog Search plugin from the toolbar
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:Catalog
+   :enable-only: loaders
+   :demo-repeat: false
 
 See Also
 ========

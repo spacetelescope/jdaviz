@@ -25,8 +25,6 @@ statistics within the aperture, with optional background subtraction.
 * Unit conversion (flux to counts, magnitude)
 * Export results to tables
 
-**Available in:** Imviz, Cubeviz
-
 Details
 =======
 
@@ -90,6 +88,13 @@ Limitations
 
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel,plugins:select-data=Image 2
+   :enable-only: plugins
+   :plugin-name: Aperture Photometry
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Opening the Plugin
 ------------------

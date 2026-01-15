@@ -24,8 +24,6 @@ a spectral region.
 * Automatic WCS propagation
 * Add results to any image viewer
 
-**Available in:** Cubeviz, Deconfigged
-
 Details
 =======
 
@@ -78,6 +76,13 @@ Use Cases
 
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Collapse
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Opening the Plugin
 ------------------

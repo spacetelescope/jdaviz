@@ -21,8 +21,6 @@ slices in spectral cubes and managing slice display.
 * Slice animation
 * Synchronize across viewers
 
-**Available in:** Cubeviz
-
 UI Access
 =========
 

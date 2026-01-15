@@ -20,10 +20,15 @@ of North and East directions based on WCS information.
 * Auto-update with WCS changes
 * Works with multiple viewers
 
-**Available in:** Imviz, Cubeviz
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Compass
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Compass` icon in the plugin toolbar to toggle compass display.
 

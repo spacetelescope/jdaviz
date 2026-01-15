@@ -44,13 +44,13 @@ Supported File Formats
 - JWST pipeline products (s2d files)
 - HST grism data
 
-Compatible Tools
-================
+UI Access
+=========
 
-Data loaded with this format can be visualized in:
-
-- **Specviz2d**: For 2D spectral analysis and extraction
-- **Mosviz**: As part of multi-object spectroscopy datasets
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:2D Spectrum
+   :enable-only: loaders
+   :demo-repeat: false
 
 See Also
 ========

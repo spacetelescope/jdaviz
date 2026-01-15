@@ -12,6 +12,7 @@ Here is some documentation specific for developers.
   release
   infrastructure
   new_plugin
+  wireframe
   ui_description
   ui_style_guide
   ui_plugin_components

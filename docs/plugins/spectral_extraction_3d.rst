@@ -24,8 +24,6 @@ over spatial regions or collapsing entire cubes.
 * Uncertainty propagation
 * Background spectrum extraction
 
-**Available in:** Cubeviz
-
 Details
 =======
 
@@ -93,6 +91,13 @@ subtraction in subsequent analysis.
 
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: 3D Spectral Extraction
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Opening the Plugin
 ------------------

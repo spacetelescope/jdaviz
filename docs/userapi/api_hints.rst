@@ -4,6 +4,7 @@
 API Hints
 *********
 
+
 Interactive hints showing available parameters and options for loaders and plugins.
 
 Description
@@ -25,6 +26,11 @@ making it easy to transition from interactive exploration to automated workflows
 
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: loaders,loaders:api-toggle,loaders:select-tab=Viewer,save,save:api-toggle,settings,settings:api-toggle,settings:select-tab=Units,info,info:api-toggle,info:select-tab=Markers,info:select-tab=Logger,subsets,subsets:api-toggle
+   :demo-repeat: true
+   :show-scroll-to: true
 
 Enabling API Hints
 ------------------

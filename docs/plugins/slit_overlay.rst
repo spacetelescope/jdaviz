@@ -4,7 +4,6 @@
 ************
 Slit Overlay
 ************
-
 .. plugin-availability::
 
 Overlay spectrograph slit positions on images.
@@ -22,10 +21,15 @@ spectroscopic observations overlaid on associated images or spatial maps.
 * Multiple slit support
 * Adjust visibility
 
-**Available in:** Specviz2d
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Slit Overlay
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Slit Overlay` icon in the plugin toolbar to configure
 slit overlay display options.

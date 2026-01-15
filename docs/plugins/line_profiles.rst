@@ -23,8 +23,6 @@ edges, or gradients.
 * Multiple data layers
 * Export profile data
 
-**Available in:** Imviz, Cubeviz (on 2D slices)
-
 UI Access
 =========
 

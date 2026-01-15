@@ -4,7 +4,8 @@
 Data Formats
 *************************
 
-Jdaviz can parse data in various astronomical formats. Select a format below to learn more:
+When loading data into Jdaviz, you specify a format that determines how the data
+will be parsed and which tools can visualize it:
 
 .. toctree::
    :maxdepth: 1
@@ -16,20 +17,33 @@ Jdaviz can parse data in various astronomical formats. Select a format below to 
    catalog
    ramp
 
-Overview
-========
-
-When loading data into Jdaviz, you specify a format that determines how the data
-will be parsed and which tools can visualize it:
-
-- **1D Spectrum**: Individual one-dimensional spectra (Specviz, Mosviz)
-- **2D Spectrum**: Two-dimensional spectroscopic data (Specviz2d, Mosviz)
-- **3D Spectrum**: Three-dimensional spectral cubes (Cubeviz)
-- **Image**: Two-dimensional astronomical images (Imviz, Mosviz)
-- **Catalog**: Astronomical source catalogs (coming soon)
-- **Ramp**: JWST Level 1 ramp data (Rampviz)
-
 Each format has specific requirements for the data structure. The format determines
 which viewers and analysis tools are available for that data.
 
 See :ref:`loaders-sources` for information on different ways to load data.
+
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data
+   :enable-only: loaders
+   :demo-repeat: false
+
+API Access
+==========
+
+You can specify the data format programmatically when loading data:
+
+.. code-block:: python
+
+    ldr = jdaviz.loaders['file']
+    ldr.filename = 'mydata.fits'
+    ldr.format = '1D Spectrum'  # Specify the desired format
+    ldr.load()
+
+or by passing as a keyword argument to the load function:
+
+.. code-block:: python
+
+    jdaviz.load('mydata.fits', format='1D Spectrum')

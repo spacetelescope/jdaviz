@@ -21,10 +21,15 @@ showing detector layouts and orientations for planning or analysis.
 * Multiple footprint overlays
 * Export footprint regions
 
-**Available in:** Imviz
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Footprints
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Footprints` icon in the plugin toolbar to:
 

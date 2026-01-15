@@ -38,8 +38,8 @@ spectrum object and will automatically extract the 1D spectrum):
 
 .. _specviz2d-import-gui:
 
-Importing data through the GUI
-==============================
+Importing data through the UI
+=============================
 
 You can load your data into the Specviz2D application
 by clicking the :guilabel:`Import Data` button at the top left of the application's

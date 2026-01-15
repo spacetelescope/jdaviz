@@ -44,24 +44,14 @@ Supported File Formats
 - JWST imaging data (i2d files)
 - HST imaging data
 
-Compatible Tools
-================
+UI Access
+=========
 
-Data loaded with this format can be visualized in:
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:Image
+   :enable-only: loaders
+   :demo-repeat: false
 
-- **Imviz**: For 2D image analysis and visualization
-- **Mosviz**: As context images for spectroscopic observations
-
-Features Available in Imviz
-============================
-
-When viewing images in Imviz, you can:
-
-- Display multiple images with alignment and blinking
-- Perform aperture photometry
-- Create and analyze image profiles
-- Overlay catalogs and footprints
-- Apply coordinate transformations
 
 See Also
 ========

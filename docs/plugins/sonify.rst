@@ -21,10 +21,15 @@ an alternative way to explore data patterns through sound.
 * Playback controls
 * Export audio files
 
-**Available in:** Cubeviz
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Sonify Data
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Sonify` icon in the plugin toolbar to:
 

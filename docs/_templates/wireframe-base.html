@@ -1,0 +1,84 @@
+<!-- Wireframe Section -->
+<div class="wireframe-section">
+    <div class="wireframe-container">
+        <div class="wireframe-toolbar">
+            <div class="wireframe-toolbar-icon" data-sidebar="loaders" data-icon="database-import" title="Import Data"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="save" data-icon="download" title="Export"></div>
+            <div class="wireframe-toolbar-divider"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="settings" data-icon="tune" title="Plot Options"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="info" data-icon="information" title="Metadata"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="plugins" data-icon="wrench" title="Plugins"></div>
+            <div class="wireframe-toolbar-icon" data-sidebar="subsets" data-icon="selection" title="Subsets"></div>
+            <div class="wireframe-toolbar-divider"></div>
+            <div class="wireframe-toolbar-icon mouseover-button" data-icon="auto-fix" title="Mouseover Info"></div>
+            <div class="wireframe-toolbar-spacer"></div>
+            <div class="wireframe-toolbar-right">
+                <div class="wireframe-toolbar-search-row">
+                    <input type="text" class="wireframe-toolbar-search" id="wireframe-search-input" placeholder="Search documentation..." readonly />
+                </div>
+                <div class="wireframe-toolbar-version-row">
+                    <span class="wireframe-toolbar-version">v{{ jdaviz_version }}</span>
+                    <div class="api-button" data-icon="api" title="Toggle API Snippets" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="wireframe-main">
+            <div class="wireframe-sidebar" id="wireframe-sidebar">
+                <div class="wireframe-sidebar-content">
+                    Click toolbar icons to toggle different sidebars
+                </div>
+            </div>
+            <div class="wireframe-viewer">
+                <!-- Viewer Toolbar -->
+                <div class="viewer-toolbar">
+                    <div class="viewer-toolbar-spacer"></div>
+                    <div class="viewer-toolbar-icon" data-icon="bqplot:home" title="Home"></div>
+                    <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzAxMDEwMTt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo=" title="Pan/Zoom"></div>
+                    <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMTAxMDE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+" title="Rectangular ROI"></div>
+                    <div class="viewer-toolbar-icon" data-icon="data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMyMzFmMjA7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg==" title="Circular ROI"></div>
+                </div>
+
+                <!-- Viewer Content Area -->
+                <div class="viewer-content">
+                    Viewer Area
+
+                    <!-- Data Menu Legend -->
+                    <div class="data-menu-legend">
+                        <div class="legend-item data-menu-trigger">
+                            <svg class="legend-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M3,5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5M11,7A2,2 0 0,0 9,9V17H11V13H13V17H15V9A2,2 0 0,0 13,7H11M11,9H13V11H11V9Z" /></svg>
+                            <div class="legend-text">1D Spectrum</div>
+                        </div>
+                        <div class="legend-item data-menu-trigger">
+                            <svg class="legend-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M15,10.5V9A2,2 0 0,0 13,7H9V17H13A2,2 0 0,0 15,15V13.5C15,12.7 14.3,12 13.5,12C14.3,12 15,11.3 15,10.5M13,15H11V13H13V15M13,11H11V9H13V11Z" /></svg>
+                            <div class="legend-text">Subset 1</div>
+                        </div>
+                    </div>
+
+                    <!-- Data Menu Popup -->
+                    <div class="data-menu-popup" id="data-menu-popup">
+                        <div class="data-menu-header">
+                            <div class="data-menu-title">Data Menu</div>
+                            <button class="data-menu-close" id="data-menu-close">×</button>
+                        </div>
+                        <div class="data-menu-content">
+                            <p class="data-menu-description">
+                                Control data and subset layer order and visibility for each viewer.
+                                Toggle layer visibility, reorder layers by dragging, and manage which data appears in the viewer.
+                            </p>
+                            <div class="data-menu-api-snippet">
+                                <pre class="api-snippet">dm = jd.viewers[viewer].data_menu</pre>
+                                <button class="api-learn-more" data-scroll-target="grid-userapi">Learn about API access</button>
+                            </div>
+                            <button class="data-menu-button wireframe-sidebar-link" data-scroll-target="grid-data-menu">Learn more about Data Menu →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Auto-cycle control button -->
+        <div class="wireframe-cycle-control" data-flyout-text="pause demo">
+            <div class="wireframe-cycle-control-icon cycle-icon-pause"></div>
+            <div class="wireframe-cycle-control-icon cycle-icon-restart hidden"></div>
+        </div>
+    </div>
+</div>

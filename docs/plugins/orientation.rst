@@ -21,10 +21,15 @@ flipping, and alignment to celestial coordinates.
 * Align North up, East left
 * Apply to single or all viewers
 
-**Available in:** Imviz, Cubeviz
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Orientation
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Orientation` icon in the plugin toolbar to:
 

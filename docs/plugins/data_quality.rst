@@ -3,7 +3,6 @@
 ************
 Data Quality
 ************
-
 .. plugin-availability::
 
 Visualize and filter data quality flags.
@@ -22,10 +21,15 @@ based on quality criteria.
 * Toggle DQ overlay
 * Interpret flag meanings
 
-**Available in:** Imviz, Cubeviz
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Data Quality
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Data Quality` icon in the plugin toolbar to:
 

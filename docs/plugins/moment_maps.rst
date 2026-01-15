@@ -3,7 +3,6 @@
 ***********
 Moment Maps
 ***********
-
 .. plugin-availability::
 
 Create moment maps from spectral cubes.
@@ -22,8 +21,6 @@ in 2D, including integrated flux, velocity, and dispersion.
 * Velocity or wavelength output units
 * Spectral region selection
 * Export to FITS format
-
-**Available in:** Cubeviz
 
 Details
 =======
@@ -84,6 +81,13 @@ exclude contamination from other features and reduce noise.
 
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Moment Maps
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Opening the Plugin
 ------------------

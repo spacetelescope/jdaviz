@@ -56,8 +56,8 @@ a data product is optional:
 
 .. _cubeviz-import-gui:
 
-Importing data through the GUI
-==============================
+Importing data through the UI
+=============================
 
 Users may load data into the Cubeviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's

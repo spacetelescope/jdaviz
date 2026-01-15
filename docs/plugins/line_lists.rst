@@ -3,7 +3,6 @@
 **********
 Line Lists
 **********
-
 .. plugin-availability::
 
 Display and manage spectral line identifications.
@@ -24,10 +23,15 @@ and analysis.
 * Color customization
 * Filter by wavelength range
 
-**Available in:** Specviz, Cubeviz, Specviz2d, Mosviz
-
 UI Access
 =========
+
+.. wireframe-demo::
+   :demo: plugins,plugins@1000:open-panel
+   :enable-only: plugins
+   :plugin-name: Line Lists
+   :plugin-panel-opened: false
+   :demo-repeat: false
 
 Click the :guilabel:`Line Lists` icon in the plugin toolbar to:
 

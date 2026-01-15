@@ -21,8 +21,6 @@ to the dispersion direction in 2D spectroscopic data.
 * Profile visualization
 * Background estimation
 
-**Available in:** Specviz2d
-
 UI Access
 =========
 

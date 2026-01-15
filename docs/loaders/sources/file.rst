@@ -1,6 +1,6 @@
-.. _loaders-source-file:
-
 :excl_platforms: mast
+
+.. _loaders-source-file:
 
 ********************
 Loading from File
@@ -36,3 +36,11 @@ The file loader supports various astronomical data formats through the underlyin
 - And more formats supported by ``astropy`` and ``specutils``
 
 See :ref:`loaders-formats` for information on available data formats.
+
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:File
+   :enable-only: loaders
+   :demo-repeat: false

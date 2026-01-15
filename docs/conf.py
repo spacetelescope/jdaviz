@@ -1165,8 +1165,557 @@ class PluginApiReferencesDirective(SphinxDirective):
             return [error_node]
 
 
+# Wireframe Content Registry
+# Defines form elements and content for all sidebars, tabs, and plugins
+WIREFRAME_CONTENT_REGISTRY = {
+    'loaders': {
+        'tabs': ['Data', 'Viewer'],
+        'tab_content': {
+            'Data': {
+                'form_elements': [
+                    {'type': 'select', 'label': 'Source', 'options': ['file', 'file drop', 'url', 'object', 'astroquery', 'virtual observatory']},
+                    {'type': 'select', 'label': 'Format', 'options': ['1D Spectrum', '2D Spectrum', 'Image']},
+                    {'type': 'button', 'label': 'Load'}
+                ]
+            },
+            'Viewer': {
+                'form_elements': [
+                    {'type': 'select', 'label': 'Viewer Type', 'options': ['1D Spectrum', '2D Spectrum', 'Histogram', 'Scatter']},
+                    {'type': 'button', 'label': 'Create Viewer'}
+                ]
+            }
+        }
+    },
+    'settings': {
+        'tabs': ['Plot Options', 'Units'],
+        'tab_content': {
+            'Plot Options': {
+                'form_elements': [
+                    {'type': 'checkbox', 'label': 'Show grid'},
+                    {'type': 'checkbox', 'label': 'Show axes labels'},
+                    {'type': 'select', 'label': 'Layer', 'options': ['Layer 1', 'Layer 2']}
+                ]
+            },
+            'Units': {
+                'form_elements': [
+                    {'type': 'select', 'label': 'Spectral Unit', 'options': ['Angstrom', 'nm', 'micron']},
+                    {'type': 'select', 'label': 'Flux Unit', 'options': ['Jy', 'erg/s/cm²/Å']}
+                ]
+            }
+        }
+    },
+    'info': {
+        'tabs': ['Metadata', 'Markers', 'Logger'],
+        'tab_content': {
+            'Metadata': {'text': 'Display file metadata and header information'},
+            'Markers': {'text': 'Interactive table of markers placed on the viewer'},
+            'Logger': {'text': 'View history of operations and messages'}
+        }
+    },
+    'plugins': {
+        'Aperture Photometry': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data', 'options': ['Image 1', 'Image 2']},
+                {'type': 'select', 'label': 'Aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Background',
+                 'options': ['Manual', 'Subset 1', 'Subset 2']},
+                {'type': 'input', 'label': 'Background value',
+                 'placeholder': '0.0'},
+                {'type': 'input', 'label': 'Pixel area',
+                 'placeholder': 'arcsec²'},
+                {'type': 'select', 'label': 'Plot Type',
+                 'options': ['Curve of Growth', 'Radial Profile',
+                             'Radial Profile (Raw)']},
+                {'type': 'checkbox', 'label': 'Fit Gaussian'},
+                {'type': 'button', 'label': 'Calculate'}
+            ]
+        },
+        'Line Analysis': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Spectrum 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Continuum',
+                 'options': ['Subset 3', 'Subset 4']},
+                {'type': 'button', 'label': 'Calculate'}
+            ]
+        },
+        'Model Fitting': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Spectrum 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Entire Spectrum', 'Subset 1']},
+                {'type': 'select', 'label': 'Model Component',
+                 'options': ['Gaussian', 'Lorentzian', 'Polynomial']},
+                {'type': 'input', 'label': 'Order', 'placeholder': '3'},
+                {'type': 'button', 'label': 'Add Component'}
+            ]
+        },
+        'Catalog Search': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Viewer',
+                 'options': ['Viewer 1', 'Viewer 2']},
+                {'type': 'select', 'label': 'Catalog',
+                 'options': ['Gaia', 'Custom (.ecsv)']},
+                {'type': 'input', 'label': 'Max sources',
+                 'placeholder': '1000'},
+                {'type': 'button', 'label': 'Search'}
+            ]
+        },
+        'Collapse': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Cube 1', 'Cube 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Entire Spectrum', 'Subset 1']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean', 'Median', 'Min', 'Max']},
+                {'type': 'button', 'label': 'Collapse'}
+            ]
+        },
+        'Gaussian Smooth': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Cube 1']},
+                {'type': 'input', 'label': 'Standard deviation',
+                 'placeholder': '3'},
+                {'type': 'button', 'label': 'Smooth'}
+            ]
+        },
+        'Moment Maps': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Cube 1', 'Cube 2']},
+                {'type': 'select', 'label': 'Spectral region',
+                 'options': ['Entire Spectrum', 'Subset 1']},
+                {'type': 'select', 'label': 'Continuum',
+                 'options': ['None', 'Surrounding']},
+                {'type': 'input', 'label': 'Moment', 'placeholder': '0'},
+                {'type': 'input', 'label': 'Reference Wavelength',
+                 'placeholder': '6563'},
+                {'type': 'button', 'label': 'Calculate'}
+            ]
+        },
+        '2D Spectral Extraction': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 2D 1', 'Cube 1']},
+                {'type': 'select', 'label': 'Spatial aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Background',
+                 'options': ['None', 'Subset 3']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean']},
+                {'type': 'button', 'label': 'Extract'}
+            ]
+        },
+        '3D Spectral Extraction': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 3D 1', 'Cube 1']},
+                {'type': 'select', 'label': 'Spatial aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Background',
+                 'options': ['None', 'Subset 3']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean']},
+                {'type': 'button', 'label': 'Extract'}
+            ]
+        },
+        'Data Quality': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Science data',
+                 'options': ['Image 1', 'Image 2']},
+                {'type': 'select', 'label': 'Data quality',
+                 'options': ['DQ Layer']},
+                {'type': 'select', 'label': 'Flag definitions',
+                 'options': ['JWST', 'HST']},
+                {'type': 'button', 'label': 'Show All'},
+                {'type': 'button', 'label': 'Hide All'}
+            ]
+        },
+        'Ramp Extraction': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Spatial aperture',
+                 'options': ['Subset 1', 'Subset 2']},
+                {'type': 'select', 'label': 'Function',
+                 'options': ['Sum', 'Mean', 'Median']},
+                {'type': 'checkbox', 'label': 'Show live ramp extraction'},
+                {'type': 'button', 'label': 'Extract'}
+            ]
+        },
+        'Compass': {
+            'form_elements': [
+                {'type': 'checkbox', 'label': 'Show compass'},
+                {'type': 'select', 'label': 'Display',
+                 'options': ['Arrows', 'Letters']},
+            ]
+        },
+        'Footprints': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Preset',
+                 'options': ['JWST NIRCam', 'JWST MIRI', 'HST']},
+                {'type': 'checkbox', 'label': 'Show footprints'},
+            ]
+        },
+        'Orientation': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Link Type',
+                 'options': ['WCS', 'Pixels']},
+                {'type': 'button', 'label': 'Rotate 90° CW'},
+                {'type': 'button', 'label': 'Rotate 90° CCW'},
+            ]
+        },
+        'Line Lists': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Available lists',
+                 'options': ['Common Atomic', 'Common Molecular']},
+                {'type': 'button', 'label': 'Load List'},
+                {'type': 'button', 'label': 'Erase All'}
+            ]
+        },
+        'Slit Overlay': {
+            'form_elements': [
+                {'type': 'checkbox', 'label': 'Show slit overlay'},
+            ]
+        },
+        'Sonify Data': {
+            'form_elements': [
+                {'type': 'select', 'label': 'Data',
+                 'options': ['Spectrum 1', 'Image 1']},
+                {'type': 'select', 'label': 'Sample rate',
+                 'options': ['22050 Hz', '44100 Hz']},
+                {'type': 'button', 'label': 'Play'},
+                {'type': 'button', 'label': 'Stop'}
+            ]
+        }
+    },
+    'subsets': {
+        'form_elements': [
+            {'type': 'select', 'label': 'Subset', 'options': ['Subset 1', 'Subset 2']},
+            {'type': 'button', 'label': 'Recenter'},
+            {'type': 'button', 'label': 'Delete'}
+        ]
+    }
+}
+
+
+def generate_form_html(form_elements):
+    """Generate HTML for a list of form elements."""
+    html_parts = []
+
+    for element in form_elements:
+        if element['type'] == 'select':
+            options_html = ''.join(f"<option>{opt}</option>" for opt in element['options'])
+            # Generate ID from label (lowercase, replace spaces with hyphens)
+            select_id = element['label'].lower().replace(' ', '-') + '-select'
+            html_parts.append(
+                f'<div class="wireframe-form-group">'
+                f'<label class="wireframe-form-label">{element["label"]}</label>'
+                f'<select id="{select_id}" class="wireframe-select">{options_html}</select>'
+                f'</div>'
+            )
+        elif element['type'] == 'input':
+            placeholder = element.get('placeholder', '')
+            html_parts.append(
+                f'<div class="wireframe-form-group">'
+                f'<label class="wireframe-form-label">{element["label"]}</label>'
+                f'<input type="text" class="wireframe-input" placeholder="{placeholder}" />'
+                f'</div>'
+            )
+        elif element['type'] == 'checkbox':
+            html_parts.append(
+                f'<div class="wireframe-form-group">'
+                f'<label class="wireframe-checkbox-label">'
+                f'<input type="checkbox" class="wireframe-checkbox" /> {element["label"]}'
+                f'</label></div>'
+            )
+        elif element['type'] == 'button':
+            html_parts.append(
+                f'<button class="wireframe-button">{element["label"]}</button>'
+            )
+
+    return ''.join(html_parts)
+
+
+def generate_content_for_sidebar(sidebar_type, plugin_name=None):
+    """Generate content for any sidebar/tab/plugin combination."""
+    if sidebar_type not in WIREFRAME_CONTENT_REGISTRY:
+        return None
+
+    registry_entry = WIREFRAME_CONTENT_REGISTRY[sidebar_type]
+
+    # Handle plugins sidebar with specific plugin
+    if sidebar_type == 'plugins' and plugin_name:
+        if plugin_name in registry_entry:
+            plugin_def = registry_entry[plugin_name]
+            if 'form_elements' in plugin_def:
+                return {'main': generate_form_html(plugin_def['form_elements'])}
+            elif 'text' in plugin_def:
+                return {'main': plugin_def['text']}
+
+    # Handle sidebars with tabs
+    if 'tabs' in registry_entry and 'tab_content' in registry_entry:
+        tab_content_map = {}
+        for tab_name, tab_def in registry_entry['tab_content'].items():
+            if 'form_elements' in tab_def:
+                tab_content_map[tab_name] = generate_form_html(tab_def['form_elements'])
+            elif 'text' in tab_def:
+                tab_content_map[tab_name] = tab_def['text']
+        return tab_content_map
+
+    # Handle simple sidebar with form elements
+    if 'form_elements' in registry_entry:
+        return {'main': generate_form_html(registry_entry['form_elements'])}
+
+    return None
+
+
+class WireframeDemoDirective(SphinxDirective):
+    """
+    Embed an interactive wireframe demonstration.
+
+    This directive loads the wireframe HTML, CSS, and JavaScript from separate files
+    and injects them into the documentation page.
+
+    Usage:
+        .. wireframe-demo::
+           :initial: loaders,loaders:select-tab=Data
+           :demo: plugins
+           :enable-only: plugins
+           :plugin-name: Aperture Photometry
+           :plugin-panel-opened: false
+           :custom-content: plugins=<html content>
+
+    Options:
+        initial: Initial state applied before demo starts, when repeating, or on restart.
+                 Uses same syntax as demo. Applied quickly without delays.
+        demo: Custom demo sidebar order (comma-separated list) or demo sequence.
+              Default: 'loaders,save,settings,info,plugins,subsets'
+              Can also specify actions like: 'plugins:open-panel,plugins:select-data=Image 2'
+              Can specify timing with @: 'plugins@1000:open-panel' (1000ms delay)
+        enable-only: Only enable clicking on these sidebars (comma-separated).
+                     Others will be disabled. If not specified, all are enabled.
+        show-scroll-to: Whether to show "Learn more" scroll-to buttons.
+                       Default: false
+        demo-repeat: Whether demo should loop continuously. Default: true
+        plugin-name: Name of the plugin expansion panel.
+                     Default: 'Data Analysis Plugin'
+        plugin-panel-opened: Whether plugin panel is open by default.
+                             Default: true
+        custom-content: Custom HTML content for sidebars.
+                       Format: sidebar=content or sidebar:tab=content
+                       Replaces the default description content.
+    """
+
+    option_spec = {
+        'initial': str,
+        'demo': str,
+        'enable-only': str,
+        'show-scroll-to': str,
+        'demo-repeat': str,
+        'plugin-name': str,
+        'plugin-panel-opened': str,
+        'custom-content': str,
+    }
+
+    def run(self):
+        # Get the template directory
+        template_dir = os.path.join(self.env.srcdir, '_templates')
+
+        # Read the three component files
+        try:
+            with open(os.path.join(template_dir, 'wireframe-base.html'), 'r') as f:
+                html_content = f.read()
+
+            with open(os.path.join(template_dir, 'wireframe-demo.css'), 'r') as f:
+                css_content = f.read()
+
+            with open(os.path.join(template_dir, 'wireframe-controller.js'), 'r') as f:
+                js_content = f.read()
+        except IOError as e:
+            error_node = nodes.error()
+            error_node += nodes.paragraph(
+                text=f'Error loading wireframe components: {e}'
+            )
+            return [error_node]
+
+        # Replace Jinja2 variables with actual values
+        app_html_context = self.env.app.config.html_context
+        jdaviz_version = app_html_context.get('jdaviz_version', '')
+        descriptions = app_html_context.get('descriptions', {})
+
+        # Replace version in HTML
+        html_content = html_content.replace('{{ jdaviz_version }}', jdaviz_version)
+
+        # Add modifier class for docs pages (to distinguish from landing page)
+        html_content = html_content.replace(
+            '<div class="wireframe-section">',
+            '<div class="wireframe-section wireframe-docs">'
+        )
+
+        # Replace version and descriptions in JS
+        js_content = js_content.replace('{{ jdaviz_version }}', jdaviz_version)
+        for key, value in descriptions.items():
+            # Escape single quotes in description values for JS strings
+            escaped_value = value.replace("'", "\\'")
+            # Replace with capitalize filter
+            capitalized_value = escaped_value.capitalize()
+            js_content = js_content.replace(
+                f'{{{{ descriptions.{key}|capitalize }}}}', capitalized_value
+            )
+            # Replace without filter
+            js_content = js_content.replace(f'{{{{ descriptions.{key} }}}}', escaped_value)
+
+        # Process directive options
+        initial_state = self.options.get('initial', None)
+        demo_order = self.options.get('demo', None)
+        enable_only = self.options.get('enable-only', None)
+        show_scroll_to = self.options.get('show-scroll-to', 'false').lower() == 'true'
+        demo_repeat = self.options.get('demo-repeat', 'true').lower() == 'true'
+        plugin_name = self.options.get('plugin-name', None)
+        plugin_panel_opened = self.options.get('plugin-panel-opened', 'true').lower() == 'true'
+        custom_content = self.options.get('custom-content', None)
+
+        # Generate unique ID for this wireframe instance
+        import time
+        unique_id = f"wireframe-{int(time.time() * 1000000) % 1000000}"
+
+        # Build custom content map - first from explicit custom-content option
+        custom_content_map = {}
+        if custom_content:
+            # Parse custom content (format: sidebar=content or sidebar|tab=content)
+            for item in custom_content.split('|'):
+                if '=' in item:
+                    sidebar, content = item.split('=', 1)
+                    custom_content_map[sidebar.strip()] = {'main': content.strip()}
+
+        # Auto-generate missing content from registry for common sidebars
+        for sidebar_type in ['loaders', 'save', 'settings', 'info', 'subsets']:
+            if sidebar_type not in custom_content_map:
+                generated = generate_content_for_sidebar(sidebar_type)
+                if generated:
+                    custom_content_map[sidebar_type] = generated
+
+        # Special handling for plugins - auto-generate if plugin_name provided
+        if plugin_name and 'plugins' not in custom_content_map:
+            generated = generate_content_for_sidebar('plugins', plugin_name=plugin_name)
+            if generated:
+                custom_content_map['plugins'] = generated
+
+        # Inject configuration into the JavaScript as instance-specific
+        # Instead of global window.wireframeConfig, we'll use data attributes on the container
+        # Build a proper JSON object
+        import json
+        import html as html_module
+
+        config_obj = {}
+        if initial_state:
+            config_obj['initialState'] = [s.strip() for s in initial_state.split(',')]
+        if demo_order:
+            config_obj['customDemo'] = [s.strip() for s in demo_order.split(',')]
+        if enable_only:
+            config_obj['enableOnly'] = [s.strip() for s in enable_only.split(',')]
+        config_obj['showScrollTo'] = show_scroll_to
+        config_obj['demoRepeat'] = demo_repeat
+        if plugin_name:
+            config_obj['pluginName'] = plugin_name
+        config_obj['pluginPanelOpened'] = plugin_panel_opened
+        if custom_content_map:
+            config_obj['customContentMap'] = json.dumps(custom_content_map)
+
+        # Convert to JSON and escape for HTML attribute
+        config_json = json.dumps(config_obj)
+        config_json_escaped = html_module.escape(config_json)
+
+        # Add unique ID to the wireframe container
+        html_content = html_content.replace(
+            '<div class="wireframe-container">',
+            f'<div class="wireframe-container" id="{unique_id}" data-wireframe-config="{config_json_escaped}">'
+        )
+
+        # Construct the complete HTML with embedded CSS and JS
+        complete_html = f'''
+<style>
+{css_content}
+</style>
+
+{html_content}
+
+<script>
+{js_content}
+</script>
+'''
+
+        # Create raw HTML node
+        raw_node = nodes.raw('', complete_html, format='html')
+        return [raw_node]
+
+
+def copy_wireframe_assets(app, exception):
+    """Copy wireframe files from _templates to _static for landing page."""
+    if exception is None and app.builder.name == 'html':
+        import shutil
+        template_dir = os.path.join(app.srcdir, '_templates')
+        static_dir = os.path.join(app.outdir, '_static')
+
+        # Get context variables for replacement
+        html_context = app.config.html_context
+        jdaviz_version = html_context.get('jdaviz_version', '')
+        descriptions = html_context.get('descriptions', {})
+
+        # Files to copy without processing
+        simple_files = [
+            'wireframe-demo.css',
+        ]
+
+        # Files that need template variable replacement
+        template_files = [
+            'wireframe-base.html',
+            'wireframe-controller.js'
+        ]
+
+        # Copy simple files
+        for filename in simple_files:
+            src = os.path.join(template_dir, filename)
+            dst = os.path.join(static_dir, filename)
+            if os.path.exists(src):
+                shutil.copy2(src, dst)
+
+        # Process and copy template files
+        for filename in template_files:
+            src = os.path.join(template_dir, filename)
+            dst = os.path.join(static_dir, filename)
+            if os.path.exists(src):
+                with open(src, 'r') as f:
+                    content = f.read()
+
+                # Replace jdaviz_version
+                content = content.replace('{{ jdaviz_version }}', jdaviz_version)
+
+                # Replace descriptions with and without filters
+                for key, value in descriptions.items():
+                    # Escape single quotes in description values for JS/HTML
+                    escaped_value = value.replace("'", "\\'")
+                    # Replace with capitalize filter
+                    capitalized_value = escaped_value.capitalize()
+                    content = content.replace(
+                        f'{{{{ descriptions.{key}|capitalize }}}}', capitalized_value
+                    )
+                    # Replace without filter
+                    content = content.replace(f'{{{{ descriptions.{key} }}}}', escaped_value)
+
+                with open(dst, 'w') as f:
+                    f.write(content)
+
+
 def setup(app):
     app.add_directive('jdavizclihelp', JdavizCLIHelpDirective)
     app.add_directive('jdavizlanding', JdavizLandingPageDirective)
     app.add_directive('plugin-api-refs', PluginApiReferencesDirective)
     app.add_directive('plugin-availability', PluginAvailabilityDirective)
+    app.add_directive('wireframe-demo', WireframeDemoDirective)
+    app.connect('build-finished', copy_wireframe_assets)

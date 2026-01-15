@@ -12,16 +12,15 @@ Using Jdaviz
   :maxdepth: 2
 
   quickstart
-  load
   loaders/index
-  plugins/index
   viewers/index
-  subsets/index
   export/index
   settings/index
   info/index
-  data_menu/index
+  plugins/index
+  subsets/index
   mouseover/index
+  data_menu/index
   save_state
   display
   video_tutorials

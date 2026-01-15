@@ -16,17 +16,37 @@ Jdaviz can load data from various sources. Select a source below to learn more:
    astroquery
    vo
 
-Overview
-========
-
-Jdaviz provides flexible data loading capabilities through multiple source options:
-
-- **File**: Load data from local files on your system
-- **File Drop**: Drag and drop files directly into the interface
-- **URL**: Load data from remote URLs
-- **Object**: Load Python objects directly from memory
-- **Astroquery**: Query astronomical archives (coming soon)
-- **Virtual Observatory**: Access data via VO protocols (coming soon)
-
 Each source can load data in various formats. See :ref:`loaders-formats` for information
 on supported data formats.
+
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data
+   :enable-only: loaders
+   :demo-repeat: false
+
+API Access
+==========
+
+.. code-block:: python
+
+    import jdaviz as jd
+    jd.show()
+
+    # Access loaders
+    loaders = jd.loaders
+
+    # Get list of available loaders
+    print(loaders)
+
+    # Use a specific loader
+    ldr = loaders['file']  # Or file drop, url, object, astroquery, vo
+
+    # Configure loading options
+    ldr.filename = 'my_data.fits'  # or ldr.url, ldr.object, etc.
+    ldr.format = '1D Spectrum'
+
+    # Import the data
+    ldr.load()

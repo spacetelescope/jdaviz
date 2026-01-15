@@ -118,6 +118,7 @@ Using Jdaviz
   :maxdepth: 2
 
   installation
+  load
   imviz/index
   specviz/index
   cubeviz/index

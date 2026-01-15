@@ -43,22 +43,13 @@ Supported File Formats
 - JWST MIRI and NIRSpec IFU data (s3d files)
 - Other IFU instrument data cubes
 
-Compatible Tools
-================
+UI Access
+=========
 
-Data loaded with this format can be visualized in:
-
-- **Cubeviz**: For 3D spectral cube analysis and visualization
-
-Features Available in Cubeviz
-==============================
-
-When viewing 3D spectra in Cubeviz, you can:
-
-- View spatial slices at different wavelengths
-- Extract 1D spectra from spatial regions
-- Create moment maps
-- Collapse the cube along different axes
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Data,loaders:select-dropdown=Format:3D Spectrum
+   :enable-only: loaders
+   :demo-repeat: false
 
 See Also
 ========

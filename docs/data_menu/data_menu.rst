@@ -1,3 +1,5 @@
+.. _data-menu:
+
 Data Menu
 =========
 
@@ -13,3 +15,12 @@ Features
 
 .. note::
    The Data Menu is accessible from the viewer area and provides fine-grained control over layer display and ordering.
+
+
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: open-data-menu
+   :enable-only: loaders
+   :demo-repeat: false

@@ -61,6 +61,15 @@ Or programmatically via the API:
     region = CirclePixelRegion(center=PixCoord(100, 100), radius=20)
     imviz.load_regions(region)
 
+UI Access
+=========
+
+.. wireframe-demo::
+   :demo: subsets
+   :enable-only: subsets
+   :demo-repeat: false
+
+
 See Also
 ========
 

@@ -13,34 +13,16 @@ Jdaviz provides specialized viewers for different types of astronomical data.
    spectrum_1d
    spectrum_2d
    spectrum_3d
-   image_2d
+   image
    table
    scatter
    histogram
    extensions
 
-Overview
-========
-
-Viewers display your data in interactive, customizable plots:
-
-**Spectrum Viewers**
-  - **1D Spectrum**: Display one-dimensional spectra
-  - **2D Spectrum**: Display two-dimensional spectroscopic data
-  - **Profile 1D**: Display extracted spectral profiles
-
-**Image Viewers**
-  - **Image 2D**: Display astronomical images with WCS support
-
-**Data Viewers**
-  - **Table**: Display tabular data
-  - **Scatter**: Create scatter plots from data
-  - **Histogram**: View data distributions
-
 Creating Viewers
 ================
 
-In deconfigged mode, viewers are created automatically based on the data format you load:
+By default, viewers are created automatically based on the data format you load:
 
 .. code-block:: python
 
@@ -55,6 +37,30 @@ You can also create viewers programmatically:
 .. code-block:: python
 
     # Create a new viewer
-    viewer = app.create_viewer('spectrum-viewer')
+    viewer_creator = jdaviz.viewers['1D Spectrum']
+    new_viewer = viewer_creator()
 
 See the individual viewer pages for detailed usage information.
+
+UI Access
+---------
+
+.. wireframe-demo::
+   :demo: loaders,loaders:select-tab=Viewer
+   :enable-only: loaders
+   :demo-repeat: false
+
+Data Menus
+==========
+
+Each viewer has a legend in the top-right indicating what layers are currently displayed. Clicking on the legend opens a data menu where you can:
+- Toggle visibility of individual layers
+- Remove layers from the viewer
+- Rename viewers
+
+For more information, see :ref:`data-menu`.
+
+Plot Options
+============
+
+Changing viewer or layer options is done through the :ref:`Plot Options <settings-plot_options>` plugin in the settings sidebar.
