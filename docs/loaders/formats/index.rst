@@ -26,7 +26,8 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-tab=Data
+   :initial: loaders,loaders:select-tab=Data
+   :demo: loaders@3000:highlight=#format-select
    :enable-only: loaders
    :demo-repeat: false
 

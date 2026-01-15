@@ -123,6 +123,7 @@ function initializeWireframeController(container) {
     let autoCycling = true;
     let cycleInterval = null;
     let currentCycleIndex = 0;
+    let currentHighlightedElements = [];
 
     // Helper function to create API snippet with proper link/button based on showScrollTo
     function createApiSnippet(code) {
@@ -131,6 +132,16 @@ function initializeWireframeController(container) {
         } else {
             return '<div class="api-snippet-container"><pre class="api-snippet">' + code + '</pre><a class="api-learn-more" href="../userapi/index.html">Learn about API access</a></div>';
         }
+    }
+
+    // Helper function to briefly highlight an element during demo
+    function briefHighlight(element, stepDelay) {
+        if (!element) return;
+        const duration = Math.min(1000, (stepDelay || 2000) / 2);
+        element.classList.add('highlighted');
+        setTimeout(function() {
+            element.classList.remove('highlighted');
+        }, duration);
     }
 
     // Build plugins content dynamically based on configuration
@@ -983,15 +994,26 @@ function initializeWireframeController(container) {
             const value = step.value;
             const data = sidebarContent_map[sidebarType];
 
-            // Only activate the sidebar if it's different from the current one or if there's no action
-            // (actions can be performed on the already-active sidebar without reactivating)
-            if (!action || currentSidebar !== sidebarType) {
+            // Check if this is a standalone action (no sidebar needed)
+            const standaloneActions = ['open-data-menu', 'highlight'];
+            const isStandaloneAction = standaloneActions.indexOf(action) !== -1;
+
+            // Only activate the sidebar if it's not a standalone action and either:
+            // - There's no action specified, OR
+            // - The sidebar is different from the current one
+            if (!isStandaloneAction && (!action || currentSidebar !== sidebarType)) {
                 activateSidebar(sidebarType);
             }
 
             // Execute action after sidebar is shown
             setTimeout(function() {
                 if (!autoCycling) return;
+
+                // Clear previous highlights at start of new step
+                currentHighlightedElements.forEach(function(el) {
+                    el.classList.remove('highlighted');
+                });
+                currentHighlightedElements = [];
 
                 if (action === 'open-panel') {
                     // Open expansion panel
@@ -1002,12 +1024,14 @@ function initializeWireframeController(container) {
                         if (content) {
                             content.classList.add('expanded');
                         }
+                        briefHighlight(panel, step.delay);
                     }
                 } else if (action === 'api-toggle') {
                     // Toggle API mode
                     const apiButton = container.querySelector('.api-button');
                     if (apiButton) {
                         apiButton.click();
+                        briefHighlight(apiButton, step.delay);
                     }
                 } else if (action === 'select-tab') {
                     // Select a specific tab
@@ -1015,6 +1039,7 @@ function initializeWireframeController(container) {
                     tabs.forEach(function(tab) {
                         if (tab.textContent.trim() === value) {
                             tab.click();
+                            briefHighlight(tab, step.delay);
                         }
                     });
                 } else if (action === 'select-dropdown') {
@@ -1042,6 +1067,7 @@ function initializeWireframeController(container) {
                                             setTimeout(function() {
                                                 dropdown.style.background = '';
                                             }, 800);
+                                            briefHighlight(dropdown, step.delay);
                                         }
                                     });
                                 }
@@ -1067,6 +1093,7 @@ function initializeWireframeController(container) {
                                         setTimeout(function() {
                                             dropdown.style.background = '';
                                         }, 800);
+                                        briefHighlight(dropdown, step.delay);
                                     }
                                 });
                             }
@@ -1077,6 +1104,15 @@ function initializeWireframeController(container) {
                     const dataMenuTrigger = container.querySelector('.data-menu-trigger');
                     if (dataMenuTrigger) {
                         dataMenuTrigger.click();
+                    }
+                } else if (action === 'highlight') {
+                    // Highlight an element by selector
+                    if (value) {
+                        const targetElements = container.querySelectorAll(value);
+                        targetElements.forEach(function(el) {
+                            el.classList.add('highlighted');
+                            currentHighlightedElements.push(el);
+                        });
                     }
                 }
 
@@ -1089,13 +1125,18 @@ function initializeWireframeController(container) {
                 } else {
                     // Demo sequence complete
                     if (demoRepeat) {
-                        // Loop back to start
+                        // Loop back to start - clear highlights before repeating
+                        currentHighlightedElements.forEach(function(el) {
+                            el.classList.remove('highlighted');
+                        });
+                        currentHighlightedElements = [];
                         currentCycleIndex = 0;
                         const firstStep = demoSequence[0];
                         const firstDelay = firstStep.delay || 2000;
                         setTimeout(autoCycleSidebars, firstDelay + 1000);
                     } else {
                         // Stop and show restart button
+                        // Keep highlights in place for last step when not repeating
                         autoCycling = false;
                         updateCycleControlButton();
                     }
@@ -1303,14 +1344,14 @@ function initializeWireframeController(container) {
 
         // Add scroll behavior for buttons inside the data menu popup
         const dataMenuScrollLinks = dataMenuPopup.querySelectorAll('[data-scroll-target]');
-        
+
         // Hide scroll-to buttons if showScrollTo is false
         if (!showScrollTo) {
             dataMenuScrollLinks.forEach(function(link) {
                 link.style.display = 'none';
             });
         }
-        
+
         dataMenuScrollLinks.forEach(function(link) {
             link.addEventListener('click', function(e) {
                 stopAutoCycle();

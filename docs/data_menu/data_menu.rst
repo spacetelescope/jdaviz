@@ -21,6 +21,6 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders:open-data-menu
+   :demo: open-data-menu
    :enable-only:
    :demo-repeat: false

@@ -1617,8 +1617,10 @@ class WireframeDemoDirective(SphinxDirective):
             config_obj['initialState'] = [s.strip() for s in initial_state.split(',')]
         if demo_order:
             config_obj['customDemo'] = [s.strip() for s in demo_order.split(',')]
-        if enable_only:
-            config_obj['enableOnly'] = [s.strip() for s in enable_only.split(',')]
+        if enable_only is not None:
+            # Split by comma and filter out empty strings
+            enabled_list = [s.strip() for s in enable_only.split(',') if s.strip()]
+            config_obj['enableOnly'] = enabled_list
         config_obj['showScrollTo'] = show_scroll_to
         config_obj['demoRepeat'] = demo_repeat
         if plugin_name:

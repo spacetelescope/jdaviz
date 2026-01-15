@@ -960,4 +960,22 @@ html[data-theme="light"] .wireframe-cycle-control::after {
         display: none;
     }
 }
+
+/* Highlighted element animation */
+.highlighted {
+    animation: highlight-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 0 4px rgba(199, 117, 9, 0.6), 0 0 12px 2px rgba(199, 117, 9, 0.4);
+    border-radius: 4px;
+    position: relative;
+    z-index: 10;
+}
+
+@keyframes highlight-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(199, 117, 9, 0.6), 0 0 12px 2px rgba(199, 117, 9, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(199, 117, 9, 0.8), 0 0 16px 4px rgba(199, 117, 9, 0.6);
+    }
+}
     </style>
