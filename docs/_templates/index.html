@@ -1377,8 +1377,80 @@
     <link rel="stylesheet" href="{{ pathto('_static/wireframe-demo.css', 1) }}">
     <script>
         // Configure wireframe for landing page (show all features)
+        // For index.html (not using Sphinx directive), configure via window.wireframeConfig
+        // Options:
+        //   showScrollTo: boolean - Show "Learn more" buttons
+        //   initialState: array - Actions to apply immediately on load
+        //   customDemo: array - Demo sequence actions
+        //   demoRepeat: boolean - Whether demo loops
+        //
+        // Action syntax: "action@duration" where duration is how long the step lasts (ms)
+        // Viewer action examples for initialState or customDemo:
+        //   "viewer-add@duration:direction:newId" - Add a viewer (direction: horiz, vert, h, v)
+        //   "viewer-image@duration:viewerId:imagePath" - Set viewer background image
+        //   "viewer-legend@duration:viewerId:layer1|layer2" - Set legend layers
+        //   "viewer-focus@duration:viewerId" - Focus/highlight a viewer
+        //   "viewer-remove@duration:viewerId" - Remove a viewer
         window.wireframeConfig = {
-            showScrollTo: true
+            showScrollTo: true,
+            customDemo: [
+                // Open loaders sidebar
+                "loaders@1500",
+                // Set source to file
+                "loaders@1500:select-dropdown=source:file",
+                // Set format to image
+                "loaders@1500:select-dropdown=format:image",
+                // Click load button
+                "loaders@100:click-button=Load",
+                // Add Image viewer, set image, set legend (immediately)
+                "viewer-add@0:horiz:Image",
+                "viewer-image@0:Image:{{ pathto('_static/cosmic_cliffs_pbn.png', 1) }}",
+                "viewer-legend@3000:Image:Cosmic Cliffs",
+                // Set source to astroquery
+                "loaders@1500:select-dropdown=source:astroquery",
+                // Set format to catalog
+                "loaders@1500:select-dropdown=format:catalog",
+                // Click load button
+                "loaders@100:click-button=Load",
+                // Replace image with image with catalog scatter on top and update legend (immediately)
+                "viewer-image@0:Image:{{ pathto('_static/cosmic_cliffs_pbn_cat.png', 1) }}",
+                "viewer-legend@3000:Image:Catalog|Cosmic Cliffs",
+                // Go to plot options and setup initial state
+                "settings@1500",
+                // Select Image in Plot Options, select layer B (index 1)
+                // "settings@0:select-viewer=Image",
+                "settings@0:select-layer=1",
+                // init color to red immediately (no highlight), then show setting to green
+                "settings@1500!:set-color=#FF0000",
+                "settings@0:set-color=#00FF00",
+                "viewer-image@3000:Image:{{ pathto('_static/cosmic_cliffs_pbn_cat_green.png', 1) }}",
+                // Switch to Viewer tab
+                "loaders@1500",
+                "loaders@1500:select-tab=Viewer",
+                // Set viewer type to scatter
+                "loaders@1500:select-dropdown=viewer type:scatter",
+                // Click create viewer button
+                "loaders@100:click-button=Create Viewer",
+                // Add Scatter viewer and set its legend (immediately)
+                "viewer-add@0:vert:Scatter",
+                "viewer-image@0:Scatter:{{ pathto('_static/hr_diagram.png', 1) }}",
+                "viewer-legend@3000:Scatter:Catalog",
+                // select subset in scatter viewer (update image to show highlighted)
+                "subsets@1500",
+                // Activate the subset tool in the scatter viewer
+                "viewer-tool-toggle@1500:Scatter:subset",
+                "viewer-image@0:Scatter:{{ pathto('_static/hr_diagram_subset.png', 1) }}",
+                "viewer-image@3000:Image:{{ pathto('_static/cosmic_cliffs_pbn_cat_green_subset.png', 1) }}",
+                "viewer-tool-toggle@1500:Scatter:subset",
+                // cycle through other tabs
+                "plugins@3000",
+                "info@3000",
+                "info@3000:select-tab=Markers",
+                "info@3000:select-tab=Logger",
+                "settings@3000",
+                "settings@3000:select-tab=Units",
+                "save@5000"
+            ]
         };
     </script>
     <script src="{{ pathto('_static/wireframe-controller.js', 1) }}"></script>

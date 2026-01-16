@@ -31,7 +31,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-dropdown=Format:Catalog
+   :demo: loaders,loaders@1000:select-dropdown=Format:Catalog,loaders:highlight=#format-select
    :enable-only: loaders
    :demo-repeat: false
 

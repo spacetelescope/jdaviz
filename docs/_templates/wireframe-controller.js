@@ -1,4 +1,5 @@
 // Wireframe controller initialization function - supports multiple instances
+// This demo-wireframe made entirely possible by vibe coding
 function initializeWireframeController(container) {
     // If no container provided, find all uninitialized containers
     if (!container) {
@@ -40,6 +41,418 @@ function initializeWireframeController(container) {
     const pluginPanelOpened = config.pluginPanelOpened !== undefined ? config.pluginPanelOpened : true;
     const customContentMapJson = config.customContentMap || null;
 
+    // Helper function to create a legend item with reverse alphabetical letter
+    function createLegendItem(layerName, index, total) {
+        // Reverse alphabetical: first item gets highest letter, last item gets A
+        var letter = String.fromCharCode(65 + ((total - 1 - index) % 26)); // B, A for 2 items; C, B, A for 3 items
+        var div = document.createElement('div');
+        div.className = 'legend-item data-menu-trigger';
+        div.innerHTML = '<span class="legend-letter">' + letter + '</span><div class="legend-text">' + layerName + '</div>';
+        return div;
+    }
+
+    // Viewer toolbar icon data URIs
+    var VIEWER_TOOLBAR_ICONS = {
+        home: 'bqplot:home',
+        panZoom: 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjUuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMi45IDIzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMi45IDIzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzAxMDEwMTt9Cjwvc3R5bGU+Cjxwb2x5Z29uIGNsYXNzPSJzdDAiIHBvaW50cz0iMjAuMSwxMy4xIDIxLDEzLjEgMjEsMS45IDkuOSwxLjkgOS45LDMuMyA3LjksMy4zIDcuOSwwIDIyLjksMCAyMi45LDE1LjEgMjAuMSwxNS4xICIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMCwyMS4xTDEuOSwyM2w1LjgtNS43di0wLjZsMC44LTAuOGMxLjIsMC45LDIuNiwxLjMsNCwxLjNjMy43LDAsNi43LTMsNi43LTYuN3MtMy02LjctNi43LTYuN3MtNi43LDMtNi43LDYuNwoJYzAsMS40LDAuNSwyLjgsMS4zLDRsLTAuOCwwLjhINS44TDAsMjEuMXogTTEyLjQsMTUuMmMtMi42LDAtNC43LTIuMS00LjctNC43bDAsMGMwLTIuNiwyLjEtNC43LDQuNy00LjdjMi42LDAsNC43LDIuMSw0LjcsNC43CglTMTUsMTUuMiwxMi40LDE1LjJDMTIuNCwxNS4yLDEyLjQsMTUuMiwxMi40LDE1LjJ6Ii8+Cjwvc3ZnPgo=',
+        rectROI: 'data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNS40NiAyNS40NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMTAxMDE7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT52aXogbG9nb3MgW1JlY292ZXJlZF08L3RpdGxlPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTEuNjcgMTMuNzMgMTEuNjcgMjEuNjMgMTAuMTMgMjAuMDkgOC43MiAyMS41MSAxMi42NyAyNS40NiAxNi42MiAyMS41MSAxNS4yMSAyMC4wOSAxMy42NyAyMS42MyAxMy42NyAxMy43MyIvPjxwb2x5bGluZSBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMTMuNjcgMTMuNzMgMTMuNjcgMy44MyAxNS4yMSA1LjM2IDE2LjYyIDMuOTUgMTIuNjcgMCA4LjcyIDMuOTUgMTAuMTMgNS4zNiAxMS42NyAzLjgzIDExLjY3IDEzLjczIi8+PC9zdmc+',
+        circROI: 'data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMi43NiAyNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMyMzFmMjA7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMSIgeD0iMS45NiIgeT0iMTYuMTUiIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxOCIgeT0iMTEuNzciIHdpZHRoPSIyLjk2IiBoZWlnaHQ9IjIuOTYiIHJ4PSIxLjQ4Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNy4zMywwVjI0aDguMzNWMFptNC4yMiwxMGgwYTEuNDgsMS40OCwwLDAsMS0xLjQ4LTEuNDhoMEExLjQ4LDEuNDgsMCwwLDEsMTEuNTUsN2gwQTEuNDgsMS40OCwwLDAsMSwxMyw4LjUyaDBBMS40OCwxLjQ4LDAsMCwxLDExLjU1LDEwWiIvPjwvc3ZnPg=='
+    };
+
+    // Helper function to create a new viewer element
+    function createViewerElement(viewerId) {
+        var viewer = document.createElement('div');
+        viewer.className = 'wireframe-viewer viewer-adding';
+        viewer.dataset.viewerId = viewerId;
+        viewer.innerHTML =
+            '<div class="viewer-toolbar">' +
+            '<div class="viewer-toolbar-spacer"></div>' +
+            '<div class="viewer-toolbar-icon" data-icon="' + VIEWER_TOOLBAR_ICONS.home + '" title="Home"></div>' +
+            '<div class="viewer-toolbar-icon" data-icon="' + VIEWER_TOOLBAR_ICONS.panZoom + '" title="Pan/Zoom"></div>' +
+            '<div class="viewer-toolbar-icon" data-icon="' + VIEWER_TOOLBAR_ICONS.rectROI + '" title="Rectangular ROI"></div>' +
+            '<div class="viewer-toolbar-icon" data-icon="' + VIEWER_TOOLBAR_ICONS.circROI + '" title="Circular ROI"></div>' +
+            '</div>' +
+            '<div class="viewer-content">' +
+            '<div class="viewer-image-container"></div>' +
+            '<span class="viewer-area-text">' + viewerId + '</span>' +
+            '<div class="data-menu-legend"></div>' +
+            '</div>';
+
+        // Remove animation class after animation completes
+        setTimeout(function() {
+            viewer.classList.remove('viewer-adding');
+        }, 300);
+
+        return viewer;
+    }
+
+    // Helper function to generate Plot Options sidebar HTML
+    function generatePlotOptionsHTML(selectedViewerId, selectedLayerIndex, selectedColor) {
+        // Get all viewers from the viewer area
+        var viewers = container.querySelectorAll('.wireframe-viewer');
+        var viewerIds = [];
+        viewers.forEach(function(v) {
+            viewerIds.push(v.dataset.viewerId);
+        });
+
+        // Default to first viewer if none selected
+        if (!selectedViewerId && viewerIds.length > 0) {
+            selectedViewerId = viewerIds[0];
+        }
+
+        // Get layers from the selected viewer's legend
+        var layers = [];
+        if (selectedViewerId) {
+            var viewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + selectedViewerId + '"]');
+            if (viewer) {
+                var legendItems = viewer.querySelectorAll('.legend-item');
+                legendItems.forEach(function(item, index) {
+                    var letter = String.fromCharCode(65 + (index % 26));
+                    // Get color from legend-item-icon background-color
+                    var icon = item.querySelector('.legend-item-icon');
+                    var color = icon ? window.getComputedStyle(icon).backgroundColor : '#00FF00';
+                    layers.push({ letter: letter, index: index, color: color });
+                });
+            }
+        }
+
+        // Default to first layer if none selected
+        if (selectedLayerIndex === undefined && layers.length > 0) {
+            selectedLayerIndex = 0;
+        }
+
+        // Default color
+        if (!selectedColor) {
+            selectedColor = '#00FF00';
+        }
+
+        var html = '';
+
+        // Viewer dropdown
+        html += '<div class="plot-options-viewer-select">';
+        html += '<label>Viewer</label>';
+        html += '<select class="plot-options-viewer-dropdown wireframe-select" id="plot-options-viewer">';
+        if (viewerIds.length === 0) {
+            html += '<option value="">No viewers available</option>';
+        } else {
+            viewerIds.forEach(function(id) {
+                var selected = id === selectedViewerId ? ' selected' : '';
+                html += '<option value="' + id + '"' + selected + '>' + id + '</option>';
+            });
+        }
+        html += '</select>';
+        html += '</div>';
+
+        // Layer tabs (letters)
+        if (layers.length > 0) {
+            html += '<div class="plot-options-section-header">Layers</div>';
+            html += '<div class="plot-options-layer-tabs" id="plot-options-layers">';
+            layers.forEach(function(layer) {
+                var active = layer.index === selectedLayerIndex ? ' active' : '';
+                html += '<button class="plot-options-layer-tab' + active + '" data-layer-index="' + layer.index + '" data-layer-color="' + layer.color + '">' + layer.letter + '</button>';
+            });
+            html += '</div>';
+
+            // Get selected layer's color for the color button
+            var selectedLayerColor = selectedColor;
+            if (layers[selectedLayerIndex]) {
+                selectedLayerColor = layers[selectedLayerIndex].color;
+            }
+
+            // Color row
+            html += '<div class="plot-options-color-row">';
+            html += '<span class="plot-options-color-label">Color</span>';
+            html += '<button class="plot-options-color-button" id="plot-options-color" style="background-color: ' + selectedLayerColor + ';" title="Click to change color"></button>';
+            html += '</div>';
+
+            // Placeholder inputs with expansion panel style bars
+            html += '<div class="plot-options-section-header">Display</div>';
+            html += '<div class="plot-options-input-row">';
+            html += '<span class="plot-options-input-label">Opacity</span>';
+            html += '<div class="plot-options-input-bar"></div>';
+            html += '</div>';
+            html += '<div class="plot-options-input-row">';
+            html += '<span class="plot-options-input-label">Stretch</span>';
+            html += '<div class="plot-options-input-bar"></div>';
+            html += '</div>';
+            html += '<div class="plot-options-input-row">';
+            html += '<span class="plot-options-input-label">Contrast</span>';
+            html += '<div class="plot-options-input-bar"></div>';
+            html += '</div>';
+        } else {
+            html += '<div style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 16px;">No layers in selected viewer</div>';
+        }
+
+        return html;
+    }
+
+    // Set up event handlers for Plot Options UI elements
+    function setupPlotOptionsHandlers() {
+        // Viewer dropdown change
+        var viewerDropdown = container.querySelector('.plot-options-viewer-dropdown');
+        if (viewerDropdown) {
+            viewerDropdown.addEventListener('change', function(e) {
+                stopAutoCycle();
+                // Refresh the Plot Options UI for the selected viewer
+                var contentDiv = container.querySelector('#sidebar-tab-content');
+                if (contentDiv) {
+                    var apiSnippet = sidebarContent_map['settings'].apiSnippets[0] || '';
+                    contentDiv.innerHTML = apiSnippet + generatePlotOptionsHTML(this.value);
+                    // Re-attach handlers
+                    setupPlotOptionsHandlers();
+                }
+            });
+        }
+
+        // Layer tab clicks
+        var layerTabs = container.querySelectorAll('.plot-options-layer-tab');
+        layerTabs.forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                stopAutoCycle();
+                // Update active state
+                layerTabs.forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+
+                // Could update the color button to reflect the layer's color
+                var layerColor = tab.dataset.layerColor;
+                var colorButton = container.querySelector('.plot-options-color-button');
+                if (colorButton && layerColor) {
+                    colorButton.style.backgroundColor = layerColor;
+                }
+            });
+        });
+
+        // Color button click (cycles through colors for demo)
+        var colorButton = container.querySelector('.plot-options-color-button');
+        if (colorButton) {
+            colorButton.addEventListener('click', function(e) {
+                stopAutoCycle();
+                // Cycle through some demo colors
+                var colors = ['#FF6D00', '#2979FF', '#00E676', '#FF1744', '#D500F9', '#FFEA00'];
+                var currentColor = this.style.backgroundColor;
+                var currentIndex = colors.findIndex(function(c) {
+                    // Compare hex to rgb
+                    var temp = document.createElement('div');
+                    temp.style.color = c;
+                    document.body.appendChild(temp);
+                    var rgb = window.getComputedStyle(temp).color;
+                    document.body.removeChild(temp);
+                    return rgb === currentColor;
+                });
+                var nextIndex = (currentIndex + 1) % colors.length;
+                this.style.backgroundColor = colors[nextIndex];
+
+                // Update active layer tab color
+                var activeTab = container.querySelector('.plot-options-layer-tab.active');
+                if (activeTab) {
+                    activeTab.dataset.layerColor = colors[nextIndex];
+                }
+            });
+        }
+    }
+
+    // Execute viewer-add action: split a viewer and add a new one (or add first viewer)
+    function executeViewerAdd(direction, newId, parentId) {
+        var viewerArea = container.querySelector('.wireframe-viewer-area');
+        if (!viewerArea) return;
+
+        // Find the target viewer to split
+        var targetViewer;
+        if (parentId) {
+            targetViewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + parentId + '"]');
+        } else {
+            // Default to the last viewer
+            var viewers = container.querySelectorAll('.wireframe-viewer');
+            targetViewer = viewers.length > 0 ? viewers[viewers.length - 1] : null;
+        }
+
+        // If no existing viewer, add the first viewer directly to the viewer area
+        if (!targetViewer) {
+            var newViewer = createViewerElement(newId);
+            viewerArea.appendChild(newViewer);
+            return;
+        }
+
+        var parent = targetViewer.parentNode;
+
+        // Create split container
+        var splitContainer = document.createElement('div');
+        splitContainer.className = 'wireframe-viewer-split ' +
+            (direction === 'horiz' || direction === 'h' || direction === 'horiz-before' || direction === 'hb'
+                ? 'horizontal' : 'vertical');
+
+        // Replace target with split container
+        parent.insertBefore(splitContainer, targetViewer);
+
+        // Move target into split
+        splitContainer.appendChild(targetViewer);
+
+        // Create new viewer
+        var newViewer = createViewerElement(newId);
+
+        // Add in correct position based on direction
+        if (direction === 'horiz-before' || direction === 'hb' ||
+            direction === 'vert-before' || direction === 'vb') {
+            splitContainer.insertBefore(newViewer, targetViewer);
+        } else {
+            splitContainer.appendChild(newViewer);
+        }
+    }
+
+    // Execute viewer-image action: set background image for a viewer
+    function executeViewerImage(viewerId, imagePath) {
+        var viewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + viewerId + '"]');
+        if (!viewer) return;
+
+        var content = viewer.querySelector('.viewer-content');
+        var imageContainer = viewer.querySelector('.viewer-image-container');
+
+        if (content && imageContainer) {
+            if (imagePath) {
+                content.classList.add('has-image');
+                imageContainer.style.backgroundImage = 'url(' + imagePath + ')';
+            } else {
+                content.classList.remove('has-image');
+                imageContainer.style.backgroundImage = '';
+            }
+        }
+    }
+
+    // Execute viewer-legend action: set legend layers for a viewer
+    function executeViewerLegend(viewerId, layersString) {
+        var viewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + viewerId + '"]');
+        if (!viewer) return;
+
+        var legend = viewer.querySelector('.data-menu-legend');
+        if (!legend) return;
+
+        // Clear existing legend items
+        legend.innerHTML = '';
+
+        // Add new legend items with reverse alphabetical letters
+        var layers = layersString.split('|');
+        var total = layers.filter(function(l) { return l.trim(); }).length;
+        layers.forEach(function(layer, index) {
+            var trimmedLayer = layer.trim();
+            if (trimmedLayer) {
+                legend.appendChild(createLegendItem(trimmedLayer, index, total));
+            }
+        });
+    }
+
+    // Execute viewer-focus action: visually emphasize a viewer
+    function executeViewerFocus(viewerId) {
+        // Remove focus from all viewers
+        var viewers = container.querySelectorAll('.wireframe-viewer');
+        viewers.forEach(function(v) {
+            v.classList.remove('focused');
+        });
+
+        // Add focus to target viewer
+        if (viewerId) {
+            var viewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + viewerId + '"]');
+            if (viewer) {
+                viewer.classList.add('focused');
+            }
+        }
+    }
+
+    // Execute viewer-remove action: remove a viewer
+    function executeViewerRemove(viewerId) {
+        var viewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + viewerId + '"]');
+        if (!viewer) return;
+
+        var parent = viewer.parentNode;
+
+        // Remove the viewer
+        parent.removeChild(viewer);
+
+        // If parent is a split container with only one child left, unwrap it
+        if (parent.classList.contains('wireframe-viewer-split')) {
+            var remainingChildren = parent.children;
+            if (remainingChildren.length === 1) {
+                var grandparent = parent.parentNode;
+                var remaining = remainingChildren[0];
+                grandparent.insertBefore(remaining, parent);
+                grandparent.removeChild(parent);
+            }
+        }
+    }
+
+    // Execute viewer-open-data-menu action: click a legend item in the specified viewer to open data menu
+    function executeViewerOpenDataMenu(viewerId) {
+        // Find the trigger element
+        var trigger = null;
+        if (viewerId) {
+            var viewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + viewerId + '"]');
+            if (viewer) {
+                trigger = viewer.querySelector('.data-menu-trigger');
+            }
+        }
+
+        // If no specific viewer or no trigger found, find any legend item
+        if (!trigger) {
+            trigger = container.querySelector('.data-menu-trigger');
+        }
+
+        // Click the trigger to open data menu (uses event delegation handler)
+        if (trigger) {
+            trigger.click();
+        }
+    }
+
+    // Execute viewer-tool-toggle action: toggle/activate a tool in a viewer's toolbar
+    function executeViewerToolToggle(viewerId, toolName) {
+        // Map tool names to icon keys
+        var toolMap = {
+            'home': VIEWER_TOOLBAR_ICONS.home,
+            'panzoom': VIEWER_TOOLBAR_ICONS.panZoom,
+            'pan-zoom': VIEWER_TOOLBAR_ICONS.panZoom,
+            'pan_zoom': VIEWER_TOOLBAR_ICONS.panZoom,
+            'rectroi': VIEWER_TOOLBAR_ICONS.rectROI,
+            'rect-roi': VIEWER_TOOLBAR_ICONS.rectROI,
+            'rect_roi': VIEWER_TOOLBAR_ICONS.rectROI,
+            'rectangle': VIEWER_TOOLBAR_ICONS.rectROI,
+            'circroi': VIEWER_TOOLBAR_ICONS.circROI,
+            'circ-roi': VIEWER_TOOLBAR_ICONS.circROI,
+            'circ_roi': VIEWER_TOOLBAR_ICONS.circROI,
+            'circle': VIEWER_TOOLBAR_ICONS.circROI,
+            'subset': VIEWER_TOOLBAR_ICONS.circROI  // alias for the circular ROI/subset tool
+        };
+
+        var viewer = container.querySelector('.wireframe-viewer[data-viewer-id="' + viewerId + '"]');
+        if (!viewer) {
+            // Try to find any viewer if the specified one doesn't exist
+            viewer = container.querySelector('.wireframe-viewer');
+        }
+        if (!viewer) return null;
+
+        var iconValue = toolMap[toolName.toLowerCase()];
+        if (!iconValue) {
+            console.warn('Unknown tool name:', toolName);
+            return null;
+        }
+
+        // Find the toolbar icon with this data-icon value
+        var toolIcon = viewer.querySelector('.viewer-toolbar-icon[data-icon="' + iconValue + '"]');
+        if (toolIcon) {
+            // Check if already active - if so, toggle it off
+            if (toolIcon.classList.contains('active')) {
+                toolIcon.classList.remove('active');
+            } else {
+                // Remove active from all icons in this viewer's toolbar
+                var allIcons = viewer.querySelectorAll('.viewer-toolbar-icon');
+                allIcons.forEach(function(icon) {
+                    icon.classList.remove('active');
+                });
+                // Add active to the selected tool
+                toolIcon.classList.add('active');
+            }
+            return toolIcon;
+        }
+        return null;
+    }
+
     // Parse custom content map from JSON
     let customContentMap = {};
     if (customContentMapJson) {
@@ -57,9 +470,10 @@ function initializeWireframeController(container) {
 
         sequenceArray.forEach(function(item) {
             let delay = 2000; // Default delay
+            let noHighlight = false; // Flag to skip highlighting
             let workingItem = item;
 
-            // Check for timing syntax: sidebar@1000:action
+            // Check for timing syntax: sidebar@1000:action or sidebar@1000!:action (! = no highlight)
             if (item.includes('@')) {
                 const atIndex = item.indexOf('@');
                 const beforeAt = item.substring(0, atIndex);
@@ -68,10 +482,21 @@ function initializeWireframeController(container) {
                 // Extract delay (number before next : or end of string)
                 const colonAfterAt = afterAt.indexOf(':');
                 if (colonAfterAt !== -1) {
-                    delay = parseInt(afterAt.substring(0, colonAfterAt), 10);
+                    let delayPart = afterAt.substring(0, colonAfterAt);
+                    // Check for ! suffix on delay (no highlight)
+                    if (delayPart.endsWith('!')) {
+                        noHighlight = true;
+                        delayPart = delayPart.slice(0, -1);
+                    }
+                    delay = parseInt(delayPart, 10);
                     workingItem = beforeAt + afterAt.substring(colonAfterAt);
                 } else {
-                    delay = parseInt(afterAt, 10);
+                    let delayPart = afterAt;
+                    if (delayPart.endsWith('!')) {
+                        noHighlight = true;
+                        delayPart = delayPart.slice(0, -1);
+                    }
+                    delay = parseInt(delayPart, 10);
                     workingItem = beforeAt;
                 }
             }
@@ -82,8 +507,17 @@ function initializeWireframeController(container) {
                 const sidebar = workingItem.substring(0, colonIndex);
                 const actionPart = workingItem.substring(colonIndex + 1);
 
-                // Check if action has a value
-                if (actionPart.includes('=')) {
+                // Special handling for viewer-* actions: everything after sidebar goes into value
+                if (sidebar.indexOf('viewer-') === 0) {
+                    sequence.push({
+                        sidebar: sidebar,
+                        action: null,
+                        value: actionPart,
+                        delay: delay,
+                        noHighlight: noHighlight
+                    });
+                } else if (actionPart.includes('=')) {
+                    // Check if action has a value
                     const equalsIndex = actionPart.indexOf('=');
                     const action = actionPart.substring(0, equalsIndex);
                     const value = actionPart.substring(equalsIndex + 1);
@@ -91,13 +525,15 @@ function initializeWireframeController(container) {
                         sidebar: sidebar,
                         action: action,
                         value: value,
-                        delay: delay
+                        delay: delay,
+                        noHighlight: noHighlight
                     });
                 } else {
                     sequence.push({
                         sidebar: sidebar,
                         action: actionPart,
-                        delay: delay
+                        delay: delay,
+                        noHighlight: noHighlight
                     });
                 }
             } else {
@@ -105,7 +541,8 @@ function initializeWireframeController(container) {
                 sequence.push({
                     sidebar: workingItem,
                     action: 'show',
-                    delay: delay
+                    delay: delay,
+                    noHighlight: noHighlight
                 });
             }
         });
@@ -213,12 +650,13 @@ function initializeWireframeController(container) {
         }
     }
 
-    function restartAutoCycle() {
-        // Stop any existing cycle
-        if (cycleInterval) {
-            clearInterval(cycleInterval);
-            cycleInterval = null;
-        }
+    // Reset demo state to initial - called when looping or manually restarting
+    function resetDemoState() {
+        // Clear highlights
+        currentHighlightedElements.forEach(function(el) {
+            el.classList.remove('highlighted');
+        });
+        currentHighlightedElements = [];
 
         // Reset API mode if active
         if (apiModeActive) {
@@ -226,6 +664,27 @@ function initializeWireframeController(container) {
             if (apiButton) {
                 apiButton.click();
             }
+        }
+
+        // Remove all viewers and split containers from the viewer area (but keep the data-menu-popup)
+        var viewerArea = container.querySelector('.wireframe-viewer-area');
+        if (viewerArea) {
+            // Remove split containers first (they contain viewers)
+            var splits = viewerArea.querySelectorAll('.wireframe-viewer-split');
+            splits.forEach(function(split) {
+                split.remove();
+            });
+            // Remove any remaining viewers not in splits
+            var viewers = viewerArea.querySelectorAll('.wireframe-viewer');
+            viewers.forEach(function(viewer) {
+                viewer.remove();
+            });
+        }
+
+        // Close the data menu popup if open
+        var dataMenuPopup = container.querySelector('#data-menu-popup');
+        if (dataMenuPopup) {
+            dataMenuPopup.classList.remove('visible');
         }
 
         // Close any open sidebar
@@ -257,6 +716,20 @@ function initializeWireframeController(container) {
             select.selectedIndex = 0;
         });
 
+        // Reset cycle index
+        currentCycleIndex = 0;
+    }
+
+    function restartAutoCycle() {
+        // Stop any existing cycle
+        if (cycleInterval) {
+            clearInterval(cycleInterval);
+            cycleInterval = null;
+        }
+
+        // Reset all demo state
+        resetDemoState();
+
         // Apply initial state if provided
         if (initialSequence && initialSequence.length > 0) {
             applyInitialState();
@@ -282,23 +755,56 @@ function initializeWireframeController(container) {
     function applyInitialState() {
         if (!initialSequence || initialSequence.length === 0) return;
 
-        let currentStep = 0;
+        // Apply all initial steps synchronously (no delays for initial state)
+        for (var i = 0; i < initialSequence.length; i++) {
+            var step = initialSequence[i];
+            var sidebarType = step.sidebar;
+            var action = step.action;
+            var value = step.value;
 
-        function applyStep() {
-            if (currentStep >= initialSequence.length) return;
+            // Check if this is a viewer action
+            if (sidebarType && sidebarType.indexOf('viewer-') === 0) {
+                var viewerAction = sidebarType;
+                var params = value ? value.split(':') : [];
 
-            const step = initialSequence[currentStep];
-            const sidebarType = step.sidebar;
-            const action = step.action;
-            const value = step.value;
-
-            // Activate the sidebar
-            if (action === 'show' || action === 'select-tab') {
+                if (viewerAction === 'viewer-add') {
+                    var direction = params[0] || 'horiz';
+                    var newId = params[1] || 'viewer-' + Date.now();
+                    var parentId = params[2] || null;
+                    executeViewerAdd(direction, newId, parentId);
+                } else if (viewerAction === 'viewer-image') {
+                    var viewerId = params[0] || 'default';
+                    var imagePath = params.slice(1).join(':');
+                    executeViewerImage(viewerId, imagePath);
+                } else if (viewerAction === 'viewer-legend') {
+                    var viewerId = params[0] || 'default';
+                    var layersString = params.slice(1).join(':');
+                    executeViewerLegend(viewerId, layersString);
+                } else if (viewerAction === 'viewer-focus') {
+                    var viewerId = params[0] || null;
+                    executeViewerFocus(viewerId);
+                } else if (viewerAction === 'viewer-remove') {
+                    var viewerId = params[0];
+                    if (viewerId) {
+                        executeViewerRemove(viewerId);
+                    }
+                } else if (viewerAction === 'viewer-open-data-menu') {
+                    var viewerId = params[0] || null;
+                    executeViewerOpenDataMenu(viewerId);
+                } else if (viewerAction === 'viewer-tool-toggle') {
+                    var viewerId = params[0];
+                    var toolName = params[1];
+                    if (viewerId && toolName) {
+                        executeViewerToolToggle(viewerId, toolName);
+                    }
+                }
+            } else if (action === 'show' || action === 'select-tab') {
+                // Activate the sidebar
                 if (action === 'select-tab' && value) {
                     // Find tab index by name
-                    const data = sidebarContent_map[sidebarType];
+                    var data = sidebarContent_map[sidebarType];
                     if (data && data.tabs) {
-                        const tabIndex = data.tabs.findIndex(t => t === value);
+                        var tabIndex = data.tabs.findIndex(function(t) { return t === value; });
                         if (tabIndex !== -1) {
                             activateSidebar(sidebarType, tabIndex);
                         } else {
@@ -310,15 +816,41 @@ function initializeWireframeController(container) {
                 } else {
                     activateSidebar(sidebarType);
                 }
-            }
-
-            currentStep++;
-            if (currentStep < initialSequence.length) {
-                setTimeout(applyStep, step.delay || 500);
+            } else if (action === 'select-viewer' && sidebarType === 'settings') {
+                // Select a viewer in Plot Options dropdown
+                var viewerDropdown = container.querySelector('.plot-options-viewer-dropdown');
+                if (viewerDropdown && value) {
+                    viewerDropdown.value = value;
+                    // Trigger change event to update layers
+                    viewerDropdown.dispatchEvent(new Event('change'));
+                }
+            } else if (action === 'select-layer' && sidebarType === 'settings') {
+                // Select a layer tab in Plot Options
+                var layerIndex = parseInt(value) || 0;
+                var layerTabs = container.querySelectorAll('.plot-options-layer-tab');
+                if (layerTabs[layerIndex]) {
+                    layerTabs.forEach(function(t) { t.classList.remove('active'); });
+                    layerTabs[layerIndex].classList.add('active');
+                    // Update color button to match layer color
+                    var layerColor = layerTabs[layerIndex].dataset.layerColor;
+                    var colorButton = container.querySelector('.plot-options-color-button');
+                    if (colorButton && layerColor) {
+                        colorButton.style.backgroundColor = layerColor;
+                    }
+                }
+            } else if (action === 'set-color' && sidebarType === 'settings') {
+                // Set color in Plot Options
+                var colorButton = container.querySelector('.plot-options-color-button');
+                if (colorButton && value) {
+                    colorButton.style.backgroundColor = value;
+                    // Update active layer tab's color
+                    var activeTab = container.querySelector('.plot-options-layer-tab.active');
+                    if (activeTab) {
+                        activeTab.dataset.layerColor = value;
+                    }
+                }
             }
         }
-
-        applyStep();
     }
 
     // Extract dropdown options from grid items
@@ -472,7 +1004,7 @@ function initializeWireframeController(container) {
         'settings': {
             tabs: ['Plot Options', 'Units'],
             content: [
-                '{{ descriptions.settings_plot }}',
+                'dynamic:plot-options',  // Special marker for dynamic content
                 '{{ descriptions.settings_units }}'
             ],
             apiSnippets: [
@@ -607,7 +1139,14 @@ function initializeWireframeController(container) {
 
                 // Build content with API snippet before content if available
                 const apiSnippet = data.apiSnippets && data.apiSnippets[activeIndex] ? data.apiSnippets[activeIndex] : '';
-                sidebarHtml += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + apiSnippet + data.content[activeIndex] + '</div>';
+                let contentHtml = data.content[activeIndex];
+
+                // Check for dynamic content markers
+                if (contentHtml === 'dynamic:plot-options') {
+                    contentHtml = generatePlotOptionsHTML();
+                }
+
+                sidebarHtml += '<div class="wireframe-sidebar-content" id="sidebar-tab-content">' + apiSnippet + contentHtml + '</div>';
 
                 // Build footer with learn more button
                 const learnMoreData = data.learnMore && data.learnMore[activeIndex] ? data.learnMore[activeIndex] : null;
@@ -644,7 +1183,14 @@ function initializeWireframeController(container) {
                         const contentDiv = container.querySelector('#sidebar-tab-content');
                         if (contentDiv && data.content[tabIndex]) {
                             const apiSnippet = data.apiSnippets && data.apiSnippets[tabIndex] ? data.apiSnippets[tabIndex] : '';
-                            contentDiv.innerHTML = apiSnippet + data.content[tabIndex];
+                            let contentHtml = data.content[tabIndex];
+
+                            // Check for dynamic content markers
+                            if (contentHtml === 'dynamic:plot-options') {
+                                contentHtml = generatePlotOptionsHTML();
+                            }
+
+                            contentDiv.innerHTML = apiSnippet + contentHtml;
 
                             // Update footer learn more button
                             const footerButton = wireframeSidebar.querySelector('.wireframe-sidebar-footer-button');
@@ -799,6 +1345,13 @@ function initializeWireframeController(container) {
                         // Fallback options
                         viewerTypeSelect.innerHTML = '<option>1D Spectrum</option><option>2D Spectrum</option><option>Histogram</option><option>Scatter</option>';
                     }
+                }, 50);
+            }
+
+            // Add event handlers for Plot Options UI
+            if (sidebarType === 'settings') {
+                setTimeout(function() {
+                    setupPlotOptionsHandlers();
                 }, 50);
             }
 
@@ -997,15 +1550,94 @@ function initializeWireframeController(container) {
             // Check if this is a standalone action (no sidebar needed)
             const standaloneActions = ['open-data-menu', 'highlight'];
             const isStandaloneAction = standaloneActions.indexOf(action) !== -1;
+            const isViewerAction = sidebarType && sidebarType.indexOf('viewer-') === 0;
+
+            // Helper function to move to the next step
+            function moveToNextStep() {
+                // Use typeof check to allow delay of 0 (since 0 is falsy)
+                const currentDelay = typeof step.delay === 'number' ? step.delay : 2000;
+                currentCycleIndex++;
+                if (currentCycleIndex < demoSequence.length) {
+                    setTimeout(autoCycleSidebars, currentDelay);
+                } else {
+                    // Demo sequence complete
+                    if (demoRepeat) {
+                        // Loop back to start - full reset including viewers
+                        setTimeout(function() {
+                            resetDemoState();
+                            autoCycleSidebars();
+                        }, currentDelay + 1000);
+                    } else {
+                        // Stop and show restart button
+                        autoCycling = false;
+                        updateCycleControlButton();
+                    }
+                }
+            }
+
+            // Handle pause action - just wait without doing anything
+            if (sidebarType === 'pause') {
+                moveToNextStep();
+                return;
+            }
+
+            // Handle viewer-* actions immediately (no setTimeout needed)
+            if (isViewerAction) {
+                const viewerAction = sidebarType;
+                const params = value ? value.split(':') : [];
+
+                if (viewerAction === 'viewer-add') {
+                    const direction = params[0] || 'horiz';
+                    const newId = params[1] || 'viewer-' + Date.now();
+                    const parentId = params[2] || null;
+                    executeViewerAdd(direction, newId, parentId);
+                } else if (viewerAction === 'viewer-image') {
+                    const viewerId = params[0] || 'default';
+                    const imagePath = params.slice(1).join(':');
+                    executeViewerImage(viewerId, imagePath);
+                } else if (viewerAction === 'viewer-legend') {
+                    const viewerId = params[0] || 'default';
+                    const layersString = params.slice(1).join(':');
+                    executeViewerLegend(viewerId, layersString);
+                } else if (viewerAction === 'viewer-focus') {
+                    const viewerId = params[0] || null;
+                    executeViewerFocus(viewerId);
+                } else if (viewerAction === 'viewer-remove') {
+                    const viewerId = params[0];
+                    if (viewerId) {
+                        executeViewerRemove(viewerId);
+                    }
+                } else if (viewerAction === 'viewer-open-data-menu') {
+                    const viewerId = params[0] || null;
+                    executeViewerOpenDataMenu(viewerId);
+                } else if (viewerAction === 'viewer-tool-toggle') {
+                    const viewerId = params[0];
+                    const toolName = params[1];
+                    if (viewerId && toolName) {
+                        var toolIcon = executeViewerToolToggle(viewerId, toolName);
+                        if (toolIcon && !step.noHighlight) {
+                            briefHighlight(toolIcon, step.delay);
+                        }
+                    }
+                }
+
+                moveToNextStep();
+                return;
+            }
 
             // Only activate the sidebar if it's not a standalone action and either:
             // - There's no action specified, OR
             // - The sidebar is different from the current one
-            if (!isStandaloneAction && (!action || currentSidebar !== sidebarType)) {
+            var needsSidebarChange = !isStandaloneAction && (!action || currentSidebar !== sidebarType);
+            if (needsSidebarChange) {
                 activateSidebar(sidebarType);
             }
 
-            // Execute action after sidebar is shown
+            // Determine delay needed - if sidebar already open, execute immediately
+            // Otherwise wait for sidebar animation (300ms CSS transition + small buffer)
+            var actionDelay = needsSidebarChange ? 350 : 0;
+
+            // Execute action after sidebar is shown (if needed)
             setTimeout(function() {
                 if (!autoCycling) return;
 
@@ -1024,14 +1656,14 @@ function initializeWireframeController(container) {
                         if (content) {
                             content.classList.add('expanded');
                         }
-                        briefHighlight(panel, step.delay);
+                        if (!step.noHighlight) briefHighlight(panel, step.delay);
                     }
                 } else if (action === 'api-toggle') {
                     // Toggle API mode
                     const apiButton = container.querySelector('.api-button');
                     if (apiButton) {
                         apiButton.click();
-                        briefHighlight(apiButton, step.delay);
+                        if (!step.noHighlight) briefHighlight(apiButton, step.delay);
                     }
                 } else if (action === 'select-tab') {
                     // Select a specific tab
@@ -1039,7 +1671,7 @@ function initializeWireframeController(container) {
                     tabs.forEach(function(tab) {
                         if (tab.textContent.trim() === value) {
                             tab.click();
-                            briefHighlight(tab, step.delay);
+                            if (!step.noHighlight) briefHighlight(tab, step.delay);
                         }
                     });
                 } else if (action === 'select-dropdown') {
@@ -1093,7 +1725,7 @@ function initializeWireframeController(container) {
                                         setTimeout(function() {
                                             dropdown.style.background = '';
                                         }, 800);
-                                        briefHighlight(dropdown, step.delay);
+                                        if (!step.noHighlight) if (!step.noHighlight) briefHighlight(dropdown, step.delay);
                                     }
                                 });
                             }
@@ -1114,34 +1746,61 @@ function initializeWireframeController(container) {
                             currentHighlightedElements.push(el);
                         });
                     }
-                }
-
-                // Move to next step
-                currentCycleIndex++;
-                if (currentCycleIndex < demoSequence.length) {
-                    const nextStep = demoSequence[currentCycleIndex];
-                    const nextDelay = nextStep.delay || 2000;
-                    setTimeout(autoCycleSidebars, nextDelay);
-                } else {
-                    // Demo sequence complete
-                    if (demoRepeat) {
-                        // Loop back to start - clear highlights before repeating
-                        currentHighlightedElements.forEach(function(el) {
-                            el.classList.remove('highlighted');
+                } else if (action === 'click-button') {
+                    // Click a button by its text content
+                    if (value) {
+                        const buttons = wireframeSidebar.querySelectorAll('button.wireframe-button');
+                        buttons.forEach(function(button) {
+                            if (button.textContent.trim().toLowerCase() === value.toLowerCase()) {
+                                // Visual feedback for button click
+                                button.style.background = 'rgba(199, 93, 44, 0.8)';
+                                setTimeout(function() {
+                                    button.style.background = '';
+                                }, 400);
+                                if (!step.noHighlight) briefHighlight(button, step.delay);
+                            }
                         });
-                        currentHighlightedElements = [];
-                        currentCycleIndex = 0;
-                        const firstStep = demoSequence[0];
-                        const firstDelay = firstStep.delay || 2000;
-                        setTimeout(autoCycleSidebars, firstDelay + 1000);
-                    } else {
-                        // Stop and show restart button
-                        // Keep highlights in place for last step when not repeating
-                        autoCycling = false;
-                        updateCycleControlButton();
+                    }
+                } else if (action === 'select-viewer' && sidebarType === 'settings') {
+                    // Select a viewer in Plot Options dropdown
+                    var viewerDropdown = container.querySelector('.plot-options-viewer-dropdown');
+                    if (viewerDropdown && value) {
+                        viewerDropdown.value = value;
+                        if (!step.noHighlight) briefHighlight(viewerDropdown, step.delay);
+                        // Trigger change event to update layers
+                        viewerDropdown.dispatchEvent(new Event('change'));
+                    }
+                } else if (action === 'select-layer' && sidebarType === 'settings') {
+                    // Select a layer tab in Plot Options
+                    var layerIndex = parseInt(value) || 0;
+                    var layerTabs = container.querySelectorAll('.plot-options-layer-tab');
+                    if (layerTabs[layerIndex]) {
+                        layerTabs.forEach(function(t) { t.classList.remove('active'); });
+                        layerTabs[layerIndex].classList.add('active');
+                        if (!step.noHighlight) briefHighlight(layerTabs[layerIndex], step.delay);
+                        // Update color button to match layer color
+                        var layerColor = layerTabs[layerIndex].dataset.layerColor;
+                        var colorButton = container.querySelector('.plot-options-color-button');
+                        if (colorButton && layerColor) {
+                            colorButton.style.backgroundColor = layerColor;
+                        }
+                    }
+                } else if (action === 'set-color' && sidebarType === 'settings') {
+                    // Set color in Plot Options
+                    var colorButton = container.querySelector('.plot-options-color-button');
+                    if (colorButton && value) {
+                        colorButton.style.backgroundColor = value;
+                        if (!step.noHighlight) briefHighlight(colorButton, step.delay);
+                        // Update active layer tab's color
+                        var activeTab = container.querySelector('.plot-options-layer-tab.active');
+                        if (activeTab) {
+                            activeTab.dataset.layerColor = value;
+                        }
                     }
                 }
-            }, 1000);
+
+                moveToNextStep();
+            }, actionDelay);
 
             return;
         }
@@ -1265,6 +1924,13 @@ function initializeWireframeController(container) {
 
         if (isFullyVisible) {
             hasStartedCycling = true;
+
+            // Apply initial state first (if any)
+            if (initialSequence && initialSequence.length > 0) {
+                applyInitialState();
+            }
+
+            // Then start the demo sequence
             autoCycleSidebars();
         }
     }
@@ -1325,17 +1991,79 @@ function initializeWireframeController(container) {
         }
     });
 
-    // Data menu popup handler
-    const dataMenuTriggers = container.querySelectorAll('.data-menu-trigger');
+    // Data menu popup handler - using event delegation for dynamic legend items
     const dataMenuPopup = container.querySelector('#data-menu-popup');
     const dataMenuClose = container.querySelector('#data-menu-close');
 
-    if (dataMenuTriggers.length > 0 && dataMenuPopup && dataMenuClose) {
-        dataMenuTriggers.forEach(function(trigger) {
-            trigger.addEventListener('click', function(e) {
+    // Helper function to position data menu popup based on trigger element
+    function positionDataMenuPopup(triggerElement) {
+        if (!dataMenuPopup) return;
+
+        var viewerArea = container.querySelector('.wireframe-viewer-area');
+        if (!viewerArea) return;
+
+        var viewerAreaRect = viewerArea.getBoundingClientRect();
+
+        // Get popup dimensions (use actual if visible, otherwise estimate)
+        var popupWidth = dataMenuPopup.offsetWidth || 350;
+        var popupHeight = dataMenuPopup.offsetHeight || 300;
+
+        var top, left;
+
+        // Always use trigger element position for consistent behavior
+        if (triggerElement) {
+            // Position based on the trigger element
+            var triggerRect = triggerElement.getBoundingClientRect();
+            top = triggerRect.top - viewerAreaRect.top;
+            left = triggerRect.left - viewerAreaRect.left - popupWidth - 8;
+        } else {
+            // Fallback to center of viewer area
+            top = (viewerAreaRect.height - popupHeight) / 2;
+            left = (viewerAreaRect.width - popupWidth) / 2;
+        }
+
+        // Make sure popup stays within viewer area bounds
+        if (top < 8) top = 8;
+        if (top + popupHeight > viewerAreaRect.height - 8) {
+            top = viewerAreaRect.height - popupHeight - 8;
+            if (top < 8) top = 8;
+        }
+
+        // If popup would go off left edge, show it to the right of trigger instead
+        if (left < 8) {
+            if (triggerElement) {
+                var triggerRect = triggerElement.getBoundingClientRect();
+                left = triggerRect.right - viewerAreaRect.left + 8;
+            } else {
+                left = 8;
+            }
+        }
+
+        dataMenuPopup.style.top = top + 'px';
+        dataMenuPopup.style.left = left + 'px';
+    }
+
+    if (dataMenuPopup && dataMenuClose) {
+        // Use event delegation on the container for dynamically created .data-menu-trigger elements
+        container.addEventListener('click', function(e) {
+            var trigger = e.target.closest('.data-menu-trigger');
+            if (trigger && container.contains(trigger)) {
                 e.stopPropagation();
-                dataMenuPopup.classList.toggle('visible');
-            });
+
+                // Pause any running demo when user clicks on legend
+                if (e.isTrusted) {
+                    stopAutoCycle();
+                }
+
+                // If popup is already visible, just hide it
+                if (dataMenuPopup.classList.contains('visible')) {
+                    dataMenuPopup.classList.remove('visible');
+                } else {
+                    // Position popup based on trigger element
+                    positionDataMenuPopup(trigger);
+                    dataMenuPopup.classList.add('visible');
+                }
+            }
         });
 
         dataMenuClose.addEventListener('click', function() {
@@ -1383,10 +2111,10 @@ function initializeWireframeController(container) {
             });
         });
 
-        // Close popup when clicking outside
+        // Close popup when clicking outside (use dynamic check for triggers)
         document.addEventListener('click', function(e) {
-            const isClickInsidePopup = dataMenuPopup.contains(e.target);
-            const isClickOnTrigger = Array.from(dataMenuTriggers).some(trigger => trigger.contains(e.target));
+            var isClickInsidePopup = dataMenuPopup.contains(e.target);
+            var isClickOnTrigger = e.target.closest('.data-menu-trigger') !== null;
 
             if (!isClickInsidePopup && !isClickOnTrigger) {
                 dataMenuPopup.classList.remove('visible');

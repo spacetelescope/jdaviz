@@ -291,12 +291,58 @@ html[data-theme="light"] {
     height: 100%;
 }
 
+/* Viewer Area - container for all viewers */
+.wireframe-viewer-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;  /* Needed for data-menu-popup absolute positioning */
+}
+
+/* Split containers for multi-viewer layouts */
+.wireframe-viewer-split {
+    display: flex;
+    flex: 1;
+    gap: 2px;
+}
+
+.wireframe-viewer-split.horizontal {
+    flex-direction: row;
+}
+
+.wireframe-viewer-split.vertical {
+    flex-direction: column;
+}
+
 .wireframe-viewer {
     flex: 1;
     background: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
     position: relative;
+    min-width: 100px;
+    min-height: 80px;
+    border: 1px solid var(--wireframe-border);
+}
+
+.wireframe-viewer.focused {
+    box-shadow: inset 0 0 0 2px var(--button-hover);
+}
+
+/* Animation for new viewers */
+.wireframe-viewer.viewer-adding {
+    animation: viewerSlideIn 0.3s ease forwards;
+}
+
+@keyframes viewerSlideIn {
+    from {
+        opacity: 0;
+        flex: 0;
+    }
+    to {
+        opacity: 1;
+        flex: 1;
+    }
 }
 
 .viewer-toolbar {
@@ -345,6 +391,32 @@ html[data-theme="light"] {
     color: var(--text-color);
     font-size: 18px;
     font-weight: 600;
+    overflow: hidden;
+}
+
+.viewer-content.has-image {
+    opacity: 1;
+}
+
+.viewer-content.has-image .viewer-area-text {
+    display: none;
+}
+
+.viewer-image-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+}
+
+.viewer-area-text {
+    position: relative;
+    z-index: 1;
 }
 
 .data-menu-legend {
@@ -364,6 +436,7 @@ html[data-theme="light"] {
     gap: 8px;
     background: rgba(0, 59, 77, 0.95);
     padding: 6px 12px;
+    padding-left: 4px;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -374,6 +447,20 @@ html[data-theme="light"] {
 .legend-item:hover {
     background: rgba(0, 75, 95, 0.95);
     border-color: rgba(255, 255, 255, 0.4);
+}
+
+.legend-letter {
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border-radius: 3px;
+    flex-shrink: 0;
 }
 
 .legend-icon {
@@ -401,15 +488,16 @@ html[data-theme="light"] {
 
 .data-menu-popup {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 400px;
-    max-height: 500px;
+    /* Position dynamically set via JavaScript */
+    top: 0;
+    left: 0;
+    width: 350px;
+    max-height: 400px;
     background: rgba(0, 97, 126, 1);
     border: 2px solid var(--wireframe-border);
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    z-index: 20;
+    z-index: 100;
     display: none;
     flex-direction: column;
 }
@@ -866,6 +954,124 @@ html[data-theme="light"] .wireframe-cycle-control::after {
     white-space: pre-wrap;
 }
 
+/* Plot Options UI */
+.plot-options-viewer-select {
+    margin-bottom: 16px;
+}
+
+.plot-options-viewer-select label {
+    display: block;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 4px;
+}
+
+.plot-options-viewer-dropdown {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.plot-options-viewer-dropdown:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.plot-options-layer-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.plot-options-layer-tab {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.plot-options-layer-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.plot-options-layer-tab.active {
+    background: var(--accent-color, #00617E);
+    border-color: var(--accent-color, #00617E);
+}
+
+.plot-options-color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 8px 0;
+}
+
+.plot-options-color-label {
+    font-size: 14px;
+    color: var(--text-color);
+    flex: 1;
+}
+
+.plot-options-color-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.plot-options-color-button:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.plot-options-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.plot-options-input-label {
+    font-size: 14px;
+    color: var(--text-color);
+    min-width: 80px;
+}
+
+.plot-options-input-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(128, 128, 128, 0.3);
+    border-radius: 4px;
+}
+
+.plot-options-section-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 16px 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Expansion Panels */
 .expansion-panels {
     display: flex;
@@ -978,4 +1184,3 @@ html[data-theme="light"] .wireframe-cycle-control::after {
         box-shadow: 0 0 0 6px rgba(199, 117, 9, 0.8), 0 0 16px 4px rgba(199, 117, 9, 0.6);
     }
 }
-    </style>

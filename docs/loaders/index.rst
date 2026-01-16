@@ -103,9 +103,9 @@ Or in the UI, click the :guilabel:`API Hints` button in the top right.
 
 .. wireframe-demo::
    :initial: loaders,loaders:select-tab=Data
-   :demo: loaders:api-toggle
+   :demo: pause@1000,loaders:api-toggle
    :enable-only: loaders
-   :demo-repeat: true
+   :demo-repeat: false
 
 When API hints are enabled, you'll see Python code snippets showing how to access and
 set various loader attributes. For example:

@@ -21,7 +21,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-dropdown=Source:file drop
+   :demo: loaders,loaders@1000:select-dropdown=Source:file drop,loaders:highlight=#source-select
    :enable-only: loaders
    :demo-repeat: false
 

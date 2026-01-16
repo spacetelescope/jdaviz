@@ -39,7 +39,7 @@ Since there are many options and the exposed options depend on previous selectio
 
 .. wireframe-demo::
    :initial: save
-   :demo: save:api-toggle
+   :demo: pause@1000,save:api-toggle
    :enable-only: save
    :demo-repeat: true
 

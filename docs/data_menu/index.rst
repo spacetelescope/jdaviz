@@ -26,7 +26,8 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: open-data-menu
+   :initial: viewer-add:horiz:Image,viewer-legend:Image:Layer1|Layer2
+   :demo: pause@1000,viewer-open-data-menu:Image
    :enable-only:
    :demo-repeat: false
 

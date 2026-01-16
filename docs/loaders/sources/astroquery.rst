@@ -52,7 +52,7 @@ Since there are many options and the exposed options depend on previous selectio
 and interactively do a search in the UI and reproduce in a notebook cell:
 
 .. wireframe-demo::
-   :initial: loaders,loaders:select-tab=Data,loaders:select-dropdown=Source:astroquery
-   :demo: loaders:api-toggle
+   :initial: loaders,loaders@1000:select-dropdown=Source:astroquery,loaders:highlight=#source-select
+   :demo: pause@1000,loaders:api-toggle
    :enable-only: loaders
    :demo-repeat: true

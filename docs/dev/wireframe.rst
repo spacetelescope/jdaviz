@@ -111,14 +111,27 @@ Defines the demo sequence - which sidebars to show and what actions to perform.
 * ``sidebar`` - Show the sidebar
 * ``sidebar:action`` - Perform an action on the sidebar
 * ``sidebar:action=value`` - Perform an action with a parameter
-* ``sidebar@delay:action`` - Add custom timing (in milliseconds) before the action
+* ``sidebar@duration:action`` - Specify how long this step lasts before proceeding (in milliseconds)
+* ``sidebar@duration!:action`` - Same as above but **skip highlighting** the affected element
 * ``:action`` or ``:action=value`` - Standalone action (no sidebar required)
+
+The ``!`` suffix after the duration disables the highlight animation for that step.
+This is useful when you want to set initial state without drawing attention to the change:
+
+.. code-block:: rst
+
+   # Normal: shows highlight on the color button
+   settings@1500:set-color=#00FF00
+
+   # No highlight: sets color quietly without visual emphasis
+   settings@0!:set-color=#FF0000
 
 **Available Actions:**
 
 * ``open-panel`` - Opens the expansion panel in plugins sidebar
 * ``select-tab=<name>`` - Switches to a specific tab in multi-tab sidebars
 * ``select-dropdown=<label>:<value>`` - Selects a dropdown value (case-insensitive matching)
+* ``click-button=<text>`` - Clicks a button by its text content (case-insensitive)
 * ``api-toggle`` - Toggles API mode on/off
 * ``open-data-menu`` - Opens the data menu popup (standalone action)
 * ``highlight=<selector>`` - Highlights element(s) matching CSS selector (standalone action)
@@ -312,7 +325,7 @@ Highlights one or more elements using a CSS selector. This is a standalone actio
 The highlight:
 
 * Uses an animated orange pulsing glow effect
-* Lasts for the step's duration (specified by ``@duration`` syntax)
+* Lasts for the step's duration (the ``@duration`` value specifies how long to wait before proceeding)
 * Clears when moving to the next step
 * **Persists** if it's the last step and ``demo-repeat: false``
 * Can target multiple elements with a single selector
@@ -352,13 +365,111 @@ Toggles the API mode on or off for the current sidebar view.
    .. wireframe-demo::
       :demo: loaders,loaders@2000:api-toggle
 
+click-button
+------------
+
+**Syntax:** ``sidebar:click-button=<text>``
+
+Clicks a button by its text content (case-insensitive matching). Provides visual feedback with a brief highlight.
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: loaders,loaders@1000:click-button=Load
+
+This is useful for demonstrating form submission workflows:
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: loaders,loaders:select-dropdown=source:file,loaders:select-dropdown=format:image,loaders@1000:click-button=Load
+
+Plot Options Actions
+--------------------
+
+The settings sidebar with Plot Options tab supports special actions for controlling
+the Plot Options UI elements.
+
+select-viewer
+^^^^^^^^^^^^^
+
+**Syntax:** ``settings:select-viewer=<viewerId>``
+
+Selects a viewer in the Plot Options viewer dropdown and updates the layer tabs to show
+layers from that viewer.
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: settings,settings:select-viewer=imageviewer
+      :demo-repeat: false
+
+select-layer
+^^^^^^^^^^^^
+
+**Syntax:** ``settings:select-layer=<index>``
+
+Selects a layer tab by its index (0-based). Updates the color button to show that layer's color.
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: settings,settings:select-layer=0,settings@1000:select-layer=1
+      :demo-repeat: false
+
+set-color
+^^^^^^^^^
+
+**Syntax:** ``settings:set-color=<color>``
+
+Sets the color of the currently selected layer. The color can be any valid CSS color
+(hex, rgb, named colors).
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: settings,settings:set-color=#FF0000,settings@1500:set-color=#00FF00
+      :demo-repeat: false
+
+**Complete Plot Options example:**
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :initial: viewer-legend@0:default:Image|Catalog
+      :demo: settings,settings:select-viewer=default,settings:select-layer=1,settings@0:set-color=#FF0000,settings@1500:set-color=#00FF00
+      :demo-repeat: false
+
+This demonstrates:
+
+1. Opening the settings sidebar (Plot Options tab)
+2. Selecting the "default" viewer
+3. Selecting layer B (index 1)
+4. Setting color to red immediately
+5. After 1.5 seconds, changing color to green
+
 Standalone Actions
 ------------------
 
 Some actions can be used without activating a sidebar first:
 
+* ``pause`` - Waits without performing any action
 * ``open-data-menu`` - Opens data menu popup
 * ``highlight=<selector>`` - Highlights elements
+
+pause
+^^^^^
+
+**Syntax:** ``pause@duration``
+
+Pauses the demo for the specified duration without performing any action.
+Useful for adding delays between actions or giving the user time to observe the current state.
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: loaders,pause@3000,settings
+      :demo-repeat: false
 
 Use these with ``:enable-only:`` to create focused demos:
 
@@ -368,6 +479,207 @@ Use these with ``:enable-only:`` to create focused demos:
       :demo: open-data-menu,highlight=#data-format-select
       :enable-only:
       :demo-repeat: false
+
+Multi-Viewer Actions
+====================
+
+The wireframe supports dynamic multi-viewer layouts through special viewer actions.
+These actions can be used in both ``:initial:`` and ``:demo:`` options.
+
+Viewer Action Syntax
+--------------------
+
+Viewer actions use the format: ``viewer-action@duration:param1:param2:param3``
+
+The ``@duration`` specifies how long (in milliseconds) to wait after performing this action before proceeding to the next step. Use ``@0`` for immediate transitions.
+
+Available viewer actions:
+
+viewer-add
+^^^^^^^^^^
+
+**Syntax:** ``viewer-add@duration:direction:newId`` or ``viewer-add@duration:direction:newId:parentId``
+
+Splits an existing viewer and adds a new one.
+
+**Parameters:**
+
+* ``direction`` - Split direction: ``horiz``, ``h``, ``vert``, ``v``, ``horiz-before``, ``hb``, ``vert-before``, ``vb``
+* ``newId`` - Unique identifier for the new viewer
+* ``parentId`` (optional) - ID of viewer to split. Defaults to the last added viewer.
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: viewer-add@1000:horiz:spectrum,viewer-add@1000:vert:cube:default
+
+This creates:
+
+1. Splits horizontally, adds "spectrum" viewer on the right
+2. Splits the "default" viewer vertically, adds "cube" viewer below it
+
+viewer-image
+^^^^^^^^^^^^
+
+**Syntax:** ``viewer-image@duration:viewerId:imagePath``
+
+Sets a background image for a viewer.
+
+**Parameters:**
+
+* ``viewerId`` - ID of the target viewer
+* ``imagePath`` - Path to the image (relative to _static or absolute URL)
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :initial: viewer-image@0:default:cosmic_cliffs.png
+      :demo: loaders
+
+viewer-legend
+^^^^^^^^^^^^^
+
+**Syntax:** ``viewer-legend@duration:viewerId:layer1|layer2|layer3``
+
+Sets the legend layers displayed in a viewer. Layers are pipe-separated (``|``).
+
+**Parameters:**
+
+* ``viewerId`` - ID of the target viewer
+* ``layers`` - Pipe-separated list of layer names
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :initial: viewer-legend@0:default:MIRI Image|Subset 1
+      :demo: plugins
+
+Layer icons are automatically assigned based on layer name:
+
+* Names containing "spectrum", "1d", "2d" get spectrum icon
+* Names containing "image", "miri", "nircam" get image icon
+* Names containing "cube", "3d" get cube icon
+* Names containing "subset" get subset icon
+
+viewer-focus
+^^^^^^^^^^^^
+
+**Syntax:** ``viewer-focus@duration:viewerId``
+
+Visually emphasizes a viewer with a highlighted border.
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: viewer-add@1000:horiz:spectrum,viewer-focus@500:spectrum
+
+viewer-remove
+^^^^^^^^^^^^^
+
+**Syntax:** ``viewer-remove@duration:viewerId``
+
+Removes a viewer and collapses the split container if only one viewer remains.
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: viewer-add@1000:horiz:spectrum,viewer-remove@2000:spectrum
+
+viewer-tool-toggle
+^^^^^^^^^^^^^^^^^^
+
+**Syntax:** ``viewer-tool-toggle@duration:viewerId:toolName``
+
+Activates a tool in the viewer's toolbar, showing it as selected.
+
+**Parameters:**
+
+* ``viewerId`` - ID of the viewer to modify
+* ``toolName`` - Name of the tool to activate. Available tools:
+   * ``home`` - Home/reset view
+   * ``panzoom`` (or ``pan-zoom``, ``pan_zoom``) - Pan and zoom tool
+   * ``rectroi`` (or ``rect-roi``, ``rectangle``) - Rectangular ROI/subset tool
+   * ``circroi`` (or ``circ-roi``, ``circle``, ``subset``) - Circular ROI/subset tool
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :demo: viewer-tool-toggle@1000:default:panzoom,viewer-tool-toggle@1500:default:circroi
+      :demo-repeat: false
+
+Complete Multi-Viewer Example
+-----------------------------
+
+Here's a complete example showing a multi-viewer demo:
+
+.. code-block:: rst
+
+   .. wireframe-demo::
+      :initial: viewer-image@0:default:cosmic_cliffs.png,viewer-legend@0:default:MIRI Image|Subset 1
+      :demo: viewer-add@2000:horiz:spectrum,viewer-legend@0:spectrum:1D Spectrum|Subset 1,viewer-focus@500:spectrum,plugins
+      :demo-repeat: false
+
+This configuration:
+
+1. **Initial state**: Sets cosmic_cliffs.png as background for default viewer with two legend layers
+2. **Demo step 1**: After 2 seconds, splits horizontally and adds "spectrum" viewer
+3. **Demo step 2**: Immediately sets legend layers for spectrum viewer
+4. **Demo step 3**: After 500ms, focuses the spectrum viewer
+5. **Demo step 4**: Shows the plugins sidebar
+
+Layout Examples
+---------------
+
+**Side-by-side viewers (1x2):**
+
+.. code-block:: rst
+
+   :demo: viewer-add@1000:horiz:right
+
+**Stacked viewers (2x1):**
+
+.. code-block:: rst
+
+   :demo: viewer-add@1000:vert:bottom
+
+**2x2 grid:**
+
+.. code-block:: rst
+
+   :demo: viewer-add@500:horiz:right,viewer-add@500:vert:bottom-left:default,viewer-add@500:vert:bottom-right:right
+
+**L-shaped layout:**
+
+.. code-block:: rst
+
+   :demo: viewer-add@500:horiz:right,viewer-add@500:vert:bottom:default
+
+Using Viewer Actions in index.html
+----------------------------------
+
+For the landing page (index.html), which doesn't use the Sphinx directive, configure
+viewer actions via ``window.wireframeConfig``:
+
+.. code-block:: javascript
+
+   window.wireframeConfig = {
+       showScrollTo: true,
+       initialState: [
+           "viewer-add@0:horiz:imageviewer",
+           "viewer-image@0:imageviewer:_static/cosmic_cliffs.png",
+           "viewer-legend@0:imageviewer:MIRI Image|Subset 1"
+       ],
+       customDemo: [
+           "viewer-add@2000:horiz:spectrum",
+           "viewer-legend@0:spectrum:1D Spectrum",
+           "loaders"
+       ],
+       demoRepeat: true
+   };
+
+Note: ``initialState`` and ``customDemo`` are arrays of action strings, matching the
+comma-separated format used in the directive. Viewers must be explicitly added using
+``viewer-add`` actions before they can be configured with images or legends.
 
 Content Registry System
 =======================
@@ -437,7 +749,7 @@ The registry is a nested dictionary with three types of entries:
            ]
        },
        'Model Fitting': {
-           'form_elements': [...]
+           'form_elements': [...]]
        }
    }
 

@@ -42,7 +42,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-dropdown=Format:Ramp
+   :demo: loaders,loaders@1000:select-dropdown=Format:Ramp,loaders:highlight=#format-select
    :enable-only: loaders
    :demo-repeat: false
 

@@ -48,7 +48,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-dropdown=Format:Image
+   :demo: loaders,loaders@1000:select-dropdown=Format:Image,loaders:highlight=#format-select
    :enable-only: loaders
    :demo-repeat: false
 

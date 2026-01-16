@@ -47,7 +47,7 @@ UI Access
 =========
 
 .. wireframe-demo::
-   :demo: loaders,loaders:select-dropdown=Format:3D Spectrum
+   :demo: loaders,loaders@1000:select-dropdown=Format:3D Spectrum,loaders:highlight=#format-select
    :enable-only: loaders
    :demo-repeat: false
 
