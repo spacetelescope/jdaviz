@@ -130,7 +130,6 @@ html[data-theme="light"] {
     background-position: center;
     background-repeat: no-repeat;
     border: none;
-    border-radius: 0;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -218,7 +217,6 @@ html[data-theme="light"] {
     flex: 1;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
     padding: 4px 8px;
     color: #ffffff;
     font-size: 13px;
@@ -254,7 +252,6 @@ html[data-theme="light"] {
     width: 32px;
     height: 28px;
     padding: 0;
-    border-radius: 3px;
     background-color: transparent;
     background-size: 20px 20px;
     background-position: center;
@@ -437,7 +434,6 @@ html[data-theme="light"] {
     background: rgba(0, 59, 77, 0.95);
     padding: 6px 12px;
     padding-left: 4px;
-    border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -459,7 +455,6 @@ html[data-theme="light"] {
     align-items: center;
     justify-content: center;
     background: transparent;
-    border-radius: 3px;
     flex-shrink: 0;
 }
 
@@ -495,7 +490,6 @@ html[data-theme="light"] {
     max-height: 400px;
     background: rgba(0, 97, 126, 1);
     border: 2px solid var(--wireframe-border);
-    border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     z-index: 100;
     display: none;
@@ -532,7 +526,6 @@ html[data-theme="light"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
     transition: background-color 0.2s ease;
 }
 
@@ -573,7 +566,6 @@ html[data-theme="light"] {
     background: var(--sidebar-active);
     color: var(--text-color);
     text-decoration: none;
-    border-radius: 4px;
     font-size: 14px;
     font-weight: 600;
     transition: all 0.3s ease;
@@ -622,7 +614,6 @@ html[data-theme="light"] {
     background: var(--sidebar-active);
     color: var(--text-color);
     text-decoration: none;
-    border-radius: 4px;
     font-size: 13px;
     font-weight: 600;
     transition: all 0.3s ease;
@@ -646,7 +637,6 @@ html[data-theme="light"] {
     background: var(--sidebar-active);
     color: var(--text-color);
     text-decoration: none;
-    border-radius: 4px;
     font-size: 13px;
     font-weight: 600;
     transition: all 0.3s ease;
@@ -725,7 +715,6 @@ html[data-theme="light"] {
     background: rgba(0, 0, 0, 0.3);
     color: var(--text-color);
     border: 1px solid var(--grid-border);
-    border-radius: 4px;
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;
@@ -745,7 +734,6 @@ html[data-theme="light"] {
     background: rgba(0, 0, 0, 0.2);
     color: var(--text-color);
     border: 1px solid var(--grid-border);
-    border-radius: 4px;
     font-size: 13px;
     font-weight: 600;
     text-align: center;
@@ -757,7 +745,6 @@ html[data-theme="light"] {
 .api-snippet {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--grid-border);
-    border-radius: 4px;
     padding: 12px;
     margin: 8px 0 12px 0;
     font-family: 'Courier New', Courier, monospace;
@@ -779,7 +766,6 @@ html[data-theme="light"] .api-snippet {
     color: #ffffff !important;
     text-decoration: none;
     padding: 10px 16px;
-    border-radius: 6px;
     font-size: 14px;
     font-weight: 700;
     transition: all 0.3s ease;
@@ -846,7 +832,6 @@ html[data-theme="light"] .api-learn-more {
     margin: 0 auto;
     background: var(--sidebar-bg);
     border: 1px solid var(--grid-border);
-    border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -971,7 +956,6 @@ html[data-theme="light"] .wireframe-cycle-control::after {
     padding: 8px 12px;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
     color: white;
     font-size: 14px;
     cursor: pointer;
@@ -996,7 +980,6 @@ html[data-theme="light"] .wireframe-cycle-control::after {
     justify-content: center;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
     color: white;
     font-size: 14px;
     font-weight: 600;
@@ -1031,7 +1014,6 @@ html[data-theme="light"] .wireframe-cycle-control::after {
 .plot-options-color-button {
     width: 32px;
     height: 32px;
-    border-radius: 4px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     cursor: pointer;
     transition: border-color 0.2s ease;
@@ -1058,7 +1040,6 @@ html[data-theme="light"] .wireframe-cycle-control::after {
     flex: 1;
     height: 8px;
     background: rgba(128, 128, 128, 0.3);
-    border-radius: 4px;
 }
 
 .plot-options-section-header {
@@ -1132,7 +1113,6 @@ html[data-theme="light"] .wireframe-cycle-control::after {
     width: 100%;
     height: 8px;
     background: rgba(128, 128, 128, 0.3);
-    border-radius: 4px;
 }
 
 .expansion-panel-content {
@@ -1171,7 +1151,6 @@ html[data-theme="light"] .wireframe-cycle-control::after {
 .highlighted {
     animation: highlight-pulse 2s ease-in-out infinite;
     box-shadow: 0 0 0 4px rgba(199, 117, 9, 0.6), 0 0 12px 2px rgba(199, 117, 9, 0.4);
-    border-radius: 4px;
     position: relative;
     z-index: 10;
 }
