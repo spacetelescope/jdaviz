@@ -4780,11 +4780,10 @@ def _populate_viewer_items(plugin, supported_viewers):
         (viewer_create_new_items, viewer_filter_function)
     """
     # Filter for config-specific restrictions
-    if plugin.app.config in ('deconfigged', 'imviz', 'lcviz', 'rampviz'):
-        if plugin.app.config == 'imviz':
-            # only allow image viewers
-            supported_viewers = [item for item in supported_viewers
-                                 if item.get('reference') == 'imviz-image-viewer']
+    if plugin.app.config == 'imviz':
+        # only allow image viewers
+        supported_viewers = [item for item in supported_viewers
+                             if item.get('reference') == 'imviz-image-viewer']
 
     # Extract items that can be created (default to True if not specified)
     # In non-deconfigged mode, hide the create new viewer options
@@ -4870,54 +4869,6 @@ class AddResults(BasePluginComponent):
       ></plugin-add-results>
 
     """
-
-    @staticmethod
-    def _populate_viewer_items(plugin, supported_viewers):
-        """
-        Populate viewer_create_new_items and add viewer filters based on supported viewers.
-
-        This is a shared helper method used by both AddResults and importers.
-
-        Parameters
-        ----------
-        plugin : Plugin instance
-            The plugin that has the viewer component
-        supported_viewers : list of dict
-            List of supported viewer types from _get_supported_viewers()
-
-        Returns
-        -------
-        tuple
-            (viewer_create_new_items, viewer_filter_function)
-        """
-        # Filter for config-specific restrictions
-        if plugin.app.config in ('deconfigged', 'imviz', 'lcviz', 'rampviz'):
-            if plugin.app.config == 'imviz':
-                # only allow image viewers
-                supported_viewers = [item for item in supported_viewers
-                                     if item.get('reference') == 'imviz-image-viewer']
-
-        # Extract items that can be created (default to True if not specified)
-        viewer_create_new_items = [item.copy() for item in supported_viewers
-                                   if item.get('allow_create', True)]
-        # Remove 'allow_create' key from the items (it's not needed in the UI)
-        for item in viewer_create_new_items:
-            item.pop('allow_create', None)
-
-        # Create filter function for existing viewers
-        def viewer_in_registry_names(viewer):
-            classes = []
-            for item in supported_viewers:
-                registry_entry = viewer_registry.members.get(item.get('reference'))
-                if registry_entry is not None:
-                    cls = registry_entry.get('cls')
-                    if cls is not None:
-                        classes.append(cls)
-            if not classes:
-                return False
-            return isinstance(viewer, tuple(classes))
-
-        return viewer_create_new_items, viewer_in_registry_names
 
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
