@@ -6,6 +6,8 @@ New Features
 
 - Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968]
 
+- Added `skewer` mode to footprint selection that only selects when clicking inside a footprint. [#3962]
+
 Cubeviz
 ^^^^^^^
 
