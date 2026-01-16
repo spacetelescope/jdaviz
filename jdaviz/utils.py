@@ -1304,7 +1304,7 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
     -------
     chosen_label : int or None
         The observation index of the selected mark, or None if no mark contains the click.
-    """    
+    """
     # Convert pixel coordinates to sky coordinates (ICRS)
     skycoord_icrs = viewer.state.reference_data.coords.pixel_to_world(px, py).icrs
     ra_deg = skycoord_icrs.ra.deg
@@ -1349,5 +1349,3 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
         return labels_arr[min_idx]
 
     return None
-
-
