@@ -64,6 +64,13 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display collapsed 2D image."""
+        if self.config == 'cubeviz':
+            return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
+        else:
+            return [{'label': 'Image', 'reference': 'imviz-image-viewer'}]
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name
