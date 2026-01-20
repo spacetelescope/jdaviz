@@ -338,14 +338,12 @@
         /* Show warning message on hover */
         .grid-item-link.platform-disabled:hover::before {
             content: attr(data-platform-warning);
+            font-size: 12px; /* Smaller font size for warning */
         }
 
         .grid-item-link.platform-disabled:hover {
-            font-size: 0; /* Hide original text */
-        }
-
-        .grid-item-link.platform-disabled:hover::before {
-            font-size: 12px; /* Smaller font size for warning */
+            font-size: 0; /* Hide original text immediately */
+            transition: none; /* Disable transition to hide text instantly */
         }
 
         .grid-item.has-toggle .grid-item-content {
