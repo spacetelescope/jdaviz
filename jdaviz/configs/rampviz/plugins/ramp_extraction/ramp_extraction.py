@@ -135,6 +135,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
 
+    def _get_supported_viewers(self):
+        """Return viewer types that can display extracted ramp integration."""
+        return [{'label': 'Ramp Profile', 'reference': 'rampviz-profile-viewer'}]
+
     @property
     def integration_viewer(self):
         viewers = self.app.get_viewers_of_cls(RampvizProfileView)
