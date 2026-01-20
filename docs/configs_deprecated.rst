@@ -126,6 +126,13 @@ Using Jdaviz
   specviz2d/index
   mosviz/index
   rampviz/index
+  display
+  video_tutorials
+  sample_notebooks
+  create_products
+  save_state
+  plugin_api
+  known_bugs
 
 
 *******************************

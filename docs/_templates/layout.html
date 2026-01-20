@@ -125,11 +125,8 @@
           { value: 'platform', label: 'Cloud Platform', icon: '☁️' }
         ];
 
-        // Get current platform from URL or sessionStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const platformFromUrl = urlParams.get('platform');
-        const platformFromStorage = sessionStorage.getItem('jdaviz-platform');
-        let currentPlatform = platformFromUrl || platformFromStorage || null;
+        // No platform tracking - always start with null
+        let currentPlatform = null;
 
         const navbar = document.querySelector('.navbar-nav');
         if (navbar) {
@@ -163,9 +160,6 @@
             item.setAttribute('data-platform', option.value);
 
             item.addEventListener('click', function() {
-              // Update platform context
-              sessionStorage.setItem('jdaviz-platform', option.value);
-
               // Update body class
               document.body.className = document.body.className.replace(/platform-\w+/g, '');
               document.body.classList.add('platform-' + option.value);

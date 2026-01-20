@@ -21,9 +21,5 @@ Using Jdaviz
   subsets/index
   mouseover/index
   data_menu/index
-  save_state
-  display
-  video_tutorials
-  sample_notebooks
-  create_products
-  known_bugs
+  examples/index
+  faq/index

@@ -12,7 +12,7 @@ and allows the Python-level interface and parsing tools to
 be defined in ``specutils`` instead of being duplicated in Jdaviz.
 :class:`~specutils.Spectrum` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
-If you are creating your own data products, please read the page :ref:`create_products`.
+If you are creating your own data products, please read the page :ref:`configs_create_products`.
 
 Cubeviz will automatically parse the data into the multiple viewers as described in
 :ref:`cubeviz-display-cubes`. For the best experience, data loaded into Cubeviz should contain valid WCS

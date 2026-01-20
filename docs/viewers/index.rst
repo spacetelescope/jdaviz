@@ -10,9 +10,9 @@ Jdaviz provides specialized viewers for different types of astronomical data.
 .. toctree::
    :maxdepth: 1
 
-   spectrum_1d
-   spectrum_2d
-   spectrum_3d
+   1d_spectrum
+   2d_spectrum
+   3d_spectrum
    image
    table
    scatter

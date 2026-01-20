@@ -14,21 +14,6 @@ Programmatic access to Jdaviz functionality for notebook workflows.
    api_hints
    show_options
 
-Overview
-========
-
-Jdaviz provides comprehensive programmatic access for use in Jupyter notebooks:
-
-**Cheatsheet**
-  Quick reference guide for common API operations and workflows.
-
-**API Hints**
-  Interactive hints showing available parameters and options for loaders
-  and plugins.
-
-**Show Options**
-  Configuration options for customizing how Jdaviz is displayed in notebooks.
-
 Quick Examples
 ==============
 

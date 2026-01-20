@@ -10,12 +10,12 @@ See information about the data directly below your cursor.
 .. toctree::
    :maxdepth: 1
 
-   image_viewer
-   spectrum1d_viewer
-   spectrum2d_viewer
-   spectrum3d_viewer
-   scatter_viewer
-   histogram_viewer
+   image
+   1d_spectrum
+   2d_spectrum
+   3d_spectrum
+   scatter
+   histogram
 
 Overview
 ========

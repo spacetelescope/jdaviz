@@ -42,9 +42,3 @@ Since there are many options and the exposed options depend on previous selectio
    :demo: pause@1000,save:api-toggle
    :enable-only: save
    :demo-repeat: true
-
-
-See Also
-========
-
-- :doc:`../save_state` - For general information on saving your work

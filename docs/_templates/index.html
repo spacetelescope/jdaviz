@@ -382,7 +382,7 @@
 
         .grid-item:hover::before {
             transform: translate(-50%, -50%) scale(2);
-            opacity: 0.03;
+            opacity: 0.01;
         }
 
         .grid-item::before {
@@ -393,7 +393,7 @@
             transform: translate(-50%, -50%);
             width: 120px;
             height: 120px;
-            opacity: 0.1;
+            opacity: 0.08;
             z-index: 0;
             transition: all 0.6s ease;
             background-size: contain;
@@ -548,18 +548,15 @@
             font-size: 14px;
             font-weight: 600;
             transition: all 0.3s ease;
-            border: 1px solid var(--grid-border);
         }
 
         .grid-item:hover .grid-item-link {
             background: var(--sidebar-hover);
-            border-color: var(--grid-border);
         }
 
         .grid-item-link:hover {
             background: var(--button-hover);
             color: var(--text-color) !important;
-            border-color: var(--grid-border);
             transform: scale(1.02);
         }
 

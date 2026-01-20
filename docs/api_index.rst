@@ -8,5 +8,4 @@ Programmatic access to Jdaviz functionality for notebook workflows.
    :maxdepth: 2
 
    userapi/index
-   plugin_api
    reference/api

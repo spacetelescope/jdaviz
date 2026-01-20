@@ -4,7 +4,7 @@
 Plugin Tables
 *************
 
-Documentation coming soon. See :doc:`../save_state` for general export information.
+Documentation coming soon.
 
 UI Access
 =========

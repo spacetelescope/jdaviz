@@ -5,14 +5,10 @@ API Hints
 *********
 
 
-Interactive hints showing available parameters and options for loaders and plugins.
-
-Description
-===========
-
-API hints is a powerful feature that provides real-time Python code snippets as you interact
-with the Jdaviz user interface. This helps you discover the programmatic API and learn how
-to automate your workflows in Jupyter notebooks.
+Enabling API hints updates the UI to show API code snippets instructing how to reproduce the
+same actions and state in the API that are currently seen in the UI.  This can be a very
+useful way to create simple reproducible workflows or to extend workflows done in the UI
+to batch processing in notebooks.
 
 When API hints are enabled, you'll see code snippets appear as you:
 
@@ -21,25 +17,18 @@ When API hints are enabled, you'll see code snippets appear as you:
 * Interact with viewers
 * Create and modify subsets
 
-The hints show the exact Python code needed to reproduce your UI actions programmatically,
-making it easy to transition from interactive exploration to automated workflows.
-
 UI Access
 =========
-
-.. wireframe-demo::
-   :demo: loaders,loaders:api-toggle,loaders:select-tab=Viewer,save,save:api-toggle,settings,settings:api-toggle,settings:select-tab=Units,info,info:api-toggle,info:select-tab=Markers,info:select-tab=Logger,subsets,subsets:api-toggle
-   :demo-repeat: true
-   :show-scroll-to: true
-
-Enabling API Hints
-------------------
 
 To enable API hints in the user interface:
 
 1. Click the **API Hints** button in the top toolbar (notebook environments)
 2. The button will highlight when API hints are active
 3. Click again to toggle off
+
+.. wireframe-demo::
+   :demo: loaders,loaders:api-toggle,loaders:select-tab=Viewer,save,save:api-toggle,settings,settings:api-toggle,settings:select-tab=Units,info,info:api-toggle,info:select-tab=Markers,info:select-tab=Logger,subsets,subsets:api-toggle
+   :demo-repeat: true
 
 Where Hints Appear
 ------------------
@@ -62,16 +51,16 @@ When enabled, API hints appear in different contexts:
 
   .. code-block:: python
 
-      plugin = jdaviz.plugins['Plot Options']
-      plugin.layer = 'image_label'
-      plugin.image_colormap = 'Viridis'
+      plg = jdaviz.plugins['Plot Options']
+      plg.layer = 'image_label'
+      plg.image_colormap = 'Viridis'
 
 **Data Menu**
   When selecting data in the menu, hints show how to access that data:
 
   .. code-block:: python
 
-      data = jdaviz.get_data('data_label')
+      dm = jdaviz.viewers['1D Spectrum'].data_menu
 
 API Access
 ==========
@@ -83,114 +72,15 @@ You can enable or disable API hints from code:
 
 .. code-block:: python
 
-    from jdaviz import Imviz
+    import jdaviz as jd
 
-    imviz = Imviz()
-    imviz.show()
+    jd.show()
 
     # Enable API hints
-    imviz.toggle_api_hints(enabled=True)
+    jd.toggle_api_hints(enabled=True)
 
     # Disable API hints
-    imviz.toggle_api_hints(enabled=False)
+    jd.toggle_api_hints(enabled=False)
 
     # Toggle current state
-    imviz.toggle_api_hints()
-
-This method works with all Jdaviz configurations (Imviz, Specviz, Cubeviz, etc.).
-
-Using the Top-Level API
------------------------
-
-You can also toggle API hints using the top-level ``jdaviz`` API:
-
-.. code-block:: python
-
-    import jdaviz
-
-    jdaviz.show()
-    jdaviz.toggle_api_hints(enabled=True)
-
-Example Workflow
-----------------
-
-A typical workflow using API hints:
-
-.. code-block:: python
-
-    from jdaviz import Specviz
-
-    # Create instance
-    specviz = Specviz()
-    specviz.show()
-
-    # Enable API hints
-    specviz.toggle_api_hints(enabled=True)
-
-    # Now interact with the UI:
-    # 1. Click on a loader - see the loader access code
-    # 2. Select options - see how to set them
-    # 3. Open a plugin - see how to access it
-    # 4. Change plugin parameters - see the property setters
-
-    # Copy the hints to build your automated workflow
-    # Then disable hints when not needed
-    specviz.toggle_api_hints(enabled=False)
-
-Details
-=======
-
-Hint Format
------------
-
-API hints are displayed as Python code blocks showing:
-
-* **Object access**: How to get a reference to the loader, plugin, or data
-* **Property names**: The exact attribute names to use
-* **Current values**: The values you've set in the UI
-* **Method calls**: Any methods needed (like ``.load()`` or ``.extract()``)
-
-The hints update dynamically as you change values in the UI.
-
-Limitations
------------
-
-**Complex Interactions**
-  Some complex UI interactions may not have direct API equivalents.
-  In these cases, hints show the closest programmatic approach.
-
-**State Dependencies**
-  Hints show current state. Some operations may depend on previous steps
-  that aren't shown in the current hint.
-
-**Performance**
-  API hints have minimal performance impact, but you may want to disable them
-  when working with very large datasets or complex workflows.
-
-Learning Path
--------------
-
-API hints are designed to help you learn the Jdaviz API:
-
-1. **Discover**: Use the UI and watch the hints to discover available API methods
-2. **Learn**: See the relationship between UI actions and code
-3. **Transition**: Copy hints into your notebook to automate workflows
-4. **Master**: Build complex programmatic workflows using the patterns learned
-
-Example Notebooks
-=================
-
-See the following notebooks for examples of using API hints:
-
-* :doc:`../sample_notebooks` - Collection of example notebooks
-* :gh-notebook:`ImvizExample.ipynb <ImvizExample>` - Imviz API examples
-* :gh-notebook:`SpecvizExample.ipynb <SpecvizExample>` - Specviz API examples
-* :gh-notebook:`CubevizExample.ipynb <CubevizExample>` - Cubeviz API examples
-
-See Also
-========
-
-* :doc:`cheatsheet` - Quick reference for common API operations
-* :doc:`../plugin_api` - Detailed plugin API documentation
-* :doc:`../load` - Documentation on data loaders
-* :doc:`show_options` - Customizing display options
+    jd.toggle_api_hints()
