@@ -328,22 +328,31 @@
         .grid-item-link.platform-disabled {
             opacity: 0.4;
             color: #888;
+            position: relative;
         }
 
         .grid-item-link.platform-disabled:hover {
             opacity: 0.6;
-            color: #aaa;
+            color: transparent !important; /* Hide text by making it transparent */
+            transform: scale(1.02); /* Same as active button hover */
+            background: var(--sidebar-hover); /* Same as active button hover */
         }
 
         /* Show warning message on hover */
-        .grid-item-link.platform-disabled:hover::before {
-            content: attr(data-platform-warning);
-            font-size: 12px; /* Smaller font size for warning */
+        .grid-item-link.platform-disabled::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: #aaa;
+            white-space: nowrap;
+            pointer-events: none;
         }
 
-        .grid-item-link.platform-disabled:hover {
-            font-size: 0; /* Hide original text immediately */
-            transition: none; /* Disable transition to hide text instantly */
+        .grid-item-link.platform-disabled:hover::after {
+            content: attr(data-platform-warning);
         }
 
         .grid-item.has-toggle .grid-item-content {
