@@ -35,21 +35,6 @@ html[data-theme="light"] {
     opacity: 1 !important;
 }
 
-/* Platform-specific content visibility */
-
-/* Hide API sections for platforms without API access (desktop and MAST) */
-body.platform-desktop .api-section,
-body.platform-mast .api-section {
-    display: none !important;
-}
-
-/* Add visual indicator for platform-specific content */
-.platform-specific {
-    border-left: 3px solid #0061ae;
-    padding-left: 1em;
-    margin-left: 0;
-}
-
 /* Section page icons using Material Design Icons */
 .section-icon-mdi-plus-box h1::before,
 .section-icon-mdi-tune-variant h1::before,
@@ -144,19 +129,4 @@ html[data-theme="light"] .section-icon-mdi-auto-fix h1::before {
 html[data-theme="light"] .section-icon-mdi-code-tags h1::before {
     background-image: url('api.svg');
     filter: none;
-}
-
-
-body.platform-desktop .platform-specific[data-platforms*="desktop"],
-body.platform-mast .platform-specific[data-platforms*="mast"],
-body.platform-jupyter .platform-specific[data-platforms*="jupyter"],
-body.platform-platform .platform-specific[data-platforms*="platform"] {
-    display: block;
-}
-
-body.platform-desktop .platform-specific:not([data-platforms*="desktop"]),
-body.platform-mast .platform-specific:not([data-platforms*="mast"]),
-body.platform-jupyter .platform-specific:not([data-platforms*="jupyter"]),
-body.platform-platform .platform-specific:not([data-platforms*="platform"]) {
-    display: none;
 }
