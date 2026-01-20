@@ -1,3 +1,5 @@
+.. rst-class:: section-icon-mdi-auto-fix
+
 3D Spectrum Viewer Mouseover
 ============================
 

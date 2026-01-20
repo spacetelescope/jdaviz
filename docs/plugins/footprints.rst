@@ -1,4 +1,5 @@
 .. _plugins-footprints:
+.. rst-class:: section-icon-mdi-tune-variant
 
 **********
 Footprints

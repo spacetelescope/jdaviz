@@ -1,4 +1,5 @@
 .. _plugins-cross_dispersion_profile:
+.. rst-class:: section-icon-mdi-tune-variant
 
 *************************
 Cross Dispersion Profile

@@ -1,4 +1,5 @@
 .. _subsets-elliptical:
+.. rst-class:: section-icon-mdi-selection
 
 **********
 Elliptical

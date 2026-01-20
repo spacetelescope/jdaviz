@@ -1,4 +1,5 @@
 .. _plugins-moment_maps:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ***********
 Moment Maps

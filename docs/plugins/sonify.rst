@@ -1,4 +1,5 @@
 .. _plugins-sonify:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ***********
 Sonify Data

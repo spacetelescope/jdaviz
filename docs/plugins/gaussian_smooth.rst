@@ -1,4 +1,5 @@
 .. _plugins-gaussian_smooth:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ***************
 Gaussian Smooth

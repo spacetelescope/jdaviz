@@ -1,4 +1,5 @@
 .. _plugins-line_lists:
+.. rst-class:: section-icon-mdi-tune-variant
 
 **********
 Line Lists

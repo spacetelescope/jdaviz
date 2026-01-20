@@ -1,4 +1,5 @@
 .. _userapi-api_hints:
+.. rst-class:: section-icon-mdi-code-tags
 
 *********
 API Hints

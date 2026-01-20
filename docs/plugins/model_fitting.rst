@@ -1,4 +1,5 @@
 .. _plugins-model-fitting:
+.. rst-class:: section-icon-mdi-tune-variant
 
 *************
 Model Fitting

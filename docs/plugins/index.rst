@@ -1,4 +1,5 @@
 .. _plugins:
+.. rst-class:: section-icon-mdi-tune-variant
 
 *********************
 Analysis Plugins
@@ -29,7 +30,6 @@ Jdaviz provides a wide range of data analysis plugins for different types of ast
    sonify
    spectral_slice
    ramp_slice
-   slit_overlay
    extensions
 
 Overview

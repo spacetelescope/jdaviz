@@ -1,4 +1,5 @@
 .. _plugins-data_quality:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ************
 Data Quality

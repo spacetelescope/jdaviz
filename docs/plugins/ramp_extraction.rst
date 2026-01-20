@@ -1,5 +1,5 @@
 .. _plugins-ramp_extraction:
-.. _rampviz-ramp-extraction:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ***************
 Ramp Extraction
@@ -51,7 +51,3 @@ API Access
    :module: jdaviz.configs.rampviz.plugins.ramp_extraction.ramp_extraction
    :class: RampExtraction
 
-See Also
-========
-
-* :ref:`rampviz-ramp-extraction` - Ramp extraction documentation

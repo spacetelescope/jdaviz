@@ -1,6 +1,8 @@
-:excl_platforms: desktop mast
-
 .. _loaders-source-object:
+
+.. rst-class:: section-icon-mdi-plus-box
+
+:excl_platforms: desktop mast
 
 ************************
 Loading Python Objects

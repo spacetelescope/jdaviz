@@ -1,4 +1,5 @@
 .. _viewers-spectrum_2d:
+.. rst-class:: section-icon-mdi-plus-box
 
 ************
 2D Spectrum

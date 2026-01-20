@@ -1,4 +1,5 @@
 .. _subsets-range:
+.. rst-class:: section-icon-mdi-selection
 
 *****
 Range

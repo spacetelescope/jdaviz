@@ -1,4 +1,5 @@
 .. _export-plugin_plots:
+.. rst-class:: section-icon-mdi-content-save
 
 ************
 Plugin Plots

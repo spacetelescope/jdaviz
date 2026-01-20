@@ -1,4 +1,5 @@
 .. _viewers-histogram:
+.. rst-class:: section-icon-mdi-plus-box
 
 *********
 Histogram

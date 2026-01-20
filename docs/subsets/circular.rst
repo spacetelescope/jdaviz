@@ -1,4 +1,5 @@
 .. _subsets-circular:
+.. rst-class:: section-icon-mdi-selection
 
 ********
 Circular

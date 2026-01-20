@@ -1,4 +1,5 @@
 .. _info-metadata:
+.. rst-class:: section-icon-mdi-information-outline
 
 ********
 Metadata

@@ -1,4 +1,5 @@
 .. _subsets-composite:
+.. rst-class:: section-icon-mdi-selection
 
 *********
 Composite

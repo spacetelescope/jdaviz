@@ -1,4 +1,5 @@
 .. _plugins-spectral_slice:
+.. rst-class:: section-icon-mdi-tune-variant
 
 **************
 Spectral Slice

@@ -1,4 +1,5 @@
 .. _plugins-extensions:
+.. rst-class:: section-icon-mdi-tune-variant
 
 *****************
 Plugin Extensions

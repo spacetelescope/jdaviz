@@ -1,4 +1,5 @@
 .. _subsets-rectangular:
+.. rst-class:: section-icon-mdi-selection
 
 ***********
 Rectangular

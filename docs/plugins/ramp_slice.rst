@@ -1,4 +1,5 @@
 .. _plugins-ramp_slice:
+.. rst-class:: section-icon-mdi-tune-variant
 
 **********
 Ramp Slice

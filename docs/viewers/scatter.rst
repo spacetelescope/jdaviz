@@ -1,4 +1,5 @@
 .. _viewers-scatter:
+.. rst-class:: section-icon-mdi-plus-box
 
 *******
 Scatter

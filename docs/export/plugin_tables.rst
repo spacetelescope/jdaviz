@@ -1,4 +1,5 @@
 .. _export-plugin_tables:
+.. rst-class:: section-icon-mdi-content-save
 
 *************
 Plugin Tables

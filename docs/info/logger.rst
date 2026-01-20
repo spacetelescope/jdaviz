@@ -1,4 +1,5 @@
 .. _info-logger:
+.. rst-class:: section-icon-mdi-information-outline
 
 ******
 Logger

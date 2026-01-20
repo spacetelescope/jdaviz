@@ -1,4 +1,5 @@
 .. _settings-plot_options:
+.. rst-class:: section-icon-mdi-cog
 
 ************
 Plot Options

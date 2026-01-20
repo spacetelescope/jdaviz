@@ -1,4 +1,5 @@
 .. _export-datasets:
+.. rst-class:: section-icon-mdi-content-save
 
 ********
 Datasets

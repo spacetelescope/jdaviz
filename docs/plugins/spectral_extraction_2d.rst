@@ -1,4 +1,5 @@
 .. _plugins-spectral_extraction_2d:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ************************
 2D Spectral Extraction

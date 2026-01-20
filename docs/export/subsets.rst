@@ -1,4 +1,5 @@
 .. _export-subsets:
+.. rst-class:: section-icon-mdi-content-save
 
 *******
 Subsets

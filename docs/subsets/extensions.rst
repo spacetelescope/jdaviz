@@ -1,4 +1,5 @@
 .. _subsets-extensions:
+.. rst-class:: section-icon-mdi-selection
 
 **********************************
 Subset Extensions

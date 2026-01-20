@@ -1,4 +1,5 @@
 .. _plugins-line-analysis:
+.. rst-class:: section-icon-mdi-tune-variant
 
 *************
 Line Analysis

@@ -1,4 +1,5 @@
 .. _info-markers:
+.. rst-class:: section-icon-mdi-information-outline
 
 *******
 Markers

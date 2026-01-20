@@ -1,6 +1,8 @@
-:excl_platforms: mast
-
 .. _loaders-source-file-drop:
+
+.. rst-class:: section-icon-mdi-plus-box
+
+:excl_platforms: mast
 
 ************************
 Loading via File Drop

@@ -1,6 +1,8 @@
-:excl_platforms: mast
-
 .. _loaders-source-vo:
+
+.. rst-class:: section-icon-mdi-plus-box
+
+:excl_platforms: mast
 
 *********************************
 Loading from Virtual Observatory

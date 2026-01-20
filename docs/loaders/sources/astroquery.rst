@@ -1,6 +1,9 @@
+.. _loaders-source-astroquery:
+
+.. rst-class:: section-icon-mdi-plus-box
+
 :excl_platforms: mast
 
-.. _loaders-source-astroquery:
 
 ***************************
 Loading from Astroquery

@@ -1,4 +1,5 @@
 .. _viewers-extensions:
+.. rst-class:: section-icon-mdi-plus-box
 
 **********************************
 Viewer Extensions

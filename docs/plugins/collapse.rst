@@ -1,4 +1,5 @@
 .. _plugins-collapse:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ********
 Collapse

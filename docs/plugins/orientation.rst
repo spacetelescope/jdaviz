@@ -1,4 +1,5 @@
 .. _plugins-orientation:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ***********
 Orientation

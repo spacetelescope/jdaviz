@@ -1,4 +1,5 @@
 .. _loaders-format-catalog:
+.. rst-class:: section-icon-mdi-plus-box
 
 :data-types: catalog
 

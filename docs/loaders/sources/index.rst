@@ -1,4 +1,5 @@
 .. _loaders-sources:
+.. rst-class:: section-icon-mdi-plus-box
 
 *************************
 Data Sources

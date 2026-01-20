@@ -1,4 +1,5 @@
 .. _viewers-table:
+.. rst-class:: section-icon-mdi-plus-box
 
 *****
 Table

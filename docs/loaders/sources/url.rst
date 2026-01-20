@@ -1,6 +1,8 @@
-:excl_platforms: mast
-
 .. _loaders-source-url:
+
+.. rst-class:: section-icon-mdi-plus-box
+
+:excl_platforms: mast
 
 *******************
 Loading from URL

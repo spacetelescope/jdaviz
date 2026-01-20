@@ -1,5 +1,5 @@
 .. _plugins-line_profiles:
-.. _imviz-line-profiles:
+.. rst-class:: section-icon-mdi-tune-variant
 
 *************
 Line Profiles

@@ -1,4 +1,5 @@
 .. _loaders-format-image:
+.. rst-class:: section-icon-mdi-plus-box
 
 :data-types: image
 

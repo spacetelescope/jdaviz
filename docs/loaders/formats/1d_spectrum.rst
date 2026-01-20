@@ -1,4 +1,5 @@
 .. _loaders-format-1d-spectrum:
+.. rst-class:: section-icon-mdi-plus-box
 
 :data-types: 1d
 

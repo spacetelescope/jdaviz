@@ -1,4 +1,5 @@
 .. _subsets-annulus:
+.. rst-class:: section-icon-mdi-selection
 
 *******
 Annulus

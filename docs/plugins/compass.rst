@@ -1,4 +1,5 @@
 .. _plugins-compass:
+.. rst-class:: section-icon-mdi-tune-variant
 
 *******
 Compass

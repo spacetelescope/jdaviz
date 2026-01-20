@@ -1,4 +1,5 @@
 .. _plugins-catalog_search:
+.. rst-class:: section-icon-mdi-tune-variant
 
 **************
 Catalog Search

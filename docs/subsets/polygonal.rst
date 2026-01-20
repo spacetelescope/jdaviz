@@ -1,4 +1,5 @@
 .. _subsets-polygonal:
+.. rst-class:: section-icon-mdi-selection
 
 *********
 Polygonal

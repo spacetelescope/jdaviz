@@ -1,4 +1,5 @@
 .. _plugins-aperture_photometry:
+.. rst-class:: section-icon-mdi-tune-variant
 
 ********************
 Aperture Photometry

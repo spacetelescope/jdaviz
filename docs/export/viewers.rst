@@ -1,4 +1,5 @@
 .. _export-viewers:
+.. rst-class:: section-icon-mdi-content-save
 
 *******
 Viewers

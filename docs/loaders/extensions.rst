@@ -1,4 +1,5 @@
 .. _loaders-extensions:
+.. rst-class:: section-icon-mdi-plus-box
 
 **********************************
 Data Loader Extensions

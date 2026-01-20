@@ -1,3 +1,6 @@
+.. rst-class:: section-icon-mdi-auto-fix
+
+
 Histogram Viewer Mouseover
 ==========================
 

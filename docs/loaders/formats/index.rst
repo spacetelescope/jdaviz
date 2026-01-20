@@ -1,4 +1,5 @@
 .. _loaders-formats:
+.. rst-class:: section-icon-mdi-plus-box
 
 *************************
 Data Formats

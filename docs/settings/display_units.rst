@@ -1,4 +1,5 @@
 .. _settings-display_units:
+.. rst-class:: section-icon-mdi-cog
 
 *************
 Display Units

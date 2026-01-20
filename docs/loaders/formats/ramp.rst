@@ -1,4 +1,5 @@
 .. _loaders-format-ramp:
+.. rst-class:: section-icon-mdi-plus-box
 
 :data-types: ramp
 
