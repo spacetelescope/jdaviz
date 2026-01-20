@@ -17,8 +17,8 @@ Jdaviz provides a wide range of data analysis plugins for different types of ast
    collapse
    moment_maps
    aperture_photometry
-   spectral_extraction_2d
-   spectral_extraction_3d
+   2d_spectral_extraction
+   3d_spectral_extraction
    ramp_extraction
    cross_dispersion_profile
    line_profiles
