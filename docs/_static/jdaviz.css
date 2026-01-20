@@ -104,7 +104,8 @@ body.platform-mast .api-section {
 }
 
 .section-icon-mdi-code-tags h1::before {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z" /></svg>');
+    background-image: url('api.svg');
+    filter: invert(1);
 }
 
 /* Light theme overrides for section icons */
@@ -141,7 +142,8 @@ html[data-theme="light"] .section-icon-mdi-auto-fix h1::before {
 }
 
 html[data-theme="light"] .section-icon-mdi-code-tags h1::before {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%231a1a1a" d="M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z" /></svg>');
+    background-image: url('api.svg');
+    filter: none;
 }
 
 

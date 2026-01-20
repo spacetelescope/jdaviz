@@ -1686,6 +1686,18 @@ class WireframeDemoDirective(SphinxDirective):
             )
             return [error_node]
 
+        # Fix relative paths in CSS for inline embedding
+        # When CSS is embedded in a page (e.g., /plugins/foo.html), url('api.svg')
+        # needs to become a relative path to _static/api.svg
+        # Calculate the relative path from current document to _static
+        docname = self.env.docname  # e.g., 'plugins/aperture_photometry'
+        depth = docname.count('/')
+        if depth > 0:
+            static_prefix = '../' * depth + '_static/'
+        else:
+            static_prefix = '_static/'
+        css_content = css_content.replace("url('api.svg')", f"url('{static_prefix}api.svg')")
+
         # Replace Jinja2 variables with actual values
         app_html_context = self.env.app.config.html_context
         jdaviz_version = app_html_context.get('jdaviz_version', '')
@@ -1833,6 +1845,7 @@ def copy_wireframe_assets(app, exception):
         # Files to copy without processing
         simple_files = [
             'wireframe-demo.css',
+            'api.svg',
         ]
 
         # Files that need template variable replacement
