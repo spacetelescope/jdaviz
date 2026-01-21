@@ -6,6 +6,8 @@ New Features
 
 - Datasets can now be renamed via API and UI through the viewer data-menu. [#3960, #3968]
 
+- Allow creating new viewers (in deconfigged) when adding results from plugins. [#3966]
+
 - Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
 
 Cubeviz
@@ -71,6 +73,13 @@ Bug Fixes
 
 - Fixed bugs in aperture photometry plugin for images in deconfigged, where the _cube_wave attribute,
   which is not applicable to images, was being accessed. [#3950]
+
+- Fixes traceback when loading two 2D spectra into the deconfigged app. [#3957]
+
+- Fixed bug when deleting a viewer with WCS-linked data in deconfigged, and readding the same data
+  into a new viewer. [#3976]
+
+- Fixed a traceback when zooming 2D spectra in deconfigged. [#3981]
 
 Cubeviz
 ^^^^^^^

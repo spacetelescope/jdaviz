@@ -536,12 +536,12 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
     def _update_label(self):
         def _formatted_value(value):
-            power = abs(np.log10(value))
-            if power >= 3:
-                # use scientific notation
-                return f'{value:0.4e}'
-            else:
-                return f'{value:0.4f}'
+            if value > 0:
+                power = abs(np.log10(value))
+                if power >= 3:
+                    # use scientific notation
+                    return f'{value:0.4e}'
+            return f'{value:0.4f}'
 
         valuestr = _formatted_value(self.value)
         xunit = str(self.xunit) if self.xunit is not None else ''

@@ -82,7 +82,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
             self.sound_device_indexes = None
             self.refresh_device_list()
 
-        self.add_results.viewer.add_filter('is_image_viewer')
         self.add_to_viewer_selected = 'flux-viewer'
         self.sonified_cube = None
         self.sonified_viewers = []
@@ -101,6 +100,10 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
         if self.config == "deconfigged":
             self.observe_traitlets_for_relevancy(traitlets_to_observe=['dataset_items'])
+
+    def _get_supported_viewers(self):
+        """Return viewer types that can display sonified data."""
+        return [{'label': '3D Spectrum', 'reference': 'cubeviz-image-viewer'}]
 
     @property
     def user_api(self):
