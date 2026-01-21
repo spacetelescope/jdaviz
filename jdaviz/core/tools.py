@@ -479,8 +479,8 @@ class SelectFootprintOverlay(CheckableTool, HubListener):
 class SkewerSelectRegion(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'skewer_select.svg')
     tool_id = 'jdaviz:skewerregion'
-    action_text = 'Skewer: spherical select region'
-    tool_tip = 'Select region overlay only if click is inside'
+    action_text = 'Select/identify smallest region containing cursor'
+    tool_tip = 'Select/identify smallest region containing cursor'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
