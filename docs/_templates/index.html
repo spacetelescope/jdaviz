@@ -1092,6 +1092,25 @@
             margin-top: 20px;
         }
 
+        .platform-description {
+            display: none;
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            padding: 0 20px;
+            font-style: italic;
+            height: 80px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .platform-description.active {
+            display: flex;
+        }
+
         .platform-content-placeholder {
             width: 90%;
             max-width: 1000px;
@@ -1338,6 +1357,10 @@
             color: #ffffff !important;
         }
 
+        html[data-theme="light"] .platform-description {
+            color: rgba(26, 26, 26, 0.7);
+        }
+
         html[data-theme="light"] .platform-content-placeholder {
             color: #1a1a1a;
         }
@@ -1495,6 +1518,20 @@
             </div>
         </div>
 
+        <!-- Platform Descriptions (above wireframe) -->
+        <div class="platform-description" data-platform-description="desktop">
+            Run Jdaviz as a native desktop application, without the need to run jupyter or use any python.  Note that with this installation, you will not have access to running API commands.
+        </div>
+        <div class="platform-description" data-platform-description="mast">
+            Preview data directly from the MAST archive in Jdaviz, without having to install Jdaviz or download any data.  If you want to move the analysis to your local machine or benefit from API access, install Jdaviz and download a notebook from MAST to get started with the same data on your own machine.
+        </div>
+        <div class="platform-description active" data-platform-description="jupyter">
+            Use Jdaviz within your own local Jupyter notebook or lab environment.  This allows full API access for bulk and reproducible analysis.
+        </div>
+        <div class="platform-description" data-platform-description="platform">
+            Access Jdaviz through cloud-based platforms like TIKE or Roman Nexus, with pre-configured environments and data access.
+        </div>
+
         <!-- Wireframe Section (loaded from external file) -->
         <div id="wireframe-placeholder"></div>
         <script>
@@ -1517,16 +1554,10 @@
         <div class="platform-content-section">
             <!-- Desktop UI Content -->
             <div class="platform-tab-content" data-platform-content="desktop">
-                <div class="platform-content-placeholder">
-                    Run Jdaviz as a native desktop application, without the need to run jupyter or use any python.  Note that with this installation, you will not have access to running API commands.
-                </div>
             </div>
 
             <!-- Jdaviz@MAST Content -->
             <div class="platform-tab-content" data-platform-content="mast">
-                <div class="platform-content-placeholder">
-                    Preview data directly from the MAST archive in Jdaviz, without having to install Jdaviz or download any data.  If you want to move the analysis to your local machine or benefit from API access, install Jdaviz and download a notebook from MAST to get started with the same data on your own machine.
-                </div>
             </div>
 
             <!-- Local Jupyter Notebook/Lab Content -->
@@ -1548,9 +1579,6 @@ jd.show()</div>
 
             <!-- Platform (TIKE, Roman Nexus) Content -->
             <div class="platform-tab-content" data-platform-content="platform">
-                <div class="platform-content-placeholder">
-                    Platform integration content coming soon
-                </div>
             </div>
         </div>
 
@@ -1657,7 +1685,9 @@ jd.show()</div>
         document.addEventListener('DOMContentLoaded', function() {
             const platformTabs = document.querySelectorAll('.platform-tab');
             const platformContents = document.querySelectorAll('.platform-tab-content');
+            const platformDescriptions = document.querySelectorAll('.platform-description');
             const gridLinks = document.querySelectorAll('.grid-item-link[data-excl-platforms]');
+            const installButton = document.getElementById('install-button');
 
             // Map platform IDs to display names
             const platformNames = {
@@ -1665,6 +1695,14 @@ jd.show()</div>
                 'mast': 'Jdaviz@MAST',
                 'jupyter': 'Jupyter Notebook',
                 'platform': 'Science Platforms'
+            };
+
+            // Install button configuration per platform
+            const installButtonConfig = {
+                'desktop': { text: 'Download Desktop App', href: 'setup/desktop.html' },
+                'mast': { text: 'Open Jdaviz@MAST', href: 'https://mast.stsci.edu/viz/ui/', target: '_blank' },
+                'jupyter': { text: 'Install Jdaviz', href: 'setup/local.html' },
+                'platform': { text: 'Access Science Platforms', href: 'setup/platforms.html' }
             };
 
             // Function to update platform-disabled state on links
@@ -1712,12 +1750,34 @@ jd.show()</div>
                         }
                     });
 
+                    // Update visible description
+                    platformDescriptions.forEach(function(desc) {
+                        const descPlatform = desc.getAttribute('data-platform-description');
+                        if (descPlatform === platform) {
+                            desc.classList.add('active');
+                        } else {
+                            desc.classList.remove('active');
+                        }
+                    });
+
                     // Update body class for platform-specific content in documentation
                     document.body.className = document.body.className.replace(/platform-\w+/g, '');
                     document.body.classList.add('platform-' + platform);
 
                     // Update platform-disabled state on links
                     updatePlatformDisabledLinks(platform);
+
+                    // Update install button
+                    const config = installButtonConfig[platform];
+                    if (config && installButton) {
+                        installButton.textContent = config.text;
+                        installButton.href = config.href;
+                        if (config.target) {
+                            installButton.target = config.target;
+                        } else {
+                            installButton.target = '_self';
+                        }
+                    }
                 });
             });
         });
