@@ -420,11 +420,11 @@ def test_astroquery_jwst_hst(deconfigged_helper, telescope):
     ldr.query_archive()
 
     assert ldr._obj.parsed_input_is_query is True
-    assert ldr.treat_as_query is True
+    assert ldr.treat_table_as_query is True
 
     # note: querying coverage covered by test_resolver_table_as_query_astroquery
 
-    ldr.treat_as_query = False
+    ldr.treat_table_as_query = False
     assert 'Catalog' in ldr.format.choices
     ldr.load()
     assert len(deconfigged_helper.app.data_collection) == 1
