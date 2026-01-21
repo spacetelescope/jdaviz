@@ -42,7 +42,7 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
     def _on_catalogs_in_dc_changed(self, new_value):
         # update telescope options when catalogs_in_dc changes
-        self.telescope._manual_options = self._telescope_options
+        self.telescope._manual_options = self.telescope_options
         self.telescope._update_items()
 
     @property
