@@ -321,7 +321,7 @@ class BaseResolver(PluginTemplateMixin, CustomToolbarToggleMixin):
         def custom_toolbar(viewer):
             if (self.parsed_input_is_query and self.treat_table_as_query and
                     's_region' in self.observation_table.headers_avail):
-                return viewer.toolbar._original_tools_nested[:3] + [['jdaviz:selectregion', 'jdaviz:skewerregion']], 'jdaviz:selectregion'  # noqa: E501
+                return viewer.toolbar._original_tools_nested[:3] + ['jdaviz:selectregion', 'jdaviz:skewerregion'], 'jdaviz:selectregion'  # noqa: E501
             return None, None
 
         self.custom_toolbar.callable = custom_toolbar
