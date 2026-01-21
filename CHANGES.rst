@@ -79,6 +79,8 @@ Bug Fixes
 
 - Fixed a traceback when zooming 2D spectra in deconfigged. [#3981]
 
+- Fixed filedrop bug where parsers were unable to detect file formats. [#3986]
+
 Cubeviz
 ^^^^^^^
 
