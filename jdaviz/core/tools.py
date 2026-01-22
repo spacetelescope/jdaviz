@@ -364,12 +364,47 @@ class TableSubset(Tool):
     icon = os.path.join(ICON_DIR, 'table_subset.svg')
     tool_id = 'jdaviz:table_subset'
     action_text = 'Create subset from table selection'
-    tool_tip = 'Create a new subset based on the current table selection'
+    tool_tip = 'Enable row selection mode to create a subset from table rows'
 
     def activate(self):
-        if not len(self.viewer.widget_table.checked):
-            return
-        self.viewer.apply_filter()
+        # Store original state on the viewer and show checkboxes
+        if not hasattr(self.viewer, '_table_subset_original_selection_enabled'):
+            self.viewer._table_subset_original_selection_enabled = self.viewer.widget_table.selection_enabled  # noqa
+        self.viewer.widget_table.selection_enabled = True
+
+        self.viewer.toolbar.override_tools(
+            ['jdaviz:table_apply_subset'],
+            'Table Subset Selection'
+        )
+
+    def is_visible(self):
+        if self.viewer.jdaviz_app.config != 'deconfigged':
+            return False
+        if not hasattr(self.viewer, 'widget_table'):
+            return False
+        return True
+
+
+@viewer_tool
+class TableApplySubset(Tool):
+    icon = os.path.join(ICON_DIR, 'check.svg')
+    tool_id = 'jdaviz:table_apply_subset'
+    action_text = 'Apply subset'
+    tool_tip = 'Create a subset from the currently checked table rows'
+
+    def activate(self):
+        if len(self.viewer.widget_table.checked):
+            self.viewer.apply_filter()
+        # Restore original state before restoring toolbar
+        if hasattr(self.viewer, '_table_subset_original_selection_enabled'):
+            self.viewer.widget_table.selection_enabled = self.viewer._table_subset_original_selection_enabled  # noqa
+            del self.viewer._table_subset_original_selection_enabled
+        else:
+            self.viewer.widget_table.selection_enabled = False
+        # Clear checked rows after applying
+        self.viewer.widget_table.checked = []
+        # Restore toolbar
+        self.viewer.toolbar.restore_tools(all_viewers=False)
 
     def is_visible(self):
         if self.viewer.jdaviz_app.config != 'deconfigged':

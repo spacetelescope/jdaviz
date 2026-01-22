@@ -35,7 +35,8 @@ from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
 from jdaviz.core.events import (SnackbarMessage,
                                 NewViewerMessage,
                                 ViewerRemovedMessage,
-                                ViewerVisibleLayersChangedMessage)
+                                ViewerVisibleLayersChangedMessage,
+                                RestoreToolbarMessage)
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
@@ -1125,7 +1126,22 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
 
+        # hide checkboxes by default (shown when TableSubset tool is activated)
+        self.widget_table.selection_enabled = False
+
         self.data_menu._obj.dataset.add_filter('is_catalog')
 
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['checked'])
+        # Subscribe to RestoreToolbarMessage to clean up checkbox state
+        # when toolbar is restored (e.g., by clicking X on custom toolbar)
+        self.hub.subscribe(self, RestoreToolbarMessage,
+                           handler=self._on_restore_toolbar)
+
+    def _on_restore_toolbar(self, msg={}):
+        """Clean up checkbox state when toolbar is restored."""
+        if hasattr(self, '_table_subset_original_selection_enabled'):
+            self.widget_table.selection_enabled = self._table_subset_original_selection_enabled
+            del self._table_subset_original_selection_enabled
+        else:
+            self.widget_table.selection_enabled = False
