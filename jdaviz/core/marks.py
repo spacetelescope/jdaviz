@@ -22,8 +22,8 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark',
-           'CatalogMark', 'FootprintOverlay', 'ApertureMark', 'DistanceMeasurement',
-           'DistanceLabel']
+           'CatalogMark', 'TableSelectionMark', 'FootprintOverlay', 'ApertureMark',
+           'DistanceMeasurement', 'DistanceLabel']
 
 accent_color = "#c75d2c"
 
@@ -756,6 +756,17 @@ class MarkersMark(PluginScatter):
 class CatalogMark(PluginScatter):
     def __init__(self, viewer, **kwargs):
         kwargs.setdefault('marker', 'circle')
+        super().__init__(viewer, **kwargs)
+
+
+class TableSelectionMark(PluginScatter):
+    """Mark to highlight table row selections in image viewers."""
+    def __init__(self, viewer, **kwargs):
+        kwargs.setdefault('marker', 'circle')
+        kwargs.setdefault('colors', ['#c75d2c'])  # accent/active orange color
+        kwargs.setdefault('default_size', 100)
+        kwargs.setdefault('fill', False)
+        kwargs.setdefault('stroke_width', 3)
         super().__init__(viewer, **kwargs)
 
 

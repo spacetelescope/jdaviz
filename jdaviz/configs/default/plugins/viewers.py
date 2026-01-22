@@ -1142,13 +1142,86 @@ class JdavizTableViewer(JdavizViewerMixin, TableViewer):
 
         self.widget_table.observe(lambda _: self.toolbar._update_tool_visibilities(),
                                   names=['checked'])
+        # Also update selection highlight marks when checked rows change
+        self.widget_table.observe(self._on_checked_changed, names=['checked'])
+        self.widget_table.observe(self._on_selection_enabled_changed, names=['selection_enabled'])
+
         # Subscribe to RestoreToolbarMessage to clean up checkbox state
         # when toolbar is restored (e.g., by clicking X on custom toolbar)
         self.hub.subscribe(self, RestoreToolbarMessage,
                            handler=self._on_restore_toolbar)
 
+    def _on_checked_changed(self, change):
+        """Update highlight marks in image viewers when checked rows change."""
+        self._update_selection_marks()
+
+    def _on_selection_enabled_changed(self, change):
+        """Show/hide selection marks when selection is enabled/disabled."""
+        if not change['new']:
+            # Selection disabled, clear all marks
+            self._clear_selection_marks()
+        else:
+            # Selection enabled, update marks
+            self._update_selection_marks()
+
+    def _get_selection_mark(self, viewer):
+        """Get or create a selection highlight mark for the given viewer."""
+        from jdaviz.core.marks import TableSelectionMark
+        matches = [mark for mark in viewer.figure.marks if isinstance(mark, TableSelectionMark)]
+        if len(matches):
+            return matches[0]
+        mark = TableSelectionMark(viewer)
+        viewer.figure.marks = viewer.figure.marks + [mark]
+        return mark
+
+    def _update_selection_marks(self):
+        """Update selection highlight marks in all image viewers."""
+        from astropy.coordinates import SkyCoord
+        from astropy import units as u
+
+        if not self.widget_table.selection_enabled:
+            return
+
+        checked_rows = self.widget_table.checked
+        if not len(checked_rows) or not len(self.layers):
+            self._clear_selection_marks()
+            return
+
+        # Get RA/Dec for checked rows
+        try:
+            ras = self.layers[0].layer.get_component('Right Ascension').data[checked_rows]
+            decs = self.layers[0].layer.get_component('Declination').data[checked_rows]
+            skycoords = SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
+        except Exception:
+            # If we can't get coordinates, clear marks
+            self._clear_selection_marks()
+            return
+
+        # Update marks in all image viewers
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            try:
+                # Convert RA/Dec to pixel coordinates for this viewer
+                pixel_coords = viewer.state.reference_data.coords.world_to_pixel(skycoords)
+                xs, ys = pixel_coords[0], pixel_coords[1]
+                mark = self._get_selection_mark(viewer)
+                mark.update_xy(xs, ys)
+                mark.visible = True
+            except Exception:
+                pass
+
+    def _clear_selection_marks(self):
+        """Clear selection highlight marks from all image viewers."""
+        from jdaviz.core.marks import TableSelectionMark
+        for viewer in self.jdaviz_app.get_viewers_of_cls('ImvizImageView'):
+            for mark in viewer.figure.marks:
+                if isinstance(mark, TableSelectionMark):
+                    mark.visible = False
+
     def _on_restore_toolbar(self, msg={}):
         """Clean up checkbox state when toolbar is restored."""
+        # Clear selection marks
+        self._clear_selection_marks()
+
         if hasattr(self, '_table_subset_original_selection_enabled'):
             self.widget_table.selection_enabled = self._table_subset_original_selection_enabled
             del self._table_subset_original_selection_enabled
