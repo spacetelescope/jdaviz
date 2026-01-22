@@ -140,8 +140,8 @@ def test_load_catalog_with_string_coord_cols(imviz_helper):
     assert_quantity_allclose(qtab['Dec'], sc.dec.deg * u.deg)
 
     # cast data collection X/Y back to strings for comparison
-    assert np.all(qtab['X'].astype(str) == catalog_obj['X'])
-    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'])
+    assert np.all(qtab['X'].astype(str) == catalog_obj['X'].astype(str))
+    assert np.all(qtab['Y'].astype(str) == catalog_obj['Y'].astype(str))
 
 
 @pytest.mark.parametrize("from_file", [True, False])
@@ -405,6 +405,29 @@ def test_astroquery_load_catalog_from_viewer(deconfigged_helper):
     ldr.query_archive()
     assert 'Catalog' in ldr.format.choices
     ldr.format = 'Catalog'
+    ldr.load()
+
+
+@pytest.mark.remote_data
+@pytest.mark.parametrize("telescope", ["JWST", "HST"])
+def test_astroquery_jwst_hst(deconfigged_helper, telescope):
+    deconfigged_helper.app.state.catalogs_in_dc = True
+
+    ldr = deconfigged_helper.loaders['astroquery']
+    ldr.source = 'M4'
+    ldr.telescope = telescope
+    ldr.max_results = 10
+    ldr.query_archive()
+
+    assert ldr._obj.parsed_input_is_query is True
+    assert ldr.treat_table_as_query is True
+
+    # note: querying coverage covered by test_resolver_table_as_query_astroquery
+
+    ldr.treat_table_as_query = False
+    assert 'Catalog' in ldr.format.choices
+    ldr.load()
+    assert len(deconfigged_helper.app.data_collection) == 1
 
 
 def test_invalid(imviz_helper, tmp_path):

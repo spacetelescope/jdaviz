@@ -120,14 +120,15 @@ class CatalogImporter(BaseImporterToDataCollection):
 
         if idx is None:
             # remove spaces/underscores/hyphens/quotes/parentheses and make lowercase for matching
+            # TODO: merge this functionality with utils.in_ra_comps / in_dec_comps?
             all_column_names = np.array([
-                x.lower()
-                 .replace(' ', '')
-                 .replace('_', '')
-                 .replace('-', '')
-                 .replace('"', '')
-                 .replace('(', '')
-                 .replace(')', '')
+                str(x).lower()
+                .replace(' ', '')
+                .replace('_', '')
+                .replace('-', '')
+                .replace('"', '')
+                .replace('(', '')
+                .replace(')', '')
                 for x in colnames
             ])
             get_idx = lambda x, s, d: np.where(np.isin(x, s))[0][0] if np.any(np.isin(x, s)) else d  # noqa
@@ -317,9 +318,9 @@ class CatalogImporter(BaseImporterToDataCollection):
             # append units to RA/Dec, if they weren't loaded in with units or
             # assigned units above when parsing strings as units
             if getattr(ra, 'unit') is None:
-                ra *= u.Unit(self.col_ra_unit_selected)
+                ra = ra.astype(float) * u.Unit(self.col_ra_unit_selected)
             if getattr(dec, 'unit') is None:
-                dec *= u.Unit(self.col_dec_unit_selected)
+                dec = dec.astype(float) * u.Unit(self.col_dec_unit_selected)
 
             output_table[col_ra_selected] = ra
             output_table[col_dec_selected] = dec
@@ -333,14 +334,21 @@ class CatalogImporter(BaseImporterToDataCollection):
             # if input is a string, try to convert to floats
             if isinstance(self.input[self.col_x_selected][0], str):
                 try:
-                    output_table['X'] = [float(x) for x in table[self.col_x_selected]]
+                    x_col = [float(x) for x in table[self.col_x_selected]]
+                    output_table['X'] = x_col
                 except ValueError:
                     raise ValueError("Could not parse X column as numeric values.")
+            else:
+                output_table['X'] = table[self.col_x_selected].astype(float)
+
             if isinstance(self.input[self.col_y_selected][0], str):
                 try:
-                    output_table['Y'] = [float(y) for y in table[self.col_y_selected]]
+                    y_col = [float(y) for y in table[self.col_y_selected]]
+                    output_table['Y'] = y_col
                 except ValueError:
                     raise ValueError("Could not parse Y column as numeric values.")
+            else:
+                output_table['Y'] = table[self.col_y_selected].astype(float)
 
             output_table[self.col_x_selected] = table[self.col_x_selected]
             output_table[self.col_y_selected] = table[self.col_y_selected]

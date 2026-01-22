@@ -25,10 +25,25 @@ class AstroqueryResolver(BaseConeSearchResolver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # TODO: once removing the catalogs_in_dc dev-flag, just pass the full list to manual_options
         self.telescope = SelectPluginComponent(
             self, items="telescope_items", selected="telescope_selected",
-            manual_options=['SDSS', 'Gaia']
+            manual_options=self.telescope_options
         )
+        # observe catalogs_in_dc to update telescope options dynamically
+        self.app.state.add_callback('catalogs_in_dc', self._on_catalogs_in_dc_changed)
+
+    @property
+    def telescope_options(self):
+        if self.app.state.catalogs_in_dc:
+            return ['JWST', 'HST', 'SDSS', 'Gaia']
+        else:
+            return ['JWST', 'HST']
+
+    def _on_catalogs_in_dc_changed(self, new_value):
+        # update telescope options when catalogs_in_dc changes
+        self.telescope._manual_options = self.telescope_options
+        self.telescope._update_items()
 
     @property
     def user_api(self):
@@ -48,7 +63,13 @@ class AstroqueryResolver(BaseConeSearchResolver):
         skycoord_center = SkyCoord.from_name(self.source, frame=self.coordframe.selected)
         radius = self.radius * u.Unit(self.radius_unit.selected)
 
-        if self.telescope.selected == 'SDSS':
+        if self.telescope.selected in ('JWST', 'HST'):
+            from astroquery.mast import MastMissions
+
+            mission = MastMissions(mission=self.telescope.selected)
+            output = mission.query_region(skycoord_center, radius=radius.value)
+
+        elif self.telescope.selected == 'SDSS':
             from astroquery.sdss import SDSS
 
             r_max = 3 * u.arcmin

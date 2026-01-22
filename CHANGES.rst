@@ -8,6 +8,8 @@ New Features
 
 - Allow creating new viewers (in deconfigged) when adding results from plugins. [#3966]
 
+- Astroquery loader supports cone-search for JWST or HST data products, where applicable. [#3907]
+
 Cubeviz
 ^^^^^^^
 
