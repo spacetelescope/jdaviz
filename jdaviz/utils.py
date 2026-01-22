@@ -1310,7 +1310,7 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
     ra_deg = skycoord_icrs.ra.deg
     dec_deg = skycoord_icrs.dec.deg
 
-    containing_labels = set()
+    containing_labels = []
     areas_by_label = {}
 
     for mark in marks:
@@ -1333,19 +1333,18 @@ def find_polygon_mark_with_skewer(px, py, viewer, marks):
 
         # Check if the click point is inside this polygon
         if spherical_polygon.contains_lonlat(ra_deg, dec_deg, degrees=True):
-            containing_labels.add(label)
+            containing_labels.append(label)
             area_deg2 = spherical_polygon.area() * (180.0 / np.pi) ** 2
             prev = areas_by_label.get(label)
             areas_by_label[label] = area_deg2 if prev is None else min(prev, area_deg2)
 
     if len(containing_labels) == 1:
-        return list(containing_labels)[0]
+        return containing_labels[0]
 
     if len(containing_labels) > 1:
         # Multiple marks contain the click - choose the smallest one
-        labels_arr = np.array(sorted(containing_labels))
-        areas_arr = np.array([areas_by_label[lbl] for lbl in labels_arr], dtype=float)
+        areas_arr = np.array([areas_by_label[lbl] for lbl in containing_labels], dtype=float)
         min_idx = np.argmin(areas_arr)
-        return labels_arr[min_idx]
+        return containing_labels[min_idx]
 
     return None
